@@ -499,7 +499,7 @@ class SetMemberPaymentRhythmApiView(APIView):
             rhythm, cache=self.cache
         ):
             raise ValidationError(
-                f"Diese Zahlungsintervall {rhythm} is nicht erlaubt, erlaubt sind: {MemberPaymentRhythmService.get_allowed_rhythms(cache=self.cache)}"
+                f"Dieses Zahlungsintervall {rhythm} ist nicht erlaubt, erlaubt sind: {MemberPaymentRhythmService.get_allowed_rhythms(cache=self.cache)}"
             )
 
         valid_from = MemberPaymentRhythmService.get_date_of_next_payment_rhythm_change(

@@ -64,7 +64,7 @@ const MemberMailingListsCard: React.FC<MemberMailCategoryModalProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler bei der Anmeldung an eine Liste",
+          "Fehler bei der Anmeldung bei einer Liste",
           setToastDatas,
         ),
       )
@@ -85,7 +85,7 @@ const MemberMailingListsCard: React.FC<MemberMailCategoryModalProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler bei der Abmeldung an eine Liste",
+          "Fehler bei der Abmeldung von einer Liste",
           setToastDatas,
         ),
       )
@@ -106,7 +106,7 @@ const MemberMailingListsCard: React.FC<MemberMailCategoryModalProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler bei der Bestätigung der Einladung an eine Liste",
+          "Fehler bei der Bestätigung der Einladung zu einer Liste",
           setToastDatas,
         ),
       )
@@ -127,7 +127,7 @@ const MemberMailingListsCard: React.FC<MemberMailCategoryModalProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Ablehnen der Einladung an eine Liste",
+          "Fehler beim Ablehnen der Einladung zu einer Liste",
           setToastDatas,
         ),
       )
@@ -157,8 +157,8 @@ const MemberMailingListsCard: React.FC<MemberMailCategoryModalProps> = ({
   function buildInvitationHelpText(list: MailingList) {
     let text = (
       <p>
-        Du bist zu diese Liste eingeladen. Du kannst die Einladung annehmen oder
-        ablehnen.
+        Du bist zu dieser Liste eingeladen. Du kannst die Einladung annehmen
+        oder ablehnen.
       </p>
     );
 
@@ -184,7 +184,7 @@ const MemberMailingListsCard: React.FC<MemberMailCategoryModalProps> = ({
           size={"sm"}
           variant={"primary"}
           icon={"unsubscribe"}
-          text={"Sich abmelden"}
+          text={"Abmelden"}
           onClick={() => onUnsubscribe(list)}
         />
       );
@@ -197,14 +197,14 @@ const MemberMailingListsCard: React.FC<MemberMailCategoryModalProps> = ({
             size={"sm"}
             variant={"primary"}
             icon={"mark_email_read"}
-            text={"Anmeldung bestätigen"}
+            text={"Einladung annehmen"}
             onClick={() => onConfirm(list)}
           />
           <TapirButton
             size={"sm"}
             variant={"primary"}
             icon={"unsubscribe"}
-            text={"Anmeldung ablehnen"}
+            text={"Einladung ablehnen"}
             onClick={() => onReject(list)}
           />
         </span>
@@ -216,7 +216,7 @@ const MemberMailingListsCard: React.FC<MemberMailCategoryModalProps> = ({
         size={"sm"}
         variant={"primary"}
         icon={"mail"}
-        text={"Sich anmelden"}
+        text={"Anmelden"}
         onClick={() => onSubscribe(list)}
         loading={listLoading === list}
       />

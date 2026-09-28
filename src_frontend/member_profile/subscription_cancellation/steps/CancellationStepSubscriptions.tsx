@@ -97,7 +97,7 @@ function buildHelpText(
         <p>
           Du kannst deinen Vertrag bis zum{" "}
           {formatDateTextLong(subscribedProduct.dateLimitForTrialCancellation)}{" "}
-          um 23.59 Uhr kündigen, damit dein Vertrag am{" "}
+          um 23:59 Uhr kündigen, damit dein Vertrag am{" "}
           {formatDateTextLong(subscribedProduct.cancellationDate)} beendet wird.
           Wenn du deine komplette Probezeit nutzen willst, dann kündige in der
           letzten Lieferwoche bis zum{" "}
@@ -107,7 +107,7 @@ function buildHelpText(
                 { weekday: "long" },
               )
             : "Kein Datum"}{" "}
-          um 23.59 Uhr.
+          um 23:59 Uhr.
         </p>
 
         {buildNoticePeriodText(subscribedProduct)}
@@ -120,7 +120,7 @@ function buildHelpText(
       <p>
         Du kannst deinen Vertrag bis zum{" "}
         {formatDateTextLong(subscribedProduct.dateLimitForTrialCancellation)} um
-        23.59 Uhr kündigen, damit dein Vertrag am{" "}
+        23:59 Uhr kündigen, damit dein Vertrag am{" "}
         {formatDateTextLong(subscribedProduct.cancellationDate)} beendet wird.
       </p>
 

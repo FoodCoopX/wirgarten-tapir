@@ -141,7 +141,7 @@ class ExistingMemberPurchasesSharesApiView(APIView):
         if serializer.validated_data["as_admin"] and not request.user.has_perm(
             Permission.Coop.MANAGE
         ):
-            raise PermissionDenied("Du hast hast die nötige Berechtigung nicht.")
+            raise PermissionDenied("Du hast die nötige Berechtigung nicht.")
 
         iban = serializer.validated_data.get("iban", None)
         account_owner = serializer.validated_data.get("account_owner", None)

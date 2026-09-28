@@ -414,7 +414,7 @@ class TestMemberBankDataApiView(TapirIntegrationTest):
         response_content = response.json()
         self.assertFalse(response_content["order_confirmed"])
         self.assertEqual(
-            "Diese E-Mail-Adresse ist schon ein anderes Mitglied zugewiesen.",
+            "Diese E-Mail-Adresse ist schon einem anderen Mitglied zugewiesen.",
             response_content["error"],
         )
 

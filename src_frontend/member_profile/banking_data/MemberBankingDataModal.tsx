@@ -47,7 +47,7 @@ const MemberBankingDataModal: React.FC<MemberBankingDataModalProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der Bank-Daten",
+          "Fehler beim Laden der Bankdaten",
           setToastDatas,
         ),
       )
@@ -78,7 +78,7 @@ const MemberBankingDataModal: React.FC<MemberBankingDataModalProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Speichern der Bank-Daten",
+          "Fehler beim Speichern der Bankdaten",
           setToastDatas,
         ),
       )
@@ -129,7 +129,7 @@ const MemberBankingDataModal: React.FC<MemberBankingDataModalProps> = ({
                 label={
                   "Ich ermächtige die " +
                   organisationName +
-                  " die gezeichneten Geschäftsanteile sowie die monatlichen Beträge für den Ernteanteil und ggf. weitere Produkte mittels Lastschrift von meinem Bankkonto einzuziehen. Zugleich weise ich mein Kreditinstitut an, die gezogene Lastschrift einzulösen."
+                  ", die gezeichneten Geschäftsanteile sowie die monatlichen Beträge für den Ernteanteil und ggf. weitere Produkte mittels Lastschrift von meinem Bankkonto einzuziehen. Zugleich weise ich mein Kreditinstitut an, die gezogene Lastschrift einzulösen."
                 }
               />
             </Form.Group>

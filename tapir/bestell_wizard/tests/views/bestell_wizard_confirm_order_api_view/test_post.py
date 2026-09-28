@@ -796,7 +796,7 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         response_content = response.json()
         self.assertFalse(response_content["order_confirmed"])
         self.assertIn(
-            "Dieser Abholort kann nicht ausgewählt werden (Das ist die Spende-Sonder-Ort).",
+            "Dieser Abholort kann nicht ausgewählt werden (das ist der Sonder-Abholort für Spenden).",
             response_content["error"],
         )
         self.assertFalse(Member.objects.exists())

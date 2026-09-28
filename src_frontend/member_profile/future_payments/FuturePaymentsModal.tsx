@@ -37,13 +37,13 @@ function getExplanationText(deliveryChargeEnabled: boolean) {
       </p>
       <p>
         Sofern im Monat eine Abholung / Lieferung noch in eine ggf. vorhandene
-        Probezeit fällt, wird dieser Monat nachträglich, d.h. im nächsten Monat
-        bezahlt (z.B. am 5. Mai für April).
+        Probezeit fällt, wird dieser Monat nachträglich, d. h. im nächsten Monat
+        bezahlt (z. B. am 5. Mai für April).
       </p>
       <p>
         Erst sobald alle Abholungen / Lieferungen eines Monats außerhalb der
-        Probezeit liegen, wird der Monat vorschüssig, d.h. im Monat selbst für
-        den laufenden Monat bezahlt (z.B. am 5. April für April).
+        Probezeit liegen, wird der Monat vorschüssig, d. h. im Monat selbst für
+        den laufenden Monat bezahlt (z. B. am 5. April für April).
       </p>
       <p>
         Im Übergang zahlst du daher in einem Monat einmal nachträglich für den
@@ -51,7 +51,7 @@ function getExplanationText(deliveryChargeEnabled: boolean) {
         Monat.
       </p>
       <p>
-        In Monaten in denen du aufgrund deines Vertragsstartes nicht alle
+        In Monaten, in denen du aufgrund deines Vertragsstartes nicht alle
         Abholungen / Lieferungen mitmachen kannst, wird dein monatlicher Betrag
         auf Basis des Kistenpreises berechnet ((Monatspreis * 12 Monate) / 52
         Wochen) und mit der Anzahl der wahrgenommenen Lieferungen multipliziert.
@@ -67,7 +67,7 @@ function getExplanationText(deliveryChargeEnabled: boolean) {
       {deliveryChargeEnabled && (
         <p>
           Wenn deine Verteilstation einen Lieferzuschlag erhebt, wird dieser pro
-          Lieferung berechnet (z.B. 2,00 € pro Lieferung, bei 4 Lieferungen im
+          Lieferung berechnet (z. B. 2,00 € pro Lieferung, bei 4 Lieferungen im
           Monat 8,00 €). Der Zuschlag fällt auch in Wochen an, in denen du einen
           Joker einsetzt oder deine Kiste spendest, da die Kiste geliefert und
           weitergegeben wird. Beim Joker wird der Zuschlag als Teil deiner
@@ -77,9 +77,9 @@ function getExplanationText(deliveryChargeEnabled: boolean) {
         </p>
       )}
       <p>
-        In der Zahlungsreihe werden nur die vorhergesehenen Zahlungen für die
+        In der Zahlungsreihe werden nur die vorgesehenen Zahlungen für die
         nächsten 12 Monate angezeigt. Sie passen sich automatisch je nach deinen
-        Aktionen (z.B. Zeichnung weiterer Anteile) an.
+        Aktionen (z. B. Zeichnung weiterer Anteile) an.
       </p>
     </div>
   );
@@ -113,7 +113,7 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
       .catch(async (error) => {
         await handleRequestError(
           error,
-          "Fehler beim Laden der vergangene Zahlungen",
+          "Fehler beim Laden der vergangenen Zahlungen",
           setToastDatas,
         );
       });
@@ -223,8 +223,8 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
       </Modal.Header>
       <Modal.Body>
         <Form.Text>
-          Es werden vorerst nur die vorhergesehenen Zahlungen für die nächsten
-          12 Monate angezeigt
+          Es werden vorerst nur die vorgesehenen Zahlungen für die nächsten 12
+          Monate angezeigt.
         </Form.Text>
         <Table striped hover responsive>
           <thead style={{ textAlign: "center" }}>

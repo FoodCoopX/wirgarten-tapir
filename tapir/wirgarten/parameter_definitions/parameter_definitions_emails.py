@@ -33,7 +33,7 @@ class ParameterDefinitionsEmails:
             label="Erklärungstext zu zusätzliche Adressen",
             datatype=TapirParameterDatatype.STRING,
             initial_value="""<p>
-        Du kannst hier zusätzliche Mail-Adressen hinzufügen. Alle Mailings werden dann nach der Bestätigung der neuen Emailadresse auch an diese versendet. An die neue Email-Adresse wird ein Bestätigungslink versendet.
+        Du kannst hier zusätzliche E-Mail-Adressen hinzufügen. Alle Mailings werden dann nach der Bestätigung der neuen E-Mail-Adresse auch an diese versendet. An die neue E-Mail-Adresse wird ein Bestätigungslink versendet.
 </p>""",
             description="Erklärungstext im Modal zu Zusätzliche Adressen im Mitgleiderbereich. "
             + HTML_ALLOWED_TEXT,

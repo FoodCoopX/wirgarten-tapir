@@ -37,7 +37,7 @@ class OrderValidator:
         for product, quantity in order.items():
             if product.type.force_waiting_list:
                 raise ValidationError(
-                    f"Bei {product.type.name}-Produkte sind nur Warteliste-Einträge möglich"
+                    f"Bei {product.type.name}-Produkten sind nur Wartelisteneinträge möglich."
                 )
 
         if cls.does_order_need_a_pickup_location(
@@ -57,7 +57,7 @@ class OrderValidator:
             ParameterKeys.DELIVERY_DONATION_FORWARD_TO_PICKUP_LOCATION, cache=cache
         ):
             raise ValidationError(
-                "Dieser Abholort kann nicht ausgewählt werden (Das ist die Spende-Sonder-Ort)."
+                "Dieser Abholort kann nicht ausgewählt werden (das ist der Sonder-Abholort für Spenden)."
             )
 
         product_type_ids_without_enough_capacity = GlobalCapacityChecker.get_product_type_ids_without_enough_capacity_for_order(
@@ -75,7 +75,7 @@ class OrderValidator:
             order=order, cache=cache
         ):
             raise ValidationError(
-                "Manche Produkte die nur einmal bestellt werden dürfen sind mehrmals in der Bestellung"
+                "Manche Produkte, die nur einmal bestellt werden dürfen, sind mehrmals in der Bestellung."
             )
 
         for product, quantity in order.items():
@@ -87,7 +87,7 @@ class OrderValidator:
                 cache=cache,
             ):
                 raise ValidationError(
-                    f"Folgende Produkt hat nicht genug Kapazität für diese Bestellung: {product.name}"
+                    f"Folgendes Produkt hat nicht genug Kapazität für diese Bestellung: {product.name}"
                 )
 
     @classmethod
