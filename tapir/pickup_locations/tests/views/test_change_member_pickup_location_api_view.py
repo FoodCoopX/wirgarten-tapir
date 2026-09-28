@@ -421,7 +421,7 @@ class TestChangeMemberPickupLocationApiView(TapirIntegrationTest):
             valid_from=datetime.datetime(year=1998, month=1, day=1)
         )
         new_pickup_location = PickupLocationFactory.create(
-            end_date=datetime.date(year=1998, month=6, day=1)
+            end_date=datetime.date(year=1998, month=5, day=31)
         )
         member = old_member_pickup_location.member
 

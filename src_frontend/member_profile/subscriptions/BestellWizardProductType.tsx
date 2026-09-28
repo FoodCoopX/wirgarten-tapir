@@ -462,6 +462,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
               step === steps.at(-1) ? getConfirmButtonText() : undefined
             }
             changesDisabled={false}
+            contractStartDate={selectedGrowingPeriod?.contractStartDate}
           />
         );
       case "9_banking_data":
@@ -512,7 +513,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
             pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
             studentStatusEnabled={false}
             waitingListEntryDetails={undefined}
-            contractStartDate={selectedGrowingPeriod?.contractStartDate!}
+            contractStartDate={selectedGrowingPeriod?.contractStartDate}
             singleProductType={productType}
             selectedGrowingPeriod={selectedGrowingPeriod}
             hideTrialPeriod={memberAlreadyHasASubscriptionForThisProductType}

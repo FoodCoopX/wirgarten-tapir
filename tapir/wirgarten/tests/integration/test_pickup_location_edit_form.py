@@ -57,10 +57,40 @@ class TestPickupLocationEditForm(TapirIntegrationTest):
 
     def test_clean_rejectsEndDateBeforeStartDate(self):
         form = PickupLocationEditForm(
-            _valid_data(start_date="2026-12-01", end_date="2026-01-01")
+            _valid_data(start_date="2026-12-01", end_date="2026-01-31")
         )
 
         self.assertFalse(form.is_valid())
         self.assertIn(
             "Ende darf nicht vor Beginn liegen.", form.errors.get("end_date", [])
         )
+
+    def test_clean_rejectsStartDateNotOnFirstOfMonth(self):
+        form = PickupLocationEditForm(_valid_data(start_date="2026-01-15"))
+
+        self.assertFalse(form.is_valid())
+        self.assertIn(
+            "Verteilstationen können nur am ersten Tag eines Monats geöffnet werden.",
+            form.errors.get("start_date", []),
+        )
+
+    def test_clean_acceptsStartDateOnFirstOfMonth(self):
+        form = PickupLocationEditForm(_valid_data(start_date="2026-01-01"))
+
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(datetime.date(2026, 1, 1), form.cleaned_data.get("start_date"))
+
+    def test_clean_rejectsEndDateNotOnLastOfMonth_reportsError(self):
+        form = PickupLocationEditForm(_valid_data(end_date="2026-12-01"))
+
+        self.assertFalse(form.is_valid())
+        self.assertIn(
+            "Verteilstationen können nur am letzten Tag eines Monats geschlossen werden.",
+            form.errors.get("end_date", []),
+        )
+
+    def test_clean_acceptsEndDateOnLastOfMonth_isValid(self):
+        form = PickupLocationEditForm(_valid_data(end_date="2026-12-31"))
+
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(datetime.date(2026, 12, 31), form.cleaned_data.get("end_date"))

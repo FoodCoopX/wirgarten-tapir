@@ -696,6 +696,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             changesDisabled={
               (waitingListEntryDetails?.pickupLocationWishes ?? []).length > 0
             }
+            contractStartDate={contractStartDate}
           />
         );
       case "5c_pickup_location_confirm_waiting_list":

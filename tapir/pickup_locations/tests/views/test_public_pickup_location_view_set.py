@@ -6,9 +6,13 @@ from rest_framework import status
 from tapir.subscriptions.services.contract_start_date_calculator import (
     ContractStartDateCalculator,
 )
+from tapir.utils.shortcuts import get_first_of_next_month, get_last_day_of_month
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import PickupLocationFactory
-from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
+from tapir.wirgarten.tests.test_utils import (
+    TapirIntegrationTest,
+    last_day_of_previous_month,
+)
 
 
 class TestPublicPickupLocationViewSet(TapirIntegrationTest):
@@ -54,8 +58,8 @@ class TestPublicPickupLocationViewSet(TapirIntegrationTest):
         )
 
     def test_publicList_plWithPastEndDate_isExcluded(self):
-        self.pickup_location_1.end_date = self.reference_date - datetime.timedelta(
-            days=1
+        self.pickup_location_1.end_date = last_day_of_previous_month(
+            self.reference_date
         )
         self.pickup_location_1.save()
         names = self._list_pickup_location_names(
@@ -64,8 +68,8 @@ class TestPublicPickupLocationViewSet(TapirIntegrationTest):
         self.assertEqual(["pickup_location_name_2", "pickup_location_name_3"], names)
 
     def test_publicList_plWithFutureStartDate_isExcluded(self):
-        self.pickup_location_1.start_date = self.reference_date + datetime.timedelta(
-            days=1
+        self.pickup_location_1.start_date = get_first_of_next_month(
+            self.reference_date + datetime.timedelta(days=1)
         )
         self.pickup_location_1.save()
         names = self._list_pickup_location_names(
@@ -74,14 +78,14 @@ class TestPublicPickupLocationViewSet(TapirIntegrationTest):
         self.assertEqual(["pickup_location_name_2", "pickup_location_name_3"], names)
 
     def test_publicList_plActiveWithinWindow_isIncluded(self):
-        self.pickup_location_1.start_date = self.reference_date - datetime.timedelta(
-            days=10
+        self.pickup_location_1.start_date = get_first_of_next_month(
+            self.reference_date - datetime.timedelta(days=30)
         )
-        self.pickup_location_1.end_date = self.reference_date + datetime.timedelta(
-            days=10
+        self.pickup_location_1.end_date = get_last_day_of_month(
+            self.reference_date + datetime.timedelta(days=10)
         )
-        self.pickup_location_2.end_date = self.reference_date - datetime.timedelta(
-            days=1
+        self.pickup_location_2.end_date = last_day_of_previous_month(
+            self.reference_date
         )
         self.pickup_location_1.save()
         self.pickup_location_2.save()

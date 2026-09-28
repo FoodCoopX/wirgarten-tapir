@@ -28,6 +28,9 @@ from tapir.bestell_wizard.services.bestell_wizard_order_fulfiller import (
 from tapir.bestell_wizard.services.bestell_wizard_order_validator import (
     BestellWizardOrderValidator,
 )
+from tapir.bestell_wizard.services.contract_start_date_with_pickup_location import (
+    ContractStartDateWithPickupLocation,
+)
 from tapir.bestell_wizard.services.questionnaire_source_service import (
     QuestionnaireSourceService,
 )
@@ -58,6 +61,7 @@ from tapir.subscriptions.services.global_capacity_checker import (
 from tapir.subscriptions.services.growing_period_choice_provider import (
     GrowingPeriodChoiceProvider,
 )
+from tapir.subscriptions.services.order_validator import OrderValidator
 from tapir.subscriptions.services.product_capacity_checker import ProductCapacityChecker
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.subscriptions.types import TapirOrder
@@ -302,14 +306,37 @@ class BestellWizardConfirmOrderApiView(APIView):
         validated_serializer_data: dict,
         cache: dict,
     ) -> Member:
-        contract_start_date = BestellWizardOrderValidator.validated_growing_period_and_get_contract_start_date(
-            validated_serializer_data["growing_period_id"], cache=cache
+        growing_period, contract_start_date = (
+            BestellWizardOrderValidator.get_growing_period_and_contract_start_date(
+                growing_period_id=validated_serializer_data["growing_period_id"],
+                cache=cache,
+            )
         )
+
+        order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
+            shopping_cart=validated_serializer_data["shopping_cart_order"], cache=cache
+        )
+
+        resolved_pickup_location = None
+        if OrderValidator.does_order_need_a_pickup_location(order=order, cache=cache):
+            resolved_pickup_location, contract_start_date = (
+                ContractStartDateWithPickupLocation.resolve_contract_start_date_for_pickup_location(
+                    pickup_location_ids=validated_serializer_data[
+                        "pickup_location_ids"
+                    ],
+                    order=order,
+                    contract_start_date=contract_start_date,
+                    growing_period=growing_period,
+                    cache=cache,
+                )
+            )
 
         BestellWizardOrderValidator.validate_order_and_user_data_and_distribution_channels(
             validated_serializer_data=validated_serializer_data,
             contract_start_date=contract_start_date,
             cache=cache,
+            pickup_location=resolved_pickup_location,
+            order=order,
         )
 
         return BestellWizardOrderFulfiller.create_member_and_fulfill_order(
@@ -317,6 +344,8 @@ class BestellWizardConfirmOrderApiView(APIView):
             contract_start_date=contract_start_date,
             request=request,
             cache=cache,
+            pickup_location=resolved_pickup_location,
+            order=order,
         )
 
     @classmethod
@@ -776,7 +805,9 @@ class BestellWizardDeliveryDatesForOrderApiView(APIView):
             )
             search_date = reference_date
             if pickup_location.start_date and pickup_location.start_date > search_date:
-                search_date = pickup_location.start_date
+                # Start one day before the availability date so that a delivery
+                # on the first day of availability is included.
+                search_date = pickup_location.start_date - datetime.timedelta(days=1)
 
             response_data[pickup_location_id] = {
                 product_type_id: DeliveryDateCalculator.get_next_delivery_date_for_product_type(

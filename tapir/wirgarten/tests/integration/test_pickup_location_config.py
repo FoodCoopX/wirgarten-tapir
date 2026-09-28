@@ -5,11 +5,11 @@ from unittest import mock
 from tapir.wirgarten.forms import pickup_location as pickup_location_module
 from tapir.wirgarten.forms.pickup_location import get_pickup_locations_map_data
 from tapir.wirgarten.parameters import ParameterDefinitions
-from tapir.wirgarten.tests.factories import Pickupickup_locationocationFactory
+from tapir.wirgarten.tests.factories import PickupLocationFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
-class TestPickupickup_locationocationConfig(TapirIntegrationTest):
+class TestPickupLocationConfig(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls) -> None:
         ParameterDefinitions().import_definitions(bulk_create=True)
@@ -33,7 +33,9 @@ class TestPickupickup_locationocationConfig(TapirIntegrationTest):
     def test_getPickupLocationsMapData_unexpectedValue_raisesTypeError(self):
         pickup_location = PickupLocationFactory.create(name="pl_with_non_serializable")
         with mock.patch.object(
-            pickup_location_module, "pickup_location_to_dict", return_value={"x": object()}
+            pickup_location_module,
+            "pickup_location_to_dict",
+            return_value={"x": object()},
         ):
             with self.assertRaises(TypeError):
                 get_pickup_locations_map_data([pickup_location], [], {})

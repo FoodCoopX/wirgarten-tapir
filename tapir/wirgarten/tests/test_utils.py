@@ -9,8 +9,16 @@ from django.utils import timezone
 from rest_framework.test import APIClient
 from tapir_mail.triggers.transactional_trigger import TransactionalTriggerData
 
+from tapir.utils.shortcuts import get_last_day_of_month
 from tapir.wirgarten.tapirmail import configure_mail_module
 from tapir.wirgarten.tests.factories import MemberFactory
+
+
+def last_day_of_previous_month(reference_date: datetime.date) -> datetime.date:
+    return get_last_day_of_month(
+        datetime.date(reference_date.year, reference_date.month, 1)
+        - datetime.timedelta(days=1)
+    )
 
 
 class TapirFactoryMixin:

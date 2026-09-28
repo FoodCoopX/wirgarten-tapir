@@ -115,13 +115,13 @@ export interface PickupLocation {
    */
   routeInfo?: string;
   /**
-   *
+   * Leer = ab sofort verfügbar. Neuanlagen nur am 1. des Monats möglich.
    * @type {Date}
    * @memberof PickupLocation
    */
   startDate?: Date | null;
   /**
-   *
+   * Leer = dauerhaft verfügbar. Schließen nur am letzten Tag eines Monats möglich.
    * @type {Date}
    * @memberof PickupLocation
    */
@@ -218,8 +218,14 @@ export function PickupLocationToJSONTyped(
     contact_name: value["contactName"],
     photo_link: value["photoLink"],
     route_info: value["routeInfo"],
-    start_date: value["startDate"],
-    end_date: value["endDate"],
+    start_date:
+      value["startDate"] == null
+        ? undefined
+        : (value["startDate"] as any).toISOString().substring(0, 10),
+    end_date:
+      value["endDate"] == null
+        ? undefined
+        : (value["endDate"] as any).toISOString().substring(0, 10),
     location_route: value["locationRoute"],
   };
 }

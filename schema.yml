@@ -11440,10 +11440,16 @@ components:
           type: string
           format: date
           nullable: true
+          title: Available from
+          description: Leer = ab sofort verfügbar. Neuanlagen nur am 1. des Monats
+            möglich.
         end_date:
           type: string
           format: date
           nullable: true
+          title: Available until
+          description: Leer = dauerhaft verfügbar. Schließen nur am letzten Tag eines
+            Monats möglich.
         location_route:
           type: string
           nullable: true
@@ -11962,6 +11968,13 @@ components:
         city:
           type: string
           maxLength: 50
+        start_date:
+          type: string
+          format: date
+          nullable: true
+          title: Available from
+          description: Leer = ab sofort verfügbar. Neuanlagen nur am 1. des Monats
+            möglich.
         opening_times:
           type: array
           items:

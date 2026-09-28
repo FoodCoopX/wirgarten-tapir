@@ -26,11 +26,14 @@ from tapir.utils.forms import DateInput
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import NO_DELIVERY, HTML_ALLOWED_TEXT
 from tapir.wirgarten.models import (
+    PICKUP_LOCATION_END_DATE_HELP_TEXT,
+    PICKUP_LOCATION_START_DATE_HELP_TEXT,
     PickupLocation,
     PickupLocationOpeningTime,
     Subscription,
     Member,
     LocationRoute,
+    validate_pickup_location_dates,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import (
@@ -359,13 +362,13 @@ class PickupLocationEditForm(forms.Form):
         self.fields["start_date"] = forms.DateField(
             label=_("Verfügbar ab"),
             required=False,
-            help_text="Leer = ab sofort verfügbar",
+            help_text=_(PICKUP_LOCATION_START_DATE_HELP_TEXT),
             widget=DateInput(),
         )
         self.fields["end_date"] = forms.DateField(
             label=_("Verfügbar bis"),
             required=False,
-            help_text="Leer = dauerhaft verfügbar",
+            help_text=_(PICKUP_LOCATION_END_DATE_HELP_TEXT),
             widget=DateInput(),
         )
 
@@ -543,6 +546,11 @@ class PickupLocationEditForm(forms.Form):
             self.add_error(
                 "end_date", ValidationError("Ende darf nicht vor Beginn liegen.")
             )
+
+        for field_name, message in validate_pickup_location_dates(
+            start_date, end_date
+        ).items():
+            self.add_error(field_name, ValidationError(message))
 
         return cleaned_data
 

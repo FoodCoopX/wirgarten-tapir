@@ -242,7 +242,7 @@ class TestBestellWizardDeliveryDatesForOrderApiView(TapirIntegrationTest):
         self,
     ):
         future_location = PickupLocationFactory.create(
-            start_date=datetime.date(2024, 7, 8)
+            start_date=datetime.date(2024, 8, 1)
         )
         PickupLocationOpeningTime.objects.create(
             pickup_location=future_location,
@@ -264,9 +264,9 @@ class TestBestellWizardDeliveryDatesForOrderApiView(TapirIntegrationTest):
 
         # The reference date is 2024-07-01. Without the start date the first
         # delivery would be on 2024-07-04. Since the location only becomes
-        # available on 2024-07-08, the first delivery is on 2024-07-11.
+        # available on 2024-08-01 (a Thursday), the first delivery is on 2024-08-01.
         self.assertEqual(
-            "2024-07-11",
+            "2024-08-01",
             response.json()["delivery_date_by_pickup_location_id_and_product_type_id"][
                 future_location.id
             ][self.product_weekly.type.id],

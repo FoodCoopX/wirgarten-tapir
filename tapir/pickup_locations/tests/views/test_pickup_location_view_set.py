@@ -6,12 +6,16 @@ from rest_framework import status
 from tapir.subscriptions.services.contract_start_date_calculator import (
     ContractStartDateCalculator,
 )
+from tapir.utils.shortcuts import get_first_of_next_month
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
     PickupLocationFactory,
 )
-from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
+from tapir.wirgarten.tests.test_utils import (
+    TapirIntegrationTest,
+    last_day_of_previous_month,
+)
 
 
 class TestPickupLocationViewSet(TapirIntegrationTest):
@@ -49,11 +53,11 @@ class TestPickupLocationViewSet(TapirIntegrationTest):
         self.assertStatusCode(response, status.HTTP_403_FORBIDDEN)
 
     def test_adminList_returnsAllPickupLocationsRegardlessOfDates(self):
-        self.pickup_location_1.end_date = self.reference_date - datetime.timedelta(
-            days=1
+        self.pickup_location_1.end_date = last_day_of_previous_month(
+            self.reference_date
         )
-        self.pickup_location_2.start_date = self.reference_date + datetime.timedelta(
-            days=1
+        self.pickup_location_2.start_date = get_first_of_next_month(
+            self.reference_date + datetime.timedelta(days=1)
         )
         self.pickup_location_1.save()
         self.pickup_location_2.save()

@@ -26,7 +26,7 @@ class TestBestellWizardBaseDataPickupLocations(TapirIntegrationTest):
             name="future", start_date=datetime.date(year=2024, month=8, day=1)
         )
         decommissioned = PickupLocationFactory.create(
-            name="decommissioned", end_date=datetime.date(year=2024, month=6, day=1)
+            name="decommissioned", end_date=datetime.date(year=2024, month=5, day=31)
         )
 
         response = self.client.get(reverse("bestell_wizard:bestell_wizard_base_data"))
@@ -36,3 +36,11 @@ class TestBestellWizardBaseDataPickupLocations(TapirIntegrationTest):
         self.assertIn(active.name, names)
         self.assertIn(future.name, names)
         self.assertNotIn(decommissioned.name, names)
+
+        pickup_locations_by_name = {
+            pl["name"]: pl for pl in response.json()["pickup_locations"]
+        }
+        self.assertEqual(
+            "2024-08-01", pickup_locations_by_name[future.name]["start_date"]
+        )
+        self.assertEqual(None, pickup_locations_by_name[active.name]["start_date"])

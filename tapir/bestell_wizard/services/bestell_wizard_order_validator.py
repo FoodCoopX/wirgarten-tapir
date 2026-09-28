@@ -50,6 +50,8 @@ class BestellWizardOrderValidator:
         validated_serializer_data: dict,
         contract_start_date: datetime.date,
         cache: dict,
+        pickup_location=None,
+        order=None,
     ):
         PersonalDataValidator.validate_personal_data_new_member(
             email=validated_serializer_data["personal_data"]["email"],
@@ -64,9 +66,11 @@ class BestellWizardOrderValidator:
         if not validated_serializer_data["sepa_allowed"]:
             raise ValidationError("SEPA-Mandat muss erlaubt sein")
 
-        order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
-            shopping_cart=validated_serializer_data["shopping_cart_order"], cache=cache
-        )
+        if order is None:
+            order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
+                shopping_cart=validated_serializer_data["shopping_cart_order"],
+                cache=cache,
+            )
 
         if (
             cls.is_contract_required(order=order, cache=cache)
@@ -90,6 +94,7 @@ class BestellWizardOrderValidator:
             contract_start_date=contract_start_date,
             order=order,
             cache=cache,
+            pickup_location=pickup_location,
         )
 
         if not SolidarityValidator.is_the_ordered_solidarity_allowed(
@@ -153,30 +158,31 @@ class BestellWizardOrderValidator:
         contract_start_date: datetime.date,
         order: TapirOrder,
         cache: dict,
+        pickup_location=None,
     ):
         if len(order) > 0 and get_parameter_value(
             ParameterKeys.BESTELLWIZARD_FORCE_WAITING_LIST, cache=cache
         ):
             raise ValidationError("Nur Warteliste-Einträge sind erlaubt.")
 
-        pickup_location = None
         if OrderValidator.does_order_need_a_pickup_location(order=order, cache=cache):
             if len(pickup_location_ids) == 0:
                 raise ValidationError(
                     "Diese Bestellung braucht eine Verteilstation, bitte wählt eine aus."
                 )
 
-            pickup_location = cls.get_first_pickup_location_with_enough_capacity(
-                pickup_location_ids=pickup_location_ids,
-                order=order,
-                member=None,
-                contract_start_date=contract_start_date,
-                cache=cache,
-            )
             if pickup_location is None:
-                raise ValidationError(
-                    "Keine der ausgewählte Verteilstationen hat genug Kapazität"
+                pickup_location = cls.get_first_pickup_location_with_enough_capacity(
+                    pickup_location_ids=pickup_location_ids,
+                    order=order,
+                    member=None,
+                    contract_start_date=contract_start_date,
+                    cache=cache,
                 )
+                if pickup_location is None:
+                    raise ValidationError(
+                        "Keine der ausgewählte Verteilstationen hat genug Kapazität"
+                    )
 
         OrderValidator.validate_order_general(
             order=order,
@@ -273,15 +279,26 @@ class BestellWizardOrderValidator:
     def validated_growing_period_and_get_contract_start_date(
         cls, growing_period_id: str, cache: dict
     ):
+        _, contract_start_date = cls.get_growing_period_and_contract_start_date(
+            growing_period_id, cache
+        )
+        return contract_start_date
+
+    @classmethod
+    def get_growing_period_and_contract_start_date(
+        cls, growing_period_id: str, cache: dict
+    ) -> tuple[GrowingPeriod, datetime.date]:
         growing_period = cls.get_and_validate_growing_period(growing_period_id, cache)
 
-        return (
+        contract_start_date = (
             ContractStartDateCalculator.get_next_contract_start_date_in_growing_period(
                 growing_period=growing_period,
                 apply_buffer_time=True,
                 cache=cache,
             )
         )
+
+        return growing_period, contract_start_date
 
     @classmethod
     def get_and_validate_growing_period(cls, growing_period_id: str, cache: dict):

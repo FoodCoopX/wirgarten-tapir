@@ -78,6 +78,7 @@ class PublicPickupLocationSerializer(serializers.ModelSerializer):
             "street_2",
             "postcode",
             "city",
+            "start_date",
             "opening_times",
             "current_delivery_charge",
         ]
