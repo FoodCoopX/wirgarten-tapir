@@ -76,7 +76,7 @@ class PickupLocationCfgView(PermissionRequiredMixin, generic.TemplateView):
 
         request = self.request
         context["search"] = request.GET.get("search", "")
-        context["show_inactive"] = request.GET.get("show_inactive") == "on"
+        context["show_ended"] = request.GET.get("show_ended") == "on"
 
         return context
 
@@ -93,8 +93,8 @@ class PickupLocationCfgView(PermissionRequiredMixin, generic.TemplateView):
                 | Q(city__icontains=search)
             )
 
-        if request.GET.get("show_inactive") != "on":
-            queryset = PickupLocationActiveFilter.get_active_at_date(
+        if request.GET.get("show_ended") != "on":
+            queryset = PickupLocationActiveFilter.get_not_ended_at_date(
                 queryset, get_today(cache={})
             )
 

@@ -25,10 +25,10 @@
             <div class="form-check mb-0">
                 <input type="checkbox"
                        class="form-check-input"
-                       name="show_inactive"
-                       id="show_inactive"
-                       {% if show_inactive %}checked{% endif %}>
-                <label class="form-check-label" for="show_inactive">Auch inaktive Abholorte anzeigen</label>
+                       name="show_ended"
+                       id="show_ended"
+                       {% if show_ended %}checked{% endif %}>
+                <label class="form-check-label" for="show_ended">Auch beendete Abholorte anzeigen</label>
             </div>
             <button type="submit" class="btn btn-primary btn-sm">Filtern</button>
             <a href="{% url 'wirgarten:pickup_locations' %}"
@@ -117,11 +117,11 @@
                                 </td>
                                 <td>
                                     {% if pl.start_date and pl.end_date %}
-                                        {{ pl.start_date|date:"d.m.Y" }} – {{ pl.end_date|date:"d.m.Y" }}
+                                        {{ pl.start_date|format_date }} – {{ pl.end_date|format_date }}
                                     {% elif pl.start_date %}
-                                        ab {{ pl.start_date|date:"d.m.Y" }}
+                                        ab {{ pl.start_date|format_date }}
                                     {% elif pl.end_date %}
-                                        bis {{ pl.end_date|date:"d.m.Y" }}
+                                        bis {{ pl.end_date|format_date }}
                                     {% else %}
                                         immer
                                     {% endif %}
