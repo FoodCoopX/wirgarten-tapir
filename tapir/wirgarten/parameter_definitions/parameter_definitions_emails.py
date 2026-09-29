@@ -47,3 +47,46 @@ class ParameterDefinitionsEmails:
             ),
         )
         order_priority -= 1
+
+        importer.parameter_definition(
+            key=ParameterKeys.ENABLE_BCC_FOR_MAIL_MODULE,
+            label="Kopien von Mails aus der Mail-Modul bekommen",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=False,
+            description="Wenn aktiviert können E-Mail-Adressen eingetragen werden die eine Kopie von alle massen- bzw. transaktionale Mails bekommen. So kann genau geprüft werden was die Mails beinhalten.",
+            category=ParameterCategory.MAIL,
+            order_priority=order_priority,
+        )
+        order_priority -= 1
+
+        importer.parameter_definition(
+            key=ParameterKeys.BCC_MAIL_MODULE_TRANSACTIONAL_MAILS,
+            label="E-Mail-Adresse als BCC für alle transaktionale Mails",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="",
+            description="Diese adresse bekommt eine Kopie von alle transaktionale Mails. Kann leer gelassen werden, dann wird keine Kopie versendet.",
+            category=ParameterCategory.MAIL,
+            order_priority=order_priority,
+            meta=ParameterMeta(
+                show_only_when=lambda cache: get_parameter_value(
+                    key=ParameterKeys.ENABLE_BCC_FOR_MAIL_MODULE, cache=cache
+                )
+            ),
+        )
+        order_priority -= 1
+
+        importer.parameter_definition(
+            key=ParameterKeys.BCC_MAIL_MODULE_MASS_MAILS,
+            label="E-Mail-Adresse als BCC für alle massen Mails",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="",
+            description="Diese adresse bekommt eine Kopie von alle massen Mails. Kann leer gelassen werden, dann wird keine Kopie versendet.",
+            category=ParameterCategory.MAIL,
+            order_priority=order_priority,
+            meta=ParameterMeta(
+                show_only_when=lambda cache: get_parameter_value(
+                    key=ParameterKeys.ENABLE_BCC_FOR_MAIL_MODULE, cache=cache
+                )
+            ),
+        )
+        order_priority -= 1
