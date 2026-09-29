@@ -46,7 +46,7 @@ class TestMemberBankDataApiView(TapirIntegrationTest):
         self.assertStatusCode(response, status.HTTP_403_FORBIDDEN)
 
     def test_get_memberTriesToGetOwnData_returnsCorrectData(self):
-        user = MemberFactory.create(is_superuser=False)
+        user = MemberFactory.create(is_superuser=False, phone_number="017726254738")
         self.client.force_login(user)
 
         url = reverse("coop:member_personal_data")
@@ -62,7 +62,7 @@ class TestMemberBankDataApiView(TapirIntegrationTest):
 
     def test_get_adminTriesToGetDataFromAnotherMember_returnsCorrectData(self):
         user = MemberFactory.create(is_superuser=True)
-        target = MemberFactory.create()
+        target = MemberFactory.create(phone_number="017726254738")
         self.client.force_login(user)
 
         url = reverse("coop:member_personal_data")
@@ -462,6 +462,79 @@ class TestMemberBankDataApiView(TapirIntegrationTest):
 
         mock_fire_action.assert_not_called()
         self.assertFalse(UpdateTapirUserLogEntry.objects.exists())
+
+    def test_get_memberHasNoPhoneNumber_returnsEmptyString(self):
+        user = MemberFactory.create(is_superuser=False, phone_number=None)
+        self.client.force_login(user)
+
+        url = reverse("coop:member_personal_data")
+        response = self.client.get(f"{url}?member_id={user.id}")
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assertEqual("", response.json()["phone_number"])
+
+    def test_get_default_returnsPhoneNumberRequiredParameter(self):
+        user = MemberFactory.create(is_superuser=False)
+        self.client.force_login(user)
+        url = reverse("coop:member_personal_data")
+
+        for value in [True, False]:
+            self._set_parameter(ParameterKeys.MEMBER_PHONE_NUMBER_REQUIRED, value)
+            response = self.client.get(f"{url}?member_id={user.id}")
+
+            self.assertStatusCode(response, status.HTTP_200_OK)
+            self.assertEqual(value, response.json()["phone_number_required"])
+
+    def _patch_phone_number(self, user, phone_number):
+        self.client.force_login(user)
+        return self.client.patch(
+            reverse("coop:member_personal_data"),
+            data={
+                "member_id": user.id,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "street": "test_street",
+                "street_2": "",
+                "email": user.email,
+                "phone_number": phone_number,
+                "postcode": "12345",
+                "city": "test_city",
+                "is_student": False,
+            },
+            content_type="application/json",
+        )
+
+    @patch.object(TransactionalTrigger, "fire_action")
+    def test_patch_phoneNumberEmptyAndRequired_dontApplyChangesAndReturnsError(
+        self, mock_fire_action: Mock
+    ):
+        self._set_parameter(ParameterKeys.MEMBER_PHONE_NUMBER_REQUIRED, True)
+        user = MemberFactory.create(is_superuser=False, phone_number="017726254738")
+
+        response = self._patch_phone_number(user, "")
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        response_content = response.json()
+        self.assertFalse(response_content["order_confirmed"])
+        self.assertEqual("Bitte gib eine Telefonnummer an.", response_content["error"])
+        user.refresh_from_db()
+        self.assertEqual("017726254738", user.phone_number)
+        mock_fire_action.assert_not_called()
+
+    @patch.object(TransactionalTrigger, "fire_action")
+    def test_patch_phoneNumberEmptyAndNotRequired_removesPhoneNumber(
+        self, mock_fire_action: Mock
+    ):
+        self._set_parameter(ParameterKeys.MEMBER_PHONE_NUMBER_REQUIRED, False)
+        user = MemberFactory.create(is_superuser=False, phone_number="017726254738")
+
+        response = self._patch_phone_number(user, "")
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assert_order_confirmed(response.json())
+        user.refresh_from_db()
+        self.assertFalse(user.phone_number)
+        mock_fire_action.assert_called_once()
 
     @patch.object(TransactionalTrigger, "fire_action")
     def test_patch_normalMemberTriesToChangeStudentStatus_dontApplyChangesAndReturnError(

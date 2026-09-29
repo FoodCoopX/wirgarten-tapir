@@ -474,7 +474,7 @@ class MemberPersonalDataApiView(APIView):
                     "first_name": member.first_name,
                     "last_name": member.last_name,
                     "email": member.email,
-                    "phone_number": member.phone_number,
+                    "phone_number": member.phone_number or "",
                     "street": member.street,
                     "street_2": member.street_2,
                     "postcode": member.postcode,
@@ -488,6 +488,9 @@ class MemberPersonalDataApiView(APIView):
                         ParameterKeys.SITE_EMAIL, cache=self.cache
                     ),
                     "member_number": self.get_formatted_member_number(member),
+                    "phone_number_required": get_parameter_value(
+                        ParameterKeys.MEMBER_PHONE_NUMBER_REQUIRED, cache=self.cache
+                    ),
                 }
             ).data
         )
@@ -539,7 +542,8 @@ class MemberPersonalDataApiView(APIView):
 
         try:
             PersonalDataValidator.validate_phone_number_is_valid(
-                serializer.validated_data.get("phone_number")
+                phone_number=serializer.validated_data["phone_number"],
+                cache=self.cache,
             )
             if serializer.validated_data["email"] != member.email:
                 PersonalDataValidator.validate_email_address_not_in_use(

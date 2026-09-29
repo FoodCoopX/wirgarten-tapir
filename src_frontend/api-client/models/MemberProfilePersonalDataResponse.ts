@@ -108,6 +108,12 @@ export interface MemberProfilePersonalDataResponse {
    * @memberof MemberProfilePersonalDataResponse
    */
   memberNumber: string;
+  /**
+   *
+   * @type {boolean}
+   * @memberof MemberProfilePersonalDataResponse
+   */
+  phoneNumberRequired: boolean;
 }
 
 /**
@@ -135,6 +141,11 @@ export function instanceOfMemberProfilePersonalDataResponse(
   if (!("contactEmail" in value) || value["contactEmail"] === undefined)
     return false;
   if (!("memberNumber" in value) || value["memberNumber"] === undefined)
+    return false;
+  if (
+    !("phoneNumberRequired" in value) ||
+    value["phoneNumberRequired"] === undefined
+  )
     return false;
   return true;
 }
@@ -168,6 +179,7 @@ export function MemberProfilePersonalDataResponseFromJSONTyped(
     canEditCountry: json["can_edit_country"],
     contactEmail: json["contact_email"],
     memberNumber: json["member_number"],
+    phoneNumberRequired: json["phone_number_required"],
   };
 }
 
@@ -201,5 +213,6 @@ export function MemberProfilePersonalDataResponseToJSONTyped(
     can_edit_country: value["canEditCountry"],
     contact_email: value["contactEmail"],
     member_number: value["memberNumber"],
+    phone_number_required: value["phoneNumberRequired"],
   };
 }

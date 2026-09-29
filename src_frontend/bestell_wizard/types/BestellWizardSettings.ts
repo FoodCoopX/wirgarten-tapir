@@ -26,6 +26,7 @@ export type BestellWizardSettings = {
   trialPeriodLengthInWeeks: number;
   paymentRhythmChoices: { [key: string]: string };
   studentStatusAllowed: boolean;
+  phoneNumberRequired: boolean;
   introEnabled: boolean;
   productTypeIdsThatAreAlreadyAtCapacity: string[];
   productIdsThatAreAlreadyAtCapacity: string[];
