@@ -79,9 +79,9 @@ class TestExtendedProductViewGet(TapirIntegrationTest):
         self,
     ):
         member = MemberFactory.create(is_superuser=True)
-        TapirParameter.objects.filter(
-            key=ParameterKeys.ORGANISATION_LEGAL_STATUS
-        ).update(value=LEGAL_STATUS_ASSOCIATION)
+        self._set_parameter(
+            ParameterKeys.ORGANISATION_LEGAL_STATUS, LEGAL_STATUS_ASSOCIATION
+        )
         self.client.force_login(member)
         product = ProductFactory.create(min_coop_shares=2)
 
