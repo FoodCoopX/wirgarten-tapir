@@ -127,6 +127,18 @@ export interface PickupLocation {
    */
   routeInfo?: string;
   /**
+   * Leer = ab sofort verfügbar. Neuanlagen nur am 1. des Monats möglich.
+   * @type {Date}
+   * @memberof PickupLocation
+   */
+  startDate?: Date | null;
+  /**
+   * Leer = dauerhaft verfügbar. Schließen nur am letzten Tag eines Monats möglich.
+   * @type {Date}
+   * @memberof PickupLocation
+   */
+  endDate?: Date | null;
+  /**
    *
    * @type {string}
    * @memberof PickupLocation
@@ -190,6 +202,9 @@ export function PickupLocationFromJSONTyped(
         ? undefined
         : json["show_details_in_basket_totals_export"],
     routeInfo: json["route_info"] == null ? undefined : json["route_info"],
+    startDate:
+      json["start_date"] == null ? undefined : new Date(json["start_date"]),
+    endDate: json["end_date"] == null ? undefined : new Date(json["end_date"]),
     locationRoute:
       json["location_route"] == null ? undefined : json["location_route"],
   };
@@ -227,6 +242,14 @@ export function PickupLocationToJSONTyped(
     show_details_in_basket_totals_export:
       value["showDetailsInBasketTotalsExport"],
     route_info: value["routeInfo"],
+    start_date:
+      value["startDate"] == null
+        ? undefined
+        : (value["startDate"] as any).toISOString().substring(0, 10),
+    end_date:
+      value["endDate"] == null
+        ? undefined
+        : (value["endDate"] as any).toISOString().substring(0, 10),
     location_route: value["locationRoute"],
   };
 }

@@ -40,6 +40,7 @@ interface Step5BPickupLocationChoiceProps {
   orderLoading: boolean;
   nextButtonTextOverride?: string;
   changesDisabled: boolean;
+  contractStartDate: Date | undefined;
 }
 
 function getTabName(tab: PickupLocationTab) {
@@ -73,6 +74,7 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
   nextButtonTextOverride,
   orderLoading,
   changesDisabled,
+  contractStartDate,
 }) => {
   const [showValidation, setShowValidation] = useState(false);
   const carouselRef = useRef<CarouselRef>(null);
@@ -227,6 +229,7 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
               productTypeIdsOverCapacity={productTypeIdsOverCapacity}
               productIdsOverCapacity={productIdsOverCapacity}
               changesDisabled={changesDisabled}
+              contractStartDate={contractStartDate}
             />
           </div>
         </Carousel.Item>
@@ -247,6 +250,7 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
             productTypesInWaitingList={productTypesInWaitingList}
             shoppingCart={shoppingCart}
             changesDisabled={changesDisabled}
+            contractStartDate={contractStartDate}
           />
         </Carousel.Item>
         {showTabWishes() && (

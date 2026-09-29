@@ -4,10 +4,12 @@ import { PublicPickupLocation, PublicProductType } from "../../api-client";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { buildFilteredShoppingCart } from "../../bestell_wizard/utils/buildFilteredShoppingCart.ts";
 import { formatOpeningTimes } from "../../bestell_wizard/utils/formatOpeningTimes.ts";
+import { isPickupLocationFuture } from "../../bestell_wizard/utils/pickupLocationContractStart.ts";
 import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
 import formatAddress from "../../utils/formatAddress.ts";
 import { buildDeliveryChargeBadge } from "../utils/buildDeliveryChargeBadge.tsx";
 import { getFirstDelivery } from "../utils/getFirstDelivery.ts";
+import PickupLocationFutureHint from "./PickupLocationFutureHint.tsx";
 
 interface Step5BPickupLocationListProps {
   pickupLocations: PublicPickupLocation[];
@@ -23,6 +25,7 @@ interface Step5BPickupLocationListProps {
   productTypesInWaitingList: Set<PublicProductType>;
   shoppingCart: ShoppingCart;
   changesDisabled: boolean;
+  contractStartDate: Date | undefined;
 }
 
 const Step5BPickupLocationList: React.FC<Step5BPickupLocationListProps> = ({
@@ -37,6 +40,7 @@ const Step5BPickupLocationList: React.FC<Step5BPickupLocationListProps> = ({
   shoppingCart,
   productTypesInWaitingList,
   changesDisabled,
+  contractStartDate,
 }) => {
   function getClassForPickupLocationListItem(
     pickupLocation: PublicPickupLocation,
@@ -63,6 +67,10 @@ const Step5BPickupLocationList: React.FC<Step5BPickupLocationListProps> = ({
 
     if (pickupLocationsWithCapacityFull.has(pickupLocation)) {
       return <span className={"text-danger"}>Ausgelastet</span>;
+    }
+
+    if (isPickupLocationFuture(pickupLocation, contractStartDate)) {
+      return <PickupLocationFutureHint pickupLocation={pickupLocation} />;
     }
 
     let freeCapacityText;
@@ -128,12 +136,19 @@ const Step5BPickupLocationList: React.FC<Step5BPickupLocationListProps> = ({
     <ListGroup style={{ maxHeight: "50dvh", overflow: "scroll" }}>
       {pickupLocations.toSorted(sortPickupLocations).map((pickupLocation) => {
         const deliveryChargeBadge = buildDeliveryChargeBadge(pickupLocation);
+        const isFuture = isPickupLocationFuture(pickupLocation, contractStartDate);
         return (
           <ListGroupItem
             key={pickupLocation.id}
             style={{
               cursor: changesDisabled ? "" : "pointer",
               lineHeight: "1.1rem",
+              backgroundColor:
+                !changesDisabled &&
+                !selectedPickupLocations.includes(pickupLocation) &&
+                isFuture
+                  ? "#fff3cd"
+                  : undefined,
             }}
             onClick={
               changesDisabled

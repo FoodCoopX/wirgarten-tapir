@@ -29,6 +29,9 @@ from tapir.pickup_locations.services.member_pickup_location_getter import (
 from tapir.pickup_locations.services.member_pickup_location_setter import (
     MemberPickupLocationSetter,
 )
+from tapir.pickup_locations.services.pickup_location_active_filter import (
+    PickupLocationActiveFilter,
+)
 from tapir.pickup_locations.services.pickup_location_capacity_general_checker import (
     PickupLocationCapacityGeneralChecker,
 )
@@ -238,8 +241,13 @@ class PublicPickupLocationViewSet(viewsets.ReadOnlyModelViewSet):
         self.cache = {}
 
     def get_queryset(self):
+        reference_date = ContractStartDateCalculator.get_next_contract_start_date(
+            reference_date=get_today(cache=self.cache),
+            apply_buffer_time=False,
+            cache=self.cache,
+        )
         return PublicPickupLocationProvider.get_pickup_locations_available_for_members(
-            cache=self.cache
+            cache=self.cache, reference_date=reference_date
         )
 
     def get_serializer_context(self):
@@ -287,9 +295,17 @@ class PickupLocationCapacityCheckApiView(APIView):
                 cache=self.cache,
             )
 
+        candidates = (
+            PublicPickupLocationProvider.get_pickup_locations_available_for_members(
+                cache=self.cache,
+                reference_date=subscription_start,
+                include_future=True,
+            )
+        )
+
         pickup_location_ids_with_enough_capacity_for_order = [
             pickup_location.id
-            for pickup_location in PickupLocation.objects.all()
+            for pickup_location in candidates
             if PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
                 pickup_location=pickup_location,
                 order=order,
@@ -445,6 +461,13 @@ class ChangeMemberPickupLocationApiView(APIView):
         ):
             raise ValidationError(
                 "Dieser Abholort kann nicht ausgewählt werden (das ist der Sonder-Abholort für Spenden)."
+            )
+
+        if not PickupLocationActiveFilter.get_active_at_date(
+            PickupLocation.objects.filter(id=new_pickup_location.id), valid_from
+        ).exists():
+            raise ValidationError(
+                "Dieser Abholort ist für den gewählten Zeitpunkt nicht verfügbar."
             )
 
         subscriptions = (

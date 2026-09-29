@@ -70,6 +70,12 @@ export interface PublicPickupLocation {
    */
   city: string;
   /**
+   * Leer = ab sofort verfügbar. Neuanlagen nur am 1. des Monats möglich.
+   * @type {Date}
+   * @memberof PublicPickupLocation
+   */
+  startDate?: Date | null;
+  /**
    *
    * @type {Array<PickupLocationOpeningTime>}
    * @memberof PublicPickupLocation
@@ -133,6 +139,8 @@ export function PublicPickupLocationFromJSONTyped(
     street2: json["street_2"] == null ? undefined : json["street_2"],
     postcode: json["postcode"],
     city: json["city"],
+    startDate:
+      json["start_date"] == null ? undefined : new Date(json["start_date"]),
     openingTimes: (json["opening_times"] as Array<any>).map(
       PickupLocationOpeningTimeFromJSON,
     ),
@@ -165,5 +173,9 @@ export function PublicPickupLocationToJSONTyped(
     street_2: value["street2"],
     postcode: value["postcode"],
     city: value["city"],
+    start_date:
+      value["startDate"] == null
+        ? undefined
+        : (value["startDate"] as any).toISOString().substring(0, 10),
   };
 }

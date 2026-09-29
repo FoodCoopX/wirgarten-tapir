@@ -27,6 +27,11 @@ import { doesWaitingListHaveProductType } from "../utils/doesWaitingListHaveProd
 import { getAssociationMembershipTypeMonthlyPriceFormatted } from "../utils/getAssociationMembershipTypeMonthlyPriceFormatted.ts";
 import { getFirstPickupLocationWithCapacity } from "../utils/getFirstPickupLocationWithCapacity.ts";
 import {
+  getEffectiveContractStartDate,
+  isPickupLocationFuture,
+} from "../../bestell_wizard/utils/pickupLocationContractStart.ts";
+import PickupLocationFutureHint from "../components/PickupLocationFutureHint.tsx";
+import {
   getProductById,
   getProductByIdGlobal,
 } from "../utils/getProductByIdGlobal.ts";
@@ -41,7 +46,7 @@ interface Step10OrderSummaryProps {
   numberOfCoopShares: number;
   studentStatusEnabled: boolean;
   goToNextStep: () => void;
-  contractStartDate: Date;
+  contractStartDate: Date | undefined;
   firstDeliveryDatesByPickupLocationAndProductType: {
     [key: string]: { [key: string]: Date };
   };
@@ -96,6 +101,17 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
   useEffect(() => {
     setActivePickupLocation(getRelevantPickupLocation());
   }, [selectedPickupLocations]);
+
+  const effectiveContractStartDate = getEffectiveContractStartDate(
+    contractStartDate,
+    activePickupLocation,
+    selectedGrowingPeriod?.endDate,
+  );
+  const isContractStartPushed =
+    !!activePickupLocation &&
+    isPickupLocationFuture(activePickupLocation, contractStartDate);
+  const isPickupLocationBeyondGrowingPeriod =
+    isContractStartPushed && effectiveContractStartDate === undefined;
 
   function getRelevantPickupLocation(): PublicPickupLocation | undefined {
     if (waitingListEntryDetails === undefined) {
@@ -282,8 +298,41 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                       ) : (
                         <>
                           <li>
-                            Vertragsstart:{" "}
-                            {formatDateNumeric(contractStartDate)}
+                            {isPickupLocationBeyondGrowingPeriod ? (
+                              <div className="small">
+                                <PickupLocationFutureHint
+                                  pickupLocation={activePickupLocation}
+                                  fontSize="0.9rem"
+                                  variant="danger"
+                                >
+                                  Die Verteilstation ist erst nach dem Ende der
+                                  gewählten Vertragsperiode verfügbar. Bitte
+                                  wähle eine passende Vertragsperiode.
+                                </PickupLocationFutureHint>
+                              </div>
+                            ) : (
+                              <>
+                                Vertragsstart:{" "}
+                                {formatDateNumeric(effectiveContractStartDate)}
+                                {isContractStartPushed && (
+                                  <div className="small">
+                                    <PickupLocationFutureHint
+                                      pickupLocation={activePickupLocation}
+                                      fontSize="0.9rem"
+                                    >
+                                      Der Vertragsstart wurde verschoben, da die
+                                      Verteilstation erst ab{" "}
+                                      {formatDateNumeric(
+                                        new Date(
+                                          activePickupLocation.startDate!,
+                                        ),
+                                      )}{" "}
+                                      verfügbar ist.
+                                    </PickupLocationFutureHint>
+                                  </div>
+                                )}
+                              </>
+                            )}
                           </li>
                           {!productType.noDelivery && (
                             <>
