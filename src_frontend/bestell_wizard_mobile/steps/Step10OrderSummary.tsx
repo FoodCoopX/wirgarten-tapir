@@ -21,7 +21,6 @@ import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
 import { Step } from "../types/Step.ts";
-import { atLeastOneMonthlyPayment } from "../utils/atLeastOneMonthlyPayment.ts";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import { doesWaitingListHaveProductType } from "../utils/doesWaitingListHaveProductType.ts";
 import { getAssociationMembershipTypeMonthlyPriceFormatted } from "../utils/getAssociationMembershipTypeMonthlyPriceFormatted.ts";
@@ -342,19 +341,7 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
               </li>
             ))}
           </ul>
-        </>,
-      );
-    }
-
-    if (
-      atLeastOneMonthlyPayment(
-        shoppingCart,
-        productTypesInWaitingList,
-        solidarityContribution,
-      )
-    ) {
-      segments.push(
-        <>
+          <hr />
           Zahlungsintervall:{" "}
           {getPaymentRhythmDisplay(personalData.paymentRhythm)}
         </>,
