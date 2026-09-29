@@ -403,7 +403,7 @@ class TestMemberBankDataApiView(TapirIntegrationTest):
         self.assertTrue(response_content["order_confirmed"])
 
         user.refresh_from_db()
-        self.assertFalse(user.phone_number_landline)
+        self.assertIsNone(user.phone_number_landline)
 
     @patch.object(TransactionalTrigger, "fire_action")
     def test_patch_secondPhoneNumberIsInvalid_dontApplyChangesAndReturnsError(

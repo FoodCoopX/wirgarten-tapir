@@ -572,6 +572,7 @@ class MemberPersonalDataApiView(APIView):
             simple_fields += ["first_name", "last_name"]
         for field in simple_fields:
             setattr(member, field, serializer.validated_data.get(field))
+        member.phone_number_landline = member.phone_number_landline or None
 
         if student_status_enabled:
             member.is_student = serializer.validated_data["is_student"]
