@@ -541,12 +541,10 @@ class MemberPersonalDataApiView(APIView):
         )
 
         try:
-            phone_number = serializer.validated_data["phone_number"]
-            PersonalDataValidator.validate_phone_number_given_if_required(
-                phone_number=phone_number, cache=self.cache
+            PersonalDataValidator.validate_phone_number_is_valid(
+                phone_number=serializer.validated_data["phone_number"],
+                cache=self.cache,
             )
-            if phone_number:
-                PersonalDataValidator.validate_phone_number_is_valid(phone_number)
             if serializer.validated_data["email"] != member.email:
                 PersonalDataValidator.validate_email_address_not_in_use(
                     email=serializer.validated_data["email"],

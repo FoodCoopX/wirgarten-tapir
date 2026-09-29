@@ -813,10 +813,8 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         self.assertStatusCode(response, 200)
         return response.json()
 
-    @patch.object(OnboardingTrigger, "on_subscription_updated", autospec=True)
-    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_orderWithoutPhoneNumberAndPhoneNumberRequired_returnOrderNotConfirmedAndDontCreateMember(
-        self, *_
+        self,
     ):
         self._set_parameter(ParameterKeys.MEMBER_PHONE_NUMBER_REQUIRED, True)
 
@@ -828,10 +826,8 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         self.assertEqual("Bitte gib eine Telefonnummer an.", response_content["error"])
         self.assertFalse(Member.objects.exists())
 
-    @patch.object(OnboardingTrigger, "on_subscription_updated", autospec=True)
-    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_orderWithoutPhoneNumberAndPhoneNumberNotRequired_memberCreatedWithoutPhoneNumber(
-        self, *_
+        self,
     ):
         self._set_parameter(ParameterKeys.MEMBER_PHONE_NUMBER_REQUIRED, False)
 
@@ -842,9 +838,8 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         self.assert_order_confirmed(response_content)
         self.assertFalse(Member.objects.get().phone_number)
 
-    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_waitingListEntryWithoutPhoneNumberAndPhoneNumberRequired_returnOrderNotConfirmedAndDontCreateEntry(
-        self, _
+        self,
     ):
         self._set_parameter(ParameterKeys.MEMBER_PHONE_NUMBER_REQUIRED, True)
 
@@ -856,9 +851,8 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         self.assertEqual("Bitte gib eine Telefonnummer an.", response_content["error"])
         self.assertFalse(WaitingListEntry.objects.exists())
 
-    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_waitingListEntryWithoutPhoneNumberAndPhoneNumberNotRequired_createsEntryWithoutPhoneNumber(
-        self, _
+        self,
     ):
         self._set_parameter(ParameterKeys.MEMBER_PHONE_NUMBER_REQUIRED, False)
 

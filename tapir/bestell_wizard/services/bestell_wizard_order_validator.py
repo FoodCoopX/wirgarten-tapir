@@ -60,10 +60,6 @@ class BestellWizardOrderValidator:
             check_waiting_list=True,
             payment_rhythm=validated_serializer_data["payment_rhythm"],
         )
-        PersonalDataValidator.validate_phone_number_given_if_required(
-            phone_number=validated_serializer_data["personal_data"]["phone_number"],
-            cache=cache,
-        )
 
         if not validated_serializer_data["sepa_allowed"]:
             raise ValidationError("SEPA-Mandat muss erlaubt sein")

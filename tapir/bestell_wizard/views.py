@@ -335,7 +335,7 @@ class BestellWizardConfirmOrderApiView(APIView):
             number_of_coop_shares=validated_serializer_data["number_of_coop_shares"],
             cache=cache,
         )
-        PersonalDataValidator.validate_phone_number_given_if_required(
+        PersonalDataValidator.validate_phone_number_is_valid(
             phone_number=validated_serializer_data["personal_data"]["phone_number"],
             cache=cache,
         )

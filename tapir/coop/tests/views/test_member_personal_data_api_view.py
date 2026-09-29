@@ -531,9 +531,7 @@ class TestMemberBankDataApiView(TapirIntegrationTest):
         response = self._patch_phone_number(user, "")
 
         self.assertStatusCode(response, status.HTTP_200_OK)
-        response_content = response.json()
-        self.assertTrue(response_content["order_confirmed"])
-        self.assertIsNone(response_content["error"])
+        self.assert_order_confirmed(response.json())
         user.refresh_from_db()
         self.assertFalse(user.phone_number)
         mock_fire_action.assert_called_once()

@@ -20,7 +20,7 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
 class TestValidateAndCreateWaitingListEntryPotentialMember(TapirUnitTest):
     @patch.object(
         PersonalDataValidator,
-        "validate_phone_number_given_if_required",
+        "validate_phone_number_is_valid",
         autospec=True,
     )
     @patch.object(
@@ -45,7 +45,7 @@ class TestValidateAndCreateWaitingListEntryPotentialMember(TapirUnitTest):
         mock_validate_creation_of_waiting_list_entry_for_a_potential_member: Mock,
         mock_create_entry_potential_member: Mock,
         mock_send_confirmation_mail: Mock,
-        mock_validate_phone_number_given_if_required: Mock,
+        mock_validate_phone_number_is_valid: Mock,
     ):
         cache = Mock()
         shopping_cart_waiting_list = Mock()
@@ -82,7 +82,7 @@ class TestValidateAndCreateWaitingListEntryPotentialMember(TapirUnitTest):
             number_of_coop_shares=7,
             cache=cache,
         )
-        mock_validate_phone_number_given_if_required.assert_called_once_with(
+        mock_validate_phone_number_is_valid.assert_called_once_with(
             phone_number="test_phone_number", cache=cache
         )
         mock_create_entry_potential_member.assert_called_once_with(

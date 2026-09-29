@@ -30,8 +30,7 @@ class PersonalDataValidator:
         cls.validate_email_address_not_in_use(
             email, cache=cache, check_waiting_list=check_waiting_list
         )
-        if phone_number:
-            cls.validate_phone_number_is_valid(phone_number)
+        cls.validate_phone_number_is_valid(phone_number, cache=cache)
 
         IBANValidator()(iban)
 
@@ -46,17 +45,14 @@ class PersonalDataValidator:
             )
 
     @classmethod
-    def validate_phone_number_given_if_required(cls, phone_number: str, cache: dict):
-        if phone_number.strip() != "":
+    def validate_phone_number_is_valid(cls, phone_number: str, cache: dict):
+        if phone_number.strip() == "":
+            if get_parameter_value(
+                key=ParameterKeys.MEMBER_PHONE_NUMBER_REQUIRED, cache=cache
+            ):
+                raise ValidationError("Bitte gib eine Telefonnummer an.")
             return
 
-        if get_parameter_value(
-            key=ParameterKeys.MEMBER_PHONE_NUMBER_REQUIRED, cache=cache
-        ):
-            raise ValidationError("Bitte gib eine Telefonnummer an.")
-
-    @classmethod
-    def validate_phone_number_is_valid(cls, phone_number: str):
         try:
             phone_number = phonenumbers.parse(phone_number, "DE")
             if not phonenumbers.is_possible_number(

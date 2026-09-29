@@ -275,7 +275,6 @@ class ParameterKeys:
     )
     BESTELLWIZARD_STEP10_FLAG_STUDENT = f"{PREFIX}.bestellwizard.step10.flag_student"
     BESTELLWIZARD_STEP10_TEXT_STUDENT = f"{PREFIX}.bestellwizard.step10.text_student"
-    MEMBER_PHONE_NUMBER_REQUIRED = f"{PREFIX}.member.phone_number_required"
     ENABLE_EXTRA_MAIL_ADDRESSES = f"{PREFIX}.emails.enable_extra_mail_addresses"
     EXPLANATION_TEXT_EXTRA_MAIL_ADDRESSES = (
         f"{PREFIX}.emails.explanation_text_extra_mail_addresses"
@@ -301,6 +300,7 @@ class ParameterKeys:
     MEMBER_NUMBER_ZERO_PAD_LENGTH = f"{PREFIX}.member.number.zero_pad_length"
     MEMBER_NUMBER_START_VALUE = f"{PREFIX}.member.number.start_value"
     MEMBER_NUMBER_ONLY_AFTER_TRIAL = f"{PREFIX}.member.number.only_after_trial"
+    MEMBER_PHONE_NUMBER_REQUIRED = f"{PREFIX}.member.phone_number_required"
     ASSOCIATIONS_ALLOW_SUPPORTING_MEMBERSHIP = (
         f"{PREFIX}.associations.allow_supporting_membership"
     )

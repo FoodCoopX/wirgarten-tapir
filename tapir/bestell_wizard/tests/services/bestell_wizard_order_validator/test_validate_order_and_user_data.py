@@ -15,40 +15,6 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 class TestValidateOrderAndUserData(TapirUnitTest):
     @patch.object(
-        PersonalDataValidator,
-        "validate_phone_number_given_if_required",
-        autospec=True,
-    )
-    @patch.object(
-        PersonalDataValidator, "validate_personal_data_new_member", autospec=True
-    )
-    def test_validateOrderAndUserData_default_checksIfPhoneNumberIsRequired(
-        self,
-        _: Mock,
-        mock_validate_phone_number_given_if_required: Mock,
-    ):
-        data = {
-            "personal_data": {
-                "email": "test_mail",
-                "phone_number": "test_phone_number",
-                "iban": "test_iban",
-                "account_owner": "test_account_owner",
-            },
-            "payment_rhythm": "test_payment_rhythm",
-            "sepa_allowed": False,
-        }
-        cache = Mock()
-
-        with self.assertRaises(ValidationError):
-            BestellWizardOrderValidator.validate_order_and_user_data_and_distribution_channels(
-                validated_serializer_data=data, contract_start_date=Mock(), cache=cache
-            )
-
-        mock_validate_phone_number_given_if_required.assert_called_once_with(
-            phone_number="test_phone_number", cache=cache
-        )
-
-    @patch.object(
         PersonalDataValidator, "validate_personal_data_new_member", autospec=True
     )
     def test_validateOrderAndUserData_sepaNotAllowed_raisesValidationError(
