@@ -50,10 +50,10 @@ class ParameterDefinitionsEmails:
 
         importer.parameter_definition(
             key=ParameterKeys.ENABLE_BCC_FOR_MAIL_MODULE,
-            label="Kopien von Mails aus der Mail-Modul bekommen",
+            label="BCC-Kopien von Mails aus Tapir erhalten",
             datatype=TapirParameterDatatype.BOOLEAN,
             initial_value=False,
-            description="Wenn aktiviert können E-Mail-Adressen eingetragen werden die eine Kopie von alle massen- bzw. transaktionale Mails bekommen. So kann genau geprüft werden was die Mails beinhalten.",
+            description="Wenn aktiviert, können weitere E-Mail-Adressen eingetragen werden, die eine Kopie von allen aus Tapir versendeten transaktionalen Mails und/oder Massenmails erhalten. So könnt ihr u.a. den Versand und genauen Inhalt der Mails prüfen.",
             category=ParameterCategory.MAIL,
             order_priority=order_priority,
         )
@@ -64,7 +64,7 @@ class ParameterDefinitionsEmails:
             label="E-Mail-Adresse als BCC für alle transaktionale Mails",
             datatype=TapirParameterDatatype.STRING,
             initial_value="",
-            description="Diese adresse bekommt eine Kopie von alle transaktionale Mails. Kann leer gelassen werden, dann wird keine Kopie versendet.",
+            description="Diese Adresse erhält eine Kopie aller versendeten transaktionalen Mails. Hier wird auch der Tokenwert mit ausgegeben. Ihr erhaltet die Mail also so, wie das Mitglied.",
             category=ParameterCategory.MAIL,
             order_priority=order_priority,
             meta=ParameterMeta(
@@ -77,10 +77,10 @@ class ParameterDefinitionsEmails:
 
         importer.parameter_definition(
             key=ParameterKeys.BCC_MAIL_MODULE_MASS_MAILS,
-            label="E-Mail-Adresse als BCC für alle massen Mails",
+            label="E-Mail-Adresse als BCC für alle Massenmails",
             datatype=TapirParameterDatatype.STRING,
             initial_value="",
-            description="Diese adresse bekommt eine Kopie von alle massen Mails. Kann leer gelassen werden, dann wird keine Kopie versendet.",
+            description="Diese Adresse erhält eine Kopie aller versendeten Massenmails. Wenn das Feld leer bleibt, dann wird keine Kopie an euch versendet (empfohlen).",
             category=ParameterCategory.MAIL,
             order_priority=order_priority,
             meta=ParameterMeta(
