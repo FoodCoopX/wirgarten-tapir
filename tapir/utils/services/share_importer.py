@@ -85,6 +85,13 @@ class ShareImporter:
             ),
         )
 
+        if transaction.transaction_type in [
+            CoopShareTransaction.CoopShareTransactionType.PURCHASE,
+            CoopShareTransaction.CoopShareTransactionType.TRANSFER_IN,
+        ] and transaction_valid_at <= get_today(cache={}):
+            member.has_received_membership_started_mail = True
+            member.save()
+
         cls.create_or_update_payment_if_necessary(transaction)
 
         return MEMBER_IMPORT_STATUS_CREATED
