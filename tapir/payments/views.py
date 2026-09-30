@@ -402,8 +402,7 @@ class GetPastMemberPaymentsApiView(APIView):
         # e.g. it was paid out early) - a settled credit must always show
         # up somewhere, and it's deliberately hidden from the future view.
         member_credits = MemberCredit.objects.filter(
-            Q(due_date__lte=get_today(cache=self.cache))
-            | Q(settled_on__isnull=False),
+            Q(due_date__lte=get_today(cache=self.cache)) | Q(settled_on__isnull=False),
             member_id=member_id,
         ).order_by("-due_date")
 

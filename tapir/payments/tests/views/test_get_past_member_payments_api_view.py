@@ -206,9 +206,7 @@ class TestGetPastMemberPaymentsAPIView(TapirIntegrationTest):
         past_url = f"{past_url}?member_id={member.id}"
         past_response = self.client.get(past_url)
         self.assertStatusCode(past_response, 200)
-        past_credit_ids = {
-            credit["id"] for credit in past_response.json()["credits"]
-        }
+        past_credit_ids = {credit["id"] for credit in past_response.json()["credits"]}
 
         future_url = reverse("payments:member_future_payments")
         future_url = f"{future_url}?member_id={member.id}"
