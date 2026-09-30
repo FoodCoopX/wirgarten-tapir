@@ -73,7 +73,7 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der BestellWizard",
+          "Fehler beim Laden des BestellWizards",
           setToastDatas,
         ),
       );

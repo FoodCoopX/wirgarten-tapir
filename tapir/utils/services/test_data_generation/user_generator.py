@@ -83,6 +83,8 @@ class UserGenerator:
     def get_user_count(cls, organization: Organization):
         if organization == Organization.BIOTOP:
             return 250
+        if organization == Organization.BAKERY:
+            return 60
         return 200
 
     @classmethod

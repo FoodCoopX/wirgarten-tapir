@@ -74,7 +74,7 @@ const UsedDonationsTable: React.FC<UsedDonationsTableProps> = ({
                           }
                         >
                           Du musst bis zum {getWeekdayDisplay(weekdayLimit)}{" "}
-                          Mitternacht die Spende absagen
+                          Mitternacht die Spende absagen.
                         </Tooltip>
                       }
                     >

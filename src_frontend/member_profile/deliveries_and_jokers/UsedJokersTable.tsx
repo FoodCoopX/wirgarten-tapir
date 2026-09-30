@@ -70,7 +70,7 @@ const UsedJokersTable: React.FC<UsedJokersTableProps> = ({
                           id={"tooltip-" + jokerWithCancellation.joker.id}
                         >
                           Du musst bis zum {getWeekdayDisplay(weekdayLimit)}{" "}
-                          Mitternacht den Joker absagen
+                          Mitternacht den Joker absagen.
                         </Tooltip>
                       }
                     >

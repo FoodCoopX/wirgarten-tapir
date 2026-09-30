@@ -28,6 +28,14 @@ if (domNodeDeliveryListCard) {
       areDonationsEnabled={
         domNodeDeliveryListCard.dataset.donationsEnabled === "true"
       }
+      canChangePickupLocation={
+        domNodeDeliveryListCard.dataset.canChangePickupLocation === "true"
+      }
+      membersCanChangePickupLocationThemselves={
+        domNodeDeliveryListCard.dataset
+          .membersCanChangePickupLocationThemselves === "true"
+      }
+      adminContactEmail={domNodeDeliveryListCard.dataset.adminContactEmail!}
       csrfToken={getCsrfToken()}
     />,
   );
@@ -85,6 +93,10 @@ if (domNodeSolidarityCard) {
     <MemberProfileSolidarityContributionCard
       memberId={domNodeSolidarityCard.dataset.memberId!}
       adminEmail={domNodeSolidarityCard.dataset.adminEmail!}
+      adminVersion={domNodeSolidarityCard.dataset.userIsAdmin === "True"}
+      membersCanChangeContribution={
+        domNodeSolidarityCard.dataset.membersCanChangeContribution === "True"
+      }
     />,
   );
 } else {

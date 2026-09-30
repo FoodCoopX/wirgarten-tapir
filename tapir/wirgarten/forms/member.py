@@ -57,8 +57,15 @@ class PersonalDataForm(FormWithRequestMixin, ModelForm):
 
         super(PersonalDataForm, self).__init__(*args, **kwargs)
         for k, v in self.fields.items():
-            if k not in ["street_2", "is_student", "birthdate"]:
+            if k not in [
+                "street_2",
+                "is_student",
+                "birthdate",
+                "phone_number",
+                "pseudonym",
+            ]:
                 v.required = True
+        self.fields["phone_number"].required = False
 
         self.fields["first_name"].disabled = not can_edit_name_and_birthdate
         self.fields["last_name"].disabled = not can_edit_name_and_birthdate
@@ -73,6 +80,11 @@ class PersonalDataForm(FormWithRequestMixin, ModelForm):
         self.fields["country"].label = _("Land")
         self.fields["birthdate"].label = _("Geburtsdatum")
 
+        self.fields["pseudonym"].label = _("Pseudonym (optional)")
+        self.fields["pseudonym"].help_text = _(
+            "Dieser Name erscheint auf der Abholliste anstelle deines echten Namens."
+        )
+
         if self.request and not self.request.user.has_perm(Permission.Accounts.MANAGE):
             self.fields["is_student"].disabled = True
         self.fields["is_student"].label = get_parameter_value(
@@ -84,6 +96,7 @@ class PersonalDataForm(FormWithRequestMixin, ModelForm):
         fields = [
             "first_name",
             "last_name",
+            "pseudonym",
             "email",
             "phone_number",
             "street",
@@ -413,7 +426,11 @@ class SubscriptionRenewalForm(Form):
     def __init__(self, *args, **kwargs):
         super().__init__(
             *args,
-            **{k: v for k, v in kwargs.items() if k not in ["start_date", "member_id"]},
+            **{
+                k: v
+                for k, v in kwargs.items()
+                if k not in ["start_date", "member_id", "actor"]
+            },
         )
         self.start_date = kwargs["start_date"]
         self.cache = {}

@@ -263,7 +263,7 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         errors = response.json()["errors"]
         self.assertEqual(1, len(errors), errors)
         self.assertEqual(
-            "Du kannst keine Zusatzabos beziehen wenn du das Basis-Abo kündigst.",
+            "Du kannst keine Zusatzabos beziehen, wenn du das Basis-Abo kündigst.",
             errors[0],
         )
         mock_cancel_subscriptions.assert_not_called()
@@ -471,7 +471,7 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         self.assertStatusCode(response, 200)
         self.assertEqual(1, len(response_content["errors"]))
         self.assertEqual(
-            "Folgende Kündigungsgrund ist nicht gültig: reason4, gültige Gründe sind: ['reason1', 'reason2']",
+            "Folgender Kündigungsgrund ist nicht gültig: reason4, gültige Gründe sind: ['reason1', 'reason2']",
             response_content["errors"][0],
         )
         mock_fire_action.assert_not_called()
@@ -778,7 +778,7 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         response_content = response.json()
         self.assert_cancellation_not_confirmed(
             response_content,
-            "Es ist nur möglich die Vereinsmitgliedschaft zu beenden wenn du alle Verträge auch kündigst.",
+            "Es ist nur möglich, die Vereinsmitgliedschaft zu beenden, wenn du auch alle Verträge kündigst.",
         )
 
         membership = AssociationMembership.objects.get()

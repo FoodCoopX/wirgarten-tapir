@@ -3,7 +3,6 @@ from decimal import Decimal
 from pathlib import Path
 
 from django.core.exceptions import ValidationError
-from icecream import ic
 from lxml import etree
 from lxml.etree import Element
 from nanoid import generate
@@ -84,7 +83,6 @@ class Pain008XmlGenerator:
     @classmethod
     def replace_special_characters(cls, document_as_string: str):
         # Unidecode converts ö to o, not oe, so we convert german characters first.
-        ic(document_as_string)
         replacements = {
             "Ö": "Oe",
             "ö": "oe",

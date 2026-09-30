@@ -5,6 +5,7 @@ export function getEmptyPersonalData(): PersonalData {
     firstName: "",
     lastName: "",
     email: "",
+    emailConfirm: "",
     phoneNumber: "",
     street: "",
     street2: "",

@@ -1,10 +1,12 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ButtonGroup, Carousel, ToggleButton } from "react-bootstrap";
 import { CarouselRef } from "react-bootstrap/Carousel";
 import { MapRef } from "react-leaflet/MapContainer";
 import { PublicPickupLocation, type PublicProductType } from "../../api-client";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
+import DeliveryDayTabs from "../../components/DeliveryDayTabs.tsx";
+import { getUniqueDeliveryDays } from "../../utils/getUniqueDeliveryDays.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
 import Step5BPickupLocationList from "../components/Step5BPickupLocationList.tsx";
 import Step5BPickupLocationMap from "../components/Step5BPickupLocationMap.tsx";
@@ -75,6 +77,23 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
   const [showValidation, setShowValidation] = useState(false);
   const carouselRef = useRef<CarouselRef>(null);
   const [mapRef, setMapRef] = useState<MapRef>(null);
+  const [selectedDeliveryDay, setSelectedDeliveryDay] = useState<number | null>(
+    null,
+  );
+
+  const availableDeliveryDays = useMemo(
+    () => getUniqueDeliveryDays(settings.pickupLocations),
+    [settings.pickupLocations],
+  );
+
+  const filteredPickupLocations = useMemo(() => {
+    if (selectedDeliveryDay === null) {
+      return settings.pickupLocations;
+    }
+    return settings.pickupLocations.filter(
+      (loc) => loc.deliveryDay === selectedDeliveryDay,
+    );
+  }, [settings.pickupLocations, selectedDeliveryDay]);
 
   useEffect(() => {
     if (!stepActive) {
@@ -149,6 +168,14 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
 
   return (
     <>
+      <DeliveryDayTabs
+        availableDays={availableDeliveryDays}
+        selectedDay={selectedDeliveryDay}
+        onSelectDay={(day) => {
+          setSelectedDeliveryDay(day);
+          setSelectedPickupLocations([]);
+        }}
+      />
       <ButtonGroup style={{ width: "100%" }}>
         {ALL_PICKUP_LOCATION_TABS.filter(
           (tab) => tab !== "wishes" || showTabWishes(),
@@ -183,7 +210,7 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
         <Carousel.Item style={{ position: "absolute", inset: 0 }}>
           <div style={{ position: "absolute", inset: 0 }}>
             <Step5BPickupLocationMap
-              pickupLocations={settings.pickupLocations}
+              pickupLocations={filteredPickupLocations}
               selectedPickupLocations={selectedPickupLocations}
               setSelectedPickupLocations={setSelectedPickupLocations}
               stepIsActive={stepActive}
@@ -205,7 +232,7 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
         </Carousel.Item>
         <Carousel.Item>
           <Step5BPickupLocationList
-            pickupLocations={settings.pickupLocations}
+            pickupLocations={filteredPickupLocations}
             selectedPickupLocations={selectedPickupLocations}
             setSelectedPickupLocations={setSelectedPickupLocations}
             pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}

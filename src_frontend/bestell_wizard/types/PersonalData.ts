@@ -2,6 +2,7 @@ export type PersonalData = {
   firstName: string;
   lastName: string;
   email: string;
+  emailConfirm: string;
   phoneNumber: string;
   street: string;
   street2: string;

@@ -105,7 +105,7 @@ class SubscriptionListFilter(FilterSet):
         widget=CheckboxInput,
     )
     show_only_ended_contracts = BooleanFilter(
-        label=_("Nur ausgelaufene Verträge anzeigen"),
+        label=_("Innerhalb der Vertragsperiode beendete Verträge anzeigen"),
         field_name="show_only_ended_contracts",
         method="filter_show_only_ended_contracts",
         widget=CheckboxInput,
@@ -302,6 +302,7 @@ class ExportSubscriptionList(View):
                 "Vorname",
                 "Nachname",
                 "Email",
+                "Telefon",
                 "Abgeschlossen am",
                 "Gekündigt am",
                 "Vertragsbeginn",
@@ -323,6 +324,7 @@ class ExportSubscriptionList(View):
                         sub.member.first_name,
                         sub.member.last_name,
                         sub.member.email,
+                        sub.member.phone_number,
                         format_date(sub.created_at),
                         format_date(sub.cancellation_ts),
                         format_date(sub.start_date),
@@ -340,7 +342,9 @@ class ExportSubscriptionList(View):
         return response
 
     def get_queryset(self):
-        return SubscriptionListView.get_queryset_external(cache=self.cache)
+        return SubscriptionListView.get_queryset_external(
+            cache=self.cache
+        ).select_related("member")
 
     def get_filterset_class(self):
         return SubscriptionListFilter

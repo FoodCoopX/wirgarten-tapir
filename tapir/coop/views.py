@@ -141,7 +141,7 @@ class ExistingMemberPurchasesSharesApiView(APIView):
         if serializer.validated_data["as_admin"] and not request.user.has_perm(
             Permission.Coop.MANAGE
         ):
-            raise PermissionDenied("Du hast hast die nötige Berechtigung nicht.")
+            raise PermissionDenied("Du hast die nötige Berechtigung nicht.")
 
         iban = serializer.validated_data.get("iban", None)
         account_owner = serializer.validated_data.get("account_owner", None)
@@ -445,6 +445,8 @@ class MemberBankDataApiView(APIView):
 
 
 class MemberPersonalDataApiView(APIView):
+    ALLOWED_COUNTRIES = ["DE", "AT"]
+
     def __init__(self, **kwargs):
         self.cache = {}
         super().__init__(**kwargs)
@@ -473,6 +475,7 @@ class MemberPersonalDataApiView(APIView):
                     "last_name": member.last_name,
                     "email": member.email,
                     "phone_number": member.phone_number,
+                    "phone_number_landline": member.phone_number_landline,
                     "street": member.street,
                     "street_2": member.street_2,
                     "postcode": member.postcode,
@@ -480,6 +483,8 @@ class MemberPersonalDataApiView(APIView):
                     "is_student": is_student,
                     "can_edit_student": self.user_can_edit_student_status(request.user),
                     "can_edit_name": self.user_can_edit_name(request.user),
+                    "country": str(member.country),
+                    "can_edit_country": self.user_can_edit_country(request.user),
                     "contact_email": get_parameter_value(
                         ParameterKeys.SITE_EMAIL, cache=self.cache
                     ),
@@ -494,6 +499,10 @@ class MemberPersonalDataApiView(APIView):
 
     @classmethod
     def user_can_edit_student_status(cls, user):
+        return user.has_perm(Permission.Coop.MANAGE)
+
+    @classmethod
+    def user_can_edit_country(cls, user):
         return user.has_perm(Permission.Coop.MANAGE)
 
     def get_formatted_member_number(self, member: Member) -> str:
@@ -533,6 +542,10 @@ class MemberPersonalDataApiView(APIView):
             PersonalDataValidator.validate_phone_number_is_valid(
                 serializer.validated_data.get("phone_number")
             )
+            if serializer.validated_data.get("phone_number_landline"):
+                PersonalDataValidator.validate_phone_number_is_valid(
+                    serializer.validated_data["phone_number_landline"]
+                )
             if serializer.validated_data["email"] != member.email:
                 PersonalDataValidator.validate_email_address_not_in_use(
                     email=serializer.validated_data["email"],
@@ -547,6 +560,14 @@ class MemberPersonalDataApiView(APIView):
                 raise DjangoValidationError(
                     "Nur Admins dürfen den Studenten-Status ändern."
                 )
+            if (
+                self.user_can_edit_country(request.user)
+                and serializer.validated_data.get("country")
+                not in self.ALLOWED_COUNTRIES
+            ):
+                raise DjangoValidationError(
+                    f"Das Land muss eines von {', '.join(self.ALLOWED_COUNTRIES)} sein."
+                )
         except DjangoValidationError as error:
             return Response(
                 OrderConfirmationResponseSerializer(
@@ -557,6 +578,7 @@ class MemberPersonalDataApiView(APIView):
         simple_fields = [
             "email",
             "phone_number",
+            "phone_number_landline",
             "street",
             "street_2",
             "postcode",
@@ -564,8 +586,11 @@ class MemberPersonalDataApiView(APIView):
         ]
         if self.user_can_edit_name(request.user):
             simple_fields += ["first_name", "last_name"]
+        if self.user_can_edit_country(request.user):
+            simple_fields.append("country")
         for field in simple_fields:
             setattr(member, field, serializer.validated_data.get(field))
+        member.phone_number_landline = member.phone_number_landline or None
 
         if student_status_enabled:
             member.is_student = serializer.validated_data["is_student"]

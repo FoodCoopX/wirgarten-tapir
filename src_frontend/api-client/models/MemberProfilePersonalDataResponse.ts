@@ -47,6 +47,12 @@ export interface MemberProfilePersonalDataResponse {
    * @type {string}
    * @memberof MemberProfilePersonalDataResponse
    */
+  phoneNumberLandline?: string | null;
+  /**
+   *
+   * @type {string}
+   * @memberof MemberProfilePersonalDataResponse
+   */
   street: string;
   /**
    *
@@ -89,6 +95,18 @@ export interface MemberProfilePersonalDataResponse {
    * @type {string}
    * @memberof MemberProfilePersonalDataResponse
    */
+  country: string;
+  /**
+   *
+   * @type {boolean}
+   * @memberof MemberProfilePersonalDataResponse
+   */
+  canEditCountry: boolean;
+  /**
+   *
+   * @type {string}
+   * @memberof MemberProfilePersonalDataResponse
+   */
   contactEmail: string;
   /**
    *
@@ -117,6 +135,9 @@ export function instanceOfMemberProfilePersonalDataResponse(
     return false;
   if (!("canEditName" in value) || value["canEditName"] === undefined)
     return false;
+  if (!("country" in value) || value["country"] === undefined) return false;
+  if (!("canEditCountry" in value) || value["canEditCountry"] === undefined)
+    return false;
   if (!("contactEmail" in value) || value["contactEmail"] === undefined)
     return false;
   if (!("memberNumber" in value) || value["memberNumber"] === undefined)
@@ -142,6 +163,10 @@ export function MemberProfilePersonalDataResponseFromJSONTyped(
     lastName: json["last_name"],
     email: json["email"],
     phoneNumber: json["phone_number"],
+    phoneNumberLandline:
+      json["phone_number_landline"] == null
+        ? undefined
+        : json["phone_number_landline"],
     street: json["street"],
     street2: json["street_2"],
     postcode: json["postcode"],
@@ -149,6 +174,8 @@ export function MemberProfilePersonalDataResponseFromJSONTyped(
     isStudent: json["is_student"] == null ? undefined : json["is_student"],
     canEditStudent: json["can_edit_student"],
     canEditName: json["can_edit_name"],
+    country: json["country"],
+    canEditCountry: json["can_edit_country"],
     contactEmail: json["contact_email"],
     memberNumber: json["member_number"],
   };
@@ -173,6 +200,7 @@ export function MemberProfilePersonalDataResponseToJSONTyped(
     last_name: value["lastName"],
     email: value["email"],
     phone_number: value["phoneNumber"],
+    phone_number_landline: value["phoneNumberLandline"],
     street: value["street"],
     street_2: value["street2"],
     postcode: value["postcode"],
@@ -180,6 +208,8 @@ export function MemberProfilePersonalDataResponseToJSONTyped(
     is_student: value["isStudent"],
     can_edit_student: value["canEditStudent"],
     can_edit_name: value["canEditName"],
+    country: value["country"],
+    can_edit_country: value["canEditCountry"],
     contact_email: value["contactEmail"],
     member_number: value["memberNumber"],
   };

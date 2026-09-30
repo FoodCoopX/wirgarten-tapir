@@ -17,7 +17,7 @@ export function getCurrentMembership(memberships: AssociationMembership[]) {
       <ul>
         <li>
           {membership.type.name} seit dem{" "}
-          {formatDateNumeric(membership.startDate)}{" "}
+          {formatDateNumeric(membership.startDate)}
           {membership.endDate && (
             <span>, endet am {formatDateNumeric(membership.endDate)}</span>
           )}

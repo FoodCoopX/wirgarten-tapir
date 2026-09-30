@@ -175,6 +175,15 @@ class MemberFilter(FilterSet):
             ("-coop_shares_total_value", "⮟ Genoanteile"),
             ("monthly_payment", "⮝ Umsatz"),
             ("-monthly_payment", "⮟ Umsatz"),
+            (
+                MemberSolidarityContributionService.ANNOTATION_CURRENT_MEMBER_CONTRIBUTION,
+                "⮝ Solidarbeitrag",
+            ),
+            (
+                "-"
+                + MemberSolidarityContributionService.ANNOTATION_CURRENT_MEMBER_CONTRIBUTION,
+                "⮟ Solidarbeitrag",
+            ),
         ),
         required=True,
         empty_label=None,
@@ -199,7 +208,11 @@ class MemberFilter(FilterSet):
 
         super().__init__(data, *args, **kwargs)
 
-        if get_next_growing_period(cache=self.cache) is None:
+        if get_parameter_value(
+            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=self.cache
+        ):
+            del self.form.fields["contract_status"]
+        elif get_next_growing_period(cache=self.cache) is None:
             w = self.form.fields["contract_status"].widget
             w.attrs["disabled"] = True
             w.attrs["title"] = "Es gibt noch keine neue Vertragsperiode!"

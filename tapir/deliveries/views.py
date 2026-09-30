@@ -12,6 +12,7 @@ from tapir_mail.triggers.transactional_trigger import (
     TransactionalTriggerData,
 )
 
+from tapir.bakery.services.breaddelivery_service import BreadDeliveryService
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.apps import DeliveriesConfig
 from tapir.deliveries.config import DELIVERY_DONATION_MODE_DISABLED
@@ -72,7 +73,7 @@ class GetMemberDeliveriesView(APIView):
         )
 
         return Response(
-            DeliverySerializer(deliveries, many=True).data,
+            DeliverySerializer(deliveries, many=True, context={"cache": cache}).data,
             status=status.HTTP_200_OK,
         )
 
@@ -214,7 +215,7 @@ class CancelJokerView(APIView):
             joker, reference_date=get_today(cache=cache), cache=cache
         ):
             return Response(
-                f"Es ist zu spät um dieses Joker abzusagen. Heute: {format_date(get_today(cache=cache))}, Joker: {format_date(joker.date)}",
+                f"Es ist zu spät, um diesen Joker abzusagen. Heute: {format_date(get_today(cache=cache))}, Joker: {format_date(joker.date)}",
                 status=status.HTTP_403_FORBIDDEN,
             )
 
@@ -260,7 +261,7 @@ class CancelDeliveryDonationView(APIView):
 
         if not DeliveryDonationManager.can_donation_be_cancelled(donation, cache=cache):
             return Response(
-                f"Es ist zu spät um diese Spende abzusagen. Heute: {format_date(get_today(cache=cache))}, Spende: {format_date(donation.date)}",
+                f"Es ist zu spät, um diese Spende abzusagen. Heute: {format_date(get_today(cache=cache))}, Spende: {format_date(donation.date)}",
                 status=status.HTTP_403_FORBIDDEN,
             )
 
@@ -311,7 +312,7 @@ class UseJokerView(APIView):
             member, date, cache=cache
         ):
             return Response(
-                "Du darfst an dem Liefertag kein Joker einsetzen",
+                "Du darfst an diesem Liefertag keinen Joker einsetzen.",
                 status=status.HTTP_403_FORBIDDEN,
             )
 
@@ -495,6 +496,8 @@ class GrowingPeriodWithDeliveryDayAdjustmentsView(APIView):
                     ]
                 ]
             )
+
+        BreadDeliveryService.resync_bread_deliveries_for_growing_period(growing_period)
 
         return Response(
             "OK",

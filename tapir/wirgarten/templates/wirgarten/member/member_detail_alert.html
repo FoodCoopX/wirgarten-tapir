@@ -6,7 +6,7 @@
     <h4 class="alert-heading">Kündigung eingegangen</h4>
     <p>
         Deine Kündigung zum
-        <strong id="cancellation_date"></strong> ist eingangen und hiermit bestätigt.
+        <strong id="cancellation_date"></strong> ist eingegangen und hiermit bestätigt.
     </p>
     <hr>
     <div style="float:right">
@@ -32,9 +32,9 @@
 <div id="email-changed-confirmation"
      style="display:none"
      class="alert alert-success">
-    <h4 class="alert-heading">Deine Email Adresse wurde geändert</h4>
+    <h4 class="alert-heading">Deine E-Mail-Adresse wurde geändert</h4>
     <p>
-        Wir kontaktieren dich jetzt nur noch über <strong>{{ object.email }}</strong>
+        Wir kontaktieren dich jetzt nur noch über <strong>{{ object.email }}</strong>.
     </p>
     <hr>
     <div style="float:right">
@@ -64,7 +64,7 @@
         <h4 class="alert-heading">Probezeitraum</h4>
         <p>
             Du hast bis zum
-            <strong>{{ next_trial_end_date|format_date }}</strong> die Möglichkeit deine Verträge während der Probezeit zu kündigen.
+            <strong>{{ next_trial_end_date|format_date }}</strong> die Möglichkeit, deine Verträge während der Probezeit zu kündigen.
         </p>
         {% for sub in subscriptions_in_trial %}
             - {{ sub }}
@@ -124,7 +124,7 @@
                     <p>
                         Schön, dass du deinen Erntevertrag verlängern möchtest!
                         <br />
-                        Du kannst deine aktuellen Ernteanteile und Zusatzverträge verlängern, oder eine andere Konstellation wählen.
+                        Du kannst deine aktuellen Ernteanteile und Zusatzverträge verlängern oder eine andere Konstellation wählen.
                     </p>
                     <hr />
                     {% for type, subs in subscriptions.items %}

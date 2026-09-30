@@ -53,6 +53,12 @@ export interface PatchedMemberProfilePersonalDataRequestRequest {
    * @type {string}
    * @memberof PatchedMemberProfilePersonalDataRequestRequest
    */
+  phoneNumberLandline?: string | null;
+  /**
+   *
+   * @type {string}
+   * @memberof PatchedMemberProfilePersonalDataRequestRequest
+   */
   street?: string;
   /**
    *
@@ -72,6 +78,12 @@ export interface PatchedMemberProfilePersonalDataRequestRequest {
    * @memberof PatchedMemberProfilePersonalDataRequestRequest
    */
   city?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PatchedMemberProfilePersonalDataRequestRequest
+   */
+  country?: string;
   /**
    *
    * @type {boolean}
@@ -112,10 +124,15 @@ export function PatchedMemberProfilePersonalDataRequestRequestFromJSONTyped(
     email: json["email"] == null ? undefined : json["email"],
     phoneNumber:
       json["phone_number"] == null ? undefined : json["phone_number"],
+    phoneNumberLandline:
+      json["phone_number_landline"] == null
+        ? undefined
+        : json["phone_number_landline"],
     street: json["street"] == null ? undefined : json["street"],
     street2: json["street_2"] == null ? undefined : json["street_2"],
     postcode: json["postcode"] == null ? undefined : json["postcode"],
     city: json["city"] == null ? undefined : json["city"],
+    country: json["country"] == null ? undefined : json["country"],
     isStudent: json["is_student"] == null ? undefined : json["is_student"],
   };
 }
@@ -140,10 +157,12 @@ export function PatchedMemberProfilePersonalDataRequestRequestToJSONTyped(
     last_name: value["lastName"],
     email: value["email"],
     phone_number: value["phoneNumber"],
+    phone_number_landline: value["phoneNumberLandline"],
     street: value["street"],
     street_2: value["street2"],
     postcode: value["postcode"],
     city: value["city"],
+    country: value["country"],
     is_student: value["isStudent"],
   };
 }

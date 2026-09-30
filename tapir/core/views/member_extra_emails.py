@@ -40,7 +40,7 @@ from tapir.wirgarten.utils import check_permission_or_self, get_now
 
 
 class MemberExtraEmailApiView(APIView):
-    FEATURE_DISABLED_MESSAGE = "Dieses Funktionalität ist ausgeschaltet."
+    FEATURE_DISABLED_MESSAGE = "Diese Funktion ist ausgeschaltet."
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

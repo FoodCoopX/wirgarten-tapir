@@ -3,6 +3,10 @@ import React, { useEffect, useState } from "react";
 import { Form, Modal, Spinner } from "react-bootstrap";
 import { v4 as uuidv4 } from "uuid";
 import { CoopApi } from "../../api-client";
+import {
+  emailsMatch,
+  shouldShowEmailMismatchWarning,
+} from "../../bestell_wizard/utils/emailsMatch.ts";
 import { isEmailValid } from "../../bestell_wizard/utils/isEmailValid.ts";
 import { isPhoneNumberValid } from "../../bestell_wizard/utils/isPhoneNumberValid.ts";
 import { isPersonalDataValidShort } from "../../bestell_wizard_mobile/utils/isPersonalDataValidShort.ts";
@@ -21,6 +25,8 @@ interface MemberPersonalDataModalProps {
   onHide: () => void;
 }
 
+const COUNTRY_OPTIONS = ["DE", "AT"];
+
 const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
   memberId,
   csrfToken,
@@ -35,11 +41,15 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [emailConfirm, setEmailConfirm] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [phoneNumberLandline, setPhoneNumberLandline] = useState("");
   const [street, setStreet] = useState("");
   const [street2, setStreet2] = useState("");
   const [postcode, setPostcode] = useState("");
   const [city, setCity] = useState("");
+  const [country, setCountry] = useState("");
+  const [canEditCountry, setCanEditCountry] = useState(false);
   const [isStudent, setIsStudent] = useState<boolean>();
   const [studentStatusEnabled, setStudentStatusEnabled] = useState(false);
   const [canEditStudent, setCanEditStudent] = useState(false);
@@ -64,30 +74,47 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
     </>
   );
 
+  const countryHelpText = canEditCountry ? (
+    <>
+      Nur änderbar durch dich als Admin. Das Mitglied sieht das Feld, kann es
+      aber nicht ändern.
+    </>
+  ) : (
+    <>
+      Du kannst nicht selbstständig dein Land verändern. Bitte wende dich an
+      deinen Betrieb (<a href={`mailto:${contactEmail}`}>{contactEmail}</a>).
+    </>
+  );
+
   const emailHelpText = canEditName ? (
     <>
-      Änderst du die Email hier direkt als Admin, gilt dieselbe Logik wie beim
-      Mitglied selbst: Ist die aktuelle Adresse bereits verifiziert, wird die
-      neue Adresse nicht sofort übernommen. Stattdessen wird beim Speichern ein
-      Bestätigungslink an die alte Adresse verschickt - erst ein Klick darauf
-      setzt die neue Adresse. Ist die aktuelle Adresse noch nicht verifiziert,
-      wird die neue Adresse sofort übernommen.
+      Änderst du die E-Mail-Adresse hier direkt als Admin, hängt das Verhalten
+      vom Verifizierungsstatus der aktuellen Adresse ab:
       <br />
       <br />
-      Damit das Mitglied die Mailadresse verändern kann, muss die transaktionale
+      <strong>Adresse bereits verifiziert:</strong> Die neue Adresse wird beim
+      Speichern nicht sofort übernommen. Stattdessen wird ein Bestätigungslink
+      an die <strong>alte</strong> Adresse verschickt – erst ein Klick darauf
+      setzt die neue Adresse. Damit das funktioniert, muss die transaktionale
       Mail "Email-Änderung: Bestätigung anfordern" im Mailmodul veröffentlicht
       sein und den Token{" "}
       <code>
         {"{{Email-Änderung: Bestätigung anfordern.Bestätigungslink}}"}
       </code>{" "}
-      enthalten. Nur dann kann das Mitglied die Änderung der Emailadresse
-      bestätigen.
+      enthalten.
+      <br />
+      <br />
+      <strong>Adresse noch nicht verifiziert</strong> (z. B. bei einem neuen
+      Mitglied, das sein Konto noch nicht bestätigt hat): Die neue Adresse wird
+      sofort übernommen, und es wird automatisch eine neue Verifizierungsmail an
+      die neue Adresse verschickt. Ein manuelles erneutes Versenden ist nicht
+      nötig – das Mitglied muss nur noch auf den Link in dieser Mail klicken.
     </>
   ) : (
     <>
-      Die Änderung deiner Email muss durch dich selbst bestätigt werden. Folge
-      den Anweisungen, die du an deine alte Email erhältst. Wenn du keine Mail
-      erhältst, dann wende dich an deinen Betrieb (
+      Die Änderung deiner E-Mail-Adresse muss durch dich selbst bestätigt
+      werden. Folge den Anweisungen, die du an deine alte E-Mail-Adresse
+      erhältst. Wenn du keine Mail erhältst, dann wende dich an deinen Betrieb (
       <a href={`mailto:${contactEmail}`}>{contactEmail}</a>).
     </>
   );
@@ -103,11 +130,15 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
         setFirstName(response.firstName);
         setLastName(response.lastName);
         setEmail(response.email);
+        setEmailConfirm(response.email);
         setPhoneNumber(response.phoneNumber);
+        setPhoneNumberLandline(response.phoneNumberLandline ?? "");
         setStreet(response.street);
         setStreet2(response.street2);
         setPostcode(response.postcode);
         setCity(response.city);
+        setCanEditCountry(response.canEditCountry);
+        setCountry(response.country);
         if (response.isStudent !== undefined) {
           setIsStudent(response.isStudent);
           setStudentStatusEnabled(true);
@@ -120,7 +151,7 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der persönliche Daten",
+          "Fehler beim Laden der persönlichen Daten",
           setToastDatas,
         ),
       )
@@ -134,6 +165,7 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
           firstName: firstName,
           lastName: lastName,
           email: email,
+          emailConfirm: emailConfirm,
           phoneNumber: phoneNumber,
           street: street,
           street2: street2,
@@ -151,6 +183,11 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
       return;
     }
 
+    if (phoneNumberLandline && !isPhoneNumberValid(phoneNumberLandline)) {
+      setShowValidation(true);
+      return;
+    }
+
     setSaving(true);
 
     api
@@ -161,10 +198,12 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
           lastName: lastName,
           email: email,
           phoneNumber: phoneNumber,
+          phoneNumberLandline: phoneNumberLandline,
           street: street,
           street2: street2,
           postcode: postcode,
           city: city,
+          country: canEditCountry ? country : undefined,
           isStudent: isStudent,
         },
       })
@@ -187,7 +226,7 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Speichern der persönliche Daten",
+          "Fehler beim Speichern der persönlichen Daten",
           setToastDatas,
         ),
       )
@@ -269,6 +308,22 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
               />
             </Form.Group>
             <Form.Group className="mb-2">
+              <Form.Label>E-Mail wiederholen</Form.Label>
+              <Form.Control
+                placeholder={"E-Mail wiederholen"}
+                type={"email"}
+                value={emailConfirm}
+                onChange={(event) => setEmailConfirm(event.target.value)}
+                isValid={showValidation && emailsMatch(email, emailConfirm)}
+                isInvalid={showValidation && !emailsMatch(email, emailConfirm)}
+              />
+              {shouldShowEmailMismatchWarning(email, emailConfirm) && (
+                <Form.Text className={showValidation ? "text-danger" : ""}>
+                  Die E-Mail-Adressen stimmen nicht überein
+                </Form.Text>
+              )}
+            </Form.Group>
+            <Form.Group className="mb-2">
               <Form.Label>Telefonnummer</Form.Label>
               <Form.Control
                 placeholder={"Telefonnummer"}
@@ -277,6 +332,20 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
                 onChange={(event) => setPhoneNumber(event.target.value)}
                 isValid={showValidation && isPhoneNumberValid(phoneNumber)}
                 isInvalid={showValidation && !isPhoneNumberValid(phoneNumber)}
+              />
+            </Form.Group>
+            <Form.Group className="mb-2">
+              <Form.Label>Telefonnummer 2 (optional)</Form.Label>
+              <Form.Control
+                placeholder={"Telefonnummer 2"}
+                type={"tel"}
+                value={phoneNumberLandline}
+                onChange={(event) => setPhoneNumberLandline(event.target.value)}
+                isInvalid={
+                  showValidation &&
+                  !!phoneNumberLandline &&
+                  !isPhoneNumberValid(phoneNumberLandline)
+                }
               />
             </Form.Group>
             <Form.Group className="mb-2">
@@ -317,6 +386,25 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
                 isValid={showValidation && city.length > 0}
                 isInvalid={showValidation && city.length === 0}
               />
+            </Form.Group>
+            <Form.Group className="mb-2">
+              <Form.Label>
+                <span className={"d-flex flex-row gap-2 align-items-center"}>
+                  Land
+                  <TapirHelpButton buttonSize={"sm"} text={countryHelpText} />
+                </span>
+              </Form.Label>
+              <Form.Select
+                value={country}
+                onChange={(event) => setCountry(event.target.value)}
+                disabled={!canEditCountry}
+              >
+                {COUNTRY_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </Form.Select>
             </Form.Group>
             {studentStatusEnabled && (
               <Form.Group>
