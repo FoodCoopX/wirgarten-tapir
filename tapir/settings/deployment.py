@@ -45,15 +45,15 @@ CELERY_BEAT_SCHEDULE = {
     "export_supplier_list_csv": {
         "task": "tapir.wirgarten.tasks.export_supplier_list_csv",
         "schedule": celery.schedules.crontab(
-            minute=0,
-            hour=3,
+            minute=15,
+            hour=6,
         ),
     },
     "export_pick_list_csv": {
         "task": "tapir.wirgarten.tasks.export_pick_list_csv",
         "schedule": celery.schedules.crontab(
-            minute=0,
-            hour=4,
+            minute=30,
+            hour=6,
         ),
     },
     "assign_member_numbers": {
