@@ -28,6 +28,9 @@ class TestDeleteMemberApiView(TapirIntegrationTest):
     def test_delete_adminTriesToDelete_memberDeleted(self):
         to_delete = MemberFactory.create()
         user = MemberFactory.create(is_superuser=True)
+        KeycloakUserManager.create_keycloak_user_if_necessary(
+            to_delete, initial_password=None, cache={}
+        )
         self.client.force_login(user)
 
         kc = KeycloakUserManager.get_keycloak_client(cache={})

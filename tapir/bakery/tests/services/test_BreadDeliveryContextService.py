@@ -16,7 +16,6 @@ from tapir.wirgarten.tests.factories import (
     MemberPickupLocationFactory,
     PickupLocationFactory,
 )
-from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 YEAR = 2026
@@ -27,10 +26,6 @@ class TestBreadDeliveryContextService(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
-
-    def setUp(self):
-        super().setUp()
-        self._set_parameter(ParameterKeys.MEMBER_BYPASS_KEYCLOAK, True)
 
     @staticmethod
     def _create_delivery(pickup_location=None, member=None, week=WEEK, bread=None):

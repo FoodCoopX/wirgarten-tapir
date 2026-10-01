@@ -1,13 +1,12 @@
 import datetime
 from unittest.mock import patch, Mock
 
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
-
 from tapir.coop.models import CoopSharesPurchasedLogEntry
 from tapir.coop.services.coop_share_purchase_handler import CoopSharePurchaseHandler
 from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.wirgarten.models import CoopShareTransaction
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 from tapir.wirgarten.tests.test_utils import mock_timezone
 
 
@@ -73,7 +72,7 @@ class TestBuyCooperativeShares(TapirUnitTest):
             payment=payment,
         )
         self.assertEqual(now, member.sepa_consent)
-        member.save.assert_called_once_with(cache=cache)
+        member.save.assert_called_once_with()
         mock_send_warning_mail_if_necessary.assert_called_once_with(
             quantity=12, shares_valid_at=shares_valid_at, member=member, cache=cache
         )

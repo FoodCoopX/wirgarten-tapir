@@ -41,12 +41,6 @@ export interface PatchedMemberProfilePersonalDataRequestRequest {
    * @type {string}
    * @memberof PatchedMemberProfilePersonalDataRequestRequest
    */
-  email?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof PatchedMemberProfilePersonalDataRequestRequest
-   */
   phoneNumber?: string;
   /**
    *
@@ -121,7 +115,6 @@ export function PatchedMemberProfilePersonalDataRequestRequestFromJSONTyped(
     memberId: json["member_id"] == null ? undefined : json["member_id"],
     firstName: json["first_name"] == null ? undefined : json["first_name"],
     lastName: json["last_name"] == null ? undefined : json["last_name"],
-    email: json["email"] == null ? undefined : json["email"],
     phoneNumber:
       json["phone_number"] == null ? undefined : json["phone_number"],
     phoneNumberLandline:
@@ -155,7 +148,6 @@ export function PatchedMemberProfilePersonalDataRequestRequestToJSONTyped(
     member_id: value["memberId"],
     first_name: value["firstName"],
     last_name: value["lastName"],
-    email: value["email"],
     phone_number: value["phoneNumber"],
     phone_number_landline: value["phoneNumberLandline"],
     street: value["street"],

@@ -13,6 +13,7 @@ from tapir_mail.triggers.transactional_trigger import (
 from tapir import settings
 from tapir.accounts.config import EMAIL_CHANGE_LINK_VALIDITY_MINUTES
 from tapir.accounts.models import TapirUser, KeycloakUser, EmailChangeRequest
+from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.utils import get_now
 
@@ -63,13 +64,13 @@ class MailChangeService:
     @classmethod
     @transaction.atomic
     def apply_mail_change(cls, user: TapirUser, new_email: str, cache: dict):
-        # token is valid -> actually change email
         old_email = user.email
-        user.change_email(new_email, cache=cache)
+        user.email = new_email
+        user.username = new_email
+        user.save()
 
-        # delete other change requests for this user
         EmailChangeRequest.objects.filter(user_id=user.id).delete()
-        # delete expired change requests
+
         link_validity = relativedelta(minutes=EMAIL_CHANGE_LINK_VALIDITY_MINUTES)
         EmailChangeRequest.objects.filter(
             created_at__lte=get_now(cache=cache) - link_validity
@@ -83,4 +84,12 @@ class MailChangeService:
                 key=Events.MEMBERAREA_CHANGE_EMAIL_SUCCESS,
                 recipient_id_in_base_queryset=user.id,
             )
+        )
+
+        kc = KeycloakUserManager.get_keycloak_client(cache=cache)
+        kc.update_user(
+            user_id=user.keycloak_id,
+            payload={
+                "email": new_email,
+            },
         )

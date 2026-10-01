@@ -7,7 +7,7 @@ from tapir_mail.triggers.transactional_trigger import (
     TransactionalTriggerData,
 )
 
-from tapir.accounts.models import UpdateTapirUserLogEntry, KeycloakUser
+from tapir.accounts.models import UpdateTapirUserLogEntry
 from tapir.configuration.models import TapirParameter
 from tapir.core.config import LEGAL_STATUS_ASSOCIATION, LEGAL_STATUS_COOPERATIVE
 from tapir.wirgarten.mail_events import Events
@@ -18,9 +18,8 @@ from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
-class TestMemberBankDataApiView(TapirIntegrationTest):
+class TestMemberPersonalDataApiView(TapirIntegrationTest):
     SIMPLE_FIELDS = [
-        "email",
         "phone_number",
         "phone_number_landline",
         "street",
@@ -384,48 +383,6 @@ class TestMemberBankDataApiView(TapirIntegrationTest):
         mock_fire_action.assert_not_called()
 
     @patch.object(TransactionalTrigger, "fire_action")
-    def test_patch_newEmailIsAlreadyInUse_dontApplyChangesAndReturnsError(
-        self, mock_fire_action: Mock
-    ):
-        user = MemberFactory.create(
-            is_superuser=False, email="email_before@example.com"
-        )
-        other_member = MemberFactory.create()
-        self.client.force_login(user)
-
-        url = reverse("coop:member_personal_data")
-        response = self.client.patch(
-            url,
-            data={
-                "member_id": user.id,
-                "first_name": "test_fn",
-                "last_name": "test_ln",
-                "street": "test_street",
-                "street_2": "test_street2",
-                "email": other_member.email,
-                "phone_number": "+4917744563327",
-                "postcode": 12345,
-                "city": "test_city",
-                "is_student": False,
-            },
-            content_type="application/json",
-        )
-
-        self.assertStatusCode(response, status.HTTP_200_OK)
-        response_content = response.json()
-        self.assertFalse(response_content["order_confirmed"])
-        self.assertEqual(
-            "Diese E-Mail-Adresse ist schon einem anderen Mitglied zugewiesen.",
-            response_content["error"],
-        )
-
-        user.refresh_from_db()
-        self.assertEqual("email_before@example.com", user.email)
-
-        mock_fire_action.assert_not_called()
-        self.assertFalse(UpdateTapirUserLogEntry.objects.exists())
-
-    @patch.object(TransactionalTrigger, "fire_action")
     def test_patch_phoneNumberIsInvalid_dontApplyChangesAndReturnsError(
         self, mock_fire_action: Mock
     ):
@@ -441,7 +398,6 @@ class TestMemberBankDataApiView(TapirIntegrationTest):
                 "last_name": "test_ln",
                 "street": "test_street",
                 "street_2": "test_street2",
-                "email": user.email,
                 "phone_number": "123",
                 "postcode": "12345",
                 "city": "test_city",
@@ -478,7 +434,6 @@ class TestMemberBankDataApiView(TapirIntegrationTest):
                 "last_name": "test_ln",
                 "street": "test_street",
                 "street_2": "test_street2",
-                "email": user.email,
                 "phone_number": "017726254738",
                 "phone_number_landline": "+4930123456",
                 "postcode": "12345",
@@ -511,7 +466,6 @@ class TestMemberBankDataApiView(TapirIntegrationTest):
                 "last_name": "test_ln",
                 "street": "test_street",
                 "street_2": "test_street2",
-                "email": user.email,
                 "phone_number": "017726254738",
                 "phone_number_landline": "",
                 "postcode": "12345",
@@ -546,7 +500,6 @@ class TestMemberBankDataApiView(TapirIntegrationTest):
                 "last_name": "test_ln",
                 "street": "test_street",
                 "street_2": "test_street2",
-                "email": user.email,
                 "phone_number": "017726254738",
                 "phone_number_landline": "123",
                 "postcode": "12345",
@@ -586,7 +539,6 @@ class TestMemberBankDataApiView(TapirIntegrationTest):
                 "last_name": "test_ln",
                 "street": "test_street",
                 "street_2": "test_street2",
-                "email": user.email,
                 "phone_number": "017726254738",
                 "postcode": "12345",
                 "city": "test_city",
@@ -623,7 +575,6 @@ class TestMemberBankDataApiView(TapirIntegrationTest):
                 "last_name": "test_ln",
                 "street": "test_street",
                 "street_2": "test_street2",
-                "email": target.email,
                 "phone_number": "017726254738",
                 "postcode": "12345",
                 "city": "test_city",
@@ -642,70 +593,3 @@ class TestMemberBankDataApiView(TapirIntegrationTest):
 
         target.refresh_from_db()
         self.assertTrue(target.is_student)
-
-    @patch.object(TransactionalTrigger, "fire_action")
-    @patch.object(KeycloakUser, "email_verified", autospec=True)
-    def test_patch_emailChanged_sendsEmailChangeConfirmationButDontChangeCurrentMail(
-        self, mock_email_verified: Mock, mock_fire_action: Mock
-    ):
-        mock_email_verified.return_value = True
-        user_before_changes = MemberFactory.create(email="old_address@example.com")
-        self.client.force_login(user_before_changes)
-
-        url = reverse("coop:member_personal_data")
-        response = self.client.patch(
-            url,
-            data={
-                "member_id": user_before_changes.id,
-                "first_name": "test_fn",
-                "last_name": "test_ln",
-                "street": "test_street",
-                "street_2": "test_street2",
-                "email": "new_address@example.com",
-                "phone_number": "017726254738",
-                "postcode": "12345",
-                "city": "test_city",
-                "is_student": False,
-            },
-            content_type="application/json",
-        )
-
-        self.assertStatusCode(response, status.HTTP_200_OK)
-        response_content = response.json()
-        self.assertTrue(response_content["order_confirmed"])
-        self.assertIsNone(response_content["error"])
-
-        user_after_changes = Member.objects.get(id=user_before_changes.id)
-        self.assertEqual("old_address@example.com", user_after_changes.email)
-
-        self.assertEqual(3, mock_fire_action.call_count)
-
-        trigger_data: TransactionalTriggerData = mock_fire_action.call_args_list[
-            0
-        ].args[0]
-        self.assertEqual(Events.MEMBERAREA_CHANGE_DATA, trigger_data.key)
-
-        trigger_data: TransactionalTriggerData = mock_fire_action.call_args_list[
-            1
-        ].kwargs["trigger_data"]
-        self.assertEqual(Events.MEMBERAREA_CHANGE_EMAIL_INITIATE, trigger_data.key)
-        self.assertEqual(
-            user_after_changes.id, trigger_data.recipient_id_in_base_queryset
-        )
-        self.assertIsNone(trigger_data.recipient_outside_of_base_queryset)
-        self.assertEqual(["verify_link"], list(trigger_data.token_data.keys()))
-
-        trigger_data: TransactionalTriggerData = mock_fire_action.call_args_list[
-            2
-        ].kwargs["trigger_data"]
-        self.assertEqual(Events.MEMBERAREA_CHANGE_EMAIL_HINT, trigger_data.key)
-        self.assertEqual(
-            TransactionalTriggerData.RecipientOutsideOfBaseQueryset(
-                email="new_address@example.com",
-                first_name=user_before_changes.first_name,  # We are logged in as not-admin, so the name should not change
-                last_name=user_before_changes.last_name,
-            ),
-            trigger_data.recipient_outside_of_base_queryset,
-        )
-        self.assertIsNone(trigger_data.recipient_id_in_base_queryset)
-        self.assertEqual({}, trigger_data.token_data)

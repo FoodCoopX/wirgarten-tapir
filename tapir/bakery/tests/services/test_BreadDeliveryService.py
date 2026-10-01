@@ -6,16 +6,19 @@ from tapir.bakery.services.bread_delivery_context_service import (
     BreadDeliveryContextService,
 )
 from tapir.bakery.services.breaddelivery_service import BreadDeliveryService
-from tapir.pickup_locations.services.member_pickup_location_setter import (
-    MemberPickupLocationSetter,
-)
 from tapir.bakery.tests.factories import (
     enable_bakery,
     BreadCapacityPickupLocationFactory,
     BreadDeliveryFactory,
     BreadFactory,
 )
+from tapir.pickup_locations.services.member_pickup_location_setter import (
+    MemberPickupLocationSetter,
+)
+from tapir.utils.shortcuts import week_to_monday
 from tapir.wirgarten.constants import NO_DELIVERY
+from tapir.wirgarten.parameters import ParameterDefinitions
+from tapir.wirgarten.service.delivery import get_next_delivery_date
 from tapir.wirgarten.tests.factories import (
     GrowingPeriodFactory,
     MemberFactory,
@@ -25,10 +28,6 @@ from tapir.wirgarten.tests.factories import (
     ProductTypeFactory,
     SubscriptionFactory,
 )
-from tapir.utils.shortcuts import week_to_monday
-from tapir.wirgarten.parameters import ParameterDefinitions
-from tapir.wirgarten.service.delivery import get_next_delivery_date
-from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 FROZEN_DATE = datetime.date(2026, 3, 14)  # Saturday, week 11
@@ -50,10 +49,6 @@ def delivered_weeks(start, end):
     "tapir.accounts.services.keycloak_user_manager.KeycloakUserManager.get_keycloak_client"
 )
 class TestGetWeeksInRange(TapirIntegrationTest):
-    def setUp(self):
-        super().setUp()
-        self._set_parameter(ParameterKeys.MEMBER_BYPASS_KEYCLOAK, True)
-
     def test_singleWeek_yieldsOneEntry(self, mock_kc):
         start = datetime.date(2026, 3, 9)  # Monday W11
         end = datetime.date(2026, 3, 13)  # Friday W11
@@ -115,7 +110,6 @@ class TestEnsureBreadDeliveries(TapirIntegrationTest):
 
     def setUp(self):
         super().setUp()
-        self._set_parameter(ParameterKeys.MEMBER_BYPASS_KEYCLOAK, True)
         enable_bakery()
 
     def _freeze_date(self, mock_datetime, date=FROZEN_DATE):

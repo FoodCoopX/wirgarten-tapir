@@ -12,6 +12,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from tapir_mail.triggers.transactional_trigger import TransactionalTriggerData
 
+from tapir.accounts.services.email_normaliser import EmailNormaliser
 from tapir.associations.models import AssociationMembershipType
 from tapir.bestell_wizard.serializers import (
     BestellWizardConfirmOrderRequestSerializer,
@@ -328,6 +329,9 @@ class BestellWizardConfirmOrderApiView(APIView):
                 shopping_cart=validated_serializer_data["shopping_cart_waiting_list"],
                 cache=cache,
             )
+        )
+        validated_serializer_data["personal_data"]["email"] = EmailNormaliser.normalise(
+            validated_serializer_data["personal_data"]["email"]
         )
         WaitingListEntryValidator.validate_creation_of_waiting_list_entry_for_a_potential_member(
             order=waiting_list_order,

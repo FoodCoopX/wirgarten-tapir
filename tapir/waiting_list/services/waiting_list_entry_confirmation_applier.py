@@ -3,6 +3,7 @@ import datetime
 from django.db import transaction
 
 from tapir.accounts.models import TapirUser
+from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
 from tapir.associations.models import AssociationMembershipType
 from tapir.bestell_wizard.services.bestell_wizard_order_fulfiller import (
     BestellWizardOrderFulfiller,
@@ -188,6 +189,7 @@ class WaitingListEntryConfirmationApplier:
             first_name=waiting_list_entry.first_name,
             last_name=waiting_list_entry.last_name,
             email=waiting_list_entry.email,
+            username=waiting_list_entry.email,
             phone_number=waiting_list_entry.phone_number,
             street=waiting_list_entry.street,
             street_2=waiting_list_entry.street_2,
@@ -201,6 +203,10 @@ class WaitingListEntryConfirmationApplier:
 
         MemberNumberService.assign_member_number_if_eligible(
             member=member, actor=actor, cache=cache
+        )
+
+        KeycloakUserManager.create_keycloak_user_if_necessary(
+            user=member, initial_password=None, cache=cache
         )
 
         return member

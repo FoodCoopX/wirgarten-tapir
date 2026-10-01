@@ -21,7 +21,6 @@ from tapir.wirgarten.tests.factories import (
     ProductPriceFactory,
     SubscriptionFactory,
 )
-from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
@@ -33,7 +32,6 @@ class TestRenewContractSameConditionsCreatesBreadDeliveries(TapirIntegrationTest
 
     def setUp(self):
         super().setUp()
-        self._set_parameter(ParameterKeys.MEMBER_BYPASS_KEYCLOAK, True)
         enable_bakery()
 
         today = datetime.date.today()
