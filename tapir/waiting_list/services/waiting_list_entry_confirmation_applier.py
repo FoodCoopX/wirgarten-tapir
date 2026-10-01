@@ -1,4 +1,5 @@
 import datetime
+from decimal import Decimal
 
 from django.db import transaction
 
@@ -99,7 +100,7 @@ class WaitingListEntryConfirmationApplier:
                     change_date=contract_start_date,
                     actor=actor,
                     cache=cache,
-                    amount=validated_data["solidarity_contribution"],
+                    amount=Decimal(str(validated_data["solidarity_contribution"])),
                 )
             )
 

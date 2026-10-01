@@ -1,4 +1,5 @@
 import datetime
+from decimal import Decimal
 
 from tapir_mail.models import MailCategory, MailCategoryMode
 from tapir_mail.service.external_recipient_manager import ExternalRecipientManager
@@ -267,7 +268,7 @@ class BestellWizardOrderFulfiller:
             member=member,
             change_date=contract_start_date,
             cache=cache,
-            amount=contribution,
+            amount=Decimal(str(contribution)),
             actor=actor,
         )
 

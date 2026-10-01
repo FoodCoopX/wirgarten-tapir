@@ -36,11 +36,10 @@ class MemberSolidarityContributionService:
         cls,
         member: Member,
         change_date: datetime.date,
-        amount: float | Decimal,
+        amount: Decimal,
         cache: dict,
         actor: TapirUser,
     ):
-        amount = Decimal(str(amount))
         member_contributions = SolidarityContribution.objects.filter(
             member_id=member.id
         )
