@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from tapir.generic_exports.services.export_segment_manager import ExportSegmentColumn
-from tapir.payments.monthly_sales_data import MonthlySalesData
+from tapir.payments.dataclasses import MonthlySalesData
 from tapir.wirgarten.utils import format_currency
 
 

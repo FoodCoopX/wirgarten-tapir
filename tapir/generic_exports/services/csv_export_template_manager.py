@@ -6,13 +6,20 @@ from tapir.generic_exports.services.csv_templates.template_joker_overview import
 from tapir.generic_exports.services.csv_templates.template_member_list_geng import (
     TemplateMemberListGeng,
 )
+from tapir.generic_exports.services.csv_templates.template_payments_by_income_source import (
+    TemplatePaymentsByIncomeSource,
+)
 from tapir.generic_exports.services.pdf_export_template_manager import TemplateData
 
 
 class CsvExportTemplateManager:
     @classmethod
     def get_templates(cls) -> dict[str, TemplateData]:
-        template_list = [TemplateMemberListGeng, TemplateJokerOverview]
+        template_list = [
+            TemplateMemberListGeng,
+            TemplateJokerOverview,
+            TemplatePaymentsByIncomeSource,
+        ]
 
         return {
             template.ID: TemplateData(

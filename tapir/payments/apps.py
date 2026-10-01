@@ -11,6 +11,11 @@ class PaymentsConfig(AppConfig):
         from tapir.payments.services.monthly_sales_segment_provider import (
             MonthlySalesSegmentProvider,
         )
+        from tapir.payments.services.monthly_actual_income_segment_provider import (
+            MonthlyActualIncomeSegmentProvider,
+        )
 
         for segment in MonthlySalesSegmentProvider.get_sales_segments():
+            ExportSegmentManager.register_segment(segment)
+        for segment in MonthlyActualIncomeSegmentProvider.get_actual_income_segments():
             ExportSegmentManager.register_segment(segment)
