@@ -155,7 +155,7 @@ const ManageJokersAndDonationsModal: React.FC<
                 id={"tooltip-joker-" + formatDateNumeric(delivery.deliveryDate)}
               >
                 Du musst bis zum {getWeekdayLimitDisplay()} Mitternacht den
-                Joker setzen
+                Joker setzen.
               </Tooltip>
             }
           >
@@ -253,7 +253,11 @@ const ManageJokersAndDonationsModal: React.FC<
         date: delivery.deliveryDate,
       })
       .catch((error) =>
-        handleRequestError(error, "Fehler beim Joker-Einsetzen", setToastDatas),
+        handleRequestError(
+          error,
+          "Fehler beim Einsetzen des Jokers",
+          setToastDatas,
+        ),
       )
       .finally(() => {
         setRequestLoading(false);
@@ -273,7 +277,7 @@ const ManageJokersAndDonationsModal: React.FC<
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Spende-Einsetzen",
+          "Fehler beim Spenden der Lieferung",
           setToastDatas,
         ),
       )
@@ -297,7 +301,7 @@ const ManageJokersAndDonationsModal: React.FC<
 
     return (
       <p>
-        Es gibt zusätzliche Einschränkungen in der folgende Perioden:
+        Es gibt zusätzliche Einschränkungen in den folgenden Perioden:
         <ul>
           {usedJokerInGrowingPeriods.map(buildJokerRestrictionForGrowingPeriod)}
         </ul>
@@ -394,7 +398,7 @@ const ManageJokersAndDonationsModal: React.FC<
           <ListGroup.Item>
             <p>
               {buildRelevantNames()} können bis {getWeekdayLimitDisplay()} 23:59
-              Uhr vor Liefertag eingesetzt oder abgesagt werden.{" "}
+              Uhr vor dem Liefertag eingesetzt oder abgesagt werden.{" "}
             </p>
             {areJokersEnabled && buildJokerRestrictions()}
           </ListGroup.Item>
@@ -402,9 +406,9 @@ const ManageJokersAndDonationsModal: React.FC<
             <Row>
               {areJokersEnabled && (
                 <Col>
-                  <h5>Eingesetzter Joker</h5>
+                  <h5>Eingesetzte Joker</h5>
                   {jokers.length == 0 ? (
-                    "Noch kein eingesetzte Joker"
+                    "Noch keine Joker eingesetzt"
                   ) : (
                     <UsedJokersTable
                       jokers={jokers}

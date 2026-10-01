@@ -92,6 +92,14 @@
                                     <label class="form-label" for="id_{{ field.name }}">{{ field.label }}</label>
                                     {{ field }}
                                 </div>
+                            {% elif field.name == 'search' %}
+                                <div class="mb-3">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <label class="form-label mb-0" for="id_{{ field.name }}">{{ field.label }}</label>
+                                        <span id="filter_search_help_button"></span>
+                                    </div>
+                                    {% bootstrap_field field show_label="skip" wrapper_class="" %}
+                                </div>
                             {% else %}
                                 {% bootstrap_field field %}
                             {% endif %}

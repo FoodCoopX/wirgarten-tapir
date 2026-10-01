@@ -13,10 +13,13 @@ import PickupLocationWaitingListSelector from "../../bestell_wizard/components/P
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { checkPickupLocationCapacities } from "../../bestell_wizard/utils/checkPickupLocationCapacities.ts";
 import ConfirmModal from "../../components/ConfirmModal.tsx";
+import DeliveryDayTabs from "../../components/DeliveryDayTabs.tsx";
 import TapirButton from "../../components/TapirButton.tsx";
+import TapirHelpButton from "../../components/TapirHelpButton.tsx";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
 import { addToast } from "../../utils/addToast.ts";
+import { getUniqueDeliveryDays } from "../../utils/getUniqueDeliveryDays.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 
 interface PickupLocationChangeModalProps {
@@ -26,6 +29,7 @@ interface PickupLocationChangeModalProps {
   memberId: string;
   reloadDeliveries: () => void;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
+  membersCanChangePickupLocationThemselves: boolean;
 }
 
 const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
@@ -35,6 +39,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
   memberId,
   reloadDeliveries,
   setToastDatas,
+  membersCanChangePickupLocationThemselves,
 }) => {
   const pickupLocationsApi = useApi(PickupLocationsApi, csrfToken);
   const subscriptionsApi = useApi(SubscriptionsApi, csrfToken);
@@ -46,6 +51,9 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
   const [selectedPickupLocations, setSelectedPickupLocations] = useState<
     PublicPickupLocation[]
   >([]);
+  const [selectedDeliveryDay, setSelectedDeliveryDay] = useState<number | null>(
+    null,
+  );
   const [
     pickupLocationsCapacityCheckLoading,
     setPickupLocationsCapacityCheckLoading,
@@ -61,6 +69,20 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
   ] = useState(false);
   const [hasWaitingListEntry, setHasWaitingListEntry] = useState(false);
   const [currentPickupLocationId, setCurrentPickupLocationId] = useState("");
+
+  const availableDeliveryDays = React.useMemo(
+    () => getUniqueDeliveryDays(pickupLocations),
+    [pickupLocations],
+  );
+
+  const filteredPickupLocations = React.useMemo(() => {
+    if (selectedDeliveryDay === null) {
+      return pickupLocations;
+    }
+    return pickupLocations.filter(
+      (loc) => loc.deliveryDay === selectedDeliveryDay,
+    );
+  }, [pickupLocations, selectedDeliveryDay]);
 
   useEffect(() => {
     pickupLocationsApi
@@ -90,7 +112,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der aktueller Verteilstation",
+          "Fehler beim Laden der aktuellen Verteilstation",
           setToastDatas,
         ),
       );
@@ -114,14 +136,14 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der Warteliste-Eintrag",
+          "Fehler beim Laden des Wartelisteneintrags",
           setToastDatas,
         ),
       );
   }, []);
 
   useEffect(() => {
-    if (pickupLocations.length === 0 || !show) {
+    if (filteredPickupLocations.length === 0 || !show) {
       return;
     }
 
@@ -134,14 +156,14 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
 
     checkPickupLocationCapacities(
       pickupLocationsApi,
-      pickupLocations,
+      filteredPickupLocations,
       shoppingCart,
       setPickupLocationsCapacityCheckLoading,
       setPickupLocationsWithCapacityFull,
       setToastDatas,
       undefined,
     );
-  }, [pickupLocations, subscriptions, show]);
+  }, [filteredPickupLocations, subscriptions, show]);
 
   useEffect(() => {
     if (selectedPickupLocations.length === 0) {
@@ -164,7 +186,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
     ) {
       if (hasWaitingListEntry) {
         alert(
-          "Du stehst schon auf der Warteliste, deswegen kannst du kein ausgelastete Verteilstation auswählen.",
+          "Du stehst schon auf der Warteliste, deswegen kannst du keine ausgelastete Verteilstation auswählen.",
         );
         setSelectedPickupLocations([]);
       } else {
@@ -201,7 +223,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
                 id: uuidv4(),
                 variant: "success",
                 message: message,
-                title: "Warteliste-Eintrag erzeugt",
+                title: "Wartelisteneintrag erzeugt",
               },
               setToastDatas,
             );
@@ -213,8 +235,8 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
                 id: uuidv4(),
                 variant: "danger",
                 message:
-                  "Es gibt schon einen Warteliste-Eintrag für dich, wenn du den ändern willst, wende dich bitte an dem Kontakt hier Oben Rechts",
-                title: "Warteliste-Eintrag nicht erzeugt",
+                  "Es gibt schon einen Wartelisteneintrag für dich. Wenn du ihn ändern willst, wende dich bitte an den Kontakt oben rechts.",
+                title: "Wartelisteneintrag nicht erzeugt",
               },
               setToastDatas,
             );
@@ -223,7 +245,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
         .catch((error) =>
           handleRequestError(
             error,
-            "Fehler beim Erzeugen des Warteliste-Eintrags",
+            "Fehler beim Erzeugen des Wartelisteneintrags",
             setToastDatas,
           ),
         )
@@ -282,15 +304,39 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
         size={"lg"}
       >
         <Modal.Header closeButton>
-          <Modal.Title>
-            <h4>Verteilstation ändern</h4>
-          </Modal.Title>
+          <div className={"d-flex gap-2 align-items-center"}>
+            <Modal.Title>
+              <h4 className={"mb-0"}>Verteilstation ändern</h4>
+            </Modal.Title>
+            {!membersCanChangePickupLocationThemselves && (
+              <TapirHelpButton
+                text={
+                  <>
+                    Mitglieder können nicht selbstständig ihren Abholort ändern.
+                    Sie müssen dazu den Betrieb kontaktieren. Wenn Sie es
+                    selbstständig ändern können sollen, muss die Checkbox
+                    "Mitglieder können deren Abholort selber ändern" in der
+                    allgemeinen Konfiguration aktiviert werden.
+                  </>
+                }
+              />
+            )}
+          </div>
         </Modal.Header>
         <Modal.Body>
+          <DeliveryDayTabs
+            availableDays={availableDeliveryDays}
+            selectedDay={selectedDeliveryDay}
+            onSelectDay={(day) => {
+              setSelectedDeliveryDay(day);
+              setSelectedPickupLocations([]);
+            }}
+          />
+
           {waitingListModeEnabled && (
             <PickupLocationWaitingListSelector
               setSelectedPickupLocations={setSelectedPickupLocations}
-              pickupLocations={pickupLocations}
+              pickupLocations={filteredPickupLocations}
               selectedPickupLocations={selectedPickupLocations}
               pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
             />
@@ -299,7 +345,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
             <Spinner />
           ) : (
             <PickupLocationSelector
-              pickupLocations={pickupLocations}
+              pickupLocations={filteredPickupLocations}
               selectedPickupLocations={selectedPickupLocations}
               setSelectedPickupLocations={setSelectedPickupLocations}
               pickupLocationsCapacityCheckLoading={
@@ -315,7 +361,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
           <TapirButton
             text={
               waitingListModeEnabled
-                ? "Warteliste-Eintrag bestätigen"
+                ? "Wartelisteneintrag bestätigen"
                 : "Wechsel bestätigen"
             }
             variant={"primary"}
@@ -332,12 +378,12 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
           (selectedPickupLocations.length > 0
             ? selectedPickupLocations[0].name
             : "") +
-          "). Du kannst eine andere Station wählen, oder dich auf die Warteliste setzen lassen. " +
+          "). Du kannst eine andere Station wählen oder dich auf die Warteliste setzen lassen. " +
           "Du kannst dich auch auf die Warteliste von bis zu drei Verteilstationen setzen lassen."
         }
         title={"Verteilstation ausgelastet"}
         open={showWaitingListConfirmationModal}
-        confirmButtonText={"Weiter mit Warteliste-Eintrag"}
+        confirmButtonText={"Weiter mit Wartelisteneintrag"}
         confirmButtonVariant={"outline-primary"}
         confirmButtonIcon={"pending_actions"}
         onConfirm={() => {

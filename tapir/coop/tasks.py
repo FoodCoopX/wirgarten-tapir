@@ -210,6 +210,11 @@ def _fire_membership_entry_trigger(member: Member, cache: dict):
 @shared_task
 def send_membership_entry_mails():
     cache = {}
+    if not legal_status_is_cooperative(cache) and not legal_status_is_association(
+        cache
+    ):
+        return
+
     members = Member.objects.filter(has_received_membership_started_mail=False)
     today = get_today(cache=cache)
 

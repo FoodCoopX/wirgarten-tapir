@@ -45,15 +45,15 @@ CELERY_BEAT_SCHEDULE = {
     "export_supplier_list_csv": {
         "task": "tapir.wirgarten.tasks.export_supplier_list_csv",
         "schedule": celery.schedules.crontab(
-            minute=0,
-            hour=3,
+            minute=15,
+            hour=6,
         ),
     },
     "export_pick_list_csv": {
         "task": "tapir.wirgarten.tasks.export_pick_list_csv",
         "schedule": celery.schedules.crontab(
-            minute=0,
-            hour=4,
+            minute=30,
+            hour=6,
         ),
     },
     "assign_member_numbers": {
@@ -154,6 +154,8 @@ elif EMAIL_ENV == "prod":
     EMAIL_AUTO_BCC = env.str("EMAIL_AUTO_BCC", default=None)
     EMAIL_BOUNCE_USER = env.str("EMAIL_BOUNCE_USER", default=None)
     EMAIL_BOUNCE_PASSWORD = env.str("EMAIL_BOUNCE_PASSWORD", default=None)
+    # IMAP host of the bounce mailbox, only needed if it differs from EMAIL_HOST
+    EMAIL_BOUNCE_HOST = env.str("EMAIL_BOUNCE_HOST", default=None)
     EMAIL_REPLY_TO = env.str("EMAIL_REPLY_TO", default=None)
 
 

@@ -147,7 +147,9 @@
                             <th>Name</th>
                             <th>Größe</th>
                             <th style="text-align:right">Preis</th>
-                            <th>Pflicht Geno-Anteile</th>
+                            {% if show_cooperative_content %}
+                                <th>Pflicht Geno-Anteile</th>
+                            {% endif %}
                         </tr>
                     </thead>
                     <tbody id="list_product">
@@ -188,7 +190,9 @@
                                         {{ product.prices.0.price }} €
                                     {% endif %}
                                 </td>
-                                <td style="text-align: right">{{ product.min_coop_shares }}</td>
+                                {% if show_cooperative_content %}
+                                    <td style="text-align: right">{{ product.min_coop_shares }}</td>
+                                {% endif %}
                             </tr>
                         {% endfor %}
                     </tbody>

@@ -92,7 +92,7 @@ class TestWaitingListCreateEntryExistingMemberView(TapirIntegrationTest):
         response_content = response.json()
         self.assertFalse(response_content["order_confirmed"])
         self.assertEqual(
-            "Es gibt schon einen Warteliste-Eintrag für dieses Mitglied.",
+            "Es gibt schon einen Wartelisteneintrag für dieses Mitglied.",
             response_content["error"],
         )
         self.assertEqual(1, WaitingListEntry.objects.count())

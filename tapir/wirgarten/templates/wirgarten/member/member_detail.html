@@ -25,12 +25,26 @@
                 {% include 'wirgarten/member/member_detail_alert.html' with renewal_status=renewal_status contract_end_date=contract_end_date member=object next_period=next_period show_trial_period_notice=show_trial_period_notice next_trial_end_date=next_trial_end_date show_renewal_warning=show_renewal_warning base_product_type_name=base_product_type_name %}
                 {% if email_change_request %}
                     <div id="email-change-verify" class="alert alert-success">
-                        <h4 class="alert-heading">Bitte bestätige deine neue Email Adresse</h4>
+                        <h4 class="alert-heading">Bitte bestätige deine neue E-Mail-Adresse</h4>
                         <p>
-                            Wir haben dir eine Mail geschickt an <strong>{{ object.email }}</strong>.
+                            Wir haben dir eine Mail an <strong>{{ object.email }}</strong> geschickt.
                             <br/>
-                            Bitte klicke den Link um deine Änderung wirksam zu machen.
+                            Bitte klicke auf den Link, um deine Änderung wirksam zu machen.
                         </p>
+                    </div>
+                {% endif %}
+                {% if bakery_enabled %}
+                    <div class="mb-3">
+                        <a href="{% url 'bakery:choose-breads' %}?member_id={{ object.pk }}"
+                           class="btn btn-lg w-100 d-flex align-items-center justify-content-center gap-2"
+                           style="background-color: #8B4513; color: white; border: none; padding: 1rem; transition: all 0.3s ease;"
+                           onmouseover="this.style.backgroundColor='#A0522D'"
+                           onmouseout="this.style.backgroundColor='#8B4513'">
+                            <div class="d-flex flex-column align-items-start">
+                                <strong style="font-size: 1.1rem;">Zu den Broten</strong>
+                                <small style="opacity: 0.9;">Wähle deine Lieblingsbrote aus.</small>
+                            </div>
+                        </a>
                     </div>
                 {% endif %}
                 <div id="member-contracts">
@@ -66,7 +80,10 @@
                 <span id="delivery_list_card"
                       data-member-id="{{ object.pk }}"
                       data-jokers-enabled="{{ jokersEnabled }}"
-                      data-donations-enabled="{{ donationsEnabled }}">
+                      data-donations-enabled="{{ donationsEnabled }}"
+                      data-can-change-pickup-location="{{ canChangePickupLocation }}"
+                      data-members-can-change-pickup-location-themselves="{{ membersCanChangePickupLocationThemselves }}"
+                      data-admin-contact-email="{{ adminContactEmail }}">
                     <span class="spinner-border">
                         <span class="visually-hidden">Loading...</span>
                     </span>
@@ -102,7 +119,7 @@
                             <div class="col-8" id="tapir_user_display_name">{{ object.get_display_name }}</div>
                         </div>
                         <div class="row m-1">
-                            <div class="col-4 fw-bold text-end">{% translate "Email" %}:</div>
+                            <div class="col-4 fw-bold text-end">{% translate "E-Mail" %}:</div>
                             {% if email_change_request %}
                                 <div class="col-8" id="tapir_user_changed_email">
                                     <span style="text-decoration: line-through; color:#6A6A6A">{{ object.email }}</span>
@@ -133,17 +150,35 @@
                                 {% if object.phone_number %}
                                     {{ object.phone_number|format_phone_number }}
                                 {% else %}
-                                    <span class="text-danger">{% translate "Missing" %}</span>
+                                    <span class="text-danger">{% translate "Fehlt" %}</span>
                                 {% endif %}
                             </div>
                         </div>
+                        {% if object.phone_number_landline %}
+                            <div class="row m-1">
+                                <div class="col-4 fw-bold text-end">{% translate "Telefon 2" %}:</div>
+                                <div class="col-8" id="tapir_user_phone_number_landline">
+                                    {{ object.phone_number_landline|format_phone_number }}
+                                </div>
+                            </div>
+                        {% endif %}
                         <div class="row m-1">
                             <div class="col-4 fw-bold text-end">{% translate "Adresse" %}:</div>
                             <div class="col-8" id="tapir_user_address">
                                 {% if object.street and object.city %}
                                     {{ object.get_display_address }}
                                 {% else %}
-                                    <span class="text-danger">{% translate "Missing" %}</span>
+                                    <span class="text-danger">{% translate "Fehlt" %}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="row m-1">
+                            <div class="col-4 fw-bold text-end">{% translate "Pseudonym" %}:</div>
+                            <div class="col-8" id="tapir_user_pseudonym">
+                                {% if object.pseudonym %}
+                                    {{ object.pseudonym }}
+                                {% else %}
+                                    <span class="text-muted">{% translate "nicht gesetzt" %}</span>
                                 {% endif %}
                             </div>
                         </div>
@@ -203,7 +238,7 @@
                          data-admin-email="{{ 'wirgarten.site.admin_email'|parameter }}">
                         <div class="card">
                             <div class="card-header">
-                                <h5 class="mb-0">Warteliste-Eintrag</h5>
+                                <h5 class="mb-0">Wartelisteneintrag</h5>
                             </div>
                             <div class="card-body">
                                 <span class="spinner-border">
@@ -277,7 +312,7 @@
                                         {% if object.account_owner %}
                                             {{ object.account_owner }}
                                         {% else %}
-                                            <span class="text-danger">{% translate "Missing" %}</span>
+                                            <span class="text-danger">{% translate "Fehlt" %}</span>
                                         {% endif %}
                                     </div>
                                 </div>
@@ -287,7 +322,7 @@
                                         {% if object.iban %}
                                             {{ object.iban }}
                                         {% else %}
-                                            <span class="text-danger">{% translate "Missing" %}</span>
+                                            <span class="text-danger">{% translate "Fehlt" %}</span>
                                         {% endif %}
                                     </div>
                                 </div>

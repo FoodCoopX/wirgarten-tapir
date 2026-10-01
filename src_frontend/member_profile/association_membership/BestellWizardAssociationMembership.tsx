@@ -73,7 +73,7 @@ const BestellWizardAssociationMembership: React.FC<
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der BestellWizard Basis-Daten",
+          "Fehler beim Laden der BestellWizard-Basisdaten",
           setToastDatas,
         ),
       );

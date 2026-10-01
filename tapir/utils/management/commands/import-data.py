@@ -11,7 +11,9 @@ from django.db import transaction
 from icecream import ic
 
 from tapir.accounts.models import EmailChangeRequest
+from tapir.deliveries.models import Joker
 from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES
+from tapir.payments.models import MemberCredit
 from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.utils.config import (
     MEMBER_IMPORT_STATUS_SKIPPED,
@@ -92,6 +94,8 @@ class Command(BaseCommand):
             QuestionaireTrafficSourceResponse.objects.all().delete()
             WaitingListEntry.objects.all().delete()
             EmailChangeRequest.objects.all().delete()
+            MemberCredit.objects.all().delete()
+            Joker.objects.all().delete()
             for member in Member.objects.all():
                 # members must be deleted one by one to trigger KeycloakUser.delete
                 member.delete()
@@ -154,6 +158,8 @@ class Command(BaseCommand):
                             QuestionaireTrafficSourceResponse.objects.all().delete()
                             WaitingListEntry.objects.all().delete()
                             EmailChangeRequest.objects.all().delete()
+                            MemberCredit.objects.all().delete()
+                            Joker.objects.all().delete()
                             for member in Member.objects.all():
                                 # members must be deleted one by one to trigger KeycloakUser.delete
                                 member.delete()

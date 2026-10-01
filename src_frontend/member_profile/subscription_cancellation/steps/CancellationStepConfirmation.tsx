@@ -31,7 +31,7 @@ const CancellationStepConfirmation: React.FC<
   return (
     <>
       <Modal.Body>
-        <p>Möchtest du wirklich folgenden Verträge kündigen?</p>
+        <p>Möchtest du wirklich folgende Verträge kündigen?</p>
         <ul>
           {selectedProducts.map(
             (productForCancellation: ProductForCancellation) => {

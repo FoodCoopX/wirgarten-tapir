@@ -11,6 +11,7 @@ import {
   PickupLocationOpeningTime,
 } from "../../api-client";
 import TapirButton from "../../components/TapirButton.tsx";
+import TapirHelpButton from "../../components/TapirHelpButton.tsx";
 import TapirToastContainer from "../../components/TapirToastContainer.tsx";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
@@ -24,6 +25,9 @@ interface DeliveryListCardProps {
   memberId: string;
   areJokersEnabled: boolean;
   areDonationsEnabled: boolean;
+  canChangePickupLocation: boolean;
+  membersCanChangePickupLocationThemselves: boolean;
+  adminContactEmail: string;
   csrfToken: string;
 }
 
@@ -31,6 +35,9 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
   memberId,
   areJokersEnabled,
   areDonationsEnabled,
+  canChangePickupLocation,
+  membersCanChangePickupLocationThemselves,
+  adminContactEmail,
   csrfToken,
 }) => {
   const api = useApi(DeliveriesApi, csrfToken);
@@ -107,12 +114,25 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
             }}
           />
         )}
-        <TapirButton
-          text={"Verteilstation ändern"}
-          icon={"edit"}
-          variant={"outline-primary"}
-          onClick={() => setShowPickupLocationChangeModal(true)}
-        />
+        {canChangePickupLocation ? (
+          <TapirButton
+            text={"Verteilstation ändern"}
+            icon={"edit"}
+            variant={"outline-primary"}
+            onClick={() => setShowPickupLocationChangeModal(true)}
+          />
+        ) : (
+          <TapirHelpButton
+            title={"Verteilstation ändern"}
+            text={
+              <>
+                Für eine Änderung deines Abholorts wende dich bitte an deinen
+                Betrieb unter{" "}
+                <a href={`mailto:${adminContactEmail}`}>{adminContactEmail}</a>.
+              </>
+            }
+          />
+        )}
       </span>
     );
   }
@@ -167,6 +187,9 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
         memberId={memberId}
         reloadDeliveries={loadDeliveries}
         setToastDatas={setToastDatas}
+        membersCanChangePickupLocationThemselves={
+          membersCanChangePickupLocationThemselves
+        }
       />
       <TapirToastContainer
         toastDatas={toastDatas}

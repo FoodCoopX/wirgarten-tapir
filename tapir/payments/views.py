@@ -129,7 +129,9 @@ class GetFutureMemberPaymentsApiView(APIView):
         )
 
         member_credits = MemberCredit.objects.filter(
-            member_id=member_id, due_date__gte=get_today(cache=self.cache)
+            member_id=member_id,
+            due_date__gte=get_today(cache=self.cache),
+            settled_on__isnull=True,
         ).order_by("due_date")
 
         return Response(
@@ -395,8 +397,10 @@ class GetPastMemberPaymentsApiView(APIView):
             member_id=member_id, member_payments=member_payments, cache=self.cache
         )
 
+        is_due_in_the_past = Q(due_date__lte=get_today(cache=self.cache))
+        is_already_settled = Q(settled_on__isnull=False)
         member_credits = MemberCredit.objects.filter(
-            member_id=member_id, due_date__lte=get_today(cache=self.cache)
+            is_due_in_the_past | is_already_settled, member_id=member_id
         ).order_by("-due_date")
 
         return Response(
@@ -499,7 +503,7 @@ class SetMemberPaymentRhythmApiView(APIView):
             rhythm, cache=self.cache
         ):
             raise ValidationError(
-                f"Diese Zahlungsintervall {rhythm} is nicht erlaubt, erlaubt sind: {MemberPaymentRhythmService.get_allowed_rhythms(cache=self.cache)}"
+                f"Dieses Zahlungsintervall {rhythm} ist nicht erlaubt, erlaubt sind: {MemberPaymentRhythmService.get_allowed_rhythms(cache=self.cache)}"
             )
 
         valid_from = MemberPaymentRhythmService.get_date_of_next_payment_rhythm_change(

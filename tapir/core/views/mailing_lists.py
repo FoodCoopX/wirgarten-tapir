@@ -319,7 +319,7 @@ class MailingListUnsubscribeRecipientView(APIView):
             return Response("OK")
 
         raise Http404(
-            f"Keine passende Empfänger gefunden, Email:{address}, Liste:{serializer.validated_data["list_name"]}"
+            f"Kein passender Empfänger gefunden, E-Mail:{address}, Liste:{serializer.validated_data["list_name"]}"
         )
 
 
