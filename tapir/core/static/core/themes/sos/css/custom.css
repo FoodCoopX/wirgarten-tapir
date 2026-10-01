@@ -30,56 +30,56 @@
 h1 {
     line-height: 1.4 !important;
     font-size: 39px !important;
-    font-family: "Bitterbrush", sans-serif !important;
+    font-family: "RadioCanada-Regular", sans-serif !important;
 }
 
 h2 {
     line-height: 1.4 !important;
     font-size: 33px !important;
-    font-family: "Bitterbrush", sans-serif !important;
+    font-family: "RadioCanada-Regular", sans-serif !important;
 }
 
 h3 {
     line-height: 1.4 !important;
     font-size: 23px !important;
-    font-family: "Bitterbrush", sans-serif !important;
+    font-family: "RadioCanada-Regular", sans-serif !important;
 }
 
 h4 {
     line-height: 1.4 !important;
     font-size: 20px !important;
-    font-family: "Bitterbrush", sans-serif !important;
+    font-family: "RadioCanada-Regular", sans-serif !important;
 }
 
 h5 {
     line-height: 1.4 !important;
     font-size: 17px !important;
-    font-family: "Bitterbrush", sans-serif !important;
+    font-family: "RadioCanada-Regular", sans-serif !important;
 }
 
 h6 {
     line-height: 1.4 !important;
     font-size: 16px !important;
-    font-family: "Bitterbrush", sans-serif !important;
+    font-family: "RadioCanada-Regular", sans-serif !important;
 }
 
 body {
     font-size: 16px !important;
     line-height: 1.7 !important;
-    font-family: "RadioCanada", sans-serif !important;
+    font-family: "RadioCanada-Light", sans-serif !important;
     color: var(--black);
 }
 
 
 @font-face {
-    font-family: "Bitterbrush";
+    font-family: "RadioCanada-Regular";
     font-style: normal;
-    src: url("/static/core/themes/sos/fonts/Bitterbrush-Regular.woff2") format("woff2");
+    src: url("/static/core/themes/sos/fonts/RadioCanada-Regular.woff2") format("woff2");
 }
 
 
 @font-face {
-    font-family: "RadioCanada";
+    font-family: "RadioCanada-Light";
     font-style: normal;
-    src: url("/static/core/themes/sos/fonts/RadioCanada-Regular.woff2") format("woff2");
+    src: url("/static/core/themes/sos/fonts/RadioCanada-Light.woff2") format("woff2");
 }
