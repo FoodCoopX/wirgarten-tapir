@@ -883,4 +883,3 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         self.assertStatusCode(response, 200)
         returned_credit_ids = {credit["id"] for credit in response.json()["credits"]}
         self.assertEqual({str(unsettled_credit.id)}, returned_credit_ids)
-        self.assertNotIn(str(settled_credit.id), returned_credit_ids)

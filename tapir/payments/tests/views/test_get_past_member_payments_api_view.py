@@ -161,10 +161,6 @@ class TestGetPastMemberPaymentsAPIView(TapirIntegrationTest):
         )
 
     def test_get_creditSettledBeforeItsDueDate_stillReturnedInPastView(self):
-        # A credit can be settled (paid out) before its due date arrives.
-        # It must not disappear from the payment series entirely: it's
-        # deliberately hidden from the future view once settled, so it has
-        # to show up here instead, even though its due date is still ahead.
         mock_timezone(test=self, now=datetime.datetime(year=2021, month=5, day=1))
         member = MemberFactory.create()
         self.client.force_login(member)
@@ -189,9 +185,6 @@ class TestGetPastMemberPaymentsAPIView(TapirIntegrationTest):
         )
 
     def test_get_creditSettledBeforeItsDueDate_neverDisappearsFromEitherView(self):
-        # End-to-end version of the above: the same credit is checked
-        # against both endpoints, to pin down the invariant that a settled
-        # credit is always visible exactly in one of the two views.
         mock_timezone(test=self, now=datetime.datetime(year=2021, month=5, day=1))
         member = MemberFactory.create()
         self.client.force_login(member)
