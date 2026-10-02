@@ -13,6 +13,9 @@ from phonenumber_field.modelfields import PhoneNumberField
 from tapir_mail.models import StaticSegmentRecipient
 
 from tapir import utils
+from tapir.accounts.services.keycloak_user_manager import (
+    KeycloakUserManager,
+)
 from tapir.core.models import ID_LENGTH, TapirModel, generate_id
 from tapir.log.models import TextLogEntry, UpdateModelLogEntry
 from tapir.utils.models import CountryField
@@ -50,10 +53,6 @@ class KeycloakUser(AbstractUser):
             target = obj
 
         if target.roles is None:
-            from tapir.accounts.services.keycloak_user_manager import (
-                KeycloakUserManager,
-            )
-
             target.roles = KeycloakUserManager.get_user_roles(
                 keycloak_id=target.keycloak_id
             )
