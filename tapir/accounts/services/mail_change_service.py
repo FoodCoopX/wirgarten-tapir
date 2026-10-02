@@ -71,6 +71,7 @@ class MailChangeService:
 
         EmailChangeRequest.objects.filter(user_id=user.id).delete()
 
+        # Clearing requests that are not related to this user but that are outdated
         link_validity = relativedelta(minutes=EMAIL_CHANGE_LINK_VALIDITY_MINUTES)
         EmailChangeRequest.objects.filter(
             created_at__lte=get_now(cache=cache) - link_validity
