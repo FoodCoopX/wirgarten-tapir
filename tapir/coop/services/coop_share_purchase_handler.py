@@ -56,7 +56,7 @@ class CoopSharePurchaseHandler:
         now = get_now(cache=cache)
         if member.sepa_consent != now:
             member.sepa_consent = get_now(cache=cache)
-            member.save(cache=cache)
+            member.save()
 
         cls.send_warning_mail_if_necessary(
             quantity=quantity,

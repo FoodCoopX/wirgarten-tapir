@@ -37,7 +37,6 @@ class UpdateMemberBankDataRequestSerializer(serializers.Serializer):
 class MemberProfilePersonalDataResponseSerializer(serializers.Serializer):
     first_name = serializers.CharField()
     last_name = serializers.CharField()
-    email = serializers.EmailField()
     phone_number = serializers.CharField()
     phone_number_landline = serializers.CharField(
         required=False, allow_blank=True, allow_null=True
@@ -59,7 +58,6 @@ class MemberProfilePersonalDataRequestSerializer(serializers.Serializer):
     member_id = serializers.CharField()
     first_name = serializers.CharField()
     last_name = serializers.CharField()
-    email = serializers.EmailField()
     phone_number = serializers.CharField()
     phone_number_landline = serializers.CharField(
         required=False, allow_blank=True, allow_null=True
@@ -70,3 +68,15 @@ class MemberProfilePersonalDataRequestSerializer(serializers.Serializer):
     city = serializers.CharField()
     country = serializers.CharField(required=False)
     is_student = serializers.BooleanField(required=False)
+
+
+class MemberEmailResponseSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    verified = serializers.BooleanField()
+    contact_email = serializers.EmailField()
+    is_admin = serializers.BooleanField()
+
+
+class MemberEmailRequestSerializer(serializers.Serializer):
+    member_id = serializers.CharField()
+    email = serializers.EmailField()

@@ -138,7 +138,9 @@ class TestGetPastMemberPaymentsAPIView(TapirIntegrationTest):
         settled_credit = MemberCreditFactory.create(
             member=member,
             due_date=datetime.date(year=2021, month=1, day=1),
-            settled_on=datetime.datetime(year=2021, month=1, day=5),
+            settled_on=datetime.datetime(
+                year=2021, month=1, day=5, tzinfo=datetime.timezone.utc
+            ),
         )
         unsettled_credit = MemberCreditFactory.create(
             member=member,
@@ -168,7 +170,9 @@ class TestGetPastMemberPaymentsAPIView(TapirIntegrationTest):
         credit_settled_early = MemberCreditFactory.create(
             member=member,
             due_date=datetime.date(year=2021, month=6, day=1),
-            settled_on=datetime.datetime(year=2021, month=5, day=1),
+            settled_on=datetime.datetime(
+                year=2021, month=5, day=1, tzinfo=datetime.timezone.utc
+            ),
         )
 
         url = reverse("payments:member_past_payments")
@@ -192,7 +196,9 @@ class TestGetPastMemberPaymentsAPIView(TapirIntegrationTest):
         credit_settled_early = MemberCreditFactory.create(
             member=member,
             due_date=datetime.date(year=2021, month=6, day=1),
-            settled_on=datetime.datetime(year=2021, month=5, day=1),
+            settled_on=datetime.datetime(
+                year=2021, month=5, day=1, tzinfo=datetime.timezone.utc
+            ),
         )
 
         past_url = reverse("payments:member_past_payments")

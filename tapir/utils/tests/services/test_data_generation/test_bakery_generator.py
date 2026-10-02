@@ -14,11 +14,11 @@ from tapir.bakery.services.bread_delivery_context_service import (
     BreadDeliveryContextService,
 )
 from tapir.configuration.models import TapirParameter
-from tapir.pickup_locations.tests.factories import (
-    create_pickup_location_with_opening_times,
-)
 from tapir.pickup_locations.services.pickup_location_delivery_day_service import (
     PickupLocationDeliveryDayService,
+)
+from tapir.pickup_locations.tests.factories import (
+    create_pickup_location_with_opening_times,
 )
 from tapir.utils.services.test_data_generation.bakery_generator import BakeryGenerator
 from tapir.utils.services.test_data_generation.data_generator import DataGenerator
@@ -48,7 +48,6 @@ class TestBakeryGenerator(TapirIntegrationTest):
 
     def setUp(self):
         super().setUp()
-        self._set_parameter(ParameterKeys.MEMBER_BYPASS_KEYCLOAK, True)
         self._create_growing_periods()
 
     @staticmethod

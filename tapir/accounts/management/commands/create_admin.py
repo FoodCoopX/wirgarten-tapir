@@ -1,28 +1,24 @@
-import sys
-
 from django.core.management import BaseCommand
 
 from tapir.accounts.models import TapirUser
+from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
 
 
 class Command(BaseCommand):
     help = "Create the initial admin account"
 
     def handle(self, *args, **options):
-        # if TapirUser.objects.filter(is_superuser=True).exists():
-        #    sys.stderr.write(
-        #        "There is already an admin account in the system, this command is disabled.\n"
-        #    )
-        #    return
-
-        admin = TapirUser(
+        admin = TapirUser.objects.create(
             first_name=options["first_name"],
             last_name=options["last_name"],
             email=options["email"],
+            username=options["email"],
             is_staff=True,
             is_superuser=True,
         )
-        admin.save(initial_password=options["password"])
+        KeycloakUserManager.create_keycloak_user_if_necessary(
+            user=admin, initial_password=options["password"], cache={}
+        )
 
     def add_arguments(self, parser):
         parser.add_argument(

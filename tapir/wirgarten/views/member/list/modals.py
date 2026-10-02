@@ -3,6 +3,7 @@ from django.urls import reverse_lazy
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
 
+from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
 from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.forms.member import (
@@ -65,9 +66,12 @@ def get_member_personal_data_create_form(request, **kwargs):
 
 
 def save_member_and_assign_number(form: PersonalDataForm):
+    form.instance.username = form.instance.email
     form.save()
     cache = {}
-    if not MemberNumberService.assign_member_number_if_eligible(
+    MemberNumberService.assign_member_number_if_eligible(
         form.instance, cache=cache, actor=form.request.user
-    ):
-        form.instance.save()  # second save persists keycloak ID (#947)
+    )
+    KeycloakUserManager.create_keycloak_user_if_necessary(
+        user=form.instance, cache=cache, initial_password=None
+    )
