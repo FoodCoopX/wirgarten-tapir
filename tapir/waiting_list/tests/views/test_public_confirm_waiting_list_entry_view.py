@@ -106,7 +106,10 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
 
         self.assertEqual(0, WaitingListEntry.objects.count())
 
-    @patch("tapir_mail.triggers.transactional_trigger.TransactionalTrigger.fire_action")
+    @patch(
+        "tapir_mail.triggers.transactional_trigger.TransactionalTrigger.fire_action",
+        autospec=True,
+    )
     def test_post_waitingListEntryWithoutStartDateAndNoGrowingPeriodOnCurrentStartDate_startsContractOnFollowingGrowingPeriod(
         self, mock_fire_action: Mock
     ):
@@ -202,7 +205,7 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
         self.assertEqual(1, Member.objects.count())
         self.assertFalse(CoopShareTransaction.objects.exists())
 
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_waitingListEntryWithDeliveredProduct_mailConfirmationGetsSentWithCorrectDates(
         self, mock_fire_action: Mock
     ):

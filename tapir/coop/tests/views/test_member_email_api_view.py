@@ -73,7 +73,7 @@ class TestMemberEmailApiView(TapirIntegrationTest):
             response_content,
         )
 
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_memberTriesToUpdateDataFromAnotherMember_returns403(
         self, mock_fire_action: Mock
     ):
@@ -95,7 +95,7 @@ class TestMemberEmailApiView(TapirIntegrationTest):
         mock_fire_action.assert_not_called()
         self.assertFalse(UpdateTapirUserLogEntry.objects.exists())
 
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_newEmailIsAlreadyInUse_dontApplyChangesAndReturnsError(
         self, mock_fire_action: Mock
     ):
@@ -129,7 +129,7 @@ class TestMemberEmailApiView(TapirIntegrationTest):
         mock_fire_action.assert_not_called()
         self.assertFalse(UpdateTapirUserLogEntry.objects.exists())
 
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     @patch.object(EmailVerificationService, "is_user_email_verified", autospec=True)
     def test_post_emailWasVerified_sendsEmailChangeConfirmationButDontChangeCurrentMail(
         self, mock_is_user_email_verified: Mock, mock_fire_action: Mock
@@ -183,7 +183,7 @@ class TestMemberEmailApiView(TapirIntegrationTest):
         self.assertIsNone(trigger_data.recipient_id_in_base_queryset)
         self.assertEqual({}, trigger_data.token_data)
 
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     @patch.object(EmailVerificationService, "send_verification_email", autospec=True)
     @patch.object(EmailVerificationService, "is_user_email_verified", autospec=True)
     def test_post_emailWasNotVerified_changeEmailRightAwayAndSendKeycloakVerificationMail(

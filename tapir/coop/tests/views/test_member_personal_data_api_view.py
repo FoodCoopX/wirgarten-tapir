@@ -137,7 +137,7 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
         response_content = response.json()
         self.assertIsNone(response_content["is_student"])
 
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_patch_memberTriesToUpdateDataFromAnotherMember_returns403(
         self, mock_fire_action: Mock
     ):
@@ -170,7 +170,7 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
         mock_fire_action.assert_not_called()
         self.assertFalse(UpdateTapirUserLogEntry.objects.exists())
 
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_patch_memberTriesToUpdateOwnData_updatesDataAndCreateLogEntryAndSendMail(
         self, mock_fire_action: Mock
     ):
@@ -229,7 +229,7 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
         self.assertIsNone(trigger_data.recipient_outside_of_base_queryset)
         self.assertEqual({}, trigger_data.token_data)
 
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_patch_adminTriesToUpdateDataOfAnOtherMember_updatesDataAndCreateLogEntryAndSendMail(
         self, mock_fire_action: Mock
     ):
@@ -330,7 +330,7 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
             content_type="application/json",
         )
 
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_patch_adminChangesCountry_countryIsSaved(self, _):
         admin = MemberFactory.create(is_superuser=True)
         target = MemberFactory.create(country="DE")
@@ -342,7 +342,7 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
         target.refresh_from_db()
         self.assertEqual("AT", target.country)
 
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_patch_memberTriesToChangeOwnCountry_countryIsNotChanged(self, _):
         user = MemberFactory.create(is_superuser=False, country="DE")
 
@@ -352,7 +352,7 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
         user.refresh_from_db()
         self.assertEqual("DE", user.country)
 
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_patch_adminSendsCountryOutsideOfDeAndAt_dontApplyChangesAndReturnsError(
         self, mock_fire_action: Mock
     ):
@@ -369,7 +369,7 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
         self.assertEqual("DE", target.country)
         mock_fire_action.assert_not_called()
 
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_patch_adminSendsNoCountry_dontApplyChangesAndReturnsError(
         self, mock_fire_action: Mock
     ):
@@ -384,7 +384,7 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
         self.assertEqual("AT", target.country)
         mock_fire_action.assert_not_called()
 
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_patch_phoneNumberIsInvalid_dontApplyChangesAndReturnsError(
         self, mock_fire_action: Mock
     ):
@@ -422,7 +422,7 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
         mock_fire_action.assert_not_called()
         self.assertFalse(UpdateTapirUserLogEntry.objects.exists())
 
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_patch_setsSecondPhoneNumber_savesIt(self, mock_fire_action: Mock):
         user = MemberFactory.create(is_superuser=False, phone_number_landline=None)
         self.client.force_login(user)
@@ -452,7 +452,7 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
         user.refresh_from_db()
         self.assertEqual("+4930123456", user.phone_number_landline)
 
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_patch_secondPhoneNumberLeftBlank_isNotRequired(
         self, mock_fire_action: Mock
     ):
@@ -484,7 +484,7 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
         user.refresh_from_db()
         self.assertIsNone(user.phone_number_landline)
 
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_patch_secondPhoneNumberIsInvalid_dontApplyChangesAndReturnsError(
         self, mock_fire_action: Mock
     ):
@@ -525,7 +525,7 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
         mock_fire_action.assert_not_called()
         self.assertFalse(UpdateTapirUserLogEntry.objects.exists())
 
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_patch_normalMemberTriesToChangeStudentStatus_dontApplyChangesAndReturnError(
         self, mock_fire_action: Mock
     ):
@@ -597,7 +597,7 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
         self.assertTrue(target.is_student)
 
     @patch.object(KeycloakUserManager, "update_keycloak_user_name", autospec=True)
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_patch_nameChanged_updatesStaticRecipientsAndKeycloak(
         self, mock_fire_action: Mock, mock_update_keycloak_user_name: Mock
     ):

@@ -36,7 +36,7 @@ class TestValidateDates(TapirUnitTest):
                 cache=Mock(),
             )
 
-    @patch.object(TapirCache, "get_growing_period_at_date")
+    @patch.object(TapirCache, "get_growing_period_at_date", autospec=True)
     def test_validateDates_givenStartDateIsNotOnSameGrowingPeriod_raisesError(
         self, mock_get_growing_period_at_date: Mock
     ):
@@ -69,8 +69,8 @@ class TestValidateDates(TapirUnitTest):
         )
         self.assertEqual(2, mock_get_growing_period_at_date.call_count)
 
-    @patch.object(TapirCache, "get_growing_period_at_date")
-    @patch("tapir.subscriptions.views.other.get_parameter_value")
+    @patch.object(TapirCache, "get_growing_period_at_date", autospec=True)
+    @patch("tapir.subscriptions.views.other.get_parameter_value", autospec=True)
     def test_validateDates_givenEndDateIsNotOnSameGrowingPeriod_raisesError(
         self, mock_get_parameter_value: Mock, mock_get_growing_period_at_date: Mock
     ):

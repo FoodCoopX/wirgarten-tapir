@@ -129,9 +129,13 @@ class TestGet(TapirIntegrationTest):
 
         self.assertStatusCode(response, status.HTTP_403_FORBIDDEN)
 
-    @patch.object(ProductCancellationDataBuilder, "build_data_for_all_products")
     @patch.object(
-        CoopMembershipCancellationManager, "can_member_cancel_coop_membership"
+        ProductCancellationDataBuilder, "build_data_for_all_products", autospec=True
+    )
+    @patch.object(
+        CoopMembershipCancellationManager,
+        "can_member_cancel_coop_membership",
+        autospec=True,
     )
     def test_get_adminAsksForDataOfOtherMember_returnsStatus200(self, *_):
         user = MemberFactory.create(is_superuser=True)

@@ -22,7 +22,7 @@ from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
-@patch.object(UserGenerator, "get_user_count", return_value=25)
+@patch.object(UserGenerator, "get_user_count", return_value=25, autospec=True)
 class TestGenerateAllWithBakery(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):

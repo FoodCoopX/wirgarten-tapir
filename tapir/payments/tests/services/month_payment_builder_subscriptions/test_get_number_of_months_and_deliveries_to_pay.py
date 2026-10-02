@@ -1,17 +1,20 @@
 import datetime
 from unittest.mock import patch, Mock, call
 
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
-
 from tapir.payments.services.month_payment_builder_subscriptions import (
     MonthPaymentBuilderSubscriptions,
 )
 from tapir.wirgarten.constants import WEEKLY
 from tapir.wirgarten.tests.factories import SubscriptionFactory
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestGetNumberOfMonthsAndDeliveriesToPay(TapirUnitTest):
-    @patch.object(MonthPaymentBuilderSubscriptions, "get_number_of_deliveries_in_month")
+    @patch.object(
+        MonthPaymentBuilderSubscriptions,
+        "get_number_of_deliveries_in_month",
+        autospec=True,
+    )
     def test_getNumberOfMonthsAndDeliveriesToPay_default_checksEveryMonthOfRangeCorrectly(
         self,
         mock_get_number_of_deliveries_in_month: Mock,

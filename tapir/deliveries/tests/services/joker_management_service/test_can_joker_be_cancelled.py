@@ -11,7 +11,9 @@ class TestJokerManagementServiceCanJokerBeCancelled(TapirUnitTest):
     def setUp(self):
         self.now = mock_timezone(self, factories.NOW)
 
-    @patch.object(JokerManagementService, "get_date_limit_for_joker_changes")
+    @patch.object(
+        JokerManagementService, "get_date_limit_for_joker_changes", autospec=True
+    )
     def test_canJokerBeCancelled_dateLimitIsInTheFuture_returnsTrue(
         self, mock_get_date_limit_for_joker_changes: Mock
     ):
@@ -29,7 +31,9 @@ class TestJokerManagementServiceCanJokerBeCancelled(TapirUnitTest):
             joker.date, cache=cache
         )
 
-    @patch.object(JokerManagementService, "get_date_limit_for_joker_changes")
+    @patch.object(
+        JokerManagementService, "get_date_limit_for_joker_changes", autospec=True
+    )
     def test_canJokerBeCancelled_dateLimitIsNotInTheFuture_returnsFalse(
         self, mock_get_date_limit_for_joker_changes: Mock
     ):

@@ -78,7 +78,10 @@ class TestWaitingListCreateEntryExistingMemberView(TapirIntegrationTest):
         self.assertEqual(404, response.status_code)
         self.assertEqual(0, WaitingListEntry.objects.count())
 
-    @patch("tapir_mail.triggers.transactional_trigger.TransactionalTrigger.fire_action")
+    @patch(
+        "tapir_mail.triggers.transactional_trigger.TransactionalTrigger.fire_action",
+        autospec=True,
+    )
     def test_post_memberAlreadyHasWaitingListEntry_returnsOrderNotConfirmed(
         self, mock_fire_action: Mock
     ):
@@ -98,7 +101,10 @@ class TestWaitingListCreateEntryExistingMemberView(TapirIntegrationTest):
         self.assertEqual(1, WaitingListEntry.objects.count())
         mock_fire_action.assert_not_called()
 
-    @patch("tapir_mail.triggers.transactional_trigger.TransactionalTrigger.fire_action")
+    @patch(
+        "tapir_mail.triggers.transactional_trigger.TransactionalTrigger.fire_action",
+        autospec=True,
+    )
     def test_post_loggedInAsSelf_createsEntryAndSendsConfirmationMail(
         self, mock_fire_action: Mock
     ):
@@ -150,7 +156,10 @@ class TestWaitingListCreateEntryExistingMemberView(TapirIntegrationTest):
             trigger_data.token_data,
         )
 
-    @patch("tapir_mail.triggers.transactional_trigger.TransactionalTrigger.fire_action")
+    @patch(
+        "tapir_mail.triggers.transactional_trigger.TransactionalTrigger.fire_action",
+        autospec=True,
+    )
     def test_post_memberAlreadyHasAPickupLocation_createsEntryAndSendsConfirmationMailWithCorrectPickupLocationToken(
         self, mock_fire_action: Mock
     ):
@@ -183,7 +192,10 @@ class TestWaitingListCreateEntryExistingMemberView(TapirIntegrationTest):
             trigger_data.token_data,
         )
 
-    @patch("tapir_mail.triggers.transactional_trigger.TransactionalTrigger.fire_action")
+    @patch(
+        "tapir_mail.triggers.transactional_trigger.TransactionalTrigger.fire_action",
+        autospec=True,
+    )
     def test_post_noGrowingPeriodCoveringToday_stillCreatesEntry(
         self, mock_fire_action: Mock
     ):
@@ -204,7 +216,10 @@ class TestWaitingListCreateEntryExistingMemberView(TapirIntegrationTest):
         self.assertEqual(1, WaitingListEntry.objects.count())
         mock_fire_action.assert_called_once()
 
-    @patch("tapir_mail.triggers.transactional_trigger.TransactionalTrigger.fire_action")
+    @patch(
+        "tapir_mail.triggers.transactional_trigger.TransactionalTrigger.fire_action",
+        autospec=True,
+    )
     def test_post_loggedInAsAdminForAnotherMember_createsEntry(
         self, mock_fire_action: Mock
     ):

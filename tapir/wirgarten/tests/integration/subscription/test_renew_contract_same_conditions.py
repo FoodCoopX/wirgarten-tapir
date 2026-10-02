@@ -24,7 +24,10 @@ from tapir.wirgarten.tests.factories import (
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
-@patch("tapir.wirgarten.views.member.details.actions.send_product_order_confirmation")
+@patch(
+    "tapir.wirgarten.views.member.details.actions.send_product_order_confirmation",
+    autospec=True,
+)
 class TestRenewContractSameConditionsCreatesBreadDeliveries(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):

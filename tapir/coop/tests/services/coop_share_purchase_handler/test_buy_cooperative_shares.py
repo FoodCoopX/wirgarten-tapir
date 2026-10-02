@@ -11,11 +11,16 @@ from tapir.wirgarten.tests.test_utils import mock_timezone
 
 
 class TestBuyCooperativeShares(TapirUnitTest):
-    @patch.object(CoopSharesPurchasedLogEntry, "populate_transaction")
-    @patch("tapir.coop.services.coop_share_purchase_handler.get_parameter_value")
-    @patch.object(CoopSharePurchaseHandler, "send_warning_mail_if_necessary")
+    @patch.object(CoopSharesPurchasedLogEntry, "populate_transaction", autospec=True)
+    @patch(
+        "tapir.coop.services.coop_share_purchase_handler.get_parameter_value",
+        autospec=True,
+    )
+    @patch.object(
+        CoopSharePurchaseHandler, "send_warning_mail_if_necessary", autospec=True
+    )
     @patch.object(CoopShareTransaction, "objects")
-    @patch.object(CoopSharePurchaseHandler, "create_or_update_payment")
+    @patch.object(CoopSharePurchaseHandler, "create_or_update_payment", autospec=True)
     @patch.object(
         MandateReferenceProvider,
         "get_or_create_mandate_reference",
@@ -85,11 +90,16 @@ class TestBuyCooperativeShares(TapirUnitTest):
 
         self.assertEqual(result, transaction)
 
-    @patch.object(CoopSharesPurchasedLogEntry, "populate_transaction")
-    @patch("tapir.coop.services.coop_share_purchase_handler.get_parameter_value")
-    @patch.object(CoopSharePurchaseHandler, "send_warning_mail_if_necessary")
+    @patch.object(CoopSharesPurchasedLogEntry, "populate_transaction", autospec=True)
+    @patch(
+        "tapir.coop.services.coop_share_purchase_handler.get_parameter_value",
+        autospec=True,
+    )
+    @patch.object(
+        CoopSharePurchaseHandler, "send_warning_mail_if_necessary", autospec=True
+    )
     @patch.object(CoopShareTransaction, "objects")
-    @patch.object(CoopSharePurchaseHandler, "create_or_update_payment")
+    @patch.object(CoopSharePurchaseHandler, "create_or_update_payment", autospec=True)
     @patch.object(
         MandateReferenceProvider,
         "get_or_create_mandate_reference",

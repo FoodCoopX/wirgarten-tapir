@@ -10,14 +10,17 @@ class TestValidatePattern(TapirUnitTest):
     @patch.object(
         MandateReferencePatternValidator,
         "validate_pattern_doesnt_contains_illegal_characters",
+        autospec=True,
     )
     @patch.object(
         MandateReferencePatternValidator,
         "validate_member_numbers_can_only_be_used_if_they_are_always_assigned",
+        autospec=True,
     )
     @patch.object(
         MandateReferencePatternValidator,
         "validate_pattern_contains_at_least_one_unique_token",
+        autospec=True,
     )
     def test_validatePattern_default_callsAllSubValidators(
         self,

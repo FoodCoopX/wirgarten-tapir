@@ -35,7 +35,7 @@ class TestUseDeliveryDonationView(TapirIntegrationTest):
         super().setUp()
         mock_timezone(test=self, now=datetime.datetime(year=2000, month=2, day=22))
 
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_featureIsDisabled_returns403(self, mock_fire_action: Mock):
         TapirParameter.objects.filter(key=ParameterKeys.DELIVERY_DONATION_MODE).update(
             value=DELIVERY_DONATION_MODE_DISABLED
@@ -52,7 +52,7 @@ class TestUseDeliveryDonationView(TapirIntegrationTest):
         self.assertFalse(DeliveryDonation.objects.exists())
         mock_fire_action.assert_not_called()
 
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_memberCreatesDonationForAnotherMember_returns403(
         self, mock_fire_action: Mock
     ):
@@ -75,7 +75,7 @@ class TestUseDeliveryDonationView(TapirIntegrationTest):
         self.assertFalse(DeliveryDonation.objects.exists())
         mock_fire_action.assert_not_called()
 
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_memberCreatesOwnDonation_createsDonationAndSendsMailAndCreatesLogEntry(
         self, mock_fire_action: Mock
     ):
@@ -114,7 +114,7 @@ class TestUseDeliveryDonationView(TapirIntegrationTest):
         self.assertEqual(donation.date, log_entry.date)
         self.assertEqual(donation, log_entry.delivery_donation)
 
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_creationNotAllowed_createsDonationAndSendsMailAndCreatesLogEntry(
         self, mock_fire_action: Mock
     ):
@@ -136,7 +136,7 @@ class TestUseDeliveryDonationView(TapirIntegrationTest):
         self.assertFalse(DeliveryDonation.objects.exists())
         mock_fire_action.assert_not_called()
 
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_adminCreatesDonationForOtherMember_createsDonationAndSendsMailAndCreatesLogEntry(
         self, mock_fire_action: Mock
     ):

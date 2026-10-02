@@ -1,18 +1,24 @@
 from unittest.mock import patch, Mock, ANY
 
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
-
 from tapir.subscriptions.services.automatic_subscription_renewal_service import (
     AutomaticSubscriptionRenewalService,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestRenewSubscriptionIfNecessary(TapirUnitTest):
-    @patch.object(AutomaticSubscriptionRenewalService, "build_renewed_subscription")
-    @patch.object(AutomaticSubscriptionRenewalService, "must_subscription_be_renewed")
+    @patch.object(
+        AutomaticSubscriptionRenewalService, "build_renewed_subscription", autospec=True
+    )
+    @patch.object(
+        AutomaticSubscriptionRenewalService,
+        "must_subscription_be_renewed",
+        autospec=True,
+    )
     @patch(
-        "tapir.subscriptions.services.automatic_subscription_renewal_service.get_parameter_value"
+        "tapir.subscriptions.services.automatic_subscription_renewal_service.get_parameter_value",
+        autospec=True,
     )
     def test_renewSubscriptionIfNecessary_automaticRenewalIsDisabled_doNothing(
         self,
@@ -31,13 +37,20 @@ class TestRenewSubscriptionIfNecessary(TapirUnitTest):
 
         mock_build_renewed_subscription.assert_not_called()
 
-    @patch.object(AutomaticSubscriptionRenewalService, "build_renewed_subscription")
-    @patch.object(AutomaticSubscriptionRenewalService, "must_subscription_be_renewed")
+    @patch.object(
+        AutomaticSubscriptionRenewalService, "build_renewed_subscription", autospec=True
+    )
+    @patch.object(
+        AutomaticSubscriptionRenewalService,
+        "must_subscription_be_renewed",
+        autospec=True,
+    )
     @patch(
         "tapir.subscriptions.services.automatic_subscription_renewal_service.get_active_subscriptions"
     )
     @patch(
-        "tapir.subscriptions.services.automatic_subscription_renewal_service.get_parameter_value"
+        "tapir.subscriptions.services.automatic_subscription_renewal_service.get_parameter_value",
+        autospec=True,
     )
     def test_renewSubscriptionIfNecessary_subscriptionMustNotBeRenewed_dontRenew(
         self,
@@ -64,13 +77,20 @@ class TestRenewSubscriptionIfNecessary(TapirUnitTest):
     @patch(
         "tapir.subscriptions.services.automatic_subscription_renewal_service.BreadDeliveryService"
     )
-    @patch.object(AutomaticSubscriptionRenewalService, "build_renewed_subscription")
-    @patch.object(AutomaticSubscriptionRenewalService, "must_subscription_be_renewed")
+    @patch.object(
+        AutomaticSubscriptionRenewalService, "build_renewed_subscription", autospec=True
+    )
+    @patch.object(
+        AutomaticSubscriptionRenewalService,
+        "must_subscription_be_renewed",
+        autospec=True,
+    )
     @patch(
         "tapir.subscriptions.services.automatic_subscription_renewal_service.get_active_subscriptions"
     )
     @patch(
-        "tapir.subscriptions.services.automatic_subscription_renewal_service.get_parameter_value"
+        "tapir.subscriptions.services.automatic_subscription_renewal_service.get_parameter_value",
+        autospec=True,
     )
     def test_renewSubscriptionIfNecessary_subscriptionMustBeRenewed_callRenew(
         self,

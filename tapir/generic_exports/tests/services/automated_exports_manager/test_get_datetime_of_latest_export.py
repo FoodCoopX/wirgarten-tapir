@@ -12,11 +12,20 @@ class TestGetDatetimeOfLatestExport(TapirUnitTest):
     @patch.object(
         AutomatedExportsManager,
         "get_datetime_of_latest_export_after_pickup_location_change_deadline",
+        autospec=True,
     )
-    @patch.object(AutomatedExportsManager, "get_datetime_of_latest_daily_export")
-    @patch.object(AutomatedExportsManager, "get_datetime_of_latest_weekly_export")
-    @patch.object(AutomatedExportsManager, "get_datetime_of_latest_monthly_export")
-    @patch.object(AutomatedExportsManager, "get_datetime_of_latest_yearly_export")
+    @patch.object(
+        AutomatedExportsManager, "get_datetime_of_latest_daily_export", autospec=True
+    )
+    @patch.object(
+        AutomatedExportsManager, "get_datetime_of_latest_weekly_export", autospec=True
+    )
+    @patch.object(
+        AutomatedExportsManager, "get_datetime_of_latest_monthly_export", autospec=True
+    )
+    @patch.object(
+        AutomatedExportsManager, "get_datetime_of_latest_yearly_export", autospec=True
+    )
     def test_getDatetimeOfLatestExport_exportIsYearly_getsResultFromYearlyFunction(
         self,
         mock_yearly: Mock,
@@ -42,11 +51,20 @@ class TestGetDatetimeOfLatestExport(TapirUnitTest):
     @patch.object(
         AutomatedExportsManager,
         "get_datetime_of_latest_export_after_pickup_location_change_deadline",
+        autospec=True,
     )
-    @patch.object(AutomatedExportsManager, "get_datetime_of_latest_daily_export")
-    @patch.object(AutomatedExportsManager, "get_datetime_of_latest_weekly_export")
-    @patch.object(AutomatedExportsManager, "get_datetime_of_latest_monthly_export")
-    @patch.object(AutomatedExportsManager, "get_datetime_of_latest_yearly_export")
+    @patch.object(
+        AutomatedExportsManager, "get_datetime_of_latest_daily_export", autospec=True
+    )
+    @patch.object(
+        AutomatedExportsManager, "get_datetime_of_latest_weekly_export", autospec=True
+    )
+    @patch.object(
+        AutomatedExportsManager, "get_datetime_of_latest_monthly_export", autospec=True
+    )
+    @patch.object(
+        AutomatedExportsManager, "get_datetime_of_latest_yearly_export", autospec=True
+    )
     def test_getDatetimeOfLatestExport_exportIsMonthly_getsResultFromMonthlyFunction(
         self,
         mock_yearly: Mock,
@@ -72,11 +90,20 @@ class TestGetDatetimeOfLatestExport(TapirUnitTest):
     @patch.object(
         AutomatedExportsManager,
         "get_datetime_of_latest_export_after_pickup_location_change_deadline",
+        autospec=True,
     )
-    @patch.object(AutomatedExportsManager, "get_datetime_of_latest_daily_export")
-    @patch.object(AutomatedExportsManager, "get_datetime_of_latest_weekly_export")
-    @patch.object(AutomatedExportsManager, "get_datetime_of_latest_monthly_export")
-    @patch.object(AutomatedExportsManager, "get_datetime_of_latest_yearly_export")
+    @patch.object(
+        AutomatedExportsManager, "get_datetime_of_latest_daily_export", autospec=True
+    )
+    @patch.object(
+        AutomatedExportsManager, "get_datetime_of_latest_weekly_export", autospec=True
+    )
+    @patch.object(
+        AutomatedExportsManager, "get_datetime_of_latest_monthly_export", autospec=True
+    )
+    @patch.object(
+        AutomatedExportsManager, "get_datetime_of_latest_yearly_export", autospec=True
+    )
     def test_getDatetimeOfLatestExport_exportIsWeekly_getsResultFromWeeklyFunction(
         self,
         mock_yearly: Mock,
@@ -102,11 +129,20 @@ class TestGetDatetimeOfLatestExport(TapirUnitTest):
     @patch.object(
         AutomatedExportsManager,
         "get_datetime_of_latest_export_after_pickup_location_change_deadline",
+        autospec=True,
     )
-    @patch.object(AutomatedExportsManager, "get_datetime_of_latest_daily_export")
-    @patch.object(AutomatedExportsManager, "get_datetime_of_latest_weekly_export")
-    @patch.object(AutomatedExportsManager, "get_datetime_of_latest_monthly_export")
-    @patch.object(AutomatedExportsManager, "get_datetime_of_latest_yearly_export")
+    @patch.object(
+        AutomatedExportsManager, "get_datetime_of_latest_daily_export", autospec=True
+    )
+    @patch.object(
+        AutomatedExportsManager, "get_datetime_of_latest_weekly_export", autospec=True
+    )
+    @patch.object(
+        AutomatedExportsManager, "get_datetime_of_latest_monthly_export", autospec=True
+    )
+    @patch.object(
+        AutomatedExportsManager, "get_datetime_of_latest_yearly_export", autospec=True
+    )
     def test_getDatetimeOfLatestExport_exportIsDaily_getsResultFromDailyFunction(
         self,
         mock_yearly: Mock,
@@ -132,11 +168,20 @@ class TestGetDatetimeOfLatestExport(TapirUnitTest):
     @patch.object(
         AutomatedExportsManager,
         "get_datetime_of_latest_export_after_pickup_location_change_deadline",
+        autospec=True,
     )
-    @patch.object(AutomatedExportsManager, "get_datetime_of_latest_daily_export")
-    @patch.object(AutomatedExportsManager, "get_datetime_of_latest_weekly_export")
-    @patch.object(AutomatedExportsManager, "get_datetime_of_latest_monthly_export")
-    @patch.object(AutomatedExportsManager, "get_datetime_of_latest_yearly_export")
+    @patch.object(
+        AutomatedExportsManager, "get_datetime_of_latest_daily_export", autospec=True
+    )
+    @patch.object(
+        AutomatedExportsManager, "get_datetime_of_latest_weekly_export", autospec=True
+    )
+    @patch.object(
+        AutomatedExportsManager, "get_datetime_of_latest_monthly_export", autospec=True
+    )
+    @patch.object(
+        AutomatedExportsManager, "get_datetime_of_latest_yearly_export", autospec=True
+    )
     def test_getDatetimeOfLatestExport_exportIsAfterDeadline_getsResultFromDeadlineFunction(
         self,
         mock_yearly: Mock,
@@ -165,11 +210,20 @@ class TestGetDatetimeOfLatestExport(TapirUnitTest):
     @patch.object(
         AutomatedExportsManager,
         "get_datetime_of_latest_export_after_pickup_location_change_deadline",
+        autospec=True,
     )
-    @patch.object(AutomatedExportsManager, "get_datetime_of_latest_daily_export")
-    @patch.object(AutomatedExportsManager, "get_datetime_of_latest_weekly_export")
-    @patch.object(AutomatedExportsManager, "get_datetime_of_latest_monthly_export")
-    @patch.object(AutomatedExportsManager, "get_datetime_of_latest_yearly_export")
+    @patch.object(
+        AutomatedExportsManager, "get_datetime_of_latest_daily_export", autospec=True
+    )
+    @patch.object(
+        AutomatedExportsManager, "get_datetime_of_latest_weekly_export", autospec=True
+    )
+    @patch.object(
+        AutomatedExportsManager, "get_datetime_of_latest_monthly_export", autospec=True
+    )
+    @patch.object(
+        AutomatedExportsManager, "get_datetime_of_latest_yearly_export", autospec=True
+    )
     def test_getDatetimeOfLatestExport_exportIsNever_raisesError(
         self,
         mock_yearly: Mock,

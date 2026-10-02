@@ -110,7 +110,11 @@ class TestConfirmSubscriptionChangesView(TapirIntegrationTest):
             ).exists()
         )
 
-    @patch.object(OrderConfirmationMailSender, "send_confirmation_mail_if_necessary")
+    @patch.object(
+        OrderConfirmationMailSender,
+        "send_confirmation_mail_if_necessary",
+        autospec=True,
+    )
     def test_post_default_confirmSelectionAndSendConfirmationMails(
         self, mock_send_confirmation_mail_if_necessary: Mock
     ):

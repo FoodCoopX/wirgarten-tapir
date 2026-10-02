@@ -8,8 +8,8 @@ from tapir.utils.services.test_data_generation.data_generator import DataGenerat
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
-@patch.object(DataGenerator, "generate_all")
-@patch.object(DataGenerator, "clear")
+@patch.object(DataGenerator, "generate_all", autospec=True)
+@patch.object(DataGenerator, "clear", autospec=True)
 class TestPopulateCommand(TapirIntegrationTest):
     def test_resetAll_noOrganization_defaultsToBiotop(self, _clear, mock_generate_all):
         call_command("populate", "--reset_all")

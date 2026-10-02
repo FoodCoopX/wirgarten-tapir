@@ -31,10 +31,11 @@ class TestCancelSubscriptions(TapirIntegrationTest):
         ).update(value=True)
         self.now = mock_timezone(self, datetime.datetime(year=2022, month=6, day=9))
 
-    @patch.object(TrialPeriodManager, "is_contract_in_trial")
+    @patch.object(TrialPeriodManager, "is_contract_in_trial", autospec=True)
     @patch.object(
         SubscriptionCancellationManager,
         "get_earliest_possible_cancellation_date_for_product",
+        autospec=True,
     )
     def test_cancelSubscriptions_default_cancelsSubscription(
         self,
@@ -64,10 +65,11 @@ class TestCancelSubscriptions(TapirIntegrationTest):
             self.assertEqual(cancellation_date, subscription.end_date)
             self.assertEqual(self.now, subscription.cancellation_ts)
 
-    @patch.object(TrialPeriodManager, "is_contract_in_trial")
+    @patch.object(TrialPeriodManager, "is_contract_in_trial", autospec=True)
     @patch.object(
         SubscriptionCancellationManager,
         "get_earliest_possible_cancellation_date_for_product",
+        autospec=True,
     )
     def test_cancelSubscriptions_cancellationDateIsBeforeStartDate_deletesFutureSubscriptions(
         self,
@@ -101,7 +103,7 @@ class TestCancelSubscriptions(TapirIntegrationTest):
         self.assertEqual(1, Subscription.objects.count())
         self.assertIn(active_subscription, Subscription.objects.all())
 
-    @patch.object(TrialPeriodManager, "is_contract_in_trial")
+    @patch.object(TrialPeriodManager, "is_contract_in_trial", autospec=True)
     def test_cancelSubscriptions_subscriptionIsInNotTrialButAutoRenewIsOff_raisesException(
         self,
         mock_is_contract_in_trial: Mock,
@@ -128,10 +130,11 @@ class TestCancelSubscriptions(TapirIntegrationTest):
         active_subscription.refresh_from_db()
         self.assertIsNone(active_subscription.cancellation_ts)
 
-    @patch.object(TrialPeriodManager, "is_contract_in_trial")
+    @patch.object(TrialPeriodManager, "is_contract_in_trial", autospec=True)
     @patch.object(
         SubscriptionCancellationManager,
         "get_earliest_possible_cancellation_date_for_product",
+        autospec=True,
     )
     def test_cancelSubscriptions_subscriptionIsInTrialAndAutoRenewIsOn_subscriptionCancelled(
         self,
@@ -160,10 +163,11 @@ class TestCancelSubscriptions(TapirIntegrationTest):
         self.assertEqual(cancellation_date, subscription.end_date)
         self.assertEqual(self.now, subscription.cancellation_ts)
 
-    @patch.object(TrialPeriodManager, "is_contract_in_trial")
+    @patch.object(TrialPeriodManager, "is_contract_in_trial", autospec=True)
     @patch.object(
         SubscriptionCancellationManager,
         "get_earliest_possible_cancellation_date_for_product",
+        autospec=True,
     )
     def test_cancelSubscriptions_cancelDateIsSameAsStartDate_deletesSubscription(
         self,
@@ -193,10 +197,11 @@ class TestCancelSubscriptions(TapirIntegrationTest):
 
         self.assertFalse(Subscription.objects.exists())
 
-    @patch.object(TrialPeriodManager, "is_contract_in_trial")
+    @patch.object(TrialPeriodManager, "is_contract_in_trial", autospec=True)
     @patch.object(
         SubscriptionCancellationManager,
         "get_earliest_possible_cancellation_date_for_product",
+        autospec=True,
     )
     def test_cancelSubscriptions_subscriptionIsRenewed_cancelsCurrentAndFutureSubscription(
         self,

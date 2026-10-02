@@ -13,7 +13,7 @@ class TestCreateOrUpdatePayment(TapirIntegrationTest):
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
-    @patch.object(CoopSharePurchaseHandler, "get_payment_due_date")
+    @patch.object(CoopSharePurchaseHandler, "get_payment_due_date", autospec=True)
     def test_createOrUpdatePayment_paymentAlreadyExistsAtDueDate_existingPaymentUpdated(
         self, mock_get_payment_due_date: Mock
     ):
@@ -41,7 +41,7 @@ class TestCreateOrUpdatePayment(TapirIntegrationTest):
         )  # 120 from before plus 3*50 for the 3 new shares
         self.assertEqual(1, Payment.objects.count())  # no payment created
 
-    @patch.object(CoopSharePurchaseHandler, "get_payment_due_date")
+    @patch.object(CoopSharePurchaseHandler, "get_payment_due_date", autospec=True)
     def test_createOrUpdatePayment_noExistingPayment_newPaymentUpdated(
         self, mock_get_payment_due_date: Mock
     ):

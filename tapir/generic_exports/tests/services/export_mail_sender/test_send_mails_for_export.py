@@ -1,13 +1,14 @@
 from unittest.mock import Mock, patch
 
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
-
 from tapir.generic_exports.services.export_mail_sender import ExportMailSender
 from tapir.wirgarten.service.email import Attachment
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestSendMailForExport(TapirUnitTest):
-    @patch("tapir.generic_exports.services.export_mail_sender.send_email")
+    @patch(
+        "tapir.generic_exports.services.export_mail_sender.send_email", autospec=True
+    )
     def test_sendMailsForExport_noRecipients_sendMailsNotCalled(
         self, mock_send_email: Mock
     ):
@@ -18,8 +19,10 @@ class TestSendMailForExport(TapirUnitTest):
 
         mock_send_email.assert_not_called()
 
-    @patch("tapir.generic_exports.services.export_mail_sender.mimetypes")
-    @patch("tapir.generic_exports.services.export_mail_sender.send_email")
+    @patch("tapir.generic_exports.services.export_mail_sender.mimetypes", autospec=True)
+    @patch(
+        "tapir.generic_exports.services.export_mail_sender.send_email", autospec=True
+    )
     def test_sendMailsForExport_hasRecipients_sendsMails(
         self, mock_send_email: Mock, mock_mimetypes: Mock
     ):

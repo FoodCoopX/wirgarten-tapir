@@ -12,8 +12,10 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
 class TestDoAutomatedCsvExports(TapirIntegrationTest):
-    @patch.object(AutomatedExportsManager, "do_single_csv_export")
-    @patch.object(AutomatedExportsManager, "get_datetime_of_latest_export")
+    @patch.object(AutomatedExportsManager, "do_single_csv_export", autospec=True)
+    @patch.object(
+        AutomatedExportsManager, "get_datetime_of_latest_export", autospec=True
+    )
     def test_doAutomatedCsvExports_exportHasCycleNever_noExportDone(
         self, mock_get_datetime_of_latest_export: Mock, mock_do_single_csv_export: Mock
     ):
@@ -24,8 +26,10 @@ class TestDoAutomatedCsvExports(TapirIntegrationTest):
         mock_get_datetime_of_latest_export.assert_not_called()
         mock_do_single_csv_export.assert_not_called()
 
-    @patch.object(AutomatedExportsManager, "do_single_csv_export")
-    @patch.object(AutomatedExportsManager, "get_datetime_of_latest_export")
+    @patch.object(AutomatedExportsManager, "do_single_csv_export", autospec=True)
+    @patch.object(
+        AutomatedExportsManager, "get_datetime_of_latest_export", autospec=True
+    )
     def test_doAutomatedCsvExports_alreadyExportedAtTargetDate_noExportDone(
         self, mock_get_datetime_of_latest_export: Mock, mock_do_single_csv_export: Mock
     ):
@@ -46,8 +50,10 @@ class TestDoAutomatedCsvExports(TapirIntegrationTest):
         mock_get_datetime_of_latest_export.assert_called_once_with(export, cache=cache)
         mock_do_single_csv_export.assert_not_called()
 
-    @patch.object(AutomatedExportsManager, "do_single_csv_export")
-    @patch.object(AutomatedExportsManager, "get_datetime_of_latest_export")
+    @patch.object(AutomatedExportsManager, "do_single_csv_export", autospec=True)
+    @patch.object(
+        AutomatedExportsManager, "get_datetime_of_latest_export", autospec=True
+    )
     def test_doAutomatedCsvExports_noExportAtTargetDate_exportDone(
         self, mock_get_datetime_of_latest_export: Mock, mock_do_single_csv_export: Mock
     ):

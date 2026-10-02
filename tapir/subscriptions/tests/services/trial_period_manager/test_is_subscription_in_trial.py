@@ -1,10 +1,9 @@
 import datetime
 from unittest.mock import patch, Mock
 
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
-
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 from tapir.wirgarten.tests.test_utils import mock_timezone
 
 
@@ -12,8 +11,11 @@ class TestIsSubscriptionInTrial(TapirUnitTest):
     def setUp(self):
         mock_timezone(self, datetime.datetime(year=2026, month=3, day=15))
 
-    @patch("tapir.subscriptions.services.trial_period_manager.get_parameter_value")
-    @patch.object(TrialPeriodManager, "get_last_day_of_trial_period")
+    @patch(
+        "tapir.subscriptions.services.trial_period_manager.get_parameter_value",
+        autospec=True,
+    )
+    @patch.object(TrialPeriodManager, "get_last_day_of_trial_period", autospec=True)
     def test_isSubscriptionInTrial_endOfTrialIsInThePast_returnsFalse(
         self, mock_get_last_day_of_trial_period: Mock, mock_get_parameter_value: Mock
     ):
@@ -35,8 +37,11 @@ class TestIsSubscriptionInTrial(TapirUnitTest):
             subscription, cache=cache
         )
 
-    @patch("tapir.subscriptions.services.trial_period_manager.get_parameter_value")
-    @patch.object(TrialPeriodManager, "get_last_day_of_trial_period")
+    @patch(
+        "tapir.subscriptions.services.trial_period_manager.get_parameter_value",
+        autospec=True,
+    )
+    @patch.object(TrialPeriodManager, "get_last_day_of_trial_period", autospec=True)
     def test_isSubscriptionInTrial_endOfTrialIsInTheFuture_returnsTrue(
         self, mock_get_last_day_of_trial_period: Mock, mock_get_parameter_value: Mock
     ):
@@ -58,8 +63,11 @@ class TestIsSubscriptionInTrial(TapirUnitTest):
             subscription, cache=cache
         )
 
-    @patch("tapir.subscriptions.services.trial_period_manager.get_parameter_value")
-    @patch.object(TrialPeriodManager, "get_last_day_of_trial_period")
+    @patch(
+        "tapir.subscriptions.services.trial_period_manager.get_parameter_value",
+        autospec=True,
+    )
+    @patch.object(TrialPeriodManager, "get_last_day_of_trial_period", autospec=True)
     def test_isSubscriptionInTrial_endOfTrialIsOnSameDay_returnsTrue(
         self, mock_get_last_day_of_trial_period: Mock, mock_get_parameter_value: Mock
     ):
@@ -81,8 +89,11 @@ class TestIsSubscriptionInTrial(TapirUnitTest):
             subscription, cache=cache
         )
 
-    @patch("tapir.subscriptions.services.trial_period_manager.get_parameter_value")
-    @patch.object(TrialPeriodManager, "get_last_day_of_trial_period")
+    @patch(
+        "tapir.subscriptions.services.trial_period_manager.get_parameter_value",
+        autospec=True,
+    )
+    @patch.object(TrialPeriodManager, "get_last_day_of_trial_period", autospec=True)
     def test_isSubscriptionInTrial_trialPeriodsAreDisabled_returnsFalse(
         self, mock_get_last_day_of_trial_period: Mock, mock_get_parameter_value: Mock
     ):
