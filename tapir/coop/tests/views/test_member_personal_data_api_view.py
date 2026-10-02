@@ -1,13 +1,15 @@
-from unittest.mock import patch, Mock
+from unittest.mock import patch, Mock, ANY
 
 from django.urls import reverse
 from rest_framework import status
+from tapir_mail.models import StaticSegment, StaticSegmentRecipient
 from tapir_mail.triggers.transactional_trigger import (
     TransactionalTrigger,
     TransactionalTriggerData,
 )
 
 from tapir.accounts.models import UpdateTapirUserLogEntry
+from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
 from tapir.configuration.models import TapirParameter
 from tapir.core.config import LEGAL_STATUS_ASSOCIATION, LEGAL_STATUS_COOPERATIVE
 from tapir.wirgarten.mail_events import Events
@@ -593,3 +595,61 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
 
         target.refresh_from_db()
         self.assertTrue(target.is_student)
+
+    @patch.object(KeycloakUserManager, "update_keycloak_user_name", autospec=True)
+    @patch.object(TransactionalTrigger, "fire_action")
+    def test_patch_nameChanged_updatesStaticRecipientsAndKeycloak(
+        self, mock_fire_action: Mock, mock_update_keycloak_user_name: Mock
+    ):
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+        target_user = MemberFactory.create(is_superuser=False)
+
+        static_segment = StaticSegment.objects.create(name="test_segment")
+        target_recipient = StaticSegmentRecipient.objects.create(
+            segment=static_segment,
+            email=target_user.email,
+            first_name="old_fn",
+            last_name="old_ln",
+        )
+        other_recipient = StaticSegmentRecipient.objects.create(
+            segment=static_segment,
+            email="other@example.com",
+            first_name="old_fn_2",
+            last_name="old_ln_2",
+        )
+
+        url = reverse("coop:member_personal_data")
+        data = {
+            "member_id": target_user.id,
+            "first_name": "test_fn",
+            "last_name": "test_ln",
+            "street": "test_street",
+            "street_2": "test_street2",
+            "phone_number": "017726254738",
+            "postcode": "12345",
+            "city": "test_city",
+            "country": "DE",
+            "is_student": False,
+        }
+        response = self.client.patch(
+            url,
+            data=data,
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        response_content = response.json()
+        self.assertTrue(response_content["order_confirmed"])
+        self.assertIsNone(response_content["error"])
+
+        mock_update_keycloak_user_name.assert_called_once_with(
+            user=target_user, cache=ANY
+        )
+
+        target_recipient.refresh_from_db()
+        self.assertEqual("test_fn", target_recipient.first_name)
+        self.assertEqual("test_ln", target_recipient.last_name)
+
+        other_recipient.refresh_from_db()
+        self.assertEqual("old_fn_2", other_recipient.first_name)
+        self.assertEqual("old_ln_2", other_recipient.last_name)
