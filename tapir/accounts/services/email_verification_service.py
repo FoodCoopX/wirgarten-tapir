@@ -32,9 +32,8 @@ class EmailVerificationService:
             )
         except Exception as e:
             LOG.error(
-                "Failed to send keycloak verification email to user: ",
+                f"Failed to send keycloak verification email to user (email: '{user.email}', id: '{user.id}', keycloak_id: '{user.keycloak_id}'): ",
                 e,
-                f" (email: '{user.email}', id: '{user.id}', keycloak_id: '{user.keycloak_id}'): ",
             )
 
         TextLogEntry().populate(
