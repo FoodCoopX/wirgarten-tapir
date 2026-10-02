@@ -22,6 +22,9 @@ from tapir_mail.triggers.transactional_trigger import (
 from tapir.accounts.models import EmailChangeRequest, UpdateTapirUserLogEntry, TapirUser
 from tapir.accounts.services.email_normaliser import EmailNormaliser
 from tapir.accounts.services.email_verification_service import EmailVerificationService
+from tapir.accounts.services.keycloak_user_delete_service import (
+    KeycloakUserDeleteService,
+)
 from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
 from tapir.accounts.services.mail_change_service import MailChangeService
 from tapir.configuration.parameter import get_parameter_value
@@ -347,6 +350,7 @@ class DeleteMemberApiView(APIView):
         parameters=[OpenApiParameter(name="member_id", type=str)],
     )
     def delete(self, request):
+        cache = {}
         member_id = request.query_params.get("member_id")
         member = get_object_or_404(Member, id=member_id)
 
@@ -376,9 +380,7 @@ class DeleteMemberApiView(APIView):
 
             member.delete()
 
-            kc = KeycloakUserManager.get_keycloak_client(cache={})
-            if member.keycloak_id:
-                kc.delete_user(member.keycloak_id)
+            KeycloakUserDeleteService.delete_user_if_exists(user=member, cache=cache)
 
         return Response("deleted")
 
