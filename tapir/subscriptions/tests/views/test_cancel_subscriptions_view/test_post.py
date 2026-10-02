@@ -50,8 +50,12 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         super().setUp()
         self.now = mock_timezone(self, NOW)
 
-    @patch.object(CoopMembershipCancellationManager, "cancel_coop_membership")
-    @patch.object(SubscriptionCancellationManager, "cancel_subscriptions")
+    @patch.object(
+        CoopMembershipCancellationManager, "cancel_coop_membership", autospec=True
+    )
+    @patch.object(
+        SubscriptionCancellationManager, "cancel_subscriptions", autospec=True
+    )
     def test_post_memberCancelsSubscriptionsOfOtherMember_returns403(
         self,
         mock_cancel_subscriptions: Mock,
@@ -78,7 +82,9 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         mock_cancel_subscriptions.assert_not_called()
         mock_cancel_coop_membership.assert_not_called()
 
-    @patch.object(SubscriptionCancellationManager, "cancel_subscriptions")
+    @patch.object(
+        SubscriptionCancellationManager, "cancel_subscriptions", autospec=True
+    )
     def test_post_memberCancelsOwnSubscriptions_returns200(
         self, mock_cancel_subscriptions: Mock
     ):
@@ -102,7 +108,9 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         self.assertStatusCode(response, 200)
         self.assertEqual(3, mock_cancel_subscriptions.call_count)
 
-    @patch.object(SubscriptionCancellationManager, "cancel_subscriptions")
+    @patch.object(
+        SubscriptionCancellationManager, "cancel_subscriptions", autospec=True
+    )
     def test_post_adminCancelsSubscriptionOfOtherMember_returns200(
         self, mock_cancel_subscriptions: Mock
     ):
@@ -127,10 +135,16 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         self.assertStatusCode(response, 200)
         self.assertEqual(3, mock_cancel_subscriptions.call_count)
 
-    @patch.object(CoopMembershipCancellationManager, "cancel_coop_membership")
-    @patch.object(SubscriptionCancellationManager, "cancel_subscriptions")
     @patch.object(
-        CoopMembershipCancellationManager, "can_member_cancel_coop_membership"
+        CoopMembershipCancellationManager, "cancel_coop_membership", autospec=True
+    )
+    @patch.object(
+        SubscriptionCancellationManager, "cancel_subscriptions", autospec=True
+    )
+    @patch.object(
+        CoopMembershipCancellationManager,
+        "can_member_cancel_coop_membership",
+        autospec=True,
     )
     def test_post_memberTriesToCancelCoopMembershipButCannot_returnsError(
         self,
@@ -160,10 +174,16 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         mock_cancel_subscriptions.assert_not_called()
         mock_cancel_coop_membership.assert_not_called()
 
-    @patch.object(CoopMembershipCancellationManager, "cancel_coop_membership")
-    @patch.object(SubscriptionCancellationManager, "cancel_subscriptions")
     @patch.object(
-        CoopMembershipCancellationManager, "can_member_cancel_coop_membership"
+        CoopMembershipCancellationManager, "cancel_coop_membership", autospec=True
+    )
+    @patch.object(
+        SubscriptionCancellationManager, "cancel_subscriptions", autospec=True
+    )
+    @patch.object(
+        CoopMembershipCancellationManager,
+        "can_member_cancel_coop_membership",
+        autospec=True,
     )
     def test_post_memberTriesToCancelCoopMembershipAndIsAllowed_cancelsCoopMembership(
         self,
@@ -199,10 +219,16 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
             member.email, mock_cancel_coop_membership.call_args.kwargs["actor"].email
         )
 
-    @patch.object(CoopMembershipCancellationManager, "cancel_coop_membership")
-    @patch.object(SubscriptionCancellationManager, "cancel_subscriptions")
     @patch.object(
-        CoopMembershipCancellationManager, "can_member_cancel_coop_membership"
+        CoopMembershipCancellationManager, "cancel_coop_membership", autospec=True
+    )
+    @patch.object(
+        SubscriptionCancellationManager, "cancel_subscriptions", autospec=True
+    )
+    @patch.object(
+        CoopMembershipCancellationManager,
+        "can_member_cancel_coop_membership",
+        autospec=True,
     )
     def test_post_memberDoesntCancelCoopMembership_coopMembershipNotCancelled(
         self,
@@ -233,7 +259,9 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         self.assertEqual(3, mock_cancel_subscriptions.call_count)
         mock_cancel_coop_membership.assert_not_called()
 
-    @patch.object(SubscriptionCancellationManager, "cancel_subscriptions")
+    @patch.object(
+        SubscriptionCancellationManager, "cancel_subscriptions", autospec=True
+    )
     def test_post_tryingToCancelARequiredSubscriptionWhileOptionalSubscriptionsAreActive_returnsError(
         self,
         mock_cancel_subscriptions: Mock,
@@ -268,7 +296,7 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         )
         mock_cancel_subscriptions.assert_not_called()
 
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_default_sendsMailTriggerAndCreatesLogEntryAndSavesCancellationReasons(
         self,
         mock_fire_action: Mock,
@@ -347,7 +375,7 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
             ).exists()
         )
 
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_aSubscriptionStartsInTheFuture_subscriptionIsIncludedInMailTriggerAndHasOwnLogEntry(
         self,
         mock_fire_action: Mock,
@@ -429,8 +457,10 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
             log_entry.subscriptions,
         )
 
-    @patch.object(SubscriptionCancellationManager, "cancel_subscriptions")
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(
+        SubscriptionCancellationManager, "cancel_subscriptions", autospec=True
+    )
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_cancellationReasonIsInvalid_returnsError(
         self, mock_fire_action: Mock, mock_cancel_subscriptions: Mock
     ):
@@ -477,8 +507,10 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         mock_fire_action.assert_not_called()
         mock_cancel_subscriptions.assert_not_called()
 
-    @patch.object(SubscriptionCancellationManager, "cancel_subscriptions")
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(
+        SubscriptionCancellationManager, "cancel_subscriptions", autospec=True
+    )
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_noCancellationReasonSent_returnsError(
         self, mock_fire_action: Mock, mock_cancel_subscriptions: Mock
     ):
@@ -522,7 +554,7 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         mock_fire_action.assert_not_called()
         mock_cancel_subscriptions.assert_not_called()
 
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_noCustomReasonSent_doesntCreateACustomObject(
         self, mock_fire_action: Mock
     ):
@@ -653,7 +685,7 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
             datetime.date(year=2013, month=1, day=20), contribution.end_date
         )
 
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_severalSubscriptionsCancelledWithDifferentEndDates_mailTokenContainsMaxEndDate(
         self,
         mock_fire_action: Mock,

@@ -393,7 +393,7 @@ class CancelSubscriptionsView(APIView):
         subscribed_products: set[Product],
     ):
         if not CoopMembershipCancellationManager.can_member_cancel_coop_membership(
-            member=member, cache=self.cache
+            member=member, reference_date=get_today(cache=self.cache), cache=self.cache
         ):
             raise ValidationError(
                 "Es ist nur möglich, die Beitrittserklärung zu widerrufen, wenn du noch nicht Mitglied bist."
