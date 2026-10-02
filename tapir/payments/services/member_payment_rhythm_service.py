@@ -11,6 +11,7 @@ from tapir.solidarity_contribution.services.member_solidarity_contribution_servi
     MemberSolidarityContributionService,
 )
 from tapir.utils.services.tapir_cache import TapirCache
+from tapir.utils.services.tapir_cache_manager import TapirCacheManager
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import get_today
@@ -224,4 +225,7 @@ class MemberPaymentRhythmService:
         ).delete()
         MemberPaymentRhythm.objects.create(
             member=member, rhythm=rhythm, valid_from=valid_from
+        )
+        TapirCacheManager.clear_category(
+            cache=cache, category=TapirCacheManager.CATEGORY_PAYMENT_RHYTHMS
         )

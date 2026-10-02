@@ -16,6 +16,8 @@ Du hast {{Beitritt zur Genossenschaft.Anzahl gezeichnete Geschäftsanteile}} Ant
 
 Dein Geschäftsguthaben beträgt daher {{Beitritt zur Genossenschaft.Gesamtwert der gezeichneten Geschäftsanteile}} Euro. <br /><br />
 
+Dein Beitrittsdatum in der Genossenschaft ist der {{Beitritt zur Genossenschaft.Beitrittsdatum Genossenschaft}}. <br /><br />
+
 Mit deiner Mitgliedschaft in der Genossenschaft trägst du aktiv dazu bei, ökologische, regionale, kleinbäuerliche Landwirtschaft zu ermöglichen. Gemeinsam sorgen wir dafür, dass Lebensmittel fair produziert werden – für die Menschen, die sie anbauen, und für die, die sie genießen. <br /><br />
 
 Wenn Du noch eine Frage oder Rückmeldung hast, melde Dich gerne bei uns! <br /><br />
@@ -31,6 +33,7 @@ Folgende Trigger sind hier relevant: <br />
 {{Beitritt zur Genossenschaft.Anzahl gezeichnete Geschäftsanteile}} <br />
 {{Beitritt zur Genossenschaft.Wert Geno-Anteil}} <br />
 {{Beitritt zur Genossenschaft.Gesamtwert der gezeichneten Geschäftsanteile}} <br />
+{{Beitritt zur Genossenschaft.Beitrittsdatum Genossenschaft}} <br />
 <br /> 
             </mj-text>
         </mj-column>

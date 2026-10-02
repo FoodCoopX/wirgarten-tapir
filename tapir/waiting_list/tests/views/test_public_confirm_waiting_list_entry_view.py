@@ -117,6 +117,11 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
         mock_timezone(test=self, now=datetime.datetime(year=1997, month=3, day=30))
         GrowingPeriodFactory.create(start_date=datetime.date(year=1997, month=6, day=1))
         product = ProductFactory.create()
+        ProductPriceFactory.create(
+            product=product,
+            valid_from=datetime.date(year=1990, month=1, day=1),
+            price=Decimal("10.00"),
+        )
         WaitingListProductWish.objects.create(
             product=product, waiting_list_entry=entry, quantity=2
         )
@@ -284,7 +289,7 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
             {
                 "contract_start_date": "11.05.2026",
                 "contract_end_date": "31.12.2026",
-                "contract_list": "<ul><li>1 × M Basket  (11.05.2026 - 31.12.2026)</li></ul>",
+                "contract_list": "<ul><li>1 × M Basket  (11.05.2026 - 31.12.2026) — 10,00 € / Monat</li></ul>",
                 "membership_start_date": "07.06.2026",
                 "membership_monthly_price": "0,00",
                 "first_pickup_date": "14.05.2026",
@@ -293,6 +298,8 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
                 "total_cost": "100,00",
                 "solidarity_contribution_amount": "12,00",
                 "solidarity_contribution_start_date": "11.05.2026",
+                "monthly_total": "22,00",
+                "payment_rhythm": "Halbjährlich",
             },
             trigger_data.token_data,
         )
@@ -390,8 +397,14 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
             confirmation_link_key=uuid.uuid4(),
             member=None,
         )
+        product = ProductFactory.create()
+        ProductPriceFactory.create(
+            product=product,
+            valid_from=datetime.date(year=1990, month=1, day=1),
+            price=Decimal("10.00"),
+        )
         WaitingListProductWish.objects.create(
-            waiting_list_entry=entry, quantity=1, product=ProductFactory.create()
+            waiting_list_entry=entry, quantity=1, product=product
         )
         mock_timezone(test=self, now=datetime.datetime(year=1997, month=3, day=30))
         GrowingPeriodFactory.create(start_date=datetime.date(year=1997, month=1, day=1))
