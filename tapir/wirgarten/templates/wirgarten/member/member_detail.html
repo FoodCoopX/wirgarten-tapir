@@ -103,12 +103,11 @@
                             margin-top:1em">
           <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">{% translate "Persönliche Daten" %}</h5>
-            <span class="d-flex flex-row gap-2">
-                            {% if extra_email_addresses_enabled %}
-                              <span id="extra_email_addresses" data-member-id="{{ object.id }}"></span>
-                            {% endif %}
-              <span id="edit_personal_data_button" data-member-id="{{ object.id }}"></span>
-                        </span>
+            <span
+              id="personal_data_dropdown"
+              data-member-id="{{ object.id }}"
+              data-extra-email-addresses-enabled="{{ extra_email_addresses_enabled }}">
+            </span>
           </div>
           <div class="card-body">
             <div class="row m-1">
@@ -183,16 +182,18 @@
                 {% endif %}
               </div>
             </div>
-            {% if object.pk == request.user.pk %}
-              <div>
-                <hr />
-                <a style="float: right"
-                   class="btn tapir-btn btn-outline-primary ms-1"
-                   href="{% url 'accounts:password_change' %}"><span
-                  class="material-icons">vpn_key</span>{% translate "Passwort ändern" %}</a>
-              </div>
-            {% endif %}
+
           </div>
+          {% if object.pk == request.user.pk %}
+            <div class="card-footer">
+            <span class="d-flex flex-row gap-2 justify-content-end" style="width: 100%;">
+              <a style="float: right"
+                 class="btn tapir-btn btn-outline-primary ms-1"
+                 href="{% url 'accounts:password_change' %}"><span
+                class="material-icons">vpn_key</span>{% translate "Passwort ändern" %}</a>
+            </span>
+            </div>
+          {% endif %}
         </div>
       </div>
       <div id="member-detail-right-column">

@@ -14,7 +14,6 @@ from tapir.wirgarten.tests.factories import (
     MemberFactory,
     PickupLocationFactory,
 )
-from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
@@ -32,7 +31,6 @@ class TestDistributionListService(TapirIntegrationTest):
 
     def setUp(self):
         super().setUp()
-        self._set_parameter(ParameterKeys.MEMBER_BYPASS_KEYCLOAK, True)
         self.roggenbrot = BreadFactory.create(name="Roggenbrot")
         self.dinkelkruste = BreadFactory.create(name="Dinkelkruste")
 

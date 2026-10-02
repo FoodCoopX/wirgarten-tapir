@@ -19,7 +19,6 @@ from tapir.utils.services.test_data_generation.product_generator import (
 from tapir.utils.services.test_data_generation.user_generator import UserGenerator
 from tapir.wirgarten.models import ProductType
 from tapir.wirgarten.parameters import ParameterDefinitions
-from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
@@ -28,10 +27,6 @@ class TestGenerateAllWithBakery(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
-
-    def setUp(self):
-        super().setUp()
-        self._set_parameter(ParameterKeys.MEMBER_BYPASS_KEYCLOAK, True)
 
     def test_generateAll_withBakery_producesACoherentWeek(self, _count):
         DataGenerator.generate_all(Organization.BAKERY)

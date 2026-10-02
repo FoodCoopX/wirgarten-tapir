@@ -35,12 +35,6 @@ export interface MemberProfilePersonalDataResponse {
    * @type {string}
    * @memberof MemberProfilePersonalDataResponse
    */
-  email: string;
-  /**
-   *
-   * @type {string}
-   * @memberof MemberProfilePersonalDataResponse
-   */
   phoneNumber: string;
   /**
    *
@@ -124,7 +118,6 @@ export function instanceOfMemberProfilePersonalDataResponse(
 ): value is MemberProfilePersonalDataResponse {
   if (!("firstName" in value) || value["firstName"] === undefined) return false;
   if (!("lastName" in value) || value["lastName"] === undefined) return false;
-  if (!("email" in value) || value["email"] === undefined) return false;
   if (!("phoneNumber" in value) || value["phoneNumber"] === undefined)
     return false;
   if (!("street" in value) || value["street"] === undefined) return false;
@@ -161,7 +154,6 @@ export function MemberProfilePersonalDataResponseFromJSONTyped(
   return {
     firstName: json["first_name"],
     lastName: json["last_name"],
-    email: json["email"],
     phoneNumber: json["phone_number"],
     phoneNumberLandline:
       json["phone_number_landline"] == null
@@ -198,7 +190,6 @@ export function MemberProfilePersonalDataResponseToJSONTyped(
   return {
     first_name: value["firstName"],
     last_name: value["lastName"],
-    email: value["email"],
     phone_number: value["phoneNumber"],
     phone_number_landline: value["phoneNumberLandline"],
     street: value["street"],

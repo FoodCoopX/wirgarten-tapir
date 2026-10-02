@@ -123,6 +123,8 @@ export * from "./MemberCredit";
 export * from "./MemberCreditCreateRequest";
 export * from "./MemberCreditSettleRequest";
 export * from "./MemberDataToConfirm";
+export * from "./MemberEmailRequestRequest";
+export * from "./MemberEmailResponse";
 export * from "./MemberExtraEmail";
 export * from "./MemberExtraEmailCreateRequestRequest";
 export * from "./MemberExtraMailData";

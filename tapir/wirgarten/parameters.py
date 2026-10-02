@@ -1,6 +1,8 @@
 import datetime
 from decimal import Decimal
 
+from django.conf import settings
+
 from tapir.configuration.models import (
     TapirParameterDatatype,
     TapirParameterDefinitionImporter,
@@ -90,7 +92,8 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         ParameterDefinitionsSupplierList.define_all_parameters_supplier_list(
             importer=self
         )
-        ParameterDefinitionsTest.define_all_parameters_test(importer=self)
+        if getattr(settings, "DEBUG", False):
+            ParameterDefinitionsTest.define_all_parameters_test(importer=self)
         ParameterDefinitionsTrialPeriod.define_all_parameters_trial_period(
             importer=self
         )
