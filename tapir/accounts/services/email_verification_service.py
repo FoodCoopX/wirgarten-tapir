@@ -23,12 +23,15 @@ class EmailVerificationService:
     def send_verification_email(
         cls, user: KeycloakUser, actor: TapirUser | None, cache: dict
     ):
-        kc = KeycloakUserManager.get_keycloak_client(cache=cache)
-        kc.send_verify_email(
-            user_id=user.keycloak_id,
-            redirect_uri=settings.SITE_URL,
-            client_id=settings.KEYCLOAK_ADMIN_CONFIG["FRONTEND_CLIENT_ID"],
-        )
+        if settings.KEYCLOAK_SKIP_VERIFICATION_EMAIL:
+            print(f"Skipping email verification for {user.email}")
+        else:
+            kc = KeycloakUserManager.get_keycloak_client(cache=cache)
+            kc.send_verify_email(
+                user_id=user.keycloak_id,
+                redirect_uri=settings.SITE_URL,
+                client_id=settings.KEYCLOAK_ADMIN_CONFIG["FRONTEND_CLIENT_ID"],
+            )
 
         TextLogEntry().populate(
             text='Keycloak Email gesendet: "Aktivierung des Benutzerkontos"',
