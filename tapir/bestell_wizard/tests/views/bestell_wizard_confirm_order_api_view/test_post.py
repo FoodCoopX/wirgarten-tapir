@@ -145,7 +145,9 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
             key=Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION,
         )
         self.assertEqual(2, mock_on_subscription_updated.call_count)
-        mock_send_verification_email.assert_called_once_with(user=member, actor=member, cache=ANY)
+        mock_send_verification_email.assert_called_once_with(
+            user=member, actor=member, cache=ANY
+        )
 
     def test_post_requestDataIsInvalid_returns400(self):
         data = self.build_valid_post_data_for_an_order_without_waiting_list()
