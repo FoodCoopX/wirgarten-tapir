@@ -24,17 +24,11 @@ class EmailVerificationService:
         cls, user: KeycloakUser, actor: TapirUser | None, cache: dict
     ):
         kc = KeycloakUserManager.get_keycloak_client(cache=cache)
-        try:
-            kc.send_verify_email(
-                user_id=user.keycloak_id,
-                redirect_uri=settings.SITE_URL,
-                client_id=settings.KEYCLOAK_ADMIN_CONFIG["FRONTEND_CLIENT_ID"],
-            )
-        except Exception as e:
-            LOG.error(
-                f"Failed to send keycloak verification email to user (email: '{user.email}', id: '{user.id}', keycloak_id: '{user.keycloak_id}'): ",
-                e,
-            )
+        kc.send_verify_email(
+            user_id=user.keycloak_id,
+            redirect_uri=settings.SITE_URL,
+            client_id=settings.KEYCLOAK_ADMIN_CONFIG["FRONTEND_CLIENT_ID"],
+        )
 
         TextLogEntry().populate(
             text='Keycloak Email gesendet: "Aktivierung des Benutzerkontos"',
