@@ -4,6 +4,7 @@ from tapir_mail.models import MailCategory, MailCategoryMode
 from tapir_mail.service.external_recipient_manager import ExternalRecipientManager
 
 from tapir.accounts.models import TapirUser
+from tapir.accounts.services.email_verification_service import EmailVerificationService
 from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
 from tapir.associations.models import AssociationMembershipType
 from tapir.associations.services.association_membership_change_handler import (
@@ -205,6 +206,10 @@ class BestellWizardOrderFulfiller:
 
         KeycloakUserManager.create_keycloak_user_if_necessary(
             user=member, initial_password=None, cache=cache
+        )
+
+        EmailVerificationService.send_verification_email(
+            user=member, actor=member, cache=cache
         )
 
         return member

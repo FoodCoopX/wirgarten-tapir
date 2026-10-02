@@ -3,6 +3,7 @@ import datetime
 from django.db import transaction
 
 from tapir.accounts.models import TapirUser
+from tapir.accounts.services.email_verification_service import EmailVerificationService
 from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
 from tapir.associations.models import AssociationMembershipType
 from tapir.bestell_wizard.services.bestell_wizard_order_fulfiller import (
@@ -207,6 +208,9 @@ class WaitingListEntryConfirmationApplier:
 
         KeycloakUserManager.create_keycloak_user_if_necessary(
             user=member, initial_password=None, cache=cache
+        )
+        EmailVerificationService.send_verification_email(
+            user=member, actor=actor, cache=cache
         )
 
         return member
