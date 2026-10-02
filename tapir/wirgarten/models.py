@@ -21,6 +21,7 @@ from localflavor.generic.models import IBANField
 from phonenumber_field.modelfields import PhoneNumberField
 
 from tapir.accounts.models import TapirUser
+from tapir.accounts.services.email_normaliser import EmailNormaliser
 from tapir.configuration.parameter import get_parameter_value
 from tapir.core.models import TapirModel
 from tapir.log.models import LogEntry, UpdateModelLogEntry
@@ -337,7 +338,9 @@ class MemberQuerySet(models.QuerySet):
 
 
 class MemberManager(models.Manager.from_queryset(MemberQuerySet)):
-    pass
+    @staticmethod
+    def normalize_email(email: str):
+        return EmailNormaliser.normalise(email)
 
 
 class Member(TapirUser):
