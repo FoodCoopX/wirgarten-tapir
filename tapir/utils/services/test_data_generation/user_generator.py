@@ -45,6 +45,7 @@ from tapir.wirgarten.utils import (
     get_today,
     legal_status_is_cooperative,
     legal_status_is_association,
+    get_now,
 )
 
 
@@ -124,7 +125,7 @@ class UserGenerator:
             )
             CoopShareTransaction.objects.filter(
                 valid_at__lte=get_today(cache=cache) - datetime.timedelta(days=60)
-            ).update(admin_confirmed=get_today(cache=cache))
+            ).update(admin_confirmed=get_now(cache=cache))
 
         cls.link_members_to_pickup_location(
             members_that_need_a_pickup_location, organization=organization
