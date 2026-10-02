@@ -11,6 +11,7 @@ from django.db import transaction
 from icecream import ic
 
 from tapir.accounts.models import EmailChangeRequest
+from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
 from tapir.deliveries.models import Joker
 from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES
 from tapir.payments.models import MemberCredit
@@ -96,8 +97,10 @@ class Command(BaseCommand):
             EmailChangeRequest.objects.all().delete()
             MemberCredit.objects.all().delete()
             Joker.objects.all().delete()
+            kc = KeycloakUserManager.get_keycloak_client(cache={})
             for member in Member.objects.all():
-                # members must be deleted one by one to trigger KeycloakUser.delete
+                if member.keycloak_id:
+                    kc.delete_user(member.keycloak_id)
                 member.delete()
             return
 
@@ -160,8 +163,10 @@ class Command(BaseCommand):
                             EmailChangeRequest.objects.all().delete()
                             MemberCredit.objects.all().delete()
                             Joker.objects.all().delete()
+                            kc = KeycloakUserManager.get_keycloak_client(cache={})
                             for member in Member.objects.all():
-                                # members must be deleted one by one to trigger KeycloakUser.delete
+                                if member.keycloak_id:
+                                    kc.delete_user(member.keycloak_id)
                                 member.delete()
 
                         if import_type == "shares":

@@ -8,7 +8,6 @@ from django.dispatch import receiver
 from django.urls import reverse
 from django.utils import translation
 from django.utils.translation import gettext_lazy as _
-from keycloak.exceptions import KeycloakDeleteError
 from nanoid import generate
 from phonenumber_field.modelfields import PhoneNumberField
 from tapir_mail.models import StaticSegmentRecipient
@@ -23,23 +22,9 @@ from tapir.utils.user_utils import UserUtils
 LOG = logging.getLogger(__name__)
 
 
-class KeycloakUserQuerySet(models.QuerySet):
-    def delete(self):
-        for obj in self:
-            obj.delete()
-
-        super().delete()
-
-
-class KeycloakUserQuerySetManager(models.Manager.from_queryset(KeycloakUserQuerySet)):
-    pass
-
-
 class KeycloakUser(AbstractUser):
     class Meta:
         abstract = True
-
-    objects = KeycloakUserQuerySetManager()
 
     id = models.CharField(
         "ID",
@@ -80,18 +65,6 @@ class KeycloakUser(AbstractUser):
             if not self.has_perm(perm, obj):
                 return False
         return True
-
-    def delete(self, *args, **kwargs):
-        from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
-
-        kc = KeycloakUserManager.get_keycloak_client(cache=kwargs.pop("cache", {}))
-        if self.keycloak_id:
-            try:
-                kc.delete_user(self.keycloak_id)
-            except KeycloakDeleteError as e:
-                LOG.error("Error deleting Keycloak user: ", e)
-
-        super().delete(*args, **kwargs)
 
 
 class TapirUser(KeycloakUser):

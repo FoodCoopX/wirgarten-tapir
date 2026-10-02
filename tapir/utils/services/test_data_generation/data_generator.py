@@ -4,6 +4,7 @@ import factory.random
 from django.core.management import call_command
 
 from tapir.accounts.models import EmailChangeRequest
+from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
 from tapir.associations.models import AssociationMembership, AssociationMembershipType
 from tapir.bakery.models import (
     AvailableBreadsForDeliveryDay,
@@ -109,7 +110,12 @@ class DataGenerator:
             models = model_class.objects.all()
             models.delete()
 
-        Member.objects.filter(email__endswith="@example.com").delete()
+        members_to_delete = Member.objects.filter(email__endswith="@example.com")
+        kc = KeycloakUserManager.get_keycloak_client(cache={})
+        for member in members_to_delete:
+            if member.keycloak_id:
+                kc.delete_user(member.keycloak_id)
+        members_to_delete.delete()
 
         print("Done")
 

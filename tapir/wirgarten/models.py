@@ -20,7 +20,7 @@ from django.utils.translation import gettext_lazy as _
 from localflavor.generic.models import IBANField
 from phonenumber_field.modelfields import PhoneNumberField
 
-from tapir.accounts.models import TapirUser, KeycloakUserQuerySet
+from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
 from tapir.core.models import TapirModel
 from tapir.log.models import LogEntry, UpdateModelLogEntry
@@ -285,7 +285,7 @@ class ProductCapacity(TapirModel):
         return f"{self.period} - {self.product_type} - {self.capacity}"
 
 
-class MemberQuerySet(KeycloakUserQuerySet):
+class MemberQuerySet(models.QuerySet):
     def with_active_subscription(self, reference_date: datetime.date | None = None):
         from tapir.wirgarten.service.products import get_active_subscriptions
 

@@ -376,6 +376,10 @@ class DeleteMemberApiView(APIView):
 
             member.delete()
 
+            kc = KeycloakUserManager.get_keycloak_client(cache={})
+            if member.keycloak_id:
+                kc.delete_user(member.keycloak_id)
+
         return Response("deleted")
 
 
