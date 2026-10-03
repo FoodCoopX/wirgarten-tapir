@@ -138,6 +138,7 @@ class GetCancellationDataView(APIView):
             return {
                 "exists": False,
                 "is_in_trial": False,
+                "is_negative": False,
                 "cancellation_date": today,
             }
 
@@ -149,6 +150,7 @@ class GetCancellationDataView(APIView):
                 )
                 for contribution in contributions
             ),
+            "is_negative": contributions.filter(amount__lt=0).exists(),
             "cancellation_date": SubscriptionCancellationManager.get_earliest_possible_cancellation_date_for_solidarity_contribution(
                 member=member, cache=cache
             ),
@@ -230,6 +232,13 @@ class CancelSubscriptionsView(APIView):
         custom_cancellation_reason: str | None,
         cancel_solidarity_contribution: bool,
     ):
+        cancel_negative_solidarity_contribution = SubscriptionCancellationManager.negative_solidarity_contribution_must_be_cancelled(
+            member=member,
+            products_selected_for_cancellation=products_selected_for_cancellation,
+            cancel_association_membership=cancel_association_membership,
+            cache=self.cache,
+        )
+
         all_cancelled_subscriptions = []
         all_deleted_subscriptions = []
         for product in products_selected_for_cancellation:
@@ -263,7 +272,7 @@ class CancelSubscriptionsView(APIView):
                 ),
             )
 
-        if cancel_solidarity_contribution:
+        if cancel_solidarity_contribution or cancel_negative_solidarity_contribution:
             MemberSolidarityContributionService.assign_contribution_to_member(
                 member=member,
                 change_date=SubscriptionCancellationManager.get_earliest_possible_cancellation_date_for_solidarity_contribution(

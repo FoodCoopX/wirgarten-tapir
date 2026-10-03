@@ -1,4 +1,5 @@
 import datetime
+from decimal import Decimal
 from unittest.mock import patch
 
 from django.urls import reverse
@@ -10,6 +11,7 @@ from tapir.coop.services.coop_membership_cancellation_manager import (
     CoopMembershipCancellationManager,
 )
 from tapir.core.config import LEGAL_STATUS_ASSOCIATION
+from tapir.solidarity_contribution.tests.factories import SolidarityContributionFactory
 from tapir.subscriptions.services.product_cancellation_data_builder import (
     ProductCancellationDataBuilder,
 )
@@ -177,3 +179,51 @@ class TestGet(TapirIntegrationTest):
         self.assertStatusCode(response, status.HTTP_200_OK)
         response_content = response.json()
         self.assertFalse(response_content["can_cancel_association_membership"])
+
+    def test_get_memberHasNegativeSolidarityContribution_isNegativeIsTrue(self):
+        member = MemberFactory.create(is_superuser=False)
+        self.client.force_login(member)
+        SolidarityContributionFactory.create(
+            member=member,
+            start_date=datetime.date(year=2023, month=1, day=1),
+            end_date=datetime.date(year=2023, month=12, day=31),
+            amount=Decimal("-5"),
+        )
+
+        url = reverse("subscriptions:cancellation_data")
+        response = self.client.get(f"{url}?member_id={member.id}")
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        solidarity_contribution_data = response.json()["solidarity_contribution_data"]
+        self.assertTrue(solidarity_contribution_data["exists"])
+        self.assertTrue(solidarity_contribution_data["is_negative"])
+
+    def test_get_memberHasPositiveSolidarityContribution_isNegativeIsFalse(self):
+        member = MemberFactory.create(is_superuser=False)
+        self.client.force_login(member)
+        SolidarityContributionFactory.create(
+            member=member,
+            start_date=datetime.date(year=2023, month=1, day=1),
+            end_date=datetime.date(year=2023, month=12, day=31),
+            amount=Decimal("5"),
+        )
+
+        url = reverse("subscriptions:cancellation_data")
+        response = self.client.get(f"{url}?member_id={member.id}")
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        solidarity_contribution_data = response.json()["solidarity_contribution_data"]
+        self.assertTrue(solidarity_contribution_data["exists"])
+        self.assertFalse(solidarity_contribution_data["is_negative"])
+
+    def test_get_memberHasNoSolidarityContribution_isNegativeIsFalse(self):
+        member = MemberFactory.create(is_superuser=False)
+        self.client.force_login(member)
+
+        url = reverse("subscriptions:cancellation_data")
+        response = self.client.get(f"{url}?member_id={member.id}")
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        solidarity_contribution_data = response.json()["solidarity_contribution_data"]
+        self.assertFalse(solidarity_contribution_data["exists"])
+        self.assertFalse(solidarity_contribution_data["is_negative"])
