@@ -1,6 +1,8 @@
 import typing
 from decimal import Decimal
 
+from django.core.validators import MaxValueValidator
+
 from tapir.configuration.models import TapirParameterDatatype
 from tapir.configuration.parameter import ParameterMeta
 from tapir.subscriptions.config import (
@@ -48,6 +50,20 @@ class ParameterDefinitionsSolidarity:
             initial_value=Decimal(0),
             description="Welche Wert vorausgewählt ist im Bestell Wizard. Kann ein andere Wert sein als die vordefinierte. Kann vom Mitglied geändert werden.",
             category=ParameterCategory.SOLIDARITY,
+            order_priority=order_priority,
+        )
+        order_priority -= 1
+
+        importer.parameter_definition(
+            key=ParameterKeys.SOLIDARITY_MINIMUM,
+            label="Niedrigster möglicher Solidarbeitrag",
+            datatype=TapirParameterDatatype.DECIMAL,
+            initial_value=Decimal(-15),
+            description="Der niedrigste Betrag, auf den ein Mitglied den Solidarbeitrag im Bestell Wizard setzen kann, "
+            "auch bei manueller Eingabe. Muss 0 oder negativ sein. Vordefinierte Werte unterhalb dieser Grenze werden "
+            "nicht mehr angeboten. Wird nur beachtet, wenn negative Solidarbeiträge erlaubt sind.",
+            category=ParameterCategory.SOLIDARITY,
+            meta=ParameterMeta(validators=[MaxValueValidator(limit_value=0)]),
             order_priority=order_priority,
         )
         order_priority -= 1

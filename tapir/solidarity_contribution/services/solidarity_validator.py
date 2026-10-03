@@ -63,16 +63,20 @@ class SolidarityValidator:
     @classmethod
     def get_solidarity_contribution_minimum(
         cls, reference_date: datetime.date, cache: dict
-    ) -> float | None:
+    ) -> float:
         enabled = get_parameter_value(
             key=ParameterKeys.HARVEST_NEGATIVE_SOLIPRICE_ENABLED, cache=cache
         )
-        if enabled == SOLIDARITY_MODE_NEGATIVE_ALWAYS_ALLOWED:
-            return None
         if enabled == SOLIDARITY_MODE_ONLY_POSITIVE:
             return 0.0
 
-        return min(
+        configured_minimum = float(
+            get_parameter_value(key=ParameterKeys.SOLIDARITY_MINIMUM, cache=cache)
+        )
+        if enabled == SOLIDARITY_MODE_NEGATIVE_ALWAYS_ALLOWED:
+            return configured_minimum
+
+        minimum_from_solidarity_excess = min(
             0.0,
             -float(
                 cls.get_solidarity_excess(
@@ -80,6 +84,7 @@ class SolidarityValidator:
                 ).quantize(Decimal("0.01"))
             ),
         )
+        return max(configured_minimum, minimum_from_solidarity_excess)
 
     @classmethod
     def get_solidarity_dropdown_values(
