@@ -30,7 +30,7 @@ def __send_email(
     error_details = ""
     if errors:
         subject = f"{subject} ({len(errors)} Fehler)"
-        error_details = f"<p>Es gab {len(error_details)} Fehler: <ul><li>{"</li><li>".join(errors)}</li></ul></p>"
+        error_details = f"<p>Es gab {len(errors)} Fehler: <ul><li>{"</li><li>".join(errors)}</li></ul></p>"
 
     body = f"<p>Hallo Admin,</p><p>im Anhang findest du die aktuelle {filename_long}.</p>{error_details}<p>(Automatisch von Tapir versendet)</p>"
 

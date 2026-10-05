@@ -298,6 +298,11 @@ class Pain008XmlStringGenerator:
         creditor_iban.text = get_parameter_value(
             key=ParameterKeys.PAYMENT_ORGANISATION_IBAN, cache=cache
         ).replace(" ", "")
+        try:
+            IBANValidator()(creditor_iban.text)
+        except ValidationError as error:
+            raise Pain008XmlGlobalException(message=error.message % error.params)
+
         if len(creditor_iban.text.strip()) == 0:
             raise Pain008XmlGlobalException(
                 "Der Parameter 'IBAN der Organisation' muss in der Konfig gesetzt werden"
