@@ -80,7 +80,10 @@ class TapirHealthStatusProvider:
         if not bounce_password:
             return "Missing setting EMAIL_BOUNCE_PASSWORD"
 
-        mail_client = IMAP4_SSL(settings.EMAIL_HOST, port=settings.EMAIL_PORT_IMAP)
+        bounce_host = (
+            getattr(settings, "EMAIL_BOUNCE_HOST", None) or settings.EMAIL_HOST
+        )
+        mail_client = IMAP4_SSL(bounce_host, port=settings.EMAIL_PORT_IMAP)
         return_code, _ = mail_client.login(
             settings.EMAIL_BOUNCE_USER, settings.EMAIL_BOUNCE_PASSWORD
         )

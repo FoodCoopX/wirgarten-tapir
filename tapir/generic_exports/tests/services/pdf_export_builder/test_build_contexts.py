@@ -14,7 +14,7 @@ class TestBuildContexts(TapirIntegrationTest):
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
-    @patch.object(PdfExportBuilder, "build_context_for_entry")
+    @patch.object(PdfExportBuilder, "build_context_for_entry", autospec=True)
     def test_buildContexts_default_buildsContextOnlyForUsedColumns(
         self, mock_build_context_for_entry: Mock
     ):

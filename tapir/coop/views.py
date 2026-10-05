@@ -13,13 +13,20 @@ from rest_framework.exceptions import (
 )
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from tapir_mail.models import EmailConfigurationDispatch
+from tapir_mail.models import EmailConfigurationDispatch, StaticSegmentRecipient
 from tapir_mail.triggers.transactional_trigger import (
     TransactionalTrigger,
     TransactionalTriggerData,
 )
 
-from tapir.accounts.models import EmailChangeRequest, UpdateTapirUserLogEntry
+from tapir.accounts.models import EmailChangeRequest, UpdateTapirUserLogEntry, TapirUser
+from tapir.accounts.services.email_normaliser import EmailNormaliser
+from tapir.accounts.services.email_verification_service import EmailVerificationService
+from tapir.accounts.services.keycloak_user_delete_service import (
+    KeycloakUserDeleteService,
+)
+from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
+from tapir.accounts.services.mail_change_service import MailChangeService
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.serializers import (
     MinimumNumberOfSharesResponseSerializer,
@@ -29,6 +36,8 @@ from tapir.coop.serializers import (
     MemberBankDataResponseSerializer,
     MemberProfilePersonalDataResponseSerializer,
     MemberProfilePersonalDataRequestSerializer,
+    MemberEmailResponseSerializer,
+    MemberEmailRequestSerializer,
 )
 from tapir.coop.services.coop_membership_cancellation_manager import (
     CoopMembershipCancellationManager,
@@ -341,6 +350,7 @@ class DeleteMemberApiView(APIView):
         parameters=[OpenApiParameter(name="member_id", type=str)],
     )
     def delete(self, request):
+        cache = {}
         member_id = request.query_params.get("member_id")
         member = get_object_or_404(Member, id=member_id)
 
@@ -369,6 +379,8 @@ class DeleteMemberApiView(APIView):
             ).delete()
 
             member.delete()
+
+            KeycloakUserDeleteService.delete_user_if_exists(user=member, cache=cache)
 
         return Response("deleted")
 
@@ -473,8 +485,8 @@ class MemberPersonalDataApiView(APIView):
                     "member_id": member.id,
                     "first_name": member.first_name,
                     "last_name": member.last_name,
-                    "email": member.email,
                     "phone_number": member.phone_number,
+                    "phone_number_landline": member.phone_number_landline,
                     "street": member.street,
                     "street_2": member.street_2,
                     "postcode": member.postcode,
@@ -541,11 +553,9 @@ class MemberPersonalDataApiView(APIView):
             PersonalDataValidator.validate_phone_number_is_valid(
                 serializer.validated_data.get("phone_number")
             )
-            if serializer.validated_data["email"] != member.email:
-                PersonalDataValidator.validate_email_address_not_in_use(
-                    email=serializer.validated_data["email"],
-                    check_waiting_list=True,
-                    cache=self.cache,
+            if serializer.validated_data.get("phone_number_landline"):
+                PersonalDataValidator.validate_phone_number_is_valid(
+                    serializer.validated_data["phone_number_landline"]
                 )
             if (
                 student_status_enabled
@@ -571,8 +581,8 @@ class MemberPersonalDataApiView(APIView):
             )
 
         simple_fields = [
-            "email",
             "phone_number",
+            "phone_number_landline",
             "street",
             "street_2",
             "postcode",
@@ -584,6 +594,7 @@ class MemberPersonalDataApiView(APIView):
             simple_fields.append("country")
         for field in simple_fields:
             setattr(member, field, serializer.validated_data.get(field))
+        member.phone_number_landline = member.phone_number_landline or None
 
         if student_status_enabled:
             member.is_student = serializer.validated_data["is_student"]
@@ -603,10 +614,116 @@ class MemberPersonalDataApiView(APIView):
                 ),
             )
 
+            StaticSegmentRecipient.objects.filter(email=member.email).update(
+                first_name=member.first_name, last_name=member.last_name
+            )
+            KeycloakUserManager.update_keycloak_user_name(user=member, cache=self.cache)
+
             member.save()
 
         return Response(
             OrderConfirmationResponseSerializer(
                 {"order_confirmed": True, "error": None}
             ).data
+        )
+
+
+class MemberEmailApiView(APIView):
+    def __init__(self, **kwargs):
+        self.cache = {}
+        super().__init__(**kwargs)
+
+    @extend_schema(
+        parameters=[OpenApiParameter(name="member_id", type=str)],
+        responses={200: MemberEmailResponseSerializer},
+    )
+    def get(self, request):
+        member_id = request.query_params.get("member_id")
+        check_permission_or_self(pk=member_id, request=request)
+        member = get_object_or_404(Member, id=member_id)
+
+        return Response(
+            MemberEmailResponseSerializer(
+                {
+                    "email": member.email,
+                    "verified": EmailVerificationService.is_user_email_verified(
+                        user=member, cache=self.cache
+                    ),
+                    "contact_email": get_parameter_value(
+                        ParameterKeys.SITE_EMAIL, cache=self.cache
+                    ),
+                    "is_admin": request.user.has_perm(Permission.Coop.MANAGE),
+                }
+            ).data
+        )
+
+    @extend_schema(
+        responses={200: OrderConfirmationResponseSerializer},
+        request=MemberEmailRequestSerializer,
+    )
+    def post(self, request):
+        serializer = MemberEmailRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        member_id = serializer.validated_data["member_id"]
+        check_permission_or_self(pk=member_id, request=request)
+        member = get_object_or_404(Member, id=member_id)
+
+        new_email = EmailNormaliser.normalise(serializer.validated_data["email"])
+
+        try:
+            if new_email == member.email:
+                raise DjangoValidationError(
+                    "Das ist schon die bestehende E-Mail-Adresse"
+                )
+
+            PersonalDataValidator.validate_email_address_not_in_use(
+                email=new_email,
+                check_waiting_list=True,
+                cache=self.cache,
+            )
+        except DjangoValidationError as error:
+            return Response(
+                OrderConfirmationResponseSerializer(
+                    {"order_confirmed": False, "error": error.message}
+                ).data
+            )
+
+        KeycloakUserManager.create_keycloak_user_if_necessary(
+            user=member, initial_password=None, cache=self.cache
+        )
+
+        if EmailVerificationService.is_user_email_verified(
+            user=member, cache=self.cache
+        ):
+            MailChangeService.start_email_change_process(
+                user=member, new_email=new_email, orig_email=member.email
+            )
+        else:
+            self.update_mail_and_send_verification_mail(
+                member=member, new_email=new_email, actor=request.user
+            )
+
+        return Response(
+            OrderConfirmationResponseSerializer(
+                {"order_confirmed": True, "error": None}
+            ).data
+        )
+
+    def update_mail_and_send_verification_mail(
+        self, member: Member, new_email: str, actor: TapirUser
+    ):
+        member_before = freeze_for_log(member)
+        MailChangeService.apply_mail_change(
+            user=member, new_email=new_email, cache=self.cache
+        )
+        UpdateTapirUserLogEntry().populate(
+            old_frozen=member_before,
+            new_model=member,
+            user=member,
+            actor=actor,
+        ).save()
+
+        EmailVerificationService.send_verification_email(
+            user=member, actor=actor, cache=self.cache
         )

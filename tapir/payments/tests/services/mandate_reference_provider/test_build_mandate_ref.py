@@ -8,7 +8,10 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestBuildMandateRef(TapirUnitTest):
-    @patch("tapir.payments.services.mandate_reference_provider.nanoid.generate")
+    @patch(
+        "tapir.payments.services.mandate_reference_provider.nanoid.generate",
+        autospec=True,
+    )
     def test_buildMandateRef_patternWithFirstAndLastName_substitutesFirstFiveLetters(
         self, mock_generate: Mock
     ):
@@ -23,7 +26,10 @@ class TestBuildMandateRef(TapirUnitTest):
 
         self.assertEqual("MAXIM/MUSTE/RANDOMCHARS", result)
 
-    @patch("tapir.payments.services.mandate_reference_provider.nanoid.generate")
+    @patch(
+        "tapir.payments.services.mandate_reference_provider.nanoid.generate",
+        autospec=True,
+    )
     def test_buildMandateRef_patternWithMemberNumberShort_substitutesMemberNumber(
         self, mock_generate: Mock
     ):
@@ -36,7 +42,10 @@ class TestBuildMandateRef(TapirUnitTest):
 
         self.assertEqual("42-RANDOMCHARS", result)
 
-    @patch("tapir.payments.services.mandate_reference_provider.nanoid.generate")
+    @patch(
+        "tapir.payments.services.mandate_reference_provider.nanoid.generate",
+        autospec=True,
+    )
     def test_buildMandateRef_namesWithAccents_accentsAreTransliterated(
         self, mock_generate: Mock
     ):
@@ -89,7 +98,8 @@ class TestBuildMandateRef(TapirUnitTest):
         )
 
     @patch(
-        "tapir.payments.services.mandate_reference_provider.MemberNumberService.format_member_number"
+        "tapir.payments.services.mandate_reference_provider.MemberNumberService.format_member_number",
+        autospec=True,
     )
     def test_buildMandateRef_patternWithMemberNumberLong_substitutesFormattedMemberNumber(
         self, mock_format_member_number: Mock
@@ -105,9 +115,13 @@ class TestBuildMandateRef(TapirUnitTest):
         self.assertEqual("JOHN-BT0042", result)
         mock_format_member_number.assert_called_once_with(member_number=42, cache=cache)
 
-    @patch("tapir.payments.services.mandate_reference_provider.get_parameter_value")
     @patch(
-        "tapir.payments.services.mandate_reference_provider.MemberNumberService.build_formatted_number"
+        "tapir.payments.services.mandate_reference_provider.get_parameter_value",
+        autospec=True,
+    )
+    @patch(
+        "tapir.payments.services.mandate_reference_provider.MemberNumberService.build_formatted_number",
+        autospec=True,
     )
     def test_buildMandateRef_patternWithMemberNumberWithoutPrefix_substitutesFormattedNumberWithEmptyPrefix(
         self,

@@ -18,6 +18,9 @@ from django_filters import (
 )
 from django_filters.views import FilterView
 
+from tapir.accounts.services.email_verification_service import (
+    EmailVerificationService,
+)
 from tapir.associations.models import AssociationMembershipType
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.german_name_sort_service import GermanNameSortService
@@ -264,7 +267,12 @@ class MemberFilter(FilterSet):
     def filter_email_verified(self, queryset, name, value):
         new_queryset = queryset.all()
         for member in queryset:
-            if member.email_verified(cache=self.cache) != value:
+            if (
+                EmailVerificationService.is_user_email_verified(
+                    user=member, cache=self.cache
+                )
+                != value
+            ):
                 new_queryset = new_queryset.exclude(id=member.id)
         return new_queryset
 

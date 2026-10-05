@@ -16,7 +16,8 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
 @patch(
-    "tapir.pickup_locations.services.pickup_location_delivery_charge_service.get_today"
+    "tapir.pickup_locations.services.pickup_location_delivery_charge_service.get_today",
+    autospec=True,
 )
 class TestDeleteCharge(TapirIntegrationTest):
     @classmethod

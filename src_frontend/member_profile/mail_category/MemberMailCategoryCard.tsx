@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from "react";
 import "dayjs/locale/de";
+import React, { useEffect, useState } from "react";
 import { Card, Form, Spinner } from "react-bootstrap";
-import { useApi } from "../../hooks/useApi.ts";
 import { CoreApi, type MailCategory, ModeEnum } from "../../api-client";
-import { handleRequestError } from "../../utils/handleRequestError.ts";
 import TapirButton from "../../components/TapirButton.tsx";
-import MemberExtraEmailsModal from "../extra_email_addresses/MemberExtraEmailsModal.tsx";
-import { ToastData } from "../../types/ToastData.ts";
 import TapirToastContainer from "../../components/TapirToastContainer.tsx";
+import { useApi } from "../../hooks/useApi.ts";
+import { ToastData } from "../../types/ToastData.ts";
+import { handleRequestError } from "../../utils/handleRequestError.ts";
+import MemberExtraEmailsModal from "../personal_data/MemberExtraEmailsModal.tsx";
 
 interface MemberMailCategoryModalProps {
   memberId: string;

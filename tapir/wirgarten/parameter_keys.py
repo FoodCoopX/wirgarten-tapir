@@ -5,7 +5,6 @@ class ParameterKeys:
     MEMBER_PICKUP_LOCATION_CHANGE_UNTIL = (
         f"{PREFIX}.member.pickup_location_change_until"
     )
-    MEMBER_BYPASS_KEYCLOAK = f"{PREFIX}.temporarily.bypass_keycloak"
     SITE_NAME = f"{PREFIX}.site.name"
     SITE_STREET = f"{PREFIX}.site.street"
     SITE_CITY = f"{PREFIX}.site.city"
@@ -278,6 +277,11 @@ class ParameterKeys:
     ENABLE_EXTRA_MAIL_ADDRESSES = f"{PREFIX}.emails.enable_extra_mail_addresses"
     EXPLANATION_TEXT_EXTRA_MAIL_ADDRESSES = (
         f"{PREFIX}.emails.explanation_text_extra_mail_addresses"
+    )
+    ENABLE_BCC_FOR_MAIL_MODULE = f"{PREFIX}.emails.enable_bcc_for_mail_module"
+    BCC_MAIL_MODULE_MASS_MAILS = f"{PREFIX}.emails.bcc_mail_module_mass_mails"
+    BCC_MAIL_MODULE_TRANSACTIONAL_MAILS = (
+        f"{PREFIX}.emails.bcc_mail_module_transactional_mails"
     )
     BAKERY_ENABLED = f"{PREFIX}.bakery.enabled"
     BAKERY_BAKING_DAY_BEFORE_DELIVERY_DAY = (

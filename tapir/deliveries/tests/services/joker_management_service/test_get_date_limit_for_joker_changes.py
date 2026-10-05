@@ -1,17 +1,17 @@
 from unittest.mock import patch, Mock
 
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
-
 from tapir.deliveries.services.date_limit_for_delivery_change_calculator import (
     DateLimitForDeliveryChangeCalculator,
 )
 from tapir.deliveries.services.joker_management_service import JokerManagementService
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestJokerManagementServiceGetDateLimitForJokerChanges(TapirUnitTest):
     @patch.object(
         DateLimitForDeliveryChangeCalculator,
         "calculate_date_limit_for_delivery_changes_in_week",
+        autospec=True,
     )
     def test_getDateLimitForJokerChanges_default_callsService(
         self, mock_calculate_date_limit_for_delivery_changes_in_week: Mock

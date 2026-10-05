@@ -69,7 +69,6 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import calculate_pickup_location_change_date
-from tapir.wirgarten.service.product_standard_order import product_type_order_by
 from tapir.wirgarten.service.products import get_active_and_future_subscriptions
 from tapir.wirgarten.utils import get_today, check_permission_or_self
 
@@ -189,7 +188,7 @@ class PickupLocationCapacityEvolutionView(APIView):
         pickup_location: PickupLocation, cache: dict
     ):
         data_points = []
-        product_types = ProductType.objects.order_by(*product_type_order_by())
+        product_types = ProductType.objects.order_by("order_in_bestellwizard")
         capacities_by_product_type = SharesCapacityService.get_available_share_capacities_for_pickup_location_by_product_type(
             pickup_location, cache=cache
         )

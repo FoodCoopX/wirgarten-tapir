@@ -28,17 +28,32 @@ class TestJokerManagementServiceCanJokerBeUsedInWeek(TapirUnitTest):
         mock_does_member_have_a_donation_in_week.return_value = False
         mock_parameter_value(cache=cache, key=ParameterKeys.JOKERS_ENABLED, value=True)
 
-    @patch.object(DeliveryDonationManager, "does_member_have_a_donation_in_week")
     @patch.object(
-        JokerManagementService, "can_joker_be_used_relative_to_weeks_without_delivery"
+        DeliveryDonationManager, "does_member_have_a_donation_in_week", autospec=True
     )
-    @patch.object(JokerManagementService, "does_member_have_a_joker_in_week")
-    @patch.object(JokerManagementService, "can_joker_be_used_relative_to_date_limit")
+    @patch.object(
+        JokerManagementService,
+        "can_joker_be_used_relative_to_weeks_without_delivery",
+        autospec=True,
+    )
+    @patch.object(
+        JokerManagementService, "does_member_have_a_joker_in_week", autospec=True
+    )
+    @patch.object(
+        JokerManagementService,
+        "can_joker_be_used_relative_to_date_limit",
+        autospec=True,
+    )
     @patch.object(
         JokerManagementService,
         "can_joker_be_used_relative_to_max_amount_per_growing_period",
+        autospec=True,
     )
-    @patch.object(JokerManagementService, "can_joker_be_used_relative_to_restrictions")
+    @patch.object(
+        JokerManagementService,
+        "can_joker_be_used_relative_to_restrictions",
+        autospec=True,
+    )
     def test_canJokerBeUsed_jokerCanBeUsed_returnsTrue(
         self,
         mock_can_joker_be_used_relative_to_restrictions: Mock,
@@ -87,17 +102,32 @@ class TestJokerManagementServiceCanJokerBeUsedInWeek(TapirUnitTest):
             member=member, reference_date=reference_date, cache=cache
         )
 
-    @patch.object(DeliveryDonationManager, "does_member_have_a_donation_in_week")
     @patch.object(
-        JokerManagementService, "can_joker_be_used_relative_to_weeks_without_delivery"
+        DeliveryDonationManager, "does_member_have_a_donation_in_week", autospec=True
     )
-    @patch.object(JokerManagementService, "does_member_have_a_joker_in_week")
-    @patch.object(JokerManagementService, "can_joker_be_used_relative_to_date_limit")
+    @patch.object(
+        JokerManagementService,
+        "can_joker_be_used_relative_to_weeks_without_delivery",
+        autospec=True,
+    )
+    @patch.object(
+        JokerManagementService, "does_member_have_a_joker_in_week", autospec=True
+    )
+    @patch.object(
+        JokerManagementService,
+        "can_joker_be_used_relative_to_date_limit",
+        autospec=True,
+    )
     @patch.object(
         JokerManagementService,
         "can_joker_be_used_relative_to_max_amount_per_growing_period",
+        autospec=True,
     )
-    @patch.object(JokerManagementService, "can_joker_be_used_relative_to_restrictions")
+    @patch.object(
+        JokerManagementService,
+        "can_joker_be_used_relative_to_restrictions",
+        autospec=True,
+    )
     def test_canJokerBeUsed_memberHasDonation_returnsFalse(
         self,
         mock_can_joker_be_used_relative_to_restrictions: Mock,
@@ -147,17 +177,32 @@ class TestJokerManagementServiceCanJokerBeUsedInWeek(TapirUnitTest):
             member=member, reference_date=reference_date, cache=cache
         )
 
-    @patch.object(DeliveryDonationManager, "does_member_have_a_donation_in_week")
     @patch.object(
-        JokerManagementService, "can_joker_be_used_relative_to_weeks_without_delivery"
+        DeliveryDonationManager, "does_member_have_a_donation_in_week", autospec=True
     )
-    @patch.object(JokerManagementService, "does_member_have_a_joker_in_week")
-    @patch.object(JokerManagementService, "can_joker_be_used_relative_to_date_limit")
+    @patch.object(
+        JokerManagementService,
+        "can_joker_be_used_relative_to_weeks_without_delivery",
+        autospec=True,
+    )
+    @patch.object(
+        JokerManagementService, "does_member_have_a_joker_in_week", autospec=True
+    )
+    @patch.object(
+        JokerManagementService,
+        "can_joker_be_used_relative_to_date_limit",
+        autospec=True,
+    )
     @patch.object(
         JokerManagementService,
         "can_joker_be_used_relative_to_max_amount_per_growing_period",
+        autospec=True,
     )
-    @patch.object(JokerManagementService, "can_joker_be_used_relative_to_restrictions")
+    @patch.object(
+        JokerManagementService,
+        "can_joker_be_used_relative_to_restrictions",
+        autospec=True,
+    )
     def test_canJokerBeUsed_restrictionsSayNo_returnsFalse(
         self,
         mock_can_joker_be_used_relative_to_restrictions: Mock,
@@ -203,17 +248,32 @@ class TestJokerManagementServiceCanJokerBeUsedInWeek(TapirUnitTest):
         mock_can_joker_be_used_relative_to_weeks_without_delivery.assert_not_called()
         mock_does_member_have_a_donation_in_week.assert_not_called()
 
-    @patch.object(DeliveryDonationManager, "does_member_have_a_donation_in_week")
     @patch.object(
-        JokerManagementService, "can_joker_be_used_relative_to_weeks_without_delivery"
+        DeliveryDonationManager, "does_member_have_a_donation_in_week", autospec=True
     )
-    @patch.object(JokerManagementService, "does_member_have_a_joker_in_week")
-    @patch.object(JokerManagementService, "can_joker_be_used_relative_to_date_limit")
+    @patch.object(
+        JokerManagementService,
+        "can_joker_be_used_relative_to_weeks_without_delivery",
+        autospec=True,
+    )
+    @patch.object(
+        JokerManagementService, "does_member_have_a_joker_in_week", autospec=True
+    )
+    @patch.object(
+        JokerManagementService,
+        "can_joker_be_used_relative_to_date_limit",
+        autospec=True,
+    )
     @patch.object(
         JokerManagementService,
         "can_joker_be_used_relative_to_max_amount_per_growing_period",
+        autospec=True,
     )
-    @patch.object(JokerManagementService, "can_joker_be_used_relative_to_restrictions")
+    @patch.object(
+        JokerManagementService,
+        "can_joker_be_used_relative_to_restrictions",
+        autospec=True,
+    )
     def test_canJokerBeUsed_maxAmountSayNo_returnsFalse(
         self,
         mock_can_joker_be_used_relative_to_restrictions: Mock,
@@ -259,17 +319,32 @@ class TestJokerManagementServiceCanJokerBeUsedInWeek(TapirUnitTest):
         )
         mock_does_member_have_a_donation_in_week.assert_not_called()
 
-    @patch.object(DeliveryDonationManager, "does_member_have_a_donation_in_week")
     @patch.object(
-        JokerManagementService, "can_joker_be_used_relative_to_weeks_without_delivery"
+        DeliveryDonationManager, "does_member_have_a_donation_in_week", autospec=True
     )
-    @patch.object(JokerManagementService, "does_member_have_a_joker_in_week")
-    @patch.object(JokerManagementService, "can_joker_be_used_relative_to_date_limit")
+    @patch.object(
+        JokerManagementService,
+        "can_joker_be_used_relative_to_weeks_without_delivery",
+        autospec=True,
+    )
+    @patch.object(
+        JokerManagementService, "does_member_have_a_joker_in_week", autospec=True
+    )
+    @patch.object(
+        JokerManagementService,
+        "can_joker_be_used_relative_to_date_limit",
+        autospec=True,
+    )
     @patch.object(
         JokerManagementService,
         "can_joker_be_used_relative_to_max_amount_per_growing_period",
+        autospec=True,
     )
-    @patch.object(JokerManagementService, "can_joker_be_used_relative_to_restrictions")
+    @patch.object(
+        JokerManagementService,
+        "can_joker_be_used_relative_to_restrictions",
+        autospec=True,
+    )
     def test_canJokerBeUsed_dateLimitSayNo_returnsFalse(
         self,
         mock_can_joker_be_used_relative_to_restrictions: Mock,
@@ -311,17 +386,32 @@ class TestJokerManagementServiceCanJokerBeUsedInWeek(TapirUnitTest):
         )
         mock_does_member_have_a_donation_in_week.assert_not_called()
 
-    @patch.object(DeliveryDonationManager, "does_member_have_a_donation_in_week")
     @patch.object(
-        JokerManagementService, "can_joker_be_used_relative_to_weeks_without_delivery"
+        DeliveryDonationManager, "does_member_have_a_donation_in_week", autospec=True
     )
-    @patch.object(JokerManagementService, "does_member_have_a_joker_in_week")
-    @patch.object(JokerManagementService, "can_joker_be_used_relative_to_date_limit")
+    @patch.object(
+        JokerManagementService,
+        "can_joker_be_used_relative_to_weeks_without_delivery",
+        autospec=True,
+    )
+    @patch.object(
+        JokerManagementService, "does_member_have_a_joker_in_week", autospec=True
+    )
+    @patch.object(
+        JokerManagementService,
+        "can_joker_be_used_relative_to_date_limit",
+        autospec=True,
+    )
     @patch.object(
         JokerManagementService,
         "can_joker_be_used_relative_to_max_amount_per_growing_period",
+        autospec=True,
     )
-    @patch.object(JokerManagementService, "can_joker_be_used_relative_to_restrictions")
+    @patch.object(
+        JokerManagementService,
+        "can_joker_be_used_relative_to_restrictions",
+        autospec=True,
+    )
     def test_canJokerBeUsed_jokerAlreadyUsedInWeek_returnsFalse(
         self,
         mock_can_joker_be_used_relative_to_restrictions: Mock,
@@ -361,17 +451,32 @@ class TestJokerManagementServiceCanJokerBeUsedInWeek(TapirUnitTest):
         )
         mock_does_member_have_a_donation_in_week.assert_not_called()
 
-    @patch.object(DeliveryDonationManager, "does_member_have_a_donation_in_week")
     @patch.object(
-        JokerManagementService, "can_joker_be_used_relative_to_weeks_without_delivery"
+        DeliveryDonationManager, "does_member_have_a_donation_in_week", autospec=True
     )
-    @patch.object(JokerManagementService, "does_member_have_a_joker_in_week")
-    @patch.object(JokerManagementService, "can_joker_be_used_relative_to_date_limit")
+    @patch.object(
+        JokerManagementService,
+        "can_joker_be_used_relative_to_weeks_without_delivery",
+        autospec=True,
+    )
+    @patch.object(
+        JokerManagementService, "does_member_have_a_joker_in_week", autospec=True
+    )
+    @patch.object(
+        JokerManagementService,
+        "can_joker_be_used_relative_to_date_limit",
+        autospec=True,
+    )
     @patch.object(
         JokerManagementService,
         "can_joker_be_used_relative_to_max_amount_per_growing_period",
+        autospec=True,
     )
-    @patch.object(JokerManagementService, "can_joker_be_used_relative_to_restrictions")
+    @patch.object(
+        JokerManagementService,
+        "can_joker_be_used_relative_to_restrictions",
+        autospec=True,
+    )
     def test_canJokerBeUsed_noDeliveryInGivenWeek_returnsFalse(
         self,
         mock_can_joker_be_used_relative_to_restrictions: Mock,
@@ -419,17 +524,32 @@ class TestJokerManagementServiceCanJokerBeUsedInWeek(TapirUnitTest):
         )
         mock_does_member_have_a_donation_in_week.assert_not_called()
 
-    @patch.object(DeliveryDonationManager, "does_member_have_a_donation_in_week")
     @patch.object(
-        JokerManagementService, "can_joker_be_used_relative_to_weeks_without_delivery"
+        DeliveryDonationManager, "does_member_have_a_donation_in_week", autospec=True
     )
-    @patch.object(JokerManagementService, "does_member_have_a_joker_in_week")
-    @patch.object(JokerManagementService, "can_joker_be_used_relative_to_date_limit")
+    @patch.object(
+        JokerManagementService,
+        "can_joker_be_used_relative_to_weeks_without_delivery",
+        autospec=True,
+    )
+    @patch.object(
+        JokerManagementService, "does_member_have_a_joker_in_week", autospec=True
+    )
+    @patch.object(
+        JokerManagementService,
+        "can_joker_be_used_relative_to_date_limit",
+        autospec=True,
+    )
     @patch.object(
         JokerManagementService,
         "can_joker_be_used_relative_to_max_amount_per_growing_period",
+        autospec=True,
     )
-    @patch.object(JokerManagementService, "can_joker_be_used_relative_to_restrictions")
+    @patch.object(
+        JokerManagementService,
+        "can_joker_be_used_relative_to_restrictions",
+        autospec=True,
+    )
     def test_canJokerBeUsed_jokerFeatureDisabled_returnsFalse(
         self,
         mock_can_joker_be_used_relative_to_restrictions: Mock,

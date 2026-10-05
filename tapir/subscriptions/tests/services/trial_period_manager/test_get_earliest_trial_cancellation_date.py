@@ -1,13 +1,12 @@
 import datetime
 from unittest.mock import patch, Mock
 
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
-
 from tapir.deliveries.services.date_limit_for_delivery_change_calculator import (
     DateLimitForDeliveryChangeCalculator,
 )
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 from tapir.wirgarten.tests.test_utils import mock_timezone
 
 
@@ -17,12 +16,19 @@ class TestGetEarliestTrialCancellationDate(TapirUnitTest):
             self, datetime.datetime(year=2027, month=6, day=4)
         ).date()
 
-    @patch("tapir.subscriptions.services.trial_period_manager.get_parameter_value")
+    @patch(
+        "tapir.subscriptions.services.trial_period_manager.get_parameter_value",
+        autospec=True,
+    )
     @patch.object(
         DateLimitForDeliveryChangeCalculator,
         "calculate_date_limit_for_delivery_changes_in_week",
+        autospec=True,
     )
-    @patch("tapir.subscriptions.services.trial_period_manager.get_next_delivery_date")
+    @patch(
+        "tapir.subscriptions.services.trial_period_manager.get_next_delivery_date",
+        autospec=True,
+    )
     def test_getEarliestTrialCancellationDate_dateLimitIsAfterInputDate_returnsSundayAfterInputDate(
         self,
         mock_get_next_delivery_date: Mock,
@@ -50,12 +56,19 @@ class TestGetEarliestTrialCancellationDate(TapirUnitTest):
             ParameterKeys.TRIAL_PERIOD_CAN_BE_CANCELLED_BEFORE_END, cache=cache
         )
 
-    @patch("tapir.subscriptions.services.trial_period_manager.get_parameter_value")
+    @patch(
+        "tapir.subscriptions.services.trial_period_manager.get_parameter_value",
+        autospec=True,
+    )
     @patch.object(
         DateLimitForDeliveryChangeCalculator,
         "calculate_date_limit_for_delivery_changes_in_week",
+        autospec=True,
     )
-    @patch("tapir.subscriptions.services.trial_period_manager.get_next_delivery_date")
+    @patch(
+        "tapir.subscriptions.services.trial_period_manager.get_next_delivery_date",
+        autospec=True,
+    )
     def test_getEarliestTrialCancellationDate_dateLimitIsSameDayAsInputDate_returnsSundayAfterInputDate(
         self,
         mock_get_next_delivery_date: Mock,
@@ -83,12 +96,19 @@ class TestGetEarliestTrialCancellationDate(TapirUnitTest):
             ParameterKeys.TRIAL_PERIOD_CAN_BE_CANCELLED_BEFORE_END, cache=cache
         )
 
-    @patch("tapir.subscriptions.services.trial_period_manager.get_parameter_value")
+    @patch(
+        "tapir.subscriptions.services.trial_period_manager.get_parameter_value",
+        autospec=True,
+    )
     @patch.object(
         DateLimitForDeliveryChangeCalculator,
         "calculate_date_limit_for_delivery_changes_in_week",
+        autospec=True,
     )
-    @patch("tapir.subscriptions.services.trial_period_manager.get_next_delivery_date")
+    @patch(
+        "tapir.subscriptions.services.trial_period_manager.get_next_delivery_date",
+        autospec=True,
+    )
     def test_getEarliestTrialCancellationDate_dateLimitIsBeforeInputDate_returnsSundayAfterDelivery(
         self,
         mock_get_next_delivery_date: Mock,
@@ -116,12 +136,19 @@ class TestGetEarliestTrialCancellationDate(TapirUnitTest):
             ParameterKeys.TRIAL_PERIOD_CAN_BE_CANCELLED_BEFORE_END, cache=cache
         )
 
-    @patch("tapir.subscriptions.services.trial_period_manager.get_parameter_value")
+    @patch(
+        "tapir.subscriptions.services.trial_period_manager.get_parameter_value",
+        autospec=True,
+    )
     @patch.object(
         DateLimitForDeliveryChangeCalculator,
         "calculate_date_limit_for_delivery_changes_in_week",
+        autospec=True,
     )
-    @patch("tapir.subscriptions.services.trial_period_manager.get_next_delivery_date")
+    @patch(
+        "tapir.subscriptions.services.trial_period_manager.get_next_delivery_date",
+        autospec=True,
+    )
     def test_getEarliestTrialCancellationDate_dateLimitIsOnSundayAndTodayIsSunday_returnsToday(
         self,
         mock_get_next_delivery_date: Mock,
@@ -152,7 +179,10 @@ class TestGetEarliestTrialCancellationDate(TapirUnitTest):
             ParameterKeys.TRIAL_PERIOD_CAN_BE_CANCELLED_BEFORE_END, cache=cache
         )
 
-    @patch("tapir.subscriptions.services.trial_period_manager.get_parameter_value")
+    @patch(
+        "tapir.subscriptions.services.trial_period_manager.get_parameter_value",
+        autospec=True,
+    )
     @patch.object(
         TrialPeriodManager,
         "get_last_day_of_trial_period",

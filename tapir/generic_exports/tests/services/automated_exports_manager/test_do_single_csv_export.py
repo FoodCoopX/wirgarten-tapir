@@ -10,9 +10,9 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
 class TestDoSingleCsvExport(TapirIntegrationTest):
-    @patch.object(ExportMailSender, "send_mails_for_export")
+    @patch.object(ExportMailSender, "send_mails_for_export", autospec=True)
     @patch.object(AutomatedCsvExportResult, "objects")
-    @patch.object(CsvExportBuilder, "create_exported_file")
+    @patch.object(CsvExportBuilder, "create_exported_file", autospec=True)
     def test_doSingleCsvExport_default_createsExportedFileAndExportResultAndSendsMail(
         self,
         mock_create_exported_file: Mock,

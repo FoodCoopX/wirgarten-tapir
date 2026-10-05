@@ -14,6 +14,9 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.coop_membership_cancellation_manager import (
     CoopMembershipCancellationManager,
 )
+from tapir.core.services.organisation_entry_date_annotator import (
+    OrganisationEntryDateAnnotator,
+)
 from tapir.deliveries.services.delivery_cycle_service import DeliveryCycleService
 from tapir.deliveries.services.pick_list_builder import PickListBuilder
 from tapir.wirgarten.mail_events import Events
@@ -196,6 +199,9 @@ def _fire_membership_entry_trigger(member: Member, cache: dict):
                 "price_of_all_shares": format_currency(
                     number_of_coop_shares * price_of_a_share
                 ),
+                "membership_start_date": OrganisationEntryDateAnnotator.get_organisation_entry_date(
+                    recipient=member, cache=cache
+                ),
             },
         ),
     )
@@ -204,6 +210,11 @@ def _fire_membership_entry_trigger(member: Member, cache: dict):
 @shared_task
 def send_membership_entry_mails():
     cache = {}
+    if not legal_status_is_cooperative(cache) and not legal_status_is_association(
+        cache
+    ):
+        return
+
     members = Member.objects.filter(has_received_membership_started_mail=False)
     today = get_today(cache=cache)
 
@@ -230,4 +241,4 @@ def send_membership_entry_mails():
             if should_send_mail:
                 _fire_membership_entry_trigger(member=member, cache=cache)
                 member.has_received_membership_started_mail = True
-                member.save(bypass_keycloak=True)
+                member.save()

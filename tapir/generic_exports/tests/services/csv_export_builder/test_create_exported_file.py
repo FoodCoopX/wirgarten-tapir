@@ -1,14 +1,13 @@
 from unittest.mock import patch, Mock
 
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
-
 from tapir.generic_exports.services.csv_export_builder import CsvExportBuilder
 from tapir.wirgarten.models import ExportedFile
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestCreateExportedFile(TapirUnitTest):
-    @patch.object(CsvExportBuilder, "build_csv_export_string")
-    @patch.object(CsvExportBuilder, "build_file_name")
+    @patch.object(CsvExportBuilder, "build_csv_export_string", autospec=True)
+    @patch.object(CsvExportBuilder, "build_file_name", autospec=True)
     @patch.object(ExportedFile, "objects")
     def test_createExportedFile_default_createsFile(
         self,

@@ -13,7 +13,8 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
 class TestGetSolidarityDropdownValues(TapirUnitTest):
 
     @patch(
-        "tapir.solidarity_contribution.services.solidarity_validator.get_parameter_value"
+        "tapir.solidarity_contribution.services.solidarity_validator.get_parameter_value",
+        autospec=True,
     )
     def test_getSolidarityDropdownValues_unitIsAbsolute_returnsCorrectValues(
         self, mock_get_parameter_value: Mock
@@ -44,7 +45,7 @@ class TestGetSolidarityDropdownValues(TapirUnitTest):
         with self.assertRaises(Exception):
             SolidarityValidator.get_solidarity_dropdown_values("-7.5,invalid")
 
-    @patch.object(SolidarityValidator, "get_solidarity_dropdown_values")
+    @patch.object(SolidarityValidator, "get_solidarity_dropdown_values", autospec=True)
     def test_validateSolidarityDropdownValues_getRaisesException_raiseValidationError(
         self, mock_get_solidarity_dropdown_values: Mock
     ):
@@ -55,7 +56,7 @@ class TestGetSolidarityDropdownValues(TapirUnitTest):
 
         mock_get_solidarity_dropdown_values.assert_called_once_with("aaa", cache={})
 
-    @patch.object(SolidarityValidator, "get_solidarity_dropdown_values")
+    @patch.object(SolidarityValidator, "get_solidarity_dropdown_values", autospec=True)
     def test_validateSolidarityDropdownValues_getDoesntRaiseException_doNothing(
         self, mock_get_solidarity_dropdown_values: Mock
     ):

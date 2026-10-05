@@ -1,10 +1,9 @@
 import datetime
 from unittest.mock import Mock, patch
 
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
-
 from tapir.deliveries.services.joker_management_service import JokerManagementService
 from tapir.wirgarten.tests import factories
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 from tapir.wirgarten.tests.test_utils import mock_timezone
 
 
@@ -12,7 +11,9 @@ class TestJokerManagementServiceCanJokerBeUsedRelativeToDateLimit(TapirUnitTest)
     def setUp(self):
         mock_timezone(self, factories.NOW)
 
-    @patch.object(JokerManagementService, "get_date_limit_for_joker_changes")
+    @patch.object(
+        JokerManagementService, "get_date_limit_for_joker_changes", autospec=True
+    )
     def test_canJokerBeUsedRelativeToDateLimit_dateLimitIsInTheFuture_returnsTrue(
         self, mock_get_date_limit_for_joker_changes: Mock
     ):
@@ -31,7 +32,9 @@ class TestJokerManagementServiceCanJokerBeUsedRelativeToDateLimit(TapirUnitTest)
             reference_date, cache=cache
         )
 
-    @patch.object(JokerManagementService, "get_date_limit_for_joker_changes")
+    @patch.object(
+        JokerManagementService, "get_date_limit_for_joker_changes", autospec=True
+    )
     def test_canJokerBeUsedRelativeToDateLimit_dateLimitIsToday_returnsTrue(
         self, mock_get_date_limit_for_joker_changes: Mock
     ):
@@ -48,7 +51,9 @@ class TestJokerManagementServiceCanJokerBeUsedRelativeToDateLimit(TapirUnitTest)
             reference_date, cache=cache
         )
 
-    @patch.object(JokerManagementService, "get_date_limit_for_joker_changes")
+    @patch.object(
+        JokerManagementService, "get_date_limit_for_joker_changes", autospec=True
+    )
     def test_canJokerBeUsedRelativeToDateLimit_dateLimitIsInThePast_returnsFalse(
         self, mock_get_date_limit_for_joker_changes: Mock
     ):

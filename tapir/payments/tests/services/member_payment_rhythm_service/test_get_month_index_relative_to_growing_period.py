@@ -1,17 +1,16 @@
 import datetime
 from unittest.mock import patch, Mock
 
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
-
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.tests.factories import GrowingPeriodFactory
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestGetMonthIndexRelativeToGrowingPeriod(TapirUnitTest):
-    @patch.object(TapirCache, "get_all_growing_periods_ascending")
+    @patch.object(TapirCache, "get_all_growing_periods_ascending", autospec=True)
     def test_getMonthIndexRelativeToGrowingPeriod_givenDateIsOnFirstMonth_returnsOne(
         self, mock_get_all_growing_periods_ascending: Mock
     ):
@@ -31,7 +30,7 @@ class TestGetMonthIndexRelativeToGrowingPeriod(TapirUnitTest):
         self.assertEqual(1, result)
         mock_get_all_growing_periods_ascending.assert_called_once_with(cache=cache)
 
-    @patch.object(TapirCache, "get_all_growing_periods_ascending")
+    @patch.object(TapirCache, "get_all_growing_periods_ascending", autospec=True)
     def test_getMonthIndexRelativeToGrowingPeriod_givenDateIsOnFifthMonth_returnsFive(
         self, mock_get_all_growing_periods_ascending: Mock
     ):
@@ -50,7 +49,7 @@ class TestGetMonthIndexRelativeToGrowingPeriod(TapirUnitTest):
         self.assertEqual(5, result)
         mock_get_all_growing_periods_ascending.assert_called_once_with(cache=cache)
 
-    @patch.object(TapirCache, "get_all_growing_periods_ascending")
+    @patch.object(TapirCache, "get_all_growing_periods_ascending", autospec=True)
     def test_getMonthIndexRelativeToGrowingPeriod_givenDateIsOnTwelfthMonth_returnsTwelve(
         self, mock_get_all_growing_periods_ascending: Mock
     ):

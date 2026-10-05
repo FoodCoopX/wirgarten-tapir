@@ -16,7 +16,7 @@ class TestBuildCsvExportView(TapirIntegrationTest):
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
-    @patch.object(CsvExportBuilder, "create_exported_file")
+    @patch.object(CsvExportBuilder, "create_exported_file", autospec=True)
     def test_buildCsvExportView_default_returnsCorrectData(
         self, mock_create_exported_file: Mock
     ):

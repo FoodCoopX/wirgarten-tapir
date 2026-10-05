@@ -36,7 +36,11 @@ class TestAutomaticConfirmationManager(TapirIntegrationTest):
         self.now = mock_timezone(self, datetime.datetime(year=2025, month=1, day=17))
         self.yesterday = self.now.date() - datetime.timedelta(days=1)
 
-    @patch.object(OrderConfirmationMailSender, "send_confirmation_mail_if_necessary")
+    @patch.object(
+        OrderConfirmationMailSender,
+        "send_confirmation_mail_if_necessary",
+        autospec=True,
+    )
     def test_confirm_subscriptionsAlreadyConfirmed_confirmationTimestampNotUpdated(
         self, mock_send_confirmation_mail_if_necessary: Mock
     ):
@@ -73,7 +77,11 @@ class TestAutomaticConfirmationManager(TapirIntegrationTest):
             confirm_creation_ids=[], confirm_purchase_ids=[]
         )
 
-    @patch.object(OrderConfirmationMailSender, "send_confirmation_mail_if_necessary")
+    @patch.object(
+        OrderConfirmationMailSender,
+        "send_confirmation_mail_if_necessary",
+        autospec=True,
+    )
     def test_confirm_transactionsAlreadyConfirmed_confirmationTimestampNotUpdated(
         self, mock_send_confirmation_mail_if_necessary: Mock
     ):
@@ -115,7 +123,11 @@ class TestAutomaticConfirmationManager(TapirIntegrationTest):
             confirm_creation_ids=[], confirm_purchase_ids=[]
         )
 
-    @patch.object(OrderConfirmationMailSender, "send_confirmation_mail_if_necessary")
+    @patch.object(
+        OrderConfirmationMailSender,
+        "send_confirmation_mail_if_necessary",
+        autospec=True,
+    )
     def test_confirm_subscriptionStartsAfterThreshold_confirmationTimestampNotUpdated(
         self, mock_send_confirmation_mail_if_necessary: Mock
     ):
@@ -135,7 +147,11 @@ class TestAutomaticConfirmationManager(TapirIntegrationTest):
             confirm_creation_ids=[], confirm_purchase_ids=[]
         )
 
-    @patch.object(OrderConfirmationMailSender, "send_confirmation_mail_if_necessary")
+    @patch.object(
+        OrderConfirmationMailSender,
+        "send_confirmation_mail_if_necessary",
+        autospec=True,
+    )
     def test_confirm_transactionStartsAfterThreshold_confirmationTimestampNotUpdated(
         self, mock_send_confirmation_mail_if_necessary: Mock
     ):
@@ -156,7 +172,11 @@ class TestAutomaticConfirmationManager(TapirIntegrationTest):
             confirm_creation_ids=[], confirm_purchase_ids=[]
         )
 
-    @patch.object(OrderConfirmationMailSender, "send_confirmation_mail_if_necessary")
+    @patch.object(
+        OrderConfirmationMailSender,
+        "send_confirmation_mail_if_necessary",
+        autospec=True,
+    )
     def test_confirm_subscriptionStartsBeforeThreshold_confirmationTimestampUpdated(
         self, mock_send_confirmation_mail_if_necessary: Mock
     ):
@@ -180,7 +200,11 @@ class TestAutomaticConfirmationManager(TapirIntegrationTest):
             confirm_creation_ids=[subscription.id], confirm_purchase_ids=[]
         )
 
-    @patch.object(OrderConfirmationMailSender, "send_confirmation_mail_if_necessary")
+    @patch.object(
+        OrderConfirmationMailSender,
+        "send_confirmation_mail_if_necessary",
+        autospec=True,
+    )
     def test_confirm_transactionStartsBeforeThreshold_confirmationTimestampUpdated(
         self, mock_send_confirmation_mail_if_necessary: Mock
     ):
@@ -205,7 +229,11 @@ class TestAutomaticConfirmationManager(TapirIntegrationTest):
             confirm_creation_ids=[], confirm_purchase_ids=[transaction.id]
         )
 
-    @patch.object(OrderConfirmationMailSender, "send_confirmation_mail_if_necessary")
+    @patch.object(
+        OrderConfirmationMailSender,
+        "send_confirmation_mail_if_necessary",
+        autospec=True,
+    )
     def test_confirm_subscriptionStartsAfterThresholdButInThePast_confirmationTimestampUpdated(
         self, mock_send_confirmation_mail_if_necessary: Mock
     ):
@@ -225,7 +253,11 @@ class TestAutomaticConfirmationManager(TapirIntegrationTest):
             confirm_creation_ids=[subscription.id], confirm_purchase_ids=[]
         )
 
-    @patch.object(OrderConfirmationMailSender, "send_confirmation_mail_if_necessary")
+    @patch.object(
+        OrderConfirmationMailSender,
+        "send_confirmation_mail_if_necessary",
+        autospec=True,
+    )
     def test_confirm_transactionStartsAfterThresholdButInThePast_confirmationTimestampUpdated(
         self, mock_send_confirmation_mail_if_necessary: Mock
     ):

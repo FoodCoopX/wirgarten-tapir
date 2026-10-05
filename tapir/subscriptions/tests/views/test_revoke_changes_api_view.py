@@ -107,7 +107,7 @@ class TestRevokeChangesAPIView(TapirIntegrationTest):
 
         self.assertStatusCode(response, status.HTTP_404_NOT_FOUND)
 
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_putOnWaitingList_deleteSubscriptionAndTransactionAndCreateWaitingListEntry(
         self, mock_fire_action: Mock
     ):
@@ -177,7 +177,7 @@ class TestRevokeChangesAPIView(TapirIntegrationTest):
 
         mock_fire_action.assert_not_called()
 
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_dontPutOnWaitingList_deleteSubscriptionAndTransactionAndSendMailToMembers(
         self, mock_fire_action: Mock
     ):

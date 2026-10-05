@@ -17,6 +17,8 @@ import type {
   GetCoopShareTransactionsResponse,
   Member,
   MemberBankDataResponse,
+  MemberEmailRequestRequest,
+  MemberEmailResponse,
   MemberProfilePersonalDataResponse,
   MinimumNumberOfSharesResponse,
   OrderConfirmationResponse,
@@ -27,6 +29,8 @@ import {
   ExistingMemberPurchasesSharesRequestRequestToJSON,
   GetCoopShareTransactionsResponseFromJSON,
   MemberBankDataResponseFromJSON,
+  MemberEmailRequestRequestToJSON,
+  MemberEmailResponseFromJSON,
   MemberFromJSON,
   MemberProfilePersonalDataResponseFromJSON,
   MinimumNumberOfSharesResponseFromJSON,
@@ -53,6 +57,14 @@ export interface CoopApiMemberBankingDataPartialUpdateRequest {
 }
 
 export interface CoopApiMemberBankingDataRetrieveRequest {
+  memberId?: string;
+}
+
+export interface CoopApiMemberEmailCreateRequest {
+  memberEmailRequestRequest: MemberEmailRequestRequest;
+}
+
+export interface CoopApiMemberEmailRetrieveRequest {
   memberId?: string;
 }
 
@@ -373,6 +385,126 @@ export class CoopApi extends runtime.BaseAPI {
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<MemberBankDataResponse> {
     const response = await this.coopApiMemberBankingDataRetrieveRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async coopApiMemberEmailCreateRaw(
+    requestParameters: CoopApiMemberEmailCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<OrderConfirmationResponse>> {
+    if (requestParameters["memberEmailRequestRequest"] == null) {
+      throw new runtime.RequiredError(
+        "memberEmailRequestRequest",
+        'Required parameter "memberEmailRequestRequest" was null or undefined when calling coopApiMemberEmailCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/coop/api/member_email`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: MemberEmailRequestRequestToJSON(
+          requestParameters["memberEmailRequestRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      OrderConfirmationResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async coopApiMemberEmailCreate(
+    requestParameters: CoopApiMemberEmailCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<OrderConfirmationResponse> {
+    const response = await this.coopApiMemberEmailCreateRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async coopApiMemberEmailRetrieveRaw(
+    requestParameters: CoopApiMemberEmailRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<MemberEmailResponse>> {
+    const queryParameters: any = {};
+
+    if (requestParameters["memberId"] != null) {
+      queryParameters["member_id"] = requestParameters["memberId"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/coop/api/member_email`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      MemberEmailResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async coopApiMemberEmailRetrieve(
+    requestParameters: CoopApiMemberEmailRetrieveRequest = {},
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<MemberEmailResponse> {
+    const response = await this.coopApiMemberEmailRetrieveRaw(
       requestParameters,
       initOverrides,
     );

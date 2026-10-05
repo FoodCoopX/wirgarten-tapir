@@ -14,11 +14,12 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 class TestGetNumberOfDeliveriesInMonth(TapirUnitTest):
     @patch.object(
-        MemberPickupLocationGetter, "get_member_pickup_location_id_from_cache"
+        MemberPickupLocationGetter,
+        "get_member_pickup_location_id_from_cache",
+        autospec=True,
     )
     @patch.object(
-        DeliveryDateCalculator,
-        "get_next_delivery_date_for_product_type",
+        DeliveryDateCalculator, "get_next_delivery_date_for_product_type", autospec=True
     )
     def test_getNumberOfDeliveriesInMonth_subscriptionFullyIncludesGivenMonth_returnsAllDeliveries(
         self,
@@ -157,11 +158,12 @@ class TestGetNumberOfDeliveriesInMonth(TapirUnitTest):
         )
 
     @patch.object(
-        MemberPickupLocationGetter, "get_member_pickup_location_id_from_cache"
+        MemberPickupLocationGetter,
+        "get_member_pickup_location_id_from_cache",
+        autospec=True,
     )
     @patch.object(
-        DeliveryDateCalculator,
-        "get_next_delivery_date_for_product_type",
+        DeliveryDateCalculator, "get_next_delivery_date_for_product_type", autospec=True
     )
     def test_getNumberOfDeliveriesInMonth_subscriptionEndsInGivenMonth_returnsDeliveriesBeforeEndOnly(
         self,
@@ -201,11 +203,12 @@ class TestGetNumberOfDeliveriesInMonth(TapirUnitTest):
         )
 
     @patch.object(
-        MemberPickupLocationGetter, "get_member_pickup_location_id_from_cache"
+        MemberPickupLocationGetter,
+        "get_member_pickup_location_id_from_cache",
+        autospec=True,
     )
     @patch.object(
-        DeliveryDateCalculator,
-        "get_next_delivery_date_for_product_type",
+        DeliveryDateCalculator, "get_next_delivery_date_for_product_type", autospec=True
     )
     def test_getNumberOfDeliveriesInMonth_subscriptionStartsAndEndsInGivenMonth_returnsDeliveriesInsideSubscriptionOnly(
         self,
@@ -240,11 +243,12 @@ class TestGetNumberOfDeliveriesInMonth(TapirUnitTest):
         self.assertEqual(3, result, "There should be a delivery on the 8th, 15th, 22nd")
 
     @patch.object(
-        MemberPickupLocationGetter, "get_member_pickup_location_id_from_cache"
+        MemberPickupLocationGetter,
+        "get_member_pickup_location_id_from_cache",
+        autospec=True,
     )
     @patch.object(
-        DeliveryDateCalculator,
-        "get_next_delivery_date_for_product_type",
+        DeliveryDateCalculator, "get_next_delivery_date_for_product_type", autospec=True
     )
     def test_getNumberOfDeliveriesInMonth_subscriptionEndsInGivenMonth_returnsDeliveriesBeforeEndOnly(
         self,

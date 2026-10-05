@@ -19,7 +19,6 @@ from tapir.wirgarten.models import (
     Subscription,
     TaxRate,
 )
-from tapir.wirgarten.service.product_standard_order import product_type_order_by
 from tapir.wirgarten.utils import get_today
 from tapir.wirgarten.validators import (
     validate_date_range,
@@ -40,7 +39,7 @@ def get_active_product_types(reference_date: datetime.date = None, cache: dict =
                 period__start_date__lte=reference_date,
                 period__end_date__gte=reference_date,
             ).values("product_type__id")
-        ).order_by(*product_type_order_by(cache=cache))
+        ).order_by("order_in_bestellwizard")
 
     active_product_types_by_date_cache = get_from_cache_or_compute(
         cache, "active_product_types_by_date", lambda: {}
@@ -189,9 +188,7 @@ def get_active_product_capacities(
     def compute():
         return ProductCapacity.objects.filter(
             period__start_date__lte=reference_date, period__end_date__gte=reference_date
-        ).order_by(
-            *product_type_order_by("product_type_id", "product_type__name", cache=cache)
-        )
+        ).order_by("product_type__order_in_bestellwizard")
 
     active_product_capacities_by_date_cache = get_from_cache_or_compute(
         cache, "active_product_capacities_by_date", lambda: {}
@@ -214,9 +211,7 @@ def get_active_and_future_subscriptions(
         filters = Q(end_date__gte=reference_date) | Q(end_date__isnull=True)
         return (
             Subscription.objects.filter(filters)
-            .order_by(
-                *product_type_order_by("product__type_id", "product__type__name", cache)
-            )
+            .order_by("product__type__order_in_bestellwizard")
             .select_related("product__type")
         )
 

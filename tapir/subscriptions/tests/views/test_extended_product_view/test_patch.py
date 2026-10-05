@@ -26,7 +26,7 @@ class TestExtendedProductViewPatch(TapirIntegrationTest):
 
         self.assertStatusCode(response, 403)
 
-    @patch.object(ProductUpdater, "update_product")
+    @patch.object(ProductUpdater, "update_product", autospec=True)
     def test_patch_default_callsProductUpdated(self, mock_update_product: Mock):
         member = MemberFactory.create(is_superuser=True)
         self.client.force_login(member)
