@@ -1281,7 +1281,7 @@ class RebuildSubscriptionPaymentsApiView(APIView):
                 OrderConfirmationResponseSerializer(
                     {
                         "order_confirmed": False,
-                        "error": f"Die Lastschriften konnten neu erzeugt werden, es sind aber folgenden Fehler aufgetreten. Die betroffene Mitglieder sind nicht in der neue Dateien enthalten. {", ".join(errors)}",
+                        "error": f"Die Lastschriften konnten neu erzeugt werden, es sind aber folgenden Fehler aufgetreten. Die betroffene Mitglieder sind nicht in der neue Dateien enthalten. {", ".join(sorted(errors))}",
                     }
                 ).data
             )

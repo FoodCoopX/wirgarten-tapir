@@ -51,14 +51,7 @@ class Pain008XmlStringGenerator:
         payments: list[Payment],
         cache: dict,
         collection_date: datetime.date,
-        skip_validation: bool = False,
     ):
-        if not skip_validation:
-            for payment in payments:
-                cls.validate_single_payment(
-                    payment=payment, cache=cache, collection_date=collection_date
-                )
-
         namespace_map = {
             None: cls.namespace,
             "xsi": "http://www.w3.org/2001/XMLSchema-instance",
@@ -161,7 +154,6 @@ class Pain008XmlStringGenerator:
                 payments=[payment],
                 cache=cache,
                 collection_date=collection_date,
-                skip_validation=True,
             )
         except Pain008XmlGlobalException:
             raise

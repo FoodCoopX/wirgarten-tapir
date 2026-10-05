@@ -6,7 +6,6 @@ from lxml import etree
 
 from tapir.payments.services.pain_008_xml_string_generator import (
     Pain008XmlStringGenerator,
-    Pain008XmlSinglePaymentException,
     Pain008XmlGlobalException,
 )
 from tapir.payments.services.payment_export_intended_use_builder import (
@@ -296,7 +295,7 @@ class TestBuildXmlString(TapirUnitTest):
     def test_buildXmlString_negativePayment_raisesSinglePaymentError(self):
         payment = PaymentFactory.build(amount=Decimal("-5"))
 
-        with self.assertRaises(Pain008XmlSinglePaymentException):
+        with self.assertRaises(Pain008XmlGlobalException):
             Pain008XmlStringGenerator.build_xml_string(
                 payments=[payment],
                 collection_date=datetime.date(year=2019, month=9, day=17),
@@ -343,20 +342,24 @@ class TestBuildXmlString(TapirUnitTest):
             error.exception.message,
         )
 
-    def test_buildXmlString_invalidMemberIban_raisesSinglePaymentError(self):
+    def test_buildXmlString_invalidMemberIban_raisesSGlobalError(self):
         payment = PaymentFactory.build(
-            amount=Decimal("10"), mandate_ref__member__iban="DE00 INVALID"
+            amount=Decimal("10"),
+            mandate_ref__member__iban="DE00 INVALID",
+            mandate_ref__member__first_name="John",
+            mandate_ref__member__last_name="Doe",
+            mandate_ref__member__member_no=123,
         )
 
-        with self.assertRaises(Pain008XmlSinglePaymentException) as error:
+        with self.assertRaises(Pain008XmlGlobalException) as error:
             Pain008XmlStringGenerator.build_xml_string(
                 payments=[payment],
                 collection_date=datetime.date(year=2019, month=9, day=17),
                 cache=self.cache,
             )
 
-        self.assertEqual(
-            "DE-IBAN müssen 22 Zeichen enthalten.",
+        self.assertIn(
+            "The value 'DE00 INVALID' is not accepted by the pattern",
             error.exception.message,
         )
 

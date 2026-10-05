@@ -29,12 +29,13 @@ class Pain008XmlFileCreator:
         send_mail: bool,
         cache: dict,
     ) -> tuple[ExportedFile | None, list[str]]:
-        errors_failed_payments = []
         try:
-            xml_bytes = Pain008XmlStringGenerator.build_xml_string(
-                payments=payments,
-                collection_date=reference_date,
-                cache=cache,
+            xml_bytes, errors_failed_payments = (
+                cls.build_xml_string_with_valid_payments_and_errors_for_invalid_payments(
+                    payments=payments,
+                    collection_date=reference_date,
+                    cache=cache,
+                )
             )
         except Pain008XmlGlobalException as exception:
             cls.send_error_mail_or_raise_exception(
@@ -44,14 +45,6 @@ class Pain008XmlFileCreator:
                 send_mail=send_mail,
             )
             return None, []
-        except Pain008XmlSinglePaymentException:
-            xml_bytes, errors_failed_payments = (
-                cls.build_xml_string_with_valid_payments_and_errors_for_invalid_payments(
-                    payments=payments,
-                    collection_date=reference_date,
-                    cache=cache,
-                )
-            )
 
         if xml_bytes is None:
             reason = f"<ul><li>{"</li><li>".join(errors_failed_payments)}</li></ul>"
@@ -80,9 +73,9 @@ class Pain008XmlFileCreator:
         if not send_mail:
             raise Pain008XmlGenericException(message=reason)
 
-        subject = f"Die {file_name}-Datei könnten nicht erzeugt werden"
+        subject = f"Fehler bei der Erzeugung der {file_name}-Datei"
 
-        body = f"<p>Hallo Admin,</p><p>Die Datei {file_name} könnte nicht erzeugt werden. Grund dafür ist: {reason}.</p>"
+        body = f"<p>Hallo Admin,</p><p>Die Datei {file_name} konnte nicht erzeugt werden. Grund dafür ist: {reason}.</p>"
 
         email = EmailMultiAlternatives(
             subject=subject,
