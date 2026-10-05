@@ -116,28 +116,28 @@ export interface PickupLocation {
   photoLink?: string;
   /**
    *
-   * @type {boolean}
-   * @memberof PickupLocation
-   */
-  showDetailsInBasketTotalsExport?: boolean;
-  /**
-   *
    * @type {string}
    * @memberof PickupLocation
    */
   routeInfo?: string;
   /**
-   * Leer = ab sofort verfügbar. Neuanlagen nur am 1. des Monats möglich.
+   * Leer = ab sofort verfügbar. Neuanlagen nur an einem Montag möglich.
    * @type {Date}
    * @memberof PickupLocation
    */
   startDate?: Date | null;
   /**
-   * Leer = dauerhaft verfügbar. Schließen nur am letzten Tag eines Monats möglich.
+   * Leer = dauerhaft verfügbar. Schließen nur an einem Sonntag möglich.
    * @type {Date}
    * @memberof PickupLocation
    */
   endDate?: Date | null;
+  /**
+   *
+   * @type {boolean}
+   * @memberof PickupLocation
+   */
+  showDetailsInBasketTotalsExport?: boolean;
   /**
    *
    * @type {string}
@@ -197,14 +197,14 @@ export function PickupLocationFromJSONTyped(
     contactName:
       json["contact_name"] == null ? undefined : json["contact_name"],
     photoLink: json["photo_link"] == null ? undefined : json["photo_link"],
-    showDetailsInBasketTotalsExport:
-      json["show_details_in_basket_totals_export"] == null
-        ? undefined
-        : json["show_details_in_basket_totals_export"],
     routeInfo: json["route_info"] == null ? undefined : json["route_info"],
     startDate:
       json["start_date"] == null ? undefined : new Date(json["start_date"]),
     endDate: json["end_date"] == null ? undefined : new Date(json["end_date"]),
+    showDetailsInBasketTotalsExport:
+      json["show_details_in_basket_totals_export"] == null
+        ? undefined
+        : json["show_details_in_basket_totals_export"],
     locationRoute:
       json["location_route"] == null ? undefined : json["location_route"],
   };
@@ -239,8 +239,6 @@ export function PickupLocationToJSONTyped(
     messenger_group_link: value["messengerGroupLink"],
     contact_name: value["contactName"],
     photo_link: value["photoLink"],
-    show_details_in_basket_totals_export:
-      value["showDetailsInBasketTotalsExport"],
     route_info: value["routeInfo"],
     start_date:
       value["startDate"] == null
@@ -250,6 +248,8 @@ export function PickupLocationToJSONTyped(
       value["endDate"] == null
         ? undefined
         : (value["endDate"] as any).toISOString().substring(0, 10),
+    show_details_in_basket_totals_export:
+      value["showDetailsInBasketTotalsExport"],
     location_route: value["locationRoute"],
   };
 }

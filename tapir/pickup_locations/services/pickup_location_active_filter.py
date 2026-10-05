@@ -17,4 +17,6 @@ class PickupLocationActiveFilter:
     def get_not_ended_at_date(
         queryset: QuerySet, reference_date: datetime.date
     ) -> QuerySet:
-        return queryset.filter(Q(end_date__isnull=True) | Q(end_date__gte=reference_date))
+        return queryset.filter(
+            Q(end_date__isnull=True) | Q(end_date__gte=reference_date)
+        )

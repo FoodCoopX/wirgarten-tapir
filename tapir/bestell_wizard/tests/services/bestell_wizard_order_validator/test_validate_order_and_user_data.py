@@ -170,7 +170,6 @@ class TestValidateOrderAndUserData(TapirUnitTest):
             contract_start_date=contract_start_date,
             order={},
             cache=cache,
-            pickup_location=None,
         )
         mock_legal_status_is_cooperative.assert_called_once_with(cache=cache)
         mock_validate_distribution_channels.assert_called_once_with(
@@ -334,7 +333,6 @@ class TestValidateOrderAndUserData(TapirUnitTest):
             contract_start_date=contract_start_date,
             order=order,
             cache=cache,
-            pickup_location=None,
         )
         mock_legal_status_is_cooperative.assert_called_once_with(cache=cache)
         mock_validate_distribution_channels.assert_called_once_with(
@@ -421,7 +419,6 @@ class TestValidateOrderAndUserData(TapirUnitTest):
             contract_start_date=contract_start_date,
             order=order,
             cache=cache,
-            pickup_location=None,
         )
         mock_is_the_ordered_solidarity_allowed.assert_called_once_with(
             amount=12, start_date=contract_start_date, cache=cache
@@ -516,7 +513,6 @@ class TestValidateOrderAndUserData(TapirUnitTest):
             contract_start_date=contract_start_date,
             order=order,
             cache=cache,
-            pickup_location=None,
         )
         mock_is_the_ordered_solidarity_allowed.assert_called_once_with(
             amount=12, start_date=contract_start_date, cache=cache
@@ -628,7 +624,6 @@ class TestValidateOrderAndUserData(TapirUnitTest):
             contract_start_date=contract_start_date,
             order=order,
             cache=cache,
-            pickup_location=None,
         )
         mock_is_the_ordered_solidarity_allowed.assert_called_once_with(
             amount=12, start_date=contract_start_date, cache=cache
@@ -740,7 +735,6 @@ class TestValidateOrderAndUserData(TapirUnitTest):
             contract_start_date=contract_start_date,
             order=order,
             cache=cache,
-            pickup_location=None,
         )
         mock_is_the_ordered_solidarity_allowed.assert_called_once_with(
             amount=12, start_date=contract_start_date, cache=cache

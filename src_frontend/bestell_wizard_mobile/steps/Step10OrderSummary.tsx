@@ -27,11 +27,6 @@ import { doesWaitingListHaveProductType } from "../utils/doesWaitingListHaveProd
 import { getAssociationMembershipTypeMonthlyPriceFormatted } from "../utils/getAssociationMembershipTypeMonthlyPriceFormatted.ts";
 import { getFirstPickupLocationWithCapacity } from "../utils/getFirstPickupLocationWithCapacity.ts";
 import {
-  getEffectiveContractStartDate,
-  isPickupLocationFuture,
-} from "../../bestell_wizard/utils/pickupLocationContractStart.ts";
-import PickupLocationFutureHint from "../components/PickupLocationFutureHint.tsx";
-import {
   getProductById,
   getProductByIdGlobal,
 } from "../utils/getProductByIdGlobal.ts";
@@ -46,7 +41,7 @@ interface Step10OrderSummaryProps {
   numberOfCoopShares: number;
   studentStatusEnabled: boolean;
   goToNextStep: () => void;
-  contractStartDate: Date | undefined;
+  contractStartDate: Date;
   firstDeliveryDatesByPickupLocationAndProductType: {
     [key: string]: { [key: string]: Date };
   };
@@ -101,17 +96,6 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
   useEffect(() => {
     setActivePickupLocation(getRelevantPickupLocation());
   }, [selectedPickupLocations]);
-
-  const effectiveContractStartDate = getEffectiveContractStartDate(
-    contractStartDate,
-    activePickupLocation,
-    selectedGrowingPeriod?.endDate,
-  );
-  const isContractStartPushed =
-    !!activePickupLocation &&
-    isPickupLocationFuture(activePickupLocation, contractStartDate);
-  const isPickupLocationBeyondGrowingPeriod =
-    isContractStartPushed && effectiveContractStartDate === undefined;
 
   function getRelevantPickupLocation(): PublicPickupLocation | undefined {
     if (waitingListEntryDetails === undefined) {
@@ -298,41 +282,8 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                       ) : (
                         <>
                           <li>
-                            {isPickupLocationBeyondGrowingPeriod ? (
-                              <div className="small">
-                                <PickupLocationFutureHint
-                                  pickupLocation={activePickupLocation}
-                                  fontSize="0.9rem"
-                                  variant="danger"
-                                >
-                                  Die Verteilstation ist erst nach dem Ende der
-                                  gewählten Vertragsperiode verfügbar. Bitte
-                                  wähle eine passende Vertragsperiode.
-                                </PickupLocationFutureHint>
-                              </div>
-                            ) : (
-                              <>
-                                Vertragsstart:{" "}
-                                {formatDateNumeric(effectiveContractStartDate)}
-                                {isContractStartPushed && (
-                                  <div className="small">
-                                    <PickupLocationFutureHint
-                                      pickupLocation={activePickupLocation}
-                                      fontSize="0.9rem"
-                                    >
-                                      Der Vertragsstart wurde verschoben, da die
-                                      Verteilstation erst ab{" "}
-                                      {formatDateNumeric(
-                                        new Date(
-                                          activePickupLocation.startDate!,
-                                        ),
-                                      )}{" "}
-                                      verfügbar ist.
-                                    </PickupLocationFutureHint>
-                                  </div>
-                                )}
-                              </>
-                            )}
+                            Vertragsstart:{" "}
+                            {formatDateNumeric(contractStartDate)}
                           </li>
                           {!productType.noDelivery && (
                             <>
@@ -468,39 +419,6 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                         }}
                       />
                     </li>
-                  )}
-                </AccordionBody>
-              </Accordion.Item>
-            </Accordion>
-          )}
-          {solidarityContribution !== 0 && (
-            <Accordion>
-              <Accordion.Item
-                eventKey={"solidarity_contribution"}
-                onClick={scrollIntoView}
-              >
-                <Accordion.Header>
-                  Solidarbeitrag: {formatCurrency(solidarityContribution)} /
-                  Monat
-                </Accordion.Header>
-                <AccordionBody>
-                  <ul>
-                    <li>
-                      Betrag: {formatCurrency(solidarityContribution)} / Monat
-                    </li>
-                    <li>Gültig ab: {formatDateNumeric(contractStartDate)}</li>
-                  </ul>
-                  {(waitingListEntryDetails === undefined ||
-                    waitingListEntryDetails.shouldShowSolidarityStep) && (
-                    <TapirButton
-                      variant={BUTTON_VARIANT}
-                      size={"sm"}
-                      text={"Solidarbeitrag anpassen"}
-                      icon={"edit"}
-                      onClick={() => {
-                        setCurrentStep("7_solidarity_contribution");
-                      }}
-                    />
                   )}
                 </AccordionBody>
               </Accordion.Item>

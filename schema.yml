@@ -14249,9 +14249,6 @@ components:
         photo_link:
           type: string
           maxLength: 512
-        show_details_in_basket_totals_export:
-          type: boolean
-          title: Im Gesamtkistenanzahls-Zettel Details anzeigen
         route_info:
           type: string
           title: Driver/Route info
@@ -14261,15 +14258,18 @@ components:
           format: date
           nullable: true
           title: Available from
-          description: Leer = ab sofort verfügbar. Neuanlagen nur am 1. des Monats
+          description: Leer = ab sofort verfügbar. Neuanlagen nur an einem Montag
             möglich.
         end_date:
           type: string
           format: date
           nullable: true
           title: Available until
-          description: Leer = dauerhaft verfügbar. Schließen nur am letzten Tag eines
-            Monats möglich.
+          description: Leer = dauerhaft verfügbar. Schließen nur an einem Sonntag
+            möglich.
+        show_details_in_basket_totals_export:
+          type: boolean
+          title: Im Gesamtkistenanzahls-Zettel Details anzeigen
         location_route:
           type: string
           nullable: true
@@ -14891,13 +14891,6 @@ components:
         city:
           type: string
           maxLength: 50
-        start_date:
-          type: string
-          format: date
-          nullable: true
-          title: Available from
-          description: Leer = ab sofort verfügbar. Neuanlagen nur am 1. des Monats
-            möglich.
         opening_times:
           type: array
           items:

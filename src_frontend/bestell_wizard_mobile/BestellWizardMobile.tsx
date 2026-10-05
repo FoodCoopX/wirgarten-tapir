@@ -67,8 +67,8 @@ import { getPhase } from "./utils/getPhase.ts";
 import { getProductTypeByProductId } from "./utils/getProductTypeByProductId.ts";
 import { getProductTypeFromStep } from "./utils/getProductTypeFromStep.ts";
 import { getPublicPickupLocationById } from "./utils/getPublicPickupLocationById.ts";
-import { updateWaitingList } from "./utils/updateWaitingList.ts";
 import { getVisibleAssociationMembershipTypes } from "./utils/getVisibleAssociationMembershipTypes.ts";
+import { updateWaitingList } from "./utils/updateWaitingList.ts";
 
 interface BestellWizardMobileProps {
   csrfToken: string;
@@ -697,7 +697,6 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             changesDisabled={
               (waitingListEntryDetails?.pickupLocationWishes ?? []).length > 0
             }
-            contractStartDate={contractStartDate}
           />
         );
       case "5c_pickup_location_confirm_waiting_list":

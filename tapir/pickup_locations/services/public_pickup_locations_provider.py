@@ -1,13 +1,12 @@
 import datetime
 
-from django.db.models import Q
-
 from tapir.configuration.parameter import get_parameter_value
 from tapir.pickup_locations.services.pickup_location_active_filter import (
     PickupLocationActiveFilter,
 )
 from tapir.wirgarten.models import PickupLocation
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.utils import get_today
 
 
 class PublicPickupLocationProvider:
@@ -15,8 +14,7 @@ class PublicPickupLocationProvider:
     def get_pickup_locations_available_for_members(
         cls,
         cache: dict,
-        reference_date: datetime.date,
-        include_future: bool = False,
+        reference_date: datetime.date | None = None,
     ):
         pickup_locations = PickupLocation.objects.order_by("name").exclude(
             id=get_parameter_value(
@@ -24,10 +22,7 @@ class PublicPickupLocationProvider:
                 cache=cache,
             )
         )
-        if include_future:
-            return pickup_locations.filter(
-                Q(end_date__isnull=True) | Q(end_date__gte=reference_date)
-            )
         return PickupLocationActiveFilter.get_active_at_date(
-            pickup_locations, reference_date
+            pickup_locations,
+            reference_date if reference_date is not None else get_today(cache=cache),
         )

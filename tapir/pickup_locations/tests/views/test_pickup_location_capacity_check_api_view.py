@@ -10,12 +10,12 @@ from tapir.pickup_locations.services.pickup_location_capacity_general_checker im
 from tapir.subscriptions.services.contract_start_date_calculator import (
     ContractStartDateCalculator,
 )
-from tapir.utils.shortcuts import get_first_of_next_month
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import PickupLocationFactory
 from tapir.wirgarten.tests.test_utils import (
     TapirIntegrationTest,
-    last_day_of_previous_month,
+    monday_after,
+    sunday_before,
 )
 
 
@@ -47,15 +47,11 @@ class TestPickupLocationCapacityCheckApiView(TapirIntegrationTest):
         "does_pickup_location_have_enough_capacity_to_add_subscriptions",
         return_value=True,
     )
-    def test_capacityCheck_includesFutureStartDatePickupLocationAsCandidate(
+    def test_capacityCheck_futureStartDatePickupLocationNotCandidate_excludesItFromCandidates(
         self, mock_does_pickup_location_have_enough_capacity_to_add_subscriptions: Mock
     ):
-        self.pickup_location_1.end_date = last_day_of_previous_month(
-            self.reference_date
-        )
-        self.pickup_location_3.start_date = get_first_of_next_month(
-            self.reference_date + datetime.timedelta(days=30)
-        )
+        self.pickup_location_1.end_date = sunday_before(self.reference_date)
+        self.pickup_location_3.start_date = monday_after(self.reference_date)
         self.pickup_location_1.save()
         self.pickup_location_3.save()
 
@@ -68,5 +64,5 @@ class TestPickupLocationCapacityCheckApiView(TapirIntegrationTest):
         self.assertStatusCode(response, status.HTTP_200_OK)
         ids = response.json()["pickup_location_ids_with_enough_capacity_for_order"]
         self.assertIn(self.pickup_location_2.id, ids)
-        self.assertIn(self.pickup_location_3.id, ids)
+        self.assertNotIn(self.pickup_location_3.id, ids)
         self.assertNotIn(self.pickup_location_1.id, ids)

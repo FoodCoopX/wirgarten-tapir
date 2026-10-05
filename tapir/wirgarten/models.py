@@ -26,22 +26,21 @@ from tapir.core.models import TapirModel
 from tapir.log.models import LogEntry, UpdateModelLogEntry
 from tapir.subscriptions.config import NOTICE_PERIOD_UNIT_OPTIONS
 from tapir.utils.models import CountryField
-from tapir.utils.shortcuts import get_last_day_of_month
 from tapir.wirgarten.constants import NO_DELIVERY, DeliveryCycle, OPTIONS_WEEKDAYS
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import format_currency, format_date, get_today
 
 PICKUP_LOCATION_START_DATE_VALIDATION_MESSAGE = (
-    "Verteilstationen können nur am ersten Tag eines Monats geöffnet werden."
+    "Verteilstationen können nur an einem Montag geöffnet werden."
 )
 PICKUP_LOCATION_END_DATE_VALIDATION_MESSAGE = (
-    "Verteilstationen können nur am letzten Tag eines Monats geschlossen werden."
+    "Verteilstationen können nur an einem Sonntag geschlossen werden."
 )
 PICKUP_LOCATION_START_DATE_HELP_TEXT = (
-    "Leer = ab sofort verfügbar. Neuanlagen nur am 1. des Monats möglich."
+    "Leer = ab sofort verfügbar. Neuanlagen nur an einem Montag möglich."
 )
 PICKUP_LOCATION_END_DATE_HELP_TEXT = (
-    "Leer = dauerhaft verfügbar. Schließen nur am letzten Tag eines Monats möglich."
+    "Leer = dauerhaft verfügbar. Schließen nur an einem Sonntag möglich."
 )
 
 
@@ -49,9 +48,9 @@ def validate_pickup_location_dates(
     start_date: datetime.date | None, end_date: datetime.date | None
 ) -> dict[str, str]:
     errors = {}
-    if start_date is not None and start_date.day != 1:
+    if start_date is not None and start_date.weekday() != 0:
         errors["start_date"] = PICKUP_LOCATION_START_DATE_VALIDATION_MESSAGE
-    if end_date is not None and end_date != get_last_day_of_month(end_date):
+    if end_date is not None and end_date.weekday() != 6:
         errors["end_date"] = PICKUP_LOCATION_END_DATE_VALIDATION_MESSAGE
     return errors
 

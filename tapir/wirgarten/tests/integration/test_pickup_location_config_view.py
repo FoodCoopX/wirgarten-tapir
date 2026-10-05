@@ -17,10 +17,10 @@ class TestPickupLocationCfgView(TapirIntegrationTest):
         super().setUp()
         self.active = PickupLocationFactory.create(name="active")
         self.future = PickupLocationFactory.create(
-            name="future", start_date=datetime.date(2099, 1, 1)
+            name="future", start_date=datetime.date(2099, 1, 5)
         )
         self.decommissioned = PickupLocationFactory.create(
-            name="decommissioned", end_date=datetime.date(2000, 1, 31)
+            name="decommissioned", end_date=datetime.date(2000, 1, 30)
         )
 
     def _filtered_names(self, **query):

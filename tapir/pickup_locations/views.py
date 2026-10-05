@@ -299,7 +299,6 @@ class PickupLocationCapacityCheckApiView(APIView):
             PublicPickupLocationProvider.get_pickup_locations_available_for_members(
                 cache=self.cache,
                 reference_date=subscription_start,
-                include_future=True,
             )
         )
 

@@ -8,6 +8,9 @@ from tapir.associations.models import AssociationMembershipType
 from tapir.associations.services.association_membership_change_handler import (
     AssociationMembershipChangeHandler,
 )
+from tapir.bestell_wizard.services.bestell_wizard_order_validator import (
+    BestellWizardOrderValidator,
+)
 from tapir.coop.services.coop_share_purchase_handler import CoopSharePurchaseHandler
 from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.payments.services.member_payment_rhythm_service import (
@@ -55,12 +58,18 @@ class BestellWizardOrderFulfiller:
         contract_start_date: datetime.date,
         request,
         cache: dict,
-        pickup_location=None,
-        order=None,
     ):
-        if order is None:
-            order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
-                validated_serializer_data["shopping_cart_order"], cache=cache
+        order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
+            validated_serializer_data["shopping_cart_order"], cache=cache
+        )
+        pickup_location = None
+        if OrderValidator.does_order_need_a_pickup_location(order=order, cache=cache):
+            pickup_location = BestellWizardOrderValidator.get_first_pickup_location_with_enough_capacity(
+                pickup_location_ids=validated_serializer_data["pickup_location_ids"],
+                contract_start_date=contract_start_date,
+                member=None,
+                order=order,
+                cache=cache,
             )
 
         is_student = validated_serializer_data["student_status_enabled"]

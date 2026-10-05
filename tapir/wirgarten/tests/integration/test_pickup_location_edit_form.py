@@ -14,8 +14,8 @@ def _valid_data(**overrides):
         "postcode": "12345",
         "city": "Musterstadt",
         "monday_times": "08:00-09:00",
-        "start_date": "2026-01-01",
-        "end_date": "2026-12-31",
+        "start_date": "2026-01-05",
+        "end_date": "2026-12-27",
     }
     data.update(overrides)
     return data
@@ -35,14 +35,14 @@ class TestPickupLocationEditForm(TapirIntegrationTest):
 
     def test_initial_populatedFromInstance(self):
         pickup_location = PickupLocationFactory.create(
-            start_date=datetime.date(2026, 1, 1),
-            end_date=datetime.date(2026, 12, 31),
+            start_date=datetime.date(2026, 1, 5),
+            end_date=datetime.date(2026, 12, 27),
         )
 
         form = PickupLocationEditForm(id=pickup_location.id)
 
-        self.assertEqual(datetime.date(2026, 1, 1), form.fields["start_date"].initial)
-        self.assertEqual(datetime.date(2026, 12, 31), form.fields["end_date"].initial)
+        self.assertEqual(datetime.date(2026, 1, 5), form.fields["start_date"].initial)
+        self.assertEqual(datetime.date(2026, 12, 27), form.fields["end_date"].initial)
 
     def test_save_persistsStartAndEndDate(self):
         pickup_location = PickupLocationFactory.create()
@@ -52,12 +52,12 @@ class TestPickupLocationEditForm(TapirIntegrationTest):
         form.save()
 
         pickup_location.refresh_from_db()
-        self.assertEqual(datetime.date(2026, 1, 1), pickup_location.start_date)
-        self.assertEqual(datetime.date(2026, 12, 31), pickup_location.end_date)
+        self.assertEqual(datetime.date(2026, 1, 5), pickup_location.start_date)
+        self.assertEqual(datetime.date(2026, 12, 27), pickup_location.end_date)
 
     def test_clean_rejectsEndDateBeforeStartDate(self):
         form = PickupLocationEditForm(
-            _valid_data(start_date="2026-12-01", end_date="2026-01-31")
+            _valid_data(start_date="2026-12-07", end_date="2026-12-06")
         )
 
         self.assertFalse(form.is_valid())
@@ -65,32 +65,32 @@ class TestPickupLocationEditForm(TapirIntegrationTest):
             "Ende darf nicht vor Beginn liegen.", form.errors.get("end_date", [])
         )
 
-    def test_clean_rejectsStartDateNotOnFirstOfMonth(self):
-        form = PickupLocationEditForm(_valid_data(start_date="2026-01-15"))
+    def test_clean_rejectsStartDateNotOnMonday(self):
+        form = PickupLocationEditForm(_valid_data(start_date="2026-01-06"))
 
         self.assertFalse(form.is_valid())
         self.assertIn(
-            "Verteilstationen können nur am ersten Tag eines Monats geöffnet werden.",
+            "Verteilstationen können nur an einem Montag geöffnet werden.",
             form.errors.get("start_date", []),
         )
 
-    def test_clean_acceptsStartDateOnFirstOfMonth(self):
-        form = PickupLocationEditForm(_valid_data(start_date="2026-01-01"))
+    def test_clean_acceptsStartDateOnMonday(self):
+        form = PickupLocationEditForm(_valid_data(start_date="2026-01-05"))
 
         self.assertTrue(form.is_valid(), form.errors)
-        self.assertEqual(datetime.date(2026, 1, 1), form.cleaned_data.get("start_date"))
+        self.assertEqual(datetime.date(2026, 1, 5), form.cleaned_data.get("start_date"))
 
-    def test_clean_rejectsEndDateNotOnLastOfMonth_reportsError(self):
-        form = PickupLocationEditForm(_valid_data(end_date="2026-12-01"))
+    def test_clean_rejectsEndDateNotOnSunday_reportsError(self):
+        form = PickupLocationEditForm(_valid_data(end_date="2026-12-26"))
 
         self.assertFalse(form.is_valid())
         self.assertIn(
-            "Verteilstationen können nur am letzten Tag eines Monats geschlossen werden.",
+            "Verteilstationen können nur an einem Sonntag geschlossen werden.",
             form.errors.get("end_date", []),
         )
 
-    def test_clean_acceptsEndDateOnLastOfMonth_isValid(self):
-        form = PickupLocationEditForm(_valid_data(end_date="2026-12-31"))
+    def test_clean_acceptsEndDateOnSunday_isValid(self):
+        form = PickupLocationEditForm(_valid_data(end_date="2026-12-27"))
 
         self.assertTrue(form.is_valid(), form.errors)
-        self.assertEqual(datetime.date(2026, 12, 31), form.cleaned_data.get("end_date"))
+        self.assertEqual(datetime.date(2026, 12, 27), form.cleaned_data.get("end_date"))

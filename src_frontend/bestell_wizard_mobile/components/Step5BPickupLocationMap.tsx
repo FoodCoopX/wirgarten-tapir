@@ -1,23 +1,21 @@
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import React, { useEffect } from "react";
-import { PublicPickupLocation, PublicProductType } from "../../api-client";
-import formatAddress from "../../utils/formatAddress.ts";
-import { formatOpeningTimes } from "../../bestell_wizard/utils/formatOpeningTimes.ts";
-import { isPickupLocationFuture } from "../../bestell_wizard/utils/pickupLocationContractStart.ts";
 import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 import { MapRef } from "react-leaflet/MapContainer";
-import L from "leaflet";
-import "./map.css";
-import "leaflet/dist/leaflet.css";
+import { PublicPickupLocation, PublicProductType } from "../../api-client";
+import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
+import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
+import { buildFilteredShoppingCart } from "../../bestell_wizard/utils/buildFilteredShoppingCart.ts";
+import { formatOpeningTimes } from "../../bestell_wizard/utils/formatOpeningTimes.ts";
+import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
 import TapirButton from "../../components/TapirButton.tsx";
+import formatAddress from "../../utils/formatAddress.ts";
+import { buildDeliveryChargeBadge } from "../utils/buildDeliveryChargeBadge.tsx";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import { getFirstDelivery } from "../utils/getFirstDelivery.ts";
-import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
-import { buildFilteredShoppingCart } from "../../bestell_wizard/utils/buildFilteredShoppingCart.ts";
-import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { wouldTheOrderFitTheProductCapacities } from "../utils/wouldTheOrderFitTheProductCapacities.ts";
-import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
-import { buildDeliveryChargeBadge } from "../utils/buildDeliveryChargeBadge.tsx";
-import PickupLocationFutureHint from "./PickupLocationFutureHint.tsx";
+import "./map.css";
 
 interface Step5BPickupLocationMapProps {
   pickupLocations: PublicPickupLocation[];
@@ -37,7 +35,6 @@ interface Step5BPickupLocationMapProps {
   productIdsOverCapacity: string[];
   settings: BestellWizardSettings;
   changesDisabled: boolean;
-  contractStartDate: Date | undefined;
 }
 
 const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
@@ -56,7 +53,6 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
   productTypeIdsOverCapacity,
   settings,
   changesDisabled,
-  contractStartDate,
 }) => {
   useEffect(() => {
     if (tabIsActive && mapRef) {
@@ -130,10 +126,6 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
 
     if (pickupLocationsWithCapacityFull.has(pickupLocation)) {
       return "marker-icon-red.png";
-    }
-
-    if (isPickupLocationFuture(pickupLocation, contractStartDate)) {
-      return "marker-icon-amber.png";
     }
 
     return "marker-icon.png";
@@ -214,8 +206,6 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
               {buildDeliveryChargeBadge(pickupLocation)}
               {pickupLocationsWithCapacityFull.has(pickupLocation) ? (
                 <span className={"text-danger"}>Ausgelastet</span>
-              ) : isPickupLocationFuture(pickupLocation, contractStartDate) ? (
-                <PickupLocationFutureHint pickupLocation={pickupLocation} />
               ) : (
                 <span className={"text-success"}>
                   {isAtLeastOneProductOrdered(
