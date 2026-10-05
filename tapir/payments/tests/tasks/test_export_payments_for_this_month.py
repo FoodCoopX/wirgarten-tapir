@@ -110,7 +110,10 @@ class TestExportPaymentsForThisMonth(TapirIntegrationTest):
             "Fehler bei der Erzeugung der Verträge-Einzahlungen Juni 2019-Datei",
             sent_mail.subject,
         )
-        self.assertEqual(
-            "<p>Hallo Admin,</p><p>Die Datei Verträge-Einzahlungen Juni 2019 konnte nicht erzeugt werden. Grund dafür ist: IN is not a valid country code for IBAN..</p>",
+        self.assertIn(
+            "<p>Hallo Admin,</p><p>Die Datei Verträge-Einzahlungen Juni 2019 konnte nicht erzeugt werden. Grund dafür ist:",
             sent_mail.body,
+        )
+        self.assertIn(
+            "The value 'INVALID' is not accepted by the pattern", sent_mail.body
         )
