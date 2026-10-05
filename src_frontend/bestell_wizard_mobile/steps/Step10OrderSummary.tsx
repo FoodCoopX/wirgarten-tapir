@@ -424,6 +424,39 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
               </Accordion.Item>
             </Accordion>
           )}
+          {solidarityContribution !== 0 && (
+            <Accordion>
+              <Accordion.Item
+                eventKey={"solidarity_contribution"}
+                onClick={scrollIntoView}
+              >
+                <Accordion.Header>
+                  Solidarbeitrag: {formatCurrency(solidarityContribution)} /
+                  Monat
+                </Accordion.Header>
+                <AccordionBody>
+                  <ul>
+                    <li>
+                      Betrag: {formatCurrency(solidarityContribution)} / Monat
+                    </li>
+                    <li>Gültig ab: {formatDateNumeric(contractStartDate)}</li>
+                  </ul>
+                  {(waitingListEntryDetails === undefined ||
+                    waitingListEntryDetails.shouldShowSolidarityStep) && (
+                    <TapirButton
+                      variant={BUTTON_VARIANT}
+                      size={"sm"}
+                      text={"Solidarbeitrag anpassen"}
+                      icon={"edit"}
+                      onClick={() => {
+                        setCurrentStep("7_solidarity_contribution");
+                      }}
+                    />
+                  )}
+                </AccordionBody>
+              </Accordion.Item>
+            </Accordion>
+          )}
           <hr />
           {(solidarityContribution > 0 ||
             isAtLeastOneProductOrdered(shoppingCart)) && (

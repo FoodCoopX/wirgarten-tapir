@@ -1,21 +1,21 @@
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
 import React, { useEffect } from "react";
+import { PublicPickupLocation, PublicProductType } from "../../api-client";
+import formatAddress from "../../utils/formatAddress.ts";
+import { formatOpeningTimes } from "../../bestell_wizard/utils/formatOpeningTimes.ts";
 import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 import { MapRef } from "react-leaflet/MapContainer";
-import { PublicPickupLocation, PublicProductType } from "../../api-client";
-import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
-import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
-import { buildFilteredShoppingCart } from "../../bestell_wizard/utils/buildFilteredShoppingCart.ts";
-import { formatOpeningTimes } from "../../bestell_wizard/utils/formatOpeningTimes.ts";
-import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
+import L from "leaflet";
+import "./map.css";
+import "leaflet/dist/leaflet.css";
 import TapirButton from "../../components/TapirButton.tsx";
-import formatAddress from "../../utils/formatAddress.ts";
-import { buildDeliveryChargeBadge } from "../utils/buildDeliveryChargeBadge.tsx";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import { getFirstDelivery } from "../utils/getFirstDelivery.ts";
+import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
+import { buildFilteredShoppingCart } from "../../bestell_wizard/utils/buildFilteredShoppingCart.ts";
+import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { wouldTheOrderFitTheProductCapacities } from "../utils/wouldTheOrderFitTheProductCapacities.ts";
-import "./map.css";
+import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
+import { buildDeliveryChargeBadge } from "../utils/buildDeliveryChargeBadge.tsx";
 
 interface Step5BPickupLocationMapProps {
   pickupLocations: PublicPickupLocation[];
