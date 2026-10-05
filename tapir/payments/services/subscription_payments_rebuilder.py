@@ -29,7 +29,14 @@ class SubscriptionPaymentsRebuilder:
         ).replace(day=1)
         today = get_today(cache=cache)
 
+        errors = []
         while current_date <= today:
             create_payments_for_this_month(reference_date=current_date)
-            export_payments_for_this_month(reference_date=current_date, send_mail=False)
+            errors.extend(
+                export_payments_for_this_month(
+                    reference_date=current_date, send_mail=False
+                )
+            )
             current_date = get_first_of_next_month(current_date)
+
+        return errors

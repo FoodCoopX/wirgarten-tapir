@@ -9,7 +9,7 @@ from django.db import transaction
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES
-from tapir.payments.services.pain_008_xml_generator import Pain008XmlGenerator
+from tapir.payments.services.pain_008_xml_file_creator import Pain008XmlFileCreator
 from tapir.payments.services.payment_export_intended_use_builder import (
     PaymentExportIntendedUseBuilder,
 )
@@ -51,7 +51,7 @@ class PaymentExportBuilder:
             contract_payments
         ).values()
 
-        cls.export_payments_if_necessary(
+        errors_failed_payments_contracts = cls.export_payments_if_necessary(
             combined_payments=combined_contract_payments,
             database_payments=contract_payments,
             is_contract_payments=True,
@@ -59,8 +59,9 @@ class PaymentExportBuilder:
             send_mail=send_mail,
             cache=cache,
         )
+        errors_failed_payments_shares = []
         if legal_status_is_cooperative(cache=cache):
-            cls.export_payments_if_necessary(
+            errors_failed_payments_shares = cls.export_payments_if_necessary(
                 combined_payments=coop_share_payments,
                 database_payments=coop_share_payments,
                 is_contract_payments=False,
@@ -68,6 +69,8 @@ class PaymentExportBuilder:
                 send_mail=send_mail,
                 cache=cache,
             )
+
+        return errors_failed_payments_contracts + errors_failed_payments_shares
 
     @classmethod
     def export_payments_if_necessary(
@@ -82,9 +85,9 @@ class PaymentExportBuilder:
         if not cls.should_export_payments(
             is_contract_payments=is_contract_payments, reference_date=reference_date
         ):
-            return
+            return []
 
-        csv_file, xml_file = cls.create_csv_and_xml_files(
+        csv_file, xml_file, errors_failed_payments = cls.create_csv_and_xml_files(
             payments=combined_payments,
             is_contract_payments=is_contract_payments,
             send_mail=send_mail,
@@ -99,6 +102,8 @@ class PaymentExportBuilder:
             payments=database_payments,
             reference_date=reference_date,
         )
+
+        return errors_failed_payments
 
     @classmethod
     def should_export_payments(
@@ -215,22 +220,19 @@ class PaymentExportBuilder:
         )
 
         xml_file = None
+        errors_failed_payments = []
         if len(payments) > 0:
-            xml_bytes = Pain008XmlGenerator.build_xml_string(
-                payments=payments, collection_date=reference_date, cache=cache
-            )
-            xml_file = export_file(
-                filename=file_name,
-                filetype=ExportedFile.FileType.XML,
-                content=xml_bytes,
-                send_email=send_mail
-                and get_parameter_value(
-                    key=ParameterKeys.PAYMENT_SEND_XML_FILE_PER_MAIL, cache=cache
-                ),
-                cache=cache,
+            xml_file, errors_failed_payments = (
+                Pain008XmlFileCreator.create_xml_file_and_send_mail(
+                    payments=payments,
+                    file_name=file_name,
+                    reference_date=reference_date,
+                    send_mail=send_mail,
+                    cache=cache,
+                )
             )
 
-        return csv_file, xml_file
+        return csv_file, xml_file, errors_failed_payments
 
     @classmethod
     def build_csv_string(
