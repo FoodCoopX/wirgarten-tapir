@@ -1,11 +1,13 @@
 import datetime
 from unittest.mock import patch, Mock
 
-from django.core.exceptions import ValidationError
 from django.urls import reverse
 from rest_framework import status
 
-from tapir.payments.services.pain_008_xml_generator import Pain008XmlGenerator
+from tapir.payments.services.pain_008_xml_string_generator import (
+    Pain008XmlStringGenerator,
+    Pain008XmlGlobalException,
+)
 from tapir.wirgarten.models import PaymentTransaction
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
@@ -61,14 +63,14 @@ class TestRebuildSubscriptionPaymentsApiView(TapirIntegrationTest):
         self.assertStatusCode(response, status.HTTP_200_OK)
         self.assertEqual(2, PaymentTransaction.objects.count())
 
-    @patch.object(Pain008XmlGenerator, "build_xml_string", autospec=True)
+    @patch.object(Pain008XmlStringGenerator, "build_xml_string", autospec=True)
     def test_post_xmlExportThrowsError_returnsErrorProperly(
         self, mock_build_xml_string: Mock
     ):
         member = MemberFactory.create(is_superuser=True)
         self.client.force_login(member)
 
-        mock_build_xml_string.side_effect = ValidationError("Test error")
+        mock_build_xml_string.side_effect = Pain008XmlGlobalException("Test error")
 
         response = self._setup_data_and_do_call()
 

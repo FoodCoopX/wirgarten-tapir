@@ -2,10 +2,13 @@ import datetime
 from decimal import Decimal
 from unittest.mock import patch, MagicMock
 
-from django.core.exceptions import ValidationError
 from lxml import etree
 
-from tapir.payments.services.pain_008_xml_generator import Pain008XmlGenerator
+from tapir.payments.services.pain_008_xml_string_generator import (
+    Pain008XmlStringGenerator,
+    Pain008XmlSinglePaymentException,
+    Pain008XmlGlobalException,
+)
 from tapir.payments.services.payment_export_intended_use_builder import (
     PaymentExportIntendedUseBuilder,
 )
@@ -58,7 +61,7 @@ class TestBuildXmlString(TapirUnitTest):
         payment_1 = PaymentFactory.build(amount=Decimal("75.20"), type="Test type")
         payment_2 = PaymentFactory.build(amount=Decimal("58.3"))
 
-        result_string = Pain008XmlGenerator.build_xml_string(
+        result_string = Pain008XmlStringGenerator.build_xml_string(
             payments=[payment_1, payment_2],
             collection_date=datetime.date(year=2019, month=9, day=17),
             cache=self.cache,
@@ -174,7 +177,7 @@ class TestBuildXmlString(TapirUnitTest):
             subscription_payment_range_start=datetime.date(year=2019, month=9, day=17),
         )
 
-        result_string = Pain008XmlGenerator.build_xml_string(
+        result_string = Pain008XmlStringGenerator.build_xml_string(
             payments=[payment_1],
             collection_date=datetime.date(year=2019, month=9, day=17),
             cache=self.cache,
@@ -214,7 +217,7 @@ class TestBuildXmlString(TapirUnitTest):
 
         payment_1 = PaymentFactory.build(amount=Decimal("75.20"), type="Test type")
 
-        result_string = Pain008XmlGenerator.build_xml_string(
+        result_string = Pain008XmlStringGenerator.build_xml_string(
             payments=[payment_1],
             collection_date=datetime.date(year=2019, month=9, day=17),
             cache=self.cache,
@@ -245,7 +248,7 @@ class TestBuildXmlString(TapirUnitTest):
 
         payment_1 = PaymentFactory.build(amount=Decimal("75.20"), type="Test type")
 
-        result_string = Pain008XmlGenerator.build_xml_string(
+        result_string = Pain008XmlStringGenerator.build_xml_string(
             payments=[payment_1],
             collection_date=datetime.date(year=2019, month=9, day=17),
             cache=self.cache,
@@ -276,7 +279,7 @@ class TestBuildXmlString(TapirUnitTest):
 
         payment_1 = PaymentFactory.build(amount=Decimal("75.20"), type="Test type")
 
-        result_string = Pain008XmlGenerator.build_xml_string(
+        result_string = Pain008XmlStringGenerator.build_xml_string(
             payments=[payment_1],
             collection_date=datetime.date(year=2019, month=9, day=17),
             cache=self.cache,
@@ -290,17 +293,17 @@ class TestBuildXmlString(TapirUnitTest):
             self._get_child("CdtrAgt/FinInstnId/BICFI", payment_information).text,
         )
 
-    def test_buildXmlString_invalidPayment_raisesGenericError(self):
+    def test_buildXmlString_negativePayment_raisesSinglePaymentError(self):
         payment = PaymentFactory.build(amount=Decimal("-5"))
 
-        with self.assertRaises(ValidationError):
-            Pain008XmlGenerator.build_xml_string(
+        with self.assertRaises(Pain008XmlSinglePaymentException):
+            Pain008XmlStringGenerator.build_xml_string(
                 payments=[payment],
                 collection_date=datetime.date(year=2019, month=9, day=17),
                 cache=self.cache,
             )
 
-    def test_buildXmlString_missingOrgIban_raisesSpecificError(self):
+    def test_buildXmlString_missingOrgIban_raisesGlobalError(self):
         payment = PaymentFactory.build(amount=Decimal("10"))
         mock_parameter_value(
             cache=self.cache,
@@ -308,8 +311,8 @@ class TestBuildXmlString(TapirUnitTest):
             value="",
         )
 
-        with self.assertRaises(ValidationError) as error:
-            Pain008XmlGenerator.build_xml_string(
+        with self.assertRaises(Pain008XmlGlobalException) as error:
+            Pain008XmlStringGenerator.build_xml_string(
                 payments=[payment],
                 collection_date=datetime.date(year=2019, month=9, day=17),
                 cache=self.cache,
@@ -320,7 +323,7 @@ class TestBuildXmlString(TapirUnitTest):
             error.exception.message,
         )
 
-    def test_buildXmlString_missingOrgIdentifier_raisesSpecificError(self):
+    def test_buildXmlString_missingOrgIdentifier_raisesGlobalError(self):
         payment = PaymentFactory.build(amount=Decimal("10"))
         mock_parameter_value(
             cache=self.cache,
@@ -328,8 +331,8 @@ class TestBuildXmlString(TapirUnitTest):
             value="",
         )
 
-        with self.assertRaises(ValidationError) as error:
-            Pain008XmlGenerator.build_xml_string(
+        with self.assertRaises(Pain008XmlGlobalException) as error:
+            Pain008XmlStringGenerator.build_xml_string(
                 payments=[payment],
                 collection_date=datetime.date(year=2019, month=9, day=17),
                 cache=self.cache,
@@ -340,20 +343,20 @@ class TestBuildXmlString(TapirUnitTest):
             error.exception.message,
         )
 
-    def test_buildXmlString_invalidMemberIban_raisesSpecificError(self):
+    def test_buildXmlString_invalidMemberIban_raisesSinglePaymentError(self):
         payment = PaymentFactory.build(
-            amount=Decimal("10"), mandate_ref__member__iban="INVALID"
+            amount=Decimal("10"), mandate_ref__member__iban="DE00 INVALID"
         )
 
-        with self.assertRaises(ValidationError) as error:
-            Pain008XmlGenerator.build_xml_string(
+        with self.assertRaises(Pain008XmlSinglePaymentException) as error:
+            Pain008XmlStringGenerator.build_xml_string(
                 payments=[payment],
                 collection_date=datetime.date(year=2019, month=9, day=17),
                 cache=self.cache,
             )
 
-        self.assertIn(
-            "The value 'INVALID' is not accepted by the pattern",
+        self.assertEqual(
+            "DE-IBAN müssen 22 Zeichen enthalten.",
             error.exception.message,
         )
 

@@ -9,7 +9,7 @@ from django.db import transaction
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES
-from tapir.payments.services.pain_008_xml_generator import Pain008XmlGenerator
+from tapir.payments.services.pain_008_xml_file_creator import Pain008XmlFileCreator
 from tapir.payments.services.payment_export_intended_use_builder import (
     PaymentExportIntendedUseBuilder,
 )
@@ -216,17 +216,11 @@ class PaymentExportBuilder:
 
         xml_file = None
         if len(payments) > 0:
-            xml_bytes = Pain008XmlGenerator.build_xml_string(
-                payments=payments, collection_date=reference_date, cache=cache
-            )
-            xml_file = export_file(
-                filename=file_name,
-                filetype=ExportedFile.FileType.XML,
-                content=xml_bytes,
-                send_email=send_mail
-                and get_parameter_value(
-                    key=ParameterKeys.PAYMENT_SEND_XML_FILE_PER_MAIL, cache=cache
-                ),
+            xml_file = Pain008XmlFileCreator.create_xml_file_and_send_mail(
+                payments=payments,
+                file_name=file_name,
+                reference_date=reference_date,
+                send_mail=send_mail,
                 cache=cache,
             )
 

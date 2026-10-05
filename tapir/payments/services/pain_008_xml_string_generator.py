@@ -3,6 +3,7 @@ from decimal import Decimal
 from pathlib import Path
 
 from django.core.exceptions import ValidationError
+from localflavor.generic.validators import IBANValidator
 from lxml import etree
 from lxml.etree import Element
 from nanoid import generate
@@ -20,7 +21,20 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import get_now
 
 
-class Pain008XmlGenerator:
+class Pain008XmlGenericException(Exception):
+    def __init__(self, message: str):
+        self.message = message
+
+
+class Pain008XmlSinglePaymentException(Pain008XmlGenericException):
+    pass
+
+
+class Pain008XmlGlobalException(Pain008XmlGenericException):
+    pass
+
+
+class Pain008XmlStringGenerator:
     # Generates payment files according to ISO20022 pain.008.001.08
     # A description of the format can be found here: https://developer.huntington.com/enterprisepayments/docs/iso-pain008
     # This PDF can also be used as reference: https://www.nacha.org/system/files/2023-12/NACHA_ISO20022_Guide_pain.008_direct_debit%208-9-23.pdf
@@ -33,9 +47,13 @@ class Pain008XmlGenerator:
 
     @classmethod
     def build_xml_string(
-        cls, payments: list[Payment], cache: dict, collection_date: datetime.date
+        cls,
+        payments: list[Payment],
+        cache: dict,
+        collection_date: datetime.date,
+        skip_validation: bool = False,
     ):
-        if len(payments) > 1:
+        if not skip_validation:
             for payment in payments:
                 cls.validate_single_payment(
                     payment=payment, cache=cache, collection_date=collection_date
@@ -71,7 +89,7 @@ class Pain008XmlGenerator:
 
         errors = cls._validate_document(document)
         if len(errors) > 0:
-            raise ValidationError(", ".join(errors))
+            raise Pain008XmlGlobalException(", ".join(errors))
 
         document_as_bytes = etree.tostring(
             document, pretty_print=True, xml_declaration=True, encoding="UTF-8"
@@ -108,12 +126,44 @@ class Pain008XmlGenerator:
     def validate_single_payment(
         cls, payment: Payment, cache: dict, collection_date: datetime.date
     ):
+        member = payment.mandate_ref.member
+        member_display_name = (
+            f"{member.first_name} {member.last_name} #{member.member_no}"
+        )
+        if not member.iban:
+            raise Pain008XmlSinglePaymentException(
+                f"Mitglied {member_display_name} hat kein IBAN"
+            )
+        try:
+            IBANValidator()(member.iban)
+        except ValidationError as error:
+            raise Pain008XmlSinglePaymentException(error.message % error.params)
+
+        if not member.account_owner:
+            raise Pain008XmlSinglePaymentException(
+                f"Mitglied {member_display_name} hat kein Kontoinhaber"
+            )
+        if not member.sepa_consent:
+            raise Pain008XmlSinglePaymentException(
+                f"Mitglied {member_display_name} hat das SEPA-Verfahren nicht zugestimmt"
+            )
+
+        if payment.amount < Decimal(0):
+            raise Pain008XmlSinglePaymentException(
+                f"Die Zahlung für {member_display_name} beträgt weniger als 0€"
+            )
+
         try:
             cls.build_xml_string(
-                payments=[payment], cache=cache, collection_date=collection_date
+                payments=[payment],
+                cache=cache,
+                collection_date=collection_date,
+                skip_validation=True,
             )
-        except ValidationError as error:
-            raise ValidationError(
+        except Pain008XmlGlobalException:
+            raise
+        except Exception as error:
+            raise Pain008XmlSinglePaymentException(
                 f"Error when building XML for payment: {payment}: {error}"
             )
 
@@ -254,7 +304,7 @@ class Pain008XmlGenerator:
             key=ParameterKeys.PAYMENT_ORGANISATION_IBAN, cache=cache
         ).replace(" ", "")
         if len(creditor_iban.text.strip()) == 0:
-            raise ValidationError(
+            raise Pain008XmlGlobalException(
                 "Der Parameter 'IBAN der Organisation' muss in der Konfig gesetzt werden"
             )
 
@@ -296,7 +346,7 @@ class Pain008XmlGenerator:
             key=ParameterKeys.PAYMENT_CREDITOR_IDENTIFIER, cache=cache
         )
         if len(creditor_id.text.strip()) == 0:
-            raise ValidationError(
+            raise Pain008XmlGlobalException(
                 "Der Parameter 'Gläubiger-Identifikationsnummer' muss in der Konfig gesetzt werden"
             )
         creditor_scheme_name = cls._append_element(creditor_other, "SchmeNm")
