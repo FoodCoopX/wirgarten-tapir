@@ -51,7 +51,7 @@ class PaymentExportBuilder:
             contract_payments
         ).values()
 
-        cls.export_payments_if_necessary(
+        errors_failed_payments_contracts = cls.export_payments_if_necessary(
             combined_payments=combined_contract_payments,
             database_payments=contract_payments,
             is_contract_payments=True,
@@ -59,8 +59,9 @@ class PaymentExportBuilder:
             send_mail=send_mail,
             cache=cache,
         )
+        errors_failed_payments_shares = []
         if legal_status_is_cooperative(cache=cache):
-            cls.export_payments_if_necessary(
+            errors_failed_payments_shares = cls.export_payments_if_necessary(
                 combined_payments=coop_share_payments,
                 database_payments=coop_share_payments,
                 is_contract_payments=False,
@@ -68,6 +69,8 @@ class PaymentExportBuilder:
                 send_mail=send_mail,
                 cache=cache,
             )
+
+        return errors_failed_payments_contracts + errors_failed_payments_shares
 
     @classmethod
     def export_payments_if_necessary(
@@ -82,9 +85,9 @@ class PaymentExportBuilder:
         if not cls.should_export_payments(
             is_contract_payments=is_contract_payments, reference_date=reference_date
         ):
-            return
+            return []
 
-        csv_file, xml_file = cls.create_csv_and_xml_files(
+        csv_file, xml_file, errors_failed_payments = cls.create_csv_and_xml_files(
             payments=combined_payments,
             is_contract_payments=is_contract_payments,
             send_mail=send_mail,
@@ -99,6 +102,8 @@ class PaymentExportBuilder:
             payments=database_payments,
             reference_date=reference_date,
         )
+
+        return errors_failed_payments
 
     @classmethod
     def should_export_payments(
@@ -215,16 +220,19 @@ class PaymentExportBuilder:
         )
 
         xml_file = None
+        errors_failed_payments = []
         if len(payments) > 0:
-            xml_file = Pain008XmlFileCreator.create_xml_file_and_send_mail(
-                payments=payments,
-                file_name=file_name,
-                reference_date=reference_date,
-                send_mail=send_mail,
-                cache=cache,
+            xml_file, errors_failed_payments = (
+                Pain008XmlFileCreator.create_xml_file_and_send_mail(
+                    payments=payments,
+                    file_name=file_name,
+                    reference_date=reference_date,
+                    send_mail=send_mail,
+                    cache=cache,
+                )
             )
 
-        return csv_file, xml_file
+        return csv_file, xml_file, errors_failed_payments
 
     @classmethod
     def build_csv_string(

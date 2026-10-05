@@ -28,7 +28,7 @@ class Pain008XmlFileCreator:
         reference_date: date,
         send_mail: bool,
         cache: dict,
-    ) -> ExportedFile | None:
+    ) -> tuple[ExportedFile | None, list[str]]:
         errors_failed_payments = []
         try:
             xml_bytes = Pain008XmlStringGenerator.build_xml_string(
@@ -43,7 +43,7 @@ class Pain008XmlFileCreator:
                 cache=cache,
                 send_mail=send_mail,
             )
-            return None
+            return None, []
         except Pain008XmlSinglePaymentException:
             xml_bytes, errors_failed_payments = (
                 cls.build_xml_string_with_valid_payments_and_errors_for_invalid_payments(
@@ -58,9 +58,9 @@ class Pain008XmlFileCreator:
             cls.send_error_mail_or_raise_exception(
                 reason=reason, file_name=file_name, cache=cache, send_mail=send_mail
             )
-            return None
+            return None, []
 
-        return export_file(
+        xml_file = export_file(
             filename=file_name,
             filetype=ExportedFile.FileType.XML,
             content=xml_bytes,
@@ -71,6 +71,7 @@ class Pain008XmlFileCreator:
             cache=cache,
             errors=errors_failed_payments,
         )
+        return xml_file, errors_failed_payments
 
     @classmethod
     def send_error_mail_or_raise_exception(
@@ -96,37 +97,6 @@ class Pain008XmlFileCreator:
         )
         email.content_subtype = "html"
         email.send()
-
-    @classmethod
-    def get_complete_payments_and_build_errors_for_incomplete_payments(
-        cls, payments: list[Payment]
-    ) -> tuple[list[Payment], list[str]]:
-        complete_payments = []
-        errors_all_payments = []
-        for payment in payments:
-            errors_this_payment = []
-            member = payment.mandate_ref.member
-            member_display_name = (
-                f"{member.first_name} {member.last_name} #{member.member_no}"
-            )
-            if not member.iban:
-                errors_this_payment.append(
-                    f"Mitglied {member_display_name} hat kein IBAN"
-                )
-            if not member.account_owner:
-                errors_this_payment.append(
-                    f"Mitglied {member_display_name} hat kein Kontoinhaber"
-                )
-            if not member.sepa_consent:
-                errors_this_payment.append(
-                    f"Mitglied {member_display_name} hat das SEPA-Verfahren nicht zugestimmt"
-                )
-            if len(errors_this_payment) == 0:
-                complete_payments.append(payment)
-            else:
-                errors_all_payments.extend(errors_this_payment)
-
-        return complete_payments, errors_all_payments
 
     @classmethod
     def build_xml_string_with_valid_payments_and_errors_for_invalid_payments(

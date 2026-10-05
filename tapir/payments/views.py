@@ -1266,13 +1266,23 @@ class RebuildSubscriptionPaymentsApiView(APIView):
 
         try:
             with transaction.atomic():
-                SubscriptionPaymentsRebuilder.rebuild_subscription_payments(
+                errors = SubscriptionPaymentsRebuilder.rebuild_subscription_payments(
                     from_date=from_date, cache=cache
                 )
         except Pain008XmlGenericException as error:
             return Response(
                 OrderConfirmationResponseSerializer(
                     {"order_confirmed": False, "error": error.message}
+                ).data
+            )
+
+        if len(errors) > 0:
+            return Response(
+                OrderConfirmationResponseSerializer(
+                    {
+                        "order_confirmed": False,
+                        "error": f"Die Lastschriften konnten neu erzeugt werden, es sind aber folgenden Fehler aufgetreten. Die betroffene Mitglieder sind nicht in der neue Dateien enthalten. {", ".join(errors)}",
+                    }
                 ).data
             )
 

@@ -137,7 +137,10 @@ class Pain008XmlStringGenerator:
         try:
             IBANValidator()(member.iban)
         except ValidationError as error:
-            raise Pain008XmlSinglePaymentException(error.message % error.params)
+            error_message = error.message % error.params
+            raise Pain008XmlSinglePaymentException(
+                f"Mitglied {member_display_name}: {error_message}"
+            )
 
         if not member.account_owner:
             raise Pain008XmlSinglePaymentException(
