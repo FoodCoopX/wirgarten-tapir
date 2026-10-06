@@ -1,12 +1,12 @@
 from unittest.mock import Mock, patch
 
 from django.core.exceptions import ValidationError
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.subscriptions.services.subscription_change_validator import (
     SubscriptionChangeValidator,
 )
 from tapir.wirgarten.tests.factories import ProductTypeFactory
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestValidateMustBeSubscribedTo(TapirUnitTest):
@@ -18,7 +18,9 @@ class TestValidateMustBeSubscribedTo(TapirUnitTest):
         )
 
     @patch.object(
-        SubscriptionChangeValidator, "calculate_capacity_used_by_the_ordered_products"
+        SubscriptionChangeValidator,
+        "calculate_capacity_used_by_the_ordered_products",
+        autospec=True,
     )
     def test_validateMustBeSubscribedTo_productIsRequiredAndOrdered_doesNothing(
         self, mock_calculate_capacity_used_by_the_ordered_products: Mock
@@ -42,7 +44,9 @@ class TestValidateMustBeSubscribedTo(TapirUnitTest):
         )
 
     @patch.object(
-        SubscriptionChangeValidator, "calculate_capacity_used_by_the_ordered_products"
+        SubscriptionChangeValidator,
+        "calculate_capacity_used_by_the_ordered_products",
+        autospec=True,
     )
     def test_validateMustBeSubscribedTo_productIsRequiredButNotOrdered_raisesError(
         self, mock_calculate_capacity_used_by_the_ordered_products: Mock

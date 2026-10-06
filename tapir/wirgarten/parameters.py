@@ -1,12 +1,17 @@
 import datetime
 from decimal import Decimal
 
+from django.conf import settings
+
 from tapir.configuration.models import (
     TapirParameterDatatype,
     TapirParameterDefinitionImporter,
     TapirParameter,
 )
 from tapir.configuration.parameter import ParameterMeta, parameter_definition
+from tapir.wirgarten.parameter_definitions.parameter_definitions_bakery import (
+    ParameterDefinitionsBakery,
+)
 from tapir.wirgarten.parameter_definitions.parameter_definitions_bestellwizard import (
     ParameterDefinitionsBestellwizard,
 )
@@ -87,10 +92,12 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         ParameterDefinitionsSupplierList.define_all_parameters_supplier_list(
             importer=self
         )
-        ParameterDefinitionsTest.define_all_parameters_test(importer=self)
+        if getattr(settings, "DEBUG", False):
+            ParameterDefinitionsTest.define_all_parameters_test(importer=self)
         ParameterDefinitionsTrialPeriod.define_all_parameters_trial_period(
             importer=self
         )
+        ParameterDefinitionsBakery.define_all_parameters_bakery(importer=self)
 
     def parameter_definition(
         self,

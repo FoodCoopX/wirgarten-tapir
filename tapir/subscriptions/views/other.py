@@ -48,6 +48,7 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
     get_product_price,
 )
+from tapir.wirgarten.utils import legal_status_is_cooperative
 
 
 class ExtendedProductView(APIView):
@@ -101,6 +102,8 @@ class ExtendedProductView(APIView):
                 product.type.delivery_cycle
             )
         )
+
+        data["show_min_coop_shares"] = legal_status_is_cooperative(cache=cache)
 
         return Response(
             ExtendedProductSerializer(data).data,

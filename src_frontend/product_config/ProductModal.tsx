@@ -55,6 +55,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
     PickingModeEnum.Share,
   );
   const [minCoopShares, setMinCoopShares] = useState(0);
+  const [showMinCoopShares, setShowMinCoopShares] = useState(false);
   const [dataLoading, setDataLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [priceIsPerDelivery, setPriceIsPerDelivery] = useState(false);
@@ -85,6 +86,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
         setUrlOfImageInBestellWizard(extendedProduct.urlOfImageInBestellwizard);
         setCapacity(extendedProduct.capacity);
         setMinCoopShares(extendedProduct.minCoopShares);
+        setShowMinCoopShares(extendedProduct.showMinCoopShares);
         setPriceIsPerDelivery(extendedProduct.pricePerDelivery);
         setHiddenInBestellWizard(extendedProduct.hiddenInBestellWizard);
       })
@@ -195,24 +197,26 @@ const ProductModal: React.FC<ProductModalProps> = ({
                   />
                 </Form.Group>
               </Col>
-              <Col>
-                <Form.Group>
-                  <Form.Label>Pflicht-Genossenschaftsanteile</Form.Label>
-                  <Form.Control
-                    value={minCoopShares}
-                    type={"number"}
-                    min={0}
-                    step={1}
-                    onChange={(e) =>
-                      setMinCoopShares(Number.parseFloat(e.target.value))
-                    }
-                  />
-                </Form.Group>
-                <Form.Text>
-                  Anzahl an Genossenschaftsanteile die gezeichnet werden müssen
-                  pro Anteil von dieses Produkt die bestellt werden.
-                </Form.Text>
-              </Col>
+              {showMinCoopShares && (
+                <Col>
+                  <Form.Group>
+                    <Form.Label>Pflicht-Genossenschaftsanteile</Form.Label>
+                    <Form.Control
+                      value={minCoopShares}
+                      type={"number"}
+                      min={0}
+                      step={1}
+                      onChange={(e) =>
+                        setMinCoopShares(Number.parseFloat(e.target.value))
+                      }
+                    />
+                  </Form.Group>
+                  <Form.Text>
+                    Anzahl an Genossenschaftsanteile die gezeichnet werden
+                    müssen pro Anteil von dieses Produkt die bestellt werden.
+                  </Form.Text>
+                </Col>
+              )}
             </Row>
           </ListGroup.Item>
           <ListGroup.Item>

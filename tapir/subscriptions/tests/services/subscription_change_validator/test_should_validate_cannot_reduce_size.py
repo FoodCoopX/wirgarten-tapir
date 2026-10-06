@@ -1,12 +1,11 @@
 import datetime
 from unittest.mock import Mock, patch
 
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
-
 from tapir.subscriptions.services.subscription_change_validator import (
     SubscriptionChangeValidator,
 )
 from tapir.utils.services.tapir_cache import TapirCache
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 from tapir.wirgarten.tests.test_utils import mock_timezone
 
 
@@ -14,13 +13,13 @@ class TestShouldValidateCannotReduceSize(TapirUnitTest):
     def test_shouldValidateCannotReduceSize_loggedInAsAdmin_returnsFalse(self):
         self.assertFalse(
             SubscriptionChangeValidator.should_validate_cannot_reduce_size(
-                logged_in_user_is_admin=True,
+                member_may_reduce_size=True,
                 subscription_start_date=Mock(),
                 cache=Mock(),
             )
         )
 
-    @patch.object(TapirCache, "get_growing_period_at_date")
+    @patch.object(TapirCache, "get_growing_period_at_date", autospec=True)
     def test_shouldValidateCannotReduceSize_noGrowingPeriodAtGivenDate_returnsFalse(
         self, mock_get_growing_period_at_date: Mock
     ):
@@ -30,7 +29,7 @@ class TestShouldValidateCannotReduceSize(TapirUnitTest):
 
         self.assertFalse(
             SubscriptionChangeValidator.should_validate_cannot_reduce_size(
-                logged_in_user_is_admin=False,
+                member_may_reduce_size=False,
                 subscription_start_date=subscription_start_date,
                 cache=cache,
             )
@@ -40,7 +39,7 @@ class TestShouldValidateCannotReduceSize(TapirUnitTest):
             reference_date=subscription_start_date, cache=cache
         )
 
-    @patch.object(TapirCache, "get_growing_period_at_date")
+    @patch.object(TapirCache, "get_growing_period_at_date", autospec=True)
     def test_shouldValidateCannotReduceSize_growingPeriodAtStartDateIsInTheFuture_returnsFalse(
         self, mock_get_growing_period_at_date: Mock
     ):
@@ -53,7 +52,7 @@ class TestShouldValidateCannotReduceSize(TapirUnitTest):
 
         self.assertFalse(
             SubscriptionChangeValidator.should_validate_cannot_reduce_size(
-                logged_in_user_is_admin=False,
+                member_may_reduce_size=False,
                 subscription_start_date=subscription_start_date,
                 cache=cache,
             )
@@ -63,7 +62,7 @@ class TestShouldValidateCannotReduceSize(TapirUnitTest):
             reference_date=subscription_start_date, cache=cache
         )
 
-    @patch.object(TapirCache, "get_growing_period_at_date")
+    @patch.object(TapirCache, "get_growing_period_at_date", autospec=True)
     def test_shouldValidateCannotReduceSize_growingPeriodAtStartDateIsNotInTheFuture_returnsTrue(
         self, mock_get_growing_period_at_date: Mock
     ):
@@ -76,7 +75,7 @@ class TestShouldValidateCannotReduceSize(TapirUnitTest):
 
         self.assertTrue(
             SubscriptionChangeValidator.should_validate_cannot_reduce_size(
-                logged_in_user_is_admin=False,
+                member_may_reduce_size=False,
                 subscription_start_date=subscription_start_date,
                 cache=cache,
             )

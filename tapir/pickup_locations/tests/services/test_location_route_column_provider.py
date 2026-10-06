@@ -550,3 +550,94 @@ class TestLocationRouteColumnProvider(TapirIntegrationTest):
         self.assertEqual({"small": 3, "normal": 3}, second["totals_across_routes"])
         self.assertEqual(6, first["grand_total"])
         self.assertEqual(6, second["grand_total"])
+
+    def test_getValuePickupLocation_someProductsAreHidden_returnsSubscriptionDataWithoutHiddenProducts(
+        self,
+    ):
+        self._set_parameter(key=ParameterKeys.PICKING_MODE, value=PICKING_MODE_SHARE)
+
+        pickup_location = PickupLocationFactory.create()
+
+        member_1 = MemberFactory.create(
+            member_no=123, first_name="John", last_name="Xi"
+        )
+        period = GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2026, month=1, day=1)
+        )
+        MemberPickupLocationFactory.create(
+            member=member_1,
+            pickup_location=pickup_location,
+            valid_from=period.start_date,
+        )
+
+        subscription_1 = SubscriptionFactory.create(
+            member=member_1,
+            quantity=1,
+            product__type__delivery_cycle=WEEKLY[0],
+            period=period,
+            product__hidden_in_bestell_wizard=False,
+        )
+        subscription_2 = SubscriptionFactory.create(
+            member=member_1,
+            quantity=1,
+            product__type__delivery_cycle=WEEKLY[0],
+            period=period,
+            product__hidden_in_bestell_wizard=True,
+        )
+        member_2 = MemberFactory.create(
+            member_no=456, first_name="Jane", last_name="Mustermensch"
+        )
+        MemberPickupLocationFactory.create(
+            member=member_2,
+            pickup_location=pickup_location,
+            valid_from=period.start_date,
+        )
+        SubscriptionFactory.create(
+            quantity=3,
+            product=subscription_2.product,
+            member=member_2,
+            period=period,
+        )
+
+        result = LocationRouteColumnProvider.get_value_pickup_locations(
+            route=None,
+            reference_datetime=datetime.datetime(
+                year=2026, month=7, day=29, hour=12, tzinfo=datetime.timezone.utc
+            ),
+            cache={},
+        )
+
+        self.assertEqual(1, len(result))
+        data = result[0]
+        self.assertEqual(
+            [subscription_1.product.id],
+            data["headers"],
+            "The product of the second subscription is hidden in the bestellwizard, it should be hidden here too",
+        )
+        self.assertEqual(
+            {
+                subscription_1.product.id: 1,
+            },
+            data["global_values"],
+        )
+        self.assertEqual(
+            [
+                {
+                    "member_no": 456,
+                    "first_name": "Jane",
+                    "last_name": "Mu",
+                    "member_values": {
+                        subscription_1.product.id: 0,
+                    },
+                },
+                {
+                    "member_no": 123,
+                    "first_name": "John",
+                    "last_name": "Xi",
+                    "member_values": {
+                        subscription_1.product.id: 1,
+                    },
+                },
+            ],
+            data["members"],
+        )

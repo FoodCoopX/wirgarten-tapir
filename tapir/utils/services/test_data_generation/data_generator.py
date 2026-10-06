@@ -4,11 +4,29 @@ import factory.random
 from django.core.management import call_command
 
 from tapir.accounts.models import EmailChangeRequest
+from tapir.accounts.services.keycloak_user_delete_service import (
+    KeycloakUserDeleteService,
+)
 from tapir.associations.models import AssociationMembership, AssociationMembershipType
+from tapir.bakery.models import (
+    AvailableBreadsForDeliveryDay,
+    Bread,
+    BreadCapacityPickupLocation,
+    BreadContent,
+    BreadDelivery,
+    BreadLabel,
+    BreadSpecificsPerDeliveryDay,
+    BreadsPerPickupLocationPerWeek,
+    Ingredient,
+    PreferenceSatisfactionLogging,
+    PreferredBread,
+    StoveSession,
+)
 from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.log.models import LogEntry
 from tapir.payments.models import MemberCredit
 from tapir.utils.config import Organization
+from tapir.utils.services.test_data_generation.bakery_generator import BakeryGenerator
 from tapir.utils.services.test_data_generation.configuration_generator import (
     ConfigurationGenerator,
 )
@@ -55,6 +73,18 @@ class DataGenerator:
         print("Clearing data...")
 
         model_classes = [
+            BreadDelivery,
+            BreadsPerPickupLocationPerWeek,
+            BreadCapacityPickupLocation,
+            AvailableBreadsForDeliveryDay,
+            BreadSpecificsPerDeliveryDay,
+            StoveSession,
+            PreferenceSatisfactionLogging,
+            PreferredBread,
+            BreadContent,
+            Bread,
+            Ingredient,
+            BreadLabel,
             CoopShareTransaction,
             Payment,
             WaitingListEntry,
@@ -82,13 +112,23 @@ class DataGenerator:
             models = model_class.objects.all()
             models.delete()
 
-        Member.objects.filter(email__endswith="@example.com").delete()
+        members_to_delete = Member.objects.filter(email__endswith="@example.com")
+        cache = {}
+        for member in members_to_delete:
+            KeycloakUserDeleteService.delete_user_if_exists(user=member, cache=cache)
+        members_to_delete.delete()
 
         print("Done")
 
     @classmethod
-    def generate_all(cls, generate_test_data_for: Organization):
+    def generate_all(
+        cls, generate_test_data_for: Organization, generate_bakery_data: bool = False
+    ):
         factory.random.reseed_random("tapir")
+
+        generate_bakery_data = generate_bakery_data or (
+            generate_test_data_for is Organization.BAKERY
+        )
 
         print(f"Generating test data for {generate_test_data_for}...")
         cls.generate_growing_periods(generate_test_data_for)
@@ -98,7 +138,11 @@ class DataGenerator:
         PickupLocationGenerator.generate_pickup_locations(generate_test_data_for)
         print("Updating configuration...")
         ConfigurationGenerator.update_settings_for_organization(generate_test_data_for)
+        if generate_bakery_data:
+            BakeryGenerator.generate_masterdata()
         UserGenerator.generate_users_and_subscriptions(generate_test_data_for)
+        if generate_bakery_data:
+            BakeryGenerator.generate_week_data()
         print("Creating jokers...")
         JokerGenerator.generate_jokers()
         print("Creating waiting list...")
@@ -160,7 +204,11 @@ class DataGenerator:
     def get_starting_month_for_growing_period(
         cls, generate_test_data_for: Organization
     ):
-        if generate_test_data_for in [Organization.BIOTOP, Organization.VEREIN]:
+        if generate_test_data_for in [
+            Organization.BIOTOP,
+            Organization.VEREIN,
+            Organization.BAKERY,
+        ]:
             return 1
         if generate_test_data_for == Organization.WIRGARTEN:
             return 7

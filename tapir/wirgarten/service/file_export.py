@@ -2,7 +2,6 @@ import csv
 
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
-from django.utils.translation import gettext_lazy as _
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.models import ExportedFile
@@ -17,23 +16,28 @@ class CsvTextBuilder(object):
         self.csv_string.append(row)
 
 
-def __send_email(file: ExportedFile, recipient: str = None, cache: dict = None):
-    if recipient is None:
-        recipient = [get_parameter_value(ParameterKeys.SITE_ADMIN_EMAIL, cache=cache)]
-    else:
-        recipient = recipient.split(",")
-
+def __send_email(
+    file: ExportedFile,
+    cache: dict | None = None,
+    errors: list[str] | None = None,
+):
     filename_long = (
         f"{file.name}_{file.created_at.strftime('%Y%m%d_%H%M%S')}.{file.type}"
     )
     filename_short = f"{file.name}.{file.type}"
 
+    subject = f"{filename_short} ist bereit"
+    error_details = ""
+    if errors:
+        subject = f"{subject} ({len(errors)} Fehler)"
+        error_details = f"<p>Es gab {len(errors)} Fehler: <ul><li>{"</li><li>".join(errors)}</li></ul></p>"
+
+    body = f"<p>Hallo Admin,</p><p>im Anhang findest du die aktuelle {filename_long}.</p>{error_details}<p>(Automatisch von Tapir versendet)</p>"
+
     email = EmailMultiAlternatives(
-        subject=_("{filename} ist bereit").format(filename=filename_short),
-        body=_(
-            "Hallo Admin,<br/><br/>im Anhang findest du die aktuelle {filename}.<br/><br/><br/>(Automatisch von Tapir versendet)"
-        ).format(filename=filename_long),
-        to=recipient,
+        subject=subject,
+        body=body,
+        to=[get_parameter_value(ParameterKeys.SITE_ADMIN_EMAIL, cache=cache)],
         from_email=settings.EMAIL_HOST_SENDER,
         bcc=(
             [settings.EMAIL_AUTO_BCC]
@@ -71,22 +75,12 @@ def export_file(
     filetype: ExportedFile.FileType,
     content: bytes,
     send_email: bool,
-    to_email_custom: str | None = None,
-    cache: dict = None,
+    cache: dict | None = None,
+    errors: list[str] | None = None,
 ) -> ExportedFile:
-    """
-    Exports binary data as a virtual file to the database. It can be automatically sent per email to the admin (or a custom email address) and it can be downloaded via UI later on.
-
-    :param filename: The base file name without a timestamp (e.g.: Kommissionierliste)
-    :param filetype: The type of the file (e.g. ExportedFile.FileType.CSV)
-    :param content: The binary data (convert a string like this: bytes("your string", "utf-8")
-    :param send_email: If true, an email will be send to the admin email address (Parameter: wirgarten.site.admin_email) or the 'to_email_custom' address if specified
-    :param to_email_custom: Comma seperated list of recipient email addresses (e.g. "tim@example.com,john@example.com")
-    """
-
     file = ExportedFile.objects.create(name=filename, type=filetype, file=content)
 
     if send_email:
-        __send_email(file, to_email_custom, cache=cache)
+        __send_email(file, cache=cache, errors=errors)
 
     return file

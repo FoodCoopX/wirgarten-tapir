@@ -11,8 +11,8 @@ _________________ <br /><br />
 "Moin {{Empfänger.Vorname}}, <br /><br />
 
 du hattest folgende Bestellung bei uns aufgegeben. <br />
-{{Bestellung widerruft.Vertragsliste}} <br />
-{{Bestellung widerruft.Anzahl an GenoAnteile}} <br /> <br />
+{{Bestellung widerrufen.Vertragsliste}} <br />
+{{Bestellung widerrufen.Anzahl an GenoAnteile}} <br /> <br />
 
 Leider können wir dir deine Bestellung nicht bestätigen. <br /><br />
 
@@ -26,8 +26,8 @@ dein {{Allgemein.Admin Name}} <br />
 __________________ <br /><br />
 
 Folgende Token sind hier relevant: <br />
-{{Bestellung widerruft.Vertragsliste}} <br />
-{{Bestellung widerruft.Anzahl an GenoAnteile}} <br />
+{{Bestellung widerrufen.Vertragsliste}} <br />
+{{Bestellung widerrufen.Anzahl an GenoAnteile}} <br />
             </mj-text>
         </mj-column>
     </mj-section>

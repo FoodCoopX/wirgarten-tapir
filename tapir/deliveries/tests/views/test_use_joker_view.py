@@ -27,8 +27,8 @@ class TestUseJokerView(TapirIntegrationTest):
         super().setUp()
         mock_timezone(self, factories.NOW)
 
-    @patch.object(TransactionalTrigger, "fire_action")
-    @patch.object(JokerManagementService, "can_joker_be_used_in_week")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    @patch.object(JokerManagementService, "can_joker_be_used_in_week", autospec=True)
     def test_useJokerView_tryToUseJokerOfAnotherMember_returns403(
         self, mock_can_joker_be_used_in_week: Mock, mock_fire_action: Mock
     ):
@@ -45,8 +45,8 @@ class TestUseJokerView(TapirIntegrationTest):
         mock_can_joker_be_used_in_week.assert_not_called()
         mock_fire_action.assert_not_called()
 
-    @patch.object(TransactionalTrigger, "fire_action")
-    @patch.object(JokerManagementService, "can_joker_be_used_in_week")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    @patch.object(JokerManagementService, "can_joker_be_used_in_week", autospec=True)
     def test_useJokerView_useJokerOfAnotherMemberAsAdmin_jokerCreated(
         self, mock_can_joker_be_used_in_week: Mock, mock_fire_action: Mock
     ):
@@ -79,8 +79,8 @@ class TestUseJokerView(TapirIntegrationTest):
         self.assertEqual(user.email, log_entry.actor.email)
         self.assertEqual(date, log_entry.date)
 
-    @patch.object(TransactionalTrigger, "fire_action")
-    @patch.object(JokerManagementService, "can_joker_be_used_in_week")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    @patch.object(JokerManagementService, "can_joker_be_used_in_week", autospec=True)
     def test_useJokerView_useOwnJokerAsNormalMember_jokerCreated(
         self, mock_can_joker_be_used_in_week: Mock, mock_fire_action: Mock
     ):
@@ -113,8 +113,8 @@ class TestUseJokerView(TapirIntegrationTest):
         self.assertEqual(user.email, log_entry.actor.email)
         self.assertEqual(date, log_entry.date)
 
-    @patch.object(TransactionalTrigger, "fire_action")
-    @patch.object(JokerManagementService, "can_joker_be_used_in_week")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    @patch.object(JokerManagementService, "can_joker_be_used_in_week", autospec=True)
     def test_useJokerView_notAllowedToUseJoker_returns403(
         self, mock_can_joker_be_used_in_week: Mock, mock_fire_action: Mock
     ):
@@ -132,8 +132,8 @@ class TestUseJokerView(TapirIntegrationTest):
         mock_can_joker_be_used_in_week.assert_called_once_with(user, date, cache=ANY)
         mock_fire_action.assert_not_called()
 
-    @patch.object(TransactionalTrigger, "fire_action")
-    @patch.object(JokerManagementService, "can_joker_be_used_in_week")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    @patch.object(JokerManagementService, "can_joker_be_used_in_week", autospec=True)
     def test_useJokerView_jokerFeatureDisabled_returns403(
         self, mock_can_joker_be_used_in_week: Mock, mock_fire_action: Mock
     ):

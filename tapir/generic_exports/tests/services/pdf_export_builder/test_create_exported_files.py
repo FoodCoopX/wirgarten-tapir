@@ -1,15 +1,14 @@
 import datetime
 from unittest.mock import patch, Mock, call
 
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
-
 from tapir.generic_exports.services.pdf_export_builder import PdfExportBuilder
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 from tapir.wirgarten.tests.test_utils import mock_timezone
 
 
 class TestCreateExportedFiles(TapirUnitTest):
-    @patch.object(PdfExportBuilder, "create_single_file")
-    @patch.object(PdfExportBuilder, "build_contexts")
+    @patch.object(PdfExportBuilder, "create_single_file", autospec=True)
+    @patch.object(PdfExportBuilder, "build_contexts", autospec=True)
     def test_createExportedFiles_generateSingleExport_createsOneFile(
         self, mock_build_contexts: Mock, mock_create_single_file: Mock
     ):
@@ -37,8 +36,8 @@ class TestCreateExportedFiles(TapirUnitTest):
             },
         )
 
-    @patch.object(PdfExportBuilder, "create_single_file")
-    @patch.object(PdfExportBuilder, "build_contexts")
+    @patch.object(PdfExportBuilder, "create_single_file", autospec=True)
+    @patch.object(PdfExportBuilder, "build_contexts", autospec=True)
     def test_createExportedFiles_generateMultipleExport_createsMultipleFiles(
         self, mock_build_contexts: Mock, mock_create_single_file: Mock
     ):

@@ -1,14 +1,16 @@
 import datetime
 from unittest.mock import patch, Mock
 
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
-
 from tapir.deliveries.services.delivery_cycle_service import DeliveryCycleService
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestIsWeekDeliveredInFourWeekRhythm(TapirUnitTest):
-    @patch("tapir.deliveries.services.delivery_cycle_service.get_parameter_value")
+    @patch(
+        "tapir.deliveries.services.delivery_cycle_service.get_parameter_value",
+        autospec=True,
+    )
     def test_isWeekDeliveredInFourWeekRhythm_dateInThePastAndFourWeeksAgo_returnsTrue(
         self, mock_get_parameter_value: Mock
     ):
@@ -25,7 +27,10 @@ class TestIsWeekDeliveredInFourWeekRhythm(TapirUnitTest):
             ParameterKeys.SUBSCRIPTION_FOUR_WEEK_CYCLE_START_POINT, cache=cache
         )
 
-    @patch("tapir.deliveries.services.delivery_cycle_service.get_parameter_value")
+    @patch(
+        "tapir.deliveries.services.delivery_cycle_service.get_parameter_value",
+        autospec=True,
+    )
     def test_isWeekDeliveredInFourWeekRhythm_dateInThePastAndThreeWeeksAgo_returnsTrue(
         self, mock_get_parameter_value: Mock
     ):
@@ -42,7 +47,10 @@ class TestIsWeekDeliveredInFourWeekRhythm(TapirUnitTest):
             ParameterKeys.SUBSCRIPTION_FOUR_WEEK_CYCLE_START_POINT, cache=cache
         )
 
-    @patch("tapir.deliveries.services.delivery_cycle_service.get_parameter_value")
+    @patch(
+        "tapir.deliveries.services.delivery_cycle_service.get_parameter_value",
+        autospec=True,
+    )
     def test_isWeekDeliveredInFourWeekRhythm_dateIsInSameWeek_returnsTrue(
         self, mock_get_parameter_value: Mock
     ):
@@ -59,7 +67,10 @@ class TestIsWeekDeliveredInFourWeekRhythm(TapirUnitTest):
             ParameterKeys.SUBSCRIPTION_FOUR_WEEK_CYCLE_START_POINT, cache=cache
         )
 
-    @patch("tapir.deliveries.services.delivery_cycle_service.get_parameter_value")
+    @patch(
+        "tapir.deliveries.services.delivery_cycle_service.get_parameter_value",
+        autospec=True,
+    )
     def test_isWeekDeliveredInFourWeekRhythm_dateIsOneWeekLater_returnsFalse(
         self, mock_get_parameter_value: Mock
     ):

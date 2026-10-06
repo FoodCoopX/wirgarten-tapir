@@ -126,13 +126,10 @@ class JokerColumnProvider:
         subscriptions_affected_by_jokers = set(
             TapirCache.get_subscriptions_affected_by_jokers(cache=cache)
         )
-        relevant_subscriptions = [
+        return [
             subscription
             for subscription in member_subscriptions
             if subscription in subscriptions_affected_by_jokers
             and subscription.start_date <= reference_date
             and subscription.end_date >= reference_date
         ]
-        return sorted(
-            relevant_subscriptions, key=lambda subscription: subscription.product.name
-        )

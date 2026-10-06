@@ -5,7 +5,6 @@ class ParameterKeys:
     MEMBER_PICKUP_LOCATION_CHANGE_UNTIL = (
         f"{PREFIX}.member.pickup_location_change_until"
     )
-    MEMBER_BYPASS_KEYCLOAK = f"{PREFIX}.temporarily.bypass_keycloak"
     SITE_NAME = f"{PREFIX}.site.name"
     SITE_STREET = f"{PREFIX}.site.street"
     SITE_CITY = f"{PREFIX}.site.city"
@@ -61,6 +60,9 @@ class ParameterKeys:
     )
     MEMBERS_CAN_UPDATE_THEIR_CONTRACTS = (
         f"{PREFIX}.member.dashboard.members_can_update_their_contracts"
+    )
+    MEMBERS_CAN_CHANGE_PICKUP_LOCATION = (
+        f"{PREFIX}.member.dashboard.members_can_change_pickup_location"
     )
     DELIVERY_DAY = f"{PREFIX}.delivery.weekday"
     DELIVERY_CHARGE_PER_PICKUP_LOCATION_ENABLED = (
@@ -276,6 +278,28 @@ class ParameterKeys:
     EXPLANATION_TEXT_EXTRA_MAIL_ADDRESSES = (
         f"{PREFIX}.emails.explanation_text_extra_mail_addresses"
     )
+    ENABLE_BCC_FOR_MAIL_MODULE = f"{PREFIX}.emails.enable_bcc_for_mail_module"
+    BCC_MAIL_MODULE_MASS_MAILS = f"{PREFIX}.emails.bcc_mail_module_mass_mails"
+    BCC_MAIL_MODULE_TRANSACTIONAL_MAILS = (
+        f"{PREFIX}.emails.bcc_mail_module_transactional_mails"
+    )
+    BAKERY_ENABLED = f"{PREFIX}.bakery.enabled"
+    BAKERY_BAKING_DAY_BEFORE_DELIVERY_DAY = (
+        f"{PREFIX}.bakery.baking_day_before_delivery_day"
+    )
+    BAKERY_LAST_CHOOSING_DAY_BEFORE_BAKING_DAY = (
+        f"{PREFIX}.bakery.last_choosing_day_before_baking_day"
+    )
+    BAKERY_MEMBERS_CAN_REDUCE_BREAD_SHARES = (
+        f"{PREFIX}.bakery.members_can_reduce_bread_shares"
+    )
+    BAKERY_PICKUP_LOCATIONS_CAN_BE_CHOSEN_PER_SHARE = (
+        f"{PREFIX}.bakery.pickup_locations_can_be_chosen_per_share"
+    )
+    BAKERY_MEMBERS_CAN_CHOOSE_BREAD_SORTS = (
+        f"{PREFIX}.bakery.members_can_choose_bread_sorts"
+    )
+    BAKERY_STOVE_LAYERS = f"{PREFIX}.bakery.stove_layers"
     MEMBER_NUMBER_PREFIX = f"{PREFIX}.member.number.prefix"
     MEMBER_NUMBER_ZERO_PAD_LENGTH = f"{PREFIX}.member.number.zero_pad_length"
     MEMBER_NUMBER_START_VALUE = f"{PREFIX}.member.number.start_value"

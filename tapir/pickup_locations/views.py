@@ -1,7 +1,7 @@
 import datetime
 import locale
 
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
@@ -66,7 +66,6 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import calculate_pickup_location_change_date
-from tapir.wirgarten.service.product_standard_order import product_type_order_by
 from tapir.wirgarten.service.products import get_active_and_future_subscriptions
 from tapir.wirgarten.utils import get_today, check_permission_or_self
 
@@ -158,6 +157,11 @@ class PickupLocationViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = PickupLocationSerializer
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["cache"] = {}
+        return context
+
 
 class PickupLocationCapacityEvolutionView(APIView):
     @extend_schema(
@@ -181,7 +185,7 @@ class PickupLocationCapacityEvolutionView(APIView):
         pickup_location: PickupLocation, cache: dict
     ):
         data_points = []
-        product_types = ProductType.objects.order_by(*product_type_order_by())
+        product_types = ProductType.objects.order_by("order_in_bestellwizard")
         capacities_by_product_type = SharesCapacityService.get_available_share_capacities_for_pickup_location_by_product_type(
             pickup_location, cache=cache
         )
@@ -378,6 +382,12 @@ class ChangeMemberPickupLocationApiView(APIView):
     def post(self, request):
         member_id = request.query_params.get("member_id")
         check_permission_or_self(member_id, request)
+        if not request.user.has_perm(
+            Permission.Accounts.MANAGE
+        ) and not get_parameter_value(
+            ParameterKeys.MEMBERS_CAN_CHANGE_PICKUP_LOCATION, cache=self.cache
+        ):
+            raise PermissionDenied()
         member = get_object_or_404(Member, id=member_id)
         new_pickup_location_id = request.query_params.get("pickup_location_id")
         new_pickup_location = get_object_or_404(
@@ -433,7 +443,7 @@ class ChangeMemberPickupLocationApiView(APIView):
             cache=self.cache,
         ):
             raise ValidationError(
-                "Dieser Abholort kann nicht ausgewählt werden (Das ist die Spende-Sonder-Ort)."
+                "Dieser Abholort kann nicht ausgewählt werden (das ist der Sonder-Abholort für Spenden)."
             )
 
         subscriptions = (
@@ -464,7 +474,7 @@ class ChangeMemberPickupLocationApiView(APIView):
             cache=self.cache,
         ):
             raise ValidationError(
-                "Diese Abholort hat nicht genug Kapazitäten für deine Verträge."
+                "Dieser Abholort hat nicht genug Kapazitäten für deine Verträge."
             )
 
 

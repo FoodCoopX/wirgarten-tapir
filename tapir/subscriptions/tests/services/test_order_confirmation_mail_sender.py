@@ -25,7 +25,7 @@ class TestOrderConfirmationMailSender(TapirIntegrationTest):
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_sendConfirmationMailIfNecessary_default_sendsMailToTheRelevantMembers(
         self, mock_fire_action: Mock
     ):

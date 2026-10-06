@@ -37,6 +37,6 @@ class TestCsvExportTemplateManager(TapirUnitTest):
             CsvExportTemplateManager.create_exports_from_template("unknown")
 
         self.assertEqual(
-            "Unknown template id \"unknown\", available IDs: ['location_routes', 'joker_overview']",
+            "Unknown template id \"unknown\", available IDs: ['location_routes', 'joker_overview', 'payments_by_income_source']",
             str(error.exception),
         )

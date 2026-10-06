@@ -161,17 +161,26 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
             any_order=True,
         )
 
-    @patch("tapir.payments.services.month_payment_builder_utils.get_parameter_value")
-    @patch.object(MonthPaymentBuilderUtils, "get_payment_due_date_on_month")
-    @patch.object(MonthPaymentBuilderSubscriptions, "get_total_to_pay")
-    @patch.object(MonthPaymentBuilderUtils, "get_already_paid_amount")
+    @patch(
+        "tapir.payments.services.month_payment_builder_utils.get_parameter_value",
+        autospec=True,
+    )
+    @patch.object(
+        MonthPaymentBuilderUtils, "get_payment_due_date_on_month", autospec=True
+    )
+    @patch.object(MonthPaymentBuilderSubscriptions, "get_total_to_pay", autospec=True)
+    @patch.object(MonthPaymentBuilderUtils, "get_already_paid_amount", autospec=True)
     @patch.object(
         MandateReferenceProvider,
         "get_or_create_mandate_reference",
         autospec=True,
     )
-    @patch.object(MemberPaymentRhythmService, "get_last_day_of_rhythm_period")
-    @patch.object(MemberPaymentRhythmService, "get_first_day_of_rhythm_period")
+    @patch.object(
+        MemberPaymentRhythmService, "get_last_day_of_rhythm_period", autospec=True
+    )
+    @patch.object(
+        MemberPaymentRhythmService, "get_first_day_of_rhythm_period", autospec=True
+    )
     def test_buildPaymentForContractAndMember_totalToPayIsEqualToAlreadyPaid_returnsNone(
         self,
         mock_get_first_day_of_rhythm_period: Mock,
@@ -248,17 +257,26 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
             key=ParameterKeys.PAYMENT_START_DATE, cache=cache
         )
 
-    @patch("tapir.payments.services.month_payment_builder_utils.get_parameter_value")
-    @patch.object(MonthPaymentBuilderUtils, "get_payment_due_date_on_month")
-    @patch.object(MonthPaymentBuilderSubscriptions, "get_total_to_pay")
-    @patch.object(MonthPaymentBuilderUtils, "get_already_paid_amount")
+    @patch(
+        "tapir.payments.services.month_payment_builder_utils.get_parameter_value",
+        autospec=True,
+    )
+    @patch.object(
+        MonthPaymentBuilderUtils, "get_payment_due_date_on_month", autospec=True
+    )
+    @patch.object(MonthPaymentBuilderSubscriptions, "get_total_to_pay", autospec=True)
+    @patch.object(MonthPaymentBuilderUtils, "get_already_paid_amount", autospec=True)
     @patch.object(
         MandateReferenceProvider,
         "get_or_create_mandate_reference",
         autospec=True,
     )
-    @patch.object(MemberPaymentRhythmService, "get_last_day_of_rhythm_period")
-    @patch.object(MemberPaymentRhythmService, "get_first_day_of_rhythm_period")
+    @patch.object(
+        MemberPaymentRhythmService, "get_last_day_of_rhythm_period", autospec=True
+    )
+    @patch.object(
+        MemberPaymentRhythmService, "get_first_day_of_rhythm_period", autospec=True
+    )
     def test_buildPaymentForContractAndMember_totalToPayIsLessThanAlreadyPaid_returnsNone(
         self,
         mock_get_first_day_of_rhythm_period: Mock,
@@ -338,16 +356,22 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
     @patch.object(
         TrialPeriodManager, "get_trial_period_start_date_for_reference", autospec=True
     )
-    @patch.object(MonthPaymentBuilderUtils, "get_payment_due_date_on_month")
-    @patch.object(MonthPaymentBuilderSubscriptions, "get_total_to_pay")
-    @patch.object(MonthPaymentBuilderUtils, "get_already_paid_amount")
+    @patch.object(
+        MonthPaymentBuilderUtils, "get_payment_due_date_on_month", autospec=True
+    )
+    @patch.object(MonthPaymentBuilderSubscriptions, "get_total_to_pay", autospec=True)
+    @patch.object(MonthPaymentBuilderUtils, "get_already_paid_amount", autospec=True)
     @patch.object(
         MandateReferenceProvider,
         "get_or_create_mandate_reference",
         autospec=True,
     )
-    @patch.object(MemberPaymentRhythmService, "get_last_day_of_rhythm_period")
-    @patch.object(MemberPaymentRhythmService, "get_first_day_of_rhythm_period")
+    @patch.object(
+        MemberPaymentRhythmService, "get_last_day_of_rhythm_period", autospec=True
+    )
+    @patch.object(
+        MemberPaymentRhythmService, "get_first_day_of_rhythm_period", autospec=True
+    )
     def test_buildPaymentForContractAndMember_totalToPayIsLessThanAlreadyPaidButNegativePaymentAllowed_returnsPaymentWithNegativeValue(
         self,
         mock_get_first_day_of_rhythm_period: Mock,
@@ -466,16 +490,22 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
     @patch.object(
         TrialPeriodManager, "get_trial_period_start_date_for_reference", autospec=True
     )
-    @patch.object(MonthPaymentBuilderUtils, "get_payment_due_date_on_month")
-    @patch.object(MonthPaymentBuilderSubscriptions, "get_total_to_pay")
-    @patch.object(MonthPaymentBuilderUtils, "get_already_paid_amount")
+    @patch.object(
+        MonthPaymentBuilderUtils, "get_payment_due_date_on_month", autospec=True
+    )
+    @patch.object(MonthPaymentBuilderSubscriptions, "get_total_to_pay", autospec=True)
+    @patch.object(MonthPaymentBuilderUtils, "get_already_paid_amount", autospec=True)
     @patch.object(
         MandateReferenceProvider,
         "get_or_create_mandate_reference",
         autospec=True,
     )
-    @patch.object(MemberPaymentRhythmService, "get_last_day_of_rhythm_period")
-    @patch.object(MemberPaymentRhythmService, "get_first_day_of_rhythm_period")
+    @patch.object(
+        MemberPaymentRhythmService, "get_last_day_of_rhythm_period", autospec=True
+    )
+    @patch.object(
+        MemberPaymentRhythmService, "get_first_day_of_rhythm_period", autospec=True
+    )
     def test_buildPaymentForContractAndMember_subscriptionIsInTrial_returnsPaymentWithDueDateNextMonth(
         self,
         mock_get_first_day_of_rhythm_period: Mock,
@@ -593,17 +623,26 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
             any_order=True,
         )
 
-    @patch("tapir.payments.services.month_payment_builder_utils.get_parameter_value")
-    @patch.object(MonthPaymentBuilderUtils, "get_payment_due_date_on_month")
-    @patch.object(MonthPaymentBuilderSubscriptions, "get_total_to_pay")
-    @patch.object(MonthPaymentBuilderUtils, "get_already_paid_amount")
+    @patch(
+        "tapir.payments.services.month_payment_builder_utils.get_parameter_value",
+        autospec=True,
+    )
+    @patch.object(
+        MonthPaymentBuilderUtils, "get_payment_due_date_on_month", autospec=True
+    )
+    @patch.object(MonthPaymentBuilderSubscriptions, "get_total_to_pay", autospec=True)
+    @patch.object(MonthPaymentBuilderUtils, "get_already_paid_amount", autospec=True)
     @patch.object(
         MandateReferenceProvider,
         "get_or_create_mandate_reference",
         autospec=True,
     )
-    @patch.object(MemberPaymentRhythmService, "get_last_day_of_rhythm_period")
-    @patch.object(MemberPaymentRhythmService, "get_first_day_of_rhythm_period")
+    @patch.object(
+        MemberPaymentRhythmService, "get_last_day_of_rhythm_period", autospec=True
+    )
+    @patch.object(
+        MemberPaymentRhythmService, "get_first_day_of_rhythm_period", autospec=True
+    )
     def test_buildPaymentForContractAndMember_rangeEndIsBeforePaymentsStart_returnsNone(
         self,
         mock_get_first_day_of_rhythm_period: Mock,
@@ -661,16 +700,22 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
     @patch.object(
         TrialPeriodManager, "get_trial_period_start_date_for_reference", autospec=True
     )
-    @patch.object(MonthPaymentBuilderUtils, "get_payment_due_date_on_month")
-    @patch.object(MonthPaymentBuilderSubscriptions, "get_total_to_pay")
-    @patch.object(MonthPaymentBuilderUtils, "get_already_paid_amount")
+    @patch.object(
+        MonthPaymentBuilderUtils, "get_payment_due_date_on_month", autospec=True
+    )
+    @patch.object(MonthPaymentBuilderSubscriptions, "get_total_to_pay", autospec=True)
+    @patch.object(MonthPaymentBuilderUtils, "get_already_paid_amount", autospec=True)
     @patch.object(
         MandateReferenceProvider,
         "get_or_create_mandate_reference",
         autospec=True,
     )
-    @patch.object(MemberPaymentRhythmService, "get_last_day_of_rhythm_period")
-    @patch.object(MemberPaymentRhythmService, "get_first_day_of_rhythm_period")
+    @patch.object(
+        MemberPaymentRhythmService, "get_last_day_of_rhythm_period", autospec=True
+    )
+    @patch.object(
+        MemberPaymentRhythmService, "get_first_day_of_rhythm_period", autospec=True
+    )
     def test_buildPaymentForContractAndMember_paymentStartIsInsideTheRange_returnsPartialPayment(
         self,
         mock_get_first_day_of_rhythm_period: Mock,
@@ -790,15 +835,19 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
             any_order=True,
         )
 
-    @patch.object(MonthPaymentBuilderSubscriptions, "get_total_to_pay")
-    @patch.object(MonthPaymentBuilderUtils, "get_already_paid_amount")
+    @patch.object(MonthPaymentBuilderSubscriptions, "get_total_to_pay", autospec=True)
+    @patch.object(MonthPaymentBuilderUtils, "get_already_paid_amount", autospec=True)
     @patch.object(
         MandateReferenceProvider,
         "get_or_create_mandate_reference",
         autospec=True,
     )
-    @patch.object(MemberPaymentRhythmService, "get_last_day_of_rhythm_period")
-    @patch.object(MemberPaymentRhythmService, "get_first_day_of_rhythm_period")
+    @patch.object(
+        MemberPaymentRhythmService, "get_last_day_of_rhythm_period", autospec=True
+    )
+    @patch.object(
+        MemberPaymentRhythmService, "get_first_day_of_rhythm_period", autospec=True
+    )
     def test_buildPaymentForContractAndMember_contractWithoutTrialStartedAfterDueDateThisMonth_returnsPaymentWithDueDateNextMonth(
         self,
         mock_get_first_day_of_rhythm_period: Mock,

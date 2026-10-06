@@ -70,7 +70,9 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
         )
 
     @patch.object(
-        PickupLocationOpeningTimesManager, "update_delivery_date_to_opening_times"
+        PickupLocationOpeningTimesManager,
+        "update_delivery_date_to_opening_times",
+        autospec=True,
     )
     def test_buildDeliveryObject_default_returnsCorrectDeliveryDate(
         self,
@@ -115,14 +117,20 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
             datetime.date(year=2023, month=6, day=7), delivery_object["delivery_date"]
         )
 
-    @patch.object(JokerManagementService, "can_joker_be_used_in_week")
-    @patch.object(JokerManagementService, "does_member_have_a_joker_in_week")
+    @patch.object(JokerManagementService, "can_joker_be_used_in_week", autospec=True)
     @patch.object(
-        PickupLocationOpeningTimesManager, "update_delivery_date_to_opening_times"
+        JokerManagementService, "does_member_have_a_joker_in_week", autospec=True
+    )
+    @patch.object(
+        PickupLocationOpeningTimesManager,
+        "update_delivery_date_to_opening_times",
+        autospec=True,
     )
     @patch.object(PickupLocationOpeningTime, "objects")
     @patch.object(
-        MemberPickupLocationGetter, "get_member_pickup_location_id_from_cache"
+        MemberPickupLocationGetter,
+        "get_member_pickup_location_id_from_cache",
+        autospec=True,
     )
     def test_buildDeliveryObject_default_returnsCorrectPickupLocationData(
         self,
@@ -182,8 +190,10 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
         self.assertIn(active_subscription_1, delivery_object["subscriptions"])
         self.assertIn(active_subscription_2, delivery_object["subscriptions"])
 
-    @patch.object(JokerManagementService, "can_joker_be_used_in_week")
-    @patch.object(JokerManagementService, "does_member_have_a_joker_in_week")
+    @patch.object(JokerManagementService, "can_joker_be_used_in_week", autospec=True)
+    @patch.object(
+        JokerManagementService, "does_member_have_a_joker_in_week", autospec=True
+    )
     def test_buildDeliveryObject_default_returnsCorrectJokerData(
         self,
         mock_does_member_have_a_joker_in_week: Mock,
@@ -213,8 +223,10 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
             mock_can_joker_be_used_value, delivery_object["can_joker_be_used"]
         )
 
-    @patch.object(JokerManagementService, "can_joker_be_used_in_week")
-    @patch.object(JokerManagementService, "does_member_have_a_joker_in_week")
+    @patch.object(JokerManagementService, "can_joker_be_used_in_week", autospec=True)
+    @patch.object(
+        JokerManagementService, "does_member_have_a_joker_in_week", autospec=True
+    )
     def test_buildDeliveryObject_jokerUsed_returnsOnlySubscriptionsFromProductTypesNotAffectedByJokers(
         self,
         mock_does_member_have_a_joker_in_week: Mock,
@@ -241,7 +253,9 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
         )
         self.assertEqual([subscription_2], list(delivery_object["subscriptions"]))
 
-    @patch.object(WeeksWithoutDeliveryService, "is_delivery_cancelled_this_week")
+    @patch.object(
+        WeeksWithoutDeliveryService, "is_delivery_cancelled_this_week", autospec=True
+    )
     def test_buildDeliveryObject_default_returnsCorrectCancelData(
         self, mock_is_delivery_cancelled_this_week: Mock
     ):

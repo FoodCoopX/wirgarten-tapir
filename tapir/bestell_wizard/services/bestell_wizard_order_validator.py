@@ -3,6 +3,7 @@ import datetime
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 
+from tapir.accounts.services.email_normaliser import EmailNormaliser
 from tapir.associations.models import AssociationMembershipType
 from tapir.bestell_wizard.services.questionnaire_source_service import (
     QuestionnaireSourceService,
@@ -51,6 +52,10 @@ class BestellWizardOrderValidator:
         contract_start_date: datetime.date,
         cache: dict,
     ):
+        validated_serializer_data["personal_data"]["email"] = EmailNormaliser.normalise(
+            validated_serializer_data["personal_data"]["email"]
+        )
+
         PersonalDataValidator.validate_personal_data_new_member(
             email=validated_serializer_data["personal_data"]["email"],
             phone_number=validated_serializer_data["personal_data"]["phone_number"],

@@ -1,7 +1,7 @@
 import datetime
 
 from tapir.generic_exports.services.export_segment_manager import ExportSegment
-from tapir.payments.monthly_sales_data import MonthlySalesData
+from tapir.payments.dataclasses import MonthlySalesData
 from tapir.payments.services.month_payment_builder_association_membership import (
     MonthPaymentBuilderAssociationMembership,
 )

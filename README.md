@@ -35,10 +35,27 @@ docker compose exec web poetry run python manage.py parameter_definitions
 docker compose exec web poetry run python manage.py populate --reset_all
 ```
 
+Alternatively, run the reset script: `./scripts/reset_all_containers.sh`
+
 You should now have a local instance accessible at http://localhost:8000/. You can log in as admin with username
 `roberto.cortes@example.com` and password `roberto.cortes`.
 
 You can log in as any user using the same pattern: `[name]@example.come` as username and `[name]` as password
+
+### Django outside of Docker
+
+You may want to run the Django server outside of Docker, for example if you want to run a debugger or to make it easier
+to run tests from your IDE. To do that:
+
+- Define a few environment variables: copy the .env.local.disabled file to .env.local, it's content
+  will be read automatically.
+- Start the non-django containers, the minimum you need is `docker compose up -d keycloak db redis` for a local Tapir
+  instance, or just `db redis` if you just want to run automated tests.
+- Start the django server with `poetry run python manage.py runserver`
+- Start the vite server with `pnpm run dev`
+
+If you want a fresh setup, for example after switching branches, the equivalent of `./scripts/reset_all_containers.sh`
+is `./scripts/reset_and_start_local_server.sh`
 
 ## Contributing & GitHub issues
 
@@ -56,6 +73,20 @@ there.
 You're of course free to check the other issues and ask questions about them, but be aware that they may not make sense
 if you're not involved in the daily Tapir-development life. We don't have an internal tool to track tasks yet, so we use
 the GitHub issues as our todo-list. Hopefully the labels will be enough to let you sort through the mess.
+
+### Bäckerei (bakery)
+
+The bakery is off by default. For a local instance with it switched on and
+filled with test data — a bakery with one `Brotanteil` share, four pickup
+stations, breads and members:
+
+```sh
+docker compose exec web poetry run python manage.py populate --reset_all --org=bakery
+```
+
+The baking-plan solver needs `ortools`, the optional `bakery` extra in
+`pyproject.toml`. The Docker image installs it (`poetry install --extras bakery`); without it the solver endpoints
+answer 503.
 
 ## Tests
 

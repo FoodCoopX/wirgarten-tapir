@@ -5,7 +5,7 @@ from functools import partial
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
-from django.db import models, transaction
+from django.db import models
 from django.db.models import (
     F,
     Index,
@@ -20,7 +20,8 @@ from django.utils.translation import gettext_lazy as _
 from localflavor.generic.models import IBANField
 from phonenumber_field.modelfields import PhoneNumberField
 
-from tapir.accounts.models import TapirUser, KeycloakUserQuerySetManager
+from tapir.accounts.models import TapirUser
+from tapir.accounts.services.email_normaliser import EmailNormaliser
 from tapir.configuration.parameter import get_parameter_value
 from tapir.core.models import TapirModel
 from tapir.log.models import LogEntry, UpdateModelLogEntry
@@ -336,10 +337,10 @@ class MemberQuerySet(models.QuerySet):
         )
 
 
-class TapirUserManager(models.Manager.from_queryset(MemberQuerySet)):
+class MemberManager(models.Manager.from_queryset(MemberQuerySet)):
     @staticmethod
-    def normalize_email(email: str) -> str:
-        return KeycloakUserQuerySetManager.normalize_email(email)
+    def normalize_email(email: str):
+        return EmailNormaliser.normalise(email)
 
 
 class Member(TapirUser):
@@ -347,7 +348,7 @@ class Member(TapirUser):
     A member of WirGarten. Usually a member has coop shares and optionally other subscriptions.
     """
 
-    objects = TapirUserManager()
+    objects = MemberManager()
 
     account_owner = models.CharField(_("Account owner"), max_length=150, null=True)
     iban = IBANField(_("IBAN"), null=True)
@@ -359,6 +360,7 @@ class Member(TapirUser):
     created_at = models.DateTimeField(auto_now_add=True, null=False)
     member_no = models.IntegerField(_("Mitgliedsnummer"), unique=True, null=True)
     is_student = models.BooleanField(_("Student*in"), default=False)
+    pseudonym = models.CharField(_("Pseudonym"), max_length=150, blank=True)
     has_received_membership_started_mail = models.BooleanField(default=False)
 
     @property
@@ -385,16 +387,6 @@ class Member(TapirUser):
                 return None
 
             return member_pickup_location_object.pickup_location
-
-    @transaction.atomic
-    def save(self, *args, **kwargs):
-        if "bypass_keycloak" not in kwargs:
-            kwargs["bypass_keycloak"] = get_parameter_value(
-                ParameterKeys.MEMBER_BYPASS_KEYCLOAK,
-                cache=kwargs.get("cache", {}),
-            )
-
-        super().save(*args, **kwargs)
 
     def coop_shares_total_value(self):
         today = get_today()
@@ -558,12 +550,6 @@ class Product(TapirModel):
                 raise ValidationError(
                     "There must be exactly one base product per ProductType."
                 )
-
-    def save(self, *args, **kwargs):
-        self.clean()
-
-        with transaction.atomic():
-            super().save(*args, **kwargs)
 
     class Meta:
         indexes = [Index(fields=["type"], name="idx_product_type")]
@@ -888,11 +874,6 @@ class CoopShareTransaction(TapirModel, Payable, AdminConfirmableMixin):
                     )
                 }
             )
-
-    def save(self, *args, **kwargs):
-        # Call the clean method to validate the model instance before saving.
-        self.clean()
-        super().save(*args, **kwargs)
 
     def __str__(self):
         prefix = f"[{format_date(self.timestamp)}] {abs(self.quantity)} Genossenschaftsanteile"

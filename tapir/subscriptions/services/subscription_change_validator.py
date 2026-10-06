@@ -33,7 +33,7 @@ class SubscriptionChangeValidator:
         cache: dict,
     ):
         if not cls.should_validate_cannot_reduce_size(
-            logged_in_user_is_admin=logged_in_user_is_admin,
+            member_may_reduce_size=logged_in_user_is_admin,
             subscription_start_date=subscription_start_date,
             cache=cache,
         ):
@@ -82,11 +82,11 @@ class SubscriptionChangeValidator:
     @classmethod
     def should_validate_cannot_reduce_size(
         cls,
-        logged_in_user_is_admin: bool,
+        member_may_reduce_size: bool,
         subscription_start_date: datetime.date,
         cache: dict,
     ):
-        if logged_in_user_is_admin:
+        if member_may_reduce_size:
             return False
 
         # Members cannot reduce the size of their subscriptions for the currently ongoing growing period.
@@ -190,7 +190,7 @@ class SubscriptionChangeValidator:
             - float(capacity_used_by_the_current_subscriptions)
         ):
             raise ValidationError(
-                f"Die ausgewählte Ernteanteile sind größer als die verfügbare Kapazität! Verfügbar: {round(free_capacity, 2)}"
+                f"Die ausgewählten Ernteanteile sind größer als die verfügbare Kapazität! Verfügbar: {round(free_capacity, 2)}"
             )
 
     @classmethod

@@ -30,7 +30,7 @@ class TestCancelDeliveryDonationView(TapirIntegrationTest):
             value=DELIVERY_DONATION_MODE_ALWAYS_POSSIBLE
         )
 
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_featureDisabled_returns403(self, mock_fire_action: Mock):
         TapirParameter.objects.filter(key=ParameterKeys.DELIVERY_DONATION_MODE).update(
             value=DELIVERY_DONATION_MODE_DISABLED
@@ -51,7 +51,7 @@ class TestCancelDeliveryDonationView(TapirIntegrationTest):
         self.assertFalse(DeliveryDonationCancelledLogEntry.objects.exists())
         mock_fire_action.assert_not_called()
 
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_donationDoesntExist_returns404(self, mock_fire_action: Mock):
         user = MemberFactory.create(is_superuser=True)
         self.client.force_login(user)
@@ -65,7 +65,7 @@ class TestCancelDeliveryDonationView(TapirIntegrationTest):
         )
         mock_fire_action.assert_not_called()
 
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_normalMemberCancelsDonationOfOtherMember_returns403(
         self, mock_fire_action: Mock
     ):
@@ -85,7 +85,7 @@ class TestCancelDeliveryDonationView(TapirIntegrationTest):
         self.assertFalse(DeliveryDonationCancelledLogEntry.objects.exists())
         mock_fire_action.assert_not_called()
 
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_normalMemberCancelsOwnDonation_cancelsDonationAndSendsMailAndCreatesLogEntry(
         self, mock_fire_action: Mock
     ):
@@ -118,7 +118,7 @@ class TestCancelDeliveryDonationView(TapirIntegrationTest):
             ),
         )
 
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_adminCancelsDonationOfOtherMember_cancelsDonationAndSendsMailAndCreatesLogEntry(
         self, mock_fire_action: Mock
     ):
@@ -154,7 +154,7 @@ class TestCancelDeliveryDonationView(TapirIntegrationTest):
             ),
         )
 
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_donationCannotBeCancelled_returns403(self, mock_fire_action: Mock):
         mock_timezone(test=self, now=datetime.datetime(year=1999, month=1, day=15))
         member = MemberFactory.create(is_superuser=False)

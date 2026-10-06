@@ -17,7 +17,7 @@ class TestBuildPdfExportView(TapirIntegrationTest):
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
-    @patch.object(PdfExportBuilder, "create_exported_files")
+    @patch.object(PdfExportBuilder, "create_exported_files", autospec=True)
     def test_buildPdfExportView_default_returnsCorrectData(
         self, mock_create_exported_files: Mock
     ):

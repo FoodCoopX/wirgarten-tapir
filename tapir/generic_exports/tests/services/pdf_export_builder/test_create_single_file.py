@@ -1,17 +1,16 @@
 from unittest.mock import patch, Mock
 
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
-
 from tapir.generic_exports.services.csv_export_builder import CsvExportBuilder
 from tapir.generic_exports.services.pdf_export_builder import PdfExportBuilder
 from tapir.wirgarten.models import ExportedFile
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestCreateSingleFile(TapirUnitTest):
-    @patch.object(PdfExportBuilder, "render_pdf")
-    @patch.object(CsvExportBuilder, "build_file_name")
+    @patch.object(PdfExportBuilder, "render_pdf", autospec=True)
+    @patch.object(CsvExportBuilder, "build_file_name", autospec=True)
     @patch.object(ExportedFile, "objects")
-    @patch.object(PdfExportBuilder, "build_template_object")
+    @patch.object(PdfExportBuilder, "build_template_object", autospec=True)
     def test_createSingleFile_default_createsFileCorrectly(
         self,
         mock_build_template_object: Mock,

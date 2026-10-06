@@ -5,8 +5,8 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestCreateMemberCreditIfNecessary(TapirUnitTest):
-    @patch.object(MemberCreditCreator, "create_credit_and_log_entry")
-    @patch.object(MemberCreditCreator, "get_amount_to_credit")
+    @patch.object(MemberCreditCreator, "create_credit_and_log_entry", autospec=True)
+    @patch.object(MemberCreditCreator, "get_amount_to_credit", autospec=True)
     def test_createMemberCreditIfNecessary_amountToCreditIsZero_doesntCreateCredit(
         self, mock_get_amount_to_credit: Mock, mock_create_credit_and_log_entry: Mock
     ):
@@ -35,8 +35,8 @@ class TestCreateMemberCreditIfNecessary(TapirUnitTest):
         )
         mock_create_credit_and_log_entry.assert_not_called()
 
-    @patch.object(MemberCreditCreator, "create_credit_and_log_entry")
-    @patch.object(MemberCreditCreator, "get_amount_to_credit")
+    @patch.object(MemberCreditCreator, "create_credit_and_log_entry", autospec=True)
+    @patch.object(MemberCreditCreator, "get_amount_to_credit", autospec=True)
     def test_createMemberCreditIfNecessary_amountToCreditIsAboveZero_createsCredit(
         self, mock_get_amount_to_credit: Mock, mock_create_credit_and_log_entry: Mock
     ):

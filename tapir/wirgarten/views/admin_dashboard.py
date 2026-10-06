@@ -35,6 +35,7 @@ from tapir.wirgarten.models import (
     Payment,
     ProductType,
 )
+from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
     annotate_member_queryset_with_coop_shares_total_value,
@@ -241,6 +242,10 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         context["show_association_content"] = legal_status_is_association(
             cache=self.cache
         )
+
+        context["bakery_enabled"] = get_parameter_value(
+            ParameterKeys.BAKERY_ENABLED, cache=self.cache
+        ) and self.request.user.has_perm(Permission.Coop.MANAGE)
 
         return context
 

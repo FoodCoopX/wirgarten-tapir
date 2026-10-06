@@ -14,13 +14,15 @@ if TYPE_CHECKING:
 
 class KeycloakUserManager:
     @classmethod
-    def create_keycloak_user(
+    def create_keycloak_user_if_necessary(
         cls,
         user: KeycloakUser,
-        keycloak_client: KeycloakAdmin,
         initial_password: str | None,
         cache: dict,
     ):
+        if user.keycloak_id:
+            return
+
         data: dict = {
             "username": user.email,
             "email": user.email,
@@ -28,12 +30,6 @@ class KeycloakUserManager:
             "lastName": user.last_name,
             "enabled": True,
         }
-
-        keycloak_id = keycloak_client.get_user_id(user.email)
-        if keycloak_id is not None:
-            user.keycloak_id = keycloak_id
-            keycloak_client.update_user(user_id=user.keycloak_id, payload=data)
-            return
 
         if initial_password:
             data["credentials"] = [{"value": initial_password, "type": "password"}]
@@ -46,59 +42,20 @@ class KeycloakUserManager:
         else:
             data["groups"] = []
 
+        keycloak_client = KeycloakUserManager.get_keycloak_client(cache)
         user.keycloak_id = keycloak_client.create_user(data)
-
-        if user.email.endswith("@example.com"):
-            return
-
-        try:
-            user.send_verify_email(cache=cache)
-        except Exception as e:
-            print(
-                "Failed to send verify email to new user: ",
-                e,
-                f" (email: '{user.email}', id: '{user.id}', keycloak_id: '{user.keycloak_id}'): ",
-            )
 
         SocialAccount.objects.create(
             user=user, provider="keycloak", uid=user.keycloak_id
         )
 
+        user.save()
+
     @classmethod
-    def update_keycloak_user(
-        cls,
-        user: KeycloakUser,
-        keycloak_client: KeycloakAdmin,
-        old_first_name: str,
-        old_last_name: str,
-        old_email: str,
-        new_first_name: str,
-        new_last_name: str,
-        new_email: str,
-        cache: dict,
-    ):
-        if old_first_name != new_first_name or old_last_name != new_last_name:
-            data = {"firstName": user.first_name, "lastName": user.last_name}
-            keycloak_client.update_user(user_id=user.keycloak_id, payload=data)
-
-        if old_email == new_email:
-            return
-
-        if user.email_verified(cache=cache):
-            from tapir.accounts.services.mail_change_service import (
-                MailChangeService,
-            )
-
-            MailChangeService.start_email_change_process(
-                user=user, new_email=new_email, orig_email=old_email
-            )
-            return
-
-        # in this case, don't start the email change process, just send the keycloak email to the new address and resend the link
-        keycloak_client.update_user(
-            user_id=user.keycloak_id, payload={"email": new_email}
-        )
-        user.send_verify_email(cache=cache)
+    def update_keycloak_user_name(cls, user: KeycloakUser, cache: dict):
+        data = {"firstName": user.first_name, "lastName": user.last_name}
+        keycloak_client = cls.get_keycloak_client(cache)
+        keycloak_client.update_user(user_id=user.keycloak_id, payload=data)
 
     @classmethod
     def get_keycloak_client(cls, cache: dict):

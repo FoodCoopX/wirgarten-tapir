@@ -50,5 +50,9 @@ class Command(BaseCommand):
 
         while current_date < today:
             create_payments_for_this_month(reference_date=current_date)
-            export_payments_for_this_month(reference_date=current_date, send_mail=False)
+            errors = export_payments_for_this_month(
+                reference_date=current_date, send_mail=False
+            )
+            for error in errors:
+                print(error)
             current_date = get_first_of_next_month(current_date)

@@ -4,16 +4,15 @@ import AssociationMembershipCard from "./association_membership/AssociationMembe
 import MemberBankingDataBase from "./banking_data/MemberBankingDataBase.tsx";
 import CoopSharesCard from "./coop_shares/CoopSharesCard.tsx";
 import DeliveryListCard from "./deliveries_and_jokers/DeliveryListCard.tsx";
-import MemberExtraEmailsBase from "./extra_email_addresses/MemberExtraEmailsBase.tsx";
 import FuturePaymentsCard from "./future_payments/FuturePaymentsCard.tsx";
 import MemberMailCategoryCard from "./mail_category/MemberMailCategoryCard.tsx";
 import MemberMailingListsCard from "./mailing_lists/MemberMailingListsCard.tsx";
 import MemberProfilePaymentRhythmBase from "./payment_rhythm/MemberProfilePaymentRhythmBase.tsx";
-import MemberPersonalDataBase from "./personal_data/MemberPersonalDataBase.tsx";
 import MemberProfileSolidarityContributionCard from "./solidarity_contribution/MemberProfileSolidarityContributionCard.tsx";
 import SubscriptionCancellationCard from "./subscription_cancellation/SubscriptionCancellationCard.tsx";
 import SubscriptionCards from "./subscriptions/SubscriptionCards.tsx";
 import MemberProfileWaitingListCard from "./waiting_list/MemberProfileWaitingListCard.tsx";
+import PersonalDataDropdown from "./personal_data/PersonalDataDropdown.tsx";
 
 const domNodeDeliveryListCard = document.getElementById("delivery_list_card");
 if (domNodeDeliveryListCard) {
@@ -28,6 +27,14 @@ if (domNodeDeliveryListCard) {
       areDonationsEnabled={
         domNodeDeliveryListCard.dataset.donationsEnabled === "true"
       }
+      canChangePickupLocation={
+        domNodeDeliveryListCard.dataset.canChangePickupLocation === "true"
+      }
+      membersCanChangePickupLocationThemselves={
+        domNodeDeliveryListCard.dataset
+          .membersCanChangePickupLocationThemselves === "true"
+      }
+      adminContactEmail={domNodeDeliveryListCard.dataset.adminContactEmail!}
       csrfToken={getCsrfToken()}
     />,
   );
@@ -155,30 +162,19 @@ if (domNodeMemberMailCategory) {
   );
 }
 
-const domNodeMemberExtraAddresses = document.getElementById(
-  "extra_email_addresses",
+const domNodePersonalDataDropdown = document.getElementById(
+  "personal_data_dropdown",
 );
-if (domNodeMemberExtraAddresses) {
-  const root = createRoot(domNodeMemberExtraAddresses);
+if (domNodePersonalDataDropdown) {
+  const root = createRoot(domNodePersonalDataDropdown);
 
   root.render(
-    <MemberExtraEmailsBase
-      memberId={domNodeMemberExtraAddresses.dataset.memberId!}
+    <PersonalDataDropdown
+      memberId={domNodePersonalDataDropdown.dataset.memberId!}
       csrfToken={getCsrfToken()}
-    />,
-  );
-}
-
-const domNodeMemberEditPersonalDataButton = document.getElementById(
-  "edit_personal_data_button",
-);
-if (domNodeMemberEditPersonalDataButton) {
-  const root = createRoot(domNodeMemberEditPersonalDataButton);
-
-  root.render(
-    <MemberPersonalDataBase
-      memberId={domNodeMemberEditPersonalDataButton.dataset.memberId!}
-      csrfToken={getCsrfToken()}
+      extraEmailAddressesEnabled={
+        domNodePersonalDataDropdown.dataset.extraEmailAddressesEnabled == "True"
+      }
     />,
   );
 }
