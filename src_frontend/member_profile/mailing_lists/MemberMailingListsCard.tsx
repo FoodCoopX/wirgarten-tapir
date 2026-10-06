@@ -134,6 +134,51 @@ const MemberMailingListsCard: React.FC<MemberMailCategoryModalProps> = ({
       .finally(() => setListLoading(undefined));
   }
 
+  function buildHelpText() {
+    return (
+      <>
+        <p>
+          Über eine Mailing-Liste kannst du dich per E-Mail mit anderen
+          Mitgliedern austauschen: Eine E-Mail an die Adresse der Liste wird an
+          alle weitergeleitet, die an der Liste teilnehmen.
+        </p>
+        <p>Was die Spalten bedeuten:</p>
+        <ul>
+          <li>
+            <strong>Liste</strong>: die E-Mail-Adresse der Liste. An diese
+            Adresse schreibst du, um alle Teilnehmenden zu erreichen.
+          </li>
+          <li>
+            <strong>Beschreibung</strong>: Mit einem Klick auf das Fragezeichen
+            siehst du, wofür die Liste gedacht ist.
+          </li>
+          <li>
+            <strong>Teilnahme</strong>: <em>Ja</em> – du nimmst teil und
+            bekommst die E-Mails der Liste. <em>Nein</em> – du nimmst nicht
+            teil. <em>Eingeladen</em> – du wurdest eingeladen und nimmst erst
+            teil, wenn du die Einladung annimmst.
+          </li>
+        </ul>
+        <p>So funktioniert es:</p>
+        <ul>
+          <li>
+            Mit „Anmelden“ nimmst du sofort an der Liste teil, und zwar mit der
+            E-Mail-Adresse aus deinem Profil. Du musst nichts weiter bestätigen.
+          </li>
+          <li>
+            Um an alle zu schreiben, schickst du aus deinem E-Mail-Programm eine
+            E-Mail an die Adresse der Liste. Nutze dafür die E-Mail-Adresse aus
+            deinem Profil als Absender.
+          </li>
+          <li>
+            Mit „Abmelden“ beendest du deine Teilnahme. Du bekommst dann keine
+            E-Mails der Liste mehr.
+          </li>
+        </ul>
+      </>
+    );
+  }
+
   function buildParticipation(list: MailingList) {
     if (subscribedLists.includes(list.name)) {
       return "Ja";
@@ -233,7 +278,7 @@ const MemberMailingListsCard: React.FC<MemberMailCategoryModalProps> = ({
             }
           >
             <h5 className={"mb-0"}>Mailing-Listen</h5>
-            <TapirHelpButton text={"HelpText Mailing-List Mitgliederbereich"} />
+            <TapirHelpButton text={buildHelpText()} width={"600px"} />
           </span>
         </Card.Header>
         <Card.Body>
