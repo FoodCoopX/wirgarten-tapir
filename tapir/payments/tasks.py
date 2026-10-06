@@ -37,7 +37,7 @@ def export_payments_for_this_month(
     # the payments may not be created yet. So we make sure that they are created before exporting.
     create_payments_for_this_month(reference_date)
 
-    PaymentExportBuilder.export_all_unexported_payments(
+    return PaymentExportBuilder.export_all_unexported_payments(
         reference_date=reference_date,
         send_mail=send_mail,
         cache=cache,

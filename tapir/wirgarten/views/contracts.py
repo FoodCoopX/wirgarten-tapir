@@ -32,7 +32,6 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
     annotate_member_queryset_with_coop_shares_total_value,
 )
-from tapir.wirgarten.service.product_standard_order import product_type_order_by
 from tapir.wirgarten.utils import format_date, get_now, get_today
 from tapir.wirgarten.views.filters import SecondaryOrderingFilter
 
@@ -65,7 +64,7 @@ class SubscriptionListFilter(FilterSet):
     )
     product__type = ModelChoiceFilter(
         label=_("Vertragsart"),
-        queryset=ProductType.objects.all().order_by(*product_type_order_by()),
+        queryset=ProductType.objects.all().order_by("order_in_bestellwizard"),
     )
     product = ModelChoiceFilter(label=_("Variante"), queryset=Product.objects.all())
     o = SecondaryOrderingFilter(

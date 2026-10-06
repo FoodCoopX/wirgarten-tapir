@@ -19,8 +19,7 @@ class TestGetNumberOfDeliveriesInMonth(TapirUnitTest):
         autospec=True,
     )
     @patch.object(
-        DeliveryDateCalculator,
-        "get_next_delivery_date_for_product_type", autospec=True
+        DeliveryDateCalculator, "get_next_delivery_date_for_product_type", autospec=True
     )
     def test_getNumberOfDeliveriesInMonth_subscriptionFullyIncludesGivenMonth_returnsAllDeliveries(
         self,
@@ -164,8 +163,7 @@ class TestGetNumberOfDeliveriesInMonth(TapirUnitTest):
         autospec=True,
     )
     @patch.object(
-        DeliveryDateCalculator,
-        "get_next_delivery_date_for_product_type", autospec=True
+        DeliveryDateCalculator, "get_next_delivery_date_for_product_type", autospec=True
     )
     def test_getNumberOfDeliveriesInMonth_subscriptionEndsInGivenMonth_returnsDeliveriesBeforeEndOnly(
         self,
@@ -210,8 +208,7 @@ class TestGetNumberOfDeliveriesInMonth(TapirUnitTest):
         autospec=True,
     )
     @patch.object(
-        DeliveryDateCalculator,
-        "get_next_delivery_date_for_product_type", autospec=True
+        DeliveryDateCalculator, "get_next_delivery_date_for_product_type", autospec=True
     )
     def test_getNumberOfDeliveriesInMonth_subscriptionStartsAndEndsInGivenMonth_returnsDeliveriesInsideSubscriptionOnly(
         self,
@@ -251,8 +248,7 @@ class TestGetNumberOfDeliveriesInMonth(TapirUnitTest):
         autospec=True,
     )
     @patch.object(
-        DeliveryDateCalculator,
-        "get_next_delivery_date_for_product_type", autospec=True
+        DeliveryDateCalculator, "get_next_delivery_date_for_product_type", autospec=True
     )
     def test_getNumberOfDeliveriesInMonth_subscriptionEndsInGivenMonth_returnsDeliveriesBeforeEndOnly(
         self,

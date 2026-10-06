@@ -61,6 +61,9 @@ from tapir.payments.services.month_payment_builder_delivery_charges import (
 from tapir.payments.services.month_payment_builder_solidarity_contributions import (
     MonthPaymentBuilderSolidarityContributions,
 )
+from tapir.payments.services.pain_008_xml_string_generator import (
+    Pain008XmlGenericException,
+)
 from tapir.payments.services.payment_export_builder import PaymentExportBuilder
 from tapir.payments.services.payment_export_intended_use_builder import (
     PaymentExportIntendedUseBuilder,
@@ -1263,13 +1266,23 @@ class RebuildSubscriptionPaymentsApiView(APIView):
 
         try:
             with transaction.atomic():
-                SubscriptionPaymentsRebuilder.rebuild_subscription_payments(
+                errors = SubscriptionPaymentsRebuilder.rebuild_subscription_payments(
                     from_date=from_date, cache=cache
                 )
-        except ValidationError as error:
+        except Pain008XmlGenericException as error:
             return Response(
                 OrderConfirmationResponseSerializer(
                     {"order_confirmed": False, "error": error.message}
+                ).data
+            )
+
+        if len(errors) > 0:
+            return Response(
+                OrderConfirmationResponseSerializer(
+                    {
+                        "order_confirmed": False,
+                        "error": f"Die Lastschriften konnten neu erzeugt werden, es sind aber folgenden Fehler aufgetreten. Die betroffene Mitglieder sind nicht in der neue Dateien enthalten. {", ".join(sorted(errors))}",
+                    }
                 ).data
             )
 

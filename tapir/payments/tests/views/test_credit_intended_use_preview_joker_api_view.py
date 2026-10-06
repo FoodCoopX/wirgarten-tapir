@@ -87,7 +87,10 @@ class TestCreditIntendedUsePreviewJokerApiView(TapirIntegrationTest):
         )
         member = MemberFactory.create(first_name="Julius", last_name="Caesar")
         subscription = SubscriptionFactory.create(
-            member=member, period=period, product__type__delivery_cycle=WEEKLY[0]
+            member=member,
+            period=period,
+            product__type__delivery_cycle=WEEKLY[0],
+            quantity=1,
         )
         ProductPriceFactory.create(
             product=subscription.product,
@@ -112,7 +115,7 @@ class TestCreditIntendedUsePreviewJokerApiView(TapirIntegrationTest):
             [
                 "3;50,42€ * 2;01.06.2026 - 1",
                 "3;50,42€ * 2;01.06.2026 - 1",
-                "3;67,92€ * 3;01.06.2026 - 0",
+                "3;22,64€ * 3;01.06.2026 - 0",
             ],
             response_content["previews_new"],
         )
