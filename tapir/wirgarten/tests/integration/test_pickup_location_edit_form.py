@@ -26,14 +26,14 @@ class TestPickupLocationEditForm(TapirIntegrationTest):
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
-    def test_hasStartAndEndDateFields_optionalDatePickers(self):
+    def test_editForm_hasOptionalDateFields_returnsDatePickers(self):
         form = PickupLocationEditForm()
         for field_name in ("start_date", "end_date"):
             self.assertIn(field_name, form.fields)
             self.assertFalse(form.fields[field_name].required)
             self.assertEqual("date", form.fields[field_name].widget.input_type)
 
-    def test_initial_populatedFromInstance(self):
+    def test_initial_forPickupLocationWithDates_populatedFromInstance(self):
         pickup_location = PickupLocationFactory.create(
             start_date=datetime.date(2026, 1, 5),
             end_date=datetime.date(2026, 12, 27),
@@ -44,7 +44,7 @@ class TestPickupLocationEditForm(TapirIntegrationTest):
         self.assertEqual(datetime.date(2026, 1, 5), form.fields["start_date"].initial)
         self.assertEqual(datetime.date(2026, 12, 27), form.fields["end_date"].initial)
 
-    def test_save_persistsStartAndEndDate(self):
+    def test_save_withStartAndEndDate_persistsBothDates(self):
         pickup_location = PickupLocationFactory.create()
 
         form = PickupLocationEditForm(_valid_data(), id=pickup_location.id)
@@ -55,7 +55,7 @@ class TestPickupLocationEditForm(TapirIntegrationTest):
         self.assertEqual(datetime.date(2026, 1, 5), pickup_location.start_date)
         self.assertEqual(datetime.date(2026, 12, 27), pickup_location.end_date)
 
-    def test_clean_rejectsEndDateBeforeStartDate(self):
+    def test_clean_endDateBeforeStartDate_addsError(self):
         form = PickupLocationEditForm(
             _valid_data(start_date="2026-12-07", end_date="2026-12-06")
         )
@@ -65,7 +65,7 @@ class TestPickupLocationEditForm(TapirIntegrationTest):
             "Ende darf nicht vor Beginn liegen.", form.errors.get("end_date", [])
         )
 
-    def test_clean_rejectsStartDateNotOnMonday(self):
+    def test_clean_startDateNotOnMonday_addsError(self):
         form = PickupLocationEditForm(_valid_data(start_date="2026-01-06"))
 
         self.assertFalse(form.is_valid())
@@ -74,7 +74,7 @@ class TestPickupLocationEditForm(TapirIntegrationTest):
             form.errors.get("start_date", []),
         )
 
-    def test_clean_acceptsStartDateOnMonday(self):
+    def test_clean_startDateOnMonday_isValid(self):
         form = PickupLocationEditForm(_valid_data(start_date="2026-01-05"))
 
         self.assertTrue(form.is_valid(), form.errors)

@@ -6,7 +6,7 @@ from tapir.wirgarten.tests.factories import PickupLocationFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
-class TestPickupLocationStartDateValidation(TapirIntegrationTest):
+class TestPickupLocationDateValidation(TapirIntegrationTest):
     def test_clean_startDateNotOnMonday_raisesValidationError(self):
         pickup_location = PickupLocationFactory.build(
             start_date=datetime.date(2026, 1, 6)

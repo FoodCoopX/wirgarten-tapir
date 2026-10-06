@@ -52,7 +52,7 @@ class TestPickupLocationViewSet(TapirIntegrationTest):
         response = self.client.get(reverse("pickup_locations:pickup_locations-list"))
         self.assertStatusCode(response, status.HTTP_403_FORBIDDEN)
 
-    def test_adminList_returnsAllPickupLocationsRegardlessOfDates(self):
+    def test_adminList_endedAndFuturePickupLocations_returnsAllPickupLocations(self):
         self.pickup_location_1.end_date = sunday_before(self.reference_date)
         self.pickup_location_2.start_date = monday_after(self.reference_date)
         self.pickup_location_1.save()
