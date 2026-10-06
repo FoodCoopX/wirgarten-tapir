@@ -32,7 +32,10 @@ class TestBestellWizardBaseDataPickupLocations(TapirIntegrationTest):
         response = self.client.get(reverse("bestell_wizard:bestell_wizard_base_data"))
         self.assertEqual(200, response.status_code)
 
-        names = [pl["name"] for pl in response.json()["pickup_locations"]]
+        names = [
+            pickup_location["name"]
+            for pickup_location in response.json()["pickup_locations"]
+        ]
         self.assertIn(active.name, names)
         self.assertNotIn(future.name, names)
         self.assertNotIn(decommissioned.name, names)

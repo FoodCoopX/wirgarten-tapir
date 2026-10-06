@@ -26,7 +26,10 @@ class TestPickupLocationCfgView(TapirIntegrationTest):
     def _filtered_names(self, **query):
         view = PickupLocationCfgView()
         view.request = RequestFactory().get("/tapir/admin/pickuplocations/", query)
-        return {pl.name for pl in view.get_filtered_pickup_locations()}
+        return {
+            pickup_location.name
+            for pickup_location in view.get_filtered_pickup_locations()
+        }
 
     def test_getFilteredPickupLocations_default_returnsCurrentAndFutureButNotEnded(
         self,

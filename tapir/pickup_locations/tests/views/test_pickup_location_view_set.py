@@ -45,7 +45,10 @@ class TestPickupLocationViewSet(TapirIntegrationTest):
         url = reverse(url_name)
         response = self.client.get(url)
         self.assertStatusCode(response, status.HTTP_200_OK)
-        return sorted(loc["name"] for loc in response.json())
+        return sorted(
+            pickup_location["name"]
+            for pickup_location in response.json()
+        )
 
     def test_adminList_loggedInAsNormalMember_returns403(self):
         self.client.force_login(MemberFactory.create(is_superuser=False))

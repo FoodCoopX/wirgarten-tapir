@@ -42,7 +42,10 @@ class TestPublicPickupLocationViewSet(TapirIntegrationTest):
         url = reverse(url_name)
         response = self.client.get(url)
         self.assertStatusCode(response, status.HTTP_200_OK)
-        return sorted(loc["name"] for loc in response.json())
+        return sorted(
+            pickup_location["name"]
+            for pickup_location in response.json()
+        )
 
     def test_publicList_noDates_returnsAllPickupLocations(self):
         names = self._list_pickup_location_names(
@@ -57,7 +60,7 @@ class TestPublicPickupLocationViewSet(TapirIntegrationTest):
             names,
         )
 
-    def test_publicList_plWithPastEndDate_isExcluded(self):
+    def test_publicList_withPastEndDate_isExcluded(self):
         self.pickup_location_1.end_date = sunday_before(self.reference_date)
         self.pickup_location_1.save()
         names = self._list_pickup_location_names(
@@ -65,7 +68,7 @@ class TestPublicPickupLocationViewSet(TapirIntegrationTest):
         )
         self.assertEqual(["pickup_location_name_2", "pickup_location_name_3"], names)
 
-    def test_publicList_plWithFutureStartDate_isExcluded(self):
+    def test_publicList_withFutureStartDate_isExcluded(self):
         self.pickup_location_1.start_date = monday_after(self.reference_date)
         self.pickup_location_1.save()
         names = self._list_pickup_location_names(
@@ -73,7 +76,7 @@ class TestPublicPickupLocationViewSet(TapirIntegrationTest):
         )
         self.assertEqual(["pickup_location_name_2", "pickup_location_name_3"], names)
 
-    def test_publicList_plActiveWithinWindow_isIncluded(self):
+    def test_publicList_activeWithinWindow_isIncluded(self):
         self.pickup_location_1.start_date = monday_after(
             self.reference_date - datetime.timedelta(days=30)
         )
