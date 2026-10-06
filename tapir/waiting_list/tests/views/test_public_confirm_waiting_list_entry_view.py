@@ -292,7 +292,10 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
             {
                 "contract_start_date": "11.05.2026",
                 "contract_end_date": "31.12.2026",
-                "contract_list": "<ul><li>1 × M Basket  (11.05.2026 - 31.12.2026) — 10,00 € / Monat</li></ul>",
+                "contract_list": (
+                    '<ul style="margin:0;padding:0 0 0 1.2em;">'
+                    '<li style="margin:0;">1 × M Basket  (11.05.2026 - 31.12.2026) — 10,00 € / Monat</li></ul>'
+                ),
                 "membership_start_date": "07.06.2026",
                 "membership_monthly_price": "0,00",
                 "first_pickup_date": "14.05.2026",
