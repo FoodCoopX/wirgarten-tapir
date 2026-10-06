@@ -26,6 +26,8 @@ class TapirIntegrationTest(TapirFactoryMixin, TestCase):
         self.apiClient = APIClient()
         cache.clear()
         configure_mail_module()
+        self.mock_get_keycloak_client = None
+        self.mock_keycloak_client = None
         mock_keycloak(self)
 
     @staticmethod
@@ -102,19 +104,21 @@ def mock_keycloak(test: TapirIntegrationTest):
     test.mock_get_keycloak_client = patcher_keycloak.start()
     test.addCleanup(patcher_keycloak.stop)
 
-    mock_client = Mock()
-    test.mock_get_keycloak_client.return_value = mock_client
+    test.mock_keycloak_client = Mock()
+    test.mock_get_keycloak_client.return_value = test.mock_keycloak_client
 
     keycloak_ids = {}
-    mock_client.get_user_id.side_effect = lambda email: keycloak_ids.get(email, None)
+    test.mock_keycloak_client.get_user_id.side_effect = lambda email: keycloak_ids.get(
+        email, None
+    )
 
-    mock_client.create_user.side_effect = (
+    test.mock_keycloak_client.create_user.side_effect = (
         lambda data: mock_set_and_return_new_keycloak_id(
             email=data["email"], keycloak_ids=keycloak_ids
         )
     )
 
-    mock_client.delete_user.side_effect = lambda keycloak_id: delete_user(
+    test.mock_keycloak_client.delete_user.side_effect = lambda keycloak_id: delete_user(
         keycloak_id_to_delete=keycloak_id, keycloak_ids=keycloak_ids
     )
 

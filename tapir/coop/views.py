@@ -5,6 +5,7 @@ from django.db.models import Sum, F
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from drf_spectacular.utils import extend_schema, OpenApiParameter
+from keycloak import KeycloakPutError
 from localflavor.generic.validators import IBANValidator
 from rest_framework import status, viewsets, permissions
 from rest_framework.exceptions import (
@@ -689,20 +690,21 @@ class MemberEmailApiView(APIView):
                 ).data
             )
 
-        KeycloakUserManager.create_keycloak_user_if_necessary(
-            user=member, initial_password=None, cache=self.cache
-        )
+        with transaction.atomic():
+            KeycloakUserManager.create_keycloak_user_if_necessary(
+                user=member, initial_password=None, cache=self.cache
+            )
 
-        if EmailVerificationService.is_user_email_verified(
-            user=member, cache=self.cache
-        ):
-            MailChangeService.start_email_change_process(
-                user=member, new_email=new_email, orig_email=member.email
-            )
-        else:
-            self.update_mail_and_send_verification_mail(
-                member=member, new_email=new_email, actor=request.user
-            )
+            if EmailVerificationService.is_user_email_verified(
+                user=member, cache=self.cache
+            ):
+                MailChangeService.start_email_change_process(
+                    user=member, new_email=new_email, orig_email=member.email
+                )
+            else:
+                self.update_mail_and_send_verification_mail(
+                    member=member, new_email=new_email, actor=request.user
+                )
 
         return Response(
             OrderConfirmationResponseSerializer(
@@ -713,6 +715,7 @@ class MemberEmailApiView(APIView):
     def update_mail_and_send_verification_mail(
         self, member: Member, new_email: str, actor: TapirUser
     ):
+        email_before = member.email
         member_before = freeze_for_log(member)
         MailChangeService.apply_mail_change(
             user=member, new_email=new_email, cache=self.cache
@@ -724,6 +727,16 @@ class MemberEmailApiView(APIView):
             actor=actor,
         ).save()
 
-        EmailVerificationService.send_verification_email(
-            user=member, actor=actor, cache=self.cache
-        )
+        try:
+            EmailVerificationService.send_verification_email(
+                user=member, actor=actor, cache=self.cache
+            )
+        except KeycloakPutError:
+            kc = KeycloakUserManager.get_keycloak_client(cache=self.cache)
+            kc.update_user(
+                user_id=member.keycloak_id,
+                payload={
+                    "email": email_before,
+                },
+            )
+            raise

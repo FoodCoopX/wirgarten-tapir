@@ -1,6 +1,7 @@
 from unittest.mock import patch, Mock, ANY
 
 from django.urls import reverse
+from keycloak import KeycloakPutError
 from rest_framework import status
 from tapir_mail.triggers.transactional_trigger import (
     TransactionalTrigger,
@@ -227,4 +228,63 @@ class TestMemberEmailApiView(TapirIntegrationTest):
 
         mock_send_verification_email.assert_called_once_with(
             user=user_after_changes, actor=ANY, cache={}
+        )
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    @patch.object(EmailVerificationService, "send_verification_email", autospec=True)
+    @patch.object(EmailVerificationService, "is_user_email_verified", autospec=True)
+    def test_post_emailWasNotVerifiedAndSendingOfVerificationMailFails_revertsKeycloakChanges(
+        self,
+        mock_is_user_email_verified: Mock,
+        mock_send_verification_email: Mock,
+        mock_fire_action: Mock,
+    ):
+        mock_is_user_email_verified.return_value = False
+        mock_send_verification_email.side_effect = KeycloakPutError()
+        self.mock_keycloak_client.get_user_id.return_value = None
+
+        user_before_changes = MemberFactory.create(email="old_address@example.com")
+        self.client.force_login(user_before_changes)
+
+        url = reverse("coop:member_email")
+        with self.assertRaises(KeycloakPutError):
+            self.client.post(
+                url,
+                data={
+                    "member_id": user_before_changes.id,
+                    "email": "new_address@example.com",
+                },
+                content_type="application/json",
+            )
+
+        user_after_changes = Member.objects.get(id=user_before_changes.id)
+        self.assertEqual("old_address@example.com", user_after_changes.email)
+
+        self.mock_keycloak_client.get_user_id.assert_called_once_with(
+            "new_address@example.com"
+        )
+
+        mock_send_verification_email.assert_called_once_with(
+            user=user_after_changes, actor=ANY, cache={}
+        )
+        self.assertEqual(2, self.mock_keycloak_client.update_user.call_count)
+        main_call = self.mock_keycloak_client.update_user.call_args_list[0]
+        self.assertEqual(
+            {
+                "user_id": mock_send_verification_email.call_args.kwargs[
+                    "user"
+                ].keycloak_id,
+                "payload": {"email": "new_address@example.com"},
+            },
+            main_call.kwargs,
+        )
+        rollback_call = self.mock_keycloak_client.update_user.call_args_list[1]
+        self.assertEqual(
+            {
+                "user_id": mock_send_verification_email.call_args.kwargs[
+                    "user"
+                ].keycloak_id,
+                "payload": {"email": "old_address@example.com"},
+            },
+            rollback_call.kwargs,
         )
