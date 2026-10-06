@@ -163,7 +163,9 @@ const MemberMailingListsCard: React.FC<MemberMailCategoryModalProps> = ({
         <ul>
           <li>
             Mit „Anmelden“ nimmst du sofort an der Liste teil, und zwar mit der
-            E-Mail-Adresse aus deinem Profil. Du musst nichts weiter bestätigen.
+            E-Mail-Adresse aus deinem Profil. Du musst nichts weiter bestätigen
+            und bekommst auch keine Bestätigungs-E-Mail. Dass die Anmeldung
+            geklappt hat, erkennst du daran, dass bei Teilnahme „Ja“ steht.
           </li>
           <li>
             Um an alle zu schreiben, schickst du aus deinem E-Mail-Programm eine
