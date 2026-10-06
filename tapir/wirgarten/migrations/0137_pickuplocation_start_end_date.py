@@ -8,6 +8,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ("wirgarten", "0134_rename_order_revoked_trigger_merge_tag"),
         ("wirgarten", "0135_merge_20260925_1310"),
+        ("wirgarten", "0136_merge_20260929_1051"),
     ]
 
     operations = [
