@@ -33,7 +33,6 @@ from tapir.wirgarten.models import (
     Subscription,
     Member,
     LocationRoute,
-    validate_pickup_location_dates,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import (
@@ -559,7 +558,7 @@ class PickupLocationEditForm(forms.Form):
                 "end_date", ValidationError("Ende darf nicht vor Beginn liegen.")
             )
 
-        for field_name, message in validate_pickup_location_dates(
+        for field_name, message in PickupLocation.validate_pickup_location_dates(
             start_date, end_date
         ).items():
             self.add_error(field_name, ValidationError(message))
