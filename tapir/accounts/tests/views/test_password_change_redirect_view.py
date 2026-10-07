@@ -26,9 +26,7 @@ class TestPasswordChangeRedirectView(SimpleTestCase):
         url = urlparse(response["Location"])
         self.assertEqual("https", url.scheme)
         self.assertEqual("auth.example.org", url.netloc)
-        self.assertEqual(
-            "/realms/tapir-test/protocol/openid-connect/auth", url.path
-        )
+        self.assertEqual("/realms/tapir-test/protocol/openid-connect/auth", url.path)
         params = parse_qs(url.query)
         self.assertEqual(["UPDATE_PASSWORD"], params["kc_action"])
         self.assertEqual(["tapir-frontend"], params["client_id"])
