@@ -31,6 +31,19 @@ from tapir.wirgarten.constants import NO_DELIVERY, DeliveryCycle, OPTIONS_WEEKDA
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import format_currency, format_date, get_today
 
+PICKUP_LOCATION_START_DATE_VALIDATION_MESSAGE = (
+    "Verteilstationen können nur an einem Montag geöffnet werden."
+)
+PICKUP_LOCATION_END_DATE_VALIDATION_MESSAGE = (
+    "Verteilstationen können nur an einem Sonntag geschlossen werden."
+)
+PICKUP_LOCATION_START_DATE_HELP_TEXT = (
+    "Leer = ab sofort verfügbar. Neuanlagen nur an einem Montag möglich."
+)
+PICKUP_LOCATION_END_DATE_HELP_TEXT = (
+    "Leer = dauerhaft verfügbar. Schließen nur an einem Sonntag möglich."
+)
+
 
 class LocationRoute(TapirModel):
     """
@@ -71,11 +84,23 @@ class PickupLocation(TapirModel):
     location_route = models.ForeignKey(
         LocationRoute, blank=True, null=True, on_delete=models.SET_NULL
     )
+    route_info = models.CharField(_("Driver/Route info"), max_length=3000, blank=True)
+    start_date = models.DateField(
+        _("Available from"),
+        null=True,
+        blank=True,
+        help_text=_(PICKUP_LOCATION_START_DATE_HELP_TEXT),
+    )  # null = active from the beginning
+    end_date = models.DateField(
+        _("Available until"),
+        null=True,
+        blank=True,
+        help_text=_(PICKUP_LOCATION_END_DATE_HELP_TEXT),
+    )  # null = active forever
     show_details_in_basket_totals_export = models.BooleanField(
         _("Im Gesamtkistenanzahls-Zettel Details anzeigen"),
         default=False,
     )
-    route_info = models.CharField(_("Driver/Route info"), max_length=3000, blank=True)
 
     class Meta:
         constraints = [
@@ -87,6 +112,26 @@ class PickupLocation(TapirModel):
 
     def __str__(self):
         return self.name
+
+    @staticmethod
+    def validate_pickup_location_dates(
+        start_date: datetime.date | None, end_date: datetime.date | None
+    ) -> dict[str, str]:
+        errors = {}
+        if start_date is not None and start_date.weekday() != 0:
+            errors["start_date"] = PICKUP_LOCATION_START_DATE_VALIDATION_MESSAGE
+        if end_date is not None and end_date.weekday() != 6:
+            errors["end_date"] = PICKUP_LOCATION_END_DATE_VALIDATION_MESSAGE
+        return errors
+
+    def clean(self):
+        errors = self.validate_pickup_location_dates(self.start_date, self.end_date)
+        if errors:
+            raise ValidationError(errors)
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
 
     @property
     def opening_times_html(self):

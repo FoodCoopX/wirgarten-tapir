@@ -19,9 +19,15 @@ from tapir.pickup_locations.services.pickup_location_capacity_general_checker im
 from tapir.pickup_locations.services.pickup_location_capacity_mode_share_checker import (
     PickupLocationCapacityModeShareChecker,
 )
+from tapir.pickup_locations.services.pickup_location_active_filter import (
+    PickupLocationActiveFilter,
+)
+from tapir.utils.forms import DateInput
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import NO_DELIVERY, HTML_ALLOWED_TEXT
 from tapir.wirgarten.models import (
+    PICKUP_LOCATION_END_DATE_HELP_TEXT,
+    PICKUP_LOCATION_START_DATE_HELP_TEXT,
     PickupLocation,
     PickupLocationOpeningTime,
     Subscription,
@@ -49,7 +55,7 @@ def get_pickup_locations_map_data(
                 location_capabilities, pickup_location, cache
             )
             for pickup_location in list(pickup_locations)
-        }
+        },
     )
 
 
@@ -139,6 +145,14 @@ def pickup_location_to_dict(
         "location_route": getattr(pickup_location.location_route, "name", ""),
         "coords": f"{pickup_location.coords_lon},{pickup_location.coords_lat}",
         "route_info": pickup_location.route_info,
+        "start_date": (
+            pickup_location.start_date.isoformat()
+            if pickup_location.start_date
+            else None
+        ),
+        "end_date": (
+            pickup_location.end_date.isoformat() if pickup_location.end_date else None
+        ),
     }
 
 
@@ -248,7 +262,10 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
                 cache=self.cache,
             ):
                 possible_location_ids.append(pickup_location.id)
-        return PickupLocation.objects.filter(id__in=possible_location_ids)
+        return PickupLocationActiveFilter.get_active_at_date(
+            PickupLocation.objects.filter(id__in=possible_location_ids),
+            reference_date,
+        )
 
     def label_from_instance(self, obj):
         return f"<strong>{obj.name}</strong><br/><small><span>{obj.street}, {obj.postcode} {obj.city}</span><br />{obj.opening_times_html_small}</small>"
@@ -349,9 +366,23 @@ class PickupLocationEditForm(forms.Form):
             help_text="z.B.: kleine Kisten links abstellen; große Tauschkiste. (max. 3000 Zeichen)",
             widget=Textarea,
         )
+        self.fields["start_date"] = forms.DateField(
+            label=_("Verfügbar ab"),
+            required=False,
+            help_text=_(PICKUP_LOCATION_START_DATE_HELP_TEXT),
+            widget=DateInput(),
+        )
+        self.fields["end_date"] = forms.DateField(
+            label=_("Verfügbar bis"),
+            required=False,
+            help_text=_(PICKUP_LOCATION_END_DATE_HELP_TEXT),
+            widget=DateInput(),
+        )
 
         self.colspans = {
             "coords": 1,
+            "start_date": 1,
+            "end_date": 1,
             "show_details_in_basket_totals_export": 2,
             "info": 2,
             "route_info": 2,
@@ -418,6 +449,8 @@ class PickupLocationEditForm(forms.Form):
             )
             self.fields["contact_name"].initial = self.pickup_location.contact_name
             self.fields["photo_link"].initial = self.pickup_location.photo_link
+            self.fields["start_date"].initial = self.pickup_location.start_date
+            self.fields["end_date"].initial = self.pickup_location.end_date
             self.fields["show_details_in_basket_totals_export"].initial = (
                 self.pickup_location.show_details_in_basket_totals_export
             )
@@ -518,6 +551,18 @@ class PickupLocationEditForm(forms.Form):
         if not at_least_one_time_filled:
             raise ValidationError("Mindestens ein Abholtag muss eingetragen werden.")
 
+        start_date = cleaned_data.get("start_date")
+        end_date = cleaned_data.get("end_date")
+        if start_date and end_date and end_date < start_date:
+            self.add_error(
+                "end_date", ValidationError("Ende darf nicht vor Beginn liegen.")
+            )
+
+        for field_name, message in PickupLocation.validate_pickup_location_dates(
+            start_date, end_date
+        ).items():
+            self.add_error(field_name, ValidationError(message))
+
         return cleaned_data
 
     @transaction.atomic
@@ -546,6 +591,8 @@ class PickupLocationEditForm(forms.Form):
         pl.contact_name = self.cleaned_data["contact_name"]
         pl.messenger_group_link = self.cleaned_data["messenger_group_link"]
         pl.photo_link = self.cleaned_data["photo_link"]
+        pl.start_date = self.cleaned_data["start_date"]
+        pl.end_date = self.cleaned_data["end_date"]
 
         pl.save()
 

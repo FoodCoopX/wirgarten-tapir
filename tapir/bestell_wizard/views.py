@@ -41,6 +41,9 @@ from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalcu
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
+from tapir.pickup_locations.services.pickup_location_active_filter import (
+    PickupLocationActiveFilter,
+)
 from tapir.pickup_locations.services.public_pickup_locations_provider import (
     PublicPickupLocationProvider,
 )
@@ -491,7 +494,8 @@ class BestellWizardBaseDataApiView(APIView):
                     deleted=False, hidden_in_bestell_wizard=False
                 ),
                 "pickup_locations": PublicPickupLocationProvider.get_pickup_locations_available_for_members(
-                    cache=self.cache
+                    cache=self.cache,
+                    reference_date=earliest_contract_start_date,
                 ),
                 "show_coop_content": legal_status_is_cooperative(cache=self.cache),
                 "trial_period_length_in_weeks": trial_period_length_in_weeks,
@@ -766,8 +770,12 @@ class BestellWizardDeliveryDatesForOrderApiView(APIView):
             cache=self.cache,
         )
 
+        pickup_location_ids = PickupLocationActiveFilter.get_active_at_date(
+            PickupLocation.objects.all(), reference_date
+        ).values_list("id", flat=True)
+
         response_data = {}
-        for pickup_location_id in PickupLocation.objects.values_list("id", flat=True):
+        for pickup_location_id in pickup_location_ids:
             response_data[pickup_location_id] = {
                 product_type_id: DeliveryDateCalculator.get_next_delivery_date_for_product_type(
                     reference_date=reference_date,
