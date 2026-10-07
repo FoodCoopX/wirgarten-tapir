@@ -48,9 +48,10 @@ const MailingListCard: React.FC = () => {
         </p>
         <p>
           Hier in Tapir legst du fest, wie eine Liste heißt, wie sie beschrieben
-          ist, ob sich Mitglieder selbst ein- und austragen können und wer die
-          Empfänger sind. Die Beschreibung sehen auch die Mitglieder. Schreib
-          dort am besten hinein, wofür die Liste gedacht ist.
+          ist, ob sich Mitglieder selbst ein- und austragen können und siehst,
+          wer die Empfänger:innen sind. Die Beschreibung sehen auch die
+          Mitglieder. Schreib dort am besten hinein, wofür die Liste gedacht
+          ist.
         </p>
         <p>
           Alles Weitere stellst du nicht in Tapir ein, sondern FoodCoopX richtet
