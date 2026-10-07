@@ -42,10 +42,7 @@ class TestPublicPickupLocationViewSet(TapirIntegrationTest):
         url = reverse(url_name)
         response = self.client.get(url)
         self.assertStatusCode(response, status.HTTP_200_OK)
-        return sorted(
-            pickup_location["name"]
-            for pickup_location in response.json()
-        )
+        return sorted(pickup_location["name"] for pickup_location in response.json())
 
     def test_publicList_noDates_returnsAllPickupLocations(self):
         names = self._list_pickup_location_names(
