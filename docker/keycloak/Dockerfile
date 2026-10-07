@@ -1,4 +1,4 @@
-FROM quay.io/keycloak/keycloak:23.0.3
+FROM quay.io/keycloak/keycloak:26.8.0
 
 COPY ./import/*.json /opt/keycloak/data/import/
 

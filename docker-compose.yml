@@ -8,8 +8,8 @@ services:
     volumes:
       - ./docker/keycloak/themes:/opt/keycloak/themes
     environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
 
   web:
     build: .
