@@ -42,23 +42,22 @@ const MailingListCard: React.FC = () => {
     return (
       <>
         <p>
-          Über eine Mailing-Liste erreicht ihr eure Mitglieder per E-Mail, oder
-          die Mitglieder tauschen sich darüber untereinander aus: Eine E-Mail an
-          die Adresse der Liste wird an alle Empfänger der Liste weitergeleitet.
+          Über eine Mailing-Liste können sich Mitglieder per E-Mail austauschen:
+          Eine E-Mail an die Adresse der Liste wird an alle Empfänger der Liste
+          weitergeleitet.
         </p>
         <p>
           Hier in Tapir legst du fest, wie eine Liste heißt, wie sie beschrieben
           ist, ob sich Mitglieder selbst ein- und austragen können und wer die
           Empfänger sind. Die Beschreibung sehen auch die Mitglieder. Schreib
-          dort am besten hinein, wofür die Liste gedacht ist und wer schreiben
-          darf.
+          dort am besten hinein, wofür die Liste gedacht ist.
         </p>
         <p>
           Alles Weitere stellst du nicht in Tapir ein, sondern FoodCoopX richtet
           es für euch ein: unter welcher Adresse eure Listen laufen (unter der
-          Domain von FoodCoopX oder unter eurer eigenen), wer an eine Liste
-          schreiben darf, ob E-Mails von Außenstehenden abgelehnt oder erst nach
-          Freigabe weitergeleitet werden und ob es ein Archiv gibt.
+          Domain von FoodCoopX oder unter eurer eigenen), ob E-Mails von
+          Außenstehenden abgelehnt oder erst nach Freigabe weitergeleitet werden
+          und ob es ein Archiv gibt.
         </p>
         <p>Was die Spalten bedeuten:</p>
         <ul>
