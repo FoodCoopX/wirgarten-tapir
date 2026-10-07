@@ -46,21 +46,6 @@ const MailingListCard: React.FC = () => {
           die Mitglieder tauschen sich darüber untereinander aus: Eine E-Mail an
           die Adresse der Liste wird an alle Empfänger der Liste weitergeleitet.
         </p>
-        <p>Typische Arten von Listen:</p>
-        <ul>
-          <li>
-            <strong>Ankündigungen</strong> (z. B. „aktuelles“): Nur die
-            Verwaltung schreibt, die Mitglieder lesen mit.
-          </li>
-          <li>
-            <strong>Austausch</strong> (z. B. „forum“): Alle auf der Liste
-            dürfen schreiben. Mitglieder tragen sich selbst ein.
-          </li>
-          <li>
-            <strong>Arbeitsgruppen</strong> (z. B. „ag-finanzen“): Alle auf der
-            Liste dürfen schreiben. Nur Admins fügen Empfänger hinzu.
-          </li>
-        </ul>
         <p>
           Hier in Tapir legst du fest, wie eine Liste heißt, wie sie beschrieben
           ist, ob sich Mitglieder selbst ein- und austragen können und wer die
