@@ -4,7 +4,7 @@ import { Badge, Form, Modal, Table } from "react-bootstrap";
 
 import dayjs from "dayjs";
 import RelativeTime from "dayjs/plugin/relativeTime";
-import { ExtendedPayment, MemberCredit, PaymentsApi } from "../../api-client";
+import { MemberCredit, PaymentsApi } from "../../api-client";
 import PlaceholderTableRows from "../../components/PlaceholderTableRows.tsx";
 import TapirHelpButton from "../../components/TapirHelpButton.tsx";
 import "../../fixed_header.css";
@@ -14,6 +14,7 @@ import { TransactionsByDueDate } from "../../types/TransactionsByDueDate.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { formatDateText } from "../../utils/formatDateText.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
+import { groupTransactionsByDueDate } from "./groupTransactionsByDueDate.ts";
 import PaymentComponent from "./PaymentComponent.tsx";
 
 interface FuturePaymentsModalProps {
@@ -37,13 +38,13 @@ function getExplanationText(deliveryChargeEnabled: boolean) {
       </p>
       <p>
         Sofern im Monat eine Abholung / Lieferung noch in eine ggf. vorhandene
-        Probezeit fällt, wird dieser Monat nachträglich, d.h. im nächsten Monat
-        bezahlt (z.B. am 5. Mai für April).
+        Probezeit fällt, wird dieser Monat nachträglich, d. h. im nächsten Monat
+        bezahlt (z. B. am 5. Mai für April).
       </p>
       <p>
         Erst sobald alle Abholungen / Lieferungen eines Monats außerhalb der
-        Probezeit liegen, wird der Monat vorschüssig, d.h. im Monat selbst für
-        den laufenden Monat bezahlt (z.B. am 5. April für April).
+        Probezeit liegen, wird der Monat vorschüssig, d. h. im Monat selbst für
+        den laufenden Monat bezahlt (z. B. am 5. April für April).
       </p>
       <p>
         Im Übergang zahlst du daher in einem Monat einmal nachträglich für den
@@ -51,7 +52,7 @@ function getExplanationText(deliveryChargeEnabled: boolean) {
         Monat.
       </p>
       <p>
-        In Monaten in denen du aufgrund deines Vertragsstartes nicht alle
+        In Monaten, in denen du aufgrund deines Vertragsstartes nicht alle
         Abholungen / Lieferungen mitmachen kannst, wird dein monatlicher Betrag
         auf Basis des Kistenpreises berechnet ((Monatspreis * 12 Monate) / 52
         Wochen) und mit der Anzahl der wahrgenommenen Lieferungen multipliziert.
@@ -67,7 +68,7 @@ function getExplanationText(deliveryChargeEnabled: boolean) {
       {deliveryChargeEnabled && (
         <p>
           Wenn deine Verteilstation einen Lieferzuschlag erhebt, wird dieser pro
-          Lieferung berechnet (z.B. 2,00 € pro Lieferung, bei 4 Lieferungen im
+          Lieferung berechnet (z. B. 2,00 € pro Lieferung, bei 4 Lieferungen im
           Monat 8,00 €). Der Zuschlag fällt auch in Wochen an, in denen du einen
           Joker einsetzt oder deine Kiste spendest, da die Kiste geliefert und
           weitergegeben wird. Beim Joker wird der Zuschlag als Teil deiner
@@ -77,9 +78,9 @@ function getExplanationText(deliveryChargeEnabled: boolean) {
         </p>
       )}
       <p>
-        In der Zahlungsreihe werden nur die vorhergesehenen Zahlungen für die
+        In der Zahlungsreihe werden nur die vorgesehenen Zahlungen für die
         nächsten 12 Monate angezeigt. Sie passen sich automatisch je nach deinen
-        Aktionen (z.B. Zeichnung weiterer Anteile) an.
+        Aktionen (z. B. Zeichnung weiterer Anteile) an.
       </p>
     </div>
   );
@@ -100,7 +101,8 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
   const api = useApi(PaymentsApi, csrfToken);
 
   const [showPastPayments, setShowPastPayments] = useState(false);
-  const [pastPayments, setPastPayments] = useState<ExtendedPayment[]>([]);
+  const [pastTransactionsByDueDate, setPastTransactionsByDueDate] =
+    useState<TransactionsByDueDate>({});
 
   useEffect(() => {
     if (!show) {
@@ -109,11 +111,15 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
 
     api
       .paymentsApiMemberPastPaymentsRetrieve({ memberId: memberId })
-      .then((response) => setPastPayments(response.payments))
+      .then((response) => {
+        setPastTransactionsByDueDate(
+          groupTransactionsByDueDate(response.payments, response.credits),
+        );
+      })
       .catch(async (error) => {
         await handleRequestError(
           error,
-          "Fehler beim Laden der vergangene Zahlungen",
+          "Fehler beim Laden der vergangenen Zahlungen",
           setToastDatas,
         );
       });
@@ -142,56 +148,49 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
     return buildTableContentFuturePayments();
   }
 
-  function buildTableContentPastPayments() {
-    return pastPayments.map((extendedPayment) => (
-      <tr key={extendedPayment.payment.id}>
+  function buildRow(
+    dueDateAsString: string,
+    objects: TransactionsByDueDate[string],
+  ) {
+    return (
+      <tr key={dueDateAsString}>
         <td style={{ textAlign: "center" }}>
           <div className={"d-flex flex-column"}>
-            <strong>
-              {formatDateText(new Date(extendedPayment.payment.dueDate))}
-            </strong>
-            <span>{dayjs().to(new Date(extendedPayment.payment.dueDate))}</span>
+            <strong>{formatDateText(new Date(dueDateAsString))}</strong>
+            <span>{dayjs().to(new Date(dueDateAsString))}</span>
           </div>
         </td>
         <td>
           <div className={"d-flex flex-column"}>
-            <PaymentComponent
-              extendedPayment={extendedPayment}
-              trialPeriodEnabled={trialPeriodEnabled}
-            />
+            {objects.map((object) =>
+              "payment" in object ? (
+                <PaymentComponent
+                  key={object.payment.id}
+                  extendedPayment={object}
+                  trialPeriodEnabled={trialPeriodEnabled}
+                />
+              ) : (
+                buildCredit(object)
+              ),
+            )}
           </div>
         </td>
       </tr>
-    ));
+    );
+  }
+
+  function buildTableContentPastPayments() {
+    return Object.entries(pastTransactionsByDueDate)
+      .toSorted(
+        ([dueDateA], [dueDateB]) =>
+          new Date(dueDateB).getTime() - new Date(dueDateA).getTime(),
+      )
+      .map(([dueDateAsString, objects]) => buildRow(dueDateAsString, objects));
   }
 
   function buildTableContentFuturePayments() {
     return Object.entries(transactionsByDueDate).map(
-      ([dueDateAsString, objects]) => (
-        <tr key={dueDateAsString}>
-          <td style={{ textAlign: "center" }}>
-            <div className={"d-flex flex-column"}>
-              <strong>{formatDateText(new Date(dueDateAsString))}</strong>
-              <span>{dayjs().to(new Date(dueDateAsString))}</span>
-            </div>
-          </td>
-          <td>
-            <div className={"d-flex flex-column"}>
-              {objects.map((object) =>
-                "payment" in object ? (
-                  <PaymentComponent
-                    key={object.payment.id}
-                    extendedPayment={object}
-                    trialPeriodEnabled={trialPeriodEnabled}
-                  />
-                ) : (
-                  buildCredit(object)
-                ),
-              )}
-            </div>
-          </td>
-        </tr>
-      ),
+      ([dueDateAsString, objects]) => buildRow(dueDateAsString, objects),
     );
   }
 
@@ -223,8 +222,8 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
       </Modal.Header>
       <Modal.Body>
         <Form.Text>
-          Es werden vorerst nur die vorhergesehenen Zahlungen für die nächsten
-          12 Monate angezeigt
+          Es werden vorerst nur die vorgesehenen Zahlungen für die nächsten 12
+          Monate angezeigt.
         </Form.Text>
         <Table striped hover responsive>
           <thead style={{ textAlign: "center" }}>

@@ -25,7 +25,7 @@ class TestGetMemberDeliveriesView(TapirIntegrationTest):
         super().setUp()
         mock_timezone(self, factories.NOW)
 
-    @patch.object(GetDeliveriesService, "get_deliveries")
+    @patch.object(GetDeliveriesService, "get_deliveries", autospec=True)
     def test_getMemberDeliveriesView_accessOtherMemberDeliveriesAsNormalUser_returns403(
         self, mock_get_deliveries: Mock
     ):

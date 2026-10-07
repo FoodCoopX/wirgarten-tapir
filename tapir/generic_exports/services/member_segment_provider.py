@@ -1,6 +1,6 @@
 import datetime
 
-from django.db.models import QuerySet
+from django.db.models import QuerySet, Q
 
 from tapir.deliveries.models import Joker
 from tapir.generic_exports.services.export_segment_manager import ExportSegment
@@ -11,6 +11,7 @@ from tapir.wirgarten.service.member import (
     annotate_member_queryset_with_coop_shares_total_value,
     annotate_member_queryset_with_monthly_payment,
 )
+from tapir.wirgarten.service.products import get_active_and_future_subscriptions
 from tapir.wirgarten.utils import (
     get_now,
     get_today,
@@ -180,3 +181,46 @@ class MemberSegmentProvider:
             coopsharetransaction__transaction_type=CoopShareTransaction.CoopShareTransactionType.CANCELLATION,
             coopsharetransaction__valid_at__range=timerange,
         )
+
+    @classmethod
+    def get_queryset_active_members(
+        cls, reference_datetime: datetime.datetime | None = None
+    ):
+        from tapir.wirgarten.models import CoopShareTransaction, Member
+        from tapir.associations.models import AssociationMembership
+
+        cache = {}
+        if reference_datetime is None:
+            reference_datetime = get_now(cache=cache)
+
+        member_ids_with_active_shares = set(
+            Member.objects.with_shares(
+                reference_date=reference_datetime.date()
+            ).values_list("id", flat=True)
+        )
+        member_ids_with_shares_in_the_future = set(
+            CoopShareTransaction.objects.filter(
+                transaction_type__in=[
+                    CoopShareTransaction.CoopShareTransactionType.TRANSFER_IN,
+                    CoopShareTransaction.CoopShareTransactionType.PURCHASE,
+                ],
+                valid_at__gte=reference_datetime.date(),
+            ).values_list("member_id", flat=True)
+        )
+        member_ids_with_active_or_future_subscriptions = set(
+            get_active_and_future_subscriptions(
+                reference_date=reference_datetime.date(), cache=cache
+            ).values_list("member_id", flat=True)
+        )
+        member_ids_with_active_or_future_association_membership = (
+            AssociationMembership.objects.filter(
+                Q(end_date=None) | Q(end_date__gte=reference_datetime.date())
+            ).values_list("member_id", flat=True)
+        )
+
+        relevant_member_ids = member_ids_with_active_shares.union(
+            member_ids_with_shares_in_the_future,
+            member_ids_with_active_or_future_subscriptions,
+            member_ids_with_active_or_future_association_membership,
+        )
+        return Member.objects.filter(id__in=relevant_member_ids)

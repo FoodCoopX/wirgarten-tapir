@@ -1,23 +1,25 @@
 import datetime
 from unittest.mock import Mock, patch
 
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
-
 from tapir.pickup_locations.services.pickup_location_capacity_mode_share_checker import (
     PickupLocationCapacityModeShareChecker,
 )
 from tapir.pickup_locations.services.share_capacities_service import (
     SharesCapacityService,
 )
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestGetFreeCapacityAtDate(TapirUnitTest):
     @patch.object(
-        PickupLocationCapacityModeShareChecker, "get_highest_usage_after_date"
+        PickupLocationCapacityModeShareChecker,
+        "get_highest_usage_after_date",
+        autospec=True,
     )
     @patch.object(
         SharesCapacityService,
         "get_available_share_capacities_for_pickup_location_by_product_type",
+        autospec=True,
     )
     def test_getFreeCapacityAtDate_default_returnsDifferenceBetweenAvailableCapacityAndHighestFutureUsage(
         self,

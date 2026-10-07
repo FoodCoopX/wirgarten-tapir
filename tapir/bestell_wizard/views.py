@@ -12,6 +12,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from tapir_mail.triggers.transactional_trigger import TransactionalTriggerData
 
+from tapir.accounts.services.email_normaliser import EmailNormaliser
 from tapir.associations.models import AssociationMembershipType
 from tapir.bestell_wizard.serializers import (
     BestellWizardConfirmOrderRequestSerializer,
@@ -215,7 +216,6 @@ class BestellWizardConfirmOrderApiView(APIView):
             "error": None,
         }
         try:
-            member = None
             with transaction.atomic():
                 member, waiting_list_entry = (
                     self.validate_everything_and_apply_all_changes(
@@ -231,10 +231,6 @@ class BestellWizardConfirmOrderApiView(APIView):
                         waiting_list_entry=waiting_list_entry,
                         feedback_text=feedback,
                     )
-            if member is not None:
-                # The member creation does calls to KeycloakUserManager that are only applied after the transaction ends.
-                # In order to persist the changes that the KeycloakUserManager applies, we need to save manually one more time.
-                member.save()
         except ValidationError as error:
             data = {
                 "order_confirmed": False,
@@ -328,6 +324,9 @@ class BestellWizardConfirmOrderApiView(APIView):
                 shopping_cart=validated_serializer_data["shopping_cart_waiting_list"],
                 cache=cache,
             )
+        )
+        validated_serializer_data["personal_data"]["email"] = EmailNormaliser.normalise(
+            validated_serializer_data["personal_data"]["email"]
         )
         WaitingListEntryValidator.validate_creation_of_waiting_list_entry_for_a_potential_member(
             order=waiting_list_order,

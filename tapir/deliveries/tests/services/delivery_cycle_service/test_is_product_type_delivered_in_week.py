@@ -1,8 +1,6 @@
 import datetime
 from unittest.mock import patch, Mock
 
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
-
 from tapir.deliveries.services.delivery_cycle_service import DeliveryCycleService
 from tapir.wirgarten.constants import (
     NO_DELIVERY,
@@ -11,6 +9,7 @@ from tapir.wirgarten.constants import (
     EVEN_WEEKS,
     ODD_WEEKS,
 )
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestIsProductTypeDeliveredInWeek(TapirUnitTest):
@@ -32,7 +31,9 @@ class TestIsProductTypeDeliveredInWeek(TapirUnitTest):
             )
         )
 
-    @patch.object(DeliveryCycleService, "is_week_delivered_in_four_week_rhythm")
+    @patch.object(
+        DeliveryCycleService, "is_week_delivered_in_four_week_rhythm", autospec=True
+    )
     def test_isProductTypeDeliveredInWeek_cycleEveryFourWeeksAndIsInDeliveryWeek_returnsTrue(
         self, mock_is_week_delivered_in_four_week_rhythm: Mock
     ):
@@ -52,7 +53,9 @@ class TestIsProductTypeDeliveredInWeek(TapirUnitTest):
             date=date, cache=cache
         )
 
-    @patch.object(DeliveryCycleService, "is_week_delivered_in_four_week_rhythm")
+    @patch.object(
+        DeliveryCycleService, "is_week_delivered_in_four_week_rhythm", autospec=True
+    )
     def test_isProductTypeDeliveredInWeek_cycleEveryFourWeeksAndIsNotInDeliveryWeek_returnsFalse(
         self, mock_is_week_delivered_in_four_week_rhythm: Mock
     ):

@@ -297,7 +297,7 @@ class ExistingMemberUpdatesAssociationMembershipApiView(APIView):
             and current_membership.type == association_membership_type
         ):
             raise DjangoValidationError(
-                "Du bist schon mitglied mit dem gleichem Mitgliedschaftstyp"
+                "Du bist schon Mitglied mit dem gleichen Mitgliedschaftstyp."
             )
 
         needs_banking_data = (

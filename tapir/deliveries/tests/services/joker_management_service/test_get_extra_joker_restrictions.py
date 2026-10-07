@@ -1,15 +1,19 @@
 from unittest.mock import patch, Mock
 
 from django.core.exceptions import ValidationError
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.deliveries.services.joker_management_service import JokerManagementService
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestJokerManagementServiceGetExtraJokerRestrictions(TapirUnitTest):
     maxDiff = 1000
 
-    @patch.object(JokerManagementService, "get_extra_joker_restrictions_from_string")
+    @patch.object(
+        JokerManagementService,
+        "get_extra_joker_restrictions_from_string",
+        autospec=True,
+    )
     def test_validateJokerRestrictions_innerFunctionRaisesException_raiseValidationError(
         self, mock_get_extra_joker_restrictions_from_string: Mock
     ):

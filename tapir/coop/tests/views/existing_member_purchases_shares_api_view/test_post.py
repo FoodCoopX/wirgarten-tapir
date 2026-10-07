@@ -203,7 +203,7 @@ class TestExistingMemberPurchasesSharesAPIView(TapirIntegrationTest):
         self.assertStatusCode(response, status.HTTP_403_FORBIDDEN)
         self.assertFalse(CoopShareTransaction.objects.exists())
         self.assertEqual(
-            {"detail": "Du hast hast die nötige Berechtigung nicht."},
+            {"detail": "Du hast die nötige Berechtigung nicht."},
             response.json(),
         )
 

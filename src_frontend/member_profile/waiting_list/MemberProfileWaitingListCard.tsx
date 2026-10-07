@@ -30,7 +30,7 @@ const MemberProfileWaitingListCard: React.FC<
       .catch(async (error) => {
         await handleRequestError(
           error,
-          "Fehler beim Laden der Warteliste-Eintrag.",
+          "Fehler beim Laden des Wartelisteneintrags.",
         );
       })
       .finally(() => setLoading(false));
@@ -41,7 +41,7 @@ const MemberProfileWaitingListCard: React.FC<
       return (
         <Card>
           <Card.Header>
-            <h5 className={"mb-0"}>Warteliste-Eintrag</h5>
+            <h5 className={"mb-0"}>Wartelisteneintrag</h5>
           </Card.Header>
           <Card.Body>
             <Spinner />
@@ -54,7 +54,7 @@ const MemberProfileWaitingListCard: React.FC<
     return (
       <Card>
         <Card.Header>
-          <h5 className={"mb-0"}>Warteliste-Eintrag</h5>
+          <h5 className={"mb-0"}>Wartelisteneintrag</h5>
         </Card.Header>
         <Card.Body>
           <Row>
@@ -64,7 +64,7 @@ const MemberProfileWaitingListCard: React.FC<
             {waitingListEntry.pickupLocationWishes &&
               waitingListEntry.pickupLocationWishes.length > 0 && (
                 <Col>
-                  Verteilstation-Wünsche
+                  Verteilstationswünsche
                   <ol>
                     {waitingListEntry.pickupLocationWishes
                       .sort((w1, w2) => w1.priority - w2.priority)
@@ -77,7 +77,7 @@ const MemberProfileWaitingListCard: React.FC<
             {waitingListEntry.productWishes &&
               waitingListEntry.productWishes.length > 0 && (
                 <Col>
-                  Produkt-Wünsche
+                  Produktwünsche
                   <ul>
                     {waitingListEntry.productWishes.map((wish) => (
                       <li key={wish.id}>
@@ -90,13 +90,16 @@ const MemberProfileWaitingListCard: React.FC<
           </Row>
           {waitingListEntry.numberOfCoopShares > 0 && (
             <Row>
-              {waitingListEntry.numberOfCoopShares} Genossenschaftsanteile
+              {waitingListEntry.numberOfCoopShares}{" "}
+              {waitingListEntry.numberOfCoopShares === 1
+                ? "Genossenschaftsanteil"
+                : "Genossenschaftsanteile"}
             </Row>
           )}
           <Row>
             <p>
               Möchtest du deine Wartelisteneinträge verändern, dann wende dich
-              bitte an <a href={"mailto:" + adminEmail}>{adminEmail}</a>
+              bitte an <a href={"mailto:" + adminEmail}>{adminEmail}</a>.
             </p>
           </Row>
         </Card.Body>

@@ -35,13 +35,13 @@ export interface MemberProfilePersonalDataResponse {
    * @type {string}
    * @memberof MemberProfilePersonalDataResponse
    */
-  email: string;
+  phoneNumber: string;
   /**
    *
    * @type {string}
    * @memberof MemberProfilePersonalDataResponse
    */
-  phoneNumber: string;
+  phoneNumberLandline?: string | null;
   /**
    *
    * @type {string}
@@ -124,7 +124,6 @@ export function instanceOfMemberProfilePersonalDataResponse(
 ): value is MemberProfilePersonalDataResponse {
   if (!("firstName" in value) || value["firstName"] === undefined) return false;
   if (!("lastName" in value) || value["lastName"] === undefined) return false;
-  if (!("email" in value) || value["email"] === undefined) return false;
   if (!("phoneNumber" in value) || value["phoneNumber"] === undefined)
     return false;
   if (!("street" in value) || value["street"] === undefined) return false;
@@ -166,8 +165,11 @@ export function MemberProfilePersonalDataResponseFromJSONTyped(
   return {
     firstName: json["first_name"],
     lastName: json["last_name"],
-    email: json["email"],
     phoneNumber: json["phone_number"],
+    phoneNumberLandline:
+      json["phone_number_landline"] == null
+        ? undefined
+        : json["phone_number_landline"],
     street: json["street"],
     street2: json["street_2"],
     postcode: json["postcode"],
@@ -200,8 +202,8 @@ export function MemberProfilePersonalDataResponseToJSONTyped(
   return {
     first_name: value["firstName"],
     last_name: value["lastName"],
-    email: value["email"],
     phone_number: value["phoneNumber"],
+    phone_number_landline: value["phoneNumberLandline"],
     street: value["street"],
     street_2: value["street2"],
     postcode: value["postcode"],

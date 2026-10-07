@@ -24,6 +24,7 @@ services:
       DEBUG: 1
       DJANGO_VITE_DEBUG: True
       MAILMAN_ENABLED: True
+      KEYCLOAK_SKIP_VERIFICATION_EMAIL: True
     depends_on:
       - db
       - redis

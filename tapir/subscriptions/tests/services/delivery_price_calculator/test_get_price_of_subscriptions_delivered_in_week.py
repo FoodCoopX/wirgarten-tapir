@@ -15,10 +15,14 @@ class TestGetPriceOfSubscriptionsDeliveredInWeek(TapirIntegrationTest):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
     @patch.object(
-        DeliveryPriceCalculator, "get_price_of_single_delivery_for_subscription"
+        DeliveryPriceCalculator,
+        "get_price_of_single_delivery_for_subscription",
+        autospec=True,
     )
     @patch.object(
-        DeliveryPriceCalculator, "get_subscriptions_that_get_delivered_in_week"
+        DeliveryPriceCalculator,
+        "get_subscriptions_that_get_delivered_in_week",
+        autospec=True,
     )
     def test_getPriceOfSubscriptionsDeliveredInWeek_default_returnsSumOfPriceTimesQuantity(
         self,
@@ -58,10 +62,14 @@ class TestGetPriceOfSubscriptionsDeliveredInWeek(TapirIntegrationTest):
         )
 
     @patch.object(
-        DeliveryPriceCalculator, "get_price_of_single_delivery_for_subscription"
+        DeliveryPriceCalculator,
+        "get_price_of_single_delivery_for_subscription",
+        autospec=True,
     )
     @patch.object(
-        DeliveryPriceCalculator, "get_subscriptions_that_get_delivered_in_week"
+        DeliveryPriceCalculator,
+        "get_subscriptions_that_get_delivered_in_week",
+        autospec=True,
     )
     def test_getPriceOfSubscriptionsDeliveredInWeek_onlySubscriptionsAffectedByJokers_returnsSumOnlyForSubscriptionsAffectedByJokers(
         self,

@@ -14,7 +14,8 @@ from tapir.wirgarten.tests.test_utils import mock_timezone
 
 class TestMustSubscriptionBeRenewed(TapirUnitTest):
     @patch(
-        "tapir.subscriptions.services.automatic_subscription_renewal_service.get_parameter_value"
+        "tapir.subscriptions.services.automatic_subscription_renewal_service.get_parameter_value",
+        autospec=True,
     )
     def test_mustSubscriptionBeRenewed_automaticRenewalIsDisabled_returnFalse(
         self, mock_get_parameter_value: Mock
@@ -32,7 +33,8 @@ class TestMustSubscriptionBeRenewed(TapirUnitTest):
         )
 
     @patch(
-        "tapir.subscriptions.services.automatic_subscription_renewal_service.get_parameter_value"
+        "tapir.subscriptions.services.automatic_subscription_renewal_service.get_parameter_value",
+        autospec=True,
     )
     def test_mustSubscriptionBeRenewed_subscriptionHasBeenCancelled_returnFalse(
         self, mock_get_parameter_value: Mock
@@ -52,10 +54,12 @@ class TestMustSubscriptionBeRenewed(TapirUnitTest):
         )
 
     @patch(
-        "tapir.subscriptions.services.automatic_subscription_renewal_service.get_next_growing_period"
+        "tapir.subscriptions.services.automatic_subscription_renewal_service.get_next_growing_period",
+        autospec=True,
     )
     @patch(
-        "tapir.subscriptions.services.automatic_subscription_renewal_service.get_parameter_value"
+        "tapir.subscriptions.services.automatic_subscription_renewal_service.get_parameter_value",
+        autospec=True,
     )
     def test_mustSubscriptionBeRenewed_noFutureGrowingPeriod_returnFalse(
         self, mock_get_parameter_value: Mock, mock_get_next_growing_period: Mock
@@ -78,10 +82,12 @@ class TestMustSubscriptionBeRenewed(TapirUnitTest):
 
     @patch.object(Subscription, "objects")
     @patch(
-        "tapir.subscriptions.services.automatic_subscription_renewal_service.get_next_growing_period"
+        "tapir.subscriptions.services.automatic_subscription_renewal_service.get_next_growing_period",
+        autospec=True,
     )
     @patch(
-        "tapir.subscriptions.services.automatic_subscription_renewal_service.get_parameter_value"
+        "tapir.subscriptions.services.automatic_subscription_renewal_service.get_parameter_value",
+        autospec=True,
     )
     def test_mustSubscriptionBeRenewed_futureSubscriptionAlreadyExists_returnFalse(
         self,
@@ -119,10 +125,12 @@ class TestMustSubscriptionBeRenewed(TapirUnitTest):
     @patch.object(NoticePeriodManager, "get_max_cancellation_date_subscription")
     @patch.object(Subscription, "objects")
     @patch(
-        "tapir.subscriptions.services.automatic_subscription_renewal_service.get_next_growing_period"
+        "tapir.subscriptions.services.automatic_subscription_renewal_service.get_next_growing_period",
+        autospec=True,
     )
     @patch(
-        "tapir.subscriptions.services.automatic_subscription_renewal_service.get_parameter_value"
+        "tapir.subscriptions.services.automatic_subscription_renewal_service.get_parameter_value",
+        autospec=True,
     )
     def test_mustSubscriptionBeRenewed_maxCancellationIsInTheFuture_returnFalse(
         self,
@@ -168,10 +176,12 @@ class TestMustSubscriptionBeRenewed(TapirUnitTest):
     @patch.object(NoticePeriodManager, "get_max_cancellation_date_subscription")
     @patch.object(Subscription, "objects")
     @patch(
-        "tapir.subscriptions.services.automatic_subscription_renewal_service.get_next_growing_period"
+        "tapir.subscriptions.services.automatic_subscription_renewal_service.get_next_growing_period",
+        autospec=True,
     )
     @patch(
-        "tapir.subscriptions.services.automatic_subscription_renewal_service.get_parameter_value"
+        "tapir.subscriptions.services.automatic_subscription_renewal_service.get_parameter_value",
+        autospec=True,
     )
     def test_mustSubscriptionBeRenewed_maxCancellationIsOnSameDay_returnFalse(
         self,

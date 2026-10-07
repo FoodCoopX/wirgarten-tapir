@@ -1,6 +1,7 @@
 class TapirCacheManager:
     CATEGORY_MEMBER_PICKUP_LOCATIONS = "member_pickup_locations"
     CATEGORY_SUBSCRIPTIONS = "subscriptions"
+    CATEGORY_PAYMENT_RHYTHMS = "payment_rhythms"
 
     @classmethod
     def register_key_in_category(cls, cache: dict | None, key, category: str):

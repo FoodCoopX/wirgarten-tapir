@@ -56,7 +56,7 @@ const MemberProfileSolidarityContributionCard: React.FC<
       .catch(async (error) => {
         await handleRequestError(
           error,
-          "Fehler beim Laden der Solidarbeitrag.",
+          "Fehler beim Laden des Solidarbeitrags.",
         );
       })
       .finally(() => setLoading(false));
@@ -106,7 +106,7 @@ const MemberProfileSolidarityContributionCard: React.FC<
       .catch(async (error) => {
         await handleRequestError(
           error,
-          "Fehler beim Speichern der Solidarbeitrag.",
+          "Fehler beim Speichern des Solidarbeitrags.",
         );
       })
       .finally(() => setLoading(false));
@@ -221,10 +221,10 @@ const MemberProfileSolidarityContributionCard: React.FC<
       return (
         <p className={"mb-0"}>
           Beachte: Das Mitglied kann den Solidarbeitrag aufgrund der
-          Einstellungen in der allgemeinen Konfigurationen nicht verändern.
-          Nur du als Admin kannst ihn einstellen. Dem Mitglied wird in dem
-          Hilfetext, der ihm eingeblendet wird, kommuniziert, dass es Kontakt
-          zu dir aufnehmen muss, um den Solidarbeitrag zu verändern.
+          Einstellungen in der allgemeinen Konfiguration nicht verändern. Nur du
+          als Admin kannst ihn einstellen. Dem Mitglied wird in dem Hilfetext,
+          der ihm eingeblendet wird, kommuniziert, dass es Kontakt zu dir
+          aufnehmen muss, um den Solidarbeitrag zu verändern.
         </p>
       );
     }
@@ -304,7 +304,7 @@ const MemberProfileSolidarityContributionCard: React.FC<
                   id={"solidarity_contribution_now"}
                   name={"solidarity_contribution_now_or_later"}
                   label={
-                    "Neuer Beitrag gültig ab nächstmöglichem Zeitpunkt: " +
+                    "Neuer Beitrag gültig ab dem nächstmöglichen Zeitpunkt: " +
                     formatDateNumeric(changeValidFrom)
                   }
                   onChange={() => setStartContributionNow(true)}
@@ -323,11 +323,11 @@ const MemberProfileSolidarityContributionCard: React.FC<
                   type={"radio"}
                 />
                 <Form.Text>
-                  Deiner aktueller Vertrag und/oder Solidarbeitrag startet am{" "}
-                  {formatDateNumeric(alternativeChangeValidFrom)}. Wenn du den
-                  ändern willst, kannst du entscheiden ob der neuer Beitrag so
-                  bald wie möglich starten soll oder erst zum geplantem
-                  Start-Datum.
+                  Dein aktueller Vertrag und/oder Solidarbeitrag startet am{" "}
+                  {formatDateNumeric(alternativeChangeValidFrom)}. Wenn du ihn
+                  ändern willst, kannst du entscheiden, ob der neue Beitrag so
+                  bald wie möglich starten soll oder erst zum geplanten
+                  Startdatum.
                 </Form.Text>
               </Form.Group>
             )}
@@ -347,7 +347,7 @@ const MemberProfileSolidarityContributionCard: React.FC<
                 Number.isNaN(Number.parseFloat(newContributionAsString)) && (
                   <>
                     <Form.Text className={"text-danger"}>
-                      Ungültiger Zahl
+                      Ungültige Zahl
                     </Form.Text>
                     <br />
                   </>
@@ -355,15 +355,15 @@ const MemberProfileSolidarityContributionCard: React.FC<
               {showValidation && shouldShowWarningLowerValue() && (
                 <>
                   <Form.Text className={"text-danger"}>
-                    Du kannst deinen Beitrag nicht selber nach Unten anpassen.
-                    Kontaktiere bitte {adminEmail}
+                    Du kannst deinen Beitrag nicht selber nach unten anpassen.
+                    Kontaktiere bitte {adminEmail}.
                   </Form.Text>
                   <br />
                 </>
               )}
               <Form.Text>
                 Neuer Beitrag gültig ab dem{" "}
-                {formatDateNumeric(getValidFromDate())}
+                {formatDateNumeric(getValidFromDate())}.
               </Form.Text>
             </Form.Group>
           </Modal.Body>

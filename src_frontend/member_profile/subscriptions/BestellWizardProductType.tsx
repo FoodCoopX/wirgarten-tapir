@@ -189,7 +189,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der BestellWizard",
+          "Fehler beim Laden des BestellWizards",
           setToastDatas,
         ),
       );
@@ -401,7 +401,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
       .catch(async (error) => {
         await handleRequestError(
           error,
-          "Fehler beim Erzeugen des Warteliste-Eintrags",
+          "Fehler beim Erzeugen des Wartelisteneintrags",
           setToastDatas,
         );
         setOrderLoading(false);
@@ -551,7 +551,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
       default: {
         const [productType, subStep] = getProductTypeFromStep(step, settings);
         if (productType === undefined) {
-          return <div>Fehler: ungültiges Schritt {step}</div>;
+          return <div>Fehler: ungültiger Schritt {step}</div>;
         }
         switch (subStep) {
           case "intro":

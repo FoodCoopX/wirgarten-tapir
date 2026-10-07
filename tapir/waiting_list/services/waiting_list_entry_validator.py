@@ -49,7 +49,7 @@ class WaitingListEntryValidator:
     ):
         if WaitingListEntry.objects.filter(member_id=member_id).exists():
             raise ValidationError(
-                "Es gibt schon einen Warteliste-Eintrag für dieses Mitglied."
+                "Es gibt schon einen Wartelisteneintrag für dieses Mitglied."
             )
 
         if not SingleSubscriptionValidator.are_single_subscription_products_are_ordered_at_most_once(

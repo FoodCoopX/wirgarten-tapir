@@ -345,7 +345,9 @@ class TestMemberSolidarityContributionService(TapirIntegrationTest):
         self.assertEqual(Decimal(0), log_entry.old_contribution_amount)
         self.assertIsNone(log_entry.old_contribution_end_date)
 
-    @patch.object(MemberSolidarityContributionService, "get_member_contribution")
+    @patch.object(
+        MemberSolidarityContributionService, "get_member_contribution", autospec=True
+    )
     def test_isUserAllowedToChangeContribution_userIsAdmin_returnsTrue(
         self, mock_get_member_contribution: Mock
     ):

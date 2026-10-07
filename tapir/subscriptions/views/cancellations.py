@@ -359,7 +359,7 @@ class CancelSubscriptionsView(APIView):
             )
         ):
             raise ValidationError(
-                "Du kannst keine Zusatzabos beziehen wenn du das Basis-Abo kündigst."
+                "Du kannst keine Zusatzabos beziehen, wenn du das Basis-Abo kündigst."
             )
 
         valid_cancellation_reasons = get_parameter_value(
@@ -371,7 +371,7 @@ class CancelSubscriptionsView(APIView):
         for reason in cancellation_reasons:
             if reason not in valid_cancellation_reasons:
                 raise ValidationError(
-                    f"Folgende Kündigungsgrund ist nicht gültig: {reason}, gültige Gründe sind: {valid_cancellation_reasons}"
+                    f"Folgender Kündigungsgrund ist nicht gültig: {reason}, gültige Gründe sind: {valid_cancellation_reasons}"
                 )
 
         if len(cancellation_reasons) == 0 and custom_cancellation_reason is None:
@@ -393,15 +393,15 @@ class CancelSubscriptionsView(APIView):
         subscribed_products: set[Product],
     ):
         if not CoopMembershipCancellationManager.can_member_cancel_coop_membership(
-            member=member, cache=self.cache
+            member=member, reference_date=get_today(cache=self.cache), cache=self.cache
         ):
             raise ValidationError(
-                "Es ist nur möglich die Beitrittserklärung zu widerrufen wenn du noch nicht Mitglied bist."
+                "Es ist nur möglich, die Beitrittserklärung zu widerrufen, wenn du noch nicht Mitglied bist."
             )
 
         if products_selected_for_cancellation != subscribed_products:
             raise ValidationError(
-                "Es ist nur möglich die Beitrittserklärung zu widerrufen wenn du alle Verträge auch kündigst."
+                "Es ist nur möglich, die Beitrittserklärung zu widerrufen, wenn du auch alle Verträge kündigst."
             )
 
     def validate_association_membership_cancellation(
@@ -414,12 +414,12 @@ class CancelSubscriptionsView(APIView):
             member=member, reference_date=get_today(self.cache), cache=self.cache
         ):
             raise ValidationError(
-                "Es gibt keine Vereinsmitgliedschaft die beendet werden kann."
+                "Es gibt keine Vereinsmitgliedschaft, die beendet werden kann."
             )
 
         if products_selected_for_cancellation != subscribed_products:
             raise ValidationError(
-                "Es ist nur möglich die Vereinsmitgliedschaft zu beenden wenn du alle Verträge auch kündigst."
+                "Es ist nur möglich, die Vereinsmitgliedschaft zu beenden, wenn du auch alle Verträge kündigst."
             )
 
     @staticmethod

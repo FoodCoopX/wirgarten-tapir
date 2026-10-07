@@ -37,7 +37,8 @@ class TestPickupLocationDeliveryChargesViewPost(TapirIntegrationTest):
         self.assertFalse(PickupLocationDeliveryCharge.objects.exists())
 
     @patch(
-        "tapir.pickup_locations.services.pickup_location_delivery_charge_service.get_today"
+        "tapir.pickup_locations.services.pickup_location_delivery_charge_service.get_today",
+        autospec=True,
     )
     def test_post_validData_createsCharge(self, mock_get_today):
         mock_get_today.return_value = datetime.date(year=2026, month=1, day=1)
@@ -80,7 +81,8 @@ class TestPickupLocationDeliveryChargesViewPost(TapirIntegrationTest):
         self.assertFalse(PickupLocationDeliveryCharge.objects.exists())
 
     @patch(
-        "tapir.pickup_locations.services.pickup_location_delivery_charge_service.get_today"
+        "tapir.pickup_locations.services.pickup_location_delivery_charge_service.get_today",
+        autospec=True,
     )
     def test_post_validFromInThePast_returns400(self, mock_get_today):
         mock_get_today.return_value = datetime.date(year=2026, month=6, day=1)

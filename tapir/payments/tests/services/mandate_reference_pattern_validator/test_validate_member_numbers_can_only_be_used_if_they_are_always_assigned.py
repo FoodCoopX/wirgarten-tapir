@@ -11,7 +11,8 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 class TestValidateMemberNumbersCanOnlyBeUsedIfTheyAreAlwaysAssigned(TapirUnitTest):
     @patch(
-        "tapir.payments.services.mandate_reference_pattern_validator.get_parameter_value"
+        "tapir.payments.services.mandate_reference_pattern_validator.get_parameter_value",
+        autospec=True,
     )
     def test_validateMemberNumbersCanOnlyBeUsedIfTheyAreAlwaysAssigned_patternHasMemberNumberTokenAndParameterIsTrue_raisesValidationError(
         self, mock_get_parameter_value: Mock
@@ -28,7 +29,8 @@ class TestValidateMemberNumbersCanOnlyBeUsedIfTheyAreAlwaysAssigned(TapirUnitTes
         )
 
     @patch(
-        "tapir.payments.services.mandate_reference_pattern_validator.get_parameter_value"
+        "tapir.payments.services.mandate_reference_pattern_validator.get_parameter_value",
+        autospec=True,
     )
     def test_validateMemberNumbersCanOnlyBeUsedIfTheyAreAlwaysAssigned_patternHasMemberNumberTokenAndParameterIsFalse_noErrorRaised(
         self, mock_get_parameter_value: Mock
@@ -40,7 +42,8 @@ class TestValidateMemberNumbersCanOnlyBeUsedIfTheyAreAlwaysAssigned(TapirUnitTes
         )
 
     @patch(
-        "tapir.payments.services.mandate_reference_pattern_validator.get_parameter_value"
+        "tapir.payments.services.mandate_reference_pattern_validator.get_parameter_value",
+        autospec=True,
     )
     def test_validateMemberNumbersCanOnlyBeUsedIfTheyAreAlwaysAssigned_patternHasNoMemberNumberTokenAndParameterIsTrue_noErrorRaised(
         self, mock_get_parameter_value: Mock

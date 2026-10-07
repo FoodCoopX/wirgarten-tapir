@@ -9,74 +9,75 @@
 {% load configuration %}
 {% load member_list %}
 {% block head %}
-    {{ block.super }}
-    <title>
-        {% block title %}Mitgliederbereich - {{ object.first_name }} {{ object.last_name }} - {{ 'wirgarten.site.name' | parameter }}{% endblock %}
-    </title>
-    <link rel="stylesheet"
-          href="{% static 'wirgarten/css/member_detail.css' %}">
-    {% vite_asset 'member_profile/member_profile_entry.tsx' %}
+  {{ block.super }}
+  <title>
+    {% block title %}{{ object.first_name }} {{ object.last_name }} - Mitgliederbereich -
+      {{ 'wirgarten.site.name' | parameter }}{% endblock %}
+  </title>
+  <link rel="stylesheet"
+        href="{% static 'wirgarten/css/member_detail.css' %}">
+  {% vite_asset 'member_profile/member_profile_entry.tsx' %}
 {% endblock head %}
 {% block content %}
-    {% csrf_token %}
-    {% with False as lock_functions %}
-        <div id="member-detail-container">
-            <div id="member-detail-left-column">
-                {% include 'wirgarten/member/member_detail_alert.html' with renewal_status=renewal_status contract_end_date=contract_end_date member=object next_period=next_period show_trial_period_notice=show_trial_period_notice next_trial_end_date=next_trial_end_date show_renewal_warning=show_renewal_warning base_product_type_name=base_product_type_name %}
-                {% if email_change_request %}
-                    <div id="email-change-verify" class="alert alert-success">
-                        <h4 class="alert-heading">Bitte bestätige deine neue Email Adresse</h4>
-                        <p>
-                            Wir haben dir eine Mail geschickt an <strong>{{ object.email }}</strong>.
-                            <br/>
-                            Bitte klicke den Link um deine Änderung wirksam zu machen.
-                        </p>
-                    </div>
-                {% endif %}
-                {% if bakery_enabled %}
-                    <div class="mb-3">
-                        <a href="{% url 'bakery:choose-breads' %}?member_id={{ object.pk }}"
-                           class="btn btn-lg w-100 d-flex align-items-center justify-content-center gap-2"
-                           style="background-color: #8B4513; color: white; border: none; padding: 1rem; transition: all 0.3s ease;"
-                           onmouseover="this.style.backgroundColor='#A0522D'"
-                           onmouseout="this.style.backgroundColor='#8B4513'">
-                            <div class="d-flex flex-column align-items-start">
-                                <strong style="font-size: 1.1rem;">Zu den Broten</strong>
-                                <small style="opacity: 0.9;">Wähle deine Lieblingsbrote aus.</small>
-                            </div>
-                        </a>
-                    </div>
-                {% endif %}
-                <div id="member-contracts">
-                    {% if show_coop_shares %}
-                        <div id="coop_shares_card"
-                             data-member-id="{{ object.id }}"
-                             data-user-is-admin="{{ perms.accounts.manage }}"></div>
-                    {% endif %}
-                    {% if show_association_membership %}
-                        <div id="association_membership_card"
-                             data-member-id="{{ object.id }}"></div>
-                    {% endif %}
-                    <div id="contract-tiles"
-                         data-show-cancellation-card="{{ subscriptionAutomaticRenewal }}"
-                         data-member-id="{{ object.pk }}"
-                         data-show-contract-edit="{{ show_contract_edit }}">
-                        <div id="subscription_cards" data-member-id="{{ object.pk }}">
+  {% csrf_token %}
+  {% with False as lock_functions %}
+    <div id="member-detail-container">
+      <div id="member-detail-left-column">
+        {% include 'wirgarten/member/member_detail_alert.html' with renewal_status=renewal_status contract_end_date=contract_end_date member=object next_period=next_period show_trial_period_notice=show_trial_period_notice next_trial_end_date=next_trial_end_date show_renewal_warning=show_renewal_warning base_product_type_name=base_product_type_name %}
+        {% if email_change_request %}
+          <div id="email-change-verify" class="alert alert-success">
+            <h4 class="alert-heading">Bitte bestätige deine neue E-Mail-Adresse</h4>
+            <p>
+              Wir haben dir eine Mail an <strong>{{ object.email }}</strong> geschickt.
+              <br />
+              Bitte klicke auf den Link, um deine Änderung wirksam zu machen.
+            </p>
+          </div>
+        {% endif %}
+        {% if bakery_enabled %}
+          <div class="mb-3">
+            <a href="{% url 'bakery:choose-breads' %}?member_id={{ object.pk }}"
+               class="btn btn-lg w-100 d-flex align-items-center justify-content-center gap-2"
+               style="background-color: #8B4513; color: white; border: none; padding: 1rem; transition: all 0.3s ease;"
+               onmouseover="this.style.backgroundColor='#A0522D'"
+               onmouseout="this.style.backgroundColor='#8B4513'">
+              <div class="d-flex flex-column align-items-start">
+                <strong style="font-size: 1.1rem;">Zu den Broten</strong>
+                <small style="opacity: 0.9;">Wähle deine Lieblingsbrote aus.</small>
+              </div>
+            </a>
+          </div>
+        {% endif %}
+        <div id="member-contracts">
+          {% if show_coop_shares %}
+            <div id="coop_shares_card"
+                 data-member-id="{{ object.id }}"
+                 data-user-is-admin="{{ perms.accounts.manage }}"></div>
+          {% endif %}
+          {% if show_association_membership %}
+            <div id="association_membership_card"
+                 data-member-id="{{ object.id }}"></div>
+          {% endif %}
+          <div id="contract-tiles"
+               data-show-cancellation-card="{{ subscriptionAutomaticRenewal }}"
+               data-member-id="{{ object.pk }}"
+               data-show-contract-edit="{{ show_contract_edit }}">
+            <div id="subscription_cards" data-member-id="{{ object.pk }}">
                             <span class="spinner-border">
                                 <span class="visually-hidden">Loading...</span>
                             </span>
-                        </div>
-                        {% if subscriptionAutomaticRenewal %}
-                            <div id="subscription_cancellation_card" data-member-id="{{ object.pk }}">
+            </div>
+            {% if subscriptionAutomaticRenewal %}
+              <div id="subscription_cancellation_card" data-member-id="{{ object.pk }}">
                                 <span class="spinner-border">
                                     <span class="visually-hidden">Loading...</span>
                                 </span>
-                            </div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-            <div id="member-detail-middle-column">
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      <div id="member-detail-middle-column">
                 <span id="delivery_list_card"
                       data-member-id="{{ object.pk }}"
                       data-jokers-enabled="{{ jokersEnabled }}"
@@ -88,260 +89,269 @@
                         <span class="visually-hidden">Loading...</span>
                     </span>
                 </span>
-                {% if show_payments_card %}
-                    <span id="future_payments_card" data-member-id="{{ object.pk }}"
-                          data-delivery-charge-enabled="{{ delivery_charge_enabled }}">
+        {% if show_payments_card %}
+          <span id="future_payments_card" data-member-id="{{ object.pk }}"
+                data-delivery-charge-enabled="{{ delivery_charge_enabled }}">
                         <span class="spinner-border">
                             <span class="visually-hidden">Loading...</span>
                         </span>
                     </span>
-                {% endif %}
-                <div id="member-personal-data"
-                     class="card"
-                     style="margin-bottom:1em;
-                            margin-top:1em">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">{% translate "Persönliche Daten" %}</h5>
-                        <span class="d-flex flex-row gap-2">
-                            {% if extra_email_addresses_enabled %}
-                                <span id="extra_email_addresses" data-member-id="{{ object.id }}"></span>
-                            {% endif %}
-                            <span id="edit_personal_data_button" data-member-id="{{ object.id }}"></span>
-                        </span>
-                    </div>
-                    <div class="card-body">
-                        <div class="row m-1">
-                            <div class="col-4 fw-bold text-end">{% translate "Mitgliedsnummer" %}:</div>
-                            <div class="col-8" id="tapir_user_member_number">{% formatted_member_number object cache %}</div>
-                        </div>
-                        <div class="row m-1">
-                            <div class="col-4 fw-bold text-end">{% translate "Name" %}:</div>
-                            <div class="col-8" id="tapir_user_display_name">{{ object.get_display_name }}</div>
-                        </div>
-                        <div class="row m-1">
-                            <div class="col-4 fw-bold text-end">{% translate "Email" %}:</div>
-                            {% if email_change_request %}
-                                <div class="col-8" id="tapir_user_changed_email">
-                                    <span style="text-decoration: line-through; color:#6A6A6A">{{ object.email }}</span>
-                                    <br/>
-                                    <span>{{ email_change_request.new_email }}&nbsp;&nbsp;&nbsp;<span
-                                        class="badge bg-danger">Nicht verifiziert</span></span>
-                                    {% if perms.accounts.manage %}
-                                        <form method="POST" action="{% url 'accounts:admin_apply_mail_change' %}">
-                                            {% csrf_token %}
-                                            <input type="hidden" name="user_id" value="{{ object.id }}"/>
-                                            <input type="hidden"
-                                                   name="new_email"
-                                                   value="{{ email_change_request.new_email }}"/>
-                                            <button type="submit" class="btn tapir-btn btn-primary btn-sm">
-                                                Als verifiziert
-                                                markieren
-                                            </button>
-                                        </form>
-                                    {% endif %}
-                                </div>
-                            {% else %}
-                                <div class="col-8" id="tapir_user_email">{{ object.email }}</div>
-                            {% endif %}
-                        </div>
-                        <div class="row m-1">
-                            <div class="col-4 fw-bold text-end">{% translate "Telefon" %}:</div>
-                            <div class="col-8" id="tapir_user_phone_number">
-                                {% if object.phone_number %}
-                                    {{ object.phone_number|format_phone_number }}
-                                {% else %}
-                                    <span class="text-danger">{% translate "Missing" %}</span>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="row m-1">
-                            <div class="col-4 fw-bold text-end">{% translate "Adresse" %}:</div>
-                            <div class="col-8" id="tapir_user_address">
-                                {% if object.street and object.city %}
-                                    {{ object.get_display_address }}
-                                {% else %}
-                                    <span class="text-danger">{% translate "Missing" %}</span>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="row m-1">
-                            <div class="col-4 fw-bold text-end">{% translate "Pseudonym" %}:</div>
-                            <div class="col-8" id="tapir_user_pseudonym">
-                                {% if object.pseudonym %}
-                                    {{ object.pseudonym }}
-                                {% else %}
-                                    <span class="text-muted">{% translate "nicht gesetzt" %}</span>
-                                {% endif %}
-                            </div>
-                        </div>
-                        {% if object.pk == request.user.pk %}
-                            <div>
-                                <hr/>
-                                <a style="float: right"
-                                   class="btn tapir-btn btn-outline-primary ms-1"
-                                   href="{% url 'accounts:password_change' %}"><span
-                                    class="material-icons">vpn_key</span>{% translate "Passwort ändern" %}</a>
-                            </div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-            <div id="member-detail-right-column">
-                <div class="row">
-                    <div>
-                        <div class="card">
-                            <div class="card-header">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <h5 class="mb-0">Bei Fragen wende dich gerne an:</h5>
-                                    <a class="btn tapir-btn btn-outline-secondary"
-                                       target="_blank"
-                                       href="{{ 'wirgarten.site.faq_link' | parameter }}">
-                                        <span class="material-icons">link</span>
-                                        <h5 class="mb-0">{% translate 'Zum FAQ' %}</h5>
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="card-body" style="padding-right: 0">
-                                <div class="d-flex flex-row justify-content-between">
-                                    <div class="d-flex flex-column">
-                                        <strong class="card-title">{{ 'wirgarten.site.admin_name'|parameter }}</strong>
-                                        <a class="card-text"
-                                           style="text-decoration:none;
-                                                  color:inherit"
-                                           href="tel:{{ 'wirgarten.site.admin_telephone'|parameter }}"
-                                           target="_blank">📞&nbsp;&nbsp;{{ 'wirgarten.site.admin_telephone'|parameter }}</a>
-                                        <a class="card-text"
-                                           style="text-decoration:none;
-                                                  color:inherit"
-                                           href="mailto:{{ 'wirgarten.site.admin_email'|parameter }}"
-                                           target="_blank">📧&nbsp;&nbsp;{{ 'wirgarten.site.admin_email'|parameter }}</a>
-                                    </div>
-                                    <img src="{{ 'wirgarten.site.admin_image'|parameter }}"
-                                         alt="{{ 'wirgarten.site.admin_name'|parameter }}"
-                                         style="max-width: 200px">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row mt-2">
-                    <div id="member_profile_waiting_list_entry"
-                         data-member-id="{{ object.pk }}"
-                         data-admin-email="{{ 'wirgarten.site.admin_email'|parameter }}">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5 class="mb-0">Warteliste-Eintrag</h5>
-                            </div>
-                            <div class="card-body">
-                                <span class="spinner-border">
-                                    <span class="visually-hidden">Loading...</span>
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row mt-2">
-                    <div id="member_profile_solidarity_contribution"
-                         data-member-id="{{ object.pk }}"
-                         data-admin-email="{{ 'wirgarten.site.admin_email'|parameter }}"
-                         data-user-is-admin="{{ perms.accounts.manage }}"
-                         data-members-can-change-contribution="{% get_parameter_value_tag 'wirgarten.harvest.members_are_allowed_to_change_soliprice' cache %}">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5 class="mb-0">Solidarbeitrag</h5>
-                            </div>
-                            <div class="card-body">
-                                <span class="spinner-border">
-                                    <span class="visually-hidden">Loading...</span>
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% if show_mail_category_content %}
-                    <div class="row mt-2">
-                        <div id="member_mail_category" data-member-id="{{ object.pk }}">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h5 class="mb-0">Mail-Abos</h5>
-                                </div>
-                                <div class="card-body">
-                                    <span class="spinner-border">
-                                        <span class="visually-hidden">Loading...</span>
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                {% endif %}
-                {% if show_mailing_list_content %}
-                    <div class="row mt-2">
-                        <div id="member_mailing_list" data-member-id="{{ object.pk }}">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h5 class="mb-0">Mailing-Listen</h5>
-                                </div>
-                                <div class="card-body">
-                                    <span class="spinner-border">
-                                        <span class="visually-hidden">Loading...</span>
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                {% endif %}
-                <div class="row mt-2">
-                    <div>
-                        <div id="member-payment-data" class="card">
-                            <h5 class="card-header d-flex justify-content-between align-items-center">
-                                {% translate "Bankverbindung" %}
-                                <span id="bank_data_button" data-member-id="{{ object.id }}"></span>
-                            </h5>
-                            <div class="card-body">
-                                <div class="row m-1">
-                                    <div class="col-4 fw-bold text-end">{% translate "Kontoinhaber" %}:</div>
-                                    <div class="col-8" id="tapir_user_account_owner">
-                                        {% if object.account_owner %}
-                                            {{ object.account_owner }}
-                                        {% else %}
-                                            <span class="text-danger">{% translate "Missing" %}</span>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                <div class="row m-1">
-                                    <div class="col-4 fw-bold text-end">{% translate "IBAN" %}:</div>
-                                    <div class="col-8" id="tapir_user_iban">
-                                        {% if object.iban %}
-                                            {{ object.iban }}
-                                        {% else %}
-                                            <span class="text-danger">{% translate "Missing" %}</span>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                <div class="row m-1">
-                                    <div class="col-4 fw-bold text-end">{% translate "Zahlungsintervall" %}:</div>
-                                    <div class="col-8" id="tapir_user_payment_rhythm">
-                                        <div class="d-flex flex-row gap-2">
-                                            {{ payment_rhythm }}
-                                            {% if perms.accounts.manage %}<span id="payment_rhythm_button"
-                                                                                data-member-id="{{ object.id }}"></span>{% endif %}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% if perms.accounts.manage %}
-            <hr/>
-            {% user_log_entry_list object %}
-            <script>
-                const handleOpenEmail = (subject, contentUrl) => {
-                    ConfirmationModal.open('Email "' + subject + '"', `<iframe style="height:75vh" width="100%" height="100%" src="${contentUrl}" />`)
-                }
-            </script>
         {% endif %}
-    {% endwith %}
+        <div id="member-personal-data"
+             class="card"
+             style="margin-bottom:1em;
+                            margin-top:1em">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">{% translate "Persönliche Daten" %}</h5>
+            <span
+              id="personal_data_dropdown"
+              data-member-id="{{ object.id }}"
+              data-extra-email-addresses-enabled="{{ extra_email_addresses_enabled }}">
+            </span>
+          </div>
+          <div class="card-body">
+            <div class="row m-1">
+              <div class="col-4 fw-bold text-end">{% translate "Mitgliedsnummer" %}:</div>
+              <div class="col-8" id="tapir_user_member_number">{% formatted_member_number object cache %}</div>
+            </div>
+            <div class="row m-1">
+              <div class="col-4 fw-bold text-end">{% translate "Name" %}:</div>
+              <div class="col-8" id="tapir_user_display_name">{{ object.get_display_name }}</div>
+            </div>
+            <div class="row m-1">
+              <div class="col-4 fw-bold text-end">{% translate "E-Mail" %}:</div>
+              {% if email_change_request %}
+                <div class="col-8" id="tapir_user_changed_email">
+                  <span style="text-decoration: line-through; color:#6A6A6A">{{ object.email }}</span>
+                  <br />
+                  <span>{{ email_change_request.new_email }}&nbsp;&nbsp;&nbsp;<span
+                    class="badge bg-danger">Nicht verifiziert</span></span>
+                  {% if perms.accounts.manage %}
+                    <form method="POST" action="{% url 'accounts:admin_apply_mail_change' %}">
+                      {% csrf_token %}
+                      <input type="hidden" name="user_id" value="{{ object.id }}" />
+                      <input type="hidden"
+                             name="new_email"
+                             value="{{ email_change_request.new_email }}" />
+                      <button type="submit" class="btn tapir-btn btn-primary btn-sm">
+                        Als verifiziert
+                        markieren
+                      </button>
+                    </form>
+                  {% endif %}
+                </div>
+              {% else %}
+                <div class="col-8" id="tapir_user_email">{{ object.email }}</div>
+              {% endif %}
+            </div>
+            <div class="row m-1">
+              <div class="col-4 fw-bold text-end">{% translate "Telefon" %}:</div>
+              <div class="col-8" id="tapir_user_phone_number">
+                {% if object.phone_number %}
+                  {{ object.phone_number|format_phone_number }}
+                {% else %}
+                  <span class="text-danger">{% translate "Fehlt" %}</span>
+                {% endif %}
+              </div>
+            </div>
+            {% if object.phone_number_landline %}
+              <div class="row m-1">
+                <div class="col-4 fw-bold text-end">{% translate "Telefon 2" %}:</div>
+                <div class="col-8" id="tapir_user_phone_number_landline">
+                  {{ object.phone_number_landline|format_phone_number }}
+                </div>
+              </div>
+            {% endif %}
+            <div class="row m-1">
+              <div class="col-4 fw-bold text-end">{% translate "Adresse" %}:</div>
+              <div class="col-8" id="tapir_user_address">
+                {% if object.street and object.city %}
+                  {{ object.get_display_address }}
+                {% else %}
+                  <span class="text-danger">{% translate "Fehlt" %}</span>
+                {% endif %}
+              </div>
+            </div>
+            <div class="row m-1">
+              <div class="col-4 fw-bold text-end">{% translate "Pseudonym" %}:</div>
+              <div class="col-8" id="tapir_user_pseudonym">
+                {% if object.pseudonym %}
+                  {{ object.pseudonym }}
+                {% else %}
+                  <span class="text-muted">{% translate "nicht gesetzt" %}</span>
+                {% endif %}
+              </div>
+            </div>
+
+          </div>
+          {% if object.pk == request.user.pk %}
+            <div class="card-footer">
+            <span class="d-flex flex-row gap-2 justify-content-end" style="width: 100%;">
+              <a style="float: right"
+                 class="btn tapir-btn btn-outline-primary ms-1"
+                 href="{% url 'accounts:password_change' %}"><span
+                class="material-icons">vpn_key</span>{% translate "Passwort ändern" %}</a>
+            </span>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+      <div id="member-detail-right-column">
+        <div class="row">
+          <div>
+            <div class="card">
+              <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                  <h5 class="mb-0">Bei Fragen wende dich gerne an:</h5>
+                  <a class="btn tapir-btn btn-outline-secondary"
+                     target="_blank"
+                     href="{{ 'wirgarten.site.faq_link' | parameter }}">
+                    <span class="material-icons">link</span>
+                    <h5 class="mb-0">{% translate 'Zum FAQ' %}</h5>
+                  </a>
+                </div>
+              </div>
+              <div class="card-body" style="padding-right: 0">
+                <div class="d-flex flex-row justify-content-between">
+                  <div class="d-flex flex-column">
+                    <strong class="card-title">{{ 'wirgarten.site.admin_name'|parameter }}</strong>
+                    <a class="card-text"
+                       style="text-decoration:none;
+                                                  color:inherit"
+                       href="tel:{{ 'wirgarten.site.admin_telephone'|parameter }}"
+                       target="_blank">📞&nbsp;&nbsp;{{ 'wirgarten.site.admin_telephone'|parameter }}</a>
+                    <a class="card-text"
+                       style="text-decoration:none;
+                                                  color:inherit"
+                       href="mailto:{{ 'wirgarten.site.admin_email'|parameter }}"
+                       target="_blank">📧&nbsp;&nbsp;{{ 'wirgarten.site.admin_email'|parameter }}</a>
+                  </div>
+                  <img src="{{ 'wirgarten.site.admin_image'|parameter }}"
+                       alt="{{ 'wirgarten.site.admin_name'|parameter }}"
+                       style="max-width: 200px">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row mt-2">
+          <div id="member_profile_waiting_list_entry"
+               data-member-id="{{ object.pk }}"
+               data-admin-email="{{ 'wirgarten.site.admin_email'|parameter }}">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0">Wartelisteneintrag</h5>
+              </div>
+              <div class="card-body">
+                                <span class="spinner-border">
+                                    <span class="visually-hidden">Loading...</span>
+                                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row mt-2">
+          <div id="member_profile_solidarity_contribution"
+               data-member-id="{{ object.pk }}"
+               data-admin-email="{{ 'wirgarten.site.admin_email'|parameter }}"
+               data-user-is-admin="{{ perms.accounts.manage }}"
+               data-members-can-change-contribution="{% get_parameter_value_tag 'wirgarten.harvest.members_are_allowed_to_change_soliprice' cache %}">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0">Solidarbeitrag</h5>
+              </div>
+              <div class="card-body">
+                                <span class="spinner-border">
+                                    <span class="visually-hidden">Loading...</span>
+                                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% if show_mail_category_content %}
+          <div class="row mt-2">
+            <div id="member_mail_category" data-member-id="{{ object.pk }}">
+              <div class="card">
+                <div class="card-header">
+                  <h5 class="mb-0">Mail-Abos</h5>
+                </div>
+                <div class="card-body">
+                                    <span class="spinner-border">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+        {% if show_mailing_list_content %}
+          <div class="row mt-2">
+            <div id="member_mailing_list" data-member-id="{{ object.pk }}">
+              <div class="card">
+                <div class="card-header">
+                  <h5 class="mb-0">Mailing-Listen</h5>
+                </div>
+                <div class="card-body">
+                                    <span class="spinner-border">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+        <div class="row mt-2">
+          <div>
+            <div id="member-payment-data" class="card">
+              <h5 class="card-header d-flex justify-content-between align-items-center">
+                {% translate "Bankverbindung" %}
+                <span id="bank_data_button" data-member-id="{{ object.id }}"></span>
+              </h5>
+              <div class="card-body">
+                <div class="row m-1">
+                  <div class="col-4 fw-bold text-end">{% translate "Kontoinhaber" %}:</div>
+                  <div class="col-8" id="tapir_user_account_owner">
+                    {% if object.account_owner %}
+                      {{ object.account_owner }}
+                    {% else %}
+                      <span class="text-danger">{% translate "Fehlt" %}</span>
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="row m-1">
+                  <div class="col-4 fw-bold text-end">{% translate "IBAN" %}:</div>
+                  <div class="col-8" id="tapir_user_iban">
+                    {% if object.iban %}
+                      {{ object.iban }}
+                    {% else %}
+                      <span class="text-danger">{% translate "Fehlt" %}</span>
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="row m-1">
+                  <div class="col-4 fw-bold text-end">{% translate "Zahlungsintervall" %}:</div>
+                  <div class="col-8" id="tapir_user_payment_rhythm">
+                    <div class="d-flex flex-row gap-2">
+                      {{ payment_rhythm }}
+                      {% if perms.accounts.manage %}<span id="payment_rhythm_button"
+                                                          data-member-id="{{ object.id }}"></span>{% endif %}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% if perms.accounts.manage %}
+      <hr />
+      {% user_log_entry_list object %}
+      <script>
+        const handleOpenEmail = (subject, contentUrl) => {
+          ConfirmationModal.open("Email \"" + subject + "\"", `<iframe style="height:75vh" width="100%" height="100%" src="${contentUrl}" />`);
+        };
+      </script>
+    {% endif %}
+  {% endwith %}
 {% endblock content %}

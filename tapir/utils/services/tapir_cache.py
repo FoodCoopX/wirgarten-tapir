@@ -36,7 +36,6 @@ from tapir.wirgarten.models import (
     Payment,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.service.product_standard_order import product_type_order_by
 from tapir.wirgarten.utils import get_today
 
 
@@ -263,7 +262,7 @@ class TapirCache:
             subscriptions_by_product_type = {
                 product_type: set()
                 for product_type in ProductType.objects.order_by(
-                    *product_type_order_by(cache=cache)
+                    "order_in_bestellwizard"
                 )
             }
             subscriptions = Subscription.objects.select_related("product__type")
@@ -312,7 +311,7 @@ class TapirCache:
         return get_from_cache_or_compute(
             cache,
             "product_types_in_standard_order",
-            lambda: ProductType.objects.order_by(*product_type_order_by(cache=cache)),
+            lambda: ProductType.objects.order_by("order_in_bestellwizard"),
         )
 
     @classmethod
@@ -484,6 +483,11 @@ class TapirCache:
     def get_payment_rhythms_objects_by_member(
         cls, cache: dict
     ) -> dict[Member, list[MemberPaymentRhythm]]:
+        key = "payment_rhythms_by_member"
+        TapirCacheManager.register_key_in_category(
+            cache=cache, key=key, category=TapirCacheManager.CATEGORY_PAYMENT_RHYTHMS
+        )
+
         def compute():
             result = {}
             all_rhythms = MemberPaymentRhythm.objects.select_related("member").order_by(
@@ -495,7 +499,7 @@ class TapirCache:
                 result[rhythm.member].append(rhythm)
             return result
 
-        return get_from_cache_or_compute(cache, "payment_rhythms_by_member", compute)
+        return get_from_cache_or_compute(cache, key, compute)
 
     @classmethod
     def get_member_payment_rhythm_object(

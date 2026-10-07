@@ -5,11 +5,16 @@ from decimal import Decimal
 from unittest.mock import patch, Mock
 
 from django.urls import reverse
+from keycloak import KeycloakPutError
 from tapir_mail.triggers.transactional_trigger import (
     TransactionalTriggerData,
     TransactionalTrigger,
 )
 
+from tapir.accounts.services.email_verification_service import EmailVerificationService
+from tapir.accounts.services.keycloak_user_delete_service import (
+    KeycloakUserDeleteService,
+)
 from tapir.associations.models import AssociationMembership
 from tapir.associations.tests.factories import AssociationMembershipTypeFactory
 from tapir.core.config import (
@@ -106,7 +111,10 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
 
         self.assertEqual(0, WaitingListEntry.objects.count())
 
-    @patch("tapir_mail.triggers.transactional_trigger.TransactionalTrigger.fire_action")
+    @patch(
+        "tapir_mail.triggers.transactional_trigger.TransactionalTrigger.fire_action",
+        autospec=True,
+    )
     def test_post_waitingListEntryWithoutStartDateAndNoGrowingPeriodOnCurrentStartDate_startsContractOnFollowingGrowingPeriod(
         self, mock_fire_action: Mock
     ):
@@ -117,6 +125,11 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
         mock_timezone(test=self, now=datetime.datetime(year=1997, month=3, day=30))
         GrowingPeriodFactory.create(start_date=datetime.date(year=1997, month=6, day=1))
         product = ProductFactory.create()
+        ProductPriceFactory.create(
+            product=product,
+            valid_from=datetime.date(year=1990, month=1, day=1),
+            price=Decimal("10.00"),
+        )
         WaitingListProductWish.objects.create(
             product=product, waiting_list_entry=entry, quantity=2
         )
@@ -197,7 +210,7 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
         self.assertEqual(1, Member.objects.count())
         self.assertFalse(CoopShareTransaction.objects.exists())
 
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_waitingListEntryWithDeliveredProduct_mailConfirmationGetsSentWithCorrectDates(
         self, mock_fire_action: Mock
     ):
@@ -284,7 +297,10 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
             {
                 "contract_start_date": "11.05.2026",
                 "contract_end_date": "31.12.2026",
-                "contract_list": "<ul><li>1 × M Basket  (11.05.2026 - 31.12.2026)</li></ul>",
+                "contract_list": (
+                    '<ul style="margin:0;padding:0 0 0 1.2em;">'
+                    '<li style="margin:0;">1 × M Basket  (11.05.2026 - 31.12.2026) — 10,00 € / Monat</li></ul>'
+                ),
                 "membership_start_date": "07.06.2026",
                 "membership_monthly_price": "0,00",
                 "first_pickup_date": "14.05.2026",
@@ -293,6 +309,8 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
                 "total_cost": "100,00",
                 "solidarity_contribution_amount": "12,00",
                 "solidarity_contribution_start_date": "11.05.2026",
+                "monthly_total": "22,00",
+                "payment_rhythm": "Halbjährlich",
             },
             trigger_data.token_data,
         )
@@ -390,8 +408,14 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
             confirmation_link_key=uuid.uuid4(),
             member=None,
         )
+        product = ProductFactory.create()
+        ProductPriceFactory.create(
+            product=product,
+            valid_from=datetime.date(year=1990, month=1, day=1),
+            price=Decimal("10.00"),
+        )
         WaitingListProductWish.objects.create(
-            waiting_list_entry=entry, quantity=1, product=ProductFactory.create()
+            waiting_list_entry=entry, quantity=1, product=product
         )
         mock_timezone(test=self, now=datetime.datetime(year=1997, month=3, day=30))
         GrowingPeriodFactory.create(start_date=datetime.date(year=1997, month=1, day=1))
@@ -424,3 +448,55 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
 
         self.assertStatusCode(response, 200)
         self.assert_order_confirmed(response.json())
+
+    @patch.object(KeycloakUserDeleteService, "delete_user_if_exists", autospec=True)
+    @patch.object(EmailVerificationService, "send_verification_email", autospec=True)
+    def test_post_sendingOfEmailVerificationFails_changesRolledBackAndMemberDeletedFromKeycloak(
+        self,
+        mock_send_verification_email: Mock,
+        mock_delete_user_if_exists: Mock,
+    ):
+        # If sending the mail verification fails, an exception will be raised by the keycloak client.
+        # This will cause the transaction to rollback, the member will not be in the Tapir DB
+        # However, since the mail is sent after the user is created in Keycloak, the user would still exist in keycloak.
+        # This test makes sure the user is deleted in keycloak too.
+
+        mock_send_verification_email.side_effect = KeycloakPutError()
+
+        entry = WaitingListEntryFactory.create(
+            confirmation_link_key=uuid.uuid4(),
+            member=None,
+            first_name="John",
+            last_name="Doe",
+            email="john@example.com",
+        )
+        mock_timezone(test=self, now=datetime.datetime(year=1997, month=3, day=30))
+        GrowingPeriodFactory.create(start_date=datetime.date(year=1997, month=1, day=1))
+
+        confirm_data = {
+            "entry_id": str(entry.id),
+            "link_key": str(entry.confirmation_link_key),
+            "account_owner": "John Doe",
+            "iban": "NL35ABNA7806242643",
+            "sepa_allowed": True,
+            "contract_accepted": True,
+            "number_of_coop_shares": 2,
+            "payment_rhythm": "semiannually",
+            "solidarity_contribution": 0,
+            "association_membership_type_id": None,
+        }
+        with self.assertRaises(KeycloakPutError):
+            self.client.post(
+                reverse("waiting_list:public_confirm_waiting_list_entry"),
+                data=json.dumps(confirm_data),
+                content_type="application/json",
+            )
+
+        self.assertFalse(Member.objects.exists())
+
+        mock_send_verification_email.assert_called_once()
+        mock_delete_user_if_exists.assert_called_once()
+        self.assertEqual(
+            mock_send_verification_email.call_args.kwargs["user"],
+            mock_delete_user_if_exists.call_args.kwargs["user"],
+        )

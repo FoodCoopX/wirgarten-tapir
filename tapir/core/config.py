@@ -46,6 +46,7 @@ THEME_AUERGARDEN = "aug"
 THEME_LANDLMUEHLE = "lnd"
 THEME_SCHINKELER_HOEFE = "sch"
 THEME_FALKENHOF = "fkh"
+THEME_HECKENGAEU = "hkg"
 
 
 THEME_OPTIONS = [
@@ -57,6 +58,7 @@ THEME_OPTIONS = [
     (THEME_GEBAECK, "Ge:Bäck"),
     (THEME_GKH, "GemüseKollektiv Hebenshausen"),
     (THEME_GROSSHOECHBERG, "Grosshöchberg"),
+    (THEME_HECKENGAEU, "Heckengäu"),
     (THEME_HUMUSWERKSTATT, "Humuswerkstatt"),
     (THEME_KATRINGER_GRUENZEUG, "Katringer Grünzeug"),
     (THEME_L2G, "L2G Dickendorf"),

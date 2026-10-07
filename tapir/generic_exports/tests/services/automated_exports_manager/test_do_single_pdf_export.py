@@ -10,9 +10,9 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
 class TestDoSinglePdfExport(TapirIntegrationTest):
-    @patch.object(ExportMailSender, "send_mails_for_export")
+    @patch.object(ExportMailSender, "send_mails_for_export", autospec=True)
     @patch.object(AutomatedPdfExportResult, "objects")
-    @patch.object(PdfExportBuilder, "create_exported_files")
+    @patch.object(PdfExportBuilder, "create_exported_files", autospec=True)
     def test_doSinglePdfExport_default_createsExportedFileAndExportResultAndSendsMail(
         self,
         create_exported_files: Mock,

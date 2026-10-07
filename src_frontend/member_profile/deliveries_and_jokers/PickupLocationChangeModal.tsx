@@ -112,7 +112,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der aktueller Verteilstation",
+          "Fehler beim Laden der aktuellen Verteilstation",
           setToastDatas,
         ),
       );
@@ -136,7 +136,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der Warteliste-Eintrag",
+          "Fehler beim Laden des Wartelisteneintrags",
           setToastDatas,
         ),
       );
@@ -186,7 +186,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
     ) {
       if (hasWaitingListEntry) {
         alert(
-          "Du stehst schon auf der Warteliste, deswegen kannst du kein ausgelastete Verteilstation auswählen.",
+          "Du stehst schon auf der Warteliste, deswegen kannst du keine ausgelastete Verteilstation auswählen.",
         );
         setSelectedPickupLocations([]);
       } else {
@@ -223,7 +223,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
                 id: uuidv4(),
                 variant: "success",
                 message: message,
-                title: "Warteliste-Eintrag erzeugt",
+                title: "Wartelisteneintrag erzeugt",
               },
               setToastDatas,
             );
@@ -235,8 +235,8 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
                 id: uuidv4(),
                 variant: "danger",
                 message:
-                  "Es gibt schon einen Warteliste-Eintrag für dich, wenn du den ändern willst, wende dich bitte an dem Kontakt hier Oben Rechts",
-                title: "Warteliste-Eintrag nicht erzeugt",
+                  "Es gibt schon einen Wartelisteneintrag für dich. Wenn du ihn ändern willst, wende dich bitte an den Kontakt oben rechts.",
+                title: "Wartelisteneintrag nicht erzeugt",
               },
               setToastDatas,
             );
@@ -245,7 +245,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
         .catch((error) =>
           handleRequestError(
             error,
-            "Fehler beim Erzeugen des Warteliste-Eintrags",
+            "Fehler beim Erzeugen des Wartelisteneintrags",
             setToastDatas,
           ),
         )
@@ -361,7 +361,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
           <TapirButton
             text={
               waitingListModeEnabled
-                ? "Warteliste-Eintrag bestätigen"
+                ? "Wartelisteneintrag bestätigen"
                 : "Wechsel bestätigen"
             }
             variant={"primary"}
@@ -378,12 +378,12 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
           (selectedPickupLocations.length > 0
             ? selectedPickupLocations[0].name
             : "") +
-          "). Du kannst eine andere Station wählen, oder dich auf die Warteliste setzen lassen. " +
+          "). Du kannst eine andere Station wählen oder dich auf die Warteliste setzen lassen. " +
           "Du kannst dich auch auf die Warteliste von bis zu drei Verteilstationen setzen lassen."
         }
         title={"Verteilstation ausgelastet"}
         open={showWaitingListConfirmationModal}
-        confirmButtonText={"Weiter mit Warteliste-Eintrag"}
+        confirmButtonText={"Weiter mit Wartelisteneintrag"}
         confirmButtonVariant={"outline-primary"}
         confirmButtonIcon={"pending_actions"}
         onConfirm={() => {

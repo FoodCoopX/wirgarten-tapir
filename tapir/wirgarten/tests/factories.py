@@ -44,6 +44,8 @@ class MemberFactory(factory.django.DjangoModelFactory[Member]):
     email = factory.Faker("email")
     account_owner = factory.Faker("last_name")
     iban = factory.Faker("iban")
+    sepa_consent = factory.Faker("date_time", tzinfo=datetime.timezone.utc)
+    username = factory.LazyAttribute(lambda member: member.email)
 
     @factory.post_generation
     def member_no(self: Member, create, member_no, **kwargs):

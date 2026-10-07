@@ -2532,6 +2532,54 @@ paths:
               schema:
                 type: boolean
           description: ''
+  /coop/api/member_email:
+    get:
+      operationId: coop_api_member_email_retrieve
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - coop
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberEmailResponse'
+          description: ''
+    post:
+      operationId: coop_api_member_email_create
+      tags:
+      - coop
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberEmailRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MemberEmailRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MemberEmailRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderConfirmationResponse'
+          description: ''
   /coop/api/member_personal_data:
     get:
       operationId: coop_api_member_personal_data_retrieve
@@ -11474,6 +11522,9 @@ components:
           nullable: true
         min_coop_shares:
           type: integer
+        show_min_coop_shares:
+          type: boolean
+          readOnly: true
         price_per_delivery:
           type: boolean
           readOnly: true
@@ -11492,6 +11543,7 @@ components:
       - picking_mode
       - price
       - price_per_delivery
+      - show_min_coop_shares
       - size
       - url_of_image_in_bestellwizard
     ExtendedProductType:
@@ -12493,6 +12545,37 @@ components:
       - subscription_changes
       - subscription_creations
       - subscriptions_deleted
+    MemberEmailRequestRequest:
+      type: object
+      properties:
+        member_id:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+          minLength: 1
+      required:
+      - email
+      - member_id
+    MemberEmailResponse:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        verified:
+          type: boolean
+        contact_email:
+          type: string
+          format: email
+        is_admin:
+          type: boolean
+      required:
+      - contact_email
+      - email
+      - is_admin
+      - verified
     MemberExtraEmail:
       type: object
       properties:
@@ -12702,11 +12785,11 @@ components:
           type: string
         last_name:
           type: string
-        email:
-          type: string
-          format: email
         phone_number:
           type: string
+        phone_number_landline:
+          type: string
+          nullable: true
         street:
           type: string
         street_2:
@@ -12739,7 +12822,6 @@ components:
       - city
       - contact_email
       - country
-      - email
       - first_name
       - last_name
       - member_number
@@ -13526,12 +13608,11 @@ components:
         last_name:
           type: string
           minLength: 1
-        email:
-          type: string
-          format: email
-          minLength: 1
         phone_number:
           type: string
+        phone_number_landline:
+          type: string
+          nullable: true
         street:
           type: string
           minLength: 1

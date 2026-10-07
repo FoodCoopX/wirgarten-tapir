@@ -71,7 +71,7 @@ const CoopSharesAdminModal: React.FC<CoopSharesAdminModalProps> = ({
         setLoading(false);
         handleRequestError(
           error,
-          "Fehler bei der manueller Zeichnung der Geno-Anteile",
+          "Fehler bei der manuellen Zeichnung der Geno-Anteile",
           setToastDatas,
         );
       });
@@ -87,17 +87,17 @@ const CoopSharesAdminModal: React.FC<CoopSharesAdminModalProps> = ({
         </p>
         <p>
           Du kannst zum einen in der Vergangenheit gezeichnete
-          Genossenschaftsanteile hinterlegen. Dies ist v.a. relevant wenn ihr
+          Genossenschaftsanteile hinterlegen. Dies ist v. a. relevant, wenn ihr
           eure Mitglieder selbstständig anlegen / importieren wollt.
         </p>
         <p>
           Du kannst aber auch für bereits bestehende Mitglieder die Zeichnung
-          von Genossenschaftsanteilen eintragen. Dies ist v.a. relevant, wenn
+          von Genossenschaftsanteilen eintragen. Dies ist v. a. relevant, wenn
           Mitglieder nicht selbstständig ihren Mitgliederbereich verwalten
           können/wollen. Das Wirksamkeitsdatum der Zeichnung der
           Genossenschaftsanteile ergibt sich hier aus den von euren
-          Konfigurationseinstellung abhängigen Regeln und kann nicht durch euch
-          festgelegt werden.
+          Konfigurationseinstellungen abhängigen Regeln und kann nicht durch
+          euch festgelegt werden.
         </p>
       </>
     );
@@ -113,7 +113,7 @@ const CoopSharesAdminModal: React.FC<CoopSharesAdminModalProps> = ({
               <TapirHelpButton
                 buttonSize={"sm"}
                 text={
-                  "Das Wirksamkeitsdatum ist das Datum, an dem der Vorstand bzw. Generalversammlung (abhängig von der Satzung) der Beitritts- bzw Zeichnungserklärung zugestimmt hat. Bitte gib dieses Datum hier ein."
+                  "Das Wirksamkeitsdatum ist das Datum, an dem der Vorstand bzw. die Generalversammlung (abhängig von der Satzung) der Beitritts- bzw. Zeichnungserklärung zugestimmt hat. Bitte gib dieses Datum hier ein."
                 }
               />
             </span>

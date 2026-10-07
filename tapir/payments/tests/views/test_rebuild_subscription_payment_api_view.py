@@ -1,11 +1,8 @@
 import datetime
-from unittest.mock import patch, Mock
 
-from django.core.exceptions import ValidationError
 from django.urls import reverse
 from rest_framework import status
 
-from tapir.payments.services.pain_008_xml_generator import Pain008XmlGenerator
 from tapir.wirgarten.models import PaymentTransaction
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
@@ -14,6 +11,7 @@ from tapir.wirgarten.tests.factories import (
     SubscriptionFactory,
     ProductPriceFactory,
     MemberPickupLocationFactory,
+    GrowingPeriodFactory,
 )
 from tapir.wirgarten.tests.test_utils import (
     TapirIntegrationTest,
@@ -34,6 +32,9 @@ class TestRebuildSubscriptionPaymentsApiView(TapirIntegrationTest):
         )
         cls._set_parameter(
             key=ParameterKeys.PAYMENT_CREDITOR_IDENTIFIER, value="test_id"
+        )
+        cls.growing_period = GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2023, month=1, day=1)
         )
 
     def setUp(self) -> None:
@@ -61,26 +62,59 @@ class TestRebuildSubscriptionPaymentsApiView(TapirIntegrationTest):
         self.assertStatusCode(response, status.HTTP_200_OK)
         self.assertEqual(2, PaymentTransaction.objects.count())
 
-    @patch.object(Pain008XmlGenerator, "build_xml_string", autospec=True)
-    def test_post_xmlExportThrowsError_returnsErrorProperly(
-        self, mock_build_xml_string: Mock
-    ):
+    def test_post_xmlExportThrowsError_returnsErrorProperly(self):
         member = MemberFactory.create(is_superuser=True)
         self.client.force_login(member)
-
-        mock_build_xml_string.side_effect = ValidationError("Test error")
+        self._set_parameter(key=ParameterKeys.PAYMENT_CREDITOR_IDENTIFIER, value="")
 
         response = self._setup_data_and_do_call()
 
         self.assertStatusCode(response, status.HTTP_200_OK)
         response_content = response.json()
         self.assertFalse(response_content["order_confirmed"])
-        self.assertEqual("Test error", response_content["error"])
+        self.assertEqual(
+            "Der Parameter 'Gläubiger-Identifikationsnummer' muss in der Konfig gesetzt werden",
+            response_content["error"],
+        )
         self.assertEqual(0, PaymentTransaction.objects.count())
+
+    def test_post_somePaymentsFail_returnsErrorProperly(self):
+        member = MemberFactory.create(is_superuser=True)
+        self.client.force_login(member)
+
+        subscription_1 = SubscriptionFactory.create(
+            period=self.growing_period,
+            member__account_owner=None,
+            member__first_name="John",
+            member__last_name="Test1",
+            member__member_no=12,
+        )
+        SubscriptionFactory.create(
+            period=self.growing_period,
+            member__iban="INVALID_IBAN",
+            product=subscription_1.product,
+            member__first_name="Alice",
+            member__last_name="Test2",
+            member__member_no=902,
+        )
+        ProductPriceFactory.create(
+            product=subscription_1.product, valid_from=subscription_1.start_date
+        )
+
+        response = self._setup_data_and_do_call()
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        response_content = response.json()
+        self.assertFalse(response_content["order_confirmed"])
+        self.assertEqual(
+            "Die Lastschriften konnten neu erzeugt werden, es sind aber folgenden Fehler aufgetreten. Die betroffene Mitglieder sind nicht in der neue Dateien enthalten. Mitglied Alice Test2 #902: IN is not a valid country code for IBAN., Mitglied John Test1 #12 hat kein Kontoinhaber",
+            response_content["error"],
+        )
+        self.assertEqual(2, PaymentTransaction.objects.count())
 
     def _setup_data_and_do_call(self):
         subscription = SubscriptionFactory.create(
-            period__start_date=datetime.date(year=2023, month=1, day=1),
+            period=self.growing_period,
             member__sepa_consent=self.now,
         )
         ProductPriceFactory.create(

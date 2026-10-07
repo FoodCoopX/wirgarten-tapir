@@ -1,6 +1,8 @@
 from django.core.management import BaseCommand
 from django.db.models import QuerySet, Count, Q
 
+from tapir.accounts.services.email_verification_service import EmailVerificationService
+from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.service.member import (
     annotate_member_queryset_with_coop_shares_total_value,
@@ -120,11 +122,16 @@ class Command(BaseCommand):
             self.stdout.write("Dry run enabled, aborting")
             return
 
+        cache = {}
+
         for member in members:
             try:
-                member.save(bypass_keycloak=False)
-                # The member must be saved twice in order to persist the keycloak ID
-                member.save(bypass_keycloak=False)
+                KeycloakUserManager.create_keycloak_user_if_necessary(
+                    user=member, initial_password=None, cache=cache
+                )
+                EmailVerificationService.send_verification_email(
+                    user=member, actor=None, cache=cache
+                )
             except Exception as e:
                 self.stderr.write(f"Error when saving member {member}: {e}")
                 continue

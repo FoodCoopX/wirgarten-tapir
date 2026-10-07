@@ -1,12 +1,11 @@
 from decimal import Decimal
 from unittest.mock import Mock
 
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
-
-from tapir.payments.monthly_sales_data import MonthlySalesData
+from tapir.payments.dataclasses import MonthlySalesData
 from tapir.payments.services.monthly_sales_column_provider import (
     MonthlySalesColumnProvider,
 )
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestMonthlySalesColumnProvider(TapirUnitTest):

@@ -86,7 +86,7 @@ class TestSubscriptionUpdateViewValidatorValidateOptionalProductCanBeOrderedWith
             )
 
         self.assertEqual(
-            "Um Anteile von diese zusätzliche Produkte (optional_PT) zu bestellen, "
-            "musst du Anteile von der Basis-Produkt (required_PT) an der gleiche Vertragsperiode haben.",
+            "Um Anteile dieses Zusatzprodukts (optional_PT) zu bestellen, "
+            "musst du in derselben Vertragsperiode auch Anteile des Basisprodukts (required_PT) haben.",
             error.exception.message,
         )

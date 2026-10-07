@@ -9,7 +9,6 @@ from tapir.bakery.tests.factories import (
     StoveSessionFactory,
 )
 from tapir.wirgarten.tests.factories import PickupLocationFactory
-from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
@@ -23,7 +22,6 @@ class TestBakingListService(TapirIntegrationTest):
 
     def setUp(self):
         super().setUp()
-        self._set_parameter(ParameterKeys.MEMBER_BYPASS_KEYCLOAK, True)
         self.roggenbrot = BreadFactory.create(name="Roggenbrot")
         self.dinkelkruste = BreadFactory.create(name="Dinkelkruste")
 
