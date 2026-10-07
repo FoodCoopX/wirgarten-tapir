@@ -43,8 +43,8 @@ const MailingListCard: React.FC = () => {
       <>
         <p>
           Über eine Mailing-Liste können sich Mitglieder per E-Mail austauschen:
-          Eine E-Mail an die Adresse der Liste wird an alle Empfänger der Liste
-          weitergeleitet.
+          Eine E-Mail an die Adresse der Liste wird an alle Empfänger:innen der
+          Liste weitergeleitet.
         </p>
         <p>
           Hier in Tapir legst du fest, wie eine Liste heißt, wie sie beschrieben
@@ -73,18 +73,18 @@ const MailingListCard: React.FC = () => {
             Mitglieder die Liste.
           </li>
           <li>
-            <strong>Empfänger</strong>: Anzahl der Empfänger, einschließlich der
-            Einladungen, die noch nicht angenommen wurden.
+            <strong>Empfänger</strong>: Anzahl der Empfänger:innen,
+            einschließlich der Einladungen, die noch nicht angenommen wurden.
           </li>
         </ul>
         <p>
-          Über die Buttons rechts kannst du die Empfänger einer Liste verwalten,
-          die Liste bearbeiten oder sie löschen.
+          Über die Buttons rechts kannst du die Empfänger:innen einer Liste
+          verwalten, die Liste bearbeiten oder sie löschen.
         </p>
         <p>
-          Empfänger, die du hinzufügst, werden zunächst nur eingeladen. Sie
-          nehmen erst teil, wenn sie die Einladung angenommen haben. Mitglieder
-          können das in ihrem Mitgliederbereich tun.
+          Empfänger:innen, die du hinzufügst, werden zunächst nur eingeladen.
+          Sie nehmen erst teil, wenn sie die Einladung angenommen haben.
+          Mitglieder können das in ihrem Mitgliederbereich tun.
         </p>
       </>
     );
