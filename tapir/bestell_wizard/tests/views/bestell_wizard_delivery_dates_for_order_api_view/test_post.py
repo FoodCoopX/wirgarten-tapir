@@ -266,9 +266,7 @@ class TestBestellWizardDeliveryDatesForOrderApiView(TapirIntegrationTest):
         )
 
     def test_post_pickupLocationWithPastEndDate_excludedFromResponse(self):
-        PickupLocationFactory.create(
-            end_date=datetime.date(year=2024, month=6, day=30)
-        )
+        PickupLocationFactory.create(end_date=datetime.date(year=2024, month=6, day=30))
 
         url = reverse("bestell_wizard:bestell_wizard_delivery_dates")
         response = self.client.post(
