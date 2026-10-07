@@ -1,18 +1,22 @@
 from unittest.mock import patch, Mock
 
 from django.core.exceptions import ValidationError
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.subscriptions.services.subscription_change_validator import (
     SubscriptionChangeValidator,
 )
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestValidateCannotReduceSize(TapirUnitTest):
     @patch.object(
-        SubscriptionChangeValidator, "calculate_capacity_used_by_the_ordered_products"
+        SubscriptionChangeValidator,
+        "calculate_capacity_used_by_the_ordered_products",
+        autospec=True,
     )
-    @patch.object(SubscriptionChangeValidator, "should_validate_cannot_reduce_size")
+    @patch.object(
+        SubscriptionChangeValidator, "should_validate_cannot_reduce_size", autospec=True
+    )
     def test_validateCannotReduceSize_shouldNotValidate_doesNothing(
         self,
         mock_should_validate_cannot_reduce_size: Mock,
@@ -35,11 +39,16 @@ class TestValidateCannotReduceSize(TapirUnitTest):
     @patch.object(
         SubscriptionChangeValidator,
         "calculate_capacity_used_by_the_current_subscriptions",
+        autospec=True,
     )
     @patch.object(
-        SubscriptionChangeValidator, "calculate_capacity_used_by_the_ordered_products"
+        SubscriptionChangeValidator,
+        "calculate_capacity_used_by_the_ordered_products",
+        autospec=True,
     )
-    @patch.object(SubscriptionChangeValidator, "should_validate_cannot_reduce_size")
+    @patch.object(
+        SubscriptionChangeValidator, "should_validate_cannot_reduce_size", autospec=True
+    )
     def test_validateCannotReduceSize_orderedProductsAreLessThanCurrent_raisesError(
         self,
         mock_should_validate_cannot_reduce_size: Mock,
@@ -85,11 +94,16 @@ class TestValidateCannotReduceSize(TapirUnitTest):
     @patch.object(
         SubscriptionChangeValidator,
         "calculate_capacity_used_by_the_current_subscriptions",
+        autospec=True,
     )
     @patch.object(
-        SubscriptionChangeValidator, "calculate_capacity_used_by_the_ordered_products"
+        SubscriptionChangeValidator,
+        "calculate_capacity_used_by_the_ordered_products",
+        autospec=True,
     )
-    @patch.object(SubscriptionChangeValidator, "should_validate_cannot_reduce_size")
+    @patch.object(
+        SubscriptionChangeValidator, "should_validate_cannot_reduce_size", autospec=True
+    )
     def test_validateCannotReduceSize_orderedProductsAreSameAsCurrent_doesNothing(
         self,
         mock_should_validate_cannot_reduce_size: Mock,
@@ -120,11 +134,16 @@ class TestValidateCannotReduceSize(TapirUnitTest):
     @patch.object(
         SubscriptionChangeValidator,
         "calculate_capacity_used_by_the_current_subscriptions",
+        autospec=True,
     )
     @patch.object(
-        SubscriptionChangeValidator, "calculate_capacity_used_by_the_ordered_products"
+        SubscriptionChangeValidator,
+        "calculate_capacity_used_by_the_ordered_products",
+        autospec=True,
     )
-    @patch.object(SubscriptionChangeValidator, "should_validate_cannot_reduce_size")
+    @patch.object(
+        SubscriptionChangeValidator, "should_validate_cannot_reduce_size", autospec=True
+    )
     def test_validateCannotReduceSize_orderedProductsAreBiggerThanCurrent_doesNothing(
         self,
         mock_should_validate_cannot_reduce_size: Mock,

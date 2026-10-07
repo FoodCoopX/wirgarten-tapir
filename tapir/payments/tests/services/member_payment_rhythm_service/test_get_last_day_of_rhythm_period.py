@@ -1,19 +1,18 @@
 import datetime
 from unittest.mock import patch, Mock, call
 
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
-
 from tapir.payments.models import MemberPaymentRhythm
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.tests.factories import GrowingPeriodFactory
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestsGetLastDayOfRhythmPeriod(TapirUnitTest):
-    @patch.object(TapirCache, "get_growing_period_at_date")
-    @patch.object(TapirCache, "get_all_growing_periods_ascending")
+    @patch.object(TapirCache, "get_growing_period_at_date", autospec=True)
+    @patch.object(TapirCache, "get_all_growing_periods_ascending", autospec=True)
     def test_getLastDayOfRhythmPeriod_givenDayIsLastDayOfRhythmPeriod_returnsSameDate(
         self,
         mock_get_all_growing_periods_ascending: Mock,
@@ -39,8 +38,8 @@ class TestsGetLastDayOfRhythmPeriod(TapirUnitTest):
             reference_date=datetime.date(year=2025, month=4, day=1), cache=cache
         )
 
-    @patch.object(TapirCache, "get_growing_period_at_date")
-    @patch.object(TapirCache, "get_all_growing_periods_ascending")
+    @patch.object(TapirCache, "get_growing_period_at_date", autospec=True)
+    @patch.object(TapirCache, "get_all_growing_periods_ascending", autospec=True)
     def test_getLastDayOfRhythmPeriod_givenDayIsFirstDayOfRhythmPeriod_returnsCorrectLastDay(
         self,
         mock_get_all_growing_periods_ascending: Mock,
@@ -72,8 +71,8 @@ class TestsGetLastDayOfRhythmPeriod(TapirUnitTest):
             reference_date=datetime.date(year=2025, month=1, day=1), cache=cache
         )
 
-    @patch.object(TapirCache, "get_growing_period_at_date")
-    @patch.object(TapirCache, "get_all_growing_periods_ascending")
+    @patch.object(TapirCache, "get_growing_period_at_date", autospec=True)
+    @patch.object(TapirCache, "get_all_growing_periods_ascending", autospec=True)
     def test_getLastDayOfRhythmPeriod_givenDayIsInTheMiddleOfRhythmPeriod_returnsCorrectLastDay(
         self,
         mock_get_all_growing_periods_ascending: Mock,
@@ -99,8 +98,8 @@ class TestsGetLastDayOfRhythmPeriod(TapirUnitTest):
             reference_date=datetime.date(year=2024, month=3, day=1), cache=cache
         )
 
-    @patch.object(TapirCache, "get_growing_period_at_date")
-    @patch.object(TapirCache, "get_all_growing_periods_ascending")
+    @patch.object(TapirCache, "get_growing_period_at_date", autospec=True)
+    @patch.object(TapirCache, "get_all_growing_periods_ascending", autospec=True)
     def test_getLastDayOfRhythmPeriod_endOfRhythmPeriodWouldBeOutsideTheGrowingPeriod_returnsEndOfGrowingPeriod(
         self,
         mock_get_all_growing_periods_ascending: Mock,

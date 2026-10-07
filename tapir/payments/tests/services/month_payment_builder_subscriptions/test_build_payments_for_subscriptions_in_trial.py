@@ -38,11 +38,12 @@ class TestBuildPaymentsForSubscriptionsInTrial(TapirIntegrationTest):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
     @patch.object(
-        MonthPaymentBuilderUtils,
-        "build_payment_for_contract_and_member",
+        MonthPaymentBuilderUtils, "build_payment_for_contract_and_member", autospec=True
     )
     @patch.object(
-        MonthPaymentBuilderSubscriptions, "get_current_and_renewed_subscriptions"
+        MonthPaymentBuilderSubscriptions,
+        "get_current_and_renewed_subscriptions",
+        autospec=True,
     )
     def test_buildPaymentsForSubscriptionsInTrial_default_callsBuildPaymentCorrectlyAndReturnsPayments(
         self,

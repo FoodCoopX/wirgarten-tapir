@@ -1,16 +1,15 @@
 from unittest.mock import patch, Mock
 
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
-
 from tapir.generic_exports import tasks
 from tapir.generic_exports.services.automated_exports_manager import (
     AutomatedExportsManager,
 )
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestTasks(TapirUnitTest):
-    @patch.object(AutomatedExportsManager, "do_automated_pdf_exports")
-    @patch.object(AutomatedExportsManager, "do_automated_csv_exports")
+    @patch.object(AutomatedExportsManager, "do_automated_pdf_exports", autospec=True)
+    @patch.object(AutomatedExportsManager, "do_automated_csv_exports", autospec=True)
     def test_doAutomatedExports_default_callsService(
         self, mock_do_automated_csv_exports: Mock, mock_do_automated_pdf_exports: Mock
     ):

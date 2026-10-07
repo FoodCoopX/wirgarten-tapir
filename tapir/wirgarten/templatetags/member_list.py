@@ -1,5 +1,6 @@
 from django import template
 
+from tapir.accounts.services.email_verification_service import EmailVerificationService
 from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
@@ -32,7 +33,7 @@ def pickup_location_warning(member: Member, cache: dict):
 
 @register.simple_tag()
 def member_email_verified(member: Member, cache: dict):
-    return member.email_verified(cache)
+    return EmailVerificationService.is_user_email_verified(user=member, cache=cache)
 
 
 @register.simple_tag()

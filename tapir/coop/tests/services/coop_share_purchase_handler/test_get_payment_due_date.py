@@ -1,14 +1,16 @@
 import datetime
 from unittest.mock import patch, Mock
 
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
-
 from tapir.coop.services.coop_share_purchase_handler import CoopSharePurchaseHandler
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestGetPaymentDueDate(TapirUnitTest):
-    @patch("tapir.coop.services.coop_share_purchase_handler.get_parameter_value")
+    @patch(
+        "tapir.coop.services.coop_share_purchase_handler.get_parameter_value",
+        autospec=True,
+    )
     def test_getPaymentDueDate_sharesValidBeforePaymentDueDayOfMonth_returnsDateInSameMonth(
         self, mock_get_parameter_value: Mock
     ):
@@ -25,7 +27,10 @@ class TestGetPaymentDueDate(TapirUnitTest):
             ParameterKeys.PAYMENT_DUE_DAY, cache=cache
         )
 
-    @patch("tapir.coop.services.coop_share_purchase_handler.get_parameter_value")
+    @patch(
+        "tapir.coop.services.coop_share_purchase_handler.get_parameter_value",
+        autospec=True,
+    )
     def test_getPaymentDueDate_sharesValidAfterPaymentDueDayOfMonth_returnsDateInFollowingMonth(
         self, mock_get_parameter_value: Mock
     ):
@@ -42,7 +47,10 @@ class TestGetPaymentDueDate(TapirUnitTest):
             ParameterKeys.PAYMENT_DUE_DAY, cache=cache
         )
 
-    @patch("tapir.coop.services.coop_share_purchase_handler.get_parameter_value")
+    @patch(
+        "tapir.coop.services.coop_share_purchase_handler.get_parameter_value",
+        autospec=True,
+    )
     def test_getPaymentDueDate_sharesValidOnPaymentDueDayOfMonth_returnsDateInSameMonth(
         self, mock_get_parameter_value: Mock
     ):

@@ -190,7 +190,9 @@ class TestMemberColumnProvider(TapirIntegrationTest):
         return [joker_1, joker_2]
 
     @patch.object(
-        DeliveryPriceCalculator, "get_price_of_subscriptions_delivered_in_week"
+        DeliveryPriceCalculator,
+        "get_price_of_subscriptions_delivered_in_week",
+        autospec=True,
     )
     def test_getValueMemberJokerCreditValue_default_returnsSummedPriceOfAllJokersThatAreBeforeDate(
         self, mock_get_price_of_subscriptions_delivered_in_week: Mock
@@ -223,7 +225,9 @@ class TestMemberColumnProvider(TapirIntegrationTest):
         )
 
     @patch.object(
-        DeliveryPriceCalculator, "get_price_of_subscriptions_delivered_in_week"
+        DeliveryPriceCalculator,
+        "get_price_of_subscriptions_delivered_in_week",
+        autospec=True,
     )
     def test_getValueMemberJokerCreditValue_pickupLocationHasDeliveryCharge_addsChargePerJoker(
         self, mock_get_price_of_subscriptions_delivered_in_week: Mock

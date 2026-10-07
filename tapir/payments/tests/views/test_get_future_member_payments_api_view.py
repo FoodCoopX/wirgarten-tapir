@@ -868,7 +868,9 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         settled_credit = MemberCreditFactory.create(
             member=member,
             due_date=datetime.date(year=2021, month=6, day=1),
-            settled_on=datetime.datetime(year=2021, month=5, day=1),
+            settled_on=datetime.datetime(
+                year=2021, month=5, day=1, tzinfo=datetime.timezone.utc
+            ),
         )
         unsettled_credit = MemberCreditFactory.create(
             member=member,

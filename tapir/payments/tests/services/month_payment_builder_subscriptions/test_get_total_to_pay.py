@@ -1,18 +1,18 @@
 import datetime
 from unittest.mock import patch, Mock, call
 
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
-
 from tapir.payments.services.month_payment_builder_subscriptions import (
     MonthPaymentBuilderSubscriptions,
 )
 from tapir.wirgarten.tests.factories import SubscriptionFactory
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestGetTotalToPay(TapirUnitTest):
     @patch.object(
         MonthPaymentBuilderSubscriptions,
         "get_amount_to_pay_for_subscription_within_range",
+        autospec=True,
     )
     def test_getTotalToPay_default_considersOnlySubscriptionsThatOverlapWithTheGivenRange(
         self, mock_get_amount_to_pay_for_subscription_within_range: Mock

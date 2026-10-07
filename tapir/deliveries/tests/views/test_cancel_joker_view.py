@@ -27,8 +27,8 @@ class TestCancelJokerView(TapirIntegrationTest):
         super().setUp()
         self.now = mock_timezone(self, factories.NOW)
 
-    @patch.object(TransactionalTrigger, "fire_action")
-    @patch.object(JokerManagementService, "cancel_joker")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    @patch.object(JokerManagementService, "cancel_joker", autospec=True)
     def test_cancelJokerView_tryToCancelJokerOfAnotherMember_returns403(
         self, mock_cancel_joker: Mock, mock_fire_action: Mock
     ):
@@ -47,8 +47,8 @@ class TestCancelJokerView(TapirIntegrationTest):
         mock_cancel_joker.assert_not_called()
         mock_fire_action.assert_not_called()
 
-    @patch.object(TransactionalTrigger, "fire_action")
-    @patch.object(JokerManagementService, "cancel_joker")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    @patch.object(JokerManagementService, "cancel_joker", autospec=True)
     def test_cancelJokerView_cancelJokerOfAnotherMemberAsAdmin_callsCancelJoker(
         self, mock_cancel_joker: Mock, mock_fire_action: Mock
     ):
@@ -80,8 +80,8 @@ class TestCancelJokerView(TapirIntegrationTest):
         self.assertEqual(user.email, log_entry.actor.email)
         self.assertEqual(joker.date, log_entry.date)
 
-    @patch.object(TransactionalTrigger, "fire_action")
-    @patch.object(JokerManagementService, "cancel_joker")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    @patch.object(JokerManagementService, "cancel_joker", autospec=True)
     def test_cancelJokerView_cancelOwnJokerAsNormalMember_callsCancelJoker(
         self, mock_cancel_joker: Mock, mock_fire_action: Mock
     ):
@@ -111,9 +111,9 @@ class TestCancelJokerView(TapirIntegrationTest):
         self.assertEqual(member.email, log_entry.actor.email)
         self.assertEqual(joker.date, log_entry.date)
 
-    @patch.object(TransactionalTrigger, "fire_action")
-    @patch.object(JokerManagementService, "can_joker_be_cancelled")
-    @patch.object(JokerManagementService, "cancel_joker")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    @patch.object(JokerManagementService, "can_joker_be_cancelled", autospec=True)
+    @patch.object(JokerManagementService, "cancel_joker", autospec=True)
     def test_cancelJokerView_jokerCannotBeCancelled_returns403(
         self,
         mock_cancel_joker: Mock,
@@ -138,8 +138,8 @@ class TestCancelJokerView(TapirIntegrationTest):
         )
         mock_fire_action.assert_not_called()
 
-    @patch.object(TransactionalTrigger, "fire_action")
-    @patch.object(JokerManagementService, "cancel_joker")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    @patch.object(JokerManagementService, "cancel_joker", autospec=True)
     def test_cancelJokerView_jokerFeatureDisabled_returns403(
         self, mock_cancel_joker: Mock, mock_fire_action: Mock
     ):

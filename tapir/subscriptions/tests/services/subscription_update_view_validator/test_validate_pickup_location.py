@@ -1,7 +1,6 @@
 from unittest.mock import patch, Mock
 
 from django.core.exceptions import ValidationError
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
@@ -11,11 +10,10 @@ from tapir.subscriptions.services.subscription_update_view_validator import (
     SubscriptionUpdateViewValidator,
 )
 from tapir.wirgarten.models import PickupLocation
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
-@patch.object(
-    PickupLocation, "objects", autospec=False
-)  # Can't autospec "objects" because it doesn't have the get() function by default
+@patch.object(PickupLocation, "objects")
 @patch.object(
     MemberPickupLocationGetter, "get_member_pickup_location_id", autospec=True
 )

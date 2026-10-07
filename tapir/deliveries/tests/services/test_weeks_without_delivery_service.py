@@ -1,17 +1,16 @@
 import datetime
 from unittest.mock import patch, Mock
 
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
-
 from tapir.deliveries.services.weeks_without_delivery_service import (
     WeeksWithoutDeliveryService,
 )
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import GrowingPeriod
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestWeeksWithoutDeliveryService(TapirUnitTest):
-    @patch.object(TapirCache, "get_growing_period_at_date")
+    @patch.object(TapirCache, "get_growing_period_at_date", autospec=True)
     def test_isDeliveryCancelledThisWeek_noGrowingPeriod_returnsFalse(
         self, mock_get_growing_period_at_date: Mock
     ):
@@ -28,7 +27,7 @@ class TestWeeksWithoutDeliveryService(TapirUnitTest):
             reference_date=delivery_date, cache=cache
         )
 
-    @patch.object(TapirCache, "get_growing_period_at_date")
+    @patch.object(TapirCache, "get_growing_period_at_date", autospec=True)
     def test_isDeliveryCancelledThisWeek_inputWeekIsNotInCancelledWeekList_returnsFalse(
         self, mock_get_growing_period_at_date: Mock
     ):
@@ -47,7 +46,7 @@ class TestWeeksWithoutDeliveryService(TapirUnitTest):
             reference_date=delivery_date, cache=cache
         )
 
-    @patch.object(TapirCache, "get_growing_period_at_date")
+    @patch.object(TapirCache, "get_growing_period_at_date", autospec=True)
     def test_isDeliveryCancelledThisWeek_inputWeekIsInCancelledList_returnsTrue(
         self, mock_get_growing_period_at_date: Mock
     ):

@@ -90,7 +90,7 @@ class TestMemberBankDataApiView(TapirIntegrationTest):
         self.assertEqual("", response_content["account_owner"])
         self.assertEqual("", response_content["iban"])
 
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_patch_memberTriesToUpdateDataOfAnotherMember_returns403(
         self, mock_fire_action: Mock
     ):
@@ -115,7 +115,7 @@ class TestMemberBankDataApiView(TapirIntegrationTest):
         self.assertFalse(UpdateTapirUserLogEntry.objects.exists())
         mock_fire_action.assert_not_called()
 
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_patch_memberTriesToUpdateOwnData_dataUpdatedAndMailSentAndLogEntryCreated(
         self, mock_fire_action: Mock
     ):
@@ -156,7 +156,7 @@ class TestMemberBankDataApiView(TapirIntegrationTest):
         self.assertIsNone(trigger_data.recipient_outside_of_base_queryset)
         self.assertEqual({}, trigger_data.token_data)
 
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_patch_adminTriesToUpdateDataOfOtherMember_dataUpdatedAndMailSentAndLogEntryCreated(
         self, mock_fire_action: Mock
     ):
@@ -198,7 +198,7 @@ class TestMemberBankDataApiView(TapirIntegrationTest):
         self.assertIsNone(trigger_data.recipient_outside_of_base_queryset)
         self.assertEqual({}, trigger_data.token_data)
 
-    @patch.object(TransactionalTrigger, "fire_action")
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_patch_updateWithoutSepaConsent_returnsError(self, mock_fire_action: Mock):
         admin = MemberFactory.create(is_superuser=True)
         target = MemberFactory.create()

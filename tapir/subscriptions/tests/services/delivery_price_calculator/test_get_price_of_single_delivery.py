@@ -1,16 +1,20 @@
 import datetime
 from unittest.mock import patch, Mock
 
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
-
 from tapir.subscriptions.services.delivery_price_calculator import (
     DeliveryPriceCalculator,
 )
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestGetPriceOfSingleDelivery(TapirUnitTest):
-    @patch.object(DeliveryPriceCalculator, "get_number_of_months_in_growing_period")
-    @patch("tapir.subscriptions.services.delivery_price_calculator.get_product_price")
+    @patch.object(
+        DeliveryPriceCalculator, "get_number_of_months_in_growing_period", autospec=True
+    )
+    @patch(
+        "tapir.subscriptions.services.delivery_price_calculator.get_product_price",
+        autospec=True,
+    )
     def test_getPriceOfSingleDelivery_default_returnsCorrectPrice(
         self,
         mock_get_product_price: Mock,
@@ -32,8 +36,13 @@ class TestGetPriceOfSingleDelivery(TapirUnitTest):
             mock_get_number_of_months_in_growing_period=mock_get_number_of_months_in_growing_period,
         )
 
-    @patch.object(DeliveryPriceCalculator, "get_number_of_months_in_growing_period")
-    @patch("tapir.subscriptions.services.delivery_price_calculator.get_product_price")
+    @patch.object(
+        DeliveryPriceCalculator, "get_number_of_months_in_growing_period", autospec=True
+    )
+    @patch(
+        "tapir.subscriptions.services.delivery_price_calculator.get_product_price",
+        autospec=True,
+    )
     def test_getPriceOfSingleDelivery_yearWith53Weeks_returnsCorrectPrice(
         self,
         mock_get_product_price: Mock,

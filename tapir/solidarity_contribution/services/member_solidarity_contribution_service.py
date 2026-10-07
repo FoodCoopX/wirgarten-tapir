@@ -36,7 +36,7 @@ class MemberSolidarityContributionService:
         cls,
         member: Member,
         change_date: datetime.date,
-        amount: float | Decimal,
+        amount: Decimal,
         cache: dict,
         actor: TapirUser,
     ):

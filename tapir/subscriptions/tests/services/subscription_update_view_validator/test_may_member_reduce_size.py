@@ -8,7 +8,8 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 @patch(
-    "tapir.subscriptions.services.subscription_update_view_validator.get_parameter_value"
+    "tapir.subscriptions.services.subscription_update_view_validator.get_parameter_value",
+    autospec=True,
 )
 class TestSubscriptionUpdateViewValidatorMayMemberReduceSize(TapirUnitTest):
     @staticmethod

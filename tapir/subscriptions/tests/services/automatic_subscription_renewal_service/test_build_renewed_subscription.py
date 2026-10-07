@@ -1,7 +1,5 @@
 from unittest.mock import patch, Mock
 
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
-
 from tapir.subscriptions.config import NOTICE_PERIOD_UNIT_WEEKS
 from tapir.subscriptions.services.automatic_subscription_renewal_service import (
     AutomaticSubscriptionRenewalService,
@@ -14,14 +12,18 @@ from tapir.wirgarten.tests.factories import (
     GrowingPeriodFactory,
     MandateReferenceFactory,
 )
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestBuildRenewedSubscription(TapirUnitTest):
-    @patch.object(AutomaticSubscriptionRenewalService, "get_renewed_trial_data")
-    @patch.object(NoticePeriodManager, "get_notice_period_unit")
-    @patch.object(NoticePeriodManager, "get_notice_period_duration")
+    @patch.object(
+        AutomaticSubscriptionRenewalService, "get_renewed_trial_data", autospec=True
+    )
+    @patch.object(NoticePeriodManager, "get_notice_period_unit", autospec=True)
+    @patch.object(NoticePeriodManager, "get_notice_period_duration", autospec=True)
     @patch(
-        "tapir.subscriptions.services.automatic_subscription_renewal_service.get_next_growing_period"
+        "tapir.subscriptions.services.automatic_subscription_renewal_service.get_next_growing_period",
+        autospec=True,
     )
     def test_buildRenewedSubscription_default_buildsFutureSubscription(
         self,

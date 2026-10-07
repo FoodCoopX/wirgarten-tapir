@@ -10,6 +10,7 @@ from django.db.models import F
 from faker import Faker
 from tapir_mail.service.shortcuts import make_timezone_aware
 
+from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
 from tapir.associations.models import AssociationMembershipType, AssociationMembership
 from tapir.associations.services.association_membership_change_handler import (
     AssociationMembershipChangeHandler,
@@ -44,6 +45,7 @@ from tapir.wirgarten.utils import (
     get_today,
     legal_status_is_cooperative,
     legal_status_is_association,
+    get_now,
 )
 
 
@@ -123,7 +125,7 @@ class UserGenerator:
             )
             CoopShareTransaction.objects.filter(
                 valid_at__lte=get_today(cache=cache) - datetime.timedelta(days=60)
-            ).update(admin_confirmed=get_today(cache=cache))
+            ).update(admin_confirmed=get_now(cache=cache))
 
         cls.link_members_to_pickup_location(
             members_that_need_a_pickup_location, organization=organization
@@ -165,12 +167,15 @@ class UserGenerator:
             withdrawal_consent=json_user.date_joined,
         )
         copy_user_info(json_user, member)
-        member.save(
+        member.username = member.email
+        member.save()
+        member.created_at = json_user.date_joined
+        member.save()
+        KeycloakUserManager.create_keycloak_user_if_necessary(
+            user=member,
             initial_password=member.email.split("@")[0],
             cache=cache,
         )
-        member.created_at = json_user.date_joined
-        member.save(cache=cache)
 
         member_without_subscriptions = random.random() < 0.20
         min_coop_shares = 0

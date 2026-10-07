@@ -22,7 +22,9 @@ class TestPickupLocationCapacityGeneralChecker(TapirIntegrationTest):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
     @patch.object(
-        PickupLocationCapacityModeShareChecker, "check_for_picking_mode_share"
+        PickupLocationCapacityModeShareChecker,
+        "check_for_picking_mode_share",
+        autospec=True,
     )
     def test_doesPickupLocationHaveEnoughCapacity_default_callsCheckerForModeShare(
         self,
@@ -62,7 +64,9 @@ class TestPickupLocationCapacityGeneralChecker(TapirIntegrationTest):
         )
 
     @patch.object(
-        PickupLocationCapacityModeShareChecker, "check_for_picking_mode_share"
+        PickupLocationCapacityModeShareChecker,
+        "check_for_picking_mode_share",
+        autospec=True,
     )
     def test_doesPickupLocationHaveEnoughCapacity_memberIsNotRegisteredToGivenPickupLocation_callsCheckerWithoutMember(
         self,

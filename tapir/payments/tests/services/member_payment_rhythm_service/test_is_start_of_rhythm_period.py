@@ -1,16 +1,17 @@
 from unittest.mock import patch, Mock
 
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
-
 from tapir.payments.models import MemberPaymentRhythm
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestIsStartOfRhythmPeriod(TapirUnitTest):
     @patch.object(
-        MemberPaymentRhythmService, "get_month_index_relative_to_growing_period"
+        MemberPaymentRhythmService,
+        "get_month_index_relative_to_growing_period",
+        autospec=True,
     )
     def test_isStartOfRhythmPeriod_indexOfGivenMonthIsInTheCreationMonthList_returnsTrue(
         self,
@@ -31,7 +32,9 @@ class TestIsStartOfRhythmPeriod(TapirUnitTest):
         )
 
     @patch.object(
-        MemberPaymentRhythmService, "get_month_index_relative_to_growing_period"
+        MemberPaymentRhythmService,
+        "get_month_index_relative_to_growing_period",
+        autospec=True,
     )
     def test_isStartOfRhythmPeriod_indexOfGivenMonthIsNotTheCreationMonthList_returnsTrue(
         self,

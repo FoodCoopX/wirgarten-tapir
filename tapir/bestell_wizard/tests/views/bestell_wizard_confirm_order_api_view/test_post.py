@@ -2,13 +2,18 @@ import datetime
 import json
 from decimal import Decimal
 from typing import Any
-from unittest.mock import patch, Mock
+from unittest.mock import patch, Mock, ANY
 
 from django.urls import reverse
+from keycloak import KeycloakPutError
 from tapir_mail.triggers.transactional_trigger import (
     TransactionalTrigger,
 )
 
+from tapir.accounts.services.email_verification_service import EmailVerificationService
+from tapir.accounts.services.keycloak_user_delete_service import (
+    KeycloakUserDeleteService,
+)
 from tapir.associations.models import AssociationMembership
 from tapir.associations.tests.factories import AssociationMembershipTypeFactory
 from tapir.bestell_wizard.services.questionnaire_source_service import (
@@ -106,10 +111,14 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         super().setUp()
         self.now = mock_timezone(self, datetime.datetime(year=2027, month=6, day=27))
 
+    @patch.object(EmailVerificationService, "send_verification_email", autospec=True)
     @patch.object(OnboardingTrigger, "on_subscription_updated", autospec=True)
     @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_orderIsValid_memberAndContractGetCreated(
-        self, mock_fire_action: Mock, mock_on_subscription_updated: Mock
+        self,
+        mock_fire_action: Mock,
+        mock_on_subscription_updated: Mock,
+        mock_send_verification_email: Mock,
     ):
         response = self.client.post(
             reverse("bestell_wizard:bestell_wizard_confirm_order"),
@@ -127,8 +136,9 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
             mock_fire_action, is_student=False, growing_period=self.growing_period
         )
         self.assertFalse(WaitingListEntry.objects.exists())
+        member = Member.objects.get()
         self.assert_solidarity_contribution_created_correctly(
-            member_id=Member.objects.get().id,
+            member_id=member.id,
             amount_as_string="12.70",
             growing_period=self.growing_period,
         )
@@ -139,6 +149,9 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
             key=Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION,
         )
         self.assertEqual(2, mock_on_subscription_updated.call_count)
+        mock_send_verification_email.assert_called_once_with(
+            user=member, actor=member, cache=ANY
+        )
 
     def test_post_requestDataIsInvalid_returns400(self):
         data = self.build_valid_post_data_for_an_order_without_waiting_list()
@@ -1253,3 +1266,39 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         self.assertFalse(Member.objects.exists())
         mock_fire_action.assert_not_called()
         mock_on_subscription_updated.assert_not_called()
+
+    @patch.object(KeycloakUserDeleteService, "delete_user_if_exists", autospec=True)
+    @patch.object(EmailVerificationService, "send_verification_email", autospec=True)
+    @patch.object(OnboardingTrigger, "on_subscription_updated", autospec=True)
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_sendingOfEmailVerificationFails_changesRolledBackAndMemberDeletedFromKeycloak(
+        self,
+        mock_fire_action: Mock,
+        mock_on_subscription_updated: Mock,
+        mock_send_verification_email: Mock,
+        mock_delete_user_if_exists: Mock,
+    ):
+        # If sending the mail verification fails, an exception will be raised by the keycloak client.
+        # This will cause the transaction to rollback, the member will not be in the Tapir DB
+        # However, since the mail is sent after the user is created in Keycloak, the user would still exist in keycloak.
+        # This test makes sure the user is deleted in keycloak too.
+
+        mock_send_verification_email.side_effect = KeycloakPutError()
+
+        with self.assertRaises(KeycloakPutError):
+            self.client.post(
+                reverse("bestell_wizard:bestell_wizard_confirm_order"),
+                data=json.dumps(
+                    self.build_valid_post_data_for_an_order_without_waiting_list()
+                ),
+                content_type="application/json",
+            )
+
+        self.assertFalse(Member.objects.exists())
+
+        mock_send_verification_email.assert_called_once()
+        mock_delete_user_if_exists.assert_called_once()
+        self.assertEqual(
+            mock_send_verification_email.call_args.kwargs["user"],
+            mock_delete_user_if_exists.call_args.kwargs["user"],
+        )

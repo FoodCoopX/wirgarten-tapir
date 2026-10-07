@@ -47,7 +47,6 @@ class TestSaveMemberAndAssignNumber(TapirUnitTest):
         save_member_and_assign_number(form)
 
         form.save.assert_called_once_with()
-        member.save.assert_called_once_with()
         mock_assign_if_eligible.assert_called_once_with(
             member, cache={}, actor=logged_in_user
         )

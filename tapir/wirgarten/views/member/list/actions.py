@@ -9,6 +9,8 @@ from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_GET
 from django.views.generic import View
 
+from tapir.accounts.services.email_verification_service import EmailVerificationService
+from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
 from tapir.associations.models import AssociationMembership
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.member_number_service import MemberNumberService
@@ -398,11 +400,13 @@ def resend_verify_email(request, **kwargs):
     member_id = kwargs["pk"]
     member = Member.objects.get(id=member_id)
     try:
-        if member.keycloak_id is None:
-            member.save(bypass_keycloak=False)
-            member.save(bypass_keycloak=False)
-        else:
-            member.send_verify_email(cache={})
+        cache = {}
+        KeycloakUserManager.create_keycloak_user_if_necessary(
+            user=member, cache=cache, initial_password=None
+        )
+        EmailVerificationService.send_verification_email(
+            user=member, actor=request.user, cache=cache
+        )
         result = "success"
     except Exception as e:
         result = str(e)

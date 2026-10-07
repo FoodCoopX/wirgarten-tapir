@@ -14,7 +14,7 @@ class TapirMailPermissionMiddlewareTest(TapirIntegrationTest):
         self.user = TapirUser(
             username="testuser", email="test@example.com", password="top_secret"
         )
-        self.user.save(bypass_keycloak=True)
+        self.user.save()
         self.middleware = TapirMailPermissionMiddleware(
             get_response=lambda request: None
         )

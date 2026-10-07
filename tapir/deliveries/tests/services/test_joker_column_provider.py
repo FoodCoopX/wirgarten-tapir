@@ -98,15 +98,20 @@ class TestJokerColumnProvider(TapirIntegrationTest):
             period=growing_period,
             end_date=datetime.date(year=2020, month=3, day=15),
             product__type__name="pt_1",
+            product__type__order_in_bestellwizard=1,
         )
         SubscriptionFactory.create(
             member=joker.member,
             period=growing_period,
             end_date=datetime.date(year=2020, month=8, day=21),
             product__type__name="pt_2",
+            product__type__order_in_bestellwizard=2,
         )
         SubscriptionFactory.create(
-            member=joker.member, period=growing_period, product__type__name="pt_3"
+            member=joker.member,
+            period=growing_period,
+            product__type__name="pt_3",
+            product__type__order_in_bestellwizard=3,
         )
 
         result = JokerColumnProvider.get_value_product_types(
