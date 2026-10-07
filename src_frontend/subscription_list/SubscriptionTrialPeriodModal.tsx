@@ -5,6 +5,7 @@ import {
   SubscriptionsApi,
   SubscriptionTrialFields,
 } from "../api-client";
+import { DAY_LABELS } from "../bakery/utils/weekdays.ts";
 import TapirButton from "../components/TapirButton.tsx";
 import TapirHelpButton from "../components/TapirHelpButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
@@ -29,6 +30,84 @@ function formatDateForInput(date: Date | null | undefined): string {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+const SUNDAY = 6;
+
+function buildCancellationRuleText(subscription: SubscriptionTrialFields) {
+  if (!subscription.trialPeriodIsFlexible) {
+    return "Kündigt das Mitglied in der Probezeit, endet der Vertrag immer am gewählten Sonntag, egal an welchem Tag es kündigt.";
+  }
+
+  const weekdayLimit = subscription.weekdayLimitForDeliveryChanges;
+  if (weekdayLimit === SUNDAY || weekdayLimit <= subscription.deliveryWeekday) {
+    return "Kündigt das Mitglied in der Probezeit, endet der Vertrag am Sonntag der Woche, in der es kündigt. Die Lieferung dieser Woche erhält es noch, danach keine mehr.";
+  }
+
+  // The limit for changes is after the delivery day: once it has passed, next week's delivery is already being prepared.
+  const weekdayLimitLabel = DAY_LABELS[weekdayLimit];
+  return (
+    "Kündigt das Mitglied bis " +
+    weekdayLimitLabel +
+    " um 23:59 Uhr, endet der Vertrag am Sonntag derselben Woche. Kündigt es später, endet er erst am Sonntag der Folgewoche. Grund: Nach " +
+    weekdayLimitLabel +
+    " 23:59 Uhr (Kommissioniervariable) sind die Kommissionier-Listen für die Folgewoche erstellt. Diese Lieferung wird noch gepackt und kann abgeholt werden."
+  );
+}
+
+function buildHelpTextTrialDisabled() {
+  return (
+    <>
+      <p>Mit Klick auf die Checkbox hat dieser Vertrag keine Probezeit.</p>
+      <p>Das bedeutet:</p>
+      <ul>
+        <li>
+          Das Mitglied kann den Vertrag nur noch regulär zum Vertragsende und
+          mit der normalen Kündigungsfrist kündigen.
+        </li>
+        <li>
+          Die Zahlungen für diesen Vertrag werden wie bei einem regulären
+          Vertrag fällig, nicht mehr als Probezeit-Zahlung im Folgemonat.
+        </li>
+      </ul>
+      <p>
+        Ein zuvor eingestelltes individuelles Probezeit-Ende wird dabei
+        gelöscht.
+      </p>
+    </>
+  );
+}
+
+function buildHelpTextCustomEndDate(subscription: SubscriptionTrialFields) {
+  return (
+    <>
+      <p>
+        Mit Klick auf die Checkbox kannst du ein individuelles Probezeit-Ende
+        für diesen Vertrag einstellen. Das Datum muss ein Sonntag sein.
+      </p>
+      <p>So wirkt das Datum:</p>
+      <ul>
+        <li>
+          Bis zum gewählten Sonntag um 23:59 Uhr ist der Vertrag in der
+          Probezeit. Ab dem Montag danach gilt er als regulärer Vertrag.
+        </li>
+        <li>{buildCancellationRuleText(subscription)}</li>
+      </ul>
+      <p>Beachte:</p>
+      <ul>
+        <li>
+          Liegt das Datum in der Vergangenheit, ist die Probezeit sofort
+          beendet.
+        </li>
+        <li>
+          Für die Zahlungen zählt der Monatserste: Ist der Vertrag am 1. eines
+          Monats noch in der Probezeit, wird dieser Monat als Probezeit-Zahlung
+          im Folgemonat fällig. Verschiebst du das Ende in einen anderen Monat,
+          kann sich die Fälligkeit ändern.
+        </li>
+      </ul>
+    </>
+  );
 }
 
 const SubscriptionTrialPeriodModal: React.FC<
@@ -156,6 +235,21 @@ const SubscriptionTrialPeriodModal: React.FC<
                   : "—"}
               </li>
             </ul>
+            <p>
+              Die Probezeit gilt pro Vertrag. Hat das Mitglied mehrere Verträge
+              (z. B. Zusatzabo oder Solidarbeitrag), behalten diese ihre eigene
+              Probezeit.
+            </p>
+            <p>
+              Standardmäßig beginnt die Probezeit am Montag der ersten
+              Lieferwoche und endet nach der eingestellten Anzahl Wochen an
+              einem Sonntag.
+            </p>
+            <p>
+              Eine Änderung der Probezeit wird sofort in der Datenbank
+              hinterlegt und damit wirksam. Das Mitglied bekommt dazu keine
+              E-Mail.
+            </p>
           </Col>
         </Row>
         {error && (
@@ -174,9 +268,7 @@ const SubscriptionTrialPeriodModal: React.FC<
                   <span className={"d-flex gap-2"}>
                     <span>Probezeit deaktiviert</span>
                     <TapirHelpButton
-                      text={
-                        "Mit Klick auf die Checkbox hat dieser Vertrag keine Probezeit."
-                      }
+                      text={buildHelpTextTrialDisabled()}
                       buttonSize={"sm"}
                     />
                   </span>
@@ -209,9 +301,7 @@ const SubscriptionTrialPeriodModal: React.FC<
                     <span>Individuelles Probezeit-Ende</span>
                     <TapirHelpButton
                       buttonSize={"sm"}
-                      text={
-                        "Mit Klick auf die Checkbox kannst du ein individuelles Probezeit-Ende für den ausgewählten Vertrag einstellen. Beachte: Das gewählte Datum muss immer ein Sonntag sein."
-                      }
+                      text={buildHelpTextCustomEndDate(subscription)}
                     />
                   </span>
                 }
@@ -243,7 +333,8 @@ const SubscriptionTrialPeriodModal: React.FC<
                     }}
                   />
                   <Form.Text className={"text-muted"}>
-                    Muss ein Sonntag sein.
+                    Muss ein Sonntag sein. Die Probezeit gilt bis zu diesem Tag
+                    um 23:59 Uhr.
                   </Form.Text>
                 </>
               )}

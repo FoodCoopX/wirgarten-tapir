@@ -1,6 +1,7 @@
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
+from tapir.configuration.parameter import get_parameter_value
 from tapir.core.config import LEGAL_STATUS_OPTIONS
 from tapir.deliveries.serializers import (
     SubscriptionSerializer,
@@ -22,6 +23,7 @@ from tapir.wirgarten.models import (
     Subscription,
     SubscriptionChangeLogEntry,
 )
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import get_today
 
 
@@ -220,6 +222,9 @@ class SubscriptionTrialFieldsSerializer(SubscriptionSerializer):
     is_in_trial = serializers.SerializerMethodField()
     default_trial_end_date = serializers.SerializerMethodField()
     effective_trial_end_date = serializers.SerializerMethodField()
+    trial_period_is_flexible = serializers.SerializerMethodField()
+    weekday_limit_for_delivery_changes = serializers.SerializerMethodField()
+    delivery_weekday = serializers.SerializerMethodField()
 
     def get_is_in_trial(self, subscription) -> bool:
         cache = self.context["cache"]
@@ -235,6 +240,23 @@ class SubscriptionTrialFieldsSerializer(SubscriptionSerializer):
         cache = self.context["cache"]
         return TrialPeriodManager.get_last_day_of_trial_period(
             subscription, cache=cache
+        )
+
+    def get_trial_period_is_flexible(self, _) -> bool:
+        return get_parameter_value(
+            ParameterKeys.TRIAL_PERIOD_CAN_BE_CANCELLED_BEFORE_END,
+            cache=self.context["cache"],
+        )
+
+    def get_weekday_limit_for_delivery_changes(self, _) -> int:
+        return get_parameter_value(
+            ParameterKeys.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL,
+            cache=self.context["cache"],
+        )
+
+    def get_delivery_weekday(self, _) -> int:
+        return get_parameter_value(
+            ParameterKeys.DELIVERY_DAY, cache=self.context["cache"]
         )
 
 

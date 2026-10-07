@@ -58,6 +58,24 @@ export interface SubscriptionTrialFields {
   readonly effectiveTrialEndDate: string;
   /**
    *
+   * @type {boolean}
+   * @memberof SubscriptionTrialFields
+   */
+  readonly trialPeriodIsFlexible: boolean;
+  /**
+   *
+   * @type {number}
+   * @memberof SubscriptionTrialFields
+   */
+  readonly weekdayLimitForDeliveryChanges: number;
+  /**
+   *
+   * @type {number}
+   * @memberof SubscriptionTrialFields
+   */
+  readonly deliveryWeekday: number;
+  /**
+   *
    * @type {Date}
    * @memberof SubscriptionTrialFields
    */
@@ -190,6 +208,18 @@ export function instanceOfSubscriptionTrialFields(
     value["effectiveTrialEndDate"] === undefined
   )
     return false;
+  if (
+    !("trialPeriodIsFlexible" in value) ||
+    value["trialPeriodIsFlexible"] === undefined
+  )
+    return false;
+  if (
+    !("weekdayLimitForDeliveryChanges" in value) ||
+    value["weekdayLimitForDeliveryChanges"] === undefined
+  )
+    return false;
+  if (!("deliveryWeekday" in value) || value["deliveryWeekday"] === undefined)
+    return false;
   if (!("createdAt" in value) || value["createdAt"] === undefined) return false;
   if (!("updatedAt" in value) || value["updatedAt"] === undefined) return false;
   if (!("quantity" in value) || value["quantity"] === undefined) return false;
@@ -227,6 +257,9 @@ export function SubscriptionTrialFieldsFromJSONTyped(
     isInTrial: json["is_in_trial"],
     defaultTrialEndDate: json["default_trial_end_date"],
     effectiveTrialEndDate: json["effective_trial_end_date"],
+    trialPeriodIsFlexible: json["trial_period_is_flexible"],
+    weekdayLimitForDeliveryChanges: json["weekday_limit_for_delivery_changes"],
+    deliveryWeekday: json["delivery_weekday"],
     createdAt: new Date(json["created_at"]),
     updatedAt: new Date(json["updated_at"]),
     adminConfirmed:
@@ -282,6 +315,9 @@ export function SubscriptionTrialFieldsToJSONTyped(
     | "is_in_trial"
     | "default_trial_end_date"
     | "effective_trial_end_date"
+    | "trial_period_is_flexible"
+    | "weekday_limit_for_delivery_changes"
+    | "delivery_weekday"
     | "created_at"
     | "updated_at"
   > | null,
