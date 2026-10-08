@@ -16013,6 +16013,15 @@ components:
         effective_trial_end_date:
           type: string
           readOnly: true
+        trial_period_is_flexible:
+          type: boolean
+          readOnly: true
+        weekday_limit_for_delivery_changes:
+          type: integer
+          readOnly: true
+        delivery_weekday:
+          type: integer
+          readOnly: true
         created_at:
           type: string
           format: date-time
@@ -16082,6 +16091,7 @@ components:
       required:
       - created_at
       - default_trial_end_date
+      - delivery_weekday
       - effective_trial_end_date
       - end_date
       - is_in_trial
@@ -16092,7 +16102,9 @@ components:
       - product
       - quantity
       - start_date
+      - trial_period_is_flexible
       - updated_at
+      - weekday_limit_for_delivery_changes
     TemporaryUpload:
       type: object
       properties:
