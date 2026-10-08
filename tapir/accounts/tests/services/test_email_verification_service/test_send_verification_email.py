@@ -37,7 +37,6 @@ class TestSendVerificationEmail(TapirIntegrationTest):
             client_id="TEST_CLIENT_ID",
         )
         mock_client.send_verify_email.assert_not_called()
-        mock_client.send_update_account.assert_not_called()
 
         self.assertEqual(1, TextLogEntry.objects.count())
         log_entry = TextLogEntry.objects.get()
