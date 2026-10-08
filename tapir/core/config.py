@@ -47,9 +47,11 @@ THEME_LANDLMUEHLE = "lnd"
 THEME_SCHINKELER_HOEFE = "sch"
 THEME_FALKENHOF = "fkh"
 THEME_HECKENGAEU = "hkg"
+THEME_ACKERNATIVE = "ack"
 
 
 THEME_OPTIONS = [
+    (THEME_ACKERNATIVE, "Ackernative"),
     (THEME_ALFTER, "Alfter"),
     (THEME_AUERGARDEN, "Auergarden"),
     (THEME_BIOTOP, "Biotop Oberland"),
