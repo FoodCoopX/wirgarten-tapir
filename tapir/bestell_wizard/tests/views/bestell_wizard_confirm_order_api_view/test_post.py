@@ -816,6 +816,66 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         self.assertFalse(WaitingListEntry.objects.exists())
         self.assertFalse(SolidarityContribution.objects.exists())
 
+    def post_with_empty_phone_number(self, data: dict):
+        data["personal_data"]["phone_number"] = ""
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+        self.assertStatusCode(response, 200)
+        return response.json()
+
+    def test_post_orderWithoutPhoneNumberAndPhoneNumberRequired_returnOrderNotConfirmedAndDontCreateMember(
+        self,
+    ):
+        self._set_parameter(ParameterKeys.MEMBER_PHONE_NUMBER_REQUIRED, True)
+
+        response_content = self.post_with_empty_phone_number(
+            self.build_valid_post_data_for_an_order_without_waiting_list()
+        )
+
+        self.assertFalse(response_content["order_confirmed"])
+        self.assertEqual("Bitte gib eine Telefonnummer an.", response_content["error"])
+        self.assertFalse(Member.objects.exists())
+
+    def test_post_orderWithoutPhoneNumberAndPhoneNumberNotRequired_memberCreatedWithoutPhoneNumber(
+        self,
+    ):
+        self._set_parameter(ParameterKeys.MEMBER_PHONE_NUMBER_REQUIRED, False)
+
+        response_content = self.post_with_empty_phone_number(
+            self.build_valid_post_data_for_an_order_without_waiting_list()
+        )
+
+        self.assert_order_confirmed(response_content)
+        self.assertFalse(Member.objects.get().phone_number)
+
+    def test_post_waitingListEntryWithoutPhoneNumberAndPhoneNumberRequired_returnOrderNotConfirmedAndDontCreateEntry(
+        self,
+    ):
+        self._set_parameter(ParameterKeys.MEMBER_PHONE_NUMBER_REQUIRED, True)
+
+        response_content = self.post_with_empty_phone_number(
+            self.build_valid_post_data_for_a_waiting_list_entry()
+        )
+
+        self.assertFalse(response_content["order_confirmed"])
+        self.assertEqual("Bitte gib eine Telefonnummer an.", response_content["error"])
+        self.assertFalse(WaitingListEntry.objects.exists())
+
+    def test_post_waitingListEntryWithoutPhoneNumberAndPhoneNumberNotRequired_createsEntryWithoutPhoneNumber(
+        self,
+    ):
+        self._set_parameter(ParameterKeys.MEMBER_PHONE_NUMBER_REQUIRED, False)
+
+        response_content = self.post_with_empty_phone_number(
+            self.build_valid_post_data_for_a_waiting_list_entry()
+        )
+
+        self.assert_order_confirmed(response_content)
+        self.assertFalse(WaitingListEntry.objects.get().phone_number)
+
     @classmethod
     def build_valid_post_data_for_a_waiting_list_entry(cls) -> dict[str, Any]:
         return {

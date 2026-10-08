@@ -304,6 +304,7 @@ class ParameterKeys:
     MEMBER_NUMBER_ZERO_PAD_LENGTH = f"{PREFIX}.member.number.zero_pad_length"
     MEMBER_NUMBER_START_VALUE = f"{PREFIX}.member.number.start_value"
     MEMBER_NUMBER_ONLY_AFTER_TRIAL = f"{PREFIX}.member.number.only_after_trial"
+    MEMBER_PHONE_NUMBER_REQUIRED = f"{PREFIX}.member.phone_number_required"
     ASSOCIATIONS_ALLOW_SUPPORTING_MEMBERSHIP = (
         f"{PREFIX}.associations.allow_supporting_membership"
     )

@@ -36,6 +36,7 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [phoneNumberRequired, setPhoneNumberRequired] = useState(false);
   const [phoneNumberLandline, setPhoneNumberLandline] = useState("");
   const [street, setStreet] = useState("");
   const [street2, setStreet2] = useState("");
@@ -90,6 +91,7 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
         setFirstName(response.firstName);
         setLastName(response.lastName);
         setPhoneNumber(response.phoneNumber);
+        setPhoneNumberRequired(response.phoneNumberRequired);
         setPhoneNumberLandline(response.phoneNumberLandline ?? "");
         setStreet(response.street);
         setStreet2(response.street2);
@@ -116,6 +118,13 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
       .finally(() => setLoading(false));
   }, [show]);
 
+  function isPhoneNumberFieldValid() {
+    if (phoneNumber.length === 0) {
+      return !phoneNumberRequired;
+    }
+    return isPhoneNumberValid(phoneNumber);
+  }
+
   function onSave() {
     if (
       !isPersonalDataValidShort(
@@ -135,6 +144,7 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
           paymentRhythm: "unused",
         },
         false,
+        phoneNumberRequired,
       )
     ) {
       setShowValidation(true);
@@ -249,15 +259,26 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
               />
             </Form.Group>
             <Form.Group className="mb-2">
-              <Form.Label>Telefonnummer</Form.Label>
+              <Form.Label>
+                {phoneNumberRequired
+                  ? "Telefonnummer"
+                  : "Telefonnummer (optional)"}
+              </Form.Label>
               <Form.Control
                 placeholder={"Telefonnummer"}
                 type={"tel"}
                 value={phoneNumber}
                 onChange={(event) => setPhoneNumber(event.target.value)}
-                isValid={showValidation && isPhoneNumberValid(phoneNumber)}
-                isInvalid={showValidation && !isPhoneNumberValid(phoneNumber)}
+                isValid={showValidation && isPhoneNumberFieldValid()}
+                isInvalid={showValidation && !isPhoneNumberFieldValid()}
               />
+              {showValidation &&
+                phoneNumberRequired &&
+                phoneNumber.length === 0 && (
+                  <Form.Text className={"text-danger"}>
+                    Bitte gib eine Telefonnummer an.
+                  </Form.Text>
+                )}
             </Form.Group>
             <Form.Group className="mb-2">
               <Form.Label>Telefonnummer 2 (optional)</Form.Label>
