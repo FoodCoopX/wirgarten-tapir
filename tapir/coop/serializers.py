@@ -52,13 +52,14 @@ class MemberProfilePersonalDataResponseSerializer(serializers.Serializer):
     can_edit_country = serializers.BooleanField()
     contact_email = serializers.EmailField()
     member_number = serializers.CharField()
+    phone_number_required = serializers.BooleanField()
 
 
 class MemberProfilePersonalDataRequestSerializer(serializers.Serializer):
     member_id = serializers.CharField()
     first_name = serializers.CharField()
     last_name = serializers.CharField()
-    phone_number = serializers.CharField()
+    phone_number = serializers.CharField(allow_blank=True)
     phone_number_landline = serializers.CharField(
         required=False, allow_blank=True, allow_null=True
     )

@@ -486,7 +486,7 @@ class MemberPersonalDataApiView(APIView):
                     "member_id": member.id,
                     "first_name": member.first_name,
                     "last_name": member.last_name,
-                    "phone_number": member.phone_number,
+                    "phone_number": member.phone_number or "",
                     "phone_number_landline": member.phone_number_landline,
                     "street": member.street,
                     "street_2": member.street_2,
@@ -501,6 +501,9 @@ class MemberPersonalDataApiView(APIView):
                         ParameterKeys.SITE_EMAIL, cache=self.cache
                     ),
                     "member_number": self.get_formatted_member_number(member),
+                    "phone_number_required": get_parameter_value(
+                        ParameterKeys.MEMBER_PHONE_NUMBER_REQUIRED, cache=self.cache
+                    ),
                 }
             ).data
         )
@@ -552,11 +555,13 @@ class MemberPersonalDataApiView(APIView):
 
         try:
             PersonalDataValidator.validate_phone_number_is_valid(
-                serializer.validated_data.get("phone_number")
+                phone_number=serializer.validated_data["phone_number"],
+                cache=self.cache,
             )
             if serializer.validated_data.get("phone_number_landline"):
                 PersonalDataValidator.validate_phone_number_is_valid(
-                    serializer.validated_data["phone_number_landline"]
+                    phone_number=serializer.validated_data["phone_number_landline"],
+                    cache=self.cache,
                 )
             if (
                 student_status_enabled

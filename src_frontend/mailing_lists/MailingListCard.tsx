@@ -38,6 +38,58 @@ const MailingListCard: React.FC = () => {
       .finally(() => setMailingListsLoading(false));
   }
 
+  function buildHelpText() {
+    return (
+      <>
+        <p>
+          Über eine Mailing-Liste können sich Mitglieder per E-Mail austauschen:
+          Eine E-Mail an die Adresse der Liste wird an alle Empfänger:innen der
+          Liste weitergeleitet.
+        </p>
+        <p>
+          Hier in Tapir legst du fest, wie eine Liste heißt, wie sie beschrieben
+          ist, ob sich Mitglieder selbst ein- und austragen können und siehst,
+          wer die Empfänger:innen sind. Die Beschreibung sehen auch die
+          Mitglieder. Schreib dort am besten hinein, wofür die Liste gedacht
+          ist.
+        </p>
+        <p>
+          Alles Weitere stellst du nicht in Tapir ein, sondern FoodCoopX richtet
+          es für euch ein: unter welcher Adresse eure Listen laufen (unter der
+          Domain von FoodCoopX oder unter eurer eigenen), ob E-Mails von
+          Außenstehenden abgelehnt oder erst nach Freigabe weitergeleitet werden
+          und ob es ein Archiv gibt.
+        </p>
+        <p>Was die Spalten bedeuten:</p>
+        <ul>
+          <li>
+            <strong>Name</strong>: die E-Mail-Adresse der Liste.
+          </li>
+          <li>
+            <strong>Mitglieder können sich selber ein- und austragen</strong>:
+            Bei <em>Ja</em> sehen alle Mitglieder die Liste in ihrem
+            Mitgliederbereich und können sich dort an- und abmelden. Bei{" "}
+            <em>Nein</em> sehen nur eingeladene und bereits angemeldete
+            Mitglieder die Liste.
+          </li>
+          <li>
+            <strong>Empfänger</strong>: Anzahl der Empfänger:innen,
+            einschließlich der Einladungen, die noch nicht angenommen wurden.
+          </li>
+        </ul>
+        <p>
+          Über die Buttons rechts kannst du die Empfänger:innen einer Liste
+          verwalten, die Liste bearbeiten oder sie löschen.
+        </p>
+        <p>
+          Empfänger:innen, die du hinzufügst, werden zunächst nur eingeladen.
+          Sie nehmen erst teil, wenn sie die Einladung angenommen haben.
+          Mitglieder können das in ihrem Mitgliederbereich tun.
+        </p>
+      </>
+    );
+  }
+
   return (
     <>
       <Row className={"mt-2"}>
@@ -51,9 +103,7 @@ const MailingListCard: React.FC = () => {
               >
                 <Card.Title className={"mb-0"}>Mailing-Listen</Card.Title>
                 <span className={"d-flex gap-2"}>
-                  <TapirHelpButton
-                    text={"HelpText Mailing-List Config-Title"}
-                  />
+                  <TapirHelpButton text={buildHelpText()} width={"600px"} />
                   <TapirButton
                     icon={"add"}
                     text={"Mailing-List erzeugen"}

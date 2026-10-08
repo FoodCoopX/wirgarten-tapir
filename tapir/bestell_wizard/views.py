@@ -334,6 +334,10 @@ class BestellWizardConfirmOrderApiView(APIView):
             number_of_coop_shares=validated_serializer_data["number_of_coop_shares"],
             cache=cache,
         )
+        PersonalDataValidator.validate_phone_number_is_valid(
+            phone_number=validated_serializer_data["personal_data"]["phone_number"],
+            cache=cache,
+        )
         entry = WaitingListEntryCreator.create_entry_potential_member(
             order=waiting_list_order,
             pickup_location_ids_in_priority_order=validated_serializer_data[
@@ -551,6 +555,7 @@ class BestellWizardBaseDataApiView(APIView):
             "force_waiting_list": ParameterKeys.BESTELLWIZARD_FORCE_WAITING_LIST,
             "intro_enabled": ParameterKeys.BESTELLWIZARD_SHOW_INTRO,
             "student_status_allowed": ParameterKeys.ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES,
+            "phone_number_required": ParameterKeys.MEMBER_PHONE_NUMBER_REQUIRED,
             "intro_step_text": ParameterKeys.BESTELLWIZARD_INTRO_TEXT,
             "label_checkbox_sepa_mandat": ParameterKeys.BESTELLWIZARD_SEPA_MANDAT_CHECKBOX_TEXT,
             "label_checkbox_contract_policy": ParameterKeys.BESTELLWIZARD_CONTRACT_POLICY_CHECKBOX_TEXT,

@@ -129,7 +129,7 @@ const AssociationMembershipTypeTable: React.FC<
         <thead>
           <tr>
             <th>Name</th>
-            <th>Preis</th>
+            <th>Preis pro Monat</th>
             <th>Reihenfolge</th>
             <th></th>
           </tr>

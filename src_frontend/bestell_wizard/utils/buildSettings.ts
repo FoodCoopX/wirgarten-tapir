@@ -23,6 +23,7 @@ export function buildSettings(
     trialPeriodLengthInWeeks: baseData.trialPeriodLengthInWeeks,
     paymentRhythmChoices: baseData.paymentRhythmChoices,
     studentStatusAllowed: baseData.studentStatusAllowed,
+    phoneNumberRequired: baseData.phoneNumberRequired,
     introEnabled: baseData.introEnabled,
     productTypeIdsThatAreAlreadyAtCapacity:
       baseData.productTypeIdsThatAreAlreadyAtCapacity,
