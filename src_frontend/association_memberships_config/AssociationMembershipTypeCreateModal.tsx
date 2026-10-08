@@ -77,6 +77,10 @@ const AssociationMembershipTypeCreateModal: React.FC<
               onChange={(event) => setName(event.target.value)}
               required={true}
             />
+            <Form.Text>
+              Wird im BestellWizard zusammen mit dem Preis angezeigt, z.B.
+              „Einzelperson 2,50 €/Monat“.
+            </Form.Text>
           </Form.Group>
           <Form.Group className={"mt-2"}>
             <Form.Label>
@@ -103,6 +107,10 @@ const AssociationMembershipTypeCreateModal: React.FC<
               as={"textarea"}
               required={true}
             />
+            <Form.Text>
+              Pflichtfeld. Wird im BestellWizard angezeigt, wenn der
+              Mitgliedschafttyp aufgeklappt wird. HTML ist erlaubt.
+            </Form.Text>
           </Form.Group>
           <Form.Group className={"mt-2"}>
             <Form.Check
@@ -118,6 +126,10 @@ const AssociationMembershipTypeCreateModal: React.FC<
               Mitgliederliste verteilt werden .
             </Form.Text>
           </Form.Group>
+          <Form.Text className={"d-block mt-2"}>
+            Der Preis wird nach dem Erzeugen über das €-Symbol in der Liste
+            festgelegt. Ohne Preis kostet die Mitgliedschaft 0,00 €.
+          </Form.Text>
         </Form>
       </Modal.Body>
       <Modal.Footer>
