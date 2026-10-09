@@ -55,15 +55,18 @@ urlpatterns = [
     path("utils/", include("tapir.utils.urls")),
     path("waiting_list/", include("tapir.waiting_list.urls")),
     path("tapir/", include("tapir.wirgarten.urls")),
-    path("jasmin/api/auth/login/", JasminLoginView.as_view(), name="picking_login"),
     path(
-        "jasmin/api/auth/refresh/",
+        "commissioning/api/auth/login/", JasminLoginView.as_view(), name="picking_login"
+    ),
+    path(
+        "commissioning/api/auth/refresh/",
         JasminRefreshVew.as_view(),
         name="picking_refresh",
     ),
-    path("jasmin/api/", include("apps.commissioning.urls")),
-    path("jasmin/api/jasmin/", include("apps.commissioning.urls")),
-    path("jasmin/api/tenants/", include("apps.shared.tenants.urls")),
+    path("commissioning/api/", include("apps.commissioning.urls")),
+    path("commissioning/api/commissioning/", include("apps.commissioning.urls")),
+    path("commissioning/api/jasmin/", include("apps.commissioning.urls")),
+    path("commissioning/api/tenants/", include("apps.shared.tenants.urls")),
     path(
         "jasmin/home",
         TemplateView.as_view(template_name="jasmin-dist/dist/index.html"),

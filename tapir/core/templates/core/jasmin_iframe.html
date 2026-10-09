@@ -23,7 +23,6 @@
     window.onload = () => {
       const iframe = document.getElementById("jasminIframe");
       iframe.contentWindow._env_ = window._env_;
-      console.log(iframe.contentWindow._env_);
       let subpage = window.location.hash.substring(1);
       if (subpage.startsWith("state=")) {
         subpage = "";

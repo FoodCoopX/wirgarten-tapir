@@ -84,7 +84,6 @@ INSTALLED_APPS = [
     "django_otp.plugins.otp_totp",
     "django_otp.plugins.otp_static",
     "django_tenants",
-    "apps.accounts",
 ]
 
 SHARED_APPS = INSTALLED_APPS
@@ -126,12 +125,18 @@ def get_tapir_mail_template_dir():
         return str(path)
 
 
+def get_jasmin_template_dir():
+    with resources.path("apps", "static") as path:
+        return str(path)
+
+
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [
             os.path.join(BASE_DIR, "tapir/templates"),
             get_tapir_mail_template_dir(),
+            get_jasmin_template_dir(),
         ],
         "APP_DIRS": True,
         "OPTIONS": {

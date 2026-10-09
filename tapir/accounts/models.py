@@ -1,6 +1,7 @@
 import logging
 from functools import partial
 
+from apps.accounts.choices import ThemeChoices
 from django.contrib.auth import user_logged_out
 from django.contrib.auth.models import AbstractUser
 from django.db import models
@@ -100,6 +101,11 @@ class TapirUser(KeycloakUser):
         default="de",
         max_length=16,
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user_language = self.preferred_language
+        self.theme = ThemeChoices.LIGHT.value
 
     def get_display_name(self):
         return UserUtils.build_display_name(self.first_name, self.last_name)
