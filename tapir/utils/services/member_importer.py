@@ -145,6 +145,7 @@ class MemberImporter:
             "Kontoinhaber": "account_owner",
             "consent_sepa": "sepa_consent",
             "privacy_consent": "privacy_consent",
+            "Pseudonym": "pseudonym",
         }
 
         map_from_row_header_to_converter = {
