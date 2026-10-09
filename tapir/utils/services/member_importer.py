@@ -189,6 +189,7 @@ class MemberImporter:
             target_mail,
         ):
             member_updated = True
+            member.username = member.email
 
         if email_before != member.email and member.keycloak_id:
             Member.objects.filter(id=member.id).update(email=member.email)
