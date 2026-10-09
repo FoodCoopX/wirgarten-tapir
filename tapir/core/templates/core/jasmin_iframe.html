@@ -1,0 +1,50 @@
+{% extends "core/base.html" %}
+{% load core %}
+{% block head %}
+  {% javascript_environment_variables %}
+{% endblock %}
+{% block content %}
+  {% csrf_token %}
+  <div
+    style="
+           width: calc(100% + 2.5em);
+           height: 93.75vh;
+           margin-left: -1.55em;
+           margin-right: -1.25em;
+           overflow: hidden;
+          "
+  >
+    <iframe
+      id="pickingIframe"
+      style="width: 100%; height: 100%; overflow: hidden"
+    ></iframe>
+  </div>
+  <script>
+    window.onload = () => {
+      const iframe = document.getElementById("pickingIframe");
+      console.log(window._env_);
+      iframe.contentWindow._env_ = window._env_;
+      console.log(iframe.contentWindow._env_);
+      let subpage = window.location.hash.substring(1);
+      if (subpage.startsWith("state=")) {
+        subpage = "";
+      }
+
+      iframe.src = "/jasmin/home" + subpage;
+
+      const checkIframeUrl = () => {
+        try {
+          window.location.hash = iframe.contentWindow.location.pathname.replace(
+            "/jasmin",
+            ""
+          );
+        } catch (e) {
+          console.log(e);
+        }
+      };
+
+      setInterval(checkIframeUrl, 500);
+    };
+  </script>
+
+{% endblock %}

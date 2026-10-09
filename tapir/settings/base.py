@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
+import datetime
 import os
 from importlib import resources
 from pathlib import Path
@@ -75,12 +76,24 @@ INSTALLED_APPS = [
     "allauth.account",
     "allauth.socialaccount",
     "allauth.socialaccount.providers.openid_connect",
+    "apps.commissioning",
+    "apps.shared.tenants",
+    "auditlog",
+    "axes",
+    "django_otp",
+    "django_otp.plugins.otp_totp",
+    "django_otp.plugins.otp_static",
+    "django_tenants",
 ]
+
+SHARED_APPS = INSTALLED_APPS
+TENANT_APPS = INSTALLED_APPS
 
 if ENABLE_SILK_PROFILING:
     INSTALLED_APPS.append("silk")
 
 MIDDLEWARE = [
+    "django_tenants.middleware.main.TenantMainMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -93,6 +106,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "tapir.wirgarten.middleware.error.GlobalServerErrorHandlerMiddleware",
     "tapir.wirgarten.middleware.mailing.TapirMailPermissionMiddleware",
+    "axes.middleware.AxesMiddleware",
 ]
 
 X_FRAME_OPTIONS = "ALLOWALL"
@@ -151,11 +165,17 @@ def get_tapir_mail_static_dir():
         return str(path)
 
 
+def get_picking_module_static_dir():
+    with resources.path("apps", "static/jasmin-dist/dist/static") as path:
+        return str(path)
+
+
 STATIC_URL = "/static/"
 STATIC_ROOT = "static"
 STATICFILES_DIRS = [
     get_tapir_mail_static_dir(),
     "dist",
+    get_picking_module_static_dir(),
 ]
 
 SELECT2_JS = "core/select2/4.0.13/js/select2.min.js"
@@ -225,6 +245,7 @@ STORAGES = {
 }
 
 AUTHENTICATION_BACKENDS = [
+    "axes.backends.AxesStandaloneBackend",
     "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
@@ -240,3 +261,9 @@ MAILING_LISTS_ENABLED = env.bool("MAILING_LISTS_ENABLED", default=False)
 
 CSRF_COOKIE_SAMESITE = "None"
 CSRF_COOKIE_SECURE = True
+
+TENANT_MODEL = "tenants.Tenant"
+TENANT_DOMAIN_MODEL = "tenants.Domain"
+
+TWO_FACTOR_CHALLENGE_LIFETIME = datetime.timedelta(minutes=5)
+TWO_FACTOR_ENROLMENT_LIFETIME = datetime.timedelta(minutes=15)
