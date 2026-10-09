@@ -15,14 +15,13 @@
           "
   >
     <iframe
-      id="pickingIframe"
+      id="jasminIframe"
       style="width: 100%; height: 100%; overflow: hidden"
     ></iframe>
   </div>
   <script>
     window.onload = () => {
-      const iframe = document.getElementById("pickingIframe");
-      console.log(window._env_);
+      const iframe = document.getElementById("jasminIframe");
       iframe.contentWindow._env_ = window._env_;
       console.log(iframe.contentWindow._env_);
       let subpage = window.location.hash.substring(1);

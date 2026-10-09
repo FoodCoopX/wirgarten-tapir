@@ -84,6 +84,7 @@ INSTALLED_APPS = [
     "django_otp.plugins.otp_totp",
     "django_otp.plugins.otp_static",
     "django_tenants",
+    "apps.accounts",
 ]
 
 SHARED_APPS = INSTALLED_APPS

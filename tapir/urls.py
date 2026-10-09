@@ -17,8 +17,9 @@ Including another URLconf
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import include, path
-from django.views.generic import RedirectView
+from django.views.generic import RedirectView, TemplateView
 
+from tapir.accounts.views import JasminLoginView, JasminRefreshVew
 from tapir.wirgarten.views.default_redirect import wirgarten_redirect_view
 from tapir.wirgarten.views.mailing import TapirMailView
 
@@ -54,6 +55,25 @@ urlpatterns = [
     path("utils/", include("tapir.utils.urls")),
     path("waiting_list/", include("tapir.waiting_list.urls")),
     path("tapir/", include("tapir.wirgarten.urls")),
+    path("jasmin/api/auth/login/", JasminLoginView.as_view(), name="picking_login"),
+    path(
+        "jasmin/api/auth/refresh/",
+        JasminRefreshVew.as_view(),
+        name="picking_refresh",
+    ),
+    path("jasmin/api/", include("apps.commissioning.urls")),
+    path("jasmin/api/jasmin/", include("apps.commissioning.urls")),
+    path("jasmin/api/tenants/", include("apps.shared.tenants.urls")),
+    path(
+        "jasmin/home",
+        TemplateView.as_view(template_name="jasmin-dist/dist/index.html"),
+        name="jasmin_home",
+    ),
+    path(
+        "jasmin/",
+        TemplateView.as_view(template_name="core/jasmin_iframe.html"),
+        name="jasmin",
+    ),
     path(
         "mailing/",
         TapirMailView.as_view(),
