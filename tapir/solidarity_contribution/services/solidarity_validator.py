@@ -27,6 +27,12 @@ class SolidarityValidator:
         if amount >= 0:
             return True
 
+        minimum = cls.get_solidarity_contribution_minimum(
+            reference_date=start_date, cache=cache
+        )
+        if amount < minimum:
+            return False
+
         solidarity_mode = get_parameter_value(
             key=ParameterKeys.HARVEST_NEGATIVE_SOLIPRICE_ENABLED, cache=cache
         )
