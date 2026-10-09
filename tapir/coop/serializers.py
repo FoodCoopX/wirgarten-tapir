@@ -53,6 +53,8 @@ class MemberProfilePersonalDataResponseSerializer(serializers.Serializer):
     contact_email = serializers.EmailField()
     member_number = serializers.CharField()
     phone_number_required = serializers.BooleanField()
+    pseudonym = serializers.CharField(allow_blank=True)
+    pseudonym_enabled = serializers.BooleanField()
 
 
 class MemberProfilePersonalDataRequestSerializer(serializers.Serializer):
@@ -69,6 +71,7 @@ class MemberProfilePersonalDataRequestSerializer(serializers.Serializer):
     city = serializers.CharField()
     country = serializers.CharField(required=False)
     is_student = serializers.BooleanField(required=False)
+    pseudonym = serializers.CharField(required=False, allow_blank=True, max_length=150)
 
 
 class MemberEmailResponseSerializer(serializers.Serializer):

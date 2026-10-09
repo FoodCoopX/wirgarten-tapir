@@ -114,6 +114,18 @@ export interface MemberProfilePersonalDataResponse {
    * @memberof MemberProfilePersonalDataResponse
    */
   phoneNumberRequired: boolean;
+  /**
+   *
+   * @type {string}
+   * @memberof MemberProfilePersonalDataResponse
+   */
+  pseudonym: string;
+  /**
+   *
+   * @type {boolean}
+   * @memberof MemberProfilePersonalDataResponse
+   */
+  pseudonymEnabled: boolean;
 }
 
 /**
@@ -145,6 +157,9 @@ export function instanceOfMemberProfilePersonalDataResponse(
     !("phoneNumberRequired" in value) ||
     value["phoneNumberRequired"] === undefined
   )
+    return false;
+  if (!("pseudonym" in value) || value["pseudonym"] === undefined) return false;
+  if (!("pseudonymEnabled" in value) || value["pseudonymEnabled"] === undefined)
     return false;
   return true;
 }
@@ -182,6 +197,8 @@ export function MemberProfilePersonalDataResponseFromJSONTyped(
     contactEmail: json["contact_email"],
     memberNumber: json["member_number"],
     phoneNumberRequired: json["phone_number_required"],
+    pseudonym: json["pseudonym"],
+    pseudonymEnabled: json["pseudonym_enabled"],
   };
 }
 
@@ -216,5 +233,7 @@ export function MemberProfilePersonalDataResponseToJSONTyped(
     contact_email: value["contactEmail"],
     member_number: value["memberNumber"],
     phone_number_required: value["phoneNumberRequired"],
+    pseudonym: value["pseudonym"],
+    pseudonym_enabled: value["pseudonymEnabled"],
   };
 }
