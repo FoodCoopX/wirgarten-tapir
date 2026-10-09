@@ -9,8 +9,14 @@ from tapir.coop.services.minimum_number_of_shares_validator import (
     MinimumNumberOfSharesValidator,
 )
 from tapir.coop.services.personal_data_validator import PersonalDataValidator
+from tapir.solidarity_contribution.services.solidarity_validator import (
+    SolidarityValidator,
+)
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.subscriptions.types import TapirOrder
+from tapir.waiting_list.services.waiting_list_entry_confirmation_applier import (
+    WaitingListEntryConfirmationApplier,
+)
 from tapir.wirgarten.models import WaitingListEntry
 from tapir.wirgarten.utils import (
     legal_status_is_cooperative,
@@ -73,6 +79,18 @@ class WaitingListEntryConfirmationValidator:
                     "association_membership_type_id", None
                 )
             )
+
+        contract_start_date = (
+            WaitingListEntryConfirmationApplier.get_contract_start_date(
+                waiting_list_entry=waiting_list_entry, cache=cache
+            )
+        )
+        if not SolidarityValidator.is_the_ordered_solidarity_allowed(
+            amount=validated_data["solidarity_contribution"],
+            start_date=contract_start_date,
+            cache=cache,
+        ):
+            raise ValidationError("Solidarbeitrag ungültig oder zu niedrig")
 
     @classmethod
     def validate_association_content(cls, association_membership_type_id: str | None):
