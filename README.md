@@ -21,6 +21,12 @@ The backend code is written with Python and Django, the frontend code is a mix o
 
 Don't hesitate to contact us if you are interested in using or contributing to Tapir.
 
+## Documentation
+
+- [doc/dev/](doc/dev/README.md) — developer documentation: architecture, frontend bridge, domain model, testing,
+  operations and security-sensitive areas.
+- [doc/](doc/README.md) — Administrations- und Betriebsdokumentation (Deutsch).
+
 ## Getting started
 
 Use docker to quickly get a development server running on your machine. Run the following commands:

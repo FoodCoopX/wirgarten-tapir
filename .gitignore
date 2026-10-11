@@ -118,6 +118,10 @@ geckodriver.log
 /node_modules/
 tapir/filepond_stored_uploads/*
 !tapir/filepond_stored_uploads/.gitkeep
+
+# Internal security notes, shared out of band
+doc/dev/security-internal.md
+
 tapir/filepond_temp_uploads/*
 !tapir/filepond_temp_uploads/.gitkeep
 
