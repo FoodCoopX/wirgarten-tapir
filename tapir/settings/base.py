@@ -79,7 +79,6 @@ INSTALLED_APPS = [
     "apps.commissioning",
     "apps.shared.tenants",
     "auditlog",
-    "axes",
     "django_otp",
     "django_otp.plugins.otp_totp",
     "django_otp.plugins.otp_static",
@@ -106,7 +105,6 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "tapir.wirgarten.middleware.error.GlobalServerErrorHandlerMiddleware",
     "tapir.wirgarten.middleware.mailing.TapirMailPermissionMiddleware",
-    "axes.middleware.AxesMiddleware",
 ]
 
 X_FRAME_OPTIONS = "ALLOWALL"
