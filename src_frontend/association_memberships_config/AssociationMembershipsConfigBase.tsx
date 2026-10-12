@@ -58,7 +58,8 @@ const AssociationMembershipsConfigBase: React.FC<
     if (membershipTypes.length === 0) {
       return (
         <Alert variant={"warning"}>
-          Es muss mindestens 1 Mitgliedschafttyp geben
+          Es muss mindestens 1 Mitgliedschafttyp geben. Lege ihn über
+          „Mitgliedschafttyp erzeugen“ an.
         </Alert>
       );
     }

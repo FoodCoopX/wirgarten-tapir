@@ -26,9 +26,16 @@ class EmailVerificationService:
         if settings.KEYCLOAK_SKIP_VERIFICATION_EMAIL:
             print(f"Skipping email verification for {user.email}")
         else:
+            # Deliberately not kc.send_verify_email(): up to Keycloak 23 that endpoint was a
+            # shortcut for the execute-actions email with VERIFY_EMAIL, rendered with
+            # executeActions.ftl, which our instance themes customize ("Bitte aktiviere dein
+            # Mitgliedskonto ..."). From Keycloak 24 on it renders email-verification.ftl with
+            # Keycloak's generic text instead. Calling the execute-actions email directly keeps
+            # the same mail and link on Keycloak 23 and 26.
             kc = KeycloakUserManager.get_keycloak_client(cache=cache)
-            kc.send_verify_email(
+            kc.send_update_account(
                 user_id=user.keycloak_id,
+                payload=["VERIFY_EMAIL"],
                 redirect_uri=settings.SITE_URL,
                 client_id=settings.KEYCLOAK_ADMIN_CONFIG["FRONTEND_CLIENT_ID"],
             )

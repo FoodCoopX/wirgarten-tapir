@@ -1,7 +1,11 @@
 from django.urls import path
 from django.views import generic
 
-from tapir.accounts.views import change_email, AdminApplyMailChangeView
+from tapir.accounts.views import (
+    change_email,
+    AdminApplyMailChangeView,
+    PasswordChangeRedirectView,
+)
 
 app_name = "accounts"
 urlpatterns = [
@@ -9,7 +13,7 @@ urlpatterns = [
     # it's easier to do it like this than hunt down all the places and fix the references
     path(
         "password_change",
-        generic.TemplateView.as_view(template_name="accounts/password_update.html"),
+        PasswordChangeRedirectView.as_view(),
         name="password_change",
     ),
     path("email_change/<str:token>", change_email, name="change_email_confirm"),

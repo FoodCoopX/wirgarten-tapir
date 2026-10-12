@@ -159,7 +159,7 @@ const AssociationMembershipTypePriceModal: React.FC<
                   />
                 </Form.Group>
                 <Form.Group>
-                  <Form.Label>Preis</Form.Label>
+                  <Form.Label>Preis pro Monat (€)</Form.Label>
                   <Form.Control
                     type={"number"}
                     step={0.01}
@@ -178,6 +178,12 @@ const AssociationMembershipTypePriceModal: React.FC<
                 loading={saving}
               />
             </div>
+            <Form.Text className={"d-block mt-2"}>
+              Der Preis gilt pro Monat. Bei einem Jahresbeitrag den Betrag durch
+              12 teilen, z.B. 30 € pro Jahr = 2,50 € pro Monat. „Ab dem“ ist das
+              Datum, ab dem der Preis gilt. Für die Zeit davor gilt der
+              vorherige Preis, ohne vorherigen Preis 0,00 €.
+            </Form.Text>
           </Form>
         </Modal.Body>
       </Modal>

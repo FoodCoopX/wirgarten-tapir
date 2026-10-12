@@ -123,7 +123,11 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
     setShowValidation(true);
 
     if (
-      isPersonalDataValidShort(personalData, emailAddressAlreadyInUse) &&
+      isPersonalDataValidShort(
+        personalData,
+        emailAddressAlreadyInUse,
+        settings.phoneNumberRequired,
+      ) &&
       isOver18
     ) {
       goToNextStep();
@@ -151,7 +155,9 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
       case "emailConfirm":
         return "E-Mail-Adresse wiederholen";
       case "phoneNumber":
-        return "Telefon-Nr (optional)";
+        return settings.phoneNumberRequired
+          ? "Telefon-Nr"
+          : "Telefon-Nr (optional)";
       default:
         return key;
     }
@@ -160,10 +166,10 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
   function isValid(key: keyof PersonalData) {
     switch (key) {
       case "phoneNumber":
-        return (
-          personalData.phoneNumber.length === 0 ||
-          isPhoneNumberValid(personalData.phoneNumber)
-        );
+        if (personalData.phoneNumber.length === 0) {
+          return !settings.phoneNumberRequired;
+        }
+        return isPhoneNumberValid(personalData.phoneNumber);
       case "email":
         return (
           isEmailValid(personalData.email) &&
@@ -194,6 +200,12 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
           personalData.emailConfirm,
         )
           ? "Die E-Mail-Adressen stimmen nicht überein"
+          : "";
+      case "phoneNumber":
+        return showValidation &&
+          settings.phoneNumberRequired &&
+          personalData.phoneNumber.length === 0
+          ? "Bitte gib eine Telefonnummer an."
           : "";
       default:
         return "";

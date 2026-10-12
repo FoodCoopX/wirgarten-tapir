@@ -2,6 +2,7 @@ import datetime
 
 from django.db.models import F
 
+from tapir.accounts.services.email_normaliser import EmailNormaliser
 from tapir.bakery.services.breaddelivery_service import BreadDeliveryService
 from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.pickup_locations.services.member_pickup_location_getter import (
@@ -28,6 +29,7 @@ class SubscriptionImporter:
 
         member_no = DataImportUtils.safe_int(row.get("Mitgliedernummer"), default=-1)
         email = DataImportUtils.normalize_cell(row.get("Email"))
+        email = EmailNormaliser.normalise(email)
         member = cls.get_member_by_number_or_email(member_no=member_no, email=email)
 
         start_date = DataImportUtils.to_date(row.get("Vertragsbeginn"))

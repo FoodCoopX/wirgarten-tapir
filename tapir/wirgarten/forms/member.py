@@ -65,7 +65,11 @@ class PersonalDataForm(FormWithRequestMixin, ModelForm):
                 "pseudonym",
             ]:
                 v.required = True
-        self.fields["phone_number"].required = False
+        self.fields["phone_number"].required = get_parameter_value(
+            key=ParameterKeys.MEMBER_PHONE_NUMBER_REQUIRED, cache={}
+        )
+        if not self.fields["phone_number"].required:
+            self.fields["phone_number"].label = _("Telefon-Nr (optional)")
 
         self.fields["first_name"].disabled = not can_edit_name_and_birthdate
         self.fields["last_name"].disabled = not can_edit_name_and_birthdate

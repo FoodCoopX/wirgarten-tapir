@@ -87,7 +87,11 @@ class OrderConfirmationMailTokenBuilder:
             )
             for subscription in sorted_subscriptions
         ]
-        return f"<ul><li>{'</li><li>'.join(formatted_subscriptions)}</li></ul>"
+        list_items = '</li><li style="margin:0;">'.join(formatted_subscriptions)
+        return (
+            '<ul style="margin:0;padding:0 0 0 1.2em;">'
+            f'<li style="margin:0;">{list_items}</li></ul>'
+        )
 
     @classmethod
     def format_monthly_total(
@@ -173,4 +177,4 @@ class OrderConfirmationMailTokenBuilder:
             reference_date=reference_date,
             cache=cache,
         )
-        return f"{subscription.long_str()} — {format_currency(monthly_price)} € / Monat"
+        return f"{subscription.long_str()}: {format_currency(monthly_price)} € / Monat"

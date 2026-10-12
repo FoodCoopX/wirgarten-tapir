@@ -8716,6 +8716,8 @@ components:
           type: boolean
         student_status_allowed:
           type: boolean
+        phone_number_required:
+          type: boolean
         show_coop_content:
           type: boolean
         intro_step_text:
@@ -8804,6 +8806,7 @@ components:
       - logo_url
       - organization_name
       - payment_rhythm_choices
+      - phone_number_required
       - pickup_locations
       - price_of_a_share
       - product_ids_that_are_already_at_capacity
@@ -12810,6 +12813,8 @@ components:
           format: email
         member_number:
           type: string
+        phone_number_required:
+          type: boolean
       required:
       - can_edit_country
       - can_edit_name
@@ -12821,6 +12826,7 @@ components:
       - last_name
       - member_number
       - phone_number
+      - phone_number_required
       - postcode
       - street
       - street_2
@@ -13604,7 +13610,6 @@ components:
           minLength: 1
         phone_number:
           type: string
-          minLength: 1
         phone_number_landline:
           type: string
           nullable: true

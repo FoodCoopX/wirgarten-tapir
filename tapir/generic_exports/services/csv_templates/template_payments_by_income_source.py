@@ -33,6 +33,7 @@ class TemplatePaymentsByIncomeSource:
 
         CsvExport.objects.create(
             name=export_name,
+            description="In diesem Export werden die monatlichen Lastschrift-Datensätze gemäß XML/CSV-Datei pro Produktanteil und sofern zutreffend Vereinsbeitrag/Genossenschaftsanteil (je nach Rechtsform) und Liefergebühren summiert dargestellt. Damit erkennt ihr, welcher Anteil der Zahlungen auf welchen Produktanteil bzw. Mitgliedschaftsteil entfällt.",
             export_segment_id=MonthlyActualIncomeSegmentProvider.SEGMENT_ID_MONTHLY_ACTUAL_INCOME,
             file_name="Eingezogene Zahlungen.csv",
             automated_export_cycle=AutomatedExportCycle.MONTHLY,

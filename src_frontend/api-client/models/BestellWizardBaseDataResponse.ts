@@ -118,6 +118,12 @@ export interface BestellWizardBaseDataResponse {
    * @type {boolean}
    * @memberof BestellWizardBaseDataResponse
    */
+  phoneNumberRequired: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof BestellWizardBaseDataResponse
+   */
   showCoopContent: boolean;
   /**
    *
@@ -297,6 +303,11 @@ export function instanceOfBestellWizardBaseDataResponse(
     value["studentStatusAllowed"] === undefined
   )
     return false;
+  if (
+    !("phoneNumberRequired" in value) ||
+    value["phoneNumberRequired"] === undefined
+  )
+    return false;
   if (!("showCoopContent" in value) || value["showCoopContent"] === undefined)
     return false;
   if (!("introStepText" in value) || value["introStepText"] === undefined)
@@ -423,6 +434,7 @@ export function BestellWizardBaseDataResponseFromJSONTyped(
     forceWaitingList: json["force_waiting_list"],
     introEnabled: json["intro_enabled"],
     studentStatusAllowed: json["student_status_allowed"],
+    phoneNumberRequired: json["phone_number_required"],
     showCoopContent: json["show_coop_content"],
     introStepText: json["intro_step_text"],
     labelCheckboxSepaMandat: json["label_checkbox_sepa_mandat"],
@@ -488,6 +500,7 @@ export function BestellWizardBaseDataResponseToJSONTyped(
     force_waiting_list: value["forceWaitingList"],
     intro_enabled: value["introEnabled"],
     student_status_allowed: value["studentStatusAllowed"],
+    phone_number_required: value["phoneNumberRequired"],
     show_coop_content: value["showCoopContent"],
     intro_step_text: value["introStepText"],
     label_checkbox_sepa_mandat: value["labelCheckboxSepaMandat"],

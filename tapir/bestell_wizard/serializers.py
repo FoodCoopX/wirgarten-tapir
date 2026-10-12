@@ -146,6 +146,7 @@ class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
     force_waiting_list = serializers.BooleanField()
     intro_enabled = serializers.BooleanField()
     student_status_allowed = serializers.BooleanField()
+    phone_number_required = serializers.BooleanField()
     show_coop_content = serializers.BooleanField()
     intro_step_text = serializers.CharField()
     label_checkbox_sepa_mandat = serializers.CharField()

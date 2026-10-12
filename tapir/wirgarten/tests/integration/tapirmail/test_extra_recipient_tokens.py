@@ -9,7 +9,7 @@ from tapir.wirgarten.models import MemberExtraEmail
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tapirmail import Segments, configure_mail_module
-from tapir.wirgarten.tests.factories import MemberFactory
+from tapir.wirgarten.tests.factories import MemberFactory, CoopShareTransactionFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
 
@@ -54,6 +54,9 @@ class TestExtraRecipientTokens(TapirIntegrationTest):
             first_name="FN-original",
             last_name="LN-original",
             iban="IBANORIGINAL",
+        )
+        CoopShareTransactionFactory.create(
+            member=original_recipient, valid_at=now.date()
         )
         MemberExtraEmail.objects.create(
             member=original_recipient,

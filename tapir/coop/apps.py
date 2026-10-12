@@ -13,9 +13,12 @@ class CoopConfig(AppConfig):
     def provide_coop_mail_segments():
         from tapir.wirgarten.models import Member
         from tapir.wirgarten.tapirmail import Segments
+        from tapir.generic_exports.services.member_segment_provider import (
+            MemberSegmentProvider,
+        )
 
         return {
-            Segments.ALL_USERS: Member.objects.all,
+            Segments.ALL_USERS: MemberSegmentProvider.get_queryset_active_members,
             Segments.COOP_MEMBERS: Member.objects.with_shares,
             Segments.NON_COOP_MEMBERS: Member.objects.without_shares,
         }

@@ -59,7 +59,7 @@
                 <span id="association_membership_update_button"></span>
             </div>
         {% endif %}
-        {% include 'wirgarten/generic/action-button.html' with onclick='handleResendVerifyEmail()' disabled=True title='Email Verifizierungslink senden' type='primary' icon='mark_email_read' class='needs-member' %}
+        {% include 'wirgarten/generic/action-button.html' with onclick='handleResendVerifyEmail()' disabled=True title='Email Verifizierungslink erneut senden (z. B. wenn die erste Mail nicht angekommen ist)' type='primary' icon='mark_email_read' class='needs-member' %}
         <div style="width: 1em"></div>
         <div class="d-flex gap-2">
             <span id="subscription_cancellation_button"></span>
@@ -228,7 +228,11 @@
 
         const handleResendVerifyEmail = () => {
             const params = Tapir.getUrlParams();
-            ConfirmationModal.open('Verifizierungs-Email erneut senden', 'Bist du dir sicher, dass du die Verifizierungs-Email erneut an dieses Mitglied senden möchtest?', 'Mail erneut senden', 'danger', () => {
+            const content = '<p>Das Mitglied erhält eine E-Mail mit einem Verifizierungslink an die aktuell hinterlegte E-Mail-Adresse. Über diesen Link bestätigt es die Adresse und schließt die Aktivierung seines Benutzerkontos ab.</p>'
+                + '<p><strong>Wann ist das nötig?</strong> Wenn in der Spalte „Email“ das Warnsymbol „Nicht verifiziert!“ angezeigt wird und das Mitglied die ursprüngliche Mail nicht erhalten oder den Link nicht genutzt hat.</p>'
+                + '<p><strong>Falsche E-Mail-Adresse?</strong> Korrigiere sie zuerst im Mitgliederbereich des Mitglieds. Solange die Adresse noch nicht verifiziert ist, wird sie sofort übernommen und automatisch ein neuer Link an die korrigierte Adresse verschickt. Diesen Button brauchst du dann nur, falls auch diese Mail nicht ankommt.</p>'
+                + '<p class="mb-0">Möchtest du die Verifizierungs-Email jetzt an dieses Mitglied senden?</p>';
+            ConfirmationModal.open('Verifizierungs-Email erneut senden', content, 'Mail erneut senden', 'danger', () => {
                 const url = "{% url 'wirgarten:member_resend_verify_email' pk='-----' %}".replace('/-----/', '/' + params.member + '/');
                 const newParams = {
                     next: window.location.pathname + Tapir.stringifyUrlParams(params)

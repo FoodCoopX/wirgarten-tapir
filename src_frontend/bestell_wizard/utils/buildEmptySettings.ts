@@ -17,6 +17,7 @@ export function buildEmptySettings(): BestellWizardSettings {
     trialPeriodLengthInWeeks: 0,
     paymentRhythmChoices: {},
     studentStatusAllowed: false,
+    phoneNumberRequired: false,
     introEnabled: false,
     productTypeIdsThatAreAlreadyAtCapacity: [],
     productIdsThatAreAlreadyAtCapacity: [],
