@@ -1,15 +1,14 @@
 import base64
 import json
 import secrets
-from dataclasses import dataclass
 from urllib.parse import urlencode
 
-from apps.accounts import errors as jasmin_errors
 from apps.accounts import serializers as jasmin_serializers
 from apps.accounts.errors import InvalidCredentials as JasminInvalidCredentials
 from apps.accounts.services import auth_service as jasmin_auth_service
 from apps.accounts.views import auth_views as jasmin_auth_views
 from apps.shared import auth_cookies as jasmin_auth_cookies
+from apps.shared.tenants.models import Tenant
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
@@ -107,13 +106,6 @@ class PasswordChangeRedirectView(View):
         )
 
 
-@dataclass
-class Tenant:
-    id: str
-    name: str
-    schema_name: str
-
-
 class JasminLoginView(APIView):
     @extend_schema(
         responses={200: jasmin_serializers.LoginResponseSerializer},
@@ -128,11 +120,7 @@ class JasminLoginView(APIView):
         ):
             raise JasminInvalidCredentials("USER NOT LOGGED IN")
 
-        tenant = Tenant(
-            id="TAPIR_DEFAULT_TENANT_ID",
-            name="TAPIR_DEFAULT_TENANT_NAME",
-            schema_name="TAPIR_DEFAULT_SCHEMA_NAME",
-        )
+        tenant = Tenant.objects.get()
         login_result = jasmin_auth_service._issue_login_tokens(
             user=request.user, tenant=tenant
         )
@@ -150,11 +138,12 @@ class JasminRefreshVew(APIView):
     )
     def post(self, request):
         refresh_token = jasmin_auth_cookies.get_tenant_refresh_token(request)
-        if not refresh_token:
-            raise jasmin_errors.RefreshTokenMissing("Refresh token is required")
 
+        tenant = Tenant.objects.get()
         result = jasmin_auth_service.refresh_access_token(
-            refresh_token=refresh_token, tenant_schema=None
+            refresh_token=refresh_token,
+            tenant_schema=tenant.schema_name,
+            tenant_name=tenant.name,
         )
         response_data = {"access": result["access"]}
         response = Response(response_data)
