@@ -1,6 +1,7 @@
 import datetime
 
 from django.test import RequestFactory
+from django.urls import reverse
 
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import PickupLocationFactory
@@ -25,7 +26,7 @@ class TestPickupLocationCfgView(TapirIntegrationTest):
 
     def _filtered_names(self, **query):
         view = PickupLocationCfgView()
-        view.request = RequestFactory().get("/tapir/admin/pickuplocations/", query)
+        view.request = RequestFactory().get(reverse("wirgarten:pickup_locations"), query)
         return {
             pickup_location.name
             for pickup_location in view.get_filtered_pickup_locations()
