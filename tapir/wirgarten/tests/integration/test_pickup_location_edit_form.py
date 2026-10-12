@@ -44,7 +44,7 @@ class TestPickupLocationEditForm(TapirIntegrationTest):
         self.assertEqual(datetime.date(2026, 1, 5), form.fields["start_date"].initial)
         self.assertEqual(datetime.date(2026, 12, 27), form.fields["end_date"].initial)
 
-    def test_save_withStartAndEndDate_persistsBothDates(self):
+    def test_pickupLocationEditForm_savingWithStartAndEndDate_persistsBothDates(self):
         pickup_location = PickupLocationFactory.create()
 
         form = PickupLocationEditForm(_valid_data(), id=pickup_location.id)
