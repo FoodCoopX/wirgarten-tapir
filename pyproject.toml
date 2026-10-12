@@ -35,6 +35,7 @@ django-allauth = { extras = ["socialaccount"], version = "^65.20.1" }
 distinctipy = { extras = ["extras"], version = "^1.3.4" }
 requests = "^2.34.2"
 mailmanclient = "^3.3.5"
+openpyxl = "^3.1.5"
 ortools = { version = "^9.15.6755", optional = true }
 jasmin-django-core = { url = "https://github.com/FoodCoopX/jasmin/raw/0de5ec4612010c2ef1a4475874b36e6549746a5d/jasmin_django_core-0.1.0+20261110164152.b81e510f-py3-none-any.whl" }
 factory-boy = "^3.3.3"

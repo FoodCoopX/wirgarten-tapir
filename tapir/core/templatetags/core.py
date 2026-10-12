@@ -150,6 +150,11 @@ def add_admin_links(groups, request, cache: dict):
             material_icon="picture_as_pdf",
             url=reverse_lazy("generic_exports:pdf_export_editor"),
         )
+        admin_group.add_link(
+            display_name=_("Datenübernahme"),
+            material_icon="upload_file",
+            url=reverse_lazy("utils:data_import"),
+        )
 
     if request.user.has_perm(Permission.Accounts.VIEW):
         members_group = SidebarLinkGroup(name=_("Mitglieder"))
