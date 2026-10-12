@@ -13,7 +13,8 @@
 {% endblock %}
 {% block content %}
   {% csrf_token %}
-  <div style="margin-top: 2em;
+  <div class="product-config-layout"
+       style="margin-top: 2em;
                 display: grid;
                 grid-gap: 1em;
                 grid-template-columns: 1fr 1em 1fr 1em 1fr">
@@ -67,7 +68,7 @@
         </table>
       </div>
     </div>
-    <span style="margin: auto" class="material-icons">arrow_forward</span>
+    <span style="margin: auto" class="material-icons product-config-arrow">arrow_forward</span>
     <div class="card">
       <div style="display: flex;flex-direction: row" class="card-header">
         <h5 style="margin: auto; width: 100%">{% translate 'Produkttypen' %}</h5>
@@ -120,7 +121,7 @@
         </table>
       </div>
     </div>
-    <span style="margin: auto" class="material-icons">arrow_forward</span>
+    <span style="margin: auto" class="material-icons product-config-arrow">arrow_forward</span>
     <div class="card">
       <div class="d-flex flex-row justify-content-between card-header">
         <h5 style="margin: auto; width: 100%">{% translate 'Produkte' %}</h5>

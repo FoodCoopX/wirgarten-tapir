@@ -1,0 +1,229 @@
+/* Phones and small tablets, for every theme (loaded after the theme's custom.css).
+ * The sidebar becomes a drawer behind the menu button in the navbar, the content uses the
+ * full width, wide cards and tables scroll sideways instead of widening the page. */
+
+#sidebar-toggle,
+#sidebar-backdrop {
+  display: none;
+}
+
+@media (max-width: 767.98px) {
+  html,
+  body {
+    overflow-x: hidden;
+  }
+
+  /* Navbar: menu button, logo, name and logout in one row */
+  .navbar.sticky-top {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+    flex-wrap: nowrap;
+  }
+
+  .navbar .navbar-brand {
+    margin-right: 0.5rem;
+  }
+
+  .navbar .nav-link {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  #sidebar-toggle {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem;
+    margin-right: 0.5rem;
+    border: 0;
+    color: #fff;
+    background: transparent;
+  }
+
+  #sidebar-toggle .material-icons {
+    width: auto;
+    font-size: 28px;
+  }
+
+  /* Sidebar as a drawer */
+  #sidebar.custom-sidebar,
+  #sidebar.custom-sidebar:hover {
+    position: fixed !important;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 16em !important;
+    max-width: 85vw;
+    padding-top: 4.5em;
+    overflow-y: auto;
+    transform: translateX(-105%);
+    transition: transform 0.25s ease;
+    z-index: 1030;
+  }
+
+  body.sidebar-open #sidebar.custom-sidebar {
+    transform: none;
+  }
+
+  #sidebar .sidebar-item-details {
+    opacity: 1 !important;
+  }
+
+  #sidebar .sidebar-sticky {
+    height: auto;
+  }
+
+  body.sidebar-open #sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1029;
+  }
+
+  body.sidebar-open {
+    overflow: hidden;
+  }
+
+  /* Content over the full width */
+  #main-content {
+    margin-left: 0 !important;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  #page-content > .container-fluid {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+
+  main .container,
+  main .container-fluid {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  main .card.m-2,
+  main .card.m-3 {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  /* Wide content scrolls inside its card instead of widening the page */
+  main .card-body,
+  main .card > .table,
+  main .card > .list-group {
+    overflow-x: auto;
+  }
+
+  main table.table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  main .table td,
+  main .table th {
+    font-size: 14px !important;
+  }
+
+  /* Headings of the themes are made for the desktop */
+  h1 {
+    font-size: 1.75rem !important;
+  }
+
+  h2 {
+    font-size: 1.5rem !important;
+  }
+
+  h3 {
+    font-size: 1.3rem !important;
+  }
+
+  h4 {
+    font-size: 1.15rem !important;
+  }
+
+  /* Card headers with buttons wrap instead of overflowing */
+  main .card-header {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  main .btn {
+    white-space: normal;
+  }
+
+  .modal-dialog {
+    margin: 0.5rem;
+  }
+
+  /* Page layouts with grids made for the desktop: one column */
+  .dashboard-container,
+  #member-detail-container,
+  .filter-list-layout {
+    display: flex !important;
+    flex-direction: column;
+    gap: 1em;
+  }
+
+  #member-detail-container {
+    margin-top: 1em;
+  }
+
+  /* Lists: filter above the table, the page scrolls instead of the table card */
+  .filter-list-filter {
+    order: -1;
+  }
+
+  .filter-list-table-body {
+    height: auto !important;
+    max-height: none;
+    overflow-y: visible !important;
+  }
+
+  /* Button bars in card headers wrap */
+  main .card-header .d-flex,
+  main .card-header > span {
+    flex-wrap: wrap;
+  }
+
+  /* Configuration: categories as a row above the parameters */
+  #config-view {
+    display: block !important;
+  }
+
+  #config-view > div[style*="position: fixed"] {
+    position: static !important;
+    margin-bottom: 1em;
+  }
+
+  #config-view .nav.flex-column {
+    flex-direction: row !important;
+    flex-wrap: wrap;
+  }
+
+  #config-view .nav .nav-link {
+    flex: 0 0 auto;
+    padding: 0.25rem 0.5rem;
+  }
+
+  #config-view > div[style*="margin-left"] {
+    margin-left: 0 !important;
+  }
+
+  /* Growing periods, product types and products below each other */
+  .product-config-layout,
+  .pickup-location-layout {
+    display: flex !important;
+    flex-direction: column;
+    height: auto !important;
+  }
+
+  .product-config-arrow {
+    transform: rotate(90deg);
+  }
+
+  .pickup-location-layout > div:last-child {
+    height: 60vh;
+  }
+}
