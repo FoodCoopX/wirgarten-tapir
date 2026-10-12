@@ -12815,6 +12815,10 @@ components:
           type: string
         phone_number_required:
           type: boolean
+        pseudonym:
+          type: string
+        pseudonym_enabled:
+          type: boolean
       required:
       - can_edit_country
       - can_edit_name
@@ -12828,6 +12832,8 @@ components:
       - phone_number
       - phone_number_required
       - postcode
+      - pseudonym
+      - pseudonym_enabled
       - street
       - street_2
     MemberSolidarityContributionsResponse:
@@ -13629,6 +13635,9 @@ components:
           minLength: 1
         is_student:
           type: boolean
+        pseudonym:
+          type: string
+          maxLength: 150
     PatchedPdfExportModelRequest:
       type: object
       properties:

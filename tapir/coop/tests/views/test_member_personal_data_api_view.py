@@ -725,3 +725,108 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
         other_recipient.refresh_from_db()
         self.assertEqual("old_fn_2", other_recipient.first_name)
         self.assertEqual("old_ln_2", other_recipient.last_name)
+
+    def test_get_bakeryEnabled_returnsPseudonymAndPseudonymEnabled(self):
+        self._set_parameter(ParameterKeys.BAKERY_ENABLED, True)
+        user = MemberFactory.create(is_superuser=False, pseudonym="test_pseudonym")
+        self.client.force_login(user)
+
+        url = reverse("coop:member_personal_data")
+        response = self.client.get(f"{url}?member_id={user.id}")
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        response_content = response.json()
+        self.assertEqual("test_pseudonym", response_content["pseudonym"])
+        self.assertTrue(response_content["pseudonym_enabled"])
+
+    def test_get_bakeryDisabled_returnsPseudonymDisabled(self):
+        self._set_parameter(ParameterKeys.BAKERY_ENABLED, False)
+        user = MemberFactory.create(is_superuser=False)
+        self.client.force_login(user)
+
+        url = reverse("coop:member_personal_data")
+        response = self.client.get(f"{url}?member_id={user.id}")
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assertFalse(response.json()["pseudonym_enabled"])
+
+    def _patch_pseudonym(self, user, pseudonym):
+        self.client.force_login(user)
+        data = {
+            "member_id": user.id,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "street": "test_street",
+            "street_2": "",
+            "phone_number": "017726254738",
+            "postcode": "12345",
+            "city": "test_city",
+            "is_student": False,
+        }
+        if pseudonym is not None:
+            data["pseudonym"] = pseudonym
+        return self.client.patch(
+            reverse("coop:member_personal_data"),
+            data=data,
+            content_type="application/json",
+        )
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_patch_memberSetsOwnPseudonym_pseudonymIsSavedAndLogged(self, _):
+        self._set_parameter(ParameterKeys.BAKERY_ENABLED, True)
+        user = MemberFactory.create(is_superuser=False, pseudonym="")
+
+        response = self._patch_pseudonym(user, " test_pseudonym ")
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assert_order_confirmed(response.json())
+        user.refresh_from_db()
+        self.assertEqual("test_pseudonym", user.pseudonym)
+        log_entry = UpdateTapirUserLogEntry.objects.get()
+        self.assertEqual("test_pseudonym", log_entry.new_values["pseudonym"])
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_patch_memberSendsEmptyPseudonym_pseudonymIsRemoved(self, _):
+        self._set_parameter(ParameterKeys.BAKERY_ENABLED, True)
+        user = MemberFactory.create(is_superuser=False, pseudonym="test_pseudonym")
+
+        response = self._patch_pseudonym(user, "")
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assert_order_confirmed(response.json())
+        user.refresh_from_db()
+        self.assertEqual("", user.pseudonym)
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_patch_pseudonymNotSent_pseudonymIsNotChanged(self, _):
+        self._set_parameter(ParameterKeys.BAKERY_ENABLED, True)
+        user = MemberFactory.create(is_superuser=False, pseudonym="test_pseudonym")
+
+        response = self._patch_pseudonym(user, None)
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assert_order_confirmed(response.json())
+        user.refresh_from_db()
+        self.assertEqual("test_pseudonym", user.pseudonym)
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_patch_bakeryDisabled_pseudonymIsNotChanged(self, _):
+        self._set_parameter(ParameterKeys.BAKERY_ENABLED, False)
+        user = MemberFactory.create(is_superuser=False, pseudonym="test_pseudonym")
+
+        response = self._patch_pseudonym(user, "other_pseudonym")
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assert_order_confirmed(response.json())
+        user.refresh_from_db()
+        self.assertEqual("test_pseudonym", user.pseudonym)
+
+    def test_patch_pseudonymTooLong_returns400(self):
+        self._set_parameter(ParameterKeys.BAKERY_ENABLED, True)
+        user = MemberFactory.create(is_superuser=False, pseudonym="test_pseudonym")
+
+        response = self._patch_pseudonym(user, "a" * 151)
+
+        self.assertStatusCode(response, status.HTTP_400_BAD_REQUEST)
+        user.refresh_from_db()
+        self.assertEqual("test_pseudonym", user.pseudonym)
