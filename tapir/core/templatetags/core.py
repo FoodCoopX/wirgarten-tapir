@@ -72,11 +72,12 @@ def add_admin_links(groups, request, cache: dict):
         material_icon="dashboard",
         url=reverse_lazy("wirgarten:admin_dashboard"),
     )
-    admin_group.add_link(
-        display_name=_("Kommissionierung"),
-        material_icon="construction",
-        url=reverse_lazy("jasmin"),
-    )
+    if settings.ENABLE_JASMIN:
+        admin_group.add_link(
+            display_name=_("Kommissionierung"),
+            material_icon="package_2",
+            url=reverse_lazy("jasmin"),
+        )
     if request.user.has_perm(Permission.Coop.MANAGE):
         admin_group.add_link(
             display_name=_("Konfiguration"),

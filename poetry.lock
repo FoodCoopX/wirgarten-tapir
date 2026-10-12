@@ -2145,7 +2145,7 @@ optional = false
 python-versions = ">=3.14,<4.0"
 groups = ["main"]
 files = [
-    {file = "jasmin_django_core-0.1.0-py3-none-any.whl", hash = "sha256:b2a6920533ea68ad89cbaf919fdedd706c4c3bab9d23aa02d597e48efa8b53c5"},
+    {file = "jasmin_django_core-0.1.0-py3-none-any.whl", hash = "sha256:17818a349a16d4d54262eb40736aa6ea9064c7f3211ee47921513399b4fde61b"},
 ]
 
 [package.dependencies]
@@ -2190,7 +2190,7 @@ weasyprint = ">=70.0,<71.0"
 
 [package.source]
 type = "url"
-url = "https://github.com/FoodCoopX/jasmin/raw/4cd3a72ecdd55ec14568068d7e49404c54a6d73e/jasmin_django_core-0.1.0-py3-none-any.whl"
+url = "https://github.com/FoodCoopX/jasmin/raw/7fd167def94bb1f6c3f1e58c6dd73f3a8c2561bf/jasmin_django_core-0.1.0-py3-none-any.whl"
 
 [[package]]
 name = "jedi"
@@ -4762,4 +4762,4 @@ bakery = ["ortools"]
 [metadata]
 lock-version = "2.1"
 python-versions = "3.14.8"
-content-hash = "8d6c4b4d91a64c452d6c2faf6a47081987098bd25686b5dc68c1518d4480895e"
+content-hash = "76e3cee46cdb8406c82e7c6ca24b4989756193e5b70665c3c8f8e6e692ce6f28"

@@ -76,23 +76,27 @@ INSTALLED_APPS = [
     "allauth.account",
     "allauth.socialaccount",
     "allauth.socialaccount.providers.openid_connect",
-    "apps.commissioning",
-    "apps.shared.tenants",
-    "auditlog",
-    "django_otp",
-    "django_otp.plugins.otp_totp",
-    "django_otp.plugins.otp_static",
-    "django_tenants",
 ]
 
-SHARED_APPS = INSTALLED_APPS
-TENANT_APPS = INSTALLED_APPS
+ENABLE_JASMIN = env.bool("ENABLE_JASMIN", default=False)
+if ENABLE_JASMIN:
+    INSTALLED_APPS += [
+        "apps.commissioning",
+        "apps.shared.tenants",
+        "auditlog",
+        "django_otp",
+        "django_otp.plugins.otp_totp",
+        "django_otp.plugins.otp_static",
+        "django_tenants",
+    ]
+
+    SHARED_APPS = INSTALLED_APPS
+    TENANT_APPS = INSTALLED_APPS
 
 if ENABLE_SILK_PROFILING:
     INSTALLED_APPS.append("silk")
 
 MIDDLEWARE = [
-    "django_tenants.middleware.main.TenantMainMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -106,6 +110,9 @@ MIDDLEWARE = [
     "tapir.wirgarten.middleware.error.GlobalServerErrorHandlerMiddleware",
     "tapir.wirgarten.middleware.mailing.TapirMailPermissionMiddleware",
 ]
+
+if ENABLE_JASMIN:
+    MIDDLEWARE = ["django_tenants.middleware.main.TenantMainMiddleware"] + MIDDLEWARE
 
 X_FRAME_OPTIONS = "ALLOWALL"
 XS_SHARING_ALLOWED_METHODS = ["POST", "GET", "OPTIONS", "PUT", "DELETE"]
@@ -128,14 +135,19 @@ def get_jasmin_template_dir():
         return str(path)
 
 
+DIRS = [
+    os.path.join(BASE_DIR, "tapir/templates"),
+    get_tapir_mail_template_dir(),
+]
+if ENABLE_JASMIN:
+    DIRS.append(
+        get_jasmin_template_dir(),
+    )
+
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [
-            os.path.join(BASE_DIR, "tapir/templates"),
-            get_tapir_mail_template_dir(),
-            get_jasmin_template_dir(),
-        ],
+        "DIRS": DIRS,
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -169,18 +181,18 @@ def get_tapir_mail_static_dir():
         return str(path)
 
 
-def get_picking_module_static_dir():
+def get_jasmin_static_dir():
     with resources.path("apps", "static/jasmin-dist/dist/static") as path:
         return str(path)
 
 
 STATIC_URL = "/static/"
 STATIC_ROOT = "static"
-STATICFILES_DIRS = [
-    get_tapir_mail_static_dir(),
-    "dist",
-    get_picking_module_static_dir(),
-]
+STATICFILES_DIRS = [get_tapir_mail_static_dir(), "dist"]
+if ENABLE_JASMIN:
+    STATICFILES_DIRS.append(
+        get_jasmin_static_dir(),
+    )
 
 SELECT2_JS = "core/select2/4.0.13/js/select2.min.js"
 SELECT2_CSS = "core/select2/4.0.13/css/select2.min.css"
@@ -265,8 +277,10 @@ MAILING_LISTS_ENABLED = env.bool("MAILING_LISTS_ENABLED", default=False)
 CSRF_COOKIE_SAMESITE = "None"
 CSRF_COOKIE_SECURE = True
 
-TENANT_MODEL = "tenants.Tenant"
-TENANT_DOMAIN_MODEL = "tenants.Domain"
 
-TWO_FACTOR_CHALLENGE_LIFETIME = datetime.timedelta(minutes=5)
-TWO_FACTOR_ENROLMENT_LIFETIME = datetime.timedelta(minutes=15)
+if ENABLE_JASMIN:
+    TENANT_MODEL = "tenants.Tenant"
+    TENANT_DOMAIN_MODEL = "tenants.Domain"
+
+    TWO_FACTOR_CHALLENGE_LIFETIME = datetime.timedelta(minutes=5)
+    TWO_FACTOR_ENROLMENT_LIFETIME = datetime.timedelta(minutes=15)

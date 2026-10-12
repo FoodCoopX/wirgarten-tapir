@@ -3,12 +3,6 @@ import json
 import secrets
 from urllib.parse import urlencode
 
-from apps.accounts import serializers as jasmin_serializers
-from apps.accounts.errors import InvalidCredentials as JasminInvalidCredentials
-from apps.accounts.services import auth_service as jasmin_auth_service
-from apps.accounts.views import auth_views as jasmin_auth_views
-from apps.shared import auth_cookies as jasmin_auth_cookies
-from apps.shared.tenants.models import Tenant
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
@@ -106,47 +100,58 @@ class PasswordChangeRedirectView(View):
         )
 
 
-class JasminLoginView(APIView):
-    @extend_schema(
-        responses={200: jasmin_serializers.LoginResponseSerializer},
-        request=jasmin_serializers.LoginRequestSerializer,
-    )
-    def post(self, request):
-        serializer = jasmin_serializers.LoginRequestSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+if settings.ENABLE_JASMIN:
+    from apps.accounts import serializers as jasmin_serializers
+    from apps.accounts.errors import InvalidCredentials as JasminInvalidCredentials
+    from apps.accounts.services import auth_service as jasmin_auth_service
+    from apps.accounts.views import auth_views as jasmin_auth_views
+    from apps.shared import auth_cookies as jasmin_auth_cookies
+    from apps.shared.tenants.models import Tenant
 
-        if not request.user.is_authenticated or not request.user.has_perm(
-            Permission.Coop.MANAGE
-        ):
-            raise JasminInvalidCredentials("USER NOT LOGGED IN")
-
-        tenant = Tenant.objects.get()
-        login_result = jasmin_auth_service._issue_login_tokens(
-            user=request.user, tenant=tenant
+    class JasminLoginView(APIView):
+        @extend_schema(
+            responses={200: jasmin_serializers.LoginResponseSerializer},
+            request=jasmin_serializers.LoginRequestSerializer,
         )
-        response = Response(
-            jasmin_auth_views._login_payload(result=login_result, tenant=tenant)
+        def post(self, request):
+            serializer = jasmin_serializers.LoginRequestSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+
+            if not request.user.is_authenticated or not request.user.has_perm(
+                Permission.Coop.MANAGE
+            ):
+                raise JasminInvalidCredentials("USER NOT LOGGED IN")
+
+            tenant = Tenant.objects.get()
+            login_result = jasmin_auth_service._issue_login_tokens(
+                user=request.user, tenant=tenant
+            )
+            response = Response(
+                jasmin_auth_views._login_payload(result=login_result, tenant=tenant)
+            )
+            jasmin_auth_cookies.set_tenant_refresh_cookie(
+                response, login_result.refresh
+            )
+            return response
+
+    class JasminRefreshVew(APIView):
+        @extend_schema(
+            responses={200: jasmin_serializers.RefreshResponseSerializer},
+            request=None,
         )
-        jasmin_auth_cookies.set_tenant_refresh_cookie(response, login_result.refresh)
-        return response
+        def post(self, request):
+            refresh_token = jasmin_auth_cookies.get_tenant_refresh_token(request)
 
-
-class JasminRefreshVew(APIView):
-    @extend_schema(
-        responses={200: jasmin_serializers.RefreshResponseSerializer},
-        request=None,
-    )
-    def post(self, request):
-        refresh_token = jasmin_auth_cookies.get_tenant_refresh_token(request)
-
-        tenant = Tenant.objects.get()
-        result = jasmin_auth_service.refresh_access_token(
-            refresh_token=refresh_token,
-            tenant_schema=tenant.schema_name,
-            tenant_name=tenant.name,
-        )
-        response_data = {"access": result["access"]}
-        response = Response(response_data)
-        if result["refresh"]:
-            jasmin_auth_cookies.set_tenant_refresh_cookie(response, result["refresh"])
-        return response
+            tenant = Tenant.objects.get()
+            result = jasmin_auth_service.refresh_access_token(
+                refresh_token=refresh_token,
+                tenant_schema=tenant.schema_name,
+                tenant_name=tenant.name,
+            )
+            response_data = {"access": result["access"]}
+            response = Response(response_data)
+            if result["refresh"]:
+                jasmin_auth_cookies.set_tenant_refresh_cookie(
+                    response, result["refresh"]
+                )
+            return response

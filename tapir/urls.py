@@ -19,7 +19,6 @@ from django.conf.urls.static import static
 from django.urls import include, path
 from django.views.generic import RedirectView, TemplateView
 
-from tapir.accounts.views import JasminLoginView, JasminRefreshVew
 from tapir.wirgarten.views.default_redirect import wirgarten_redirect_view
 from tapir.wirgarten.views.mailing import TapirMailView
 
@@ -56,6 +55,24 @@ urlpatterns = [
     path("waiting_list/", include("tapir.waiting_list.urls")),
     path("tapir/", include("tapir.wirgarten.urls")),
     path(
+        "mailing/",
+        TapirMailView.as_view(),
+        name="tapir_mail",
+        kwargs={"TAPIR_MAIL_PATH": settings.TAPIR_MAIL_PATH},
+    ),
+    path(tapir_mail_path, include("tapir_mail.urls")),
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+if settings.ENABLE_SILK_PROFILING:
+    urlpatterns += [path("silk/", include("silk.urls", namespace="silk"))]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+if settings.ENABLE_JASMIN:
+    from tapir.accounts.views import JasminLoginView, JasminRefreshVew
+
+    path(
         "commissioning/api/auth/login/", JasminLoginView.as_view(), name="picking_login"
     ),
     path(
@@ -77,17 +94,3 @@ urlpatterns = [
         TemplateView.as_view(template_name="core/jasmin_iframe.html"),
         name="jasmin",
     ),
-    path(
-        "mailing/",
-        TapirMailView.as_view(),
-        name="tapir_mail",
-        kwargs={"TAPIR_MAIL_PATH": settings.TAPIR_MAIL_PATH},
-    ),
-    path(tapir_mail_path, include("tapir_mail.urls")),
-] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-
-if settings.ENABLE_SILK_PROFILING:
-    urlpatterns += [path("silk/", include("silk.urls", namespace="silk"))]
-
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
