@@ -4,6 +4,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import transaction
 from django.shortcuts import get_object_or_404
+from django.contrib.staticfiles.storage import staticfiles_storage
 from django.templatetags.static import static
 from django.views.generic import TemplateView
 from drf_spectacular.types import OpenApiTypes
@@ -467,6 +468,15 @@ class BestellWizardBaseDataApiView(APIView):
         super().__init__(**kwargs)
         self.cache = {}
 
+    @staticmethod
+    def build_logo_url(cache: dict):
+        # The wizard has a light background: themes can ship a dark logo for it
+        theme = get_parameter_value(key=ParameterKeys.ORGANISATION_THEME, cache=cache)
+        dark_logo = f"core/themes/{theme}/images/Logo_dark.webp"
+        if staticfiles_storage.exists(dark_logo):
+            return static(dark_logo)
+        return static(f"core/themes/{theme}/images/Logo_white.webp")
+
     @extend_schema(
         responses={200: BestellWizardBaseDataResponseSerializer},
     )
@@ -528,9 +538,7 @@ class BestellWizardBaseDataApiView(APIView):
                     contract_start_date=earliest_contract_start_date,
                 ),
                 "product_ids_that_are_already_at_capacity": product_ids_that_are_already_at_capacity,
-                "logo_url": static(
-                    f"core/themes/{get_parameter_value(key=ParameterKeys.ORGANISATION_THEME, cache=self.cache)}/images/Logo_white.webp"
-                ),
+                "logo_url": self.build_logo_url(cache=self.cache),
                 "distribution_channels": QuestionnaireSourceService.get_questionnaire_source_choices(
                     cache=self.cache
                 ),
