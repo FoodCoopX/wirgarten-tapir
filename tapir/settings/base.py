@@ -251,7 +251,6 @@ STORAGES = {
 }
 
 AUTHENTICATION_BACKENDS = [
-    "axes.backends.AxesStandaloneBackend",
     "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
