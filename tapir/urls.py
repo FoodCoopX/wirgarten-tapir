@@ -72,25 +72,29 @@ if settings.DEBUG:
 if settings.ENABLE_JASMIN:
     from tapir.accounts.views import JasminLoginView, JasminRefreshVew
 
-    path(
-        "commissioning/api/auth/login/", JasminLoginView.as_view(), name="picking_login"
-    ),
-    path(
-        "commissioning/api/auth/refresh/",
-        JasminRefreshVew.as_view(),
-        name="picking_refresh",
-    ),
-    path("commissioning/api/", include("apps.commissioning.urls")),
-    path("commissioning/api/commissioning/", include("apps.commissioning.urls")),
-    path("commissioning/api/jasmin/", include("apps.commissioning.urls")),
-    path("commissioning/api/tenants/", include("apps.shared.tenants.urls")),
-    path(
-        "jasmin/home",
-        TemplateView.as_view(template_name="jasmin-dist/dist/index.html"),
-        name="jasmin_home",
-    ),
-    path(
-        "jasmin/",
-        TemplateView.as_view(template_name="core/jasmin_iframe.html"),
-        name="jasmin",
-    ),
+    urlpatterns += [
+        path(
+            "commissioning/api/auth/login/",
+            JasminLoginView.as_view(),
+            name="picking_login",
+        ),
+        path(
+            "commissioning/api/auth/refresh/",
+            JasminRefreshVew.as_view(),
+            name="picking_refresh",
+        ),
+        path("commissioning/api/", include("apps.commissioning.urls")),
+        path("commissioning/api/commissioning/", include("apps.commissioning.urls")),
+        path("commissioning/api/jasmin/", include("apps.commissioning.urls")),
+        path("commissioning/api/tenants/", include("apps.shared.tenants.urls")),
+        path(
+            "jasmin/home",
+            TemplateView.as_view(template_name="jasmin-dist/dist/index.html"),
+            name="jasmin_home",
+        ),
+        path(
+            "jasmin/",
+            TemplateView.as_view(template_name="core/jasmin_iframe.html"),
+            name="jasmin",
+        ),
+    ]
