@@ -1,0 +1,146 @@
+{% extends "core/base.html" %}
+{% load django_bootstrap5 %}
+{% load i18n %}
+{% block title %}
+    {{ page_title }}
+{% endblock title %}
+{% block content %}
+    <div class="container">
+        <div class="card m-2">
+            <h5 class="card-header">{{ page_title }}</h5>
+            <div class="card-body">
+                <p>
+                    Übernimmt den Bestand aus Excel oder CSV, in dieser Reihenfolge: <strong>Mitglieder</strong>,
+                    dann <strong>Genossenschaftsanteile</strong>, dann <strong>Verträge</strong>. Abholorte,
+                    Produkttypen, Produkte und Vertragsperioden müssen vorher in Tapir angelegt sein, die Tabelle
+                    nennt sie mit demselben Namen.
+                </p>
+                <p class="mb-2">
+                    Jede Datei wird zuerst nur geprüft. Gespeichert wird erst mit „Übernehmen“, und nur, wenn keine Zeile
+                    einen Fehler hat. Vorlagen mit allen Spalten (Pflichtspalten fett) und einer Beispielzeile:
+                </p>
+                <div class="d-flex flex-wrap gap-2">
+                    {% for import_type in import_types %}
+                        <a class="btn tapir-btn btn-outline-primary"
+                           href="{% url 'utils:data_import_template' import_type.key %}">
+                            <span class="material-icons">download</span>
+                            Vorlage {{ import_type.name }}
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="card m-2">
+            <h5 class="card-header">Datei prüfen</h5>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {% bootstrap_form form %}
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn tapir-btn btn-primary">
+                            <span class="material-icons">fact_check</span>
+                            Prüfen
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% if result %}
+            <div class="card m-2">
+                <h5 class="card-header">Probelauf: {{ result.import_type.name }} aus {{ filename }}</h5>
+                <div class="card-body">
+                    {% if result.missing_columns %}
+                        <div class="alert alert-danger">
+                            Es fehlen Pflichtspalten: <strong>{{ result.missing_columns|join:", " }}</strong>.
+                            Die Spaltennamen müssen genau so heißen wie in der Vorlage.
+                        </div>
+                    {% else %}
+                        <div class="d-flex flex-wrap gap-2 mb-3">
+                            <span class="badge text-bg-success fs-6">{{ result.counts.created }} werden angelegt</span>
+                            <span class="badge text-bg-primary fs-6">{{ result.counts.updated }} werden aktualisiert</span>
+                            <span class="badge text-bg-light border fs-6">{{ result.counts.skipped }} unverändert</span>
+                            <span class="badge text-bg-danger fs-6">{{ result.counts.error }} mit Fehler</span>
+                        </div>
+                    {% endif %}
+                    {% if result.unknown_columns %}
+                        <div class="alert alert-warning">
+                            Diese Spalten kennt die Übernahme nicht, sie werden ignoriert:
+                            {{ result.unknown_columns|join:", " }}
+                        </div>
+                    {% endif %}
+                    {% if result.rows %}
+                        <div class="table-responsive" style="max-height: 60vh">
+                            <table class="table table-sm align-middle">
+                                <thead class="sticky-top bg-white">
+                                    <tr>
+                                        <th>Zeile</th>
+                                        <th>Datensatz</th>
+                                        <th>Ergebnis</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for row in result.rows %}
+                                        <tr {% if row.status == "error" %}class="table-danger"{% endif %}>
+                                            <td>{{ row.line }}</td>
+                                            <td>{{ row.label }}</td>
+                                            <td style="white-space: normal">
+                                                {% if row.status == "created" %}
+                                                    wird angelegt
+                                                {% elif row.status == "updated" %}
+                                                    wird aktualisiert
+                                                {% elif row.status == "skipped" %}
+                                                    unverändert
+                                                {% else %}
+                                                    Fehler: {{ row.message }}
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+                    {% if result.can_be_applied %}
+                        <form method="post" action="{% url 'utils:data_import_apply' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="token" value="{{ token }}">
+                            <div class="d-flex justify-content-end mt-3">
+                                <button type="submit" class="btn tapir-btn btn-primary">
+                                    <span class="material-icons">save</span>
+                                    Übernehmen
+                                </button>
+                            </div>
+                        </form>
+                    {% else %}
+                        <p class="mt-3 mb-0">
+                            Bitte die Fehler in der Datei beheben und sie erneut prüfen. Es wurde nichts gespeichert.
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+        <div class="card m-2">
+            <h5 class="card-header">Logins für übernommene Mitglieder</h5>
+            <div class="card-body">
+                <p>
+                    {{ members_without_login }} Mitglieder mit Anteilen oder laufendem Vertrag haben noch keinen Login.
+                    Sie bekommen einen Login und eine Mail, mit der sie ihr Passwort setzen. Erst verschicken, wenn
+                    Mitglieder, Anteile und Verträge übernommen sind.
+                </p>
+                {% if members_without_login %}
+                    <form method="post"
+                          action="{% url 'utils:data_import_activation' %}"
+                          onsubmit="return confirm('{{ members_without_login }} Aktivierungsmails jetzt verschicken?')">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn tapir-btn btn-primary">
+                                <span class="material-icons">mail</span>
+                                Aktivierungsmails verschicken
+                            </button>
+                        </div>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock content %}

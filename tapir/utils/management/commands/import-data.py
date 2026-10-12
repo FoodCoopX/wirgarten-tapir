@@ -1,9 +1,6 @@
-import csv
 import os
 import sys
 import traceback
-import unicodedata
-from csv import DictReader
 from typing import Literal
 
 from django.core.management import BaseCommand
@@ -33,6 +30,7 @@ from tapir.utils.models import (
 from tapir.utils.services.member_importer import MemberImporter
 from tapir.utils.services.share_importer import ShareImporter
 from tapir.utils.services.subscription_importer import SubscriptionImporter
+from tapir.utils.services.tabular_file_reader import TabularFileReader
 from tapir.wirgarten.models import (
     Member,
     Subscription,
@@ -151,27 +149,17 @@ class Command(BaseCommand):
         print_stacktrace = options.get("stacktrace", False)
         update_existing = options.get("update")[0] == "yes"
 
-        # Open with utf-8-sig so a potential BOM (U+FEFF) is discarded automatically
-        # Normalize/clean header names to remove invisible/odd whitespace
-        with open(filepath, "r", encoding="utf-8-sig", newline="") as f:
-            base_reader = csv.reader(f, delimiter=";")
+        # Excel (.xlsx) or CSV; header names are cleaned of invisible characters
+        with open(filepath, "rb") as f:
+            data = TabularFileReader.read(f, filepath)
+        reader = iter(data.rows)
 
-            try:
-                raw_headers = next(base_reader)
-            except StopIteration:
-                print("Provided CSV file is empty.")
-                return
+        # Optional verification mode: show what the importer sees without touching the DB
+        if options.get("verify_csv"):
+            self.verify_csv(data.headers, reader)
+            return
 
-            cleaned_headers = [self._clean_field_name(h) for h in raw_headers]
-
-            # Continue reading remaining lines as DictReader with the cleaned headers
-            reader = csv.DictReader(f, delimiter=";", fieldnames=cleaned_headers)
-
-            # Optional verification mode: show what the importer sees without touching the DB
-            if options.get("verify_csv"):
-                self.verify_csv(cleaned_headers, raw_headers, reader)
-                return
-
+        try:
             with transaction.atomic():
                 if delete_all:
                     if import_type == "members":
@@ -190,12 +178,11 @@ class Command(BaseCommand):
                         EmailChangeRequest.objects.all().delete()
                         MemberCredit.objects.all().delete()
                         Joker.objects.all().delete()
+                        cache = {}
                         for member in Member.objects.all():
-                            if not dry_run:
-                                # The dry run's transaction rollback doesn't undo keycloak account deletion
-                                KeycloakUserDeleteService.delete_user_if_exists(
-                                    user=member
-                                )
+                            KeycloakUserDeleteService.delete_user_if_exists(
+                                user=member, cache=cache
+                            )
                             member.delete()
 
                     if import_type == "shares":
@@ -224,13 +211,7 @@ class Command(BaseCommand):
                 if dry_run:
                     transaction.set_rollback(True)
 
-    def verify_csv(
-        self,
-        cleaned_headers: list[str | None],
-        raw_headers: list[str],
-        reader: DictReader[str | None],
-    ):
-        self.stdout.write(f"Raw headers: {raw_headers}")
+    def verify_csv(self, cleaned_headers: list[str], reader):
         self.stdout.write(f"Cleaned headers: {cleaned_headers}")
         try:
             first_row = next(reader)
@@ -248,7 +229,7 @@ class Command(BaseCommand):
 
     def import_generic(
         self,
-        reader: DictReader[str],
+        reader,
         update_existing: bool,
         import_type: Literal["members", "shares", "subscriptions"],
         print_stacktrace: bool,
@@ -308,21 +289,3 @@ class Command(BaseCommand):
         self.stderr.write(f"{exception}, {exception_filename}:L{exception_line_number}")
         if print_stacktrace:
             self.stderr.write(traceback.format_exc())
-
-    @staticmethod
-    def _clean_field_name(s: str) -> str | None:
-        if s is None:
-            return s
-        # Remove common invisible characters and normalize
-        # - BOM (\ufeff), zero-width spaces (\u200b, \u200c, \u200d), word joiner (\u2060)
-        # - Non-breaking space (\u00a0) -> regular space
-        s = (
-            s.replace("\ufeff", "")
-            .replace("\u200b", "")
-            .replace("\u200c", "")
-            .replace("\u200d", "")
-            .replace("\u2060", "")
-            .replace("\xa0", " ")
-        )
-        s = unicodedata.normalize("NFKC", s)
-        return s.strip()

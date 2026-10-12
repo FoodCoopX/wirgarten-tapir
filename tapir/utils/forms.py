@@ -35,3 +35,25 @@ class ResetTestDataForm(Form):
             "This will delete all existing data, including members, users, subscriptions... and recreate them from scratch."
         ),
     )
+
+
+class DataImportForm(Form):
+    import_type = forms.ChoiceField(label=_("Was wird übernommen?"))
+    file = forms.FileField(
+        label=_("Datei"),
+        help_text=_(
+            "Excel (.xlsx) oder CSV. Die erste Zeile enthält die Spaltennamen, die erste Tabelle wird gelesen."
+        ),
+        widget=forms.ClearableFileInput(attrs={"accept": ".xlsx,.xlsm,.csv"}),
+    )
+    update_existing = forms.BooleanField(
+        required=False,
+        label=_("Bestehende Datensätze aktualisieren"),
+        help_text=_(
+            "Ohne Haken werden bereits vorhandene Mitglieder, Anteile und Verträge übersprungen."
+        ),
+    )
+
+    def __init__(self, *args, import_types=(), **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["import_type"].choices = import_types

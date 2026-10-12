@@ -49,6 +49,9 @@ DELIVERY_ADDRESS_COLUMNS = {
 
 
 class MemberImporter:
+    # Off during dry runs: the database changes are rolled back, a changed Keycloak e-mail would not be
+    keycloak_updates_enabled = True
+
     @classmethod
     def import_member(
         cls,
@@ -252,7 +255,11 @@ class MemberImporter:
             member_updated = True
             member.username = member.email
 
-        if email_before != member.email and member.keycloak_id:
+        if (
+            email_before != member.email
+            and member.keycloak_id
+            and cls.keycloak_updates_enabled
+        ):
             Member.objects.filter(id=member.id).update(email=member.email)
             if not dry_run:
                 KeycloakUserManager.get_keycloak_client().update_user(
