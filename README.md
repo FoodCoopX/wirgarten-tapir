@@ -57,6 +57,47 @@ to run tests from your IDE. To do that:
 If you want a fresh setup, for example after switching branches, the equivalent of `./scripts/reset_all_containers.sh`
 is `./scripts/reset_and_start_local_server.sh`
 
+## Running in production (containers, APT)
+
+In production every Tapir instance - one per solidarity farm - runs as podman containers under systemd: web
+(gunicorn), celery worker and celery beat from the production image
+(`ghcr.io/foodcoopx/wirgarten-tapir`, built from `docker/production/Containerfile`). One Keycloak container
+serves all instances, each with its own realm, and one redis container holds the celery queues and caches of all
+instances, each in its own database number. PostgreSQL and nginx run on the host. The Debian package `tapir`
+(Debian 13 trixie, `Architecture: all`) installs the tools; a signed APT repository is published on GitHub Pages:
+https://foodcoopx.github.io/wirgarten-tapir
+
+```sh
+sudo curl -fsSLo /usr/share/keyrings/tapir-archive-keyring.gpg \
+  https://foodcoopx.github.io/wirgarten-tapir/tapir-archive-keyring.gpg
+gpg --show-keys --with-fingerprint /usr/share/keyrings/tapir-archive-keyring.gpg
+# compare with the fingerprint published by the maintainers
+echo "deb [signed-by=/usr/share/keyrings/tapir-archive-keyring.gpg] https://foodcoopx.github.io/wirgarten-tapir trixie main" \
+  | sudo tee /etc/apt/sources.list.d/tapir.list
+sudo apt update
+sudo apt install tapir postgresql nginx
+```
+
+The installation asks for the first instance (name, public host name, local port, e-mail of the first admin) and
+sets it up completely.
+Everything else is done with the tools of the package (all for root):
+
+| Command | Purpose |
+|---|---|
+| `tapir-instance create <name> --domain <host> --port <port> [--admin-email <mail>]` | new instance: containers, database, Keycloak realm, admin, nginx site, checks |
+| `tapir-instance list` / `status <name>` | overview / checks |
+| `tapir-instance upgrade <name>\|--all [--image <image>]` | pull the image, migrate, restart |
+| `tapir-instance user-add <name> <mail> [--admin]` | Tapir user with Keycloak login |
+| `tapir-instance remove <name> [--purge]` | stop and remove (with `--purge` also database, realm, data) |
+| `tapir-manage <name> <manage.py args>` | e.g. `tapir-manage mysolawi shell` |
+| `tapir-kcadm --realm <realm> user list\|add\|passwd\|role\|group\|...` | Keycloak on the command line, realm always explicit (`rwxrwx---` root) |
+
+The nginx site of an instance is written to `/etc/nginx/sites-available/tapir-<name>` (HTTP until the certificate
+exists, e.g. `certbot certonly --webroot -w /var/www/html -d <host>`, then HTTPS after `tapir-instance nginx <name>`);
+enabling it is left to you. An nginx site of the domain that is already enabled gets the Keycloak login paths added
+(with backup and `nginx -t`). The Keycloak admin console is not public; use `tapir-kcadm` or
+`ssh -L 8800:127.0.0.1:8800 root@<server>` and http://localhost:8800/admin. Details: [packaging/README.md](packaging/README.md).
+
 ## Contributing & GitHub issues
 
 You are very welcome to try Tapir locally with the "Getting started" instructions above and do your own thing. The

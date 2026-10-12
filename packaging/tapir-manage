@@ -1,0 +1,3 @@
+#!/bin/sh
+# manage.py of a Tapir instance: tapir-manage <instance> <arguments>, e.g. tapir-manage mysolawi createsuperuser
+exec tapir-instance manage "$@"

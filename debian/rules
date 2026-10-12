@@ -1,0 +1,21 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@
+
+override_dh_auto_build override_dh_auto_test override_dh_auto_clean:
+
+override_dh_auto_install:
+	install -D -m 0755 packaging/tapir-instance debian/tapir/usr/sbin/tapir-instance
+	install -D -m 0755 packaging/tapir-manage debian/tapir/usr/sbin/tapir-manage
+	install -D -m 0770 packaging/tapir-kcadm debian/tapir/usr/sbin/tapir-kcadm
+	install -D -m 0644 packaging/tapir.env.example debian/tapir/usr/share/tapir/tapir.env.example
+	install -D -m 0644 packaging/nginx-site.conf.in debian/tapir/usr/share/tapir/nginx-site.conf.in
+	install -D -m 0644 packaging/keycloak/tapir-realm.json.in debian/tapir/usr/share/tapir/keycloak/tapir-realm.json.in
+	mkdir -p debian/tapir/usr/share/tapir/keycloak/themes
+	cp -rL packaging/keycloak/themes/wirgarten debian/tapir/usr/share/tapir/keycloak/themes/
+
+# tapir-kcadm only for root: rwxrwx--- root:root
+override_dh_fixperms:
+	dh_fixperms
+	chmod 0770 debian/tapir/usr/sbin/tapir-kcadm
