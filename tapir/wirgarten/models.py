@@ -31,12 +31,6 @@ from tapir.wirgarten.constants import NO_DELIVERY, DeliveryCycle, OPTIONS_WEEKDA
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import format_currency, format_date, get_today
 
-PICKUP_LOCATION_START_DATE_VALIDATION_MESSAGE = (
-    "Verteilstationen können nur an einem Montag geöffnet werden."
-)
-PICKUP_LOCATION_END_DATE_VALIDATION_MESSAGE = (
-    "Verteilstationen können nur an einem Sonntag geschlossen werden."
-)
 PICKUP_LOCATION_START_DATE_HELP_TEXT = (
     "Leer = ab sofort verfügbar. Neuanlagen nur an einem Montag möglich."
 )
@@ -112,26 +106,6 @@ class PickupLocation(TapirModel):
 
     def __str__(self):
         return self.name
-
-    @staticmethod
-    def validate_pickup_location_dates(
-        start_date: datetime.date | None, end_date: datetime.date | None
-    ) -> dict[str, str]:
-        errors = {}
-        if start_date is not None and start_date.weekday() != 0:
-            errors["start_date"] = PICKUP_LOCATION_START_DATE_VALIDATION_MESSAGE
-        if end_date is not None and end_date.weekday() != 6:
-            errors["end_date"] = PICKUP_LOCATION_END_DATE_VALIDATION_MESSAGE
-        return errors
-
-    def clean(self):
-        errors = self.validate_pickup_location_dates(self.start_date, self.end_date)
-        if errors:
-            raise ValidationError(errors)
-
-    def save(self, *args, **kwargs):
-        self.clean()
-        super().save(*args, **kwargs)
 
     @property
     def opening_times_html(self):

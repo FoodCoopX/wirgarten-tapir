@@ -39,6 +39,9 @@ from tapir.wirgarten.service.delivery import (
     get_active_pickup_location_capabilities,
 )
 from tapir.wirgarten.service.get_next_delivery_date import get_next_delivery_date
+from tapir.wirgarten.service.pickup_location_date_validation import (
+    PickupLocationDateValidator,
+)
 from tapir.wirgarten.service.products import (
     get_active_subscriptions,
     get_product_price,
@@ -558,7 +561,7 @@ class PickupLocationEditForm(forms.Form):
                 "end_date", ValidationError("Ende darf nicht vor Beginn liegen.")
             )
 
-        for field_name, message in PickupLocation.validate_pickup_location_dates(
+        for field_name, message in PickupLocationDateValidator.validate(
             start_date, end_date
         ).items():
             self.add_error(field_name, ValidationError(message))

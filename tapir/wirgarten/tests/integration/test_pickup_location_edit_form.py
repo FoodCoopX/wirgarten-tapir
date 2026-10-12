@@ -33,7 +33,9 @@ class TestPickupLocationEditForm(TapirIntegrationTest):
             self.assertFalse(form.fields[field_name].required)
             self.assertEqual("date", form.fields[field_name].widget.input_type)
 
-    def test_pickupLocationEditForm_formInstanceHasStartAndEndDates_fieldsInitialValueSet(self):
+    def test_pickupLocationEditForm_formInstanceHasStartAndEndDates_fieldsInitialValueSet(
+        self,
+    ):
         pickup_location = PickupLocationFactory.create(
             start_date=datetime.date(2026, 1, 5),
             end_date=datetime.date(2026, 12, 27),

@@ -26,7 +26,9 @@ class TestPickupLocationCfgView(TapirIntegrationTest):
 
     def _filtered_names(self, **query):
         view = PickupLocationCfgView()
-        view.request = RequestFactory().get(reverse("wirgarten:pickup_locations"), query)
+        view.request = RequestFactory().get(
+            reverse("wirgarten:pickup_locations"), query
+        )
         return {
             pickup_location.name
             for pickup_location in view.get_filtered_pickup_locations()
