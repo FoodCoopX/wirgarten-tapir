@@ -3,8 +3,9 @@ import unittest
 from unittest.mock import patch, Mock
 
 import factory.random
+from django.conf import settings
 from django.core.cache import cache
-from django.test import TestCase, Client, SimpleTestCase
+from django.test import TestCase, Client, SimpleTestCase, override_settings
 from django.utils import timezone
 from rest_framework.test import APIClient
 from tapir_mail.triggers.transactional_trigger import TransactionalTriggerData
@@ -18,6 +19,14 @@ class TapirFactoryMixin:
         factory.random.reseed_random(self.__class__.__name__)
 
 
+@override_settings(
+    STORAGES={
+        **settings.STORAGES,
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
+        },
+    }
+)
 class TapirIntegrationTest(TapirFactoryMixin, TestCase):
     def setUp(self) -> None:
         super().setUp()
