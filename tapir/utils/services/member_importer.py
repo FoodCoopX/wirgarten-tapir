@@ -8,6 +8,7 @@ from tapir.associations.models import (
     AssociationMembershipCreatedLogEntry,
     AssociationMembershipUpdatedLogEntry,
 )
+from tapir.bakery.models import PreferredBread, Bread
 from tapir.configuration.parameter import get_parameter_value
 from tapir.log.util import freeze_for_log
 from tapir.payments.services.member_payment_rhythm_service import (
@@ -83,13 +84,19 @@ class MemberImporter:
             rhythm_from_import=row.get("Zahlungsintervall", None),
         )
 
-        cls.update_association_membership_if_necessary(member=member, row=row)
+        association_membership_updated = cls.update_association_membership_if_necessary(
+            member=member, row=row
+        )
+
+        preferred_breads_updated = cls.update_preferred_breads(member=member, row=row)
 
         if (
             member_attributes_updated
             or pickup_location_updated
             or solidarity_updated
             or payment_rhythm_updated
+            or association_membership_updated
+            or preferred_breads_updated
         ):
             return MEMBER_IMPORT_STATUS_UPDATED
         return MEMBER_IMPORT_STATUS_SKIPPED
@@ -345,6 +352,8 @@ class MemberImporter:
 
         cls.create_association_membership_if_necessary(member=member, row=row)
 
+        cls.update_preferred_breads(member=member, row=row)
+
         MemberImportedLogEntry().populate(model=member, actor=None, user=member).save()
 
         return MEMBER_IMPORT_STATUS_CREATED
@@ -465,3 +474,33 @@ class MemberImporter:
             start_date=target_start_date,
             end_date=target_end_date,
         )
+
+    @classmethod
+    def update_preferred_breads(cls, member: Member, row: dict[str, str]):
+        row_value = row.get("Lieblingsbroten", None)
+        if row_value is None:
+            return False
+        preferred_bread_names = DataImportUtils.normalize_cell(row_value).split(",")
+
+        new_preferred_breads = set()
+        for raw_bread_name in preferred_bread_names:
+            bread_name = raw_bread_name.strip()
+            if bread_name == "":
+                continue
+
+            bread = Bread.objects.filter(name__iexact=bread_name.strip()).first()
+            if bread is None:
+                raise TapirDataImportException(
+                    f"Brot mit Name {bread_name.strip()} existiert nicht"
+                )
+
+            new_preferred_breads.add(bread)
+
+        preferred_bread_object, _ = PreferredBread.objects.get_or_create(
+            member_id=member.id
+        )
+        if set(preferred_bread_object.breads.all()) == new_preferred_breads:
+            return False
+
+        preferred_bread_object.breads.set(new_preferred_breads)
+        return True

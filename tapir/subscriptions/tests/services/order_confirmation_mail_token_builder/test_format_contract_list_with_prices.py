@@ -38,7 +38,7 @@ class TestFormatContractListWithPrices(TapirUnitTest):
 
         self.assertEqual(
             '<ul style="margin:0;padding:0 0 0 1.2em;">'
-            '<li style="margin:0;">2 × M Basket  (11.05.2026 - 31.12.2026) — 21,50 € / Monat</li></ul>',
+            '<li style="margin:0;">2 × M Basket  (11.05.2026 - 31.12.2026): 21,50 € / Monat</li></ul>',
             result,
         )
         mock_get_monthly_price.assert_called_once_with(
@@ -106,7 +106,7 @@ class TestFormatContractListWithPrices(TapirUnitTest):
 
         self.assertEqual(
             '<ul style="margin:0;padding:0 0 0 1.2em;">'
-            '<li style="margin:0;">3 × A Veg  (01.01.2026 - 31.12.2026) — 10,00 € / Monat</li>'
-            '<li style="margin:0;">1 × B Herb  (01.01.2026 - 31.12.2026) — 5,00 € / Monat</li></ul>',
+            '<li style="margin:0;">3 × A Veg  (01.01.2026 - 31.12.2026): 10,00 € / Monat</li>'
+            '<li style="margin:0;">1 × B Herb  (01.01.2026 - 31.12.2026): 5,00 € / Monat</li></ul>',
             result,
         )
