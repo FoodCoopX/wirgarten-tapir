@@ -237,3 +237,55 @@ class TestBestellWizardDeliveryDatesForOrderApiView(TapirIntegrationTest):
             },
             response.json()["delivery_date_by_pickup_location_id_and_product_type_id"],
         )
+
+    def test_post_pickupLocationWithFutureStartDate_excludedFromResponse(self):
+        PickupLocationFactory.create(
+            start_date=datetime.date(year=2024, month=8, day=5)
+        )
+
+        url = reverse("bestell_wizard:bestell_wizard_delivery_dates")
+        response = self.client.post(
+            url,
+            data={
+                "shopping_cart": {
+                    self.product_weekly.id: 1,
+                },
+            },
+            content_type="application/json",
+        )
+
+        # The reference date is 2024-07-01. The pickup location with the start
+        # date 2024-08-05 is not active yet and must not be included.
+        self.assertEqual(
+            {self.pickup_location_1.id, self.pickup_location_2.id},
+            set(
+                response.json()[
+                    "delivery_date_by_pickup_location_id_and_product_type_id"
+                ].keys()
+            ),
+        )
+
+    def test_post_pickupLocationWithPastEndDate_excludedFromResponse(self):
+        PickupLocationFactory.create(end_date=datetime.date(year=2024, month=6, day=30))
+
+        url = reverse("bestell_wizard:bestell_wizard_delivery_dates")
+        response = self.client.post(
+            url,
+            data={
+                "shopping_cart": {
+                    self.product_weekly.id: 1,
+                },
+            },
+            content_type="application/json",
+        )
+
+        # The reference date is 2024-07-01. The pickup location with the end
+        # date 2024-06-30 is already decommissioned and must not be included.
+        self.assertEqual(
+            {self.pickup_location_1.id, self.pickup_location_2.id},
+            set(
+                response.json()[
+                    "delivery_date_by_pickup_location_id_and_product_type_id"
+                ].keys()
+            ),
+        )
