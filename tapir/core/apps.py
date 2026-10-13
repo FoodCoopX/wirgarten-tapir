@@ -27,8 +27,10 @@ class CoreConfig(AppConfig):
     def create_tenant(cls, **_):
         from apps.shared.tenants.models import Tenant, Domain
 
-        tenant = Tenant.objects.create(name="Tapir", schema_name="public")
-        Domain.objects.create(domain="localhost", tenant=tenant)
+        tenant, _ = Tenant.objects.get_or_create(
+            defaults={"name": "Tapir", "schema_name": "tapir_placeholder_tenant"}
+        )
+        Domain.objects.get_or_create(defaults={"domain": "localhost"}, tenant=tenant)
 
     @classmethod
     def get_bcc_if_enabled(cls, key: str) -> str | None:

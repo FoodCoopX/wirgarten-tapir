@@ -78,23 +78,28 @@ INSTALLED_APPS = [
     "allauth.socialaccount.providers.openid_connect",
 ]
 
+if ENABLE_SILK_PROFILING:
+    INSTALLED_APPS.append("silk")
+
 ENABLE_JASMIN = env.bool("ENABLE_JASMIN", default=False)
 if ENABLE_JASMIN:
     INSTALLED_APPS += [
-        "apps.commissioning",
+        "django_tenants",
         "apps.shared.tenants",
+        "apps.commissioning",
         "auditlog",
         "django_otp",
         "django_otp.plugins.otp_totp",
         "django_otp.plugins.otp_static",
-        "django_tenants",
     ]
 
     SHARED_APPS = INSTALLED_APPS
-    TENANT_APPS = INSTALLED_APPS
+    # We don't use tenants for now (we only need it because of Jasmin), so everything goes to shared.
+    # It complains if TENANT_APPS is empty, so we just give it one placeholder app.
+    TENANT_APPS = [
+        "rest_framework",
+    ]
 
-if ENABLE_SILK_PROFILING:
-    INSTALLED_APPS.append("silk")
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
