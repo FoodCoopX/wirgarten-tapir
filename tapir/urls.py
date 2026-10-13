@@ -19,6 +19,7 @@ from django.conf.urls.static import static
 from django.urls import include, path
 from django.views.generic import RedirectView, TemplateView
 
+from tapir.core.views.general import JasminTemplateView
 from tapir.wirgarten.views.default_redirect import wirgarten_redirect_view
 from tapir.wirgarten.views.mailing import TapirMailView
 
@@ -94,7 +95,7 @@ if settings.ENABLE_JASMIN:
         ),
         path(
             "jasmin/",
-            TemplateView.as_view(template_name="core/jasmin_iframe.html"),
+            JasminTemplateView.as_view(template_name="core/jasmin_iframe.html"),
             name="jasmin",
         ),
     ]

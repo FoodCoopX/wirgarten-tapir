@@ -1,7 +1,10 @@
-from typing import Literal
+from typing import Literal, Any
 
+from django.conf import settings
 from django.db import transaction
+from django.http import HttpRequest
 from django.shortcuts import get_object_or_404
+from django.views.generic import TemplateView
 from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
 from rest_framework import status, serializers
 from rest_framework.response import Response
@@ -115,3 +118,20 @@ class MemberMailCategoryDataApiView(APIView):
                 )
 
         return Response(True)
+
+
+if settings.ENABLE_JASMIN:
+    from tapir.core.services.jasmin_synchronisation_service import (
+        JasminSynchronisationService,
+        JasminSynchronisationException,
+    )
+
+    class JasminTemplateView(TemplateView):
+        template_name = "core/jasmin_iframe.html"
+
+        def get(self, request: HttpRequest, *args: Any, **kwargs: Any):
+            try:
+                JasminSynchronisationService.synchronise_everything()
+            except JasminSynchronisationException as error:
+                self.extra_context = {"synchronisation_error": error.message}
+            return super().get(request, *args, **kwargs)

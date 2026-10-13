@@ -5,44 +5,34 @@
 {% endblock %}
 {% block content %}
   {% csrf_token %}
-  <div
-    style="
+  {% if synchronisation_error %}
+    <div class="alert alert-danger mt-2" role="alert">{{ synchronisation_error }}</div>
+  {% else %}
+    <div
+      style="
            width: calc(100% + 2.5em);
            height: 93.75vh;
            margin-left: -1.55em;
            margin-right: -1.25em;
            overflow: hidden;
           "
-  >
-    <iframe
-      id="jasminIframe"
-      style="width: 100%; height: 100%; overflow: hidden"
-    ></iframe>
-  </div>
-  <script>
-    window.onload = () => {
-      const iframe = document.getElementById("jasminIframe");
-      iframe.contentWindow._env_ = window._env_;
-      let subpage = window.location.hash.substring(1);
-      if (subpage.startsWith("state=")) {
-        subpage = "";
-      }
-
-      iframe.src = "/jasmin/home" + subpage;
-
-      const checkIframeUrl = () => {
-        try {
-          window.location.hash = iframe.contentWindow.location.pathname.replace(
-            "/jasmin",
-            ""
-          );
-        } catch (e) {
-          console.log(e);
+    >
+      <iframe
+        id="jasminIframe"
+        style="width: 100%; height: 100%; overflow: hidden"
+      ></iframe>
+    </div>
+    <script>
+      window.onload = () => {
+        const iframe = document.getElementById("jasminIframe");
+        iframe.contentWindow._env_ = window._env_;
+        let subpage = window.location.hash.substring(1);
+        if (subpage.startsWith("state=")) {
+          subpage = "";
         }
+
+        iframe.src = "/jasmin/home" + subpage;
       };
-
-      setInterval(checkIframeUrl, 500);
-    };
-  </script>
-
+    </script>
+  {% endif %}
 {% endblock %}
