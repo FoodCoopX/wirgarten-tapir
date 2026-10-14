@@ -177,4 +177,4 @@ class OrderConfirmationMailTokenBuilder:
             reference_date=reference_date,
             cache=cache,
         )
-        return f"{subscription.long_str()} — {format_currency(monthly_price)} € / Monat"
+        return f"{subscription.long_str()}: {format_currency(monthly_price)} € / Monat"

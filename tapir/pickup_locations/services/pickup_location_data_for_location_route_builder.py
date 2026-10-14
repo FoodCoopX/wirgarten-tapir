@@ -71,7 +71,9 @@ class PickupLocationDataForLocationRouteBuilder:
             ),
             "product_name_by_id": {
                 product.id: product.name
-                for product in TapirCache.get_all_products(cache=cache)
+                for product in cls.get_relevant_products_sorted(
+                    reference_date=reference_datetime.date(), cache=cache
+                )
             },
             "convert_headers": PickingModeProvider.get_picking_mode(cache=cache)
             == PICKING_MODE_SHARE,
@@ -120,24 +122,12 @@ class PickupLocationDataForLocationRouteBuilder:
         if picking_mode == PICKING_MODE_BASKET:
             return BasketSizeCapacitiesService.get_basket_sizes(cache=cache)
 
-        products = [
-            product
-            for product in TapirCache.get_all_products(cache=cache)
-            if DeliveryCycleService.is_product_type_delivered_in_week(
-                product_type=product.type, date=reference_date, cache=cache
+        return [
+            product.id
+            for product in cls.get_relevant_products_sorted(
+                reference_date=reference_date, cache=cache
             )
-            and not product.hidden_in_bestell_wizard
         ]
-        products = sorted(
-            products,
-            key=lambda product: (
-                product.type.order_in_bestellwizard,
-                cls.get_price_or_zero(
-                    product=product, reference_date=reference_date, cache=cache
-                ),
-            ),
-        )
-        return [product.id for product in products]
 
     @classmethod
     def get_price_or_zero(
@@ -147,3 +137,29 @@ class PickupLocationDataForLocationRouteBuilder:
             product=product, reference_date=reference_date, cache=cache
         )
         return Decimal(0) if price_object is None else price_object.price
+
+    @classmethod
+    def get_relevant_products_sorted(cls, reference_date: datetime.date, cache: dict):
+        products = [
+            product
+            for product in TapirCache.get_all_products(cache=cache)
+            if DeliveryCycleService.is_product_type_delivered_in_week(
+                product_type=product.type, date=reference_date, cache=cache
+            )
+            and not product.hidden_in_bestell_wizard
+            and TapirCache.get_product_type_capacity_at_date(
+                product_type=product.type,
+                reference_date=reference_date,
+                cache=cache,
+            )
+            is not None
+        ]
+        return sorted(
+            products,
+            key=lambda product: (
+                product.type.order_in_bestellwizard,
+                cls.get_price_or_zero(
+                    product=product, reference_date=reference_date, cache=cache
+                ),
+            ),
+        )

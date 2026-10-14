@@ -3,14 +3,24 @@ import unittest
 from unittest.mock import patch, Mock
 
 import factory.random
+from django.conf import settings
 from django.core.cache import cache
-from django.test import TestCase, Client, SimpleTestCase
+from django.test import TestCase, Client, SimpleTestCase, override_settings
 from django.utils import timezone
 from rest_framework.test import APIClient
 from tapir_mail.triggers.transactional_trigger import TransactionalTriggerData
 
+from tapir.utils.shortcuts import get_monday, get_next_sunday
 from tapir.wirgarten.tapirmail import configure_mail_module
 from tapir.wirgarten.tests.factories import MemberFactory
+
+
+def monday_after(reference_date: datetime.date) -> datetime.date:
+    return get_monday(reference_date) + datetime.timedelta(weeks=1)
+
+
+def sunday_before(reference_date: datetime.date) -> datetime.date:
+    return get_next_sunday(reference_date - datetime.timedelta(days=7))
 
 
 class TapirFactoryMixin:
@@ -18,6 +28,14 @@ class TapirFactoryMixin:
         factory.random.reseed_random(self.__class__.__name__)
 
 
+@override_settings(
+    STORAGES={
+        **settings.STORAGES,
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
+        },
+    }
+)
 class TapirIntegrationTest(TapirFactoryMixin, TestCase):
     def setUp(self) -> None:
         super().setUp()

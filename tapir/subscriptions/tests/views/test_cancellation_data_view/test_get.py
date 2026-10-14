@@ -156,7 +156,7 @@ class TestGet(TapirIntegrationTest):
             key=ParameterKeys.ORGANISATION_LEGAL_STATUS, value=LEGAL_STATUS_ASSOCIATION
         )
         AssociationMembershipFactory.create(
-            member=member, start_date=datetime.date(year=2023, month=1, day=1)
+            member=member, start_date=datetime.date(year=2023, month=3, day=1)
         )
 
         url = reverse("subscriptions:cancellation_data")
