@@ -1,6 +1,7 @@
 import base64
 import json
 import secrets
+from dataclasses import dataclass
 from urllib.parse import urlencode
 
 from dateutil.relativedelta import relativedelta
@@ -106,7 +107,16 @@ if settings.ENABLE_JASMIN:
     from apps.accounts.services import auth_service as jasmin_auth_service
     from apps.accounts.views import auth_views as jasmin_auth_views
     from apps.shared import auth_cookies as jasmin_auth_cookies
-    from apps.shared.tenants.models import Tenant
+
+    @dataclass
+    class PlaceholderTenant:
+        name: str
+        schema_name: str
+        id: str
+
+    tenant = PlaceholderTenant(
+        name="placeholder", schema_name="public", id="placeholder_id"
+    )
 
     class JasminLoginView(APIView):
         @extend_schema(
@@ -122,7 +132,6 @@ if settings.ENABLE_JASMIN:
             ):
                 raise JasminInvalidCredentials("USER NOT LOGGED IN")
 
-            tenant = Tenant.objects.get()
             login_result = jasmin_auth_service._issue_login_tokens(
                 user=request.user, tenant=tenant
             )
@@ -142,7 +151,6 @@ if settings.ENABLE_JASMIN:
         def post(self, request):
             refresh_token = jasmin_auth_cookies.get_tenant_refresh_token(request)
 
-            tenant = Tenant.objects.get()
             result = jasmin_auth_service.refresh_access_token(
                 refresh_token=refresh_token,
                 tenant_schema=tenant.schema_name,

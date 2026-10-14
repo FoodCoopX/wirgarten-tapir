@@ -1,6 +1,4 @@
 from django.apps import AppConfig
-from django.conf import settings
-from django.db.models.signals import post_migrate
 from tapir_mail.config import ExternalConfig
 
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -19,18 +17,6 @@ class CoreConfig(AppConfig):
                 ParameterKeys.BCC_MAIL_MODULE_TRANSACTIONAL_MAILS
             )
         )
-
-        if settings.ENABLE_JASMIN:
-            post_migrate.connect(self.create_tenant, sender=self)
-
-    @classmethod
-    def create_tenant(cls, **_):
-        from apps.shared.tenants.models import Tenant, Domain
-
-        tenant, _ = Tenant.objects.get_or_create(
-            defaults={"name": "Tapir", "schema_name": "tapir_placeholder_tenant"}
-        )
-        Domain.objects.get_or_create(defaults={"domain": "localhost"}, tenant=tenant)
 
     @classmethod
     def get_bcc_if_enabled(cls, key: str) -> str | None:

@@ -38,7 +38,7 @@ distinctipy = { extras = ["extras"], version = "^1.3.4" }
 requests = "^2.34.2"
 mailmanclient = "^3.3.5"
 ortools = { version = "^9.15.6755", optional = true }
-jasmin-django-core = { url = "https://github.com/FoodCoopX/jasmin/raw/7fd167def94bb1f6c3f1e58c6dd73f3a8c2561bf/jasmin_django_core-0.1.0-py3-none-any.whl" }
+jasmin-django-core = { url = "https://github.com/FoodCoopX/jasmin/raw/f820fce28b9602d6c03e9ee8c24fc4ecc396b886/jasmin_django_core-0.1.0-py3-none-any.whl" }
 
 [tool.poetry.extras]
 bakery = ["ortools"]

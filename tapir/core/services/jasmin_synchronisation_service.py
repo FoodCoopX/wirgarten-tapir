@@ -97,7 +97,7 @@ class JasminSynchronisationService:
                 tapir_product_type.delivery_cycle
             ),
             valid_from=tapir_product_type.created_at.date(),
-            share_option=cls.get_jasmin_delivery_cycle(tapir_product_type.name),
+            share_option=cls.get_jasmin_share_option(tapir_product_type.name),
         )
 
     @classmethod
@@ -110,7 +110,7 @@ class JasminSynchronisationService:
         return cls.TAPIR_TO_JASMIN_DELIVERY_CYCLE_MAP[tapir_delivery_cycle]
 
     @classmethod
-    def jasmin_share_option(cls, product_type_name: str):
+    def get_jasmin_share_option(cls, product_type_name: str):
         for keyword, share_option in cls.KEYWORD_TO_JASMIN_SHARE_OPTION_MAP:
             if keyword.casefold() in product_type_name.casefold():
                 return share_option
@@ -127,7 +127,7 @@ class JasminSynchronisationService:
             )
         }
         jasmin_product_by_name = {
-            product.name: product for product in ShareTypeVariation.objects.all()
+            product.description: product for product in ShareTypeVariation.objects.all()
         }
 
         tapir_names = set(tapir_product_by_name.keys())
@@ -135,7 +135,7 @@ class JasminSynchronisationService:
 
         names_to_delete = jasmin_names.difference(tapir_names)
         if len(names_to_delete) > 0:
-            ShareTypeVariation.objects.filter(name__in=names_to_delete)
+            ShareTypeVariation.objects.filter(description__in=names_to_delete)
 
         names_to_create = tapir_names.difference(jasmin_names)
         if len(names_to_create) > 0:
@@ -153,4 +153,5 @@ class JasminSynchronisationService:
             variation_type=ShareTypeVariation.VariationType.PHYSICAL,
             size=tapir_product.name,
             valid_from=tapir_product.created_at.date(),
+            description=tapir_product.name,
         )

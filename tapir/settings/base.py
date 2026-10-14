@@ -10,7 +10,6 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
-import datetime
 import os
 from importlib import resources
 from pathlib import Path
@@ -84,20 +83,11 @@ if ENABLE_SILK_PROFILING:
 ENABLE_JASMIN = env.bool("ENABLE_JASMIN", default=False)
 if ENABLE_JASMIN:
     INSTALLED_APPS += [
-        "django_tenants",
-        "apps.shared.tenants",
         "apps.commissioning",
         "auditlog",
         "django_otp",
         "django_otp.plugins.otp_totp",
         "django_otp.plugins.otp_static",
-    ]
-
-    SHARED_APPS = INSTALLED_APPS
-    # We don't use tenants for now (we only need it because of Jasmin), so everything goes to shared.
-    # It complains if TENANT_APPS is empty, so we just give it one placeholder app.
-    TENANT_APPS = [
-        "rest_framework",
     ]
 
 
@@ -115,9 +105,6 @@ MIDDLEWARE = [
     "tapir.wirgarten.middleware.error.GlobalServerErrorHandlerMiddleware",
     "tapir.wirgarten.middleware.mailing.TapirMailPermissionMiddleware",
 ]
-
-if ENABLE_JASMIN:
-    MIDDLEWARE = ["django_tenants.middleware.main.TenantMainMiddleware"] + MIDDLEWARE
 
 X_FRAME_OPTIONS = "ALLOWALL"
 XS_SHARING_ALLOWED_METHODS = ["POST", "GET", "OPTIONS", "PUT", "DELETE"]
@@ -282,10 +269,8 @@ MAILING_LISTS_ENABLED = env.bool("MAILING_LISTS_ENABLED", default=False)
 CSRF_COOKIE_SAMESITE = "None"
 CSRF_COOKIE_SECURE = True
 
-
 if ENABLE_JASMIN:
-    TENANT_MODEL = "tenants.Tenant"
-    TENANT_DOMAIN_MODEL = "tenants.Domain"
+    import datetime
 
     TWO_FACTOR_CHALLENGE_LIFETIME = datetime.timedelta(minutes=5)
     TWO_FACTOR_ENROLMENT_LIFETIME = datetime.timedelta(minutes=15)

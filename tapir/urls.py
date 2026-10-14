@@ -19,7 +19,7 @@ from django.conf.urls.static import static
 from django.urls import include, path
 from django.views.generic import RedirectView, TemplateView
 
-from tapir.core.views.general import JasminTemplateView
+from tapir.core.views.general import JasminTemplateView, JasminCurrentTenantView
 from tapir.wirgarten.views.default_redirect import wirgarten_redirect_view
 from tapir.wirgarten.views.mailing import TapirMailView
 
@@ -87,7 +87,11 @@ if settings.ENABLE_JASMIN:
         path("commissioning/api/", include("apps.commissioning.urls")),
         path("commissioning/api/commissioning/", include("apps.commissioning.urls")),
         path("commissioning/api/jasmin/", include("apps.commissioning.urls")),
-        path("commissioning/api/tenants/", include("apps.shared.tenants.urls")),
+        path("commissioning/api/tenants/current/", JasminCurrentTenantView.as_view()),
+        path(
+            "commissioning/api/tenants/tenants/<str:unused>/",
+            JasminCurrentTenantView.as_view(),
+        ),
         path(
             "jasmin/home",
             TemplateView.as_view(template_name="jasmin-dist/dist/index.html"),
