@@ -4,10 +4,10 @@ import os
 import celery.schedules
 import environ
 
-from tapir.settings.base import BASE_DIR
-from tapir.settings.base import ENABLE_JASMIN
+from tapir.settings.base import BASE_DIR, DEBUG
 
 env = environ.Env()
+environ.Env.read_env(BASE_DIR / "../.env.local")
 
 TAPIR_VERSION = env.str("TAPIR_VERSION", default="dev")
 
@@ -16,8 +16,7 @@ SECRET_KEY = env.str(
     "SECRET_KEY", default="fl%20e9dbkh4mosi5$i$!5&+f^ic5=7^92hrchl89x+)k0ctsn"
 )
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env.bool("DEBUG", default=False)
+
 if not DEBUG:
     print(
         f"Tapir Version: {TAPIR_VERSION}"
@@ -228,12 +227,6 @@ TAPIRMAIL_REACT_APP_BASENAME = TAPIR_MAIL_PATH
 if DEBUG:
     CSRF_TRUSTED_ORIGINS = ["http://localhost:8000", SITE_URL]
 
-if ENABLE_JASMIN:
-    CSRF_COOKIE_HTTPONLY = (
-        False  # JS needs to read the token; HttpOnly would break the Jasmin-SPA
-    )
-    SESSION_COOKIE_SAMESITE = "Lax"
-    CSRF_COOKIE_SAMESITE = "Lax"
 
 SOCIALACCOUNT_PROVIDERS = {
     "openid_connect": {
@@ -257,15 +250,3 @@ if DEBUG:
 EMAIL_ADDRESS_ERRORS = env.str("EMAIL_ADDRESS_ERRORS", None)
 if EMAIL_ADDRESS_ERRORS:
     ADMINS = [EMAIL_ADDRESS_ERRORS]
-
-if ENABLE_JASMIN:
-    DEFAULT_FIELD_ENCRYPTION_KEY = "HeQ7tkqHP7nVB1hA7VkX0SVIan3y_NUFrjyeDnfzcXk="
-    FIELD_ENCRYPTION_KEY = env.str("FIELD_ENCRYPTION_KEY", DEFAULT_FIELD_ENCRYPTION_KEY)
-    if not DEBUG and FIELD_ENCRYPTION_KEY == DEFAULT_FIELD_ENCRYPTION_KEY:
-        raise ValueError(
-            "FIELD_ENCRYPTION_KEY must be set in production (and must not be the dev default)."
-        )
-
-    SIMPLE_JWT = {
-        "REFRESH_TOKEN_LIFETIME": datetime.timedelta(days=7),
-    }

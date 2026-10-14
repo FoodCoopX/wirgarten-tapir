@@ -1,11 +1,7 @@
-from dataclasses import dataclass
-from typing import Literal, Any
+from typing import Literal
 
-from django.conf import settings
 from django.db import transaction
-from django.http import HttpRequest
 from django.shortcuts import get_object_or_404
-from django.views.generic import TemplateView
 from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
 from rest_framework import status, serializers
 from rest_framework.response import Response
@@ -17,7 +13,6 @@ from tapir_mail.serializers import MailCategorySerializer
 from tapir.configuration.parameter import get_parameter_value
 from tapir.core.serializers import (
     MemberMailCategoryRequestSerializer,
-    JasminPlaceholderTenantSerializer,
 )
 from tapir.core.services.internal_recipient_manager import InternalRecipientManager
 from tapir.wirgarten.models import (
@@ -120,50 +115,3 @@ class MemberMailCategoryDataApiView(APIView):
                 )
 
         return Response(True)
-
-
-if settings.ENABLE_JASMIN:
-    from tapir.core.services.jasmin_synchronisation_service import (
-        JasminSynchronisationService,
-        JasminSynchronisationException,
-    )
-
-    class JasminTemplateView(TemplateView):
-        template_name = "core/jasmin_iframe.html"
-
-        def get(self, request: HttpRequest, *args: Any, **kwargs: Any):
-            try:
-                JasminSynchronisationService.synchronise_everything()
-            except JasminSynchronisationException as error:
-                self.extra_context = {"synchronisation_error": error.message}
-            return super().get(request, *args, **kwargs)
-
-    @dataclass
-    class PlaceholderTenant:
-        name: str
-        schema_name: str
-        id: str
-
-    tenant = PlaceholderTenant(
-        name="placeholder", schema_name="public", id="placeholder_id"
-    )
-
-    class JasminCurrentTenantView(APIView):
-        @extend_schema(
-            responses={200: JasminPlaceholderTenantSerializer},
-            parameters=[],
-        )
-        def get(self, request, *args, **kwargs):
-            settings = {"uploads_weekly_share_amount": True, "tenant_language": "de"}
-            return Response(
-                JasminPlaceholderTenantSerializer(
-                    {
-                        "id": tenant.id,
-                        "name": tenant.name,
-                        "tenant_language": "de",
-                        "number_locale": "de-DE",
-                        "settings": settings,
-                        "current_settings": settings,
-                    }
-                ).data
-            )

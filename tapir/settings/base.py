@@ -23,6 +23,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 environ.Env.read_env(BASE_DIR / "../.env.local")
 
+DEBUG = env.bool("DEBUG", default=False)
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
@@ -80,16 +82,6 @@ INSTALLED_APPS = [
 if ENABLE_SILK_PROFILING:
     INSTALLED_APPS.append("silk")
 
-ENABLE_JASMIN = env.bool("ENABLE_JASMIN", default=False)
-if ENABLE_JASMIN:
-    INSTALLED_APPS += [
-        "apps.commissioning",
-        "auditlog",
-        "django_otp",
-        "django_otp.plugins.otp_totp",
-        "django_otp.plugins.otp_static",
-    ]
-
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -122,19 +114,10 @@ def get_tapir_mail_template_dir():
         return str(path)
 
 
-def get_jasmin_template_dir():
-    with resources.path("apps", "static") as path:
-        return str(path)
-
-
 DIRS = [
     os.path.join(BASE_DIR, "tapir/templates"),
     get_tapir_mail_template_dir(),
 ]
-if ENABLE_JASMIN:
-    DIRS.append(
-        get_jasmin_template_dir(),
-    )
 
 TEMPLATES = [
     {
@@ -173,18 +156,10 @@ def get_tapir_mail_static_dir():
         return str(path)
 
 
-def get_jasmin_static_dir():
-    with resources.path("apps", "static/jasmin-dist/dist/static") as path:
-        return str(path)
-
-
 STATIC_URL = "/static/"
 STATIC_ROOT = "static"
 STATICFILES_DIRS = [get_tapir_mail_static_dir(), "dist"]
-if ENABLE_JASMIN:
-    STATICFILES_DIRS.append(
-        get_jasmin_static_dir(),
-    )
+
 
 SELECT2_JS = "core/select2/4.0.13/js/select2.min.js"
 SELECT2_CSS = "core/select2/4.0.13/css/select2.min.css"
@@ -269,8 +244,53 @@ MAILING_LISTS_ENABLED = env.bool("MAILING_LISTS_ENABLED", default=False)
 CSRF_COOKIE_SAMESITE = "None"
 CSRF_COOKIE_SECURE = True
 
+
+ENABLE_JASMIN = env.bool("ENABLE_JASMIN", default=False)
 if ENABLE_JASMIN:
+    # Those settings are only necessary for the integration with Jasmin
     import datetime
 
     TWO_FACTOR_CHALLENGE_LIFETIME = datetime.timedelta(minutes=5)
     TWO_FACTOR_ENROLMENT_LIFETIME = datetime.timedelta(minutes=15)
+
+    INSTALLED_APPS += [
+        "tapir.jasmin_integration",
+        "apps.commissioning",
+        "auditlog",
+        "django_otp",
+        "django_otp.plugins.otp_totp",
+        "django_otp.plugins.otp_static",
+    ]
+
+    def get_jasmin_template_dir():
+        with resources.path("apps", "static") as path:
+            return str(path)
+
+    DIRS.append(
+        get_jasmin_template_dir(),
+    )
+
+    def get_jasmin_static_dir():
+        with resources.path("apps", "static/jasmin-dist/dist/static") as path:
+            return str(path)
+
+    STATICFILES_DIRS.append(
+        get_jasmin_static_dir(),
+    )
+
+    CSRF_COOKIE_HTTPONLY = (
+        False  # JS needs to read the token; HttpOnly would break the Jasmin-SPA
+    )
+    SESSION_COOKIE_SAMESITE = "Lax"
+    CSRF_COOKIE_SAMESITE = "Lax"
+
+    DEFAULT_FIELD_ENCRYPTION_KEY = "HeQ7tkqHP7nVB1hA7VkX0SVIan3y_NUFrjyeDnfzcXk="
+    FIELD_ENCRYPTION_KEY = env.str("FIELD_ENCRYPTION_KEY", DEFAULT_FIELD_ENCRYPTION_KEY)
+    if not DEBUG and FIELD_ENCRYPTION_KEY == DEFAULT_FIELD_ENCRYPTION_KEY:
+        raise ValueError(
+            f"FIELD_ENCRYPTION_KEY must be set in production (and must not be the dev default)., DEUBG IS: {DEBUG}"
+        )
+
+    SIMPLE_JWT = {
+        "REFRESH_TOKEN_LIFETIME": datetime.timedelta(days=7),
+    }

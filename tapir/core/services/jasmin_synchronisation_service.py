@@ -111,7 +111,7 @@ class JasminSynchronisationService:
 
     @classmethod
     def get_jasmin_share_option(cls, product_type_name: str):
-        for keyword, share_option in cls.KEYWORD_TO_JASMIN_SHARE_OPTION_MAP:
+        for keyword, share_option in cls.KEYWORD_TO_JASMIN_SHARE_OPTION_MAP.items():
             if keyword.casefold() in product_type_name.casefold():
                 return share_option
 

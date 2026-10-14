@@ -19,7 +19,10 @@ from django.conf.urls.static import static
 from django.urls import include, path
 from django.views.generic import RedirectView, TemplateView
 
-from tapir.core.views.general import JasminTemplateView, JasminCurrentTenantView
+from tapir.jasmin_integration.views import (
+    JasminTemplateView,
+    JasminCurrentTenantView,
+)
 from tapir.wirgarten.views.default_redirect import wirgarten_redirect_view
 from tapir.wirgarten.views.mailing import TapirMailView
 
