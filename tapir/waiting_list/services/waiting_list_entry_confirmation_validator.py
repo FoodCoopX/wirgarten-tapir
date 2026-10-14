@@ -90,7 +90,7 @@ class WaitingListEntryConfirmationValidator:
             start_date=contract_start_date,
             cache=cache,
         ):
-            raise ValidationError("Solidarbeitrag ungültig oder zu niedrig")
+            raise ValidationError("Solidarbeitrag zu niedrig")
 
     @classmethod
     def validate_association_content(cls, association_membership_type_id: str | None):

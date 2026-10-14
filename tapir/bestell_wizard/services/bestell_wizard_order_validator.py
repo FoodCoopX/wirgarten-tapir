@@ -102,7 +102,7 @@ class BestellWizardOrderValidator:
             start_date=contract_start_date,
             cache=cache,
         ):
-            raise ValidationError("Solidarbeitrag ungültig oder zu niedrig")
+            raise ValidationError("Solidarbeitrag zu niedrig")
 
         if legal_status_is_cooperative(cache=cache):
             cls.validate_coop_content(
