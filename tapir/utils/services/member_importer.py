@@ -477,7 +477,7 @@ class MemberImporter:
 
     @classmethod
     def update_preferred_breads(cls, member: Member, row: dict[str, str]):
-        row_value = row.get("Lieblingsbroten", None)
+        row_value = row.get("Lieblingsbrote", None)
         if row_value is None:
             return False
         preferred_bread_names = DataImportUtils.normalize_cell(row_value).split(",")
