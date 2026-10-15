@@ -1,16 +1,32 @@
-from dataclasses import dataclass
-
+from apps.accounts import serializers as jasmin_serializers
+from apps.accounts.errors import InvalidCredentials as JasminInvalidCredentials
+from apps.accounts.services import auth_service as jasmin_auth_service
+from apps.accounts.views import auth_views as jasmin_auth_views
+from apps.shared import auth_cookies as jasmin_auth_cookies
 from django.http import HttpRequest
 from django.views.generic import TemplateView
 from drf_spectacular.utils import extend_schema
+from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.viewsets import ModelViewSet
 
 from tapir.core.services.jasmin_synchronisation_service import (
     JasminSynchronisationService,
     JasminSynchronisationException,
 )
-from tapir.jasmin_integration.serializers import JasminPlaceholderTenantSerializer
+from tapir.generic_exports.permissions import HasCoopManagePermission
+from tapir.jasmin_integration.models import JasminTenant, JasminTenantSettings
+from tapir.jasmin_integration.serializers import (
+    JasminTenantSerializer,
+    JasminTenantSettingsSerializer,
+)
+from tapir.wirgarten.constants import Permission
+
+
+def get_tenant():
+    tenant, _ = JasminTenant.objects.get_or_create(defaults={"schema_name": "public"})
+    return tenant
 
 
 class JasminTemplateView(TemplateView):
@@ -24,34 +40,79 @@ class JasminTemplateView(TemplateView):
         return super().get(request, *args, **kwargs)
 
 
-@dataclass
-class PlaceholderTenant:
-    name: str
-    schema_name: str
-    id: str
-
-
-tenant = PlaceholderTenant(
-    name="placeholder", schema_name="public", id="placeholder_id"
-)
-
-
 class JasminCurrentTenantView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
     @extend_schema(
-        responses={200: JasminPlaceholderTenantSerializer},
+        responses={200: JasminTenantSerializer},
         parameters=[],
     )
     def get(self, request, *args, **kwargs):
-        settings = {"uploads_weekly_share_amount": True, "tenant_language": "de"}
-        return Response(
-            JasminPlaceholderTenantSerializer(
-                {
-                    "id": tenant.id,
-                    "name": tenant.name,
-                    "tenant_language": "de",
-                    "number_locale": "de-DE",
-                    "settings": settings,
-                    "current_settings": settings,
-                }
-            ).data
+        tenant = get_tenant()
+        return Response(JasminTenantSerializer(tenant).data)
+
+
+class JasminTenantViewSet(ModelViewSet):
+    queryset = JasminTenant.objects.all()
+    serializer_class = JasminTenantSerializer
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+
+class JasminUpdateCurrentSettingsView(APIView):
+    def put(self, request, *args, **kwargs):
+        serializer = JasminTenantSettingsSerializer(
+            instance=JasminTenantSettings.objects.get(),
+            data=request.data["settings"],
+            partial=True,
         )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response("OK")
+
+
+class JasminLoginView(APIView):
+    @extend_schema(
+        responses={200: jasmin_serializers.LoginResponseSerializer},
+        request=jasmin_serializers.LoginRequestSerializer,
+    )
+    def post(self, request):
+        serializer = jasmin_serializers.LoginRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        if not request.user.is_authenticated or not request.user.has_perm(
+            Permission.Coop.MANAGE
+        ):
+            raise JasminInvalidCredentials("USER NOT LOGGED IN")
+
+        tenant = get_tenant()
+
+        login_result = jasmin_auth_service._issue_login_tokens(
+            user=request.user, tenant=tenant
+        )
+        response = Response(
+            jasmin_auth_views._login_payload(result=login_result, tenant=tenant)
+        )
+        jasmin_auth_cookies.set_tenant_refresh_cookie(response, login_result.refresh)
+        return response
+
+
+class JasminRefreshVew(APIView):
+    @extend_schema(
+        responses={200: jasmin_serializers.RefreshResponseSerializer},
+        request=None,
+    )
+    def post(self, request):
+        refresh_token = jasmin_auth_cookies.get_tenant_refresh_token(request)
+
+        tenant = get_tenant()
+
+        result = jasmin_auth_service.refresh_access_token(
+            refresh_token=refresh_token,
+            tenant_schema="public",
+            tenant_name=tenant.name,
+        )
+        response_data = {"access": result["access"]}
+        response = Response(response_data)
+        if result["refresh"]:
+            jasmin_auth_cookies.set_tenant_refresh_cookie(response, result["refresh"])
+        return response

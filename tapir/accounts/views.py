@@ -1,7 +1,6 @@
 import base64
 import json
 import secrets
-from dataclasses import dataclass
 from urllib.parse import urlencode
 
 from dateutil.relativedelta import relativedelta
@@ -14,9 +13,6 @@ from django.urls import reverse_lazy, reverse
 from django.utils import timezone
 from django.views import View
 from django.views.generic import FormView
-from drf_spectacular.utils import extend_schema
-from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from tapir.accounts.config import EMAIL_CHANGE_LINK_VALIDITY_MINUTES
 from tapir.accounts.forms import AdminMailChangeForm
@@ -99,67 +95,3 @@ class PasswordChangeRedirectView(View):
         return HttpResponseRedirect(
             f"{public_url}/realms/{realm}/protocol/openid-connect/auth?{urlencode(params)}"
         )
-
-
-if settings.ENABLE_JASMIN:
-    from apps.accounts import serializers as jasmin_serializers
-    from apps.accounts.errors import InvalidCredentials as JasminInvalidCredentials
-    from apps.accounts.services import auth_service as jasmin_auth_service
-    from apps.accounts.views import auth_views as jasmin_auth_views
-    from apps.shared import auth_cookies as jasmin_auth_cookies
-
-    @dataclass
-    class PlaceholderTenant:
-        name: str
-        schema_name: str
-        id: str
-
-    tenant = PlaceholderTenant(
-        name="placeholder", schema_name="public", id="placeholder_id"
-    )
-
-    class JasminLoginView(APIView):
-        @extend_schema(
-            responses={200: jasmin_serializers.LoginResponseSerializer},
-            request=jasmin_serializers.LoginRequestSerializer,
-        )
-        def post(self, request):
-            serializer = jasmin_serializers.LoginRequestSerializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-
-            if not request.user.is_authenticated or not request.user.has_perm(
-                Permission.Coop.MANAGE
-            ):
-                raise JasminInvalidCredentials("USER NOT LOGGED IN")
-
-            login_result = jasmin_auth_service._issue_login_tokens(
-                user=request.user, tenant=tenant
-            )
-            response = Response(
-                jasmin_auth_views._login_payload(result=login_result, tenant=tenant)
-            )
-            jasmin_auth_cookies.set_tenant_refresh_cookie(
-                response, login_result.refresh
-            )
-            return response
-
-    class JasminRefreshVew(APIView):
-        @extend_schema(
-            responses={200: jasmin_serializers.RefreshResponseSerializer},
-            request=None,
-        )
-        def post(self, request):
-            refresh_token = jasmin_auth_cookies.get_tenant_refresh_token(request)
-
-            result = jasmin_auth_service.refresh_access_token(
-                refresh_token=refresh_token,
-                tenant_schema=tenant.schema_name,
-                tenant_name=tenant.name,
-            )
-            response_data = {"access": result["access"]}
-            response = Response(response_data)
-            if result["refresh"]:
-                jasmin_auth_cookies.set_tenant_refresh_cookie(
-                    response, result["refresh"]
-                )
-            return response
