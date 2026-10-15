@@ -144,29 +144,29 @@ class JasminSynchronisationService:
         cls,
         api: JasminApiClient,
         viewset_class,
-        tapir_names: set[str],
-        jasmin_objects_by_name: dict,
+        tapir_keys: set,
+        jasmin_objects_by_key: dict,
         changes_monday: datetime.date,
-    ) -> set[str]:
-        """Reopens the Jasmin objects whose name is back in Tapir, ends the validity
-        of the ones whose name isn't in Tapir anymore.
+    ) -> set:
+        """Reopens the Jasmin objects whose key is back in Tapir, ends the validity
+        of the ones whose key isn't in Tapir anymore.
 
-        Returns the names for which a Jasmin object must be created."""
-        names_to_create = set()
-        for name in tapir_names:
-            jasmin_object = jasmin_objects_by_name.get(name)
+        Returns the keys for which a Jasmin object must be created."""
+        keys_to_create = set()
+        for key in tapir_keys:
+            jasmin_object = jasmin_objects_by_key.get(key)
             if jasmin_object is None:
-                names_to_create.add(name)
+                keys_to_create.add(key)
             elif jasmin_object.valid_until is not None:
                 # Reopening instead of creating a new object: Jasmin refuses
                 # overlapping validity periods for the same share type or size.
                 api.update(viewset_class, jasmin_object.id, {"valid_until": None})
 
-        for name, jasmin_object in jasmin_objects_by_name.items():
-            if name not in tapir_names and jasmin_object.valid_until is None:
+        for key, jasmin_object in jasmin_objects_by_key.items():
+            if key not in tapir_keys and jasmin_object.valid_until is None:
                 cls.end_validity(api, viewset_class, jasmin_object, changes_monday)
 
-        return names_to_create
+        return keys_to_create
 
     @classmethod
     def end_validity(
@@ -221,8 +221,8 @@ class JasminSynchronisationService:
         names_to_create = cls.synchronise_time_bound_objects(
             api=api,
             viewset_class=ShareTypeViewSet,
-            tapir_names=set(tapir_product_types_by_name.keys()),
-            jasmin_objects_by_name=jasmin_product_types_by_name,
+            tapir_keys=set(tapir_product_types_by_name.keys()),
+            jasmin_objects_by_key=jasmin_product_types_by_name,
             changes_monday=changes_monday,
         )
         for name in sorted(names_to_create):
@@ -263,30 +263,40 @@ class JasminSynchronisationService:
 
     @classmethod
     def synchronise_products(cls, api: JasminApiClient, changes_monday: datetime.date):
-        tapir_product_by_name = {
-            product.name: product
+        # Product names are only unique within a product type ("M" can exist in
+        # several types), so products are identified by their type's name and their
+        # own name. In Jasmin: the share type's name and the variation's description.
+        tapir_product_by_key = {
+            (product.type.name, product.name): product
             for product in Product.objects.select_related("type").exclude(
                 type__delivery_cycle=NO_DELIVERY[0]
             )
         }
-        # Ordered by validity so that the most recent object wins for each name
-        jasmin_product_by_name = {
-            product.description: product
-            for product in ShareTypeVariation.objects.order_by("valid_from")
+        # Ordered by validity so that the most recent object wins for each key
+        jasmin_product_by_key = {
+            (product.share_type.name, product.description): product
+            for product in ShareTypeVariation.objects.select_related(
+                "share_type"
+            ).order_by("valid_from")
         }
 
-        names_to_create = cls.synchronise_time_bound_objects(
+        keys_to_create = cls.synchronise_time_bound_objects(
             api=api,
             viewset_class=ShareTypeVariationViewSet,
-            tapir_names=set(tapir_product_by_name.keys()),
-            jasmin_objects_by_name=jasmin_product_by_name,
+            tapir_keys=set(tapir_product_by_key.keys()),
+            jasmin_objects_by_key=jasmin_product_by_key,
             changes_monday=changes_monday,
         )
-        for name in sorted(names_to_create):
+        for key in sorted(keys_to_create):
             api.create(
                 ShareTypeVariationViewSet,
-                cls.build_jasmin_product_data(tapir_product_by_name[name]),
+                cls.build_jasmin_product_data(tapir_product_by_key[key]),
             )
+
+    @staticmethod
+    def get_variation_code(product_type_name: str, product_name: str) -> str:
+        """How the deliveries CSV references a product, see synchronise_products."""
+        return f"{product_type_name} / {product_name}"
 
     @classmethod
     def build_jasmin_product_data(cls, tapir_product: Product) -> dict:
@@ -585,11 +595,12 @@ class JasminSynchronisationService:
                 active_on_date_q(week_monday), delivery_station__is_active=True
             ).values_list("delivery_station__short_name", "delivery_day__day_number")
         )
-        jasmin_product_names = set(
-            ShareTypeVariation.objects.filter(
+        jasmin_variation_codes = {
+            cls.get_variation_code(share_type_name, description)
+            for share_type_name, description in ShareTypeVariation.objects.filter(
                 active_on_date_q(week_monday)
-            ).values_list("description", flat=True)
-        )
+            ).values_list("share_type__name", "description")
+        }
 
         rows = []
         left_out_quantity_by_pickup_location_name = {}
@@ -632,11 +643,14 @@ class JasminSynchronisationService:
                 for product_name, quantity in sorted(
                     quantities_by_product_name.items()
                 ):
+                    variation_code = cls.get_variation_code(
+                        product_type.name, product_name
+                    )
                     if (
                         pickup_location_name,
                         delivery_day,
                     ) not in jasmin_station_days or (
-                        product_name not in jasmin_product_names
+                        variation_code not in jasmin_variation_codes
                     ):
                         left_out_quantity_by_pickup_location_name[
                             pickup_location_name
@@ -654,7 +668,7 @@ class JasminSynchronisationService:
                             "delivery_week": delivery_week,
                             "delivery_station_code": pickup_location_name,
                             "delivery_day_code": delivery_day,
-                            "variation_code": product_name,
+                            "variation_code": variation_code,
                             "quantity": quantity,
                         }
                     )
@@ -673,8 +687,9 @@ class JasminSynchronisationService:
     def synchronise_code_mappings(
         cls, api: JasminApiClient, reference_date: datetime.date
     ):
-        # The deliveries CSV references stations by name, variations by product name
-        # and days by day number (0=Monday in both Tapir and Jasmin).
+        # The deliveries CSV references stations by name, variations by product type
+        # and product name (see get_variation_code) and days by day number (0=Monday
+        # in both Tapir and Jasmin).
         internal_id_by_code_by_kind = {
             ExternalCodeMapping.KIND_STATION: {
                 short_name: str(station_id)
@@ -683,10 +698,12 @@ class JasminSynchronisationService:
                 ).values_list("id", "short_name")
             },
             ExternalCodeMapping.KIND_VARIATION: {
-                description: str(variation_id)
-                for variation_id, description in ShareTypeVariation.objects.filter(
-                    active_on_date_q(reference_date)
-                ).values_list("id", "description")
+                cls.get_variation_code(share_type_name, description): str(variation_id)
+                for variation_id, share_type_name, description in (
+                    ShareTypeVariation.objects.filter(
+                        active_on_date_q(reference_date)
+                    ).values_list("id", "share_type__name", "description")
+                )
             },
             ExternalCodeMapping.KIND_DAY: {
                 str(day_number): str(day_id)
