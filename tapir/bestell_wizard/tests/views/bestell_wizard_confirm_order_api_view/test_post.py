@@ -785,7 +785,7 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         response_content = response.json()
         self.assertFalse(response_content["order_confirmed"])
         self.assertIn(
-            "Solidarbeitrag ungültig oder zu niedrig",
+            "Solidarbeitrag zu niedrig",
             response_content["error"],
         )
         self.assertFalse(Member.objects.exists())

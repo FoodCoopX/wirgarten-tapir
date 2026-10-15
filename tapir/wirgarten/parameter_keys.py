@@ -133,6 +133,7 @@ class ParameterKeys:
 
     SOLIDARITY_CHOICES = f"{PREFIX}.solidarity.choices"
     SOLIDARITY_DEFAULT = f"{PREFIX}.solidarity.default"
+    SOLIDARITY_MINIMUM = f"{PREFIX}.solidarity.minimum"
     # the following two are still named "HARVEST_" for backward compatibility but now belong to the category SOLIDARITY
     HARVEST_NEGATIVE_SOLIPRICE_ENABLED = f"{PREFIX}.harvest.negative_soliprice_enabled"
     HARVEST_MEMBERS_ARE_ALLOWED_TO_CHANGE_SOLIPRICE = (
