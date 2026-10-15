@@ -294,3 +294,7 @@ if ENABLE_JASMIN:
     SIMPLE_JWT = {
         "REFRESH_TOKEN_LIFETIME": datetime.timedelta(days=7),
     }
+
+    JASMIN_CURRENT_TENANT_SETTINGS_PROVIDER = (
+        "tapir.jasmin_integration.services.get_current_jasmin_tenant_settings"
+    )

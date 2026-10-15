@@ -2,7 +2,7 @@ from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from tapir.jasmin_integration.models import JasminTenant, JasminTenantSettings
-from tapir.wirgarten.utils import get_now
+from tapir.jasmin_integration.services import get_current_jasmin_tenant_settings
 
 
 class JasminTenantSettingsSerializer(serializers.ModelSerializer):
@@ -45,14 +45,7 @@ class JasminTenantSerializer(serializers.ModelSerializer):
     @staticmethod
     @extend_schema_field(JasminTenantSettingsSerializer)
     def get_current_settings(_):
-        settings, _ = JasminTenantSettings.objects.get_or_create(
-            defaults={
-                "uploads_weekly_share_amount": True,
-                "valid_from": get_now(cache=None),
-            }
-        )
-
-        return JasminTenantSettingsSerializer(settings).data
+        return JasminTenantSettingsSerializer(get_current_jasmin_tenant_settings()).data
 
     @classmethod
     @extend_schema_field(JasminTenantSettingsSerializer)
