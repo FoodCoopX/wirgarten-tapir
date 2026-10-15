@@ -117,6 +117,34 @@ class JasminSynchronisationService:
             first_monday_not_in_the_past += datetime.timedelta(days=7)
         return max(week_monday, first_monday_not_in_the_past)
 
+    @staticmethod
+    def get_earliest_movable_monday() -> datetime.date:
+        """Jasmin refuses to create delivery days and station days starting in the
+        past, but lets an existing one's start move back to the monday of the
+        current week. Jasmin compares with its own notion of today, so this does
+        too."""
+        return get_monday(timezone.localdate())
+
+    @classmethod
+    def move_start_back(
+        cls,
+        api: JasminApiClient,
+        viewset_class,
+        object_id: str,
+        week_monday: datetime.date,
+        other_fields: dict | None = None,
+    ) -> str | None:
+        """Makes the delivery day or station day start with the given week, if
+        Jasmin allows it. Returns the object's ID if it does, None otherwise."""
+        if week_monday < cls.get_earliest_movable_monday():
+            return None
+        api.update(
+            viewset_class,
+            object_id,
+            {"valid_from": week_monday, **(other_fields or {})},
+        )
+        return object_id
+
     @classmethod
     def synchronise_pickup_locations(cls, api: JasminApiClient):
         # Stations are deactivated instead of deleted: the station days and demand
@@ -457,9 +485,7 @@ class JasminSynchronisationService:
                 or station_day.valid_until is not None
             ):
                 continue
-            cls.end_validity(
-                api, DeliveryStationDayViewSet, station_day, changes_monday
-            )
+            cls.end_station_day_validity(api, station_day, week_monday, changes_monday)
 
         for (
             station_id,
@@ -472,18 +498,31 @@ class JasminSynchronisationService:
                 if day_id is None:
                     # The delivery day itself only starts after this week
                     continue
-                if cls.station_day_exists_later(station_id, day_id, week_monday):
-                    # Created while synchronising an earlier week, starting with
-                    # the first week Jasmin still allows changes for.
-                    continue
-                api.create(
+                later_station_day = cls.get_station_day_starting_later(
+                    station_id, day_id, week_monday
+                )
+                if later_station_day is not None:
+                    # Created while synchronising another week, starting with the
+                    # first week Jasmin allowed to create it for.
+                    station_day_id = later_station_day.id
+                else:
+                    station_day_id = api.create(
+                        DeliveryStationDayViewSet,
+                        {
+                            "delivery_station": station_id,
+                            "delivery_day": day_id,
+                            "valid_from": changes_monday,
+                            **wanted_fields,
+                        },
+                    )["id"]
+                    if changes_monday == week_monday:
+                        continue
+                cls.move_start_back(
+                    api,
                     DeliveryStationDayViewSet,
-                    {
-                        "delivery_station": station_id,
-                        "delivery_day": day_id,
-                        "valid_from": changes_monday,
-                        **wanted_fields,
-                    },
+                    station_day_id,
+                    week_monday,
+                    other_fields=wanted_fields,
                 )
                 continue
 
@@ -494,15 +533,41 @@ class JasminSynchronisationService:
                 continue
             api.update(DeliveryStationDayViewSet, station_day.id, wanted_fields)
 
+    @classmethod
+    def end_station_day_validity(
+        cls,
+        api: JasminApiClient,
+        station_day: DeliveryStationDay,
+        week_monday: datetime.date,
+        changes_monday: datetime.date,
+    ):
+        """Makes the station day end before the given week if Jasmin allows it, so
+        that it doesn't overlap with the station day replacing it, which starts with
+        that week (see move_start_back). Otherwise, like for other objects, before
+        the first week Jasmin still allows changes for."""
+        if week_monday < changes_monday:
+            try:
+                cls.end_validity(
+                    api, DeliveryStationDayViewSet, station_day, week_monday
+                )
+                return
+            except JasminSynchronisationException:
+                pass
+        cls.end_validity(api, DeliveryStationDayViewSet, station_day, changes_monday)
+
     @staticmethod
-    def station_day_exists_later(
+    def get_station_day_starting_later(
         station_id: str, day_id: str, week_monday: datetime.date
-    ) -> bool:
-        return DeliveryStationDay.objects.filter(
-            delivery_station_id=station_id,
-            delivery_day_id=day_id,
-            valid_from__gt=week_monday,
-        ).exists()
+    ) -> DeliveryStationDay | None:
+        return (
+            DeliveryStationDay.objects.filter(
+                delivery_station_id=station_id,
+                delivery_day_id=day_id,
+                valid_from__gt=week_monday,
+            )
+            .order_by("valid_from")
+            .first()
+        )
 
     @classmethod
     def get_tour_and_stop_order_by_pickup_location_id(cls) -> dict:
@@ -536,27 +601,39 @@ class JasminSynchronisationService:
     ) -> str | None:
         """The delivery day valid in the given week, created if there is none.
 
-        Returns None if the delivery day only starts after the given week: Jasmin
-        refuses to create one starting in a week that already began."""
+        Returns None if the delivery day can only start after the given week: Jasmin
+        refuses to create one starting in the past, and to move an existing one's
+        start back before the current week."""
         shares_delivery_day = SharesDeliveryDay.objects.filter(
             active_on_date_q(week_monday), day_number=day_number
         ).first()
         if shares_delivery_day is not None:
             return shares_delivery_day.id
 
-        if SharesDeliveryDay.objects.filter(
-            day_number=day_number, valid_from__gt=week_monday
-        ).exists():
-            # Created while synchronising an earlier week, starting with the first
-            # week Jasmin still allows changes for.
-            return None
+        later_shares_delivery_day = (
+            SharesDeliveryDay.objects.filter(
+                day_number=day_number, valid_from__gt=week_monday
+            )
+            .order_by("valid_from")
+            .first()
+        )
+        if later_shares_delivery_day is not None:
+            # Created while synchronising another week, starting with the first
+            # week Jasmin allowed to create it for.
+            return cls.move_start_back(
+                api, SharesDeliveryDayViewSet, later_shares_delivery_day.id, week_monday
+            )
 
         valid_from = cls.get_first_changeable_monday(week_monday)
         shares_delivery_day_id = api.create(
             SharesDeliveryDayViewSet,
             {"day_number": day_number, "valid_from": valid_from},
         )["id"]
-        return shares_delivery_day_id if valid_from == week_monday else None
+        if valid_from == week_monday:
+            return shares_delivery_day_id
+        return cls.move_start_back(
+            api, SharesDeliveryDayViewSet, shares_delivery_day_id, week_monday
+        )
 
     @classmethod
     def build_deliveries_csv(cls, rows: list[dict], note: str | None = None) -> bytes:
