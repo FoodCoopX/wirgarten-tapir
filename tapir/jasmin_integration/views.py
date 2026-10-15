@@ -16,9 +16,6 @@ from tapir.core.services.jasmin_synchronisation_service import (
     JasminSynchronisationException,
 )
 from tapir.jasmin_integration import jasmin_compat
-from tapir.jasmin_integration.authentication import (
-    CsrfExemptSessionAuthentication,
-)
 from tapir.wirgarten.constants import Permission
 
 
@@ -61,7 +58,6 @@ class JasminTemplateView(TemplateView):
 class JasminAuthApiView(APIView):
     # The Tapir session decides who gets Jasmin tokens. The views check it
     # themselves, so that a refused user gets the 401 Jasmin's frontend expects.
-    authentication_classes = [CsrfExemptSessionAuthentication]
     permission_classes = [AllowAny]
 
     def get_exception_handler(self):

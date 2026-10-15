@@ -303,12 +303,3 @@ if ENABLE_JASMIN:
     TENANT_DOMAIN_MODEL = "tenants.Domain"
     JASMIN_TENANT_SCHEMA_NAME = "tapir"
     MIDDLEWARE.append("tapir.jasmin_integration.middleware.JasminTenantMiddleware")
-
-    # Jasmin's API only accepts Jasmin's JWT, like in Jasmin itself: Tapir's session
-    # authentication is skipped there, see tapir.jasmin_integration.authentication.
-    REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"] = [
-        "rest_framework.authentication.TokenAuthentication",
-        "tapir.jasmin_integration.authentication.TapirSessionAuthentication",
-        "tapir.jasmin_integration.authentication.TapirForwardAuthentication",
-        "apps.authz.authentication.TenantBoundJWTAuthentication",
-    ]

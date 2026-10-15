@@ -75,8 +75,7 @@ if settings.ENABLE_JASMIN:
 
     urlpatterns += [
         # Where Jasmin's frontend expects Jasmin's API, like in Jasmin's
-        # config/tenant_urls.py. Tapir's own URLs must stay out of "api/", see
-        # tapir.jasmin_integration.authentication.
+        # config/tenant_urls.py.
         path("api/auth/login/", JasminLoginView.as_view(), name="jasmin_login"),
         path("api/auth/refresh/", JasminRefreshVew.as_view(), name="jasmin_refresh"),
         path("api/commissioning/", include("apps.commissioning.urls")),
