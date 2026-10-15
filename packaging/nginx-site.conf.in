@@ -1,0 +1,48 @@
+# Managed by the tapir package (tapir-instance). Delete this line to keep local changes.
+# Tapir for @HOST@: gunicorn on @UPSTREAM@#KC#, Keycloak login pages from @KEYCLOAK@
+#HTTPS## TLS certificate: @CERT@
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name @HOST@;
+
+    # Certificate requests, e.g. certbot certonly --webroot -w /var/www/html -d @HOST@
+    location /.well-known/acme-challenge/ { root /var/www/html; }
+
+#HTTPS#    location / { return 301 https://$host$request_uri; }
+#HTTPS#}
+#HTTPS#
+#HTTPS#server {
+#HTTPS#    listen 443 ssl;
+#HTTPS#    listen [::]:443 ssl;
+#HTTPS#    http2 on;
+#HTTPS#    server_name @HOST@;
+#HTTPS#
+#HTTPS#    ssl_certificate     @CERT@;
+#HTTPS#    ssl_certificate_key @KEY@;
+#HTTPS#    add_header Strict-Transport-Security "max-age=31536000" always;
+
+    client_max_body_size 25m;
+
+    proxy_set_header Host              $host;
+    proxy_set_header X-Real-IP         $remote_addr;
+    proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-Host  $host;
+    proxy_set_header X-Forwarded-Port  $server_port;
+
+#KC#    # Keycloak: only login/OIDC and its resources. The Keycloak admin console stays
+#KC#    # internal, /admin belongs to Tapir here.
+#KC#    location /realms/ {
+#KC#        proxy_pass @KEYCLOAK@;
+#KC#        proxy_buffer_size 128k;
+#KC#        proxy_buffers 4 256k;
+#KC#    }
+#KC#    location /resources/ { proxy_pass @KEYCLOAK@; }
+
+    location / {
+        proxy_pass http://@UPSTREAM@;
+        proxy_read_timeout 120s;
+    }
+}

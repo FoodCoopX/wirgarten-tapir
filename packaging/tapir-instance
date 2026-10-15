@@ -1,0 +1,729 @@
+#!/bin/bash
+# Manages Tapir instances (one per Solawi) running as podman containers under systemd.
+#
+#   tapir-instance create <name> --domain <host> --port <port> [--admin-email <mail>] [--realm <realm>]
+#                         [--image <image>] [--db-url <url>] [--keycloak-port <port>] [--no-nginx]
+#   tapir-instance list
+#   tapir-instance status <name>
+#   tapir-instance upgrade <name>|--all [--image <image>]                 pull, migrate, restart
+#   tapir-instance restart|stop|start <name>
+#   tapir-instance nginx <name>                                         rewrite the nginx site (e.g. HTTPS once the certificate exists)
+#   tapir-instance logs <name> [web|worker|beat]
+#   tapir-instance manage <name> <manage.py arguments>                   e.g. createsuperuser, shell
+#   tapir-instance user-add <name> <mail> [--admin] [--first <name>] [--last <name>]
+#   tapir-instance remove <name> [--purge]                              --purge also drops database and data
+#
+# Every instance gets: /etc/tapir/instances/<name>.env, data in /var/lib/tapir/<name>, the systemd units
+# tapir-<name>-{web,worker,beat} (target tapir-<name>.target), a PostgreSQL database on this machine,
+# a database number in the shared redis (container tapir-redis), a realm in the shared Keycloak
+# (container tapir-keycloak, see tapir-kcadm) and the nginx site
+# /etc/nginx/sites-available/tapir-<name> (enabling it is left to you; an already enabled site of the
+# domain gets the Keycloak login paths added).
+set -euo pipefail
+
+# --- paths and commands, overridable for tests --------------------------------------------------
+TAPIR_ETC="${TAPIR_ETC:-/etc/tapir}"
+TAPIR_LIB="${TAPIR_LIB:-/var/lib/tapir}"
+TAPIR_SHARE="${TAPIR_SHARE:-/usr/share/tapir}"
+QUADLET_DIR="${QUADLET_DIR:-/etc/containers/systemd}"
+SYSTEMD_DIR="${SYSTEMD_DIR:-/etc/systemd/system}"
+NGINX_DIR="${NGINX_DIR:-/etc/nginx}"
+SYSTEMCTL="${SYSTEMCTL:-systemctl}"
+PSQL_ADMIN="${PSQL_ADMIN:-runuser -u postgres -- psql -X -q -tA}"
+PG_HOST="${PG_HOST:-127.0.0.1}"
+PG_PORT="${PG_PORT:-5432}"
+CHOWN="${CHOWN:-chown}"
+RM_DATA="${RM_DATA:-rm -rf}"
+NGINX_TEST="${NGINX_TEST:-nginx -t}"
+NGINX_RELOAD="${NGINX_RELOAD:-systemctl reload nginx}"
+TAPIR_IMAGE_DEFAULT="${TAPIR_IMAGE:-ghcr.io/foodcoopx/wirgarten-tapir:latest}"
+KEYCLOAK_IMAGE="${KEYCLOAK_IMAGE:-quay.io/keycloak/keycloak:26.8.0}"
+CONTAINER_UID=10100
+INSTANCES="$TAPIR_ETC/instances"
+KC_ENV="$TAPIR_ETC/keycloak.env"
+REDIS_PORT="${REDIS_PORT:-6380}"
+REDIS_IMAGE="${REDIS_IMAGE:-docker.io/library/redis:7.4-alpine}"
+REDIS_DATABASES=64
+NGINX_SNIPPET="$NGINX_DIR/snippets/tapir-keycloak.conf"
+
+# Rewrites an nginx site (read twice): in every server block that listens on 443 - wherever the
+# listen line is, certbot appends it at the end - drop own /realms/ and /resources/ locations,
+# include the snippet before "location /" and point "location /" to gunicorn.
+NGINX_REWRITE='
+    function count(s, c,   t) { t = s; return gsub(c, "", t) }
+    NR == FNR {
+        if (depth == 0 && $0 ~ /^[[:space:]]*server[[:space:]]*\{/) block++
+        if (depth >= 1 && $0 ~ /^[[:space:]]*listen[^;]*443/) https[block] = 1
+        depth += count($0, "\\{") - count($0, "\\}")
+        next
+    }
+    {
+        opens = count($0, "\\{"); closes = count($0, "\\}")
+        if (level == 0 && $0 ~ /^[[:space:]]*server[[:space:]]*\{/) { current++; done = 0 }
+        level += opens - closes
+    }
+    skip { skip_depth += opens - closes; if (skip_depth <= 0) skip = 0; next }
+    https[current] && /^[[:space:]]*location[[:space:]]+\/(realms|resources)\/[[:space:]]*\{/ {
+        skip_depth = opens - closes; if (skip_depth > 0) skip = 1; next }
+    https[current] && /include[[:space:]]+[^;]*tapir-keycloak\.conf/ { next }
+    https[current] && !done && /^[[:space:]]*location[[:space:]]+\/[[:space:]]*\{/ {
+        match($0, /^[[:space:]]*/); print substr($0, 1, RLENGTH) "include " snippet ";"
+        done = 1; in_root = 1 }
+    in_root && /proxy_pass[[:space:]]/ { sub(/proxy_pass[[:space:]]+[^;]+;/, "proxy_pass " upstream ";"); in_root = 0 }
+    in_root && /\}/ { in_root = 0 }
+    { print }
+'
+
+# --- helpers ------------------------------------------------------------------------------------
+log() { printf '\033[1m==> %s\033[0m\n' "$*"; }
+warn() { printf '\033[33mWARNING: %s\033[0m\n' "$*" >&2; }
+die() { printf '\033[31mERROR: %s\033[0m\n' "$*" >&2; exit 1; }
+random_string() { tr -dc 'A-Za-z0-9' </dev/urandom | head -c "$1" || true; }
+to_bool() { case "$1" in [Tt]rue|1|yes) echo true ;; *) echo false ;; esac; }
+env_value() { sed -n "s/^$2=//p" "$1" 2>/dev/null | tail -n 1 || true; }
+set_env() {  # file key value
+    local escaped
+    escaped="$(printf '%s' "$3" | sed 's/[&|\\]/\\&/g')"
+    if grep -q "^#\?$2=" "$1" 2>/dev/null; then
+        # first (possibly commented) line gets the value, later duplicates are dropped
+        sed -i -e "0,/^#\?$2=.*/s||$2=$escaped|" "$1"
+        awk -v key="$2=" 'index($0, key) == 1 { if (seen++) next } { print }' "$1" > "$1.tmp" && cat "$1.tmp" > "$1" && rm -f "$1.tmp"
+    else
+        printf '%s=%s\n' "$2" "$3" >> "$1"
+    fi
+}
+unset_env() { sed -i "/^$2=/d" "$1"; }
+psql_admin() { $PSQL_ADMIN "$@"; }
+port_in_use() { ss -ltnH "sport = :$1" | grep -q .; }
+# A container of that name that was not started by our systemd unit must never be replaced
+# (quadlet runs podman with --replace and removes the container when the unit stops).
+assert_own_container() {  # container unit
+    podman container exists "$1" 2>/dev/null || return 0
+    local unit
+    unit="$(podman inspect -f '{{index .Config.Labels "PODMAN_SYSTEMD_UNIT"}}' "$1" 2>/dev/null || true)"
+    [ "$unit" = "$2" ] || die "a container named $1 exists that tapir-instance did not create (unit: ${unit:-none}) - rename or remove it first"
+}
+check_name() {
+    printf '%s' "$1" | grep -qE '^[a-z][a-z0-9-]{1,30}$' || die "invalid instance name '$1' (a-z, 0-9, -)"
+}
+instance_env() { echo "$INSTANCES/$1.env"; }
+require_instance() { [ -r "$(instance_env "$1")" ] || die "no instance '$1' (see: tapir-instance list)"; }
+units() { echo "tapir-$1-web tapir-$1-worker tapir-$1-beat"; }
+image_of() { env_value "$(instance_env "$1")" TAPIR_IMAGE; }
+
+# Runs a one-off container of the instance image (migrate, manage, ...)
+run_once() {  # name args...
+    local name="$1"; shift
+    podman run --rm --network host --env-file "$(instance_env "$name")" \
+        -v "$TAPIR_LIB/$name:/data" "$(image_of "$name")" "$@"
+}
+# manage.py shell -c inside the running web container (falls back to a one-off container)
+tapir_shell() {  # name code
+    if podman container exists "tapir-$1-web" 2>/dev/null \
+        && [ "$(podman inspect -f '{{.State.Running}}' "tapir-$1-web")" = true ]; then
+        podman exec "tapir-$1-web" python manage.py shell -c "$2"
+    else
+        run_once "$1" manage shell -c "$2"
+    fi
+}
+
+# --- shared Keycloak ----------------------------------------------------------------------------
+kcadm() { podman exec -i tapir-keycloak /opt/keycloak/bin/kcadm.sh "$@" --config /tmp/kcadm.config; }
+kc_login() {
+    kcadm config credentials --server "http://127.0.0.1:$(env_value "$KC_ENV" KC_HTTP_PORT)" --realm master \
+        --user admin --password "$(env_value "$KC_ENV" KC_BOOTSTRAP_ADMIN_PASSWORD)" >/dev/null 2>&1 \
+        || die "login to Keycloak failed"
+}
+
+ensure_keycloak() {  # port
+    local port="$1" db_password
+    install -d -m 0750 "$TAPIR_ETC"
+    [ -e "$KC_ENV" ] || install -m 0600 /dev/null "$KC_ENV"
+    for key in KC_DB_PASSWORD KC_BOOTSTRAP_ADMIN_PASSWORD; do
+        [ -n "$(env_value "$KC_ENV" $key)" ] || set_env "$KC_ENV" $key "$(random_string 32)"
+    done
+    [ -n "$(env_value "$KC_ENV" KC_HTTP_PORT)" ] || set_env "$KC_ENV" KC_HTTP_PORT "$port"
+    port="$(env_value "$KC_ENV" KC_HTTP_PORT)"
+    db_password="$(env_value "$KC_ENV" KC_DB_PASSWORD)"
+    # One Keycloak for all instances: no global host name, every realm has its own frontendUrl
+    while IFS='=' read -r key value; do set_env "$KC_ENV" "$key" "$value"; done <<EOF
+KC_DB=postgres
+KC_DB_URL=jdbc:postgresql://$PG_HOST:$PG_PORT/keycloak
+KC_DB_USERNAME=keycloak
+KC_HOSTNAME_STRICT=false
+KC_PROXY_HEADERS=xforwarded
+KC_HTTP_ENABLED=true
+KC_HTTP_HOST=127.0.0.1
+KC_BOOTSTRAP_ADMIN_USERNAME=admin
+EOF
+    for key in KC_HOSTNAME KC_HOSTNAME_ADMIN KC_HOSTNAME_BACKCHANNEL_DYNAMIC TAPIR_CLIENT_SECRET; do
+        unset_env "$KC_ENV" "$key"
+    done
+
+    if [ "$(psql_admin -c "SELECT 1 FROM pg_roles WHERE rolname = 'keycloak'")" = 1 ]; then
+        psql_admin -c "ALTER ROLE keycloak LOGIN PASSWORD '$db_password'"
+    else
+        psql_admin -c "CREATE ROLE keycloak LOGIN PASSWORD '$db_password'"
+    fi
+    [ "$(psql_admin -c "SELECT 1 FROM pg_database WHERE datname = 'keycloak'")" = 1 ] \
+        || psql_admin -c "CREATE DATABASE keycloak OWNER keycloak"
+
+    install -d -m 0755 "$TAPIR_LIB/keycloak/themes"
+    rm -rf "$TAPIR_LIB/keycloak/themes/wirgarten"
+    cp -rL "$TAPIR_SHARE/keycloak/themes/wirgarten" "$TAPIR_LIB/keycloak/themes/"
+
+    local unit="$QUADLET_DIR/tapir-keycloak.container" new
+    assert_own_container tapir-keycloak tapir-keycloak.service
+    install -d "$QUADLET_DIR"
+    new="$(cat <<EOF
+# Written by tapir-instance: Keycloak shared by all Tapir instances
+[Unit]
+Description=Keycloak for Tapir
+Wants=network-online.target
+After=network-online.target postgresql.service
+
+[Container]
+ContainerName=tapir-keycloak
+Image=$KEYCLOAK_IMAGE
+Network=host
+EnvironmentFile=$KC_ENV
+Volume=$TAPIR_LIB/keycloak/themes/wirgarten:/opt/keycloak/themes/wirgarten:ro
+Exec=start
+
+[Service]
+Restart=always
+TimeoutStartSec=900
+
+[Install]
+WantedBy=multi-user.target default.target
+EOF
+)"
+    if [ "$(cat "$unit" 2>/dev/null)" != "$new" ] || ! podman container exists tapir-keycloak 2>/dev/null; then
+        if ! podman container exists tapir-keycloak 2>/dev/null && port_in_use "$port"; then
+            die "port $port for Keycloak is already in use"
+        fi
+        log "Keycloak on 127.0.0.1:$port"
+        podman pull -q "$KEYCLOAK_IMAGE" >/dev/null
+        printf '%s\n' "$new" > "$unit"
+        $SYSTEMCTL daemon-reload
+        $SYSTEMCTL restart tapir-keycloak.service
+    fi
+    for _ in $(seq 1 150); do
+        curl -fs -o /dev/null "http://127.0.0.1:$port/realms/master" && break
+        sleep 2
+    done
+    curl -fs -o /dev/null "http://127.0.0.1:$port/realms/master" \
+        || die "Keycloak does not answer, see: journalctl -u tapir-keycloak"
+    kc_login
+}
+
+ensure_realm() {  # name realm domain
+    local name="$1" realm="$2" domain="$3" env secret public_url id
+    env="$(instance_env "$name")"
+    public_url="https://$domain"
+    secret="$(env_value "$env" KEYCLOAK_ADMIN_CLIENT_SECRET_KEY)"
+    case "$secret" in ""|"**********") secret="$(random_string 32)" ;; esac
+    if ! kcadm get "realms/$realm" >/dev/null 2>&1; then
+        log "Creating realm $realm"
+        sed -e "s|@REALM@|$realm|g" -e "s|@DOMAIN@|$domain|g" -e "s|@CLIENT_SECRET@|$secret|g" \
+            "$TAPIR_SHARE/keycloak/tapir-realm.json.in" | kcadm create realms -f - >/dev/null 2>&1 \
+            || die "creating realm $realm failed"
+    fi
+    # Also for an existing realm: frontend URL, redirect URIs, secret
+    kcadm update "realms/$realm" -s "attributes.frontendUrl=$public_url"
+    for client in tapir-backend tapir-frontend; do
+        id="$(kcadm get clients -r "$realm" -q clientId=$client --fields id --format csv --noquotes)"
+        kcadm update "clients/$id" -r "$realm" -s "rootUrl=$public_url" \
+            -s "redirectUris=[\"$public_url/*\"]" -s "webOrigins=[\"$public_url\"]" \
+            -s "attributes.\"post.logout.redirect.uris\"=$public_url/*"
+        [ "$client" = tapir-backend ] && kcadm update "clients/$id" -r "$realm" -s "secret=$secret"
+    done
+    # Mails (verify e-mail, reset password) through the same server as the instance
+    local email_host sender smtp_user
+    email_host="$(env_value "$env" EMAIL_HOST)"
+    if [ -n "$email_host" ]; then
+        sender="$(env_value "$env" EMAIL_HOST_SENDER)"
+        smtp_user="$(env_value "$env" EMAIL_HOST_USER)"
+        kcadm update "realms/$realm" \
+            -s "smtpServer.host=$email_host" \
+            -s "smtpServer.port=$(env_value "$env" EMAIL_PORT | grep . || echo 587)" \
+            -s "smtpServer.from=${sender:-$smtp_user}" \
+            -s "smtpServer.fromDisplayName=$(env_value "$env" EMAIL_HOST_SENDER_NAME)" \
+            -s "smtpServer.starttls=$(to_bool "$(env_value "$env" EMAIL_USE_TLS | grep . || echo true)")" \
+            -s "smtpServer.ssl=$(to_bool "$(env_value "$env" EMAIL_USE_SSL)")" \
+            -s "smtpServer.auth=$([ -n "$smtp_user" ] && echo true || echo false)" \
+            -s "smtpServer.user=$smtp_user" \
+            -s "smtpServer.password=$(env_value "$env" EMAIL_HOST_PASSWORD)"
+    else
+        warn "no EMAIL_HOST in $env - Keycloak cannot send verification and password mails for $realm yet"
+    fi
+    set_env "$env" KEYCLOAK_ADMIN_SERVER_URL "http://127.0.0.1:$(env_value "$KC_ENV" KC_HTTP_PORT)"
+    set_env "$env" KEYCLOAK_PUBLIC_URL "$public_url"
+    set_env "$env" KEYCLOAK_REALM_NAME "$realm"
+    set_env "$env" KEYCLOAK_CLIENT_ID tapir-backend
+    set_env "$env" KEYCLOAK_ADMIN_CLIENT_SECRET_KEY "$secret"
+}
+
+# --- shared redis -------------------------------------------------------------------------------
+redis_cli() { podman exec tapir-redis redis-cli -p "$REDIS_PORT" "$@"; }
+
+# One redis container for all instances (celery queue and cache); every instance has its own
+# database number
+ensure_redis() {
+    local unit="$QUADLET_DIR/tapir-redis.container" new
+    assert_own_container tapir-redis tapir-redis.service
+    install -d -m 0750 "$TAPIR_LIB/redis"
+    $CHOWN 999:999 "$TAPIR_LIB/redis"  # redis user of the official image
+    new="# Written by tapir-instance: redis shared by all Tapir instances
+[Unit]
+Description=Redis for Tapir
+Wants=network-online.target
+After=network-online.target
+
+[Container]
+ContainerName=tapir-redis
+Image=$REDIS_IMAGE
+Network=host
+Volume=$TAPIR_LIB/redis:/data
+Exec=redis-server --bind 127.0.0.1 --port $REDIS_PORT --databases $REDIS_DATABASES --appendonly yes --dir /data
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=multi-user.target default.target"
+    if [ "$(cat "$unit" 2>/dev/null)" != "$new" ] || ! podman container exists tapir-redis 2>/dev/null; then
+        if ! podman container exists tapir-redis 2>/dev/null && port_in_use "$REDIS_PORT"; then
+            die "port $REDIS_PORT for redis is already in use"
+        fi
+        log "redis on 127.0.0.1:$REDIS_PORT"
+        podman pull -q "$REDIS_IMAGE" >/dev/null
+        install -d "$QUADLET_DIR"
+        printf '%s\n' "$new" > "$unit"
+        $SYSTEMCTL daemon-reload
+        $SYSTEMCTL restart tapir-redis.service
+    fi
+    for _ in $(seq 1 30); do
+        [ "$(redis_cli ping 2>/dev/null)" = PONG ] && return 0
+        sleep 1
+    done
+    die "redis does not answer, see: journalctl -u tapir-redis"
+}
+
+# Points the instance to its database number in the shared redis; older setups (a redis on the
+# host, one redis container per instance) are moved over and their leftovers removed
+ensure_instance_redis() {  # name
+    local name="$1" env db url used other
+    env="$(instance_env "$name")"
+    db="$(env_value "$env" TAPIR_REDIS_DB)"
+    if [ -z "$db" ]; then
+        used=" "
+        for other in "$INSTANCES"/*.env; do
+            [ -e "$other" ] && [ "$other" != "$env" ] && used="$used$(env_value "$other" TAPIR_REDIS_DB) "
+        done
+        db=0
+        while [ "${used#* "$db" }" != "$used" ]; do db=$((db + 1)); done
+        [ "$db" -lt "$REDIS_DATABASES" ] || die "no free redis database left (at most $REDIS_DATABASES instances)"
+        set_env "$env" TAPIR_REDIS_DB "$db"
+    fi
+    url="redis://127.0.0.1:$REDIS_PORT/$db"
+    if [ "$(env_value "$env" CELERY_BROKER_URL)" != "$url" ]; then
+        log "$name uses redis database $db"
+        set_env "$env" CELERY_BROKER_URL "$url"
+        set_env "$env" CELERY_RESULT_BACKEND "$url"
+    fi
+    if [ -n "$(env_value "$env" TAPIR_REDIS_PORT)" ] || [ -e "$QUADLET_DIR/tapir-$name-redis.container" ]; then
+        $SYSTEMCTL stop "tapir-$name-redis.service" 2>/dev/null || true
+        rm -f "$QUADLET_DIR/tapir-$name-redis.container"
+        unset_env "$env" TAPIR_REDIS_PORT
+        $SYSTEMCTL daemon-reload
+    fi
+}
+
+# --- systemd units ------------------------------------------------------------------------------
+write_units() {  # name
+    local name="$1" env image
+    env="$(instance_env "$name")"
+    image="$(image_of "$name")"
+    for role in web worker beat; do assert_own_container "tapir-$name-$role" "tapir-$name-$role.service"; done
+    install -d "$QUADLET_DIR" "$SYSTEMD_DIR"
+    cat > "$SYSTEMD_DIR/tapir-$name.target" <<EOF
+# Written by tapir-instance
+[Unit]
+Description=Tapir instance $name
+
+[Install]
+WantedBy=multi-user.target default.target
+EOF
+    local after="network-online.target postgresql.service tapir-keycloak.service tapir-redis.service"
+    for role in web worker beat; do
+        cat > "$QUADLET_DIR/tapir-$name-$role.container" <<EOF
+# Written by tapir-instance
+[Unit]
+Description=Tapir $name: $role
+Wants=network-online.target tapir-redis.service
+After=$after
+PartOf=tapir-$name.target
+
+[Container]
+ContainerName=tapir-$name-$role
+Image=$image
+Network=host
+EnvironmentFile=$env
+Volume=$TAPIR_LIB/$name:/data
+Exec=$role
+
+[Service]
+Restart=always
+TimeoutStartSec=300
+
+[Install]
+WantedBy=tapir-$name.target
+EOF
+    done
+    $SYSTEMCTL daemon-reload
+}
+
+start_instance() {
+    ensure_redis
+    $SYSTEMCTL enable "tapir-$1.target" >/dev/null 2>&1 || true
+    $SYSTEMCTL restart "tapir-$1.target"
+    for unit in $(units "$1"); do
+        $SYSTEMCTL restart "$unit.service"
+    done
+}
+
+# --- nginx --------------------------------------------------------------------------------------
+write_nginx() {  # name
+    local name="$1" env domain upstream keycloak cert key site enabled backup
+    [ -d "$NGINX_DIR" ] || return 0
+    env="$(instance_env "$name")"
+    domain="$(env_value "$env" TAPIR_DOMAIN)"
+    upstream="$(env_value "$env" GUNICORN_BIND)"
+    keycloak="http://127.0.0.1:$(env_value "$KC_ENV" KC_HTTP_PORT)"
+    install -d "$NGINX_DIR/snippets" "$NGINX_DIR/sites-available"
+    cat > "$NGINX_SNIPPET" <<EOF
+# Written by tapir-instance: Keycloak login/OIDC paths for Tapir. The admin console stays internal.
+location /realms/ {
+    proxy_pass $keycloak;
+    proxy_set_header Host \$host;
+    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto \$scheme;
+    proxy_set_header X-Forwarded-Host \$host;
+    proxy_set_header X-Forwarded-Port \$server_port;
+    proxy_buffer_size 128k;
+    proxy_buffers 4 256k;
+}
+location /resources/ {
+    proxy_pass $keycloak;
+    proxy_set_header Host \$host;
+    proxy_set_header X-Forwarded-Proto \$scheme;
+}
+EOF
+
+    # sites-available/tapir-<name>, HTTPS as soon as the certificate exists; enabling it is manual
+    site="$NGINX_DIR/sites-available/tapir-$name"
+    cert="$(env_value "$env" TAPIR_TLS_CERTIFICATE)"; cert="${cert:-/etc/letsencrypt/live/$domain/fullchain.pem}"
+    key="$(env_value "$env" TAPIR_TLS_CERTIFICATE_KEY)"; key="${key:-/etc/letsencrypt/live/$domain/privkey.pem}"
+    if [ -e "$site" ] && ! head -n 1 "$site" | grep -q '^# Managed by the tapir package'; then
+        warn "$site was changed locally - not overwritten"
+    else
+        sed -e "s|@HOST@|$domain|g; s|@UPSTREAM@|$upstream|g; s|@KEYCLOAK@|$keycloak|g; s|@CERT@|$cert|g; s|@KEY@|$key|g" \
+            "$TAPIR_SHARE/nginx-site.conf.in" | sed 's/#KC#//' \
+            | if [ -r "$cert" ] && [ -r "$key" ]; then sed 's/^#HTTPS#//'; else sed '/^#HTTPS#/d'; fi > "$site"
+    fi
+
+    # An already enabled site of the domain (e.g. written by hand): add the Keycloak paths
+    enabled="$(grep -lE "server_name[^;]*[[:space:]]$domain([[:space:];]|$)" "$NGINX_DIR"/sites-enabled/* 2>/dev/null | head -n 1 || true)"
+    if [ -z "$enabled" ]; then
+        log "nginx: wrote $site - enable it: ln -s $site $NGINX_DIR/sites-enabled/ && nginx -t && systemctl reload nginx"
+        return 0
+    fi
+    enabled="$(readlink -f "$enabled")"
+    [ "$enabled" = "$(readlink -f "$site")" ] && { $NGINX_TEST 2>/dev/null && $NGINX_RELOAD; NGINX_ACTIVE=true; return 0; }
+    backup="$TAPIR_LIB/backup/$(basename "$enabled").$(date +%Y%m%d%H%M%S)"
+    install -d -m 0700 "$TAPIR_LIB/backup"
+    cp -a "$enabled" "$backup"
+    awk -v snippet="$NGINX_SNIPPET" -v upstream="http://$upstream" "$NGINX_REWRITE" "$backup" "$backup" > "$enabled"
+    if ! grep -q "tapir-keycloak.conf" "$enabled"; then
+        cp -a "$backup" "$enabled"
+        warn "no HTTPS server block with \"location /\" in $enabled - add: include $NGINX_SNIPPET;"
+    elif $NGINX_TEST 2>/dev/null; then
+        $NGINX_RELOAD
+        NGINX_ACTIVE=true
+        log "nginx: $enabled updated (backup $backup) and reloaded"
+    else
+        cp -a "$backup" "$enabled"
+        warn "nginx -t failed - $enabled restored, add by hand: include $NGINX_SNIPPET;"
+    fi
+}
+
+# --- Tapir users --------------------------------------------------------------------------------
+# Creates (or completes) a Tapir user with a Keycloak login; prints the initial password if new
+add_user() {  # name email admin first last
+    local name="$1" email="$2" admin="$3" first="${4:-}" last="${5:-}" password result
+    printf '%s' "$email" | grep -qE '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+$' || die "invalid e-mail $email"
+    printf '%s%s' "$first" "$last" | grep -q "['\\\\]" && die "names must not contain ' or \\"
+    password="$(random_string 20)"
+    result="$(tapir_shell "$name" "
+from allauth.socialaccount.models import SocialAccount
+from tapir.accounts.models import TapirUser
+from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
+email, password, admin = '$email', '$password', $( [ "$admin" = true ] && echo True || echo False )
+client = KeycloakUserManager.get_keycloak_client({})
+user = TapirUser.objects.filter(email=email).first()
+if user is None:
+    user = TapirUser.objects.create(email=email, username=email, first_name='${first:-Admin}', last_name='${last:-Tapir}', is_staff=admin, is_superuser=admin)
+elif admin:
+    user.is_staff = user.is_superuser = True
+    user.save()
+# A keycloak_id from an earlier Keycloak does not exist in this one
+if user.keycloak_id and not client.get_user_id(email):
+    SocialAccount.objects.filter(user=user, provider='keycloak').delete()
+    user.keycloak_id = None
+    user.save()
+if user.keycloak_id:
+    print('exists')
+else:
+    KeycloakUserManager.create_keycloak_user_if_necessary(user=user, initial_password=password, cache={})
+    print('created')
+" 2>&1 | grep -v '^Tapir Version' | tail -n 1 || true)"
+    case "$result" in
+        created)
+            install -d -m 0700 "$TAPIR_ETC/initial-passwords"
+            install -m 0600 /dev/null "$TAPIR_ETC/initial-passwords/$name-$email"
+            printf 'URL: https://%s\nUser: %s\nPassword: %s\n' "$(env_value "$(instance_env "$name")" TAPIR_DOMAIN)" \
+                "$email" "$password" > "$TAPIR_ETC/initial-passwords/$name-$email"
+            log "$email created, initial password in $TAPIR_ETC/initial-passwords/$name-$email" ;;
+        exists) log "$email already has a Keycloak login" ;;
+        *) die "creating $email failed: $result" ;;
+    esac
+}
+
+# --- checks -------------------------------------------------------------------------------------
+check_instance() {  # name
+    local name="$1" env domain realm issuer failed=0
+    env="$(instance_env "$name")"
+    domain="$(env_value "$env" TAPIR_DOMAIN)"
+    realm="$(env_value "$env" KEYCLOAK_REALM_NAME)"
+    check() { if "${@:2}" >/dev/null 2>&1; then echo "  ok    $1"; else echo "  FAIL  $1"; failed=1; fi; }
+    for _ in $(seq 1 60); do
+        curl -fs -o /dev/null -H "Host: $domain" -H "X-Forwarded-Proto: https" "http://$(env_value "$env" GUNICORN_BIND)/" && break
+        sleep 2
+    done
+    for unit in $(units "$name"); do check "$unit running" $SYSTEMCTL is-active --quiet "$unit.service"; done
+    check "Tapir answers on $(env_value "$env" GUNICORN_BIND)" \
+        curl -fs -o /dev/null -H "Host: $domain" -H "X-Forwarded-Proto: https" "http://$(env_value "$env" GUNICORN_BIND)/"
+    issuer="$(curl -fs "$(env_value "$env" KEYCLOAK_ADMIN_SERVER_URL)/realms/$realm/.well-known/openid-configuration" \
+        | sed -n 's/.*"issuer":"\([^"]*\)".*/\1/p')"
+    check "Keycloak realm $realm, issuer https://$domain/realms/$realm" test "$issuer" = "https://$domain/realms/$realm"
+    check "Tapir reaches redis (cache and celery)" tapir_shell "$name" "
+from django.core.cache import cache
+cache.set('tapir-instance-check', 1, 10)
+assert cache.get('tapir-instance-check') == 1"
+    check "Tapir reaches the Keycloak admin API" tapir_shell "$name" "
+from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
+KeycloakUserManager.get_keycloak_client({}).get_users({'max': 1})"
+    if [ "${NGINX_ACTIVE:-false}" = true ]; then
+        check "https://$domain/realms/$realm through nginx" \
+            curl -fsk -o /dev/null --max-time 20 --resolve "$domain:443:127.0.0.1" "https://$domain/realms/$realm"
+        check "https://$domain/ through nginx" \
+            curl -fsk -o /dev/null --max-time 20 --resolve "$domain:443:127.0.0.1" "https://$domain/"
+    fi
+    return "$failed"
+}
+
+# PostgreSQL role and database tapir_<name> on this machine with a new password
+create_local_db() {  # name env
+    local role="tapir_${1//-/_}" password
+    password="$(random_string 32)"
+    if [ "$(psql_admin -c "SELECT 1 FROM pg_roles WHERE rolname = '$role'")" = 1 ]; then
+        psql_admin -c "ALTER ROLE $role LOGIN PASSWORD '$password'"
+    else
+        psql_admin -c "CREATE ROLE $role LOGIN PASSWORD '$password'"
+    fi
+    [ "$(psql_admin -c "SELECT 1 FROM pg_database WHERE datname = '$role'")" = 1 ] \
+        || psql_admin -c "CREATE DATABASE $role OWNER $role"
+    set_env "$2" DATABASE_CONNECTION "postgresql://$role:$password@$PG_HOST:$PG_PORT/$role"
+    log "PostgreSQL database $role"
+}
+
+# --- commands -----------------------------------------------------------------------------------
+cmd_create() {
+    local name; name="$(printf '%s' "${1:-}" | tr 'A-Z' 'a-z')"; shift || true
+    check_name "$name"
+    local domain="" port="" admin_email="" realm="$name" image="$TAPIR_IMAGE_DEFAULT" db_url="" kc_port=8800 nginx=true
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --domain) domain="$2"; shift 2 ;;
+            --port) port="$2"; shift 2 ;;
+            --admin-email) admin_email="$2"; shift 2 ;;
+            --realm) realm="$2"; shift 2 ;;
+            --image) image="$2"; shift 2 ;;
+            --db-url) db_url="$2"; shift 2 ;;
+            --keycloak-port) kc_port="$2"; shift 2 ;;
+            --no-nginx) nginx=false; shift ;;
+            *) die "unknown option $1" ;;
+        esac
+    done
+    [ -n "$domain" ] && [ -n "$port" ] || die "usage: tapir-instance create <name> --domain <host> --port <port>"
+    printf '%s' "$realm" | grep -qE '^[a-z][a-z0-9-]{1,30}$' || die "invalid realm '$realm'"
+    local env; env="$(instance_env "$name")"
+    if [ ! -e "$env" ]; then
+        port_in_use "$port" && die "port $port is already in use"
+        for other in "$INSTANCES"/*.env; do
+            [ -e "$other" ] && [ "$(env_value "$other" TAPIR_DOMAIN)" = "$domain" ] && die "$domain is used by $(basename "$other" .env)"
+        done
+    fi
+    command -v podman >/dev/null || die "podman is missing (apt install podman)"
+    log "Instance $name for https://$domain on 127.0.0.1:$port"
+
+    install -d -m 0750 "$INSTANCES"
+    if [ ! -e "$env" ]; then
+        install -m 0640 /dev/null "$env"
+        sed "s/@SECRET_KEY@/$(random_string 64)/" "$TAPIR_SHARE/tapir.env.example" > "$env"
+    fi
+    set_env "$env" TAPIR_DOMAIN "$domain"
+    set_env "$env" TAPIR_IMAGE "$image"
+    set_env "$env" SITE_URL "https://$domain"
+    set_env "$env" ALLOWED_HOSTS "$domain"
+    set_env "$env" GUNICORN_BIND "127.0.0.1:$port"
+    set_env "$env" ERROR_LOG_DIR /data/log
+    ensure_redis
+    ensure_instance_redis "$name"
+
+    # Database
+    if [ -n "$db_url" ]; then
+        set_env "$env" DATABASE_CONNECTION "$db_url"
+    elif env_value "$env" DATABASE_CONNECTION | grep -q 'CHANGE_ME'; then
+        create_local_db "$name" "$env"
+    fi
+
+    install -d -m 0750 "$TAPIR_LIB/$name"
+    $CHOWN "$CONTAINER_UID:$CONTAINER_UID" "$TAPIR_LIB/$name"
+
+    ensure_keycloak "$kc_port"
+    ensure_realm "$name" "$realm" "$domain"
+
+    log "Pulling $image"
+    podman pull -q "$image" >/dev/null 2>&1 || podman image exists "$image" || die "image $image not available"
+    log "Migrating the database"
+    run_once "$name" migrate 2>&1 | grep -vE '^\s+Applying|^Operations|^Running migrations' | tail -n 3
+    write_units "$name"
+    start_instance "$name"
+    [ -n "$admin_email" ] && add_user "$name" "$admin_email" true
+    [ "$nginx" = true ] && write_nginx "$name"
+    log "Checks"
+    if check_instance "$name"; then log "Done: https://$domain"; else die "some checks failed"; fi
+}
+
+cmd_keycloak() {  # move an instance to (or refresh it in) the shared Keycloak
+    local name="${1:-}"; require_instance "$name"
+    local env; env="$(instance_env "$name")"
+    ensure_keycloak 8800
+    ensure_realm "$name" "$(env_value "$env" KEYCLOAK_REALM_NAME | grep . || echo "$name")" \
+        "$(env_value "$env" TAPIR_DOMAIN)"
+    ensure_instance_redis "$name"
+    write_units "$name"
+    start_instance "$name"
+    write_nginx "$name"
+    check_instance "$name"
+}
+
+cmd_list() {
+    printf '%-16s %-34s %-7s %-16s %s\n' INSTANCE DOMAIN PORT REALM STATE
+    for env in "$INSTANCES"/*.env; do
+        [ -e "$env" ] || continue
+        local name; name="$(basename "$env" .env)"
+        printf '%-16s %-34s %-7s %-16s %s\n' "$name" "$(env_value "$env" TAPIR_DOMAIN)" \
+            "$(env_value "$env" GUNICORN_BIND | sed 's/.*://')" "$(env_value "$env" KEYCLOAK_REALM_NAME)" \
+            "$($SYSTEMCTL is-active "tapir-$name-web.service" 2>/dev/null || true)"
+    done
+}
+
+cmd_upgrade() {
+    local targets=() image=""
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --all) for env in "$INSTANCES"/*.env; do [ -e "$env" ] && targets+=("$(basename "$env" .env)"); done; shift ;;
+            --image) image="$2"; shift 2 ;;
+            *) targets+=("$1"); shift ;;
+        esac
+    done
+    [ ${#targets[@]} -gt 0 ] || die "usage: tapir-instance upgrade <name>|--all [--image <image>]"
+    for name in "${targets[@]}"; do
+        require_instance "$name"
+        [ -n "$image" ] && set_env "$(instance_env "$name")" TAPIR_IMAGE "$image"
+        log "Upgrading $name to $(image_of "$name")"
+        podman pull -q "$(image_of "$name")" >/dev/null 2>&1 || podman image exists "$(image_of "$name")" \
+            || die "image $(image_of "$name") not available"
+        ensure_redis
+        ensure_instance_redis "$name"
+        run_once "$name" migrate 2>&1 | tail -n 2
+        write_units "$name"
+        start_instance "$name"
+        check_instance "$name" || warn "checks failed for $name"
+    done
+}
+
+cmd_remove() {
+    local name="${1:-}" purge=false; require_instance "$name"
+    [ "${2:-}" = --purge ] && purge=true
+    local env; env="$(instance_env "$name")"
+    $SYSTEMCTL disable --now "tapir-$name.target" >/dev/null 2>&1 || true
+    for unit in $(units "$name") "tapir-$name-redis"; do $SYSTEMCTL stop "$unit.service" 2>/dev/null || true; done
+    local redis_db; redis_db="$(env_value "$env" TAPIR_REDIS_DB)"
+    rm -f "$QUADLET_DIR/tapir-$name-"*.container "$SYSTEMD_DIR/tapir-$name.target"
+    $SYSTEMCTL daemon-reload
+    if [ "$purge" = true ]; then
+        local realm db; realm="$(env_value "$env" KEYCLOAK_REALM_NAME)"
+        db="$(env_value "$env" DATABASE_CONNECTION | sed -E 's|.*/([^/?]+).*|\1|')"
+        if podman container exists tapir-keycloak 2>/dev/null && [ -n "$realm" ]; then kc_login; kcadm delete "realms/$realm" || true; fi
+        case "$db" in tapir_*) psql_admin -c "DROP DATABASE IF EXISTS $db" && psql_admin -c "DROP ROLE IF EXISTS $db" ;; esac
+        if [ -n "$redis_db" ] && podman container exists tapir-redis 2>/dev/null; then
+            redis_cli -n "$redis_db" FLUSHDB >/dev/null || true
+        fi
+        $RM_DATA "${TAPIR_LIB:?}/$name"
+        rm -f "$NGINX_DIR/sites-available/tapir-$name"
+        rm -f "$env"
+        log "$name removed with database, realm and data"
+    else
+        mv "$env" "$env.removed"
+        log "$name stopped and removed; database, realm and data kept ($env.removed)"
+    fi
+}
+
+main() {
+    [ "$(id -u)" = 0 ] || [ -n "${TAPIR_INSTANCE_TEST:-}" ] || die "tapir-instance is for root only"
+    local command="${1:-}"; shift || true
+    case "$command" in
+        create) cmd_create "$@" ;;
+        keycloak) cmd_keycloak "$@" ;;
+        list) cmd_list ;;
+        status) require_instance "${1:-}"; check_instance "$1" ;;
+        upgrade) cmd_upgrade "$@" ;;
+        restart|start) require_instance "${1:-}"; start_instance "$1" ;;
+        nginx) require_instance "${1:-}"; write_nginx "$1" ;;
+        stop) require_instance "${1:-}"; read -ra unit_list <<< "$(units "$1")"
+              $SYSTEMCTL stop "tapir-$1.target" "${unit_list[@]}" ;;
+        logs) require_instance "${1:-}"; journalctl -u "tapir-$1-${2:-web}" -n 100 --no-pager 2>/dev/null \
+                  || podman logs --tail 100 "tapir-$1-${2:-web}" ;;
+        manage) require_instance "${1:-}"; local name="$1"; shift
+                if podman container exists "tapir-$name-web" 2>/dev/null; then
+                    exec podman exec -it "tapir-$name-web" python manage.py "$@"
+                else run_once "$name" manage "$@"; fi ;;
+        user-add) require_instance "${1:-}"; local name="$1" email="${2:-}" admin=false first="" last=""
+                  shift 2 || die "usage: tapir-instance user-add <instance> <mail> [--admin] [--first <first name>] [--last <last name>]"
+                  printf '%s' "$email" | grep -qE '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+$' \
+                      || die "'$email' is not an e-mail address - usage: tapir-instance user-add <instance> <mail> [--admin] [--first <first name>] [--last <last name>]"
+                  while [ $# -gt 0 ]; do case "$1" in
+                      --admin) admin=true; shift ;; --first) first="$2"; shift 2 ;; --last) last="$2"; shift 2 ;;
+                      *) die "unknown option $1" ;; esac; done
+                  add_user "$name" "$email" "$admin" "$first" "$last" ;;
+        remove) cmd_remove "$@" ;;
+        ""|-h|--help|help) sed -n '2,/^[^#]/{/^#/p}' "$0" | sed 's/^# \{0,1\}//' ;;
+        *) die "unknown command $command (see: tapir-instance --help)" ;;
+    esac
+}
+
+main "$@"

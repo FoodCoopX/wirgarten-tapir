@@ -1,0 +1,138 @@
+#!/bin/bash
+# Keycloak administration on the command line for the shared Keycloak of the Tapir instances.
+# The realm is always given explicitly (one realm per instance, see: tapir-instance list).
+#
+#   tapir-kcadm realms                                         list the realms
+#   tapir-kcadm --realm <realm> user list [<search>]
+#   tapir-kcadm --realm <realm> user show <mail>
+#   tapir-kcadm --realm <realm> user add <mail> [--first <name>] [--last <name>] [--password <pw>] [--superuser]
+#   tapir-kcadm --realm <realm> user passwd <mail> [--password <pw>] [--temporary]   generated if not given
+#   tapir-kcadm --realm <realm> user role <mail> <role> [--remove]                  e.g. coop.manage, coop.view
+#   tapir-kcadm --realm <realm> user group <mail> <group> [--remove]                e.g. superuser
+#   tapir-kcadm --realm <realm> user enable|disable|delete|logout <mail>
+#   tapir-kcadm --realm <realm> user verify-mail|reset-mail <mail>                  send a mail from Keycloak
+#   tapir-kcadm --realm <realm> roles | groups
+#   tapir-kcadm --realm <realm> raw <kcadm.sh arguments>                           -r <realm> is added
+#
+# A Keycloak login alone does not open Tapir: Tapir needs its own user with the same e-mail.
+# For staff accounts use "tapir-instance user-add <instance> <mail> [--admin]", which creates both.
+set -euo pipefail
+
+TAPIR_ETC="${TAPIR_ETC:-/etc/tapir}"
+KC_ENV="$TAPIR_ETC/keycloak.env"
+
+die() { printf '\033[31mERROR: %s\033[0m\n' "$*" >&2; exit 1; }
+env_value() { sed -n "s/^$2=//p" "$1" 2>/dev/null | tail -n 1 || true; }
+random_string() { tr -dc 'A-Za-z0-9' </dev/urandom | head -c "$1" || true; }
+usage() { sed -n '2,/^[^#]/{/^#/p}' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
+
+# Only for root (the package installs it as rwxrwx--- root:root)
+[ "$(id -u)" = 0 ] || [ -n "${TAPIR_KCADM_TEST:-}" ] || die "tapir-kcadm is for root only"
+[ -r "$KC_ENV" ] || die "$KC_ENV not readable - run as root on the Tapir server"
+podman container exists tapir-keycloak 2>/dev/null || die "Keycloak container tapir-keycloak not found"
+
+kcadm() { podman exec -i tapir-keycloak /opt/keycloak/bin/kcadm.sh "$@" --config /tmp/kcadm.config; }
+kcadm config credentials --server "http://127.0.0.1:$(env_value "$KC_ENV" KC_HTTP_PORT)" --realm master \
+    --user admin --password "$(env_value "$KC_ENV" KC_BOOTSTRAP_ADMIN_PASSWORD)" >/dev/null 2>&1 \
+    || die "login to Keycloak failed"
+
+REALM=""
+case "${1:-}" in
+    realms) kcadm get realms --fields realm,enabled,attributes --format csv --noquotes 2>/dev/null \
+                | awk -F, '$1 != "master" {print $1}' ; exit 0 ;;
+    --realm) REALM="${2:-}"; shift 2 || usage 2 ;;
+    -h|--help|"") usage ;;
+    *) die "the realm is required: tapir-kcadm --realm <realm> ... (realms: tapir-kcadm realms)" ;;
+esac
+[ -n "$REALM" ] || die "the realm is required: tapir-kcadm --realm <realm> ..."
+kcadm get "realms/$REALM" --fields realm >/dev/null 2>&1 || die "realm '$REALM' not found (tapir-kcadm realms)"
+
+user_id() {  # mail
+    local id
+    id="$(kcadm get users -r "$REALM" -q "email=$1" -q exact=true --fields id --format csv --noquotes | head -n 1)"
+    [ -n "$id" ] || die "no user $1 in realm $REALM"
+    echo "$id"
+}
+
+cmd="${1:-}"; shift || true
+case "$cmd" in
+    user)
+        sub="${1:-}"; shift || true
+        case "$sub" in
+            list)
+                kcadm get users -r "$REALM" ${1:+-q "search=$1"} --limit 1000 \
+                    --fields username,firstName,lastName,enabled,emailVerified --format csv --noquotes ;;
+            show)
+                id="$(user_id "${1:?mail}")"
+                kcadm get "users/$id" -r "$REALM" --fields username,email,firstName,lastName,enabled,emailVerified,requiredActions
+                echo "realm roles:"; kcadm get "users/$id/role-mappings/realm/composite" -r "$REALM" --fields name --format csv --noquotes | sed 's/^/  /'
+                echo "groups:"; kcadm get "users/$id/groups" -r "$REALM" --fields name --format csv --noquotes | sed 's/^/  /' ;;
+            add)
+                mail="${1:?mail}"; shift
+                first="" last="" password="" group=""
+                while [ $# -gt 0 ]; do case "$1" in
+                    --first) first="$2"; shift 2 ;; --last) last="$2"; shift 2 ;;
+                    --password) password="$2"; shift 2 ;; --superuser) group=superuser; shift ;;
+                    *) die "unknown option $1" ;; esac; done
+                kcadm create users -r "$REALM" -s "username=$mail" -s "email=$mail" -s enabled=true \
+                    -s emailVerified=true ${first:+-s "firstName=$first"} ${last:+-s "lastName=$last"} >/dev/null 2>&1 \
+                    || die "could not create $mail (exists already?)"
+                generated=false
+                [ -n "$password" ] || { password="$(random_string 16)"; generated=true; }
+                if [ "$generated" = true ]; then
+                    kcadm set-password -r "$REALM" --username "$mail" --new-password "$password" --temporary
+                else
+                    kcadm set-password -r "$REALM" --username "$mail" --new-password "$password"
+                fi
+                [ -n "$group" ] && kcadm update "users/$(user_id "$mail")/groups/$(kcadm get groups -r "$REALM" -q "search=$group" --fields id --format csv --noquotes | head -n 1)" -r "$REALM" -n
+                echo "created $mail in $REALM"
+                [ "$generated" = true ] && echo "temporary password (must be changed at first login): $password"
+                echo "note: Tapir needs its own user with this e-mail - see tapir-instance user-add" ;;
+            passwd)
+                mail="${1:?mail}"; shift
+                password="" temporary=false
+                while [ $# -gt 0 ]; do case "$1" in
+                    --password) password="$2"; shift 2 ;; --temporary) temporary=true; shift ;;
+                    *) die "unknown option $1" ;; esac; done
+                [ -n "$password" ] || { password="$(random_string 16)"; temporary=true; echo "new password: $password"; }
+                if [ "$temporary" = true ]; then
+                    kcadm set-password -r "$REALM" --username "$mail" --new-password "$password" --temporary
+                else
+                    kcadm set-password -r "$REALM" --username "$mail" --new-password "$password"
+                fi
+                echo "password of $mail set$([ "$temporary" = true ] && echo ' (temporary, must be changed at next login)')" ;;
+            role)
+                mail="${1:?mail}" role="${2:?role}"
+                if [ "${3:-}" = --remove ]; then
+                    kcadm remove-roles -r "$REALM" --uusername "$mail" --rolename "$role"; echo "removed $role from $mail"
+                else
+                    kcadm add-roles -r "$REALM" --uusername "$mail" --rolename "$role"; echo "added $role to $mail"
+                fi ;;
+            group)
+                mail="${1:?mail}" group="${2:?group}"
+                gid="$(kcadm get groups -r "$REALM" -q "search=$group" -q exact=true --fields id --format csv --noquotes | head -n 1)"
+                [ -n "$gid" ] || die "no group $group in realm $REALM"
+                if [ "${3:-}" = --remove ]; then
+                    kcadm delete "users/$(user_id "$mail")/groups/$gid" -r "$REALM"; echo "removed $mail from $group"
+                else
+                    kcadm update "users/$(user_id "$mail")/groups/$gid" -r "$REALM" -n; echo "added $mail to $group"
+                fi ;;
+            enable|disable)
+                kcadm update "users/$(user_id "${1:?mail}")" -r "$REALM" -s "enabled=$([ "$sub" = enable ] && echo true || echo false)"
+                echo "$1 ${sub}d" ;;
+            delete)
+                kcadm delete "users/$(user_id "${1:?mail}")" -r "$REALM"; echo "deleted $1 in Keycloak (the Tapir user is kept)" ;;
+            logout)
+                kcadm create "users/$(user_id "${1:?mail}")/logout" -r "$REALM" -n; echo "sessions of $1 ended" ;;
+            verify-mail)
+                kcadm update "users/$(user_id "${1:?mail}")/send-verify-email" -r "$REALM" -n; echo "verification mail sent to $1" ;;
+            reset-mail)
+                kcadm update "users/$(user_id "${1:?mail}")/execute-actions-email" -r "$REALM" -b '["UPDATE_PASSWORD"]'
+                echo "password reset mail sent to $1" ;;
+            *) usage 2 ;;
+        esac ;;
+    roles) kcadm get roles -r "$REALM" --fields name,description --format csv --noquotes ;;
+    groups) kcadm get groups -r "$REALM" --fields name --format csv --noquotes ;;
+    raw) kcadm "$@" -r "$REALM" ;;
+    *) usage 2 ;;
+esac

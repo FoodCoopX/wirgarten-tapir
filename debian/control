@@ -1,0 +1,21 @@
+Source: tapir
+Section: web
+Priority: optional
+Maintainer: Jörg Bernau <Joerg.Bernau@onesimus.io>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.7.0
+Homepage: https://github.com/FoodCoopX/wirgarten-tapir
+Rules-Requires-Root: no
+
+Package: tapir
+Architecture: all
+Depends: ${misc:Depends}, podman (>= 4.4), curl, iproute2
+Recommends: postgresql, nginx
+Description: Member and subscription management for solidarity farms (WirGarten)
+ Tapir manages members, subscriptions, coop shares, deliveries and payments.
+ .
+ This package installs the tools to run Tapir instances - one per solidarity
+ farm - as podman containers under systemd: tapir-instance (create, upgrade,
+ remove), tapir-kcadm (Keycloak administration on the command line)
+ and tapir-manage. Every instance gets its own containers, PostgreSQL
+ database, realm in a shared Keycloak and nginx site.

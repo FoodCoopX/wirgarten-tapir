@@ -1,0 +1,6 @@
+tapir (0.1.0) trixie; urgency=medium
+
+  * Initial packaging: tools to run Tapir instances, one per solidarity farm,
+    as podman containers under systemd with a shared Keycloak.
+
+ -- Jörg Bernau <Joerg.Bernau@onesimus.io>  Mon, 12 Oct 2026 16:18:58 +0200

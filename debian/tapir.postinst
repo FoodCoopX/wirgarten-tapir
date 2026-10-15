@@ -1,0 +1,27 @@
+#!/bin/sh
+set -e
+
+. /usr/share/debconf/confmodule
+
+if [ "$1" = configure ] && ! ls /etc/tapir/instances/*.env >/dev/null 2>&1; then
+    db_get tapir/instance_name; name="$(printf '%s' "$RET" | tr 'A-Z_' 'a-z-')"
+    db_get tapir/domain; domain="$RET"
+    db_get tapir/port; port="$RET"
+    db_get tapir/admin_email; admin_email="$RET"
+    db_get tapir/image; image="$RET"
+    db_get tapir/create_instance; create="$RET"
+    db_stop
+
+    # stdout belongs to debconf: everything goes to stderr
+    if [ "$create" = true ] && [ -n "$domain" ]; then
+        tapir-instance create "$name" --domain "$domain" --port "$port" --image "$image" \
+            ${admin_email:+--admin-email "$admin_email"} >&2 \
+            || echo "tapir: WARNING: creating the instance failed - fix the cause and run: tapir-instance create $name --domain $domain --port $port" >&2
+    else
+        echo "tapir: no instance yet - create one with: tapir-instance create <name> --domain <host> --port <port>" >&2
+    fi
+fi
+
+#DEBHELPER#
+
+exit 0
