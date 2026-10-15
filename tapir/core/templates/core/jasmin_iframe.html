@@ -8,6 +8,13 @@
   {% if synchronisation_error %}
     <div class="alert alert-danger mt-2" role="alert">{{ synchronisation_error }}</div>
   {% else %}
+    {% if synchronisation_warnings %}
+      <div class="alert alert-warning mt-2" role="alert">
+        {% for warning in synchronisation_warnings %}
+          <div>{{ warning }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
     <div
       style="
            width: calc(100% + 2.5em);

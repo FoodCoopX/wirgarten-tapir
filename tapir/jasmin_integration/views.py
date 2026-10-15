@@ -34,10 +34,13 @@ def get_tenant():
 class JasminTemplateView(TemplateView):
     template_name = "core/jasmin_iframe.html"
 
-    @transaction.atomic
     def get(self, request: HttpRequest, *args, **kwargs):
         try:
-            JasminSynchronisationService.synchronise_everything()
+            with transaction.atomic():
+                warnings = JasminSynchronisationService.synchronise_everything(
+                    user=request.user
+                )
+            self.extra_context = {"synchronisation_warnings": warnings}
         except JasminSynchronisationException as error:
             self.extra_context = {"synchronisation_error": error.message}
         return super().get(request, *args, **kwargs)

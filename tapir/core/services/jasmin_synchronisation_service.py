@@ -19,10 +19,23 @@ from apps.commissioning.models.choices import (
 )
 from apps.commissioning.models.managers import active_on_date_q
 from apps.commissioning.services import ShareImportService
-from django.db import transaction
-from django.db.models import ProtectedError, RestrictedError
+from apps.commissioning.viewsets.choices_models_viewsets import (
+    SharesDeliveryDayViewSet,
+)
+from apps.commissioning.viewsets.delivery_viewsets import (
+    DeliveryStationDayViewSet,
+    DeliveryStationViewSet,
+)
+from apps.commissioning.viewsets.imports_viewsets import ExternalCodeMappingViewSet
+from apps.commissioning.viewsets.shares_viewsets import (
+    ShareTypeVariationViewSet,
+    ShareTypeViewSet,
+)
+from django.utils import timezone
 
 from tapir.deliveries.services.pick_list_builder import PickListBuilder
+from tapir.jasmin_integration.exceptions import JasminSynchronisationException
+from tapir.jasmin_integration.jasmin_api_client import JasminApiClient
 from tapir.pickup_locations.services.pickup_location_delivery_day_service import (
     PickupLocationDeliveryDayService,
 )
@@ -44,11 +57,7 @@ from tapir.wirgarten.models import (
 from tapir.wirgarten.service.get_next_delivery_date import get_next_delivery_date
 from tapir.wirgarten.utils import get_now
 
-
-class JasminSynchronisationException(Exception):
-    def __init__(self, message: str, *args):
-        self.message = message
-        super().__init__(message, *args)
+__all__ = ["JasminSynchronisationService", "JasminSynchronisationException"]
 
 
 class JasminSynchronisationService:
@@ -76,22 +85,40 @@ class JasminSynchronisationService:
         "halb": ShareTypeVariationSizeOptions.HALF,
     }
 
-    NUMBER_OF_DELIVERIES_TO_SYNCHRONISE = 4
+    NUMBER_OF_DELIVERIES_TO_SYNCHRONISE = 6
 
     @classmethod
-    def synchronise_everything(cls):
+    def synchronise_everything(cls, user) -> list[str]:
+        """Writes go through Jasmin's API as the given user, see JasminApiClient.
+
+        Returns warnings about deliveries that couldn't be transferred."""
         cache = {}
+        api = JasminApiClient(user=user)
         # Objects that don't exist in Tapir anymore stop being valid from the week
-        # of the next delivery on.
-        week_monday = get_monday(get_next_delivery_date(cache=cache))
+        # of the next delivery on, or later if Jasmin doesn't allow changes to that
+        # week anymore.
+        changes_monday = cls.get_first_changeable_monday(
+            get_monday(get_next_delivery_date(cache=cache))
+        )
 
-        cls.synchronise_pickup_locations()
-        cls.synchronise_product_types(week_monday=week_monday)
-        cls.synchronise_products(week_monday=week_monday)
-        cls.synchronize_deliveries(cache=cache)
+        cls.synchronise_pickup_locations(api)
+        cls.synchronise_product_types(api, changes_monday=changes_monday)
+        cls.synchronise_products(api, changes_monday=changes_monday)
+        return cls.synchronize_deliveries(api, cache=cache)
+
+    @staticmethod
+    def get_first_changeable_monday(week_monday: datetime.date) -> datetime.date:
+        """Jasmin refuses validity periods that start in the past: changes to a week
+        that already began only apply from the next week on. Jasmin compares with
+        its own notion of today, so this does too."""
+        today = timezone.now().date()
+        first_monday_not_in_the_past = get_monday(today)
+        if first_monday_not_in_the_past < today:
+            first_monday_not_in_the_past += datetime.timedelta(days=7)
+        return max(week_monday, first_monday_not_in_the_past)
 
     @classmethod
-    def synchronise_pickup_locations(cls):
+    def synchronise_pickup_locations(cls, api: JasminApiClient):
         # Stations are deactivated instead of deleted: the station days and demand
         # of past weeks still reference them. Their station days get closed in
         # synchronise_delivery_station_days.
@@ -101,31 +128,25 @@ class JasminSynchronisationService:
             for station in DeliveryStation.objects.order_by("is_active")
         }
 
-        location_names_to_create = []
         for name in tapir_names:
             station = jasmin_stations_by_name.get(name)
             if station is None:
-                location_names_to_create.append(name)
+                api.create(DeliveryStationViewSet, {"short_name": name})
             elif not station.is_active:
-                station.is_active = True
-                station.save()
+                api.update(DeliveryStationViewSet, station.id, {"is_active": True})
 
         for name, station in jasmin_stations_by_name.items():
             if name not in tapir_names and station.is_active:
-                station.is_active = False
-                station.save()
-
-        if len(location_names_to_create) > 0:
-            DeliveryStation.objects.bulk_create(
-                [DeliveryStation(short_name=name) for name in location_names_to_create]
-            )
+                api.update(DeliveryStationViewSet, station.id, {"is_active": False})
 
     @classmethod
     def synchronise_time_bound_objects(
         cls,
+        api: JasminApiClient,
+        viewset_class,
         tapir_names: set[str],
         jasmin_objects_by_name: dict,
-        week_monday: datetime.date,
+        changes_monday: datetime.date,
     ) -> set[str]:
         """Reopens the Jasmin objects whose name is back in Tapir, ends the validity
         of the ones whose name isn't in Tapir anymore.
@@ -139,38 +160,52 @@ class JasminSynchronisationService:
             elif jasmin_object.valid_until is not None:
                 # Reopening instead of creating a new object: Jasmin refuses
                 # overlapping validity periods for the same share type or size.
-                jasmin_object.valid_until = None
-                jasmin_object.save()
+                api.update(viewset_class, jasmin_object.id, {"valid_until": None})
 
         for name, jasmin_object in jasmin_objects_by_name.items():
             if name not in tapir_names and jasmin_object.valid_until is None:
-                cls.end_validity(jasmin_object, week_monday)
+                cls.end_validity(api, viewset_class, jasmin_object, changes_monday)
 
         return names_to_create
 
     @classmethod
-    def end_validity(cls, time_bound_object, week_monday: datetime.date):
+    def end_validity(
+        cls,
+        api: JasminApiClient,
+        viewset_class,
+        time_bound_object,
+        changes_monday: datetime.date,
+    ):
         """Makes the object valid until the sunday before the given week.
 
         Validity periods can't end before they start: an object that starts on or
-        after the given week gets deleted, or if it is referenced (by demand rows
-        for example), stays valid until the end of its first week."""
-        if time_bound_object.valid_from < week_monday:
-            time_bound_object.valid_until = week_monday - datetime.timedelta(days=1)
-            time_bound_object.save()
+        after the given week gets deleted, or if Jasmin refuses the deletion
+        (because demand rows reference it for example), stays valid until the end of
+        its first week."""
+        if time_bound_object.valid_from < changes_monday:
+            api.update(
+                viewset_class,
+                time_bound_object.id,
+                {"valid_until": changes_monday - datetime.timedelta(days=1)},
+            )
             return
 
         try:
-            with transaction.atomic():
-                time_bound_object.delete()
-        except (ProtectedError, RestrictedError):
-            time_bound_object.valid_until = (
-                time_bound_object.valid_from + datetime.timedelta(days=6)
+            api.destroy(viewset_class, time_bound_object.id)
+        except JasminSynchronisationException:
+            api.update(
+                viewset_class,
+                time_bound_object.id,
+                {
+                    "valid_until": time_bound_object.valid_from
+                    + datetime.timedelta(days=6)
+                },
             )
-            time_bound_object.save()
 
     @classmethod
-    def synchronise_product_types(cls, week_monday: datetime.date):
+    def synchronise_product_types(
+        cls, api: JasminApiClient, changes_monday: datetime.date
+    ):
         tapir_product_types_by_name = {
             product_type.name: product_type
             for product_type in ProductType.objects.exclude(
@@ -184,31 +219,29 @@ class JasminSynchronisationService:
         }
 
         names_to_create = cls.synchronise_time_bound_objects(
+            api=api,
+            viewset_class=ShareTypeViewSet,
             tapir_names=set(tapir_product_types_by_name.keys()),
             jasmin_objects_by_name=jasmin_product_types_by_name,
-            week_monday=week_monday,
+            changes_monday=changes_monday,
         )
-        if len(names_to_create) > 0:
-            jasmin_product_types_to_create = []
-            for name in names_to_create:
-                tapir_product_type = tapir_product_types_by_name[name]
-                jasmin_product_types_to_create.append(
-                    cls.build_jasmin_product_type(tapir_product_type)
-                )
-
-            ShareType.objects.bulk_create(jasmin_product_types_to_create)
+        for name in sorted(names_to_create):
+            api.create(
+                ShareTypeViewSet,
+                cls.build_jasmin_product_type_data(tapir_product_types_by_name[name]),
+            )
 
     @classmethod
-    def build_jasmin_product_type(cls, tapir_product_type: ProductType) -> ShareType:
-        return ShareType(
-            name=tapir_product_type.name,
-            short_name=tapir_product_type.name,
-            delivery_cycle=cls.get_jasmin_delivery_cycle(
+    def build_jasmin_product_type_data(cls, tapir_product_type: ProductType) -> dict:
+        return {
+            "name": tapir_product_type.name,
+            "short_name": tapir_product_type.name,
+            "delivery_cycle": cls.get_jasmin_delivery_cycle(
                 tapir_product_type.delivery_cycle
             ),
-            valid_from=get_monday(tapir_product_type.created_at.date()),
-            share_option=cls.get_jasmin_share_option(tapir_product_type.name),
-        )
+            "valid_from": get_monday(tapir_product_type.created_at.date()),
+            "share_option": cls.get_jasmin_share_option(tapir_product_type.name),
+        }
 
     @classmethod
     def get_jasmin_delivery_cycle(cls, tapir_delivery_cycle: str):
@@ -229,7 +262,7 @@ class JasminSynchronisationService:
         return ShareOptions.HARVEST_SHARE
 
     @classmethod
-    def synchronise_products(cls, week_monday: datetime.date):
+    def synchronise_products(cls, api: JasminApiClient, changes_monday: datetime.date):
         tapir_product_by_name = {
             product.name: product
             for product in Product.objects.select_related("type").exclude(
@@ -243,29 +276,29 @@ class JasminSynchronisationService:
         }
 
         names_to_create = cls.synchronise_time_bound_objects(
+            api=api,
+            viewset_class=ShareTypeVariationViewSet,
             tapir_names=set(tapir_product_by_name.keys()),
             jasmin_objects_by_name=jasmin_product_by_name,
-            week_monday=week_monday,
+            changes_monday=changes_monday,
         )
-        if len(names_to_create) > 0:
-            jasmin_product_to_create = []
-            for name in names_to_create:
-                tapir_product = tapir_product_by_name[name]
-                jasmin_product_to_create.append(cls.build_jasmin_product(tapir_product))
-
-            ShareTypeVariation.objects.bulk_create(jasmin_product_to_create)
+        for name in sorted(names_to_create):
+            api.create(
+                ShareTypeVariationViewSet,
+                cls.build_jasmin_product_data(tapir_product_by_name[name]),
+            )
 
     @classmethod
-    def build_jasmin_product(cls, tapir_product: Product):
-        return ShareTypeVariation(
-            share_type=ShareType.objects.filter(name=tapir_product.type.name).latest(
-                "valid_from"
-            ),
-            variation_type=ShareTypeVariation.VariationType.PHYSICAL,
-            size=cls.get_jasmin_size(tapir_product.name),
-            valid_from=get_monday(tapir_product.created_at.date()),
-            description=tapir_product.name,
-        )
+    def build_jasmin_product_data(cls, tapir_product: Product) -> dict:
+        return {
+            "share_type": ShareType.objects.filter(name=tapir_product.type.name)
+            .latest("valid_from")
+            .id,
+            "variation_type": ShareTypeVariation.VariationType.PHYSICAL,
+            "size": cls.get_jasmin_size(tapir_product.name),
+            "valid_from": get_monday(tapir_product.created_at.date()),
+            "description": tapir_product.name,
+        }
 
     @classmethod
     def get_jasmin_size(cls, product_name: str):
@@ -282,65 +315,67 @@ class JasminSynchronisationService:
         )
 
     @classmethod
-    def synchronize_deliveries(cls, cache: dict | None = None):
-        if cache is None:
-            cache = {}
-
-        batches = []
+    def synchronize_deliveries(cls, api: JasminApiClient, cache: dict) -> list[str]:
+        warnings = []
         delivery_date = get_next_delivery_date(cache=cache)
         for _ in range(cls.NUMBER_OF_DELIVERIES_TO_SYNCHRONISE):
-            batches.append(
-                cls.synchronize_delivery(delivery_date=delivery_date, cache=cache)
+            warnings.extend(
+                cls.synchronize_delivery(api, delivery_date=delivery_date, cache=cache)
             )
             delivery_date = get_next_delivery_date(
                 reference_date=delivery_date + datetime.timedelta(days=1),
                 cache=cache,
             )
 
-        return batches
+        return warnings
 
     @classmethod
-    def synchronize_delivery(cls, delivery_date: datetime.date, cache: dict):
+    def synchronize_delivery(
+        cls, api: JasminApiClient, delivery_date: datetime.date, cache: dict
+    ) -> list[str]:
         year, delivery_week, _ = delivery_date.isocalendar()
+        week_monday = get_monday(delivery_date)
 
-        cls.synchronise_delivery_station_days(delivery_date=delivery_date, cache=cache)
-        cls.synchronise_code_mappings(get_monday(delivery_date))
+        cls.synchronise_delivery_station_days(
+            api, delivery_date=delivery_date, cache=cache
+        )
+        cls.synchronise_code_mappings(api, week_monday)
+        rows, warnings = cls.build_delivery_rows(
+            delivery_date=delivery_date, cache=cache
+        )
 
         original_filename = f"tapir_deliveries_{year}_KW{delivery_week}.csv"
         try:
             batch = ShareImportService.ingest_upload(
-                file_bytes=cls.build_deliveries_csv(
-                    delivery_date=delivery_date, cache=cache
-                ),
+                file_bytes=cls.build_deliveries_csv(rows),
                 original_filename=original_filename,
                 year=year,
                 delivery_week=delivery_week,
-                uploaded_by=None,
+                uploaded_by=api.user,
             )
         except ShareImportFileAlreadyUsed as error:
             if error.details["status"] == ShareImportBatch.STATUS_APPLIED:
                 # The demand currently applied for that week is already up-to-date.
-                return ShareImportBatch.objects.get(id=error.details["batch_id"])
+                return warnings
 
             # The same file was applied before but has been superseded by another one
             # since then (for example a joker that got taken then cancelled).
             # Jasmin refuses the same file twice, the note makes the file unique.
             batch = ShareImportService.ingest_upload(
                 file_bytes=cls.build_deliveries_csv(
-                    delivery_date=delivery_date,
-                    cache=cache,
-                    note=f"Tapir-Sync {get_now(cache=cache).isoformat()}",
+                    rows, note=f"Tapir-Sync {get_now(cache=cache).isoformat()}"
                 ),
                 original_filename=original_filename,
                 year=year,
                 delivery_week=delivery_week,
-                uploaded_by=None,
+                uploaded_by=api.user,
             )
 
-        return cls.apply_batch(batch)
+        cls.apply_batch(batch, user=api.user)
+        return warnings
 
     @classmethod
-    def apply_batch(cls, batch: ShareImportBatch) -> ShareImportBatch:
+    def apply_batch(cls, batch: ShareImportBatch, user) -> ShareImportBatch:
         outcome = ShareImportService.parse_and_validate(batch)
         if not outcome.is_ok:
             raise JasminSynchronisationException(
@@ -349,14 +384,15 @@ class JasminSynchronisationService:
             )
 
         ShareImportService.build_preview(batch, outcome.rows)
-        return ShareImportService.apply(batch, outcome.rows, applied_by=None)
+        return ShareImportService.apply(batch, outcome.rows, applied_by=user)
 
     @classmethod
     def synchronise_delivery_station_days(
-        cls, delivery_date: datetime.date, cache: dict
+        cls, api: JasminApiClient, delivery_date: datetime.date, cache: dict
     ):
         # Station days are valid for whole ISO weeks, starting on a monday.
         week_monday = get_monday(delivery_date)
+        changes_monday = cls.get_first_changeable_monday(week_monday)
 
         station_id_by_name = dict(
             DeliveryStation.objects.filter(is_active=True).values_list(
@@ -374,8 +410,8 @@ class JasminSynchronisationService:
             if day_number is None:
                 continue
 
-            shares_delivery_day = cls.get_or_create_shares_delivery_day(
-                day_number=day_number, week_monday=week_monday
+            shares_delivery_day_id = cls.get_or_create_shares_delivery_day_id(
+                api, day_number=day_number, week_monday=week_monday
             )
             opening_time = (
                 PickupLocationOpeningTime.objects.filter(
@@ -388,7 +424,7 @@ class JasminSynchronisationService:
                 pickup_location.id
             ]
             wanted_fields_by_station_and_day_id[
-                (station_id_by_name[pickup_location.name], shares_delivery_day.id)
+                (station_id_by_name[pickup_location.name], shares_delivery_day_id)
             ] = {
                 "pickup_time_begin": opening_time.open_time if opening_time else None,
                 "pickup_time_end": opening_time.close_time if opening_time else None,
@@ -411,7 +447,9 @@ class JasminSynchronisationService:
                 or station_day.valid_until is not None
             ):
                 continue
-            cls.end_validity(station_day, week_monday)
+            cls.end_validity(
+                api, DeliveryStationDayViewSet, station_day, changes_monday
+            )
 
         for (
             station_id,
@@ -421,12 +459,22 @@ class JasminSynchronisationService:
                 (station_id, day_id)
             )
             if station_day is None:
-                DeliveryStationDay(
-                    delivery_station_id=station_id,
-                    delivery_day_id=day_id,
-                    valid_from=week_monday,
-                    **wanted_fields,
-                ).save()
+                if day_id is None:
+                    # The delivery day itself only starts after this week
+                    continue
+                if cls.station_day_exists_later(station_id, day_id, week_monday):
+                    # Created while synchronising an earlier week, starting with
+                    # the first week Jasmin still allows changes for.
+                    continue
+                api.create(
+                    DeliveryStationDayViewSet,
+                    {
+                        "delivery_station": station_id,
+                        "delivery_day": day_id,
+                        "valid_from": changes_monday,
+                        **wanted_fields,
+                    },
+                )
                 continue
 
             if all(
@@ -434,9 +482,17 @@ class JasminSynchronisationService:
                 for field, value in wanted_fields.items()
             ):
                 continue
-            for field, value in wanted_fields.items():
-                setattr(station_day, field, value)
-            station_day.save()
+            api.update(DeliveryStationDayViewSet, station_day.id, wanted_fields)
+
+    @staticmethod
+    def station_day_exists_later(
+        station_id: str, day_id: str, week_monday: datetime.date
+    ) -> bool:
+        return DeliveryStationDay.objects.filter(
+            delivery_station_id=station_id,
+            delivery_day_id=day_id,
+            valid_from__gt=week_monday,
+        ).exists()
 
     @classmethod
     def get_tour_and_stop_order_by_pickup_location_id(cls) -> dict:
@@ -465,30 +521,35 @@ class JasminSynchronisationService:
         return tour_and_stop_order_by_pickup_location_id
 
     @classmethod
-    def get_or_create_shares_delivery_day(
-        cls, day_number: int, week_monday: datetime.date
-    ) -> SharesDeliveryDay:
+    def get_or_create_shares_delivery_day_id(
+        cls, api: JasminApiClient, day_number: int, week_monday: datetime.date
+    ) -> str | None:
+        """The delivery day valid in the given week, created if there is none.
+
+        Returns None if the delivery day only starts after the given week: Jasmin
+        refuses to create one starting in a week that already began."""
         shares_delivery_day = SharesDeliveryDay.objects.filter(
             active_on_date_q(week_monday), day_number=day_number
         ).first()
         if shares_delivery_day is not None:
-            return shares_delivery_day
+            return shares_delivery_day.id
 
-        shares_delivery_day = SharesDeliveryDay(
-            day_number=day_number, valid_from=week_monday
-        )
-        shares_delivery_day.save()
-        return shares_delivery_day
+        if SharesDeliveryDay.objects.filter(
+            day_number=day_number, valid_from__gt=week_monday
+        ).exists():
+            # Created while synchronising an earlier week, starting with the first
+            # week Jasmin still allows changes for.
+            return None
+
+        valid_from = cls.get_first_changeable_monday(week_monday)
+        shares_delivery_day_id = api.create(
+            SharesDeliveryDayViewSet,
+            {"day_number": day_number, "valid_from": valid_from},
+        )["id"]
+        return shares_delivery_day_id if valid_from == week_monday else None
 
     @classmethod
-    def build_deliveries_csv(
-        cls, delivery_date: datetime.date, cache: dict, note: str | None = None
-    ) -> bytes:
-        year, delivery_week, _ = delivery_date.isocalendar()
-        pickup_location_id_by_name = dict(
-            PickupLocation.objects.values_list("name", "id")
-        )
-
+    def build_deliveries_csv(cls, rows: list[dict], note: str | None = None) -> bytes:
         output = io.StringIO()
         writer = csv.DictWriter(
             output,
@@ -503,7 +564,35 @@ class JasminSynchronisationService:
             ],
         )
         writer.writeheader()
+        for row in rows:
+            writer.writerow({**row, **({"note": note} if note is not None else {})})
 
+        return output.getvalue().encode("utf-8")
+
+    @classmethod
+    def build_delivery_rows(
+        cls, delivery_date: datetime.date, cache: dict
+    ) -> tuple[list[dict], list[str]]:
+        """The rows of the deliveries CSV, and warnings about the deliveries left out
+        because their station day or product doesn't exist in Jasmin in that week."""
+        year, delivery_week, _ = delivery_date.isocalendar()
+        week_monday = get_monday(delivery_date)
+        pickup_location_id_by_name = dict(
+            PickupLocation.objects.values_list("name", "id")
+        )
+        jasmin_station_days = set(
+            DeliveryStationDay.objects.filter(
+                active_on_date_q(week_monday), delivery_station__is_active=True
+            ).values_list("delivery_station__short_name", "delivery_day__day_number")
+        )
+        jasmin_product_names = set(
+            ShareTypeVariation.objects.filter(
+                active_on_date_q(week_monday)
+            ).values_list("description", flat=True)
+        )
+
+        rows = []
+        left_out_quantity_by_pickup_location_name = {}
         for product_type in ProductType.objects.exclude(
             delivery_cycle=NO_DELIVERY[0]
         ).order_by("name"):
@@ -543,7 +632,23 @@ class JasminSynchronisationService:
                 for product_name, quantity in sorted(
                     quantities_by_product_name.items()
                 ):
-                    writer.writerow(
+                    if (
+                        pickup_location_name,
+                        delivery_day,
+                    ) not in jasmin_station_days or (
+                        product_name not in jasmin_product_names
+                    ):
+                        left_out_quantity_by_pickup_location_name[
+                            pickup_location_name
+                        ] = (
+                            left_out_quantity_by_pickup_location_name.get(
+                                pickup_location_name, 0
+                            )
+                            + quantity
+                        )
+                        continue
+
+                    rows.append(
                         {
                             "year": year,
                             "delivery_week": delivery_week,
@@ -551,14 +656,23 @@ class JasminSynchronisationService:
                             "delivery_day_code": delivery_day,
                             "variation_code": product_name,
                             "quantity": quantity,
-                            **({"note": note} if note is not None else {}),
                         }
                     )
 
-        return output.getvalue().encode("utf-8")
+        warnings = [
+            f"KW{delivery_week} {year}: {quantity} Anteil(e) für {pickup_location_name} "
+            f"nicht übertragen, der Verteilort oder das Produkt existiert in Jasmin "
+            f"erst ab einer späteren Woche."
+            for pickup_location_name, quantity in sorted(
+                left_out_quantity_by_pickup_location_name.items()
+            )
+        ]
+        return rows, warnings
 
     @classmethod
-    def synchronise_code_mappings(cls, reference_date: datetime.date):
+    def synchronise_code_mappings(
+        cls, api: JasminApiClient, reference_date: datetime.date
+    ):
         # The deliveries CSV references stations by name, variations by product name
         # and days by day number (0=Monday in both Tapir and Jasmin).
         internal_id_by_code_by_kind = {
@@ -582,10 +696,25 @@ class JasminSynchronisationService:
             },
         }
 
+        existing_mappings = {
+            (mapping.kind, mapping.external_code): mapping
+            for mapping in ExternalCodeMapping.objects.all()
+        }
         for kind, internal_id_by_code in internal_id_by_code_by_kind.items():
             for code, internal_id in internal_id_by_code.items():
-                ExternalCodeMapping.objects.update_or_create(
-                    kind=kind,
-                    external_code=code,
-                    defaults={"internal_id": internal_id},
-                )
+                mapping = existing_mappings.get((kind, code))
+                if mapping is None:
+                    api.create(
+                        ExternalCodeMappingViewSet,
+                        {
+                            "kind": kind,
+                            "external_code": code,
+                            "internal_id": internal_id,
+                        },
+                    )
+                elif mapping.internal_id != internal_id:
+                    api.update(
+                        ExternalCodeMappingViewSet,
+                        mapping.id,
+                        {"internal_id": internal_id},
+                    )
