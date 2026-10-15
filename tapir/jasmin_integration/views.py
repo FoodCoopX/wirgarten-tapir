@@ -1,5 +1,6 @@
 from apps.accounts import serializers as jasmin_serializers
 from apps.accounts.errors import InvalidCredentials as JasminInvalidCredentials
+from apps.accounts.errors import InvalidToken as JasminInvalidToken
 from apps.accounts.services import auth_service as jasmin_auth_service
 from apps.accounts.views import auth_views as jasmin_auth_views
 from apps.shared import auth_cookies as jasmin_auth_cookies
@@ -100,21 +101,25 @@ class JasminLoginView(APIView):
 
 class JasminRefreshVew(APIView):
     @extend_schema(
-        responses={200: jasmin_serializers.RefreshResponseSerializer},
+        responses={200: jasmin_serializers.LoginResponseSerializer},
         request=None,
     )
     def post(self, request):
-        refresh_token = jasmin_auth_cookies.get_tenant_refresh_token(request)
+        # Jasmin's login system isn't used, the Tapir session decides: instead of
+        # validating Jasmin's refresh cookie, every refresh issues new tokens for the
+        # current Tapir user. The response also carries the user like the login
+        # response does, so that Jasmin's frontend knows the user's roles without
+        # going through its login page.
+        if not request.user.is_authenticated or not request.user.has_perm(
+            Permission.Coop.MANAGE
+        ):
+            raise JasminInvalidToken("USER NOT LOGGED IN")
 
         tenant = get_tenant()
 
-        result = jasmin_auth_service.refresh_access_token(
-            refresh_token=refresh_token,
-            tenant_schema="public",
-            tenant_name=tenant.name,
+        login_result = jasmin_auth_service._issue_login_tokens(
+            user=request.user, tenant=tenant
         )
-        response_data = {"access": result["access"]}
-        response = Response(response_data)
-        if result["refresh"]:
-            jasmin_auth_cookies.set_tenant_refresh_cookie(response, result["refresh"])
-        return response
+        return Response(
+            jasmin_auth_views._login_payload(result=login_result, tenant=tenant)
+        )
