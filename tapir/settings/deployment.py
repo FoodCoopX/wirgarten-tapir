@@ -4,7 +4,7 @@ import os
 import celery.schedules
 import environ
 
-from tapir.settings.base import BASE_DIR, DEBUG
+from tapir.settings.base import BASE_DIR, DEBUG, ENABLE_JASMIN
 
 env = environ.Env()
 environ.Env.read_env(BASE_DIR / "../.env.local")
@@ -29,7 +29,11 @@ if not DEBUG:
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 DATABASES = {
     "default": {
-        "ENGINE": "django_tenants.postgresql_backend",
+        "ENGINE": (
+            "tapir.jasmin_integration.db_backend"
+            if ENABLE_JASMIN
+            else "django.db.backends.postgresql"
+        ),
         "NAME": "tapir",
         "USER": "tapir",
         "PASSWORD": "tapir",

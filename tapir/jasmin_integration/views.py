@@ -8,27 +8,14 @@ from django.db import transaction
 from django.http import HttpRequest
 from django.views.generic import TemplateView
 from drf_spectacular.utils import extend_schema
-from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.viewsets import ModelViewSet
 
 from tapir.core.services.jasmin_synchronisation_service import (
     JasminSynchronisationService,
     JasminSynchronisationException,
 )
-from tapir.generic_exports.permissions import HasCoopManagePermission
-from tapir.jasmin_integration.models import JasminTenant, JasminTenantSettings
-from tapir.jasmin_integration.serializers import (
-    JasminTenantSerializer,
-    JasminTenantSettingsSerializer,
-)
 from tapir.wirgarten.constants import Permission
-
-
-def get_tenant():
-    tenant, _ = JasminTenant.objects.get_or_create(defaults={"schema_name": "public"})
-    return tenant
 
 
 class JasminTemplateView(TemplateView):
@@ -46,36 +33,6 @@ class JasminTemplateView(TemplateView):
         return super().get(request, *args, **kwargs)
 
 
-class JasminCurrentTenantView(APIView):
-    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
-
-    @extend_schema(
-        responses={200: JasminTenantSerializer},
-        parameters=[],
-    )
-    def get(self, request, *args, **kwargs):
-        tenant = get_tenant()
-        return Response(JasminTenantSerializer(tenant).data)
-
-
-class JasminTenantViewSet(ModelViewSet):
-    queryset = JasminTenant.objects.all()
-    serializer_class = JasminTenantSerializer
-    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
-
-
-class JasminUpdateCurrentSettingsView(APIView):
-    def put(self, request, *args, **kwargs):
-        serializer = JasminTenantSettingsSerializer(
-            instance=JasminTenantSettings.objects.get(),
-            data=request.data["settings"],
-            partial=True,
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response("OK")
-
-
 class JasminLoginView(APIView):
     @extend_schema(
         responses={200: jasmin_serializers.LoginResponseSerializer},
@@ -90,7 +47,7 @@ class JasminLoginView(APIView):
         ):
             raise JasminInvalidCredentials("USER NOT LOGGED IN")
 
-        tenant = get_tenant()
+        tenant = request.tenant
 
         login_result = jasmin_auth_service._issue_login_tokens(
             user=request.user, tenant=tenant
@@ -118,7 +75,7 @@ class JasminRefreshVew(APIView):
         ):
             raise JasminInvalidToken("USER NOT LOGGED IN")
 
-        tenant = get_tenant()
+        tenant = request.tenant
 
         login_result = jasmin_auth_service._issue_login_tokens(
             user=request.user, tenant=tenant

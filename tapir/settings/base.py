@@ -256,6 +256,7 @@ if ENABLE_JASMIN:
     INSTALLED_APPS += [
         "tapir.jasmin_integration",
         "apps.commissioning",
+        "apps.shared.tenants",
         "auditlog",
         "django_otp",
         "django_otp.plugins.otp_totp",
@@ -295,6 +296,10 @@ if ENABLE_JASMIN:
         "REFRESH_TOKEN_LIFETIME": datetime.timedelta(days=7),
     }
 
-    JASMIN_CURRENT_TENANT_SETTINGS_PROVIDER = (
-        "tapir.jasmin_integration.services.get_current_jasmin_tenant_settings"
-    )
+    # Jasmin runs with a single tenant, see tapir.jasmin_integration.db_backend.
+    # Its schema doesn't exist: like all of Tapir's, Jasmin's tables are in the
+    # public schema.
+    TENANT_MODEL = "tenants.Tenant"
+    TENANT_DOMAIN_MODEL = "tenants.Domain"
+    JASMIN_TENANT_SCHEMA_NAME = "tapir"
+    MIDDLEWARE.append("tapir.jasmin_integration.middleware.JasminTenantMiddleware")

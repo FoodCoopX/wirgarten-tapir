@@ -18,14 +18,8 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import include, path
 from django.views.generic import RedirectView, TemplateView
-from rest_framework.routers import DefaultRouter
 
-from tapir.jasmin_integration.views import (
-    JasminTemplateView,
-    JasminCurrentTenantView,
-    JasminTenantViewSet,
-    JasminUpdateCurrentSettingsView,
-)
+from tapir.jasmin_integration.views import JasminTemplateView
 from tapir.wirgarten.views.default_redirect import wirgarten_redirect_view
 from tapir.wirgarten.views.mailing import TapirMailView
 
@@ -93,7 +87,7 @@ if settings.ENABLE_JASMIN:
         path("commissioning/api/", include("apps.commissioning.urls")),
         path("commissioning/api/commissioning/", include("apps.commissioning.urls")),
         path("commissioning/api/jasmin/", include("apps.commissioning.urls")),
-        path("commissioning/api/tenants/current/", JasminCurrentTenantView.as_view()),
+        path("commissioning/api/tenants/", include("apps.shared.tenants.urls")),
         path(
             "jasmin/home",
             TemplateView.as_view(template_name="jasmin-dist/dist/index.html"),
@@ -104,14 +98,4 @@ if settings.ENABLE_JASMIN:
             JasminTemplateView.as_view(template_name="core/jasmin_iframe.html"),
             name="jasmin",
         ),
-        path(
-            "commissioning/api/tenants/settings/update_current_settings/",
-            JasminUpdateCurrentSettingsView.as_view(),
-        ),
     ]
-
-router = DefaultRouter()
-router.register(
-    r"commissioning/api/tenants/tenants", JasminTenantViewSet, basename="tenants"
-)
-urlpatterns += router.urls
