@@ -74,20 +74,13 @@ if settings.ENABLE_JASMIN:
     from tapir.jasmin_integration.views import JasminLoginView, JasminRefreshVew
 
     urlpatterns += [
-        path(
-            "commissioning/api/auth/login/",
-            JasminLoginView.as_view(),
-            name="jasmin_login",
-        ),
-        path(
-            "commissioning/api/auth/refresh/",
-            JasminRefreshVew.as_view(),
-            name="jasmin_refresh",
-        ),
-        path("commissioning/api/", include("apps.commissioning.urls")),
-        path("commissioning/api/commissioning/", include("apps.commissioning.urls")),
-        path("commissioning/api/jasmin/", include("apps.commissioning.urls")),
-        path("commissioning/api/tenants/", include("apps.shared.tenants.urls")),
+        # Where Jasmin's frontend expects Jasmin's API, like in Jasmin's
+        # config/tenant_urls.py. Tapir's own URLs must stay out of "api/", see
+        # tapir.jasmin_integration.authentication.
+        path("api/auth/login/", JasminLoginView.as_view(), name="jasmin_login"),
+        path("api/auth/refresh/", JasminRefreshVew.as_view(), name="jasmin_refresh"),
+        path("api/commissioning/", include("apps.commissioning.urls")),
+        path("api/tenants/", include("apps.shared.tenants.urls")),
         path(
             "jasmin/home",
             TemplateView.as_view(template_name="jasmin-dist/dist/index.html"),

@@ -7,6 +7,7 @@ from django.db import transaction
 from django.http import HttpRequest
 from django.views.generic import TemplateView
 from drf_spectacular.utils import extend_schema
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -15,6 +16,9 @@ from tapir.core.services.jasmin_synchronisation_service import (
     JasminSynchronisationException,
 )
 from tapir.jasmin_integration import jasmin_compat
+from tapir.jasmin_integration.authentication import (
+    CsrfExemptSessionAuthentication,
+)
 from tapir.wirgarten.constants import Permission
 
 
@@ -55,6 +59,11 @@ class JasminTemplateView(TemplateView):
 
 
 class JasminAuthApiView(APIView):
+    # The Tapir session decides who gets Jasmin tokens. The views check it
+    # themselves, so that a refused user gets the 401 Jasmin's frontend expects.
+    authentication_classes = [CsrfExemptSessionAuthentication]
+    permission_classes = [AllowAny]
+
     def get_exception_handler(self):
         # Jasmin's errors carry their HTTP status (401 for an invalid token, which
         # Jasmin's frontend reads as "logged out"), but only Jasmin's exception

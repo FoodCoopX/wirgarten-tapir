@@ -220,7 +220,6 @@ def javascript_environment_variables(context):
             "REACT_APP_API_ROOT": api_root,
             "TAPIRMAIL_REACT_APP_BASENAME": settings.TAPIRMAIL_REACT_APP_BASENAME,
             "TAPIRMAIL_REACT_APP_API_ROOT": settings.TAPIRMAIL_REACT_APP_API_ROOT,
-            "COMMISSIONING_API_BASE_URL": settings.SITE_URL + "/commissioning",
         },
     }
 
