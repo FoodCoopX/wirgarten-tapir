@@ -3,6 +3,7 @@ from apps.accounts.errors import InvalidCredentials as JasminInvalidCredentials
 from apps.accounts.errors import InvalidToken as JasminInvalidToken
 from apps.shared import auth_cookies as jasmin_auth_cookies
 from core.exception_handler import jasmin_exception_handler
+from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db import transaction
 from django.http import HttpRequest
 from django.views.generic import TemplateView
@@ -23,7 +24,8 @@ def can_use_jasmin(user) -> bool:
     return user.is_authenticated and user.has_perm(Permission.Coop.MANAGE)
 
 
-class JasminTemplateView(TemplateView):
+class JasminTemplateView(PermissionRequiredMixin, TemplateView):
+    permission_required = Permission.Coop.MANAGE
     template_name = "core/jasmin_iframe.html"
 
     def get(self, request: HttpRequest, *args, **kwargs):

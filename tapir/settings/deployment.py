@@ -28,18 +28,11 @@ if not DEBUG:
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 DATABASES = {
-    "default": {
-        "ENGINE": (
-            "tapir.jasmin_integration.db_backend"
-            if ENABLE_JASMIN
-            else "django.db.backends.postgresql"
-        ),
-        "NAME": "tapir",
-        "USER": "tapir",
-        "PASSWORD": "tapir",
-        "HOST": env.str("DATABASE_HOST", default="db"),
-        "PORT": "5432",
-    },
+    "default": env.db(
+        "DATABASE_CONNECTION",
+        default="postgresql://tapir:tapir@db:5432/tapir",
+        engine="tapir.jasmin_integration.db_backend" if ENABLE_JASMIN else None,
+    ),
 }
 
 

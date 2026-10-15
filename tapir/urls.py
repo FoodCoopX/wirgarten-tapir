@@ -19,7 +19,6 @@ from django.conf.urls.static import static
 from django.urls import include, path
 from django.views.generic import RedirectView, TemplateView
 
-from tapir.jasmin_integration.views import JasminTemplateView
 from tapir.wirgarten.views.default_redirect import wirgarten_redirect_view
 from tapir.wirgarten.views.mailing import TapirMailView
 
@@ -71,7 +70,11 @@ if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.ENABLE_JASMIN:
-    from tapir.jasmin_integration.views import JasminLoginView, JasminRefreshVew
+    from tapir.jasmin_integration.views import (
+        JasminLoginView,
+        JasminRefreshVew,
+        JasminTemplateView,
+    )
 
     urlpatterns += [
         # Where Jasmin's frontend expects Jasmin's API, like in Jasmin's
