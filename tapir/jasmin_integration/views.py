@@ -3,6 +3,7 @@ from apps.accounts.errors import InvalidCredentials as JasminInvalidCredentials
 from apps.accounts.services import auth_service as jasmin_auth_service
 from apps.accounts.views import auth_views as jasmin_auth_views
 from apps.shared import auth_cookies as jasmin_auth_cookies
+from django.db import transaction
 from django.http import HttpRequest
 from django.views.generic import TemplateView
 from drf_spectacular.utils import extend_schema
@@ -32,6 +33,7 @@ def get_tenant():
 class JasminTemplateView(TemplateView):
     template_name = "core/jasmin_iframe.html"
 
+    @transaction.atomic
     def get(self, request: HttpRequest, *args, **kwargs):
         try:
             JasminSynchronisationService.synchronise_everything()
