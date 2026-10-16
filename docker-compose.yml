@@ -10,6 +10,8 @@ services:
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_HOSTNAME: http://localhost:8080
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
 
   web:
     build: .
@@ -18,12 +20,12 @@ services:
       poetry run python manage.py runserver_plus 0.0.0.0:8000 --reloader-type=stat"
     volumes:
       - .:/app
-      - media-volume:/app/media
-    environment:
+      - web-static:/app/static
+      - web-uploads:/app/tapir/filepond_stored_uploads
+    environment: &tapir_env
       VIRTUAL_HOST: localhost
       DEBUG: 1
       DJANGO_VITE_DEBUG: True
-      MAILMAN_ENABLED: True
       KEYCLOAK_SKIP_VERIFICATION_EMAIL: True
     depends_on:
       - db
@@ -33,6 +35,8 @@ services:
 
   db:
     image: postgres:14
+    volumes:
+      - tapir-db:/var/lib/postgresql/data
     environment:
       - POSTGRES_DB=tapir
       - POSTGRES_PASSWORD=tapir
@@ -54,8 +58,7 @@ services:
       poetry run celery -A tapir worker -l info --pool=solo"
     volumes:
       - .:/app
-    environment:
-      DEBUG: 1
+    environment: *tapir_env
     depends_on:
       - redis
       - db
@@ -69,8 +72,7 @@ services:
       poetry run celery -A tapir beat -l info --schedule /tmp/celerybeat-schedule"
     volumes:
       - .:/app
-    environment:
-      DEBUG: 1
+    environment: *tapir_env
     depends_on:
       - redis
       - celery
@@ -85,6 +87,9 @@ services:
       - .:/app
       - vite_node_modules:/app/node_modules
 
+
 volumes:
-  media-volume:
+  tapir-db:
+  web-static:
+  web-uploads:
   vite_node_modules:

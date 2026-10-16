@@ -3,7 +3,7 @@
 set -e
 poetry lock
 poetry install
-docker compose down
+docker compose down -v --remove-orphans
 docker compose up -d --remove-orphans keycloak db redis
 poetry run python manage.py migrate
 poetry run python manage.py parameter_definitions
