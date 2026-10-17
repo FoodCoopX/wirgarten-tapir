@@ -65,3 +65,15 @@ class TestCanMembershipBeCancelled(TapirUnitTest):
                 reference_date=datetime.date(year=2022, month=6, day=30),
             )
         )
+
+    def test_canMembershipBeCancelled_membershipAlreadyStarted_returnsFalse(self):
+        membership = AssociationMembershipFactory.build(
+            cancellation_ts=None, start_date=datetime.date(year=2022, month=1, day=1)
+        )
+
+        self.assertFalse(
+            AssociationMembershipCancellationManager._can_membership_be_cancelled(
+                membership=membership,
+                reference_date=datetime.date(year=2022, month=6, day=30),
+            )
+        )

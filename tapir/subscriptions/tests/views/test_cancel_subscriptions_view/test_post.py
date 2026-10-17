@@ -750,7 +750,9 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         subscriptions = SubscriptionFactory.create_batch(
             size=3, member=member, period=period
         )
-        AssociationMembershipFactory.create(member=member, start_date=period.start_date)
+        AssociationMembershipFactory.create(
+            member=member, start_date=(self.now + datetime.timedelta(days=30)).date()
+        )
 
         post_data = {
             "member_id": member.id,
@@ -791,7 +793,9 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         subscriptions = SubscriptionFactory.create_batch(
             size=3, member=member, period=period
         )
-        AssociationMembershipFactory.create(member=member, start_date=period.start_date)
+        AssociationMembershipFactory.create(
+            member=member, start_date=(self.now + datetime.timedelta(days=30)).date()
+        )
 
         post_data = {
             "member_id": member.id,

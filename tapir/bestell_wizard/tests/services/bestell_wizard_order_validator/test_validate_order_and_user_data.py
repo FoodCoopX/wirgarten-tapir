@@ -394,9 +394,7 @@ class TestValidateOrderAndUserData(TapirUnitTest):
                 cache=cache,
             )
 
-        self.assertEqual(
-            "Solidarbeitrag ungültig oder zu niedrig", error.exception.message
-        )
+        self.assertEqual("Solidarbeitrag zu niedrig", error.exception.message)
 
         mock_validate_personal_data_new_member.assert_called_once_with(
             email="test_mail",

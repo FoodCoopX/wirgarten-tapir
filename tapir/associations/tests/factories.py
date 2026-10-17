@@ -27,7 +27,7 @@ class AssociationMembershipTypePriceFactory(
         model = AssociationMembershipTypePrice
 
     type = factory.SubFactory(AssociationMembershipTypeFactory)
-    valid_from = factory.Faker("date")
+    valid_from = factory.Faker("date_object")
     price = factory.Faker("pydecimal", min_value=3, max_value=30)
 
 
@@ -39,5 +39,5 @@ class AssociationMembershipFactory(
 
     member = factory.SubFactory(MemberFactory)
     type = factory.SubFactory(AssociationMembershipTypeFactory)
-    start_date = factory.Faker("date")
+    start_date = factory.Faker("date_object")
     end_date = None

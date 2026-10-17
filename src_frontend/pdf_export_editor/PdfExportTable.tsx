@@ -33,7 +33,11 @@ const PdfExportTable: React.FC<PdfExportTableProps> = ({
       return (
         <tr key={exp.id}>
           <td>{exp.name}</td>
-          <td>{exp.description}</td>
+          <td>
+            <div className={"text-wrap"} style={{ maxWidth: "50dvw" }}>
+              {exp.description}
+            </div>
+          </td>
           <td>{getSegmentName(exp.exportSegmentId)}</td>
           <td>
             <div className={"d-flex flex-row gap-2"}>
