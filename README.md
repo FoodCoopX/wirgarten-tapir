@@ -21,6 +21,12 @@ The backend code is written with Python and Django, the frontend code is a mix o
 
 Don't hesitate to contact us if you are interested in using or contributing to Tapir.
 
+## User documentation
+
+The user documentation is maintained as Markdown files in [`docs/`](docs/) and published as a searchable website with
+MkDocs and GitHub Pages. See [Contributing to the documentation](CONTRIBUTING.md#contributing-to-the-documentation) to
+preview documentation changes locally.
+
 ## Getting started
 
 Use docker to quickly get a development server running on your machine. Run the following commands:
