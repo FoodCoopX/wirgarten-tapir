@@ -30,6 +30,18 @@ before every commit:
 
     poetry install && pre-commit install
 
+### AI coding assistants
+Contributors use different assistants (GitHub Copilot, Claude Code, OpenCode, Codex, …). All of
+them are configured from one shared folder, [.agents/](.agents/README.md): repository rules in
+`.agents/rules/`, role profiles in `.agents/agents/`, task recipes in `.agents/skills/`. The
+tool-specific paths (`AGENTS.md`, `.github/`, `.claude/`, `.opencode/`) are symlinks into it, so an
+instruction written once applies to everyone — please improve the shared files rather than keeping
+private ones.
+
+On Linux and macOS the links work out of the box. On Windows, run
+`git config --global core.symlinks true` (needs Developer Mode) before cloning, and use
+`./scripts/setup_agent_links.sh` to verify or repair an existing checkout.
+
 ## Getting started
 
     docker-compose up
