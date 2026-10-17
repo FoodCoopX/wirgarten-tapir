@@ -1,4 +1,8 @@
+# Claude Code reads the shared AGENTS.md; a local CLAUDE.md would override it
 CLAUDE.md
+
+# Per-developer assistant settings (shared config belongs in .agents/)
+.claude/settings.local.json
 
 # Django #
 *.log
