@@ -18,6 +18,7 @@ from tapir.associations.services.association_membership_change_handler import (
 from tapir.bestell_wizard.services.bestell_wizard_order_validator import (
     BestellWizardOrderValidator,
 )
+from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.coop_share_purchase_handler import CoopSharePurchaseHandler
 from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.payments.services.member_payment_rhythm_service import (
@@ -45,6 +46,7 @@ from tapir.wirgarten.models import (
     QuestionaireTrafficSourceResponse,
     QuestionaireTrafficSourceOption,
 )
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
     send_product_order_confirmation,
     send_investing_membership_confirmation,
@@ -196,6 +198,10 @@ class BestellWizardOrderFulfiller:
                 email=personal_data["email"],
                 first_name=personal_data["first_name"],
             )
+
+        personal_data = dict(personal_data)
+        if not get_parameter_value(ParameterKeys.BAKERY_ENABLED, cache=cache):
+            personal_data.pop("pseudonym", None)
 
         member = Member.objects.create(
             **personal_data,

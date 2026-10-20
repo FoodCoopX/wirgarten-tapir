@@ -8718,6 +8718,8 @@ components:
           type: boolean
         phone_number_required:
           type: boolean
+        pseudonym_enabled:
+          type: boolean
         show_coop_content:
           type: boolean
         intro_step_text:
@@ -8812,6 +8814,7 @@ components:
       - product_ids_that_are_already_at_capacity
       - product_type_ids_that_are_already_at_capacity
       - product_types
+      - pseudonym_enabled
       - show_coop_content
       - solidarity_contribution_choices
       - solidarity_contribution_default
@@ -14184,6 +14187,9 @@ components:
           type: string
         iban:
           type: string
+        pseudonym:
+          type: string
+          maxLength: 150
       required:
       - account_owner
       - city

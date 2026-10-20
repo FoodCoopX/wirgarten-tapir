@@ -24,6 +24,7 @@ export function buildSettings(
     paymentRhythmChoices: baseData.paymentRhythmChoices,
     studentStatusAllowed: baseData.studentStatusAllowed,
     phoneNumberRequired: baseData.phoneNumberRequired,
+    pseudonymEnabled: baseData.pseudonymEnabled,
     introEnabled: baseData.introEnabled,
     productTypeIdsThatAreAlreadyAtCapacity:
       baseData.productTypeIdsThatAreAlreadyAtCapacity,

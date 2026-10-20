@@ -535,6 +535,9 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             postcode: personalData.postcode,
             street: personalData.street,
             street2: personalData.street2,
+            pseudonym: showPseudonymField()
+              ? personalData.pseudonym?.trim()
+              : undefined,
           },
           sepaAllowed: sepaAllowed,
           contractAccepted: contractAccepted,
@@ -602,6 +605,20 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     } else {
       setCurrentStep("14_confirmation");
     }
+  }
+
+  function showPseudonymField() {
+    // Only a new member gets the pseudonym: waiting list entries don't store it.
+    return (
+      settings.pseudonymEnabled &&
+      waitingListEntryDetails === undefined &&
+      !(
+        areAllOrderedProductsInWaitingList(
+          shoppingCart,
+          productTypesInWaitingList,
+        ) && becomeMemberNow === false
+      )
+    );
   }
 
   function goToProductTypeStep(productType: PublicProductType) {
@@ -793,6 +810,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             }
             setToastDatas={setToastDatas}
             changesDisabled={waitingListEntryDetails !== undefined}
+            showPseudonymField={showPseudonymField()}
           />
         );
       case "9_banking_data":

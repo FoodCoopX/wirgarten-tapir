@@ -876,6 +876,55 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         self.assert_order_confirmed(response_content)
         self.assertFalse(WaitingListEntry.objects.get().phone_number)
 
+    def post_with_pseudonym(self, data: dict):
+        data["personal_data"]["pseudonym"] = "Brotfan"
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+        self.assertStatusCode(response, 200)
+        return response.json()
+
+    def test_post_orderWithPseudonymAndBakeryEnabled_memberCreatedWithPseudonym(
+        self,
+    ):
+        self._set_parameter(ParameterKeys.BAKERY_ENABLED, True)
+
+        response_content = self.post_with_pseudonym(
+            self.build_valid_post_data_for_an_order_without_waiting_list()
+        )
+
+        self.assert_order_confirmed(response_content)
+        self.assertEqual("Brotfan", Member.objects.get().pseudonym)
+
+    def test_post_orderWithPseudonymAndBakeryDisabled_memberCreatedWithoutPseudonym(
+        self,
+    ):
+        self._set_parameter(ParameterKeys.BAKERY_ENABLED, False)
+
+        response_content = self.post_with_pseudonym(
+            self.build_valid_post_data_for_an_order_without_waiting_list()
+        )
+
+        self.assert_order_confirmed(response_content)
+        self.assertEqual("", Member.objects.get().pseudonym)
+
+    def test_post_orderWithoutPseudonym_memberCreatedWithoutPseudonym(self):
+        self._set_parameter(ParameterKeys.BAKERY_ENABLED, True)
+
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(
+                self.build_valid_post_data_for_an_order_without_waiting_list()
+            ),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        self.assert_order_confirmed(response.json())
+        self.assertEqual("", Member.objects.get().pseudonym)
+
     @classmethod
     def build_valid_post_data_for_a_waiting_list_entry(cls) -> dict[str, Any]:
         return {

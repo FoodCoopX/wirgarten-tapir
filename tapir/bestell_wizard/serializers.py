@@ -24,6 +24,7 @@ class PersonalDataSerializer(serializers.Serializer):
     country = serializers.CharField()
     account_owner = serializers.CharField(allow_blank=True)
     iban = serializers.CharField(allow_blank=True)
+    pseudonym = serializers.CharField(allow_blank=True, required=False, max_length=150)
 
 
 class BestellWizardConfirmOrderRequestSerializer(serializers.Serializer):
@@ -147,6 +148,7 @@ class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
     intro_enabled = serializers.BooleanField()
     student_status_allowed = serializers.BooleanField()
     phone_number_required = serializers.BooleanField()
+    pseudonym_enabled = serializers.BooleanField()
     show_coop_content = serializers.BooleanField()
     intro_step_text = serializers.CharField()
     label_checkbox_sepa_mandat = serializers.CharField()

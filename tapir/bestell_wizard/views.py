@@ -560,6 +560,8 @@ class BestellWizardBaseDataApiView(APIView):
             "intro_enabled": ParameterKeys.BESTELLWIZARD_SHOW_INTRO,
             "student_status_allowed": ParameterKeys.ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES,
             "phone_number_required": ParameterKeys.MEMBER_PHONE_NUMBER_REQUIRED,
+            # The pseudonym is only used on the bakery pickup lists.
+            "pseudonym_enabled": ParameterKeys.BAKERY_ENABLED,
             "intro_step_text": ParameterKeys.BESTELLWIZARD_INTRO_TEXT,
             "label_checkbox_sepa_mandat": ParameterKeys.BESTELLWIZARD_SEPA_MANDAT_CHECKBOX_TEXT,
             "label_checkbox_contract_policy": ParameterKeys.BESTELLWIZARD_CONTRACT_POLICY_CHECKBOX_TEXT,
