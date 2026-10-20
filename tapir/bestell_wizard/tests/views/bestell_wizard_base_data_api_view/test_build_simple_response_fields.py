@@ -46,11 +46,6 @@ class TestBuildSimpleResponseFields(TapirUnitTest):
             cache=cache,
         )
         mock_parameter_value(
-            key=ParameterKeys.BESTELLWIZARD_INTRO_TEXT,
-            value="test_intro_text",
-            cache=cache,
-        )
-        mock_parameter_value(
             key=ParameterKeys.BESTELLWIZARD_SEPA_MANDAT_CHECKBOX_TEXT,
             value="test_sepa_mandat",
             cache=cache,
@@ -111,7 +106,6 @@ class TestBuildSimpleResponseFields(TapirUnitTest):
                 "intro_enabled": "test_show_intro",
                 "student_status_allowed": "test_allow_student",
                 "phone_number_required": "test_phone_number_required",
-                "intro_step_text": "test_intro_text",
                 "label_checkbox_sepa_mandat": "test_sepa_mandat",
                 "label_checkbox_contract_policy": "test_contract_policy",
                 "default_payment_rhythm": "test_default_rhythm",
