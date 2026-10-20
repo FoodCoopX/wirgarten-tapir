@@ -271,7 +271,6 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
               showValidation={showValidation}
               isValid={isValid("pseudonym")}
               style={{ flexGrow: 1 }}
-              disabled={changesDisabled}
               maxLength={150}
             />
             <TapirHelpButton

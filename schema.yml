@@ -14913,6 +14913,9 @@ components:
           type: string
           nullable: true
           minLength: 1
+        pseudonym:
+          type: string
+          maxLength: 150
       required:
       - account_owner
       - association_membership_type_id

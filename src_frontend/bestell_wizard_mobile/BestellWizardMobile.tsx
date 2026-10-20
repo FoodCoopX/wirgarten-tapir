@@ -506,6 +506,9 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             solidarityContribution: solidarityContribution,
             associationMembershipTypeId:
               selectedAssociationMembershipType?.id ?? null,
+            pseudonym: showPseudonymField()
+              ? personalData.pseudonym?.trim()
+              : undefined,
           },
         })
         .then(handleOrderResponse)
@@ -608,17 +611,31 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
   }
 
   function showPseudonymField() {
-    // Only a new member gets the pseudonym: waiting list entries don't store it.
-    return (
-      settings.pseudonymEnabled &&
-      waitingListEntryDetails === undefined &&
-      !(
-        areAllOrderedProductsInWaitingList(
+    if (!settings.pseudonymEnabled) {
+      return false;
+    }
+    // Waiting list entries don't store the pseudonym: it is asked when the entry gets confirmed.
+    if (waitingListEntryDetails !== undefined) {
+      return !waitingListEntryDetails.memberAlreadyExists;
+    }
+    return willAMemberBeCreated();
+  }
+
+  function willAMemberBeCreated() {
+    // Same rule as BestellWizardConfirmOrderApiView.validate_everything_and_apply_all_changes
+    const orderNotEmpty =
+      Object.keys(
+        buildFilteredShoppingCart(
           shoppingCart,
+          false,
           productTypesInWaitingList,
-        ) && becomeMemberNow === false
-      )
-    );
+        ),
+      ).length > 0;
+    const becomeMemberNowSent =
+      !settings.forceWaitingList && becomeMemberNow !== false;
+    const legalStatusHasMembership =
+      settings.legalStatus === "coop" || settings.legalStatus === "association";
+    return orderNotEmpty || (becomeMemberNowSent && legalStatusHasMembership);
   }
 
   function goToProductTypeStep(productType: PublicProductType) {

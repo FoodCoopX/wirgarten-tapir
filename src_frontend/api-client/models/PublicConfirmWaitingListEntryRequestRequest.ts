@@ -78,6 +78,12 @@ export interface PublicConfirmWaitingListEntryRequestRequest {
    * @memberof PublicConfirmWaitingListEntryRequestRequest
    */
   associationMembershipTypeId: string | null;
+  /**
+   *
+   * @type {string}
+   * @memberof PublicConfirmWaitingListEntryRequestRequest
+   */
+  pseudonym?: string;
 }
 
 /**
@@ -139,6 +145,7 @@ export function PublicConfirmWaitingListEntryRequestRequestFromJSONTyped(
     paymentRhythm: json["payment_rhythm"],
     solidarityContribution: json["solidarity_contribution"],
     associationMembershipTypeId: json["association_membership_type_id"],
+    pseudonym: json["pseudonym"] == null ? undefined : json["pseudonym"],
   };
 }
 
@@ -167,5 +174,6 @@ export function PublicConfirmWaitingListEntryRequestRequestToJSONTyped(
     payment_rhythm: value["paymentRhythm"],
     solidarity_contribution: value["solidarityContribution"],
     association_membership_type_id: value["associationMembershipTypeId"],
+    pseudonym: value["pseudonym"],
   };
 }

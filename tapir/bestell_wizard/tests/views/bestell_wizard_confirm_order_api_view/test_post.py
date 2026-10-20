@@ -925,6 +925,20 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         self.assert_order_confirmed(response.json())
         self.assertEqual("", Member.objects.get().pseudonym)
 
+    def test_post_pseudonymTooLong_returnsErrorAndDontCreateMember(self):
+        self._set_parameter(ParameterKeys.BAKERY_ENABLED, True)
+        data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        data["personal_data"]["pseudonym"] = "x" * 151
+
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 400)
+        self.assertFalse(Member.objects.exists())
+
     @classmethod
     def build_valid_post_data_for_a_waiting_list_entry(cls) -> dict[str, Any]:
         return {

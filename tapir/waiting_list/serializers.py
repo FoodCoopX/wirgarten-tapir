@@ -144,3 +144,4 @@ class PublicConfirmWaitingListEntryRequestSerializer(serializers.Serializer):
     payment_rhythm = serializers.CharField()
     solidarity_contribution = serializers.FloatField()
     association_membership_type_id = serializers.CharField(allow_null=True)
+    pseudonym = serializers.CharField(allow_blank=True, required=False, max_length=150)

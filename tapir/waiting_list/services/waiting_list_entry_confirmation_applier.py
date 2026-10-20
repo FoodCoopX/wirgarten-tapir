@@ -14,6 +14,7 @@ from tapir.associations.models import AssociationMembershipType
 from tapir.bestell_wizard.services.bestell_wizard_order_fulfiller import (
     BestellWizardOrderFulfiller,
 )
+from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
@@ -40,6 +41,7 @@ from tapir.wirgarten.models import (
     Member,
     OrderFeedback,
 )
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import calculate_pickup_location_change_date
 from tapir.wirgarten.utils import (
     get_now,
@@ -204,6 +206,11 @@ class WaitingListEntryConfirmationApplier:
             country=waiting_list_entry.country,
             account_owner=validated_data["account_owner"],
             iban=validated_data["iban"],
+            pseudonym=(
+                validated_data.get("pseudonym", "")
+                if get_parameter_value(ParameterKeys.BAKERY_ENABLED, cache=cache)
+                else ""
+            ),
             **contracts_signed,
         )
 
