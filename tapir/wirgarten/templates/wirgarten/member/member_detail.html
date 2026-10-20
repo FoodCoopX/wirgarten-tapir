@@ -215,11 +215,13 @@
                 <div class="d-flex flex-row justify-content-between">
                   <div class="d-flex flex-column">
                     <strong class="card-title">{{ 'wirgarten.site.admin_name'|parameter }}</strong>
-                    <a class="card-text"
-                       style="text-decoration:none;
-                                                  color:inherit"
-                       href="tel:{{ 'wirgarten.site.admin_telephone'|parameter }}"
-                       target="_blank">📞&nbsp;&nbsp;{{ 'wirgarten.site.admin_telephone'|parameter }}</a>
+                    {% if 'wirgarten.site.admin_telephone'|parameter %}
+                      <a class="card-text"
+                         style="text-decoration:none;
+                                                    color:inherit"
+                         href="tel:{{ 'wirgarten.site.admin_telephone'|parameter }}"
+                         target="_blank">📞&nbsp;&nbsp;{{ 'wirgarten.site.admin_telephone'|parameter }}</a>
+                    {% endif %}
                     <a class="card-text"
                        style="text-decoration:none;
                                                   color:inherit"
