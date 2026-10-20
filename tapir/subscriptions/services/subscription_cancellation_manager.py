@@ -1,3 +1,6 @@
+from tapir.associations.services.association_membership_cancellation_manager import (
+    AssociationMembershipCancellationManager,
+)
 from tapir.bakery.services.breaddelivery_service import BreadDeliveryService
 from tapir.configuration.parameter import get_parameter_value
 from tapir.core.exceptions import TapirImproperlyConfigured
@@ -8,7 +11,7 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
 )
-from tapir.wirgarten.utils import get_now, get_today
+from tapir.wirgarten.utils import get_now, get_today, legal_status_is_association
 
 
 class SubscriptionCancellationManager:
@@ -68,6 +71,51 @@ class SubscriptionCancellationManager:
             )
             .exclude(amount=0)
             .order_by("end_date")
+        )
+
+    @classmethod
+    def negative_solidarity_contribution_must_be_cancelled(
+        cls,
+        member: Member,
+        products_selected_for_cancellation: set[Product],
+        cancel_association_membership: bool,
+        cache: dict,
+    ) -> bool:
+        from tapir.subscriptions.services.product_cancellation_data_builder import (
+            ProductCancellationDataBuilder,
+        )
+
+        subscribed_products = ProductCancellationDataBuilder.get_subscribed_products(
+            member=member, cache=cache
+        )
+        if products_selected_for_cancellation != subscribed_products:
+            return False
+
+        if (
+            len(products_selected_for_cancellation) == 0
+            and not cancel_association_membership
+        ):
+            return False
+
+        member_can_cancel_association_membership = legal_status_is_association(
+            cache=cache
+        ) and AssociationMembershipCancellationManager.does_member_have_a_cancellable_membership(
+            member=member,
+            reference_date=get_today(cache=cache),
+            cache=cache,
+        )
+        if (
+            member_can_cancel_association_membership
+            and not cancel_association_membership
+        ):
+            return False
+
+        return (
+            cls.get_solidarity_contributions_that_could_be_cancelled(
+                member=member, cache=cache
+            )
+            .filter(amount__lt=0)
+            .exists()
         )
 
     @classmethod

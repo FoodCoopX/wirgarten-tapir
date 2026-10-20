@@ -221,6 +221,8 @@ const SubscriptionCancellationModal: React.FC<
               cancelAssociationMembershipSelected={
                 cancelAssociationMembershipSelected
               }
+              cancelSolidarityContribution={cancelSolidarityContribution}
+              solidarityContributionData={solidarityContributionData}
               customCancellationReasons={customCancellationReason}
               goToPreviousStep={() => setCurrentStep("reasons")}
               confirmationLoading={confirmationLoading}
