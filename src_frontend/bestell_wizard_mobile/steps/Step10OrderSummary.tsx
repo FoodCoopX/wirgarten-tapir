@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Accordion, AccordionBody } from "react-bootstrap";
 import {
   AssociationMembershipType,
@@ -104,13 +104,6 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
   stepActive,
   setCurrentStep,
 }) => {
-  const [activePickupLocation, setActivePickupLocation] =
-    useState<PublicPickupLocation>();
-
-  useEffect(() => {
-    setActivePickupLocation(getRelevantPickupLocation());
-  }, [selectedPickupLocations]);
-
   function getRelevantPickupLocation(): PublicPickupLocation | undefined {
     if (waitingListEntryDetails === undefined) {
       return getFirstPickupLocationWithCapacity(
@@ -125,6 +118,8 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
 
     return waitingListEntryDetails.currentPickupLocation;
   }
+
+  const activePickupLocation = getRelevantPickupLocation();
 
   function getProductTypeTitle(productType: PublicProductType) {
     if (isProductTypeOrdered(productType, shoppingCart)) {
@@ -228,6 +223,18 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
     return selectedPickupLocations.filter(
       (pickupLocation) => pickupLocation !== activePickupLocation,
     );
+  }
+
+  function getPickupLocationWishHeading() {
+    if (activePickupLocation) {
+      return "Weitere Verteilstation-Wünsche auf Warteliste:";
+    }
+
+    if (getLocationsNotActive().length === 1) {
+      return "Verteilstation auf der Warteliste:";
+    }
+
+    return "Verteilstationen auf der Warteliste:";
   }
 
   function getEndOfTrialPeriod(productTypeId: string) {
@@ -448,9 +455,7 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                       {!productType.noDelivery &&
                         getLocationsNotActive().length > 0 && (
                           <li>
-                            <div>
-                              Weitere Verteilstation-Wünsche auf Warteliste:
-                            </div>
+                            <div>{getPickupLocationWishHeading()}</div>
                             <ul>
                               {getLocationsNotActive().map((pickupLocation) => (
                                 <li key={pickupLocation.id}>
