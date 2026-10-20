@@ -17,6 +17,7 @@ import { formatDateText } from "../../utils/formatDateText.ts";
 interface DeliveriesTableProps {
   deliveriesLoading: boolean;
   deliveries: Delivery[];
+  pickupLocationLabel: string;
   setSelectedPickupLocation: React.Dispatch<
     React.SetStateAction<PickupLocation | undefined>
   >;
@@ -72,6 +73,7 @@ function productCell(delivery: Delivery) {
 const DeliveriesTable: React.FC<DeliveriesTableProps> = ({
   deliveries,
   deliveriesLoading,
+  pickupLocationLabel,
   setSelectedPickupLocation,
   setSelectedPickupLocationOpeningTimes,
 }) => {
@@ -110,7 +112,7 @@ const DeliveriesTable: React.FC<DeliveriesTableProps> = ({
             <tr>
               <th>Datum</th>
               <th>Produkte</th>
-              <th>Abholort</th>
+              <th>{pickupLocationLabel}</th>
             </tr>
           </thead>
           <tbody>
