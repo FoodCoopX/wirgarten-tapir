@@ -444,6 +444,17 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
             self.assertStatusCode(response, status.HTTP_200_OK)
             self.assertEqual(value, response.json()["phone_number_required"])
 
+    def test_get_default_returnsLabelStudentCheckboxParameter(self):
+        user = MemberFactory.create(is_superuser=False)
+        self.client.force_login(user)
+        self._set_parameter(ParameterKeys.LABEL_STUDENT_CHECKBOX, "Custom label")
+
+        url = reverse("coop:member_personal_data")
+        response = self.client.get(f"{url}?member_id={user.id}")
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assertEqual("Custom label", response.json()["label_student_checkbox"])
+
     def _patch_phone_number(self, user, phone_number):
         self.client.force_login(user)
         return self.client.patch(

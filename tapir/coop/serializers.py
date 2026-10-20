@@ -47,6 +47,7 @@ class MemberProfilePersonalDataResponseSerializer(serializers.Serializer):
     city = serializers.CharField()
     is_student = serializers.BooleanField(required=False)
     can_edit_student = serializers.BooleanField()
+    label_student_checkbox = serializers.CharField()
     can_edit_name = serializers.BooleanField()
     country = serializers.CharField(allow_blank=True)
     can_edit_country = serializers.BooleanField()

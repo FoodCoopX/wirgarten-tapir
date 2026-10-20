@@ -12802,6 +12802,8 @@ components:
           type: boolean
         can_edit_student:
           type: boolean
+        label_student_checkbox:
+          type: string
         can_edit_name:
           type: boolean
         country:
@@ -12823,6 +12825,7 @@ components:
       - contact_email
       - country
       - first_name
+      - label_student_checkbox
       - last_name
       - member_number
       - phone_number
