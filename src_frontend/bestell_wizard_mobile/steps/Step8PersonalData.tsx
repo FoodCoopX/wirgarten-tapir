@@ -48,6 +48,8 @@ const FIELDS: (keyof PersonalData)[] = [
   "phoneNumber",
 ];
 
+const PSEUDONYM_MAX_LENGTH = 150;
+
 const PSEUDONYM_HELP_TEXT =
   "Wenn du ein Pseudonym angibst, steht es auf der Abholliste für die Brote " +
   "an deiner Verteilstation anstelle deines Namens. Überall sonst wird " +
@@ -219,6 +221,10 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
           personalData.phoneNumber.length === 0
           ? "Bitte gib eine Telefonnummer an."
           : "";
+      case "pseudonym":
+        return (personalData.pseudonym ?? "").length >= PSEUDONYM_MAX_LENGTH
+          ? `Maximal ${PSEUDONYM_MAX_LENGTH} Zeichen.`
+          : "";
       default:
         return "";
     }
@@ -259,7 +265,7 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
         ))}
         {showPseudonymField && (
           <div
-            className={"d-flex flex-row gap-2 align-items-center"}
+            className={"d-flex flex-row gap-2 align-items-start"}
             style={{ width: "264px" }}
           >
             <PersonalDataFormControl
@@ -270,14 +276,21 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
               type={getType("pseudonym")}
               showValidation={showValidation}
               isValid={isValid("pseudonym")}
+              extraText={getExtraText("pseudonym")}
               style={{ flexGrow: 1 }}
-              maxLength={150}
+              maxLength={PSEUDONYM_MAX_LENGTH}
             />
-            <TapirHelpButton
-              title={"Wofür ist das Pseudonym?"}
-              text={PSEUDONYM_HELP_TEXT}
-              width={"300px"}
-            />
+            {/* Same height as the floating label input, so that the button stays centered next to it */}
+            <div
+              className={"d-flex align-items-center"}
+              style={{ height: "calc(3.5rem + 2px)" }}
+            >
+              <TapirHelpButton
+                title={"Wofür ist das Pseudonym?"}
+                text={PSEUDONYM_HELP_TEXT}
+                width={"300px"}
+              />
+            </div>
           </div>
         )}
       </div>
