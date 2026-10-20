@@ -277,6 +277,7 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
             <TapirHelpButton
               title={"Wofür ist das Pseudonym?"}
               text={PSEUDONYM_HELP_TEXT}
+              width={"300px"}
             />
           </div>
         )}
