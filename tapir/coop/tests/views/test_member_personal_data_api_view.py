@@ -197,9 +197,7 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
         )
 
         self.assertStatusCode(response, status.HTTP_200_OK)
-        response_content = response.json()
-        self.assertTrue(response_content["order_confirmed"])
-        self.assertIsNone(response_content["error"])
+        self.assert_order_confirmed(response.json())
 
         user_after_changes = Member.objects.get(id=user_before_changes.id)
         for field_name, value in data.items():
@@ -258,9 +256,7 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
         )
 
         self.assertStatusCode(response, status.HTTP_200_OK)
-        response_content = response.json()
-        self.assertTrue(response_content["order_confirmed"])
-        self.assertIsNone(response_content["error"])
+        self.assert_order_confirmed(response.json())
 
         target.refresh_from_db()
         for field_name, value in data.items():
@@ -338,7 +334,7 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
         response = self._patch_country(admin, target, "AT")
 
         self.assertStatusCode(response, status.HTTP_200_OK)
-        self.assertTrue(response.json()["order_confirmed"])
+        self.assert_order_confirmed(response.json())
         target.refresh_from_db()
         self.assertEqual("AT", target.country)
 
@@ -518,8 +514,7 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
         )
 
         self.assertStatusCode(response, status.HTTP_200_OK)
-        response_content = response.json()
-        self.assertTrue(response_content["order_confirmed"])
+        self.assert_order_confirmed(response.json())
 
         user.refresh_from_db()
         self.assertEqual("+4930123456", user.phone_number_landline)
@@ -550,8 +545,7 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
         )
 
         self.assertStatusCode(response, status.HTTP_200_OK)
-        response_content = response.json()
-        self.assertTrue(response_content["order_confirmed"])
+        self.assert_order_confirmed(response.json())
 
         user.refresh_from_db()
         self.assertIsNone(user.phone_number_landline)
@@ -659,11 +653,7 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
         )
 
         self.assertStatusCode(response, status.HTTP_200_OK)
-        response_content = response.json()
-        self.assertTrue(response_content["order_confirmed"])
-        self.assertIsNone(
-            response_content["error"],
-        )
+        self.assert_order_confirmed(response.json())
 
         target.refresh_from_db()
         self.assertTrue(target.is_student)
@@ -674,7 +664,7 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
         self, mock_fire_action: Mock, mock_update_keycloak_user_name: Mock
     ):
         self.client.force_login(MemberFactory.create(is_superuser=True))
-        target_user = MemberFactory.create(is_superuser=False)
+        target_user = MemberFactory.create(is_superuser=False, keycloak_id="1234")
 
         static_segment = StaticSegment.objects.create(name="test_segment")
         target_recipient = StaticSegmentRecipient.objects.create(
@@ -710,9 +700,7 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
         )
 
         self.assertStatusCode(response, status.HTTP_200_OK)
-        response_content = response.json()
-        self.assertTrue(response_content["order_confirmed"])
-        self.assertIsNone(response_content["error"])
+        self.assert_order_confirmed(response.json())
 
         mock_update_keycloak_user_name.assert_called_once_with(
             user=target_user, cache=ANY
@@ -725,3 +713,39 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
         other_recipient.refresh_from_db()
         self.assertEqual("old_fn_2", other_recipient.first_name)
         self.assertEqual("old_ln_2", other_recipient.last_name)
+
+    @patch.object(KeycloakUserManager, "update_keycloak_user_name", autospec=True)
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_patch_memberHasNoKeycloakId_doesNotUpdateKeycloak(
+        self, mock_fire_action: Mock, mock_update_keycloak_user_name: Mock
+    ):
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+        target_user = MemberFactory.create(is_superuser=False, keycloak_id=None)
+
+        url = reverse("coop:member_personal_data")
+        data = {
+            "member_id": target_user.id,
+            "first_name": "test_fn",
+            "last_name": "test_ln",
+            "street": "test_street",
+            "street_2": "test_street2",
+            "phone_number": "017726254738",
+            "postcode": "12345",
+            "city": "test_city",
+            "country": "DE",
+            "is_student": False,
+        }
+        response = self.client.patch(
+            url,
+            data=data,
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assert_order_confirmed(response.json())
+
+        mock_update_keycloak_user_name.assert_not_called()
+
+        target_user.refresh_from_db()
+        self.assertEqual("test_fn", target_user.first_name)
+        self.assertEqual("test_ln", target_user.last_name)

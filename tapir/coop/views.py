@@ -623,7 +623,10 @@ class MemberPersonalDataApiView(APIView):
             StaticSegmentRecipient.objects.filter(email=member.email).update(
                 first_name=member.first_name, last_name=member.last_name
             )
-            KeycloakUserManager.update_keycloak_user_name(user=member, cache=self.cache)
+            if member.keycloak_id:
+                KeycloakUserManager.update_keycloak_user_name(
+                    user=member, cache=self.cache
+                )
 
             member.save()
 
