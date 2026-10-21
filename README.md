@@ -26,16 +26,17 @@ Don't hesitate to contact us if you are interested in using or contributing to T
 Use docker to quickly get a development server running on your machine. Run the following commands:
 
 ```sh
-docker compose up -d
-# Create tables
-docker compose exec web poetry run python manage.py migrate
-# Define the configuration parameters
-docker compose exec web poetry run python manage.py parameter_definitions    
-# Generate test data
-docker compose exec web poetry run python manage.py populate --reset_all
+make up
+# Create tables, define the configuration parameters, generate test data
+make migrate parameters populate
 ```
 
-Alternatively, run the reset script: `./scripts/reset_all_containers.sh`
+Alternatively, run the reset script: `./scripts/reset_all_containers.sh` (or `make reset`).
+
+Every repetitive task has a `make` target — run `make help` to see them. They wrap the commands in
+`docker compose exec web …` for you, which is where Django, `manage.py` and the tests have to run.
+If you prefer typing the commands yourself, look at the [Makefile](Makefile): it is short and
+deliberately readable.
 
 You should now have a local instance accessible at http://localhost:8000/. You can log in as admin with username
 `roberto.cortes@example.com` and password `roberto.cortes`.
@@ -81,7 +82,7 @@ filled with test data — a bakery with one `Brotanteil` share, four pickup
 stations, breads and members:
 
 ```sh
-docker compose exec web poetry run python manage.py populate --reset_all --org=bakery
+make populate-bakery
 ```
 
 The baking-plan solver needs `ortools`, the optional `bakery` extra in
@@ -90,16 +91,21 @@ answer 503.
 
 ## Tests
 
-Tests are run with `pytest`:
+Tests are run with `pytest`, inside the `web` container:
 
 ```shell
-docker compose exec web poetry run pytest --reuse-db -n auto
+make test-fast                      # the whole suite
+make test-app APP=subscriptions     # just one app
+make test                           # what CI runs: format check + coverage
 ```
 
-If you run into troubles while running the tests, try running them without `--reuse-db -n auto`.
+If you run into troubles, run pytest without `--reuse-db -n auto`:
+`docker compose exec web poetry run pytest`.
 
-You can run unit tests outside the Docker container with just by simple running `pytest`, assuming you have the poetry
-environment installed and activated. That should be a bit faster. Integration tests must be run from inside Docker.
+Unit and integration tests are not separated by path, so **running `pytest` on your host collects
+the integration tests too and they fail**. Run them through the targets above, or — if you work
+with the [Django outside of Docker](#django-outside-of-docker) setup — against a local server with
+`db` and `redis` running.
 
 ### Keycloak during tests
 
@@ -125,15 +131,12 @@ API Requests made from the React frontend use API clients. Here are the steps to
 
 - Annotate your API view with [Spectacular](https://github.com/tfranzel/drf-spectacular) (search for `@extend_schema(`
   for examples)
-- Generate the API schema file with `python ./manage.py spectacular --file schema.yml`
-- Generate the TypeScript API clients using [OpenAPI Generator](https://openapi-generator.tech/) with
-  `./scripts/generate_api_clients.sh`
+- Run `make schema`
 
-There are help scripts in the `/scripts` folder. You can do a full update with the following command:
-
-```bash
-docker compose exec web ./scripts/generate_api_schema.sh && docker compose exec vite ./scripts/generate_api_clients.sh
-```
+That regenerates the schema file with `manage.py spectacular --file schema.yml` and then the
+TypeScript clients with [OpenAPI Generator](https://openapi-generator.tech/). The underlying help
+scripts live in the `/scripts` folder; the client step is a no-op when `schema.yml` did not change.
+Commit `schema.yml`, `.schema.hash` and the regenerated client together with your backend change.
 
 ## Style and conventions
 

@@ -22,11 +22,11 @@ annotation. Both generated outputs are committed, so they must be regenerated in
    def get(self, request): ...
    ```
 
-2. Regenerate the schema from inside the `web` container, then the client from inside `vite`:
+2. Regenerate both artifacts with one target — the schema from inside the `web` container, then
+   the client from inside `vite`:
 
    ```bash
-   docker compose exec web ./scripts/generate_api_schema.sh \
-     && docker compose exec vite ./scripts/generate_api_clients.sh
+   make schema
    ```
 
    The schema step runs `manage.py spectacular --file schema.yml`. The client step is a no-op when
@@ -43,8 +43,7 @@ annotation. Both generated outputs are committed, so they must be regenerated in
 
 ## Notes
 
-- The containers must be running (`docker compose up`, or `./scripts/reset_all_containers.sh` for a
-  full reset).
+- The containers must be running (`make up`, or `make reset` for a full rebuild).
 - The client generator writes imports that do not resolve, which would break `npm run build`; the
   script already runs Prettier with an import organiser afterwards to clean them. Don't skip it by
   calling `openapi-generator-cli` directly.
