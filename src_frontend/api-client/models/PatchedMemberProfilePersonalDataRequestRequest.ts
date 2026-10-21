@@ -84,6 +84,12 @@ export interface PatchedMemberProfilePersonalDataRequestRequest {
    * @memberof PatchedMemberProfilePersonalDataRequestRequest
    */
   isStudent?: boolean;
+  /**
+   *
+   * @type {string}
+   * @memberof PatchedMemberProfilePersonalDataRequestRequest
+   */
+  pseudonym?: string;
 }
 
 /**
@@ -127,6 +133,7 @@ export function PatchedMemberProfilePersonalDataRequestRequestFromJSONTyped(
     city: json["city"] == null ? undefined : json["city"],
     country: json["country"] == null ? undefined : json["country"],
     isStudent: json["is_student"] == null ? undefined : json["is_student"],
+    pseudonym: json["pseudonym"] == null ? undefined : json["pseudonym"],
   };
 }
 
@@ -156,5 +163,6 @@ export function PatchedMemberProfilePersonalDataRequestRequestToJSONTyped(
     city: value["city"],
     country: value["country"],
     is_student: value["isStudent"],
+    pseudonym: value["pseudonym"],
   };
 }
