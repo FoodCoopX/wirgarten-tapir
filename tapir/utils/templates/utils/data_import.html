@@ -10,14 +10,18 @@
             <h5 class="card-header">{{ page_title }}</h5>
             <div class="card-body">
                 <p>
-                    Übernimmt den Bestand aus Excel oder CSV, in dieser Reihenfolge: <strong>Mitglieder</strong>,
-                    dann <strong>Genossenschaftsanteile</strong>, dann <strong>Verträge</strong>. Abholorte,
-                    Produkttypen, Produkte und Vertragsperioden müssen vorher in Tapir angelegt sein, die Tabelle
-                    nennt sie mit demselben Namen.
+                    Übernimmt den Bestand aus einer Excel- oder CSV-Datei für die ausgewählten Typen. Eine Datei kann
+                    mehrere Typen gleichzeitig abdecken: jede nicht-leere Zeile wird für alle ausgewählten Typen
+                    verwendet, in dieser Reihenfolge: <strong>Mitglieder</strong>, dann
+                    <strong>Genossenschaftsanteile</strong>, dann <strong>Verträge</strong>. Abholorte, Produkttypen,
+                    Produkte und Vertragsperioden müssen vorher in Tapir angelegt sein, die Tabelle nennt sie mit
+                    demselben Namen.
                 </p>
                 <p class="mb-2">
-                    Jede Datei wird zuerst nur geprüft. Gespeichert wird erst mit „Übernehmen“, und nur, wenn keine Zeile
-                    einen Fehler hat. Vorlagen mit allen Spalten (Pflichtspalten fett) und einer Beispielzeile:
+                    Ablauf: erst die Spalten der Datei den Zielfeldern zuordnen, dann wird jede Zeile geprüft, dann
+                    können nur die gültigen und ausgewählten Zeilen übernommen werden. Vorlagen mit allen Spalten
+                    (Pflichtspalten fett) und einer Beispielzeile, falls lieber mit festen Spaltennamen gearbeitet
+                    wird:
                 </p>
                 <div class="d-flex flex-wrap gap-2">
                     {% for import_type in import_types %}
@@ -31,9 +35,9 @@
             </div>
         </div>
         <div class="card m-2">
-            <h5 class="card-header">Datei prüfen</h5>
+            <h5 class="card-header">1. Datei hochladen</h5>
             <div class="card-body">
-                <form method="post" enctype="multipart/form-data">
+                <form method="post" enctype="multipart/form-data" action="{% url 'utils:data_import' %}">
                     {% csrf_token %}
                     {% bootstrap_form form %}
                     <div class="d-flex justify-content-end">
@@ -45,80 +49,196 @@
                 </form>
             </div>
         </div>
-        {% if result %}
+
+        {% if stage == "mapping" %}
             <div class="card m-2">
-                <h5 class="card-header">Probelauf: {{ result.import_type.name }} aus {{ filename }}</h5>
+                <h5 class="card-header">
+                    2. Spalten zuordnen: {{ filename }} ({{ selected_type_names|join:", " }})
+                </h5>
                 <div class="card-body">
-                    {% if result.missing_columns %}
+                    {% if mapping_errors %}
                         <div class="alert alert-danger">
-                            Es fehlen Pflichtspalten: <strong>{{ result.missing_columns|join:", " }}</strong>.
-                            Die Spaltennamen müssen genau so heißen wie in der Vorlage.
-                        </div>
-                    {% else %}
-                        <div class="d-flex flex-wrap gap-2 mb-3">
-                            <span class="badge text-bg-success fs-6">{{ result.counts.created }} werden angelegt</span>
-                            <span class="badge text-bg-primary fs-6">{{ result.counts.updated }} werden aktualisiert</span>
-                            <span class="badge text-bg-light border fs-6">{{ result.counts.skipped }} unverändert</span>
-                            <span class="badge text-bg-danger fs-6">{{ result.counts.error }} mit Fehler</span>
+                            {% for error in mapping_errors %}<div>{{ error }}</div>{% endfor %}
                         </div>
                     {% endif %}
-                    {% if result.unknown_columns %}
-                        <div class="alert alert-warning">
-                            Diese Spalten kennt die Übernahme nicht, sie werden ignoriert:
-                            {{ result.unknown_columns|join:", " }}
-                        </div>
-                    {% endif %}
-                    {% if result.rows %}
-                        <div class="table-responsive" style="max-height: 60vh">
+                    <p>
+                        Jede Spalte der Datei kann einem Zielfeld zugeordnet werden, oder „Nicht importieren“.
+                        Felder mit * sind für die ausgewählten Typen Pflicht und müssen alle zugeordnet sein, bevor
+                        geprüft werden kann. Ein Ziel kann höchstens einer Spalte zugeordnet werden.
+                    </p>
+                    <form method="post" action="{% url 'utils:data_import_mapping' %}" id="mapping-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="token" value="{{ token }}">
+                        <div class="table-responsive" style="max-height: 70vh">
                             <table class="table table-sm align-middle">
                                 <thead class="sticky-top bg-white">
                                     <tr>
-                                        <th>Zeile</th>
-                                        <th>Datensatz</th>
-                                        <th>Ergebnis</th>
+                                        {% for column in columns %}
+                                            <th style="min-width: 220px">
+                                                <div class="mb-1 text-truncate" title="{{ column.header }}">
+                                                    {{ column.header }}
+                                                </div>
+                                                <select name="col_{{ column.index }}"
+                                                        class="form-select form-select-sm mapping-select"
+                                                        data-column-index="{{ column.index }}">
+                                                    <option value="">Nicht importieren</option>
+                                                    {% for field in semantic_fields %}
+                                                        <option value="{{ field.key }}"
+                                                                data-required="{{ field.required|yesno:"1," }}"
+                                                                {% if column.selected_key == field.key %}selected{% endif %}>
+                                                            {{ field.label }}{% if field.required %} *{% endif %}
+                                                        </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </th>
+                                        {% endfor %}
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for row in result.rows %}
-                                        <tr {% if row.status == "error" %}class="table-danger"{% endif %}>
+                                    {% for row in preview_rows %}
+                                        <tr>
+                                            {% for value in row %}
+                                                <td>{{ value }}</td>
+                                            {% endfor %}
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% if total_rows > preview_rows|length %}
+                            <p class="text-muted">
+                                Zeigt die ersten {{ preview_rows|length }} von {{ total_rows }} Zeilen.
+                            </p>
+                        {% endif %}
+                        <div class="d-flex justify-content-end mt-3">
+                            <button type="submit" class="btn tapir-btn btn-primary" id="mapping-submit">
+                                <span class="material-icons">fact_check</span>
+                                Prüfen
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <script>
+                (function () {
+                    const form = document.getElementById("mapping-form");
+                    const selects = Array.from(form.querySelectorAll(".mapping-select"));
+                    const submitButton = document.getElementById("mapping-submit");
+
+                    function refresh() {
+                        const chosen = new Set(
+                            selects.map((select) => select.value).filter((value) => value !== "")
+                        );
+                        const assigned = new Set();
+                        selects.forEach((select) => {
+                            if (select.value !== "") {
+                                assigned.add(select.value);
+                            }
+                        });
+
+                        selects.forEach((select) => {
+                            Array.from(select.options).forEach((option) => {
+                                if (option.value === "") {
+                                    option.disabled = false;
+                                    return;
+                                }
+                                option.disabled = chosen.has(option.value) && option.value !== select.value;
+                            });
+                        });
+
+                        const requiredKeys = new Set();
+                        selects.forEach((select) => {
+                            Array.from(select.options).forEach((option) => {
+                                if (option.dataset.required === "1") {
+                                    requiredKeys.add(option.value);
+                                }
+                            });
+                        });
+                        let allRequiredMapped = true;
+                        requiredKeys.forEach((key) => {
+                            if (!assigned.has(key)) {
+                                allRequiredMapped = false;
+                            }
+                        });
+                        submitButton.disabled = !allRequiredMapped;
+                    }
+
+                    selects.forEach((select) => select.addEventListener("change", refresh));
+                    refresh();
+                })();
+            </script>
+        {% endif %}
+
+        {% if stage == "review" %}
+            <div class="card m-2">
+                <h5 class="card-header">
+                    3. Prüfung: {{ filename }} ({{ selected_type_names|join:", " }})
+                </h5>
+                <div class="card-body">
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <span class="badge text-bg-success fs-6">{{ valid_count }} gültig</span>
+                        <span class="badge text-bg-danger fs-6">{{ invalid_count }} mit Fehler</span>
+                    </div>
+                    <p>
+                        Grün: Zelle gültig. Rot: Zelle fehlt (Pflichtfeld) oder hat ein ungültiges Format, oder die
+                        Zeile hat einen Fehler, der keiner einzelnen Zelle zuzuordnen ist (siehe Meldung). Orange:
+                        optionales Feld in dieser Zeile leer, obwohl die Spalte sonst Werte hat. Grau: nicht
+                        zugeordnet oder optionales Feld, dessen Spalte durchgehend leer ist. Nur ausgewählte,
+                        gültige Zeilen werden übernommen; schlägt eine ausgewählte Zeile beim Übernehmen
+                        unerwartet fehl, wird alles zurückgerollt.
+                    </p>
+                    <form method="post" action="{% url 'utils:data_import_apply' %}" id="apply-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="token" value="{{ token }}">
+                        <div class="table-responsive" style="max-height: 65vh">
+                            <table class="table table-sm align-middle">
+                                <thead class="sticky-top bg-white">
+                                    <tr>
+                                        <th></th>
+                                        <th>Zeile</th>
+                                        {% for header in headers %}<th>{{ header }}</th>{% endfor %}
+                                        <th>Meldung</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for row in review_rows %}
+                                        <tr {% if not row.valid %}class="table-danger"{% endif %}>
+                                            <td>
+                                                <input type="checkbox" class="form-check-input" name="rows"
+                                                       value="{{ row.index }}"
+                                                       {% if row.valid %}checked{% else %}disabled{% endif %}>
+                                            </td>
                                             <td>{{ row.line }}</td>
-                                            <td>{{ row.label }}</td>
+                                            {% for cell in row.cells %}
+                                                <td class="cell-{{ cell.state }}">{{ cell.value }}</td>
+                                            {% endfor %}
                                             <td style="white-space: normal">
-                                                {% if row.status == "created" %}
-                                                    wird angelegt
-                                                {% elif row.status == "updated" %}
-                                                    wird aktualisiert
-                                                {% elif row.status == "skipped" %}
-                                                    unverändert
-                                                {% else %}
-                                                    Fehler: {{ row.message }}
-                                                {% endif %}
+                                                {% for message in row.messages %}<div>{{ message }}</div>{% endfor %}
                                             </td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
                         </div>
-                    {% endif %}
-                    {% if result.can_be_applied %}
-                        <form method="post" action="{% url 'utils:data_import_apply' %}">
-                            {% csrf_token %}
-                            <input type="hidden" name="token" value="{{ token }}">
-                            <div class="d-flex justify-content-end mt-3">
-                                <button type="submit" class="btn tapir-btn btn-primary">
-                                    <span class="material-icons">save</span>
-                                    Übernehmen
-                                </button>
-                            </div>
-                        </form>
-                    {% else %}
-                        <p class="mt-3 mb-0">
-                            Bitte die Fehler in der Datei beheben und sie erneut prüfen. Es wurde nichts gespeichert.
-                        </p>
-                    {% endif %}
+                        <div class="d-flex justify-content-end mt-3">
+                            <button type="submit"
+                                    class="btn tapir-btn btn-primary"
+                                    {% if not valid_count %}disabled{% endif %}>
+                                <span class="material-icons">save</span>
+                                Übernehmen
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
+            <style>
+                .cell-valid { background-color: #d1e7dd; }
+                .cell-invalid { background-color: #f8d7da; }
+                .cell-warn { background-color: #fff3cd; }
+                .cell-neutral { background-color: transparent; }
+            </style>
         {% endif %}
+
         <div class="card m-2">
             <h5 class="card-header">Logins für übernommene Mitglieder</h5>
             <div class="card-body">

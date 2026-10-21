@@ -7,6 +7,11 @@ app_name = "utils"
 urlpatterns = [
     path("data_import", views.DataImportView.as_view(), name="data_import"),
     path(
+        "data_import/mapping",
+        views.DataImportMappingView.as_view(),
+        name="data_import_mapping",
+    ),
+    path(
         "data_import/apply",
         views.DataImportApplyView.as_view(),
         name="data_import_apply",
