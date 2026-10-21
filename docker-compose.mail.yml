@@ -1,0 +1,113 @@
+include:
+  - docker-compose.yml
+
+x-mail-environment: &mail_environment
+  KEYCLOAK_SKIP_VERIFICATION_EMAIL: False
+  EMAIL_ENV: prod
+  EMAIL_HOST: list.example.com
+  EMAIL_PORT: 1025
+  EMAIL_USE_SSL: False
+  EMAIL_USE_TLS: False
+  EMAIL_HOST_SENDER: tapir@example.com
+  EMAIL_HOST_SENDER_NAME: Test Tapir
+  EMAIL_HOST_USER: test
+  EMAIL_HOST_PASSWORD: test
+  EMAIL_BOUNCE_ADDRESS: tapir@example.com
+  MAILING_LISTS_ENABLED: True
+  MAILMAN_URL: http://mailman-core:8001/3.1
+
+services:
+  web:
+    environment: *mail_environment
+
+  celery:
+    environment: *mail_environment
+
+  mailman-core:
+    image: maxking/mailman-core:rolling
+    restart: unless-stopped
+    volumes:
+      - mailman-core:/opt/mailman
+    stop_grace_period: 30s
+    depends_on:
+      mailman-db:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    environment:
+      - DATABASE_URL=postgresql://mailman:mailmanpass@mailman-db/mailmandb
+      - DATABASE_TYPE=postgres
+      - DATABASE_CLASS=mailman.database.postgresql.PostgreSQLDatabase
+      - HYPERKITTY_API_KEY=someapikey
+      # Route Mailman Core's outgoing mail through Mailpit instead of a real MTA
+      - SMTP_HOST=mailpit
+      - SMTP_PORT=1025
+    ports:
+      - "8001:8001"  # API
+      - "8024:8024"  # LMTP - incoming emails
+
+  mailman-web:
+    image: maxking/mailman-web:rolling
+    restart: unless-stopped
+    depends_on:
+      mailman-db:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    volumes:
+      - mailman-web:/opt/mailman-web-data
+    environment:
+      - DATABASE_TYPE=postgres
+      - DATABASE_URL=postgresql://mailman:mailmanpass@mailman-db/mailmandb
+      - HYPERKITTY_API_KEY=someapikey
+      # Route Mailman Web's outgoing mail (password resets, notifications, etc.) through Mailpit
+      - SMTP_HOST=mailpit
+      - SMTP_PORT=1025
+      - SERVE_FROM_DOMAIN=tapir.example.com
+      - MAILMAN_ADMIN_USER=admin
+      - MAILMAN_ADMIN_EMAIL=admin@example.com
+      - SECRET_KEY=some_secret_key
+      - UWSGI_STATIC_MAP=/static=/opt/mailman-web-data/static
+    ports:
+      - "8002:8000"  # HTTP
+      - "8082:8082"  # uwsgi
+
+  mailman-db:
+    environment:
+      - POSTGRES_DB=mailmandb
+      - POSTGRES_USER=mailman
+      - POSTGRES_PASSWORD=mailmanpass
+    image: postgres:14
+    volumes:
+      - mailman-db:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready --dbname mailmandb --username mailman" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Local test mail server: captures all outgoing mail from Mailman
+  # instead of delivering it, so nothing escapes to real inboxes.
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    environment:
+      - MP_DATABASE=/db/mailpit.db
+      - MP_SMTP_AUTH_ALLOW_INSECURE=true
+      - MP_SMTP_AUTH_ACCEPT_ANY=true
+    volumes:
+      - mailpit-db:/db
+    ports:
+      - "8025:8025"  # Web UI - view captured messages at http://localhost:8025
+      - "1025:1025"  # SMTP server - Mailman delivers here
+    networks:
+      default:
+        aliases:
+          - example.com
+          - list.example.com
+
+volumes:
+  mailman-db:
+  mailman-core:
+  mailman-web:
+  mailpit-db:
