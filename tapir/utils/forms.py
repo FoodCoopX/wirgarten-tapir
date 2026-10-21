@@ -38,7 +38,16 @@ class ResetTestDataForm(Form):
 
 
 class DataImportForm(Form):
-    import_type = forms.ChoiceField(label=_("Was wird übernommen?"))
+    import_types = forms.MultipleChoiceField(
+        label=_("Was wird übernommen?"),
+        required=False,
+        widget=forms.CheckboxSelectMultiple,
+        help_text=_(
+            "Eine Datei kann mehrere Typen gleichzeitig abdecken: jede nicht-leere Zeile wird "
+            "dann für alle ausgewählten Typen verwendet, in dieser Reihenfolge: Mitglieder, "
+            "Genossenschaftsanteile, Verträge."
+        ),
+    )
     file = forms.FileField(
         label=_("Datei"),
         help_text=_(
@@ -54,6 +63,12 @@ class DataImportForm(Form):
         ),
     )
 
-    def __init__(self, *args, import_types=(), **kwargs):
+    def __init__(self, *args, import_type_choices=(), **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["import_type"].choices = import_types
+        self.fields["import_types"].choices = import_type_choices
+
+    def clean_import_types(self):
+        import_types = self.cleaned_data["import_types"]
+        if not import_types:
+            raise forms.ValidationError(_("Mindestens ein Typ muss ausgewählt werden."))
+        return import_types
