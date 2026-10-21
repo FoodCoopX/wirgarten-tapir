@@ -332,6 +332,9 @@ class GetCoopShareTransactionsApiView(APIView):
             "url_of_bestell_wizard": reverse(
                 "bestell_wizard:bestell_wizard_coop_shares", args=[member_id]
             ),
+            "contact_email": get_parameter_value(
+                ParameterKeys.SITE_EMAIL, cache=self.cache
+            ),
         }
 
         return Response(GetCoopShareTransactionsResponseSerializer(data).data)

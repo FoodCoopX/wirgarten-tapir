@@ -36,6 +36,12 @@ export interface GetCoopShareTransactionsResponse {
    * @memberof GetCoopShareTransactionsResponse
    */
   urlOfBestellWizard: string;
+  /**
+   *
+   * @type {string}
+   * @memberof GetCoopShareTransactionsResponse
+   */
+  contactEmail: string;
 }
 
 /**
@@ -50,6 +56,8 @@ export function instanceOfGetCoopShareTransactionsResponse(
     !("urlOfBestellWizard" in value) ||
     value["urlOfBestellWizard"] === undefined
   )
+    return false;
+  if (!("contactEmail" in value) || value["contactEmail"] === undefined)
     return false;
   return true;
 }
@@ -72,6 +80,7 @@ export function GetCoopShareTransactionsResponseFromJSONTyped(
       CoopShareTransactionFromJSON,
     ),
     urlOfBestellWizard: json["url_of_bestell_wizard"],
+    contactEmail: json["contact_email"],
   };
 }
 
@@ -94,5 +103,6 @@ export function GetCoopShareTransactionsResponseToJSONTyped(
       CoopShareTransactionToJSON,
     ),
     url_of_bestell_wizard: value["urlOfBestellWizard"],
+    contact_email: value["contactEmail"],
   };
 }

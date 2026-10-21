@@ -79,6 +79,7 @@ class AdminSetAssociationMembershipRequestSerializer(Serializer):
 class MemberAssociationMembershipDetailsSerializer(Serializer):
     memberships = AssociationMembershipSerializer(many=True)
     order_wizard_url = CharField(allow_null=True)
+    contact_email = serializers.EmailField()
 
 
 class ExistingMemberUpdatesAssociationMembershipRequest(Serializer):
