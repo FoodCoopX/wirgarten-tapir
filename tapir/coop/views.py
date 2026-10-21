@@ -523,7 +523,6 @@ class MemberPersonalDataApiView(APIView):
         return user.has_perm(Permission.Coop.MANAGE)
 
     def is_pseudonym_enabled(self):
-        # The pseudonym is only used on the bakery pickup lists.
         return get_parameter_value(ParameterKeys.BAKERY_ENABLED, cache=self.cache)
 
     def get_formatted_member_number(self, member: Member) -> str:
