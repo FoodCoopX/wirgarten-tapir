@@ -47,6 +47,7 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
   const [isStudent, setIsStudent] = useState<boolean>();
   const [studentStatusEnabled, setStudentStatusEnabled] = useState(false);
   const [canEditStudent, setCanEditStudent] = useState(false);
+  const [labelStudentCheckbox, setLabelStudentCheckbox] = useState("");
   const [canEditName, setCanEditName] = useState(false);
   const [contactEmail, setContactEmail] = useState("");
   const [memberNumber, setMemberNumber] = useState("");
@@ -125,6 +126,7 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
           setIsStudent(response.isStudent);
           setStudentStatusEnabled(true);
           setCanEditStudent(response.canEditStudent);
+          setLabelStudentCheckbox(response.labelStudentCheckbox);
         }
         setCanEditName(response.canEditName);
         setContactEmail(response.contactEmail);
@@ -405,9 +407,7 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
                   onChange={(e) => setIsStudent(e.target.checked)}
                   id={"is_student"}
                   isValid={showValidation}
-                  label={
-                    "Ich bin Student*in und kann keine Genossenschaftsanteile zeichnen"
-                  }
+                  label={labelStudentCheckbox}
                   disabled={!canEditStudent}
                 />
               </Form.Group>

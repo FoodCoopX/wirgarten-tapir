@@ -24,7 +24,7 @@ class TestGetPriceOfSubscriptionsDeliveredInWeek(TapirIntegrationTest):
         "get_subscriptions_that_get_delivered_in_week",
         autospec=True,
     )
-    def test_getPriceOfSubscriptionsDeliveredInWeek_default_returnsSumOfPriceTimesQuantity(
+    def test_getPriceOfSubscriptionsDeliveredInWeek_default_returnsSumOfPricesIgnoringQuantity(
         self,
         mock_get_subscriptions_that_get_delivered_in_week: Mock,
         mock_get_price_of_single_delivery_for_subscription: Mock,
@@ -45,7 +45,8 @@ class TestGetPriceOfSubscriptionsDeliveredInWeek(TapirIntegrationTest):
             cache={},
         )
 
-        self.assertEqual(2 * 15 + 4 * 26, result)
+        # The quantity is already taken into account in get_price_of_single_delivery_for_subscription
+        self.assertEqual(15 + 26, result)
 
         mock_get_subscriptions_that_get_delivered_in_week.assert_called_once_with(
             member, reference_date, cache=cache
@@ -98,7 +99,7 @@ class TestGetPriceOfSubscriptionsDeliveredInWeek(TapirIntegrationTest):
             cache=cache,
         )
 
-        self.assertEqual(4 * 26, result)
+        self.assertEqual(26, result)
 
         mock_get_subscriptions_that_get_delivered_in_week.assert_called_once_with(
             member, reference_date, cache=cache
