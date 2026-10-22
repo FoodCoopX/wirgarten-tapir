@@ -80,6 +80,12 @@ export interface MemberProfilePersonalDataResponse {
   canEditStudent: boolean;
   /**
    *
+   * @type {string}
+   * @memberof MemberProfilePersonalDataResponse
+   */
+  labelStudentCheckbox: string;
+  /**
+   *
    * @type {boolean}
    * @memberof MemberProfilePersonalDataResponse
    */
@@ -144,6 +150,11 @@ export function instanceOfMemberProfilePersonalDataResponse(
   if (!("city" in value) || value["city"] === undefined) return false;
   if (!("canEditStudent" in value) || value["canEditStudent"] === undefined)
     return false;
+  if (
+    !("labelStudentCheckbox" in value) ||
+    value["labelStudentCheckbox"] === undefined
+  )
+    return false;
   if (!("canEditName" in value) || value["canEditName"] === undefined)
     return false;
   if (!("country" in value) || value["country"] === undefined) return false;
@@ -191,6 +202,7 @@ export function MemberProfilePersonalDataResponseFromJSONTyped(
     city: json["city"],
     isStudent: json["is_student"] == null ? undefined : json["is_student"],
     canEditStudent: json["can_edit_student"],
+    labelStudentCheckbox: json["label_student_checkbox"],
     canEditName: json["can_edit_name"],
     country: json["country"],
     canEditCountry: json["can_edit_country"],
@@ -227,6 +239,7 @@ export function MemberProfilePersonalDataResponseToJSONTyped(
     city: value["city"],
     is_student: value["isStudent"],
     can_edit_student: value["canEditStudent"],
+    label_student_checkbox: value["labelStudentCheckbox"],
     can_edit_name: value["canEditName"],
     country: value["country"],
     can_edit_country: value["canEditCountry"],
