@@ -183,7 +183,7 @@ const MailingListHeldMessagesModal: React.FC<
           }
           onHide();
         }}
-        size={"lg"}
+        size={"xl"}
       >
         <Modal.Header closeButton={true}>
           <span className={"d-flex gap-2 align-items-center"}>
