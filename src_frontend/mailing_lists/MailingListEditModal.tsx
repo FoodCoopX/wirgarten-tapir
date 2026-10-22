@@ -7,6 +7,7 @@ import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
 import { getCsrfToken } from "../utils/getCsrfToken.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
+import { MODERATED_CHECKBOX_LABEL } from "./MODERATED_CHECKBOX_LABEL.tsx";
 
 interface MailingListEditModalProps {
   show: boolean;
@@ -112,30 +113,7 @@ const MailingListEditModal: React.FC<MailingListEditModalProps> = ({
           </Form.Group>
           <Form.Group controlId={"moderated"} className={"mt-2"}>
             <Form.Check
-              label={
-                <span className={"d-flex gap-2"}>
-                  <span>
-                    E-Mails von Mitgliedern müssen von Admins freigegeben
-                    werden.
-                  </span>
-                  <TapirHelpButton
-                    text={
-                      <>
-                        <p>
-                          Wenn aktiviert, werden E-Mails von Empfänger:innen der
-                          Liste zurückgehalten und erst an alle weitergeleitet,
-                          nachdem Admins sie freigegeben haben.
-                        </p>
-                        <p className={"mb-0"}>
-                          Wenn deaktiviert, werden E-Mails von Empfänger:innen
-                          sofort an alle weitergeleitet.
-                        </p>
-                      </>
-                    }
-                    buttonSize={"sm"}
-                  />
-                </span>
-              }
+              label={MODERATED_CHECKBOX_LABEL}
               checked={moderated}
               onChange={(event) => setModerated(event.target.checked)}
             />
