@@ -169,11 +169,14 @@ class MailingListEditView(APIView):
             description=serializer.validated_data["description"],
             moderated=serializer.validated_data["moderated"],
         )
+        updated_list = MailingListProvider.get_list_by_name_or_404(
+            list_name=serializer.validated_data["name"], cache=cache
+        )
 
         return Response(
             MailingListAdminSerializer(
                 MailingListSerializerDataBuilder.build_admin_serializer_data(
-                    mailing_list
+                    updated_list
                 )
             ).data
         )

@@ -10,10 +10,11 @@ class MailingListSerializerDataBuilder:
     def build_serializer_data(cls, mailing_list: MailingList):
         return {
             "name": mailing_list.fqdn_listname,
-            "nb_recipients": len(mailing_list.members) + len(mailing_list.requests),
-            "advertised": mailing_list.settings["advertised"],
+            "nb_recipients": mailing_list.member_count
+            + mailing_list.get_requests_count(),
+            "advertised": mailing_list.advertised,
             "moderated": MailingListSettingsUpdater.is_moderated(mailing_list),
-            "description": mailing_list.settings["description"],
+            "description": mailing_list.description,
         }
 
     @classmethod

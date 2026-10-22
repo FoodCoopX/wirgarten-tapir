@@ -32,9 +32,13 @@ class MockMailingListData:
 
 
 class MockListSettings:
-    def __init__(self):
+    def __init__(self, mock_list: Mock):
         self._settings = {}
-        self.save = Mock()
+        self.save = Mock(side_effect=lambda: self.apply_to_list(mock_list))
+
+    def apply_to_list(self, mock_list: Mock):
+        mock_list.advertised = self._settings.get("advertised")
+        mock_list.description = self._settings.get("description")
 
     def __getitem__(self, key):
         return self._settings.get(key)
@@ -90,15 +94,18 @@ class MailmanTestHelper:
             Mock(**vars(held_message))
             for held_message in mailing_list_data.held_messages
         ]
+        mock_list.member_count = len(mock_list.members)
+        mock_list.get_requests_count.return_value = len(mock_list.requests)
         mock_list.get_held_count.return_value = len(mock_list.held)
         mock_list.moderate_message.side_effect = (
             lambda request_id, action: cls.moderate_mock_message(mock_list, request_id)
         )
-        mock_list.settings = MockListSettings()
+        mock_list.settings = MockListSettings(mock_list)
         mock_list.settings["advertised"] = mailing_list_data.advertised
         mock_list.settings["description"] = mailing_list_data.description
         mock_list.settings["default_member_action"] = (
             "hold" if mailing_list_data.moderated else "defer"
         )
+        mock_list.settings.apply_to_list(mock_list)
 
         return mock_list
