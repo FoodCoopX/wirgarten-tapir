@@ -49,7 +49,10 @@ const MailingListHeldMessageItem: React.FC<MailingListHeldMessageItemProps> = ({
     <ListGroup.Item>
       <div className={"d-flex justify-content-between gap-2"}>
         <div>
-          <h6 className={"mb-1"}>{heldMessage.subject || "(Kein Betreff)"}</h6>
+          <h6 className={"mb-1"}>
+            <span className={"text-muted fw-normal"}>Betreff:</span>{" "}
+            {heldMessage.subject || "(Kein Betreff)"}
+          </h6>
           <div>
             Von {buildSender()}, am{" "}
             {formatDateNumeric(heldMessage.holdDate, true)}
