@@ -98,8 +98,8 @@ const MailingListHeldMessagesModal: React.FC<
         },
       })
       .then(() => {
-        setHeldMessages(
-          heldMessages.filter((message) => message !== heldMessage),
+        setHeldMessages((previousHeldMessages) =>
+          previousHeldMessages.filter((message) => message !== heldMessage),
         );
         setPendingConfirmation(undefined);
         setChangesApplied(true);
