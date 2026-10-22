@@ -23,6 +23,7 @@ class TestMailingListCreateView(TapirIntegrationTest):
             "name": "test_name",
             "description": "test_description",
             "advertised": False,
+            "moderated": False,
         }
         response = self.client.post(reverse("core:mailing_list_create"), data=post_data)
 
@@ -38,6 +39,7 @@ class TestMailingListCreateView(TapirIntegrationTest):
             "name": "test_name",
             "description": "test_description",
             "advertised": False,
+            "moderated": False,
         }
         response = self.client.post(reverse("core:mailing_list_create"), data=post_data)
 
@@ -54,6 +56,7 @@ class TestMailingListCreateView(TapirIntegrationTest):
             "name": "test_name",
             "description": "test_description",
             "advertised": False,
+            "moderated": False,
         }
         response = self.client.post(reverse("core:mailing_list_create"), data=post_data)
 
@@ -69,6 +72,7 @@ class TestMailingListCreateView(TapirIntegrationTest):
                 "nb_recipients": 0,
                 "description": "test_description",
                 "advertised": False,
+                "moderated": False,
             },
             response_content,
         )
@@ -83,6 +87,7 @@ class TestMailingListCreateView(TapirIntegrationTest):
             "name": "prefix",
             "description": "test_description",
             "advertised": False,
+            "moderated": False,
         }
         response = self.client.post(reverse("core:mailing_list_create"), data=post_data)
 
@@ -98,6 +103,26 @@ class TestMailingListCreateView(TapirIntegrationTest):
                 "nb_recipients": 0,
                 "description": "test_description",
                 "advertised": False,
+                "moderated": False,
             },
             response_content,
         )
+
+    def test_post_moderated_setsDefaultMemberActionToHold(self):
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+
+        domain = MailmanTestHelper.mock_domain(test=self, mailing_list_datas=[])
+
+        post_data = {
+            "name": "test_name",
+            "description": "test_description",
+            "advertised": False,
+            "moderated": True,
+        }
+        response = self.client.post(reverse("core:mailing_list_create"), data=post_data)
+
+        self.assertStatusCode(
+            response=response, expected_status_code=status.HTTP_200_OK
+        )
+        self.assertEqual("hold", domain.lists[0].settings["default_member_action"])
+        self.assertTrue(response.json()["moderated"])

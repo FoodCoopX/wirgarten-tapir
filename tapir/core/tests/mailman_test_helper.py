@@ -14,6 +14,7 @@ class MockMailingListData:
     confirmed_recipients: list[str] = field(default_factory=list)
     unconfirmed_recipients: list[str] = field(default_factory=list)
     advertised: bool = field(default=False)
+    moderated: bool = field(default=False)
     description: str = field(default="")
 
 
@@ -46,11 +47,13 @@ class MailmanTestHelper:
         domain.lists = [
             cls.build_mock_list(mailing_list) for mailing_list in mailing_list_datas
         ]
-        domain.create_list.side_effect = lambda list_name: cls.build_mock_list(
-            MockMailingListData(
-                name=list_name, unconfirmed_recipients=[], confirmed_recipients=[]
-            )
-        )
+
+        def create_list(list_name):
+            created_list = cls.build_mock_list(MockMailingListData(name=list_name))
+            domain.lists.append(created_list)
+            return created_list
+
+        domain.create_list.side_effect = create_list
         return domain
 
     @classmethod
@@ -68,5 +71,8 @@ class MailmanTestHelper:
         mock_list.settings = MockListSettings()
         mock_list.settings["advertised"] = mailing_list_data.advertised
         mock_list.settings["description"] = mailing_list_data.description
+        mock_list.settings["default_member_action"] = (
+            "hold" if mailing_list_data.moderated else "defer"
+        )
 
         return mock_list

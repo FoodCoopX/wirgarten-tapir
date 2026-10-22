@@ -12197,11 +12197,14 @@ components:
           type: integer
         advertised:
           type: boolean
+        moderated:
+          type: boolean
         description:
           type: string
       required:
       - advertised
       - description
+      - moderated
       - name
       - nb_recipients
     MailingListCreateRequest:
@@ -12212,12 +12215,15 @@ components:
           minLength: 1
         advertised:
           type: boolean
+        moderated:
+          type: boolean
         description:
           type: string
           minLength: 1
       required:
       - advertised
       - description
+      - moderated
       - name
     MailingListRecipient:
       type: object

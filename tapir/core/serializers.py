@@ -30,12 +30,14 @@ class MailingListSerializer(serializers.Serializer):
     name = serializers.CharField()
     nb_recipients = serializers.IntegerField()
     advertised = serializers.BooleanField()
+    moderated = serializers.BooleanField()
     description = serializers.CharField()
 
 
 class MailingListCreateSerializer(serializers.Serializer):
     name = serializers.CharField()
     advertised = serializers.BooleanField()
+    moderated = serializers.BooleanField()
     description = serializers.CharField()
 
 

@@ -45,6 +45,7 @@ class TestMailingListListView(TapirIntegrationTest):
                     unconfirmed_recipients=["4", "5"],
                     description="description A",
                     advertised=True,
+                    moderated=True,
                 ),
                 MockMailingListData(
                     name="list_B",
@@ -69,12 +70,14 @@ class TestMailingListListView(TapirIntegrationTest):
                     "nb_recipients": 5,
                     "description": "description A",
                     "advertised": True,
+                    "moderated": True,
                 },
                 {
                     "name": "list_B@example.com",
                     "nb_recipients": 2,
                     "description": "",
                     "advertised": False,
+                    "moderated": False,
                 },
             ],
             response_content,

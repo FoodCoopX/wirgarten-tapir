@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Form, Modal } from "react-bootstrap";
 import { CoreApi } from "../api-client";
 import TapirButton from "../components/TapirButton.tsx";
+import TapirHelpButton from "../components/TapirHelpButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
 import { getCsrfToken } from "../utils/getCsrfToken.ts";
@@ -24,6 +25,7 @@ const MailingListCreateModal: React.FC<MailingListCreateModalProps> = ({
   const [listName, setListName] = useState("");
   const [saving, setSaving] = useState(false);
   const [advertised, setAdvertised] = useState(false);
+  const [moderated, setModerated] = useState(false);
   const [description, setDescription] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -32,6 +34,7 @@ const MailingListCreateModal: React.FC<MailingListCreateModalProps> = ({
       setListName("");
       setDescription("");
       setAdvertised(false);
+      setModerated(false);
     }
   }, [show]);
 
@@ -51,6 +54,7 @@ const MailingListCreateModal: React.FC<MailingListCreateModalProps> = ({
         mailingListCreateRequest: {
           name: listName,
           advertised: advertised,
+          moderated: moderated,
           description: description,
         },
       })
@@ -117,6 +121,36 @@ const MailingListCreateModal: React.FC<MailingListCreateModalProps> = ({
               label={"Mitglieder können sich selber ein- und austragen."}
               checked={advertised}
               onChange={(event) => setAdvertised(event.target.checked)}
+            />
+          </Form.Group>
+          <Form.Group controlId={"moderated"} className={"mt-2"}>
+            <Form.Check
+              label={
+                <span className={"d-flex gap-2"}>
+                  <span>
+                    E-Mails von Mitgliedern müssen von Admins freigegeben
+                    werden.
+                  </span>
+                  <TapirHelpButton
+                    text={
+                      <>
+                        <p>
+                          Wenn aktiviert, werden E-Mails von Empfänger:innen der
+                          Liste zurückgehalten und erst an alle weitergeleitet,
+                          nachdem Admins sie freigegeben haben.
+                        </p>
+                        <p className={"mb-0"}>
+                          Wenn deaktiviert, werden E-Mails von Empfänger:innen
+                          sofort an alle weitergeleitet.
+                        </p>
+                      </>
+                    }
+                    buttonSize={"sm"}
+                  />
+                </span>
+              }
+              checked={moderated}
+              onChange={(event) => setModerated(event.target.checked)}
             />
           </Form.Group>
         </Form>

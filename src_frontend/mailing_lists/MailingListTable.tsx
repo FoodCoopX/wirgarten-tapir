@@ -69,6 +69,7 @@ const MailingListTable: React.FC<MailingListsTableProps> = ({
             <th>Name</th>
             <th>Beschreibung</th>
             <th>Mitglieder können sich selber ein- und austragen</th>
+            <th>Moderiert</th>
             <th>Empfänger</th>
             <th></th>
           </tr>
@@ -83,6 +84,7 @@ const MailingListTable: React.FC<MailingListsTableProps> = ({
                 </div>
               </td>
               <td>{mailingList.advertised ? "Ja" : "Nein"}</td>
+              <td>{mailingList.moderated ? "Ja" : "Nein"}</td>
               <td>{mailingList.nbRecipients}</td>
 
               <td>

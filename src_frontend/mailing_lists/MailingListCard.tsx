@@ -73,6 +73,13 @@ const MailingListCard: React.FC = () => {
             Mitglieder die Liste.
           </li>
           <li>
+            <strong>Moderiert</strong>: Bei <em>Ja</em> werden E-Mails von
+            Empfänger:innen der Liste zurückgehalten und erst an alle
+            weitergeleitet, nachdem Admins sie freigegeben haben. Bei{" "}
+            <em>Nein</em> werden E-Mails von Empfänger:innen sofort an alle
+            weitergeleitet.
+          </li>
+          <li>
             <strong>Empfänger</strong>: Anzahl der Empfänger:innen,
             einschließlich der Einladungen, die noch nicht angenommen wurden.
           </li>

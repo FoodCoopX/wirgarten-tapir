@@ -27,6 +27,7 @@ const MailingListEditModal: React.FC<MailingListEditModalProps> = ({
   const [listName, setListName] = useState("");
   const [saving, setSaving] = useState(false);
   const [advertised, setAdvertised] = useState(false);
+  const [moderated, setModerated] = useState(false);
   const [description, setDescription] = useState("");
 
   useEffect(() => {
@@ -37,6 +38,7 @@ const MailingListEditModal: React.FC<MailingListEditModalProps> = ({
     setListName(mailingList.name);
     setDescription(mailingList.description);
     setAdvertised(mailingList.advertised);
+    setModerated(mailingList.moderated);
   }, [show, mailingList]);
 
   function onSave() {
@@ -47,6 +49,7 @@ const MailingListEditModal: React.FC<MailingListEditModalProps> = ({
         mailingListCreateRequest: {
           name: mailingList.name,
           advertised: advertised,
+          moderated: moderated,
           description: description,
         },
       })
@@ -105,6 +108,36 @@ const MailingListEditModal: React.FC<MailingListEditModalProps> = ({
               }
               checked={advertised}
               onChange={(event) => setAdvertised(event.target.checked)}
+            />
+          </Form.Group>
+          <Form.Group controlId={"moderated"} className={"mt-2"}>
+            <Form.Check
+              label={
+                <span className={"d-flex gap-2"}>
+                  <span>
+                    E-Mails von Mitgliedern müssen von Admins freigegeben
+                    werden.
+                  </span>
+                  <TapirHelpButton
+                    text={
+                      <>
+                        <p>
+                          Wenn aktiviert, werden E-Mails von Empfänger:innen der
+                          Liste zurückgehalten und erst an alle weitergeleitet,
+                          nachdem Admins sie freigegeben haben.
+                        </p>
+                        <p className={"mb-0"}>
+                          Wenn deaktiviert, werden E-Mails von Empfänger:innen
+                          sofort an alle weitergeleitet.
+                        </p>
+                      </>
+                    }
+                    buttonSize={"sm"}
+                  />
+                </span>
+              }
+              checked={moderated}
+              onChange={(event) => setModerated(event.target.checked)}
             />
           </Form.Group>
         </Form>
