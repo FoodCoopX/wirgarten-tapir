@@ -135,6 +135,7 @@ class MailingListCreateView(APIView):
         created_list.settings["default_member_action"] = (
             "hold" if create_serializer.validated_data["moderated"] else "defer"
         )
+        created_list.settings["preferred_language"] = "de"
         created_list.settings.save()
 
         return Response(
@@ -168,6 +169,7 @@ class MailingListEditView(APIView):
         mailing_list.settings["default_member_action"] = (
             "hold" if serializer.validated_data["moderated"] else "defer"
         )
+        mailing_list.settings["preferred_language"] = "de"
         mailing_list.settings.save()
 
         return Response(

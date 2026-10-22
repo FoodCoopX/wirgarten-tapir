@@ -64,6 +64,7 @@ class TestMailingListCreateView(TapirIntegrationTest):
             response=response, expected_status_code=status.HTTP_200_OK
         )
         domain.create_list.assert_called_once_with(list_name="test_name")
+        self.assertEqual("de", domain.lists[0].settings["preferred_language"])
 
         response_content = response.json()
         self.assertEqual(
