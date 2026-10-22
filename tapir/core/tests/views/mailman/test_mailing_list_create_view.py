@@ -70,6 +70,7 @@ class TestMailingListCreateView(TapirIntegrationTest):
             {
                 "name": "test_name@example.com",
                 "nb_recipients": 0,
+                "nb_held_messages": 0,
                 "description": "test_description",
                 "advertised": False,
                 "moderated": False,
@@ -101,6 +102,7 @@ class TestMailingListCreateView(TapirIntegrationTest):
             {
                 "name": "prefix@example.com",
                 "nb_recipients": 0,
+                "nb_held_messages": 0,
                 "description": "test_description",
                 "advertised": False,
                 "moderated": False,

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Card, Col, Row, Spinner } from "react-bootstrap";
-import { CoreApi, MailingList } from "../api-client";
+import { CoreApi, MailingListAdmin } from "../api-client";
 import TapirButton from "../components/TapirButton.tsx";
 import TapirHelpButton from "../components/TapirHelpButton.tsx";
 import TapirToastContainer from "../components/TapirToastContainer.tsx";
@@ -14,7 +14,7 @@ import MailingListTable from "./MailingListTable.tsx";
 const MailingListCard: React.FC = () => {
   const api = useApi(CoreApi, getCsrfToken());
   const [mailingListsLoading, setMailingListsLoading] = useState(true);
-  const [mailingLists, setMailingLists] = useState<MailingList[]>([]);
+  const [mailingLists, setMailingLists] = useState<MailingListAdmin[]>([]);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
@@ -82,6 +82,11 @@ const MailingListCard: React.FC = () => {
           <li>
             <strong>Empfänger</strong>: Anzahl der Empfänger:innen,
             einschließlich der Einladungen, die noch nicht angenommen wurden.
+          </li>
+          <li>
+            <strong>Mails zur Freigabe</strong>: Anzahl der E-Mails, die
+            zurückgehalten werden und darauf warten, von Admins freigegeben oder
+            abgelehnt zu werden.
           </li>
         </ul>
         <p>

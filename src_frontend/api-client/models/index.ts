@@ -110,6 +110,7 @@ export * from "./LocationRouteRequest";
 export * from "./MailCategory";
 export * from "./MailCategoryRequest";
 export * from "./MailingList";
+export * from "./MailingListAdmin";
 export * from "./MailingListCreateRequest";
 export * from "./MailingListRecipient";
 export * from "./MailingListSubscribeExternalRecipientRequestRequest";

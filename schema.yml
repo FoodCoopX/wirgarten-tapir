@@ -2744,7 +2744,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MailingList'
+                $ref: '#/components/schemas/MailingListAdmin'
           description: ''
   /core/api/mailing_list_delete:
     delete:
@@ -2794,7 +2794,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MailingList'
+                $ref: '#/components/schemas/MailingListAdmin'
           description: ''
   /core/api/mailing_list_list:
     get:
@@ -2812,7 +2812,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/MailingList'
+                  $ref: '#/components/schemas/MailingListAdmin'
           description: ''
   /core/api/mailing_list_recipient_list:
     get:
@@ -12206,6 +12206,28 @@ components:
       - description
       - moderated
       - name
+      - nb_recipients
+    MailingListAdmin:
+      type: object
+      properties:
+        name:
+          type: string
+        nb_recipients:
+          type: integer
+        advertised:
+          type: boolean
+        moderated:
+          type: boolean
+        description:
+          type: string
+        nb_held_messages:
+          type: integer
+      required:
+      - advertised
+      - description
+      - moderated
+      - name
+      - nb_held_messages
       - nb_recipients
     MailingListCreateRequest:
       type: object

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Form, Modal } from "react-bootstrap";
-import { CoreApi, MailingList } from "../api-client";
+import { CoreApi, MailingListAdmin } from "../api-client";
 import TapirButton from "../components/TapirButton.tsx";
 import TapirHelpButton from "../components/TapirHelpButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
@@ -13,7 +13,7 @@ interface MailingListEditModalProps {
   onHide: () => void;
   loadData: () => void;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
-  mailingList: MailingList;
+  mailingList: MailingListAdmin;
 }
 
 const MailingListEditModal: React.FC<MailingListEditModalProps> = ({

@@ -34,6 +34,10 @@ class MailingListSerializer(serializers.Serializer):
     description = serializers.CharField()
 
 
+class MailingListAdminSerializer(MailingListSerializer):
+    nb_held_messages = serializers.IntegerField()
+
+
 class MailingListCreateSerializer(serializers.Serializer):
     name = serializers.CharField()
     advertised = serializers.BooleanField()

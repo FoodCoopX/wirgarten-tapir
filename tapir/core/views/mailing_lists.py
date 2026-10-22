@@ -16,7 +16,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from tapir.core.serializers import (
-    MailingListSerializer,
+    MailingListAdminSerializer,
     MailingListRecipientSerializer,
     MailingListCreateSerializer,
     MailingListSubscribeExternalRecipientRequestSerializer,
@@ -77,7 +77,7 @@ class MailingListsListView(APIView):
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
 
     @extend_schema(
-        responses={200: MailingListSerializer(many=True)},
+        responses={200: MailingListAdminSerializer(many=True)},
     )
     def get(self, request):
         MailingListsEnabledChecker.check_mailing_lists_enabled()
@@ -85,14 +85,14 @@ class MailingListsListView(APIView):
         cache = {}
         domain = TapirMailmanClient.get_domain(cache)
         mailing_lists = [
-            MailingListSerializerDataBuilder.build_serializer_data(mailing_list)
+            MailingListSerializerDataBuilder.build_admin_serializer_data(mailing_list)
             for mailing_list in domain.lists
         ]
         mailing_lists = sorted(
             mailing_lists, key=lambda mailing_list: mailing_list["name"]
         )
         return Response(
-            MailingListSerializer(
+            MailingListAdminSerializer(
                 mailing_lists,
                 many=True,
             ).data
@@ -104,7 +104,7 @@ class MailingListCreateView(APIView):
 
     @extend_schema(
         request=MailingListCreateSerializer(),
-        responses={200: MailingListSerializer()},
+        responses={200: MailingListAdminSerializer()},
     )
     def post(self, request):
         MailingListsEnabledChecker.check_mailing_lists_enabled()
@@ -132,8 +132,10 @@ class MailingListCreateView(APIView):
         created_list.settings.save()
 
         return Response(
-            MailingListSerializer(
-                MailingListSerializerDataBuilder.build_serializer_data(created_list)
+            MailingListAdminSerializer(
+                MailingListSerializerDataBuilder.build_admin_serializer_data(
+                    created_list
+                )
             ).data
         )
 
@@ -143,7 +145,7 @@ class MailingListEditView(APIView):
 
     @extend_schema(
         request=MailingListCreateSerializer(),
-        responses={200: MailingListSerializer()},
+        responses={200: MailingListAdminSerializer()},
     )
     def put(self, request):
         MailingListsEnabledChecker.check_mailing_lists_enabled()
@@ -163,8 +165,10 @@ class MailingListEditView(APIView):
         mailing_list.settings.save()
 
         return Response(
-            MailingListSerializer(
-                MailingListSerializerDataBuilder.build_serializer_data(mailing_list)
+            MailingListAdminSerializer(
+                MailingListSerializerDataBuilder.build_admin_serializer_data(
+                    mailing_list
+                )
             ).data
         )
 

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Table } from "react-bootstrap";
-import { CoreApi, MailingList } from "../api-client";
+import { CoreApi, MailingListAdmin } from "../api-client";
 import ConfirmDeleteModal from "../components/ConfirmDeleteModal.tsx";
 import TapirButton from "../components/TapirButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
@@ -11,9 +11,9 @@ import MailingListEditModal from "./MailingListEditModal.tsx";
 import MailingListManageRecipientsModal from "./MailingListManageRecipientsModal.tsx";
 
 interface MailingListsTableProps {
-  mailingLists: MailingList[];
+  mailingLists: MailingListAdmin[];
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
-  setMailingLists: (list: MailingList[]) => void;
+  setMailingLists: (list: MailingListAdmin[]) => void;
   loadData: () => void;
 }
 
@@ -25,10 +25,11 @@ const MailingListTable: React.FC<MailingListsTableProps> = ({
 }) => {
   const api = useApi(CoreApi, getCsrfToken());
   const [listSelectedForDeletion, setListSelectedForDeletion] =
-    useState<MailingList>();
+    useState<MailingListAdmin>();
   const [listSelectedForManagement, setListSelectedForManagement] =
-    useState<MailingList>();
-  const [listSelectedForEdit, setListSelectedForEdit] = useState<MailingList>();
+    useState<MailingListAdmin>();
+  const [listSelectedForEdit, setListSelectedForEdit] =
+    useState<MailingListAdmin>();
   const [deleting, setDeleting] = useState(false);
 
   function onDelete() {
@@ -71,6 +72,7 @@ const MailingListTable: React.FC<MailingListsTableProps> = ({
             <th>Mitglieder können sich selber ein- und austragen</th>
             <th>Moderiert</th>
             <th>Empfänger</th>
+            <th>Mails zur Freigabe</th>
             <th></th>
           </tr>
         </thead>
@@ -86,6 +88,7 @@ const MailingListTable: React.FC<MailingListsTableProps> = ({
               <td>{mailingList.advertised ? "Ja" : "Nein"}</td>
               <td>{mailingList.moderated ? "Ja" : "Nein"}</td>
               <td>{mailingList.nbRecipients}</td>
+              <td>{mailingList.nbHeldMessages}</td>
 
               <td>
                 <span className={"d-flex flex-row gap-2"}>

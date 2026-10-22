@@ -15,6 +15,7 @@ class MockMailingListData:
     unconfirmed_recipients: list[str] = field(default_factory=list)
     advertised: bool = field(default=False)
     moderated: bool = field(default=False)
+    nb_held_messages: int = field(default=0)
     description: str = field(default="")
 
 
@@ -68,6 +69,7 @@ class MailmanTestHelper:
             {"email": recipient, "token": generate_id()}
             for recipient in mailing_list_data.unconfirmed_recipients
         ]
+        mock_list.get_held_count.return_value = mailing_list_data.nb_held_messages
         mock_list.settings = MockListSettings()
         mock_list.settings["advertised"] = mailing_list_data.advertised
         mock_list.settings["description"] = mailing_list_data.description

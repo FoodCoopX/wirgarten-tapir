@@ -11,3 +11,10 @@ class MailingListSerializerDataBuilder:
             "moderated": mailing_list.settings["default_member_action"] == "hold",
             "description": mailing_list.settings["description"],
         }
+
+    @classmethod
+    def build_admin_serializer_data(cls, mailing_list: MailingList):
+        return {
+            **cls.build_serializer_data(mailing_list),
+            "nb_held_messages": mailing_list.get_held_count(),
+        }

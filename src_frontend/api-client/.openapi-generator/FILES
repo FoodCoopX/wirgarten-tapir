@@ -125,6 +125,7 @@ models/LocationRouteRequest.ts
 models/MailCategory.ts
 models/MailCategoryRequest.ts
 models/MailingList.ts
+models/MailingListAdmin.ts
 models/MailingListCreateRequest.ts
 models/MailingListRecipient.ts
 models/MailingListSubscribeExternalRecipientRequestRequest.ts

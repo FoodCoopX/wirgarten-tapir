@@ -13,7 +13,7 @@
  */
 
 import type {
-  MailingList,
+  MailingListAdmin,
   MailingListCreateRequest,
   MailingListRecipient,
   MailingListSubscribeExternalRecipientRequestRequest,
@@ -26,8 +26,8 @@ import type {
   PatchedMemberExtraEmailUpdateRequestRequest,
 } from "../models/index";
 import {
+  MailingListAdminFromJSON,
   MailingListCreateRequestToJSON,
-  MailingListFromJSON,
   MailingListRecipientFromJSON,
   MailingListSubscribeExternalRecipientRequestRequestToJSON,
   MailingListSubscribeInternalRecipientRequestRequestToJSON,
@@ -170,7 +170,7 @@ export class CoreApi extends runtime.BaseAPI {
   async coreApiMailingListCreateCreateRaw(
     requestParameters: CoreApiMailingListCreateCreateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<MailingList>> {
+  ): Promise<runtime.ApiResponse<MailingListAdmin>> {
     if (requestParameters["mailingListCreateRequest"] == null) {
       throw new runtime.RequiredError(
         "mailingListCreateRequest",
@@ -212,7 +212,7 @@ export class CoreApi extends runtime.BaseAPI {
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      MailingListFromJSON(jsonValue),
+      MailingListAdminFromJSON(jsonValue),
     );
   }
 
@@ -221,7 +221,7 @@ export class CoreApi extends runtime.BaseAPI {
   async coreApiMailingListCreateCreate(
     requestParameters: CoreApiMailingListCreateCreateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<MailingList> {
+  ): Promise<MailingListAdmin> {
     const response = await this.coreApiMailingListCreateCreateRaw(
       requestParameters,
       initOverrides,
@@ -299,7 +299,7 @@ export class CoreApi extends runtime.BaseAPI {
   async coreApiMailingListEditUpdateRaw(
     requestParameters: CoreApiMailingListEditUpdateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<MailingList>> {
+  ): Promise<runtime.ApiResponse<MailingListAdmin>> {
     if (requestParameters["mailingListCreateRequest"] == null) {
       throw new runtime.RequiredError(
         "mailingListCreateRequest",
@@ -341,7 +341,7 @@ export class CoreApi extends runtime.BaseAPI {
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      MailingListFromJSON(jsonValue),
+      MailingListAdminFromJSON(jsonValue),
     );
   }
 
@@ -350,7 +350,7 @@ export class CoreApi extends runtime.BaseAPI {
   async coreApiMailingListEditUpdate(
     requestParameters: CoreApiMailingListEditUpdateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<MailingList> {
+  ): Promise<MailingListAdmin> {
     const response = await this.coreApiMailingListEditUpdateRaw(
       requestParameters,
       initOverrides,
@@ -362,7 +362,7 @@ export class CoreApi extends runtime.BaseAPI {
    */
   async coreApiMailingListListListRaw(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<Array<MailingList>>> {
+  ): Promise<runtime.ApiResponse<Array<MailingListAdmin>>> {
     const queryParameters: any = {};
 
     const headerParameters: runtime.HTTPHeaders = {};
@@ -392,7 +392,7 @@ export class CoreApi extends runtime.BaseAPI {
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      jsonValue.map(MailingListFromJSON),
+      jsonValue.map(MailingListAdminFromJSON),
     );
   }
 
@@ -400,7 +400,7 @@ export class CoreApi extends runtime.BaseAPI {
    */
   async coreApiMailingListListList(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<Array<MailingList>> {
+  ): Promise<Array<MailingListAdmin>> {
     const response = await this.coreApiMailingListListListRaw(initOverrides);
     return await response.value();
   }
