@@ -1,5 +1,6 @@
 import logging
 from typing import Any
+from urllib.error import HTTPError
 
 from django.conf import settings
 from django.contrib.auth.mixins import PermissionRequiredMixin
@@ -10,7 +11,7 @@ from django.urls import reverse
 from django.views.generic import TemplateView
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from mailmanclient import MailmanConnectionError, MailingList
-from rest_framework import permissions
+from rest_framework import permissions, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -393,14 +394,18 @@ class MailingListModerateHeldMessageView(APIView):
             list_name=serializer.validated_data["list_name"], cache=cache
         )
         request_id = serializer.validated_data["request_id"]
-        for held_message in mailing_list.held:
-            if held_message.request_id == request_id:
-                held_message.moderate(serializer.validated_data["moderation_action"])
-                return Response("OK")
+        try:
+            mailing_list.moderate_message(
+                request_id, serializer.validated_data["moderation_action"]
+            )
+        except HTTPError as error:
+            if error.code != status.HTTP_404_NOT_FOUND:
+                raise
+            raise Http404(
+                f"Keine zurückgehaltene E-Mail mit ID {request_id} in Liste {mailing_list.fqdn_listname} gefunden"
+            )
 
-        raise Http404(
-            f"Keine zurückgehaltene E-Mail mit ID {request_id} in Liste {mailing_list.fqdn_listname} gefunden"
-        )
+        return Response("OK")
 
 
 class MemberMailingListDataView(APIView):

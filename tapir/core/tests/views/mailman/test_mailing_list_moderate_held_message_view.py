@@ -43,10 +43,6 @@ class TestMailingListModerateHeldMessageView(TapirIntegrationTest):
             },
         )
 
-    def assert_no_message_moderated(self, mailing_list):
-        for held_message in mailing_list.held:
-            held_message.moderate.assert_not_called()
-
     def test_post_loggedInAsNormalMember_returns403(self):
         self.client.force_login(MemberFactory.create(is_superuser=False))
         mailing_list = self.mock_list_with_held_messages()
@@ -56,7 +52,7 @@ class TestMailingListModerateHeldMessageView(TapirIntegrationTest):
         self.assertStatusCode(
             response=response, expected_status_code=status.HTTP_403_FORBIDDEN
         )
-        self.assert_no_message_moderated(mailing_list)
+        mailing_list.moderate_message.assert_not_called()
 
     @override_settings(MAILING_LISTS_ENABLED=False)
     def test_post_mailingListsDisabled_returns403(self):
@@ -68,7 +64,7 @@ class TestMailingListModerateHeldMessageView(TapirIntegrationTest):
         self.assertStatusCode(
             response=response, expected_status_code=status.HTTP_403_FORBIDDEN
         )
-        self.assert_no_message_moderated(mailing_list)
+        mailing_list.moderate_message.assert_not_called()
 
     def test_post_invalidAction_returns400(self):
         self.client.force_login(MemberFactory.create(is_superuser=True))
@@ -79,7 +75,7 @@ class TestMailingListModerateHeldMessageView(TapirIntegrationTest):
         self.assertStatusCode(
             response=response, expected_status_code=status.HTTP_400_BAD_REQUEST
         )
-        self.assert_no_message_moderated(mailing_list)
+        mailing_list.moderate_message.assert_not_called()
 
     def test_post_messageNotFound_returns404(self):
         self.client.force_login(MemberFactory.create(is_superuser=True))
@@ -90,7 +86,7 @@ class TestMailingListModerateHeldMessageView(TapirIntegrationTest):
         self.assertStatusCode(
             response=response, expected_status_code=status.HTTP_404_NOT_FOUND
         )
-        self.assert_no_message_moderated(mailing_list)
+        mailing_list.moderate_message.assert_called_once_with(3, "accept")
 
     def test_post_accept_callsModerateOnCorrectMessage(self):
         self.client.force_login(MemberFactory.create(is_superuser=True))
@@ -101,8 +97,7 @@ class TestMailingListModerateHeldMessageView(TapirIntegrationTest):
         self.assertStatusCode(
             response=response, expected_status_code=status.HTTP_200_OK
         )
-        mailing_list.held[0].moderate.assert_not_called()
-        mailing_list.held[1].moderate.assert_called_once_with("accept")
+        mailing_list.moderate_message.assert_called_once_with(2, "accept")
 
     def test_post_reject_callsModerateOnCorrectMessage(self):
         self.client.force_login(MemberFactory.create(is_superuser=True))
@@ -113,8 +108,7 @@ class TestMailingListModerateHeldMessageView(TapirIntegrationTest):
         self.assertStatusCode(
             response=response, expected_status_code=status.HTTP_200_OK
         )
-        mailing_list.held[0].moderate.assert_called_once_with("reject")
-        mailing_list.held[1].moderate.assert_not_called()
+        mailing_list.moderate_message.assert_called_once_with(1, "reject")
 
     def test_post_discard_callsModerateOnCorrectMessage(self):
         self.client.force_login(MemberFactory.create(is_superuser=True))
@@ -125,5 +119,4 @@ class TestMailingListModerateHeldMessageView(TapirIntegrationTest):
         self.assertStatusCode(
             response=response, expected_status_code=status.HTTP_200_OK
         )
-        mailing_list.held[0].moderate.assert_not_called()
-        mailing_list.held[1].moderate.assert_called_once_with("discard")
+        mailing_list.moderate_message.assert_called_once_with(2, "discard")

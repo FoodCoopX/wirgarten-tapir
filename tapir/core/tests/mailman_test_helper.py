@@ -1,4 +1,6 @@
 import unittest
+from email.message import Message
+from urllib.error import HTTPError
 from dataclasses import dataclass, field
 from unittest.mock import patch, Mock
 
@@ -68,6 +70,11 @@ class MailmanTestHelper:
         return domain
 
     @classmethod
+    def moderate_mock_message(cls, mock_list: Mock, request_id: int):
+        if request_id not in {held.request_id for held in mock_list.held}:
+            raise HTTPError(url="", code=404, msg="Not Found", hdrs=Message(), fp=None)
+
+    @classmethod
     def build_mock_list(cls, mailing_list_data: MockMailingListData):
         mock_list = Mock()
         mock_list.fqdn_listname = f"{mailing_list_data.name}@{settings.EMAIL_HOST}"
@@ -84,6 +91,9 @@ class MailmanTestHelper:
             for held_message in mailing_list_data.held_messages
         ]
         mock_list.get_held_count.return_value = len(mock_list.held)
+        mock_list.moderate_message.side_effect = (
+            lambda request_id, action: cls.moderate_mock_message(mock_list, request_id)
+        )
         mock_list.settings = MockListSettings()
         mock_list.settings["advertised"] = mailing_list_data.advertised
         mock_list.settings["description"] = mailing_list_data.description
