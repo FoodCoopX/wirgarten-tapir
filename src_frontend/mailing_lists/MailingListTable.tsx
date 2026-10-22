@@ -8,6 +8,7 @@ import { ToastData } from "../types/ToastData.ts";
 import { getCsrfToken } from "../utils/getCsrfToken.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import MailingListEditModal from "./MailingListEditModal.tsx";
+import MailingListHeldMessagesModal from "./MailingListHeldMessagesModal.tsx";
 import MailingListManageRecipientsModal from "./MailingListManageRecipientsModal.tsx";
 
 interface MailingListsTableProps {
@@ -29,6 +30,8 @@ const MailingListTable: React.FC<MailingListsTableProps> = ({
   const [listSelectedForManagement, setListSelectedForManagement] =
     useState<MailingListAdmin>();
   const [listSelectedForEdit, setListSelectedForEdit] =
+    useState<MailingListAdmin>();
+  const [listSelectedForModeration, setListSelectedForModeration] =
     useState<MailingListAdmin>();
   const [deleting, setDeleting] = useState(false);
 
@@ -99,6 +102,13 @@ const MailingListTable: React.FC<MailingListsTableProps> = ({
                     onClick={() => setListSelectedForManagement(mailingList)}
                   />
                   <TapirButton
+                    icon={"approval"}
+                    variant={"outline-primary"}
+                    size={"sm"}
+                    onClick={() => setListSelectedForModeration(mailingList)}
+                    disabled={mailingList.nbHeldMessages === 0}
+                  />
+                  <TapirButton
                     icon={"edit"}
                     variant={"outline-primary"}
                     size={"sm"}
@@ -136,6 +146,15 @@ const MailingListTable: React.FC<MailingListsTableProps> = ({
           loadData={loadData}
           setToastDatas={setToastDatas}
           listName={listSelectedForManagement.name}
+        />
+      )}
+      {listSelectedForModeration && (
+        <MailingListHeldMessagesModal
+          show={true}
+          onHide={() => setListSelectedForModeration(undefined)}
+          loadData={loadData}
+          setToastDatas={setToastDatas}
+          listName={listSelectedForModeration.name}
         />
       )}
       {listSelectedForEdit && (

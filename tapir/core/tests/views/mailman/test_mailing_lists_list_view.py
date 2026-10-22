@@ -2,7 +2,11 @@ from django.test import override_settings
 from django.urls import reverse
 from rest_framework import status
 
-from tapir.core.tests.mailman_test_helper import MailmanTestHelper, MockMailingListData
+from tapir.core.tests.mailman_test_helper import (
+    MailmanTestHelper,
+    MockHeldMessageData,
+    MockMailingListData,
+)
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
@@ -46,7 +50,10 @@ class TestMailingListListView(TapirIntegrationTest):
                     description="description A",
                     advertised=True,
                     moderated=True,
-                    nb_held_messages=3,
+                    held_messages=[
+                        MockHeldMessageData(request_id=request_id)
+                        for request_id in range(3)
+                    ],
                 ),
                 MockMailingListData(
                     name="list_B",

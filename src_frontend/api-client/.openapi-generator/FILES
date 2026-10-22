@@ -127,6 +127,8 @@ models/MailCategoryRequest.ts
 models/MailingList.ts
 models/MailingListAdmin.ts
 models/MailingListCreateRequest.ts
+models/MailingListHeldMessage.ts
+models/MailingListModerateHeldMessageRequestRequest.ts
 models/MailingListRecipient.ts
 models/MailingListSubscribeExternalRecipientRequestRequest.ts
 models/MailingListSubscribeInternalRecipientRequestRequest.ts
@@ -158,6 +160,7 @@ models/MemberSubscriptionData.ts
 models/MinimumNumberOfSharesResponse.ts
 models/MissingTrigger.ts
 models/ModeEnum.ts
+models/ModerationActionEnum.ts
 models/Mpl.ts
 models/NoticePeriodUnitEnum.ts
 models/NumberOfAssociationMembersPerMonthResponse.ts

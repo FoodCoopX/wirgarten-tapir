@@ -15,6 +15,8 @@
 import type {
   MailingListAdmin,
   MailingListCreateRequest,
+  MailingListHeldMessage,
+  MailingListModerateHeldMessageRequestRequest,
   MailingListRecipient,
   MailingListSubscribeExternalRecipientRequestRequest,
   MailingListSubscribeInternalRecipientRequestRequest,
@@ -28,6 +30,8 @@ import type {
 import {
   MailingListAdminFromJSON,
   MailingListCreateRequestToJSON,
+  MailingListHeldMessageFromJSON,
+  MailingListModerateHeldMessageRequestRequestToJSON,
   MailingListRecipientFromJSON,
   MailingListSubscribeExternalRecipientRequestRequestToJSON,
   MailingListSubscribeInternalRecipientRequestRequestToJSON,
@@ -50,6 +54,14 @@ export interface CoreApiMailingListDeleteDestroyRequest {
 
 export interface CoreApiMailingListEditUpdateRequest {
   mailingListCreateRequest: MailingListCreateRequest;
+}
+
+export interface CoreApiMailingListHeldMessagesListRequest {
+  listName: string;
+}
+
+export interface CoreApiMailingListModerateHeldMessageCreateRequest {
+  mailingListModerateHeldMessageRequestRequest: MailingListModerateHeldMessageRequestRequest;
 }
 
 export interface CoreApiMailingListRecipientListListRequest {
@@ -360,6 +372,69 @@ export class CoreApi extends runtime.BaseAPI {
 
   /**
    */
+  async coreApiMailingListHeldMessagesListRaw(
+    requestParameters: CoreApiMailingListHeldMessagesListRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<Array<MailingListHeldMessage>>> {
+    if (requestParameters["listName"] == null) {
+      throw new runtime.RequiredError(
+        "listName",
+        'Required parameter "listName" was null or undefined when calling coreApiMailingListHeldMessagesList().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    if (requestParameters["listName"] != null) {
+      queryParameters["list_name"] = requestParameters["listName"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/core/api/mailing_list_held_messages`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      jsonValue.map(MailingListHeldMessageFromJSON),
+    );
+  }
+
+  /**
+   */
+  async coreApiMailingListHeldMessagesList(
+    requestParameters: CoreApiMailingListHeldMessagesListRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<Array<MailingListHeldMessage>> {
+    const response = await this.coreApiMailingListHeldMessagesListRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
   async coreApiMailingListListListRaw(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<Array<MailingListAdmin>>> {
@@ -402,6 +477,74 @@ export class CoreApi extends runtime.BaseAPI {
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<Array<MailingListAdmin>> {
     const response = await this.coreApiMailingListListListRaw(initOverrides);
+    return await response.value();
+  }
+
+  /**
+   */
+  async coreApiMailingListModerateHeldMessageCreateRaw(
+    requestParameters: CoreApiMailingListModerateHeldMessageCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<string>> {
+    if (
+      requestParameters["mailingListModerateHeldMessageRequestRequest"] == null
+    ) {
+      throw new runtime.RequiredError(
+        "mailingListModerateHeldMessageRequestRequest",
+        'Required parameter "mailingListModerateHeldMessageRequestRequest" was null or undefined when calling coreApiMailingListModerateHeldMessageCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/core/api/mailing_list_moderate_held_message`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: MailingListModerateHeldMessageRequestRequestToJSON(
+          requestParameters["mailingListModerateHeldMessageRequestRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    if (this.isJsonMime(response.headers.get("content-type"))) {
+      return new runtime.JSONApiResponse<string>(response);
+    } else {
+      return new runtime.TextApiResponse(response) as any;
+    }
+  }
+
+  /**
+   */
+  async coreApiMailingListModerateHeldMessageCreate(
+    requestParameters: CoreApiMailingListModerateHeldMessageCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<string> {
+    const response = await this.coreApiMailingListModerateHeldMessageCreateRaw(
+      requestParameters,
+      initOverrides,
+    );
     return await response.value();
   }
 

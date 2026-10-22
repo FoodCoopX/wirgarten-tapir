@@ -51,6 +51,21 @@ class MailingListRecipientSerializer(serializers.Serializer):
     link_to_member_profile = serializers.CharField(allow_null=True)
 
 
+class MailingListHeldMessageSerializer(serializers.Serializer):
+    request_id = serializers.IntegerField()
+    sender = serializers.CharField()
+    subject = serializers.CharField(allow_blank=True)
+    reason = serializers.CharField(allow_blank=True)
+    hold_date = serializers.DateTimeField()
+    body = serializers.CharField(allow_blank=True)
+
+
+class MailingListModerateHeldMessageRequestSerializer(serializers.Serializer):
+    list_name = serializers.CharField()
+    request_id = serializers.IntegerField()
+    moderation_action = serializers.ChoiceField(choices=["accept", "reject", "discard"])
+
+
 class MailingListSubscribeExternalRecipientRequestSerializer(serializers.Serializer):
     address = serializers.EmailField()
     list_name = serializers.CharField()

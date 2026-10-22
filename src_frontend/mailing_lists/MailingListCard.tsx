@@ -91,7 +91,8 @@ const MailingListCard: React.FC = () => {
         </ul>
         <p>
           Über die Buttons rechts kannst du die Empfänger:innen einer Liste
-          verwalten, die Liste bearbeiten oder sie löschen.
+          verwalten, zurückgehaltene E-Mails freigeben, ablehnen oder verwerfen,
+          die Liste bearbeiten oder sie löschen.
         </p>
         <p>
           Empfänger:innen, die du hinzufügst, werden zunächst nur eingeladen.

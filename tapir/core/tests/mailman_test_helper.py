@@ -9,13 +9,23 @@ from tapir.core.services.mailman.tapir_mailman_client import TapirMailmanClient
 
 
 @dataclass
+class MockHeldMessageData:
+    request_id: int
+    sender: str = field(default="sender@example.com")
+    subject: str = field(default="Subject")
+    reason: str = field(default="The message comes from a moderated member")
+    hold_date: str = field(default="2026-10-22T14:04:18.570413")
+    msg: str = field(default="From: sender@example.com\nSubject: Subject\n\nBody\n")
+
+
+@dataclass
 class MockMailingListData:
     name: str
     confirmed_recipients: list[str] = field(default_factory=list)
     unconfirmed_recipients: list[str] = field(default_factory=list)
     advertised: bool = field(default=False)
     moderated: bool = field(default=False)
-    nb_held_messages: int = field(default=0)
+    held_messages: list[MockHeldMessageData] = field(default_factory=list)
     description: str = field(default="")
 
 
@@ -69,7 +79,11 @@ class MailmanTestHelper:
             {"email": recipient, "token": generate_id()}
             for recipient in mailing_list_data.unconfirmed_recipients
         ]
-        mock_list.get_held_count.return_value = mailing_list_data.nb_held_messages
+        mock_list.held = [
+            Mock(**vars(held_message))
+            for held_message in mailing_list_data.held_messages
+        ]
+        mock_list.get_held_count.return_value = len(mock_list.held)
         mock_list.settings = MockListSettings()
         mock_list.settings["advertised"] = mailing_list_data.advertised
         mock_list.settings["description"] = mailing_list_data.description

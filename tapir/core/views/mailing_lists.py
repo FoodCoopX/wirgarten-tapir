@@ -17,11 +17,16 @@ from rest_framework.views import APIView
 
 from tapir.core.serializers import (
     MailingListAdminSerializer,
+    MailingListHeldMessageSerializer,
+    MailingListModerateHeldMessageRequestSerializer,
     MailingListRecipientSerializer,
     MailingListCreateSerializer,
     MailingListSubscribeExternalRecipientRequestSerializer,
     MailingListSubscribeInternalRecipientRequestSerializer,
     MemberMailingListDataResponseSerializer,
+)
+from tapir.core.services.mailman.held_message_serializer_data_builder import (
+    HeldMessageSerializerDataBuilder,
 )
 from tapir.core.services.mailman.mailing_list_provider import MailingListProvider
 from tapir.core.services.mailman.mailing_list_self_request_preparer import (
@@ -330,6 +335,58 @@ class MailingListUnsubscribeRecipientView(APIView):
 
         raise Http404(
             f"Kein passender Empfänger gefunden, E-Mail:{address}, Liste:{serializer.validated_data["list_name"]}"
+        )
+
+
+class MailingListHeldMessagesView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        parameters=[OpenApiParameter(name="list_name", type=str, required=True)],
+        responses={200: MailingListHeldMessageSerializer(many=True)},
+    )
+    def get(self, request):
+        MailingListsEnabledChecker.check_mailing_lists_enabled()
+
+        cache = {}
+        mailing_list = MailingListProvider.get_list_by_name_or_404(
+            list_name=request.query_params.get("list_name"), cache=cache
+        )
+        held_messages = [
+            HeldMessageSerializerDataBuilder.build_serializer_data(held_message)
+            for held_message in mailing_list.held
+        ]
+        held_messages = sorted(
+            held_messages, key=lambda held_message: held_message["hold_date"]
+        )
+        return Response(MailingListHeldMessageSerializer(held_messages, many=True).data)
+
+
+class MailingListModerateHeldMessageView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        request=MailingListModerateHeldMessageRequestSerializer(),
+        responses={200: str},
+    )
+    def post(self, request):
+        MailingListsEnabledChecker.check_mailing_lists_enabled()
+
+        serializer = MailingListModerateHeldMessageRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        cache = {}
+        mailing_list = MailingListProvider.get_list_by_name_or_404(
+            list_name=serializer.validated_data["list_name"], cache=cache
+        )
+        request_id = serializer.validated_data["request_id"]
+        for held_message in mailing_list.held:
+            if held_message.request_id == request_id:
+                held_message.moderate(serializer.validated_data["moderation_action"])
+                return Response("OK")
+
+        raise Http404(
+            f"Keine zurückgehaltene E-Mail mit ID {request_id} in Liste {mailing_list.fqdn_listname} gefunden"
         )
 
 
