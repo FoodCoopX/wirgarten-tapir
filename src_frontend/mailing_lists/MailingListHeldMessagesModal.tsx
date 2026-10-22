@@ -5,7 +5,7 @@ import {
   MailingListHeldMessage,
   ModerationActionEnum,
 } from "../api-client";
-import ConfirmDeleteModal from "../components/ConfirmDeleteModal.tsx";
+import ConfirmModal from "../components/ConfirmModal.tsx";
 import TapirHelpButton from "../components/TapirHelpButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
@@ -197,8 +197,13 @@ const MailingListHeldMessagesModal: React.FC<
         <Modal.Footer />
       </Modal>
       {pendingConfirmation && (
-        <ConfirmDeleteModal
+        <ConfirmModal
           message={buildConfirmationMessage(pendingConfirmation)}
+          title={
+            pendingConfirmation.moderationAction === ModerationActionEnum.Reject
+              ? "Ablehnen bestätigen"
+              : "Verwerfen bestätigen"
+          }
           open={true}
           onConfirm={() =>
             onModerate(
@@ -213,6 +218,12 @@ const MailingListHeldMessagesModal: React.FC<
               ? "Ablehnen"
               : "Verwerfen"
           }
+          confirmButtonIcon={
+            pendingConfirmation.moderationAction === ModerationActionEnum.Reject
+              ? "block"
+              : "delete"
+          }
+          confirmButtonVariant={"danger"}
         />
       )}
     </>
