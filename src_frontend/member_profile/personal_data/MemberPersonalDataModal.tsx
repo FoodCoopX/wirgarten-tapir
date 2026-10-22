@@ -51,6 +51,8 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
   const [canEditName, setCanEditName] = useState(false);
   const [contactEmail, setContactEmail] = useState("");
   const [memberNumber, setMemberNumber] = useState("");
+  const [pseudonym, setPseudonym] = useState("");
+  const [pseudonymEnabled, setPseudonymEnabled] = useState(false);
 
   const memberNumberHelpText =
     "Die Mitgliedsnummer kann nicht selbstständig verändert werden.";
@@ -78,6 +80,26 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
     <>
       Du kannst nicht selbstständig dein Land verändern. Bitte wende dich an
       deinen Betrieb (<a href={`mailto:${contactEmail}`}>{contactEmail}</a>).
+    </>
+  );
+
+  const pseudonymHelpText = (
+    <>
+      <p>
+        Das Pseudonym ist freiwillig. Wenn du eines angibst, steht es auf der
+        Abholliste für die Brote an deiner Verteilstation anstelle deines
+        Namens. Die Abholliste können auch andere Mitglieder sehen, die dort
+        ihre Brote abholen.
+      </p>
+      <p>
+        Ohne Pseudonym steht dort dein Vorname mit dem Anfangsbuchstaben deines
+        Nachnamens (z. B. „M., Anna“).
+      </p>
+      <p className={"mb-0"}>
+        Überall sonst, z. B. in E-Mails, Verträgen und in der Verwaltung, wird
+        weiterhin dein echter Name verwendet. Du kannst das Pseudonym jederzeit
+        ändern oder wieder entfernen, indem du das Feld leer lässt.
+      </p>
     </>
   );
 
@@ -109,6 +131,8 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
         setCanEditName(response.canEditName);
         setContactEmail(response.contactEmail);
         setMemberNumber(response.memberNumber);
+        setPseudonym(response.pseudonym);
+        setPseudonymEnabled(response.pseudonymEnabled);
       })
       .catch((error) =>
         handleRequestError(
@@ -174,6 +198,7 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
           city: city,
           country: canEditCountry ? country : undefined,
           isStudent: isStudent,
+          pseudonym: pseudonymEnabled ? pseudonym.trim() : undefined,
         },
       })
       .then((response) => {
@@ -260,6 +285,27 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
                 disabled={!canEditName}
               />
             </Form.Group>
+            {pseudonymEnabled && (
+              <Form.Group className="mb-2">
+                <Form.Label>
+                  <span className={"d-flex flex-row gap-2 align-items-center"}>
+                    Pseudonym (optional)
+                    <TapirHelpButton
+                      buttonSize={"sm"}
+                      title={"Wofür ist das Pseudonym?"}
+                      text={pseudonymHelpText}
+                    />
+                  </span>
+                </Form.Label>
+                <Form.Control
+                  placeholder={"Pseudonym"}
+                  value={pseudonym}
+                  onChange={(event) => setPseudonym(event.target.value)}
+                  maxLength={150}
+                  isValid={showValidation}
+                />
+              </Form.Group>
+            )}
             <Form.Group className="mb-2">
               <Form.Label>
                 {phoneNumberRequired

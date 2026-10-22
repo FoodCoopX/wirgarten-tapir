@@ -507,6 +507,8 @@ class MemberPersonalDataApiView(APIView):
                     "phone_number_required": get_parameter_value(
                         ParameterKeys.MEMBER_PHONE_NUMBER_REQUIRED, cache=self.cache
                     ),
+                    "pseudonym": member.pseudonym,
+                    "pseudonym_enabled": self.is_pseudonym_enabled(),
                 }
             ).data
         )
@@ -522,6 +524,9 @@ class MemberPersonalDataApiView(APIView):
     @classmethod
     def user_can_edit_country(cls, user):
         return user.has_perm(Permission.Coop.MANAGE)
+
+    def is_pseudonym_enabled(self):
+        return get_parameter_value(ParameterKeys.BAKERY_ENABLED, cache=self.cache)
 
     def get_formatted_member_number(self, member: Member) -> str:
         if not MemberNumberService.should_display_member_number(
@@ -608,6 +613,9 @@ class MemberPersonalDataApiView(APIView):
         if student_status_enabled:
             member.is_student = serializer.validated_data["is_student"]
 
+        if self.is_pseudonym_enabled() and "pseudonym" in serializer.validated_data:
+            member.pseudonym = serializer.validated_data["pseudonym"]
+
         with transaction.atomic():
             UpdateTapirUserLogEntry().populate(
                 old_frozen=member_before,
@@ -626,7 +634,10 @@ class MemberPersonalDataApiView(APIView):
             StaticSegmentRecipient.objects.filter(email=member.email).update(
                 first_name=member.first_name, last_name=member.last_name
             )
-            KeycloakUserManager.update_keycloak_user_name(user=member, cache=self.cache)
+            if member.keycloak_id:
+                KeycloakUserManager.update_keycloak_user_name(
+                    user=member, cache=self.cache
+                )
 
             member.save()
 

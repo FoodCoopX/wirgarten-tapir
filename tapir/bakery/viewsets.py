@@ -21,6 +21,7 @@ from tapir.bakery.models import (
     PreferredBread,
     StoveSession,
 )
+from tapir.bakery.permissions import IsReadOnly
 from tapir.bakery.serializers import (
     BreadContentSerializer,
     BreadDeliverySerializer,
@@ -46,7 +47,6 @@ from tapir.bakery.services.bread_delivery_context_service import (
     BreadDeliveryContextService,
 )
 from tapir.bakery.utils import int_query_param, str_to_bool
-from tapir.bakery.permissions import IsReadOnly
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.pickup_locations.services.pickup_location_delivery_day_service import (
     PickupLocationDeliveryDayService,
@@ -506,7 +506,9 @@ class StoveSessionViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 @extend_schema(tags=["bakery"])
-class BreadsPerPickupLocationPerWeekViewSet(viewsets.ReadOnlyModelViewSet):
+class BreadsPerPickupLocationPerWeekViewSet(
+    RequestCacheMixin, viewsets.ReadOnlyModelViewSet
+):
     """The solver's distribution result per pickup location and week."""
 
     queryset = BreadsPerPickupLocationPerWeek.objects.select_related(
@@ -554,7 +556,7 @@ class BreadsPerPickupLocationPerWeekViewSet(viewsets.ReadOnlyModelViewSet):
             # not merely any day it is open.
             queryset = queryset.filter(
                 pickup_location_id__in=PickupLocationDeliveryDayService.get_pickup_location_ids_for_delivery_day(
-                    day=delivery_day, cache={}
+                    day=delivery_day, cache=self.tapir_cache
                 )
             )
 
