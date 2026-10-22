@@ -7,6 +7,7 @@ from tapir.core.tests.mailman_test_helper import (
     MockHeldMessageData,
     MockMailingListData,
 )
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
@@ -112,6 +113,9 @@ class TestMailingListHeldMessagesView(TapirIntegrationTest):
                 {
                     "request_id": 1,
                     "sender": "earlier@example.com",
+                    "sender_name": None,
+                    "formatted_member_number": None,
+                    "link_to_member_profile": None,
                     "subject": "Earlier",
                     "reason": "The message is not from a list member",
                     "hold_date": "2026-10-21T10:30:00+02:00",
@@ -120,6 +124,9 @@ class TestMailingListHeldMessagesView(TapirIntegrationTest):
                 {
                     "request_id": 2,
                     "sender": "later@example.com",
+                    "sender_name": None,
+                    "formatted_member_number": None,
+                    "link_to_member_profile": None,
                     "subject": "Later",
                     "reason": "The message comes from a moderated member",
                     "hold_date": "2026-10-22T16:00:00+02:00",
@@ -128,3 +135,73 @@ class TestMailingListHeldMessagesView(TapirIntegrationTest):
             ],
             response.json(),
         )
+
+    @override_settings(EMAIL_HOST="example.com")
+    def test_get_theMailWasSentByAMember_returnsMemberData(self):
+        self._set_parameter(ParameterKeys.MEMBER_NUMBER_PREFIX, "BT")
+        self._set_parameter(ParameterKeys.MEMBER_NUMBER_ZERO_PAD_LENGTH, 4)
+        self._set_parameter(ParameterKeys.MEMBER_NUMBER_ONLY_AFTER_TRIAL, False)
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+        member = MemberFactory.create(
+            email="member@example.com",
+            first_name="Minea",
+            last_name="Halla",
+            member_no=42,
+        )
+        MailmanTestHelper.mock_domain(
+            test=self,
+            mailing_list_datas=[
+                MockMailingListData(
+                    name="list_a",
+                    held_messages=[
+                        MockHeldMessageData(
+                            request_id=1,
+                            sender="Member@Example.com",
+                            msg="From: Other Name <Member@Example.com>\n\nBody\n",
+                        ),
+                    ],
+                ),
+            ],
+        )
+
+        response = self.client.get(self.build_url("list_a@example.com"))
+
+        self.assertStatusCode(
+            response=response, expected_status_code=status.HTTP_200_OK
+        )
+        held_message = response.json()[0]
+        self.assertEqual(member.get_display_name(), held_message["sender_name"])
+        self.assertEqual("BT0042", held_message["formatted_member_number"])
+        self.assertEqual(
+            reverse("wirgarten:member_detail", kwargs={"pk": member.id}),
+            held_message["link_to_member_profile"],
+        )
+
+    @override_settings(EMAIL_HOST="example.com")
+    def test_get_theMailWasNotSentByAMember_returnsDisplayNameFromMailHeader(self):
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+        MailmanTestHelper.mock_domain(
+            test=self,
+            mailing_list_datas=[
+                MockMailingListData(
+                    name="list_a",
+                    held_messages=[
+                        MockHeldMessageData(
+                            request_id=1,
+                            sender="outsider@example.com",
+                            msg="From: Out Sider <outsider@example.com>\n\nBody\n",
+                        ),
+                    ],
+                ),
+            ],
+        )
+
+        response = self.client.get(self.build_url("list_a@example.com"))
+
+        self.assertStatusCode(
+            response=response, expected_status_code=status.HTTP_200_OK
+        )
+        held_message = response.json()[0]
+        self.assertEqual("Out Sider", held_message["sender_name"])
+        self.assertIsNone(held_message["formatted_member_number"])
+        self.assertIsNone(held_message["link_to_member_profile"])

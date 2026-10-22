@@ -15,6 +15,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from tapir.accounts.services.email_normaliser import EmailNormaliser
 from tapir.core.serializers import (
     MailingListAdminSerializer,
     MailingListHeldMessageSerializer,
@@ -352,9 +353,19 @@ class MailingListHeldMessagesView(APIView):
         mailing_list = MailingListProvider.get_list_by_name_or_404(
             list_name=request.query_params.get("list_name"), cache=cache
         )
+        mailman_held_messages = mailing_list.held
+        senders = {
+            EmailNormaliser.normalise(held_message.sender)
+            for held_message in mailman_held_messages
+        }
+        members_by_email = {
+            member.email: member for member in Member.objects.filter(email__in=senders)
+        }
         held_messages = [
-            HeldMessageSerializerDataBuilder.build_serializer_data(held_message)
-            for held_message in mailing_list.held
+            HeldMessageSerializerDataBuilder.build_serializer_data(
+                held_message, members_by_email, cache=cache
+            )
+            for held_message in mailman_held_messages
         ]
         held_messages = sorted(
             held_messages, key=lambda held_message: held_message["hold_date"]

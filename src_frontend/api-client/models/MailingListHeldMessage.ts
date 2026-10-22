@@ -35,6 +35,24 @@ export interface MailingListHeldMessage {
    * @type {string}
    * @memberof MailingListHeldMessage
    */
+  senderName: string | null;
+  /**
+   *
+   * @type {string}
+   * @memberof MailingListHeldMessage
+   */
+  formattedMemberNumber: string | null;
+  /**
+   *
+   * @type {string}
+   * @memberof MailingListHeldMessage
+   */
+  linkToMemberProfile: string | null;
+  /**
+   *
+   * @type {string}
+   * @memberof MailingListHeldMessage
+   */
   subject: string;
   /**
    *
@@ -64,6 +82,18 @@ export function instanceOfMailingListHeldMessage(
 ): value is MailingListHeldMessage {
   if (!("requestId" in value) || value["requestId"] === undefined) return false;
   if (!("sender" in value) || value["sender"] === undefined) return false;
+  if (!("senderName" in value) || value["senderName"] === undefined)
+    return false;
+  if (
+    !("formattedMemberNumber" in value) ||
+    value["formattedMemberNumber"] === undefined
+  )
+    return false;
+  if (
+    !("linkToMemberProfile" in value) ||
+    value["linkToMemberProfile"] === undefined
+  )
+    return false;
   if (!("subject" in value) || value["subject"] === undefined) return false;
   if (!("reason" in value) || value["reason"] === undefined) return false;
   if (!("holdDate" in value) || value["holdDate"] === undefined) return false;
@@ -87,6 +117,9 @@ export function MailingListHeldMessageFromJSONTyped(
   return {
     requestId: json["request_id"],
     sender: json["sender"],
+    senderName: json["sender_name"],
+    formattedMemberNumber: json["formatted_member_number"],
+    linkToMemberProfile: json["link_to_member_profile"],
     subject: json["subject"],
     reason: json["reason"],
     holdDate: new Date(json["hold_date"]),
@@ -111,6 +144,9 @@ export function MailingListHeldMessageToJSONTyped(
   return {
     request_id: value["requestId"],
     sender: value["sender"],
+    sender_name: value["senderName"],
+    formatted_member_number: value["formattedMemberNumber"],
+    link_to_member_profile: value["linkToMemberProfile"],
     subject: value["subject"],
     reason: value["reason"],
     hold_date: value["holdDate"].toISOString(),

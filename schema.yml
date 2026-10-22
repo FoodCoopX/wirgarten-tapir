@@ -12306,6 +12306,15 @@ components:
           type: integer
         sender:
           type: string
+        sender_name:
+          type: string
+          nullable: true
+        formatted_member_number:
+          type: string
+          nullable: true
+        link_to_member_profile:
+          type: string
+          nullable: true
         subject:
           type: string
         reason:
@@ -12317,10 +12326,13 @@ components:
           type: string
       required:
       - body
+      - formatted_member_number
       - hold_date
+      - link_to_member_profile
       - reason
       - request_id
       - sender
+      - sender_name
       - subject
     MailingListModerateHeldMessageRequestRequest:
       type: object

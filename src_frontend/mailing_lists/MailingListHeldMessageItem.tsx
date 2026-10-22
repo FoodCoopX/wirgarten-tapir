@@ -21,13 +21,37 @@ const MailingListHeldMessageItem: React.FC<MailingListHeldMessageItemProps> = ({
   onReject,
   onDiscard,
 }) => {
+  function buildSender() {
+    if (!heldMessage.senderName) {
+      return heldMessage.sender;
+    }
+
+    let name = heldMessage.senderName;
+    if (heldMessage.formattedMemberNumber) {
+      name += " #" + heldMessage.formattedMemberNumber;
+    }
+
+    let nameOrLink;
+    if (heldMessage.linkToMemberProfile) {
+      nameOrLink = <a href={heldMessage.linkToMemberProfile}>{name}</a>;
+    } else {
+      nameOrLink = name;
+    }
+
+    return (
+      <>
+        {nameOrLink} ({heldMessage.sender})
+      </>
+    );
+  }
+
   return (
     <ListGroup.Item>
       <div className={"d-flex justify-content-between gap-2"}>
         <div>
           <h6 className={"mb-1"}>{heldMessage.subject || "(Kein Betreff)"}</h6>
           <div>
-            Von {heldMessage.sender}, am{" "}
+            Von {buildSender()}, am{" "}
             {formatDateNumeric(heldMessage.holdDate, true)}
           </div>
           <small className={"text-muted"}>{heldMessage.reason}</small>

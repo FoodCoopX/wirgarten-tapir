@@ -54,6 +54,9 @@ class MailingListRecipientSerializer(serializers.Serializer):
 class MailingListHeldMessageSerializer(serializers.Serializer):
     request_id = serializers.IntegerField()
     sender = serializers.CharField()
+    sender_name = serializers.CharField(allow_null=True)
+    formatted_member_number = serializers.CharField(allow_null=True)
+    link_to_member_profile = serializers.CharField(allow_null=True)
     subject = serializers.CharField(allow_blank=True)
     reason = serializers.CharField(allow_blank=True)
     hold_date = serializers.DateTimeField()
