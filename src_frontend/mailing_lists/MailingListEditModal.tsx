@@ -146,7 +146,7 @@ const MailingListEditModal: React.FC<MailingListEditModalProps> = ({
         <TapirButton
           variant={"primary"}
           icon={"save"}
-          text={"Erzeugen"}
+          text={"Speichern"}
           onClick={onSave}
           loading={saving}
         />
