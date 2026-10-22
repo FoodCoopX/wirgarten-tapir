@@ -90,34 +90,34 @@ const MailingListTable: React.FC<MailingListsTableProps> = ({
               </td>
               <td>{mailingList.advertised ? "Ja" : "Nein"}</td>
               <td>{mailingList.moderated ? "Ja" : "Nein"}</td>
-              <td>{mailingList.nbRecipients}</td>
-              <td>{mailingList.nbHeldMessages}</td>
+              <td>
+                <TapirButton
+                  icon={"manage_accounts"}
+                  text={String(mailingList.nbRecipients)}
+                  variant={"outline-primary"}
+                  onClick={() => setListSelectedForManagement(mailingList)}
+                />
+              </td>
+              <td>
+                <TapirButton
+                  icon={"approval"}
+                  text={String(mailingList.nbHeldMessages)}
+                  variant={"outline-primary"}
+                  onClick={() => setListSelectedForModeration(mailingList)}
+                  disabled={mailingList.nbHeldMessages === 0}
+                />
+              </td>
 
               <td>
                 <span className={"d-flex flex-row gap-2"}>
                   <TapirButton
-                    icon={"contact_mail"}
-                    variant={"outline-primary"}
-                    size={"sm"}
-                    onClick={() => setListSelectedForManagement(mailingList)}
-                  />
-                  <TapirButton
-                    icon={"approval"}
-                    variant={"outline-primary"}
-                    size={"sm"}
-                    onClick={() => setListSelectedForModeration(mailingList)}
-                    disabled={mailingList.nbHeldMessages === 0}
-                  />
-                  <TapirButton
                     icon={"edit"}
                     variant={"outline-primary"}
-                    size={"sm"}
                     onClick={() => setListSelectedForEdit(mailingList)}
                   />
                   <TapirButton
                     icon={"delete"}
                     variant={"outline-danger"}
-                    size={"sm"}
                     onClick={() => setListSelectedForDeletion(mailingList)}
                   />
                 </span>

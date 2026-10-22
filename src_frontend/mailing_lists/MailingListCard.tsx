@@ -82,17 +82,18 @@ const MailingListCard: React.FC = () => {
           <li>
             <strong>Empfänger</strong>: Anzahl der Empfänger:innen,
             einschließlich der Einladungen, die noch nicht angenommen wurden.
+            Mit einem Klick darauf kannst du die Empfänger:innen verwalten.
           </li>
           <li>
             <strong>Mails zur Freigabe</strong>: Anzahl der E-Mails, die
             zurückgehalten werden und darauf warten, von Admins freigegeben oder
-            abgelehnt zu werden.
+            abgelehnt zu werden. Mit einem Klick darauf kannst du sie freigeben,
+            ablehnen oder verwerfen.
           </li>
         </ul>
         <p>
-          Über die Buttons rechts kannst du die Empfänger:innen einer Liste
-          verwalten, zurückgehaltene E-Mails freigeben, ablehnen oder verwerfen,
-          die Liste bearbeiten oder sie löschen.
+          Über die Buttons rechts kannst du die Liste bearbeiten oder sie
+          löschen.
         </p>
         <p>
           Empfänger:innen, die du hinzufügst, werden zunächst nur eingeladen.
