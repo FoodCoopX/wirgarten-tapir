@@ -167,6 +167,8 @@ class BestellWizardOrderFulfiller:
                 coop_share_transaction=coop_share_transaction,
                 association_membership=association_membership,
                 solidarity_contribution=solidarity_contribution,
+                without_coop_shares=legal_status_is_cooperative(cache=cache)
+                and is_student,
             )
 
         return member
