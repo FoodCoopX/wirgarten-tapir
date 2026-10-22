@@ -77,6 +77,16 @@ urlpatterns = [
         name="mailing_list_subscribe_internal",
     ),
     path(
+        "api/mailing_list_held_messages",
+        mailing_lists.MailingListHeldMessagesView.as_view(),
+        name="mailing_list_held_messages",
+    ),
+    path(
+        "api/mailing_list_moderate_held_message",
+        mailing_lists.MailingListModerateHeldMessageView.as_view(),
+        name="mailing_list_moderate_held_message",
+    ),
+    path(
         "api/member_mailing_list_data",
         mailing_lists.MemberMailingListDataView.as_view(),
         name="member_mailing_list_data",

@@ -6,6 +6,7 @@ import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
 import { getCsrfToken } from "../utils/getCsrfToken.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
+import { MODERATED_CHECKBOX_LABEL } from "./MODERATED_CHECKBOX_LABEL.tsx";
 
 interface MailingListCreateModalProps {
   show: boolean;
@@ -24,6 +25,7 @@ const MailingListCreateModal: React.FC<MailingListCreateModalProps> = ({
   const [listName, setListName] = useState("");
   const [saving, setSaving] = useState(false);
   const [advertised, setAdvertised] = useState(false);
+  const [moderated, setModerated] = useState(false);
   const [description, setDescription] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -32,6 +34,7 @@ const MailingListCreateModal: React.FC<MailingListCreateModalProps> = ({
       setListName("");
       setDescription("");
       setAdvertised(false);
+      setModerated(false);
     }
   }, [show]);
 
@@ -51,6 +54,7 @@ const MailingListCreateModal: React.FC<MailingListCreateModalProps> = ({
         mailingListCreateRequest: {
           name: listName,
           advertised: advertised,
+          moderated: moderated,
           description: description,
         },
       })
@@ -117,6 +121,13 @@ const MailingListCreateModal: React.FC<MailingListCreateModalProps> = ({
               label={"Mitglieder können sich selber ein- und austragen."}
               checked={advertised}
               onChange={(event) => setAdvertised(event.target.checked)}
+            />
+          </Form.Group>
+          <Form.Group controlId={"moderated"} className={"mt-2"}>
+            <Form.Check
+              label={MODERATED_CHECKBOX_LABEL}
+              checked={moderated}
+              onChange={(event) => setModerated(event.target.checked)}
             />
           </Form.Group>
         </Form>
