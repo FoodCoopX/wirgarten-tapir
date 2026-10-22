@@ -205,3 +205,42 @@ class TestMailingListHeldMessagesView(TapirIntegrationTest):
         self.assertEqual("Out Sider", held_message["sender_name"])
         self.assertIsNone(held_message["formatted_member_number"])
         self.assertIsNone(held_message["link_to_member_profile"])
+
+    @override_settings(EMAIL_HOST="example.com")
+    def test_get_bodyHasUnknownCharset_returnsPlaceholderBody(self):
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+        MailmanTestHelper.mock_domain(
+            test=self,
+            mailing_list_datas=[
+                MockMailingListData(
+                    name="list_a",
+                    held_messages=[
+                        MockHeldMessageData(
+                            request_id=1,
+                            msg=(
+                                'Content-Type: text/plain; charset="x-unknown"\n'
+                                "\n"
+                                "Body\n"
+                            ),
+                        ),
+                        MockHeldMessageData(request_id=2),
+                    ],
+                ),
+            ],
+        )
+
+        with self.assertLogs(
+            "tapir.core.services.mailman.held_message_serializer_data_builder"
+        ):
+            response = self.client.get(self.build_url("list_a@example.com"))
+
+        self.assertStatusCode(
+            response=response, expected_status_code=status.HTTP_200_OK
+        )
+        self.assertEqual(
+            [
+                "(Der Inhalt der E-Mail konnte nicht gelesen werden.)",
+                "Body\n",
+            ],
+            [held_message["body"] for held_message in response.json()],
+        )

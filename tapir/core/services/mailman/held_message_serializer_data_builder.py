@@ -1,5 +1,6 @@
 import datetime
 import email
+import logging
 from email import policy
 from email.message import EmailMessage
 from email.utils import parseaddr
@@ -11,6 +12,8 @@ from tapir.accounts.services.email_normaliser import EmailNormaliser
 from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.utils import get_today
+
+LOG = logging.getLogger(__name__)
 
 
 class HeldMessageSerializerDataBuilder:
@@ -68,4 +71,8 @@ class HeldMessageSerializerDataBuilder:
         body = message.get_body(preferencelist=("plain", "html"))
         if body is None:
             return ""
-        return body.get_content()
+        try:
+            return body.get_content()
+        except Exception:
+            LOG.exception("Failed to read the body of a held message")
+            return "(Der Inhalt der E-Mail konnte nicht gelesen werden.)"
