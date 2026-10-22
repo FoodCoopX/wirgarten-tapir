@@ -95,6 +95,7 @@ const MailingListTable: React.FC<MailingListsTableProps> = ({
                   icon={"manage_accounts"}
                   text={String(mailingList.nbRecipients)}
                   variant={"outline-primary"}
+                  size={"sm"}
                   onClick={() => setListSelectedForManagement(mailingList)}
                 />
               </td>
@@ -103,6 +104,7 @@ const MailingListTable: React.FC<MailingListsTableProps> = ({
                   icon={"approval"}
                   text={String(mailingList.nbHeldMessages)}
                   variant={"outline-primary"}
+                  size={"sm"}
                   onClick={() => setListSelectedForModeration(mailingList)}
                   disabled={mailingList.nbHeldMessages === 0}
                 />
@@ -113,11 +115,13 @@ const MailingListTable: React.FC<MailingListsTableProps> = ({
                   <TapirButton
                     icon={"edit"}
                     variant={"outline-primary"}
+                    size={"sm"}
                     onClick={() => setListSelectedForEdit(mailingList)}
                   />
                   <TapirButton
                     icon={"delete"}
                     variant={"outline-danger"}
+                    size={"sm"}
                     onClick={() => setListSelectedForDeletion(mailingList)}
                   />
                 </span>
