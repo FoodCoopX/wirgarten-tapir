@@ -1,5 +1,9 @@
 from mailmanclient import MailingList
 
+from tapir.core.services.mailman.mailing_list_settings_updater import (
+    MailingListSettingsUpdater,
+)
+
 
 class MailingListSerializerDataBuilder:
     @classmethod
@@ -8,7 +12,7 @@ class MailingListSerializerDataBuilder:
             "name": mailing_list.fqdn_listname,
             "nb_recipients": len(mailing_list.members) + len(mailing_list.requests),
             "advertised": mailing_list.settings["advertised"],
-            "moderated": mailing_list.settings["default_member_action"] == "hold",
+            "moderated": MailingListSettingsUpdater.is_moderated(mailing_list),
             "description": mailing_list.settings["description"],
         }
 

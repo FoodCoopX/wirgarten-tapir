@@ -37,6 +37,9 @@ from tapir.core.services.mailman.mailing_list_self_request_preparer import (
 from tapir.core.services.mailman.mailing_list_serializer_data_builder import (
     MailingListSerializerDataBuilder,
 )
+from tapir.core.services.mailman.mailing_list_settings_updater import (
+    MailingListSettingsUpdater,
+)
 from tapir.core.services.mailman.mailing_list_subscription_checker import (
     MailingListSubscriptionChecker,
 )
@@ -127,17 +130,12 @@ class MailingListCreateView(APIView):
         if list_name.endswith(suffix):
             list_name = list_name.replace(suffix, "")
         created_list = domain.create_list(list_name=list_name)
-        created_list.settings["advertised"] = create_serializer.validated_data[
-            "advertised"
-        ]
-        created_list.settings["description"] = create_serializer.validated_data[
-            "description"
-        ]
-        created_list.settings["default_member_action"] = (
-            "hold" if create_serializer.validated_data["moderated"] else "defer"
+        MailingListSettingsUpdater.update_settings(
+            mailing_list=created_list,
+            advertised=create_serializer.validated_data["advertised"],
+            description=create_serializer.validated_data["description"],
+            moderated=create_serializer.validated_data["moderated"],
         )
-        created_list.settings["preferred_language"] = "de"
-        created_list.settings.save()
 
         return Response(
             MailingListAdminSerializer(
@@ -165,13 +163,12 @@ class MailingListEditView(APIView):
         mailing_list = MailingListProvider.get_list_by_name_or_404(
             list_name=serializer.validated_data["name"], cache=cache
         )
-        mailing_list.settings["advertised"] = serializer.validated_data["advertised"]
-        mailing_list.settings["description"] = serializer.validated_data["description"]
-        mailing_list.settings["default_member_action"] = (
-            "hold" if serializer.validated_data["moderated"] else "defer"
+        MailingListSettingsUpdater.update_settings(
+            mailing_list=mailing_list,
+            advertised=serializer.validated_data["advertised"],
+            description=serializer.validated_data["description"],
+            moderated=serializer.validated_data["moderated"],
         )
-        mailing_list.settings["preferred_language"] = "de"
-        mailing_list.settings.save()
 
         return Response(
             MailingListAdminSerializer(
