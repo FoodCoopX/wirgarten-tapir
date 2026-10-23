@@ -208,7 +208,7 @@ const Step7SolidarityContribution: React.FC<
             {!isValueValid(solidarityContribution) &&
               (settings.solidarityContributionMinimum ?? 0) < 0 && (
                 <Alert variant={"danger"}>
-                  Der Solidartopf reicht gerade nur für{" "}
+                  Der niedrigste mögliche Solidarbeitrag beträgt{" "}
                   {formatCurrency(settings.solidarityContributionMinimum ?? 0)}
                 </Alert>
               )}

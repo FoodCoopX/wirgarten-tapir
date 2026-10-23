@@ -332,6 +332,9 @@ class GetCoopShareTransactionsApiView(APIView):
             "url_of_bestell_wizard": reverse(
                 "bestell_wizard:bestell_wizard_coop_shares", args=[member_id]
             ),
+            "contact_email": get_parameter_value(
+                ParameterKeys.SITE_EMAIL, cache=self.cache
+            ),
         }
 
         return Response(GetCoopShareTransactionsResponseSerializer(data).data)
@@ -494,6 +497,9 @@ class MemberPersonalDataApiView(APIView):
                     "city": member.city,
                     "is_student": is_student,
                     "can_edit_student": self.user_can_edit_student_status(request.user),
+                    "label_student_checkbox": get_parameter_value(
+                        ParameterKeys.LABEL_STUDENT_CHECKBOX, cache=self.cache
+                    ),
                     "can_edit_name": self.user_can_edit_name(request.user),
                     "country": str(member.country),
                     "can_edit_country": self.user_can_edit_country(request.user),
@@ -504,6 +510,8 @@ class MemberPersonalDataApiView(APIView):
                     "phone_number_required": get_parameter_value(
                         ParameterKeys.MEMBER_PHONE_NUMBER_REQUIRED, cache=self.cache
                     ),
+                    "pseudonym": member.pseudonym,
+                    "pseudonym_enabled": self.is_pseudonym_enabled(),
                 }
             ).data
         )
@@ -519,6 +527,9 @@ class MemberPersonalDataApiView(APIView):
     @classmethod
     def user_can_edit_country(cls, user):
         return user.has_perm(Permission.Coop.MANAGE)
+
+    def is_pseudonym_enabled(self):
+        return get_parameter_value(ParameterKeys.BAKERY_ENABLED, cache=self.cache)
 
     def get_formatted_member_number(self, member: Member) -> str:
         if not MemberNumberService.should_display_member_number(
@@ -605,6 +616,9 @@ class MemberPersonalDataApiView(APIView):
         if student_status_enabled:
             member.is_student = serializer.validated_data["is_student"]
 
+        if self.is_pseudonym_enabled() and "pseudonym" in serializer.validated_data:
+            member.pseudonym = serializer.validated_data["pseudonym"]
+
         with transaction.atomic():
             UpdateTapirUserLogEntry().populate(
                 old_frozen=member_before,
@@ -623,7 +637,10 @@ class MemberPersonalDataApiView(APIView):
             StaticSegmentRecipient.objects.filter(email=member.email).update(
                 first_name=member.first_name, last_name=member.last_name
             )
-            KeycloakUserManager.update_keycloak_user_name(user=member, cache=self.cache)
+            if member.keycloak_id:
+                KeycloakUserManager.update_keycloak_user_name(
+                    user=member, cache=self.cache
+                )
 
             member.save()
 

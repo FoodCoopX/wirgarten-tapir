@@ -66,9 +66,6 @@ urlpatterns = [
 if settings.ENABLE_SILK_PROFILING:
     urlpatterns += [path("silk/", include("silk.urls", namespace="silk"))]
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
 if settings.ENABLE_JASMIN:
     from tapir.jasmin_integration.views import (
         JasminLoginView,

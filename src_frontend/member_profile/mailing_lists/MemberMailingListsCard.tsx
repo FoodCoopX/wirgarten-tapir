@@ -173,10 +173,32 @@ const MemberMailingListsCard: React.FC<MemberMailCategoryModalProps> = ({
             deinem Profil als Absender.
           </li>
           <li>
+            Bei manchen Listen werden E-Mails nicht sofort weitergeleitet,
+            sondern erst, nachdem Admins sie freigegeben haben. Das steht dann
+            in der Beschreibung der Liste.
+          </li>
+          <li>
             Mit „Abmelden“ beendest du deine Teilnahme. Du bekommst dann keine
             E-Mails der Liste mehr.
           </li>
         </ul>
+      </>
+    );
+  }
+
+  function buildDescription(list: MailingList) {
+    if (!list.moderated) {
+      return list.description;
+    }
+
+    return (
+      <>
+        <p>{list.description}</p>
+        <p className={"mb-0 d-flex gap-1 align-items-center"}>
+          <span className={"material-icons text-warning"}>warning</span>
+          E-Mails an diese Liste werden nicht sofort weitergeleitet, sondern
+          erst nach Freigabe durch Admins.
+        </p>
       </>
     );
   }
@@ -302,7 +324,7 @@ const MemberMailingListsCard: React.FC<MemberMailCategoryModalProps> = ({
                     <td>{list.name}</td>
                     <td>
                       <TapirHelpButton
-                        text={list.description}
+                        text={buildDescription(list)}
                         buttonSize={"sm"}
                         title={"Beschreibung"}
                       />

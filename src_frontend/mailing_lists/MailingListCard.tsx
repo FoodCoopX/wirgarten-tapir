@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Card, Col, Row, Spinner } from "react-bootstrap";
-import { CoreApi, MailingList } from "../api-client";
+import { CoreApi, MailingListAdmin } from "../api-client";
 import TapirButton from "../components/TapirButton.tsx";
 import TapirHelpButton from "../components/TapirHelpButton.tsx";
 import TapirToastContainer from "../components/TapirToastContainer.tsx";
@@ -14,7 +14,7 @@ import MailingListTable from "./MailingListTable.tsx";
 const MailingListCard: React.FC = () => {
   const api = useApi(CoreApi, getCsrfToken());
   const [mailingListsLoading, setMailingListsLoading] = useState(true);
-  const [mailingLists, setMailingLists] = useState<MailingList[]>([]);
+  const [mailingLists, setMailingLists] = useState<MailingListAdmin[]>([]);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
@@ -73,13 +73,27 @@ const MailingListCard: React.FC = () => {
             Mitglieder die Liste.
           </li>
           <li>
+            <strong>Moderiert</strong>: Bei <em>Ja</em> werden E-Mails von
+            Empfänger:innen der Liste zurückgehalten und erst an alle
+            weitergeleitet, nachdem Admins sie freigegeben haben. Bei{" "}
+            <em>Nein</em> werden E-Mails von Empfänger:innen sofort an alle
+            weitergeleitet.
+          </li>
+          <li>
             <strong>Empfänger</strong>: Anzahl der Empfänger:innen,
             einschließlich der Einladungen, die noch nicht angenommen wurden.
+            Mit einem Klick darauf kannst du die Empfänger:innen verwalten.
+          </li>
+          <li>
+            <strong>Mails zur Freigabe</strong>: Anzahl der E-Mails, die
+            zurückgehalten werden und darauf warten, von Admins freigegeben oder
+            abgelehnt zu werden. Mit einem Klick darauf kannst du sie freigeben,
+            ablehnen oder verwerfen.
           </li>
         </ul>
         <p>
-          Über die Buttons rechts kannst du die Empfänger:innen einer Liste
-          verwalten, die Liste bearbeiten oder sie löschen.
+          Über die Buttons rechts kannst du die Liste bearbeiten oder sie
+          löschen.
         </p>
         <p>
           Empfänger:innen, die du hinzufügst, werden zunächst nur eingeladen.

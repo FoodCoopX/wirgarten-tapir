@@ -35,6 +35,9 @@ class AssociationMembershipCancellationManager:
     ):
         if membership.cancellation_ts is not None:
             return False
+
+        if membership.start_date <= reference_date:
+            return False
         if membership.end_date is not None and membership.end_date <= reference_date:
             return False
         return True

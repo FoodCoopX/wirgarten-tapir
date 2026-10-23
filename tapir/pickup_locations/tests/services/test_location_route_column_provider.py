@@ -16,6 +16,8 @@ from tapir.wirgarten.tests.factories import (
     MemberFactory,
     GrowingPeriodFactory,
     MemberPickupLocationFactory,
+    ProductCapacityFactory,
+    ProductFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
@@ -118,12 +120,18 @@ class TestLocationRouteColumnProvider(TapirIntegrationTest):
             member=member_1,
             period=period,
         )
+        ProductCapacityFactory.create(
+            product_type=subscription_1.product.type, period=period
+        )
         subscription_2 = SubscriptionFactory.create(
             member=member_1,
             quantity=1,
             product__type__delivery_cycle=WEEKLY[0],
             product__type__order_in_bestellwizard=2,
             period=period,
+        )
+        ProductCapacityFactory.create(
+            product_type=subscription_2.product.type, period=period
         )
         member_2 = MemberFactory.create(
             member_no=456, first_name="Jane", last_name="Mustermensch"
@@ -144,6 +152,9 @@ class TestLocationRouteColumnProvider(TapirIntegrationTest):
             product__type__delivery_cycle=NO_DELIVERY[0],
             period=period,
         )
+        ProductCapacityFactory.create(
+            product_type=undelivered_subscription.product.type, period=period
+        )
 
         result = LocationRouteColumnProvider.get_value_pickup_locations(
             route=None,
@@ -162,7 +173,6 @@ class TestLocationRouteColumnProvider(TapirIntegrationTest):
             {
                 subscription_1.product.id: subscription_1.product.name,
                 subscription_2.product.id: subscription_2.product.name,
-                undelivered_subscription.product.id: undelivered_subscription.product.name,
             },
             data["product_name_by_id"],
         )
@@ -196,6 +206,82 @@ class TestLocationRouteColumnProvider(TapirIntegrationTest):
                 },
             ],
             data["members"],
+        )
+
+    def test_getValuePickupLocation_someProductsAreNotEnabledForCurrentPeriod_onlyShowProductsEnabledInCurrentPeriod(
+        self,
+    ):
+        self._set_parameter(key=ParameterKeys.PICKING_MODE, value=PICKING_MODE_SHARE)
+
+        pickup_location = PickupLocationFactory.create()
+
+        member_1 = MemberFactory.create(
+            member_no=123, first_name="John", last_name="Xi"
+        )
+        period = GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2026, month=1, day=1)
+        )
+        MemberPickupLocationFactory.create(
+            member=member_1,
+            pickup_location=pickup_location,
+            valid_from=period.start_date,
+        )
+
+        subscription_1 = SubscriptionFactory.create(
+            quantity=2,
+            product__type__delivery_cycle=WEEKLY[0],
+            product__type__order_in_bestellwizard=1,
+            member=member_1,
+            period=period,
+        )
+        ProductCapacityFactory.create(
+            product_type=subscription_1.product.type, period=period
+        )
+        subscription_2 = SubscriptionFactory.create(
+            member=member_1,
+            quantity=1,
+            product__type__delivery_cycle=WEEKLY[0],
+            product__type__order_in_bestellwizard=2,
+            period=period,
+        )
+        ProductCapacityFactory.create(
+            product_type=subscription_2.product.type, period=period
+        )
+
+        past_product = ProductFactory.create()
+        ProductCapacityFactory.create(
+            product_type=past_product.type,
+            period=GrowingPeriodFactory.create(
+                start_date=datetime.date(year=2025, month=1, day=1)
+            ),
+        )
+        future_product = ProductFactory.create()
+        ProductCapacityFactory.create(
+            product_type=future_product.type,
+            period=GrowingPeriodFactory.create(
+                start_date=datetime.date(year=2027, month=1, day=1)
+            ),
+        )
+
+        result = LocationRouteColumnProvider.get_value_pickup_locations(
+            route=None,
+            reference_datetime=datetime.datetime(
+                year=2026, month=7, day=29, hour=12, tzinfo=datetime.timezone.utc
+            ),
+            cache={},
+        )
+
+        self.assertEqual(1, len(result))
+        data = result[0]
+        self.assertEqual(
+            [subscription_1.product.id, subscription_2.product.id], data["headers"]
+        )
+        self.assertEqual(
+            {
+                subscription_1.product.id: subscription_1.product.name,
+                subscription_2.product.id: subscription_2.product.name,
+            },
+            data["product_name_by_id"],
         )
 
     def test_getValuePickupLocation_pickingModeBasket_returnsCorrectSubscriptionData(
@@ -577,12 +663,18 @@ class TestLocationRouteColumnProvider(TapirIntegrationTest):
             period=period,
             product__hidden_in_bestell_wizard=False,
         )
+        ProductCapacityFactory.create(
+            product_type=subscription_1.product.type, period=period
+        )
         subscription_2 = SubscriptionFactory.create(
             member=member_1,
             quantity=1,
             product__type__delivery_cycle=WEEKLY[0],
             period=period,
             product__hidden_in_bestell_wizard=True,
+        )
+        ProductCapacityFactory.create(
+            product_type=subscription_2.product.type, period=period
         )
         member_2 = MemberFactory.create(
             member_no=456, first_name="Jane", last_name="Mustermensch"

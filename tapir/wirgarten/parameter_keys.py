@@ -15,6 +15,7 @@ class ParameterKeys:
     SITE_ADMIN_IMAGE = f"{PREFIX}.site.admin_image"
     SITE_PRIVACY_LINK = f"{PREFIX}.site.privacy_link"
     SITE_FAQ_LINK = f"{PREFIX}.site.faq_link"
+    SITE_WEBSITE_LINK = f"{PREFIX}.site.website_link"
     COOP_MIN_SHARES = f"{PREFIX}.coop.min_shares"
     COOP_SHARE_PRICE = f"{PREFIX}.coop.share_price"
     COOP_STATUTE_LINK = f"{PREFIX}.coop.statute_link"
@@ -63,6 +64,9 @@ class ParameterKeys:
     )
     MEMBERS_CAN_CHANGE_PICKUP_LOCATION = (
         f"{PREFIX}.member.dashboard.members_can_change_pickup_location"
+    )
+    MEMBER_DASHBOARD_PICKUP_LOCATION_LABEL = (
+        f"{PREFIX}.member.dashboard.pickup_location_label"
     )
     DELIVERY_DAY = f"{PREFIX}.delivery.weekday"
     DELIVERY_CHARGE_PER_PICKUP_LOCATION_ENABLED = (
@@ -133,6 +137,7 @@ class ParameterKeys:
 
     SOLIDARITY_CHOICES = f"{PREFIX}.solidarity.choices"
     SOLIDARITY_DEFAULT = f"{PREFIX}.solidarity.default"
+    SOLIDARITY_MINIMUM = f"{PREFIX}.solidarity.minimum"
     # the following two are still named "HARVEST_" for backward compatibility but now belong to the category SOLIDARITY
     HARVEST_NEGATIVE_SOLIPRICE_ENABLED = f"{PREFIX}.harvest.negative_soliprice_enabled"
     HARVEST_MEMBERS_ARE_ALLOWED_TO_CHANGE_SOLIPRICE = (
@@ -140,7 +145,6 @@ class ParameterKeys:
     )
     BESTELLWIZARD_FORCE_WAITING_LIST = f"{PREFIX}.bestellwizard.force_waiting_list"
     BESTELLWIZARD_SHOW_INTRO = f"{PREFIX}.bestellwizard.show_intro"
-    BESTELLWIZARD_INTRO_TEXT = f"{PREFIX}.bestellwizard.intro_text"
     BESTELL_WIZARD_SOLIDARITY_STEP_POSITION = (
         f"{PREFIX}.bestellwizard.solidarity_step_position"
     )
@@ -265,6 +269,9 @@ class ParameterKeys:
     )
     BESTELLWIZARD_STEP14B_TITLE = f"{PREFIX}.bestellwizard.step14b.title"
     BESTELLWIZARD_STEP14B_TEXT = f"{PREFIX}.bestellwizard.step14b.text"
+    BESTELLWIZARD_STEP14_BACK_TO_WEBSITE_BUTTON_TEXT = (
+        f"{PREFIX}.bestellwizard.step14.back_to_website_button_text"
+    )
     ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES = (
         f"{PREFIX}.coop.allow_students_to_order_without_coop_shares"
     )

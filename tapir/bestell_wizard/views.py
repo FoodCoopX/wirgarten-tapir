@@ -41,6 +41,9 @@ from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalcu
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
+from tapir.pickup_locations.services.pickup_location_active_filter import (
+    PickupLocationActiveFilter,
+)
 from tapir.pickup_locations.services.public_pickup_locations_provider import (
     PublicPickupLocationProvider,
 )
@@ -249,13 +252,20 @@ class BestellWizardConfirmOrderApiView(APIView):
         order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
             validated_serializer_data["shopping_cart_order"], cache=cache
         )
+        force_waiting_list = get_parameter_value(
+            ParameterKeys.BESTELLWIZARD_FORCE_WAITING_LIST, cache=cache
+        )
+        if len(order) > 0 and force_waiting_list:
+            raise ValidationError("Nur Warteliste-Einträge sind erlaubt.")
+
         member = None
         waiting_list_entry = None
 
         become_member_now = validated_serializer_data["become_member_now"]
-        if not legal_status_is_cooperative(
-            cache=cache
-        ) and not legal_status_is_association(cache=cache):
+        if force_waiting_list or (
+            not legal_status_is_cooperative(cache=cache)
+            and not legal_status_is_association(cache=cache)
+        ):
             become_member_now = False
 
         if len(order) > 0 or become_member_now:
@@ -273,7 +283,8 @@ class BestellWizardConfirmOrderApiView(APIView):
         )
 
         if (
-            len(order_waiting_list) > 0
+            force_waiting_list
+            or len(order_waiting_list) > 0
             or len(validated_serializer_data["pickup_location_ids"]) > 1
         ):
             if member is None:
@@ -495,7 +506,8 @@ class BestellWizardBaseDataApiView(APIView):
                     deleted=False, hidden_in_bestell_wizard=False
                 ),
                 "pickup_locations": PublicPickupLocationProvider.get_pickup_locations_available_for_members(
-                    cache=self.cache
+                    cache=self.cache,
+                    reference_date=earliest_contract_start_date,
                 ),
                 "show_coop_content": legal_status_is_cooperative(cache=self.cache),
                 "trial_period_length_in_weeks": trial_period_length_in_weeks,
@@ -556,13 +568,13 @@ class BestellWizardBaseDataApiView(APIView):
             "intro_enabled": ParameterKeys.BESTELLWIZARD_SHOW_INTRO,
             "student_status_allowed": ParameterKeys.ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES,
             "phone_number_required": ParameterKeys.MEMBER_PHONE_NUMBER_REQUIRED,
-            "intro_step_text": ParameterKeys.BESTELLWIZARD_INTRO_TEXT,
             "label_checkbox_sepa_mandat": ParameterKeys.BESTELLWIZARD_SEPA_MANDAT_CHECKBOX_TEXT,
             "label_checkbox_contract_policy": ParameterKeys.BESTELLWIZARD_CONTRACT_POLICY_CHECKBOX_TEXT,
             "default_payment_rhythm": ParameterKeys.PAYMENT_DEFAULT_RHYTHM,
             "coop_statute_link": ParameterKeys.COOP_STATUTE_LINK,
             "organization_name": ParameterKeys.SITE_NAME,
             "contact_mail_address": ParameterKeys.SITE_EMAIL,
+            "website_url": ParameterKeys.SITE_WEBSITE_LINK,
             "solidarity_contribution_default": ParameterKeys.SOLIDARITY_DEFAULT,
             "feedback_step_enabled": ParameterKeys.BESTELLWIZARD_STEP13_ENABLED,
             "solidarity_step_position": ParameterKeys.BESTELL_WIZARD_SOLIDARITY_STEP_POSITION,
@@ -625,6 +637,7 @@ class BestellWizardBaseDataApiView(APIView):
             "step14_text": ParameterKeys.BESTELLWIZARD_STEP14_TEXT,
             "step14b_title": ParameterKeys.BESTELLWIZARD_STEP14B_TITLE,
             "step14b_text": ParameterKeys.BESTELLWIZARD_STEP14B_TEXT,
+            "step14_back_to_website_button_text": ParameterKeys.BESTELLWIZARD_STEP14_BACK_TO_WEBSITE_BUTTON_TEXT,
             "privacy_policy_url": ParameterKeys.SITE_PRIVACY_LINK,
             "label_student_checkbox": ParameterKeys.LABEL_STUDENT_CHECKBOX,
             "student_checkbox_explanation_text": ParameterKeys.STUDENT_CHECKBOX_EXPLANATION_TEXT,
@@ -771,8 +784,12 @@ class BestellWizardDeliveryDatesForOrderApiView(APIView):
             cache=self.cache,
         )
 
+        pickup_location_ids = PickupLocationActiveFilter.get_active_at_date(
+            PickupLocation.objects.all(), reference_date
+        ).values_list("id", flat=True)
+
         response_data = {}
-        for pickup_location_id in PickupLocation.objects.values_list("id", flat=True):
+        for pickup_location_id in pickup_location_ids:
             response_data[pickup_location_id] = {
                 product_type_id: DeliveryDateCalculator.get_next_delivery_date_for_product_type(
                     reference_date=reference_date,

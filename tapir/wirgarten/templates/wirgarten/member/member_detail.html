@@ -84,7 +84,8 @@
                       data-donations-enabled="{{ donationsEnabled }}"
                       data-can-change-pickup-location="{{ canChangePickupLocation }}"
                       data-members-can-change-pickup-location-themselves="{{ membersCanChangePickupLocationThemselves }}"
-                      data-admin-contact-email="{{ adminContactEmail }}">
+                      data-admin-contact-email="{{ adminContactEmail }}"
+                      data-pickup-location-label="{{ pickupLocationLabel }}">
                     <span class="spinner-border">
                         <span class="visually-hidden">Loading...</span>
                     </span>
@@ -172,16 +173,18 @@
                 {% endif %}
               </div>
             </div>
-            <div class="row m-1">
-              <div class="col-4 fw-bold text-end">{% translate "Pseudonym" %}:</div>
-              <div class="col-8" id="tapir_user_pseudonym">
-                {% if object.pseudonym %}
-                  {{ object.pseudonym }}
-                {% else %}
-                  <span class="text-muted">{% translate "nicht gesetzt" %}</span>
-                {% endif %}
+            {% if bakery_enabled %}
+              <div class="row m-1">
+                <div class="col-4 fw-bold text-end">{% translate "Pseudonym" %}:</div>
+                <div class="col-8" id="tapir_user_pseudonym">
+                  {% if object.pseudonym %}
+                    {{ object.pseudonym }}
+                  {% else %}
+                    <span class="text-muted">{% translate "nicht gesetzt" %}</span>
+                  {% endif %}
+                </div>
               </div>
-            </div>
+            {% endif %}
 
           </div>
           {% if object.pk == request.user.pk %}
@@ -215,11 +218,13 @@
                 <div class="d-flex flex-row justify-content-between">
                   <div class="d-flex flex-column">
                     <strong class="card-title">{{ 'wirgarten.site.admin_name'|parameter }}</strong>
-                    <a class="card-text"
-                       style="text-decoration:none;
-                                                  color:inherit"
-                       href="tel:{{ 'wirgarten.site.admin_telephone'|parameter }}"
-                       target="_blank">📞&nbsp;&nbsp;{{ 'wirgarten.site.admin_telephone'|parameter }}</a>
+                    {% if 'wirgarten.site.admin_telephone'|parameter %}
+                      <a class="card-text"
+                         style="text-decoration:none;
+                                color:inherit"
+                         href="tel:{{ 'wirgarten.site.admin_telephone'|parameter }}"
+                         target="_blank">📞&nbsp;&nbsp;{{ 'wirgarten.site.admin_telephone'|parameter }}</a>
+                    {% endif %}
                     <a class="card-text"
                        style="text-decoration:none;
                                                   color:inherit"
