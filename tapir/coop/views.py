@@ -497,6 +497,9 @@ class MemberPersonalDataApiView(APIView):
                     "city": member.city,
                     "is_student": is_student,
                     "can_edit_student": self.user_can_edit_student_status(request.user),
+                    "label_student_checkbox": get_parameter_value(
+                        ParameterKeys.LABEL_STUDENT_CHECKBOX, cache=self.cache
+                    ),
                     "can_edit_name": self.user_can_edit_name(request.user),
                     "country": str(member.country),
                     "can_edit_country": self.user_can_edit_country(request.user),
