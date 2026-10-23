@@ -10,6 +10,7 @@ class MinimumNumberOfSharesResponseSerializer(serializers.Serializer):
 class GetCoopShareTransactionsResponseSerializer(serializers.Serializer):
     transactions = CoopShareTransactionSerializer(many=True)
     url_of_bestell_wizard = serializers.URLField()
+    contact_email = serializers.EmailField()
 
 
 class ExistingMemberPurchasesSharesRequestSerializer(serializers.Serializer):

@@ -11786,7 +11786,11 @@ components:
         url_of_bestell_wizard:
           type: string
           format: uri
+        contact_email:
+          type: string
+          format: email
       required:
+      - contact_email
       - transactions
       - url_of_bestell_wizard
     GetDatesFromCustomCycleDeliveryWeeksResponse:
@@ -12549,7 +12553,11 @@ components:
         order_wizard_url:
           type: string
           nullable: true
+        contact_email:
+          type: string
+          format: email
       required:
+      - contact_email
       - memberships
       - order_wizard_url
     MemberBankDataResponse:
