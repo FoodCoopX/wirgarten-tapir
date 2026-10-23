@@ -81,7 +81,7 @@ class ParameterDefinitionsSite:
             label="Admin/Ansprechpartner Telefonnummer",
             datatype=TapirParameterDatatype.STRING,
             initial_value="+49 176 34 45 81 48",
-            description="Die Kontakttelefonnummer für Mitglieder",
+            description="Die Kontakttelefonnummer für Mitglieder. Wenn das Feld leer bleibt, wird im Mitgliederbereich keine Telefonnummer angezeigt.",
             category=ParameterCategory.SITE,
         )
 
