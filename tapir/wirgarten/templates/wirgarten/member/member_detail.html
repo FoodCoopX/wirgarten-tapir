@@ -1,7 +1,7 @@
 {% extends "core/base.html" %}
 {% load log %}
 {% load django_vite %}
-{% load tapir_static %}
+{% load static %}
 {% load i18n %}
 {% load log %}
 {% load accounts %}
@@ -63,45 +63,45 @@
                data-member-id="{{ object.pk }}"
                data-show-contract-edit="{{ show_contract_edit }}">
             <div id="subscription_cards" data-member-id="{{ object.pk }}">
-                            <span class="spinner-border">
-                                <span class="visually-hidden">Loading...</span>
-                            </span>
+              <span class="spinner-border">
+                <span class="visually-hidden">Loading...</span>
+              </span>
             </div>
             {% if subscriptionAutomaticRenewal %}
               <div id="subscription_cancellation_card" data-member-id="{{ object.pk }}">
-                                <span class="spinner-border">
-                                    <span class="visually-hidden">Loading...</span>
-                                </span>
+                <span class="spinner-border">
+                  <span class="visually-hidden">Loading...</span>
+                </span>
               </div>
             {% endif %}
           </div>
         </div>
       </div>
       <div id="member-detail-middle-column">
-                <span id="delivery_list_card"
-                      data-member-id="{{ object.pk }}"
-                      data-jokers-enabled="{{ jokersEnabled }}"
-                      data-donations-enabled="{{ donationsEnabled }}"
-                      data-can-change-pickup-location="{{ canChangePickupLocation }}"
-                      data-members-can-change-pickup-location-themselves="{{ membersCanChangePickupLocationThemselves }}"
-                      data-admin-contact-email="{{ adminContactEmail }}"
-                      data-pickup-location-label="{{ pickupLocationLabel }}">
-                    <span class="spinner-border">
-                        <span class="visually-hidden">Loading...</span>
-                    </span>
-                </span>
+        <span id="delivery_list_card"
+              data-member-id="{{ object.pk }}"
+              data-jokers-enabled="{{ jokersEnabled }}"
+              data-donations-enabled="{{ donationsEnabled }}"
+              data-can-change-pickup-location="{{ canChangePickupLocation }}"
+              data-members-can-change-pickup-location-themselves="{{ membersCanChangePickupLocationThemselves }}"
+              data-admin-contact-email="{{ adminContactEmail }}"
+              data-pickup-location-label="{{ pickupLocationLabel }}">
+          <span class="spinner-border">
+            <span class="visually-hidden">Loading...</span>
+          </span>
+        </span>
         {% if show_payments_card %}
           <span id="future_payments_card" data-member-id="{{ object.pk }}"
                 data-delivery-charge-enabled="{{ delivery_charge_enabled }}">
-                        <span class="spinner-border">
-                            <span class="visually-hidden">Loading...</span>
-                        </span>
-                    </span>
+            <span class="spinner-border">
+              <span class="visually-hidden">Loading...</span>
+            </span>
+          </span>
         {% endif %}
         <div id="member-personal-data"
              class="card"
              style="margin-bottom:1em;
-                            margin-top:1em">
+                    margin-top:1em">
           <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">{% translate "Persönliche Daten" %}</h5>
             <span
@@ -189,12 +189,12 @@
           </div>
           {% if object.pk == request.user.pk %}
             <div class="card-footer">
-            <span class="d-flex flex-row gap-2 justify-content-end" style="width: 100%;">
-              <a style="float: right"
-                 class="btn tapir-btn btn-outline-primary ms-1"
-                 href="{% url 'accounts:password_change' %}"><span
-                class="material-icons">vpn_key</span>{% translate "Passwort ändern" %}</a>
-            </span>
+              <span class="d-flex flex-row gap-2 justify-content-end" style="width: 100%;">
+                <a style="float: right"
+                   class="btn tapir-btn btn-outline-primary ms-1"
+                   href="{% url 'accounts:password_change' %}"><span
+                  class="material-icons">vpn_key</span>{% translate "Passwort ändern" %}</a>
+              </span>
             </div>
           {% endif %}
         </div>
@@ -227,7 +227,7 @@
                     {% endif %}
                     <a class="card-text"
                        style="text-decoration:none;
-                                                  color:inherit"
+                              color:inherit"
                        href="mailto:{{ 'wirgarten.site.admin_email'|parameter }}"
                        target="_blank">📧&nbsp;&nbsp;{{ 'wirgarten.site.admin_email'|parameter }}</a>
                   </div>
@@ -248,9 +248,9 @@
                 <h5 class="mb-0">Wartelisteneintrag</h5>
               </div>
               <div class="card-body">
-                                <span class="spinner-border">
-                                    <span class="visually-hidden">Loading...</span>
-                                </span>
+                <span class="spinner-border">
+                  <span class="visually-hidden">Loading...</span>
+                </span>
               </div>
             </div>
           </div>
@@ -266,9 +266,9 @@
                 <h5 class="mb-0">Solidarbeitrag</h5>
               </div>
               <div class="card-body">
-                                <span class="spinner-border">
-                                    <span class="visually-hidden">Loading...</span>
-                                </span>
+                <span class="spinner-border">
+                  <span class="visually-hidden">Loading...</span>
+                </span>
               </div>
             </div>
           </div>
@@ -281,9 +281,9 @@
                   <h5 class="mb-0">Mail-Abos</h5>
                 </div>
                 <div class="card-body">
-                                    <span class="spinner-border">
-                                        <span class="visually-hidden">Loading...</span>
-                                    </span>
+                  <span class="spinner-border">
+                    <span class="visually-hidden">Loading...</span>
+                  </span>
                 </div>
               </div>
             </div>
@@ -297,9 +297,9 @@
                   <h5 class="mb-0">Mailing-Listen</h5>
                 </div>
                 <div class="card-body">
-                                    <span class="spinner-border">
-                                        <span class="visually-hidden">Loading...</span>
-                                    </span>
+                  <span class="spinner-border">
+                    <span class="visually-hidden">Loading...</span>
+                  </span>
                 </div>
               </div>
             </div>

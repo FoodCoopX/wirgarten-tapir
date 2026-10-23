@@ -18,11 +18,7 @@ SECRET_KEY = env.str(
 
 
 if not DEBUG:
-    print(
-        f"Tapir Version: {TAPIR_VERSION}"
-        if TAPIR_VERSION
-        else "\033[93m>>> WARNING: TAPIR_VERSION is not set, cache busting will not work!\033[0m"
-    )
+    print(f"Tapir Version: {TAPIR_VERSION}")
 
 
 # Database
