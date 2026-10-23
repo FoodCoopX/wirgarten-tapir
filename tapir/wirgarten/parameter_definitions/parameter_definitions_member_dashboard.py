@@ -226,6 +226,19 @@ class ParameterDefinitionsMemberDashboard:
         )
 
         importer.parameter_definition(
+            key=ParameterKeys.MEMBER_DASHBOARD_PICKUP_LOCATION_LABEL,
+            label="Bezeichnung für den Abholort im Mitgliederbereich",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Abholort",
+            description="Wie der Abholort im Mitgliederbereich in der Kachel 'Abholung' genannt wird, z.B. 'Abholort', 'Verteilstation' oder 'Depot'. "
+            "Die Bezeichnung wird einheitlich als Spaltenüberschrift in der Tabelle der Abholungen und "
+            "im Button zum Ändern des Abholorts verwendet (z.B. 'Abholort ändern'). "
+            "Andere Seiten (z.B. Bestellwizard, E-Mails, Admin-Bereich) sind davon nicht betroffen.",
+            category=ParameterCategory.MEMBER_DASHBOARD,
+            order_priority=149,
+        )
+
+        importer.parameter_definition(
             key=ParameterKeys.MEMBER_NUMBER_PREFIX,
             label="Mitgliedsnummer: Präfix",
             datatype=TapirParameterDatatype.STRING,
