@@ -240,6 +240,10 @@ function buildCoopSteps(
   productTypesInWaitingList: Set<PublicProductType>,
   becomeMemberNow: boolean | null,
 ) {
+  if (settings.forceWaitingList) {
+    return [];
+  }
+
   if (
     !shouldIncludeStepsCoopShares(
       waitingListEntryDetails,
@@ -281,6 +285,10 @@ function buildAssociationSteps(
   becomeMemberNow: boolean | null,
   waitingListEntryDetails: PublicWaitingListEntryDetails | undefined,
 ) {
+  if (settings.forceWaitingList) {
+    return [];
+  }
+
   if (settings.legalStatus !== "association") {
     return [];
   }
