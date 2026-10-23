@@ -17,7 +17,7 @@ Including another URLconf
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import include, path
-from django.views.generic import RedirectView
+from django.views.generic import RedirectView, TemplateView
 
 from tapir.wirgarten.views.default_redirect import wirgarten_redirect_view
 from tapir.wirgarten.views.mailing import TapirMailView
@@ -65,3 +65,29 @@ urlpatterns = [
 
 if settings.ENABLE_SILK_PROFILING:
     urlpatterns += [path("silk/", include("silk.urls", namespace="silk"))]
+
+if settings.ENABLE_JASMIN:
+    from tapir.jasmin_integration.views import (
+        JasminLoginView,
+        JasminRefreshVew,
+        JasminTemplateView,
+    )
+
+    urlpatterns += [
+        # Where Jasmin's frontend expects Jasmin's API, like in Jasmin's
+        # config/tenant_urls.py.
+        path("api/auth/login/", JasminLoginView.as_view(), name="jasmin_login"),
+        path("api/auth/refresh/", JasminRefreshVew.as_view(), name="jasmin_refresh"),
+        path("api/commissioning/", include("apps.commissioning.urls")),
+        path("api/tenants/", include("apps.shared.tenants.urls")),
+        path(
+            "jasmin/home",
+            TemplateView.as_view(template_name="jasmin-dist/dist/index.html"),
+            name="jasmin_home",
+        ),
+        path(
+            "jasmin/",
+            JasminTemplateView.as_view(template_name="core/jasmin_iframe.html"),
+            name="jasmin",
+        ),
+    ]
