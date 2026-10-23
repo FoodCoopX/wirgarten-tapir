@@ -14,7 +14,7 @@ RUN sed -i -e '/de_DE.UTF-8/s/^# //g' -e '/en_US.UTF-8/s/^# //g' /etc/locale.gen
 
 COPY ./pyproject.toml /app/pyproject.toml
 COPY ./poetry.lock /app/poetry.lock
-RUN pip install poetry && poetry install --extras bakery
+RUN pip install poetry==2.5.1 && poetry install --extras bakery
 
 COPY tapir /app/tapir
 COPY manage.py /app/manage.py
