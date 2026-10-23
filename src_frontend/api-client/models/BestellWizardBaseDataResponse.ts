@@ -130,12 +130,6 @@ export interface BestellWizardBaseDataResponse {
    * @type {string}
    * @memberof BestellWizardBaseDataResponse
    */
-  introStepText: string;
-  /**
-   *
-   * @type {string}
-   * @memberof BestellWizardBaseDataResponse
-   */
   labelCheckboxSepaMandat: string;
   /**
    *
@@ -316,8 +310,6 @@ export function instanceOfBestellWizardBaseDataResponse(
     return false;
   if (!("showCoopContent" in value) || value["showCoopContent"] === undefined)
     return false;
-  if (!("introStepText" in value) || value["introStepText"] === undefined)
-    return false;
   if (
     !("labelCheckboxSepaMandat" in value) ||
     value["labelCheckboxSepaMandat"] === undefined
@@ -444,7 +436,6 @@ export function BestellWizardBaseDataResponseFromJSONTyped(
     studentStatusAllowed: json["student_status_allowed"],
     phoneNumberRequired: json["phone_number_required"],
     showCoopContent: json["show_coop_content"],
-    introStepText: json["intro_step_text"],
     labelCheckboxSepaMandat: json["label_checkbox_sepa_mandat"],
     labelCheckboxContractPolicy: json["label_checkbox_contract_policy"],
     trialPeriodLengthInWeeks: json["trial_period_length_in_weeks"],
@@ -511,7 +502,6 @@ export function BestellWizardBaseDataResponseToJSONTyped(
     student_status_allowed: value["studentStatusAllowed"],
     phone_number_required: value["phoneNumberRequired"],
     show_coop_content: value["showCoopContent"],
-    intro_step_text: value["introStepText"],
     label_checkbox_sepa_mandat: value["labelCheckboxSepaMandat"],
     label_checkbox_contract_policy: value["labelCheckboxContractPolicy"],
     trial_period_length_in_weeks: value["trialPeriodLengthInWeeks"],

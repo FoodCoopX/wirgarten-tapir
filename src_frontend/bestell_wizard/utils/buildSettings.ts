@@ -17,7 +17,6 @@ export function buildSettings(
       baseData.associationsAllowInvestingMembership,
     forceWaitingList: baseData.forceWaitingList,
     showCoopContent: baseData.showCoopContent,
-    introStepText: baseData.introStepText,
     labelCheckboxSepaMandat: baseData.labelCheckboxSepaMandat,
     labelCheckboxContractPolicy: baseData.labelCheckboxContractPolicy,
     trialPeriodLengthInWeeks: baseData.trialPeriodLengthInWeeks,

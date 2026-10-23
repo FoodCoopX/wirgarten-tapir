@@ -8772,8 +8772,6 @@ components:
           type: boolean
         show_coop_content:
           type: boolean
-        intro_step_text:
-          type: string
         label_checkbox_sepa_mandat:
           type: string
         label_checkbox_contract_policy:
@@ -8853,7 +8851,6 @@ components:
       - growing_period_choices
       - images
       - intro_enabled
-      - intro_step_text
       - label_checkbox_contract_policy
       - label_checkbox_sepa_mandat
       - legal_status

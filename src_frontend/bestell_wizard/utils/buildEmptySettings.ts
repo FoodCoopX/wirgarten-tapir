@@ -11,7 +11,6 @@ export function buildEmptySettings(): BestellWizardSettings {
     associationsAllowInvestingMembership: false,
     forceWaitingList: false,
     showCoopContent: false,
-    introStepText: "",
     labelCheckboxSepaMandat: "",
     labelCheckboxContractPolicy: "",
     trialPeriodLengthInWeeks: 0,
