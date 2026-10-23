@@ -1056,6 +1056,7 @@ class WaitingListEntry(TapirModel):
     postcode = models.CharField(_("Postcode"), max_length=32, blank=True)
     city = models.CharField(_("City"), max_length=50, blank=True)
     country = CountryField(_("Country"), blank=True, default="DE")
+    pseudonym = models.CharField(_("Pseudonym"), max_length=150, blank=True)
     privacy_consent = models.DateTimeField()
     number_of_coop_shares = models.PositiveSmallIntegerField()
     # if desired_start_date is null, the wish is "as soon as possible"

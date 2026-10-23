@@ -89,6 +89,7 @@ class PublicWaitingListEntryDetailsSerializer(serializers.Serializer):
     postcode = serializers.CharField()
     city = serializers.CharField()
     country = serializers.CharField()
+    pseudonym = serializers.CharField(allow_blank=True)
     birthdate = serializers.DateField(required=False)
     account_owner = serializers.CharField(required=False)
     iban = serializers.CharField(required=False)
@@ -144,4 +145,3 @@ class PublicConfirmWaitingListEntryRequestSerializer(serializers.Serializer):
     payment_rhythm = serializers.CharField()
     solidarity_contribution = serializers.FloatField()
     association_membership_type_id = serializers.CharField(allow_null=True)
-    pseudonym = serializers.CharField(allow_blank=True, required=False, max_length=150)

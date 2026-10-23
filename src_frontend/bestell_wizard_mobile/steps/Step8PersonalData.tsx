@@ -33,7 +33,6 @@ interface Step8PersonalDataProps {
   ) => void;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
   changesDisabled: boolean;
-  showPseudonymField: boolean;
 }
 
 const FIELDS: (keyof PersonalData)[] = [
@@ -80,7 +79,6 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
   setEmailAddressAlreadyInUseLoading,
   setToastDatas,
   changesDisabled,
-  showPseudonymField,
 }) => {
   const [isOver18, setIsOver18] = useState(false);
   const [showValidation, setShowValidation] = useState(false);
@@ -263,7 +261,7 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
             disabled={changesDisabled}
           />
         ))}
-        {showPseudonymField && (
+        {settings.pseudonymEnabled && (
           <div
             className={"d-flex flex-row gap-2 align-items-start"}
             style={{ width: "264px" }}
@@ -278,9 +276,9 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
               isValid={isValid("pseudonym")}
               extraText={getExtraText("pseudonym")}
               style={{ flexGrow: 1 }}
+              disabled={changesDisabled}
               maxLength={PSEUDONYM_MAX_LENGTH}
             />
-            {/* Same height as the floating label input, so that the button stays centered next to it */}
             <div
               className={"d-flex align-items-center"}
               style={{ height: "calc(3.5rem + 2px)" }}

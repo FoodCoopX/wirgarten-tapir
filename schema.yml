@@ -14001,6 +14001,9 @@ components:
           oneOf:
           - $ref: '#/components/schemas/CountryEnum'
           - $ref: '#/components/schemas/BlankEnum'
+        pseudonym:
+          type: string
+          maxLength: 150
         privacy_consent:
           type: string
           format: date-time
@@ -14351,6 +14354,7 @@ components:
           type: string
         pseudonym:
           type: string
+          default: ''
           maxLength: 150
       required:
       - account_owner
@@ -15075,9 +15079,6 @@ components:
           type: string
           nullable: true
           minLength: 1
-        pseudonym:
-          type: string
-          maxLength: 150
       required:
       - account_owner
       - association_membership_type_id
@@ -15342,6 +15343,8 @@ components:
           type: string
         country:
           type: string
+        pseudonym:
+          type: string
         birthdate:
           type: string
           format: date
@@ -15377,6 +15380,7 @@ components:
       - number_of_coop_shares
       - phone_number
       - postcode
+      - pseudonym
       - should_show_solidarity_step
       - street
       - street_2
@@ -16599,6 +16603,9 @@ components:
           oneOf:
           - $ref: '#/components/schemas/CountryEnum'
           - $ref: '#/components/schemas/BlankEnum'
+        pseudonym:
+          type: string
+          maxLength: 150
         privacy_consent:
           type: string
           format: date-time
@@ -16776,6 +16783,9 @@ components:
           oneOf:
           - $ref: '#/components/schemas/CountryEnum'
           - $ref: '#/components/schemas/BlankEnum'
+        pseudonym:
+          type: string
+          maxLength: 150
         privacy_consent:
           type: string
           format: date-time

@@ -501,9 +501,9 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
             mock_delete_user_if_exists.call_args.kwargs["user"],
         )
 
-    def post_confirmation_with_pseudonym(self):
+    def test_post_entryWithPseudonym_memberCreatedWithPseudonym(self):
         entry = WaitingListEntryFactory.create(
-            confirmation_link_key=uuid.uuid4(), member=None
+            confirmation_link_key=uuid.uuid4(), member=None, pseudonym="Brotfan"
         )
         mock_timezone(test=self, now=datetime.datetime(year=1997, month=3, day=30))
         GrowingPeriodFactory.create(start_date=datetime.date(year=1997, month=1, day=1))
@@ -519,7 +519,6 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
             "payment_rhythm": "semiannually",
             "solidarity_contribution": 0,
             "association_membership_type_id": None,
-            "pseudonym": "Brotfan",
         }
 
         response = self.client.post(
@@ -534,19 +533,4 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
             response_content["order_confirmed"],
             f"Order not confirmed. Error: {response_content.get('error')}",
         )
-
-    def test_post_pseudonymGivenAndBakeryEnabled_memberCreatedWithPseudonym(self):
-        self._set_parameter(ParameterKeys.BAKERY_ENABLED, True)
-
-        self.post_confirmation_with_pseudonym()
-
         self.assertEqual("Brotfan", Member.objects.get().pseudonym)
-
-    def test_post_pseudonymGivenAndBakeryDisabled_memberCreatedWithoutPseudonym(
-        self,
-    ):
-        self._set_parameter(ParameterKeys.BAKERY_ENABLED, False)
-
-        self.post_confirmation_with_pseudonym()
-
-        self.assertEqual("", Member.objects.get().pseudonym)

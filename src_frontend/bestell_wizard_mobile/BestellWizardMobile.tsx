@@ -207,6 +207,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
           personalData.street2 = waitingListEntryDetails.street2;
           personalData.postcode = waitingListEntryDetails.postcode;
           personalData.city = waitingListEntryDetails.city;
+          personalData.pseudonym = waitingListEntryDetails.pseudonym;
           personalData.iban = waitingListEntryDetails.iban ?? "";
           personalData.accountOwner =
             waitingListEntryDetails.accountOwner ?? "";
@@ -507,9 +508,6 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             solidarityContribution: solidarityContribution,
             associationMembershipTypeId:
               selectedAssociationMembershipType?.id ?? null,
-            pseudonym: showPseudonymField()
-              ? personalData.pseudonym?.trim()
-              : undefined,
           },
         })
         .then(handleOrderResponse)
@@ -539,9 +537,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             postcode: personalData.postcode,
             street: personalData.street,
             street2: personalData.street2,
-            pseudonym: showPseudonymField()
-              ? personalData.pseudonym?.trim()
-              : undefined,
+            pseudonym: personalData.pseudonym,
           },
           sepaAllowed: sepaAllowed,
           contractAccepted: contractAccepted,
@@ -609,34 +605,6 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     } else {
       setCurrentStep("14_confirmation");
     }
-  }
-
-  function showPseudonymField() {
-    if (!settings.pseudonymEnabled) {
-      return false;
-    }
-    // Waiting list entries don't store the pseudonym: it is asked when the entry gets confirmed.
-    if (waitingListEntryDetails !== undefined) {
-      return !waitingListEntryDetails.memberAlreadyExists;
-    }
-    return willAMemberBeCreated();
-  }
-
-  function willAMemberBeCreated() {
-    // Same rule as BestellWizardConfirmOrderApiView.validate_everything_and_apply_all_changes
-    const orderNotEmpty =
-      Object.keys(
-        buildFilteredShoppingCart(
-          shoppingCart,
-          false,
-          productTypesInWaitingList,
-        ),
-      ).length > 0;
-    const becomeMemberNowSent =
-      !settings.forceWaitingList && becomeMemberNow !== false;
-    const legalStatusHasMembership =
-      settings.legalStatus === "coop" || settings.legalStatus === "association";
-    return orderNotEmpty || (becomeMemberNowSent && legalStatusHasMembership);
   }
 
   function goToProductTypeStep(productType: PublicProductType) {
@@ -828,7 +796,6 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             }
             setToastDatas={setToastDatas}
             changesDisabled={waitingListEntryDetails !== undefined}
-            showPseudonymField={showPseudonymField()}
           />
         );
       case "9_banking_data":

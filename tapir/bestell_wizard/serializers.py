@@ -24,7 +24,7 @@ class PersonalDataSerializer(serializers.Serializer):
     country = serializers.CharField()
     account_owner = serializers.CharField(allow_blank=True)
     iban = serializers.CharField(allow_blank=True)
-    pseudonym = serializers.CharField(allow_blank=True, required=False, max_length=150)
+    pseudonym = serializers.CharField(allow_blank=True, default="", max_length=150)
 
 
 class BestellWizardConfirmOrderRequestSerializer(serializers.Serializer):

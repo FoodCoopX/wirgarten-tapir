@@ -77,6 +77,7 @@ class WaitingListEntryCreator:
 
         if personal_data is not None:
             cls.set_personal_data_from_validated_data(waiting_list_entry, personal_data)
+            waiting_list_entry.pseudonym = personal_data["pseudonym"]
 
         waiting_list_entry.save()
 

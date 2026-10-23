@@ -886,11 +886,7 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         self.assertStatusCode(response, 200)
         return response.json()
 
-    def test_post_orderWithPseudonymAndBakeryEnabled_memberCreatedWithPseudonym(
-        self,
-    ):
-        self._set_parameter(ParameterKeys.BAKERY_ENABLED, True)
-
+    def test_post_orderWithPseudonym_memberCreatedWithPseudonym(self):
         response_content = self.post_with_pseudonym(
             self.build_valid_post_data_for_an_order_without_waiting_list()
         )
@@ -898,21 +894,15 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         self.assert_order_confirmed(response_content)
         self.assertEqual("Brotfan", Member.objects.get().pseudonym)
 
-    def test_post_orderWithPseudonymAndBakeryDisabled_memberCreatedWithoutPseudonym(
-        self,
-    ):
-        self._set_parameter(ParameterKeys.BAKERY_ENABLED, False)
-
+    def test_post_waitingListEntryWithPseudonym_entryCreatedWithPseudonym(self):
         response_content = self.post_with_pseudonym(
-            self.build_valid_post_data_for_an_order_without_waiting_list()
+            self.build_valid_post_data_for_a_waiting_list_entry()
         )
 
         self.assert_order_confirmed(response_content)
-        self.assertEqual("", Member.objects.get().pseudonym)
+        self.assertEqual("Brotfan", WaitingListEntry.objects.get().pseudonym)
 
     def test_post_orderWithoutPseudonym_memberCreatedWithoutPseudonym(self):
-        self._set_parameter(ParameterKeys.BAKERY_ENABLED, True)
-
         response = self.client.post(
             reverse("bestell_wizard:bestell_wizard_confirm_order"),
             data=json.dumps(
@@ -926,7 +916,6 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         self.assertEqual("", Member.objects.get().pseudonym)
 
     def test_post_pseudonymTooLong_returnsErrorAndDontCreateMember(self):
-        self._set_parameter(ParameterKeys.BAKERY_ENABLED, True)
         data = self.build_valid_post_data_for_an_order_without_waiting_list()
         data["personal_data"]["pseudonym"] = "x" * 151
 
