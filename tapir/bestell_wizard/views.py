@@ -252,13 +252,20 @@ class BestellWizardConfirmOrderApiView(APIView):
         order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
             validated_serializer_data["shopping_cart_order"], cache=cache
         )
+        force_waiting_list = get_parameter_value(
+            ParameterKeys.BESTELLWIZARD_FORCE_WAITING_LIST, cache=cache
+        )
+        if len(order) > 0 and force_waiting_list:
+            raise ValidationError("Nur Warteliste-Einträge sind erlaubt.")
+
         member = None
         waiting_list_entry = None
 
         become_member_now = validated_serializer_data["become_member_now"]
-        if not legal_status_is_cooperative(
-            cache=cache
-        ) and not legal_status_is_association(cache=cache):
+        if force_waiting_list or (
+            not legal_status_is_cooperative(cache=cache)
+            and not legal_status_is_association(cache=cache)
+        ):
             become_member_now = False
 
         if len(order) > 0 or become_member_now:
@@ -276,7 +283,8 @@ class BestellWizardConfirmOrderApiView(APIView):
         )
 
         if (
-            len(order_waiting_list) > 0
+            force_waiting_list
+            or len(order_waiting_list) > 0
             or len(validated_serializer_data["pickup_location_ids"]) > 1
         ):
             if member is None:

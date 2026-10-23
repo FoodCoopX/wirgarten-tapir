@@ -18,7 +18,6 @@ import {
 import { BestellWizardSettings } from "../bestell_wizard/types/BestellWizardSettings.ts";
 import { PersonalData } from "../bestell_wizard/types/PersonalData.ts";
 import { ShoppingCart } from "../bestell_wizard/types/ShoppingCart.ts";
-import { areAllOrderedProductsInWaitingList } from "../bestell_wizard/utils/areAllOrderedProductsInWaitingList.ts";
 import { buildEmptySettings } from "../bestell_wizard/utils/buildEmptySettings.ts";
 import { buildEmptyShoppingCart } from "../bestell_wizard/utils/buildEmptyShoppingCart.ts";
 import { buildFilteredShoppingCart } from "../bestell_wizard/utils/buildFilteredShoppingCart.ts";
@@ -67,8 +66,10 @@ import { getPhase } from "./utils/getPhase.ts";
 import { getProductTypeByProductId } from "./utils/getProductTypeByProductId.ts";
 import { getProductTypeFromStep } from "./utils/getProductTypeFromStep.ts";
 import { getPublicPickupLocationById } from "./utils/getPublicPickupLocationById.ts";
-import { updateWaitingList } from "./utils/updateWaitingList.ts";
 import { getVisibleAssociationMembershipTypes } from "./utils/getVisibleAssociationMembershipTypes.ts";
+import { isOrderWaitingListOnly } from "./utils/isOrderWaitingListOnly.ts";
+import { updateWaitingList } from "./utils/updateWaitingList.ts";
+import { willBecomeMemberNow } from "./utils/willBecomeMemberNow.ts";
 
 interface BestellWizardMobileProps {
   csrfToken: string;
@@ -555,8 +556,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
           ),
           studentStatusEnabled: studentStatusEnabled,
           paymentRhythm: personalData.paymentRhythm,
-          becomeMemberNow:
-            !settings.forceWaitingList && becomeMemberNow !== false,
+          becomeMemberNow: willBecomeMemberNow(settings, becomeMemberNow),
           privacyPolicyRead: privacyPolicyRead,
           cancellationPolicyRead: cancellationPolicyRead,
           growingPeriodId: selectedGrowingPeriod!.id!,
@@ -592,11 +592,12 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     }
 
     if (
-      areAllOrderedProductsInWaitingList(
+      isOrderWaitingListOnly(
+        settings,
         shoppingCart,
         productTypesInWaitingList,
-      ) &&
-      becomeMemberNow === false
+        becomeMemberNow,
+      )
     ) {
       setCurrentStep("14b_confirmation_waiting_list");
     } else {

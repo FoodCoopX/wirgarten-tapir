@@ -85,6 +85,7 @@ class TestMemberMailingListDataView(TapirIntegrationTest):
                 "available_lists": [
                     {
                         "advertised": True,
+                        "moderated": False,
                         "description": "",
                         "name": "test_name@example.com",
                         "nb_recipients": 0,
@@ -148,6 +149,7 @@ class TestMemberMailingListDataView(TapirIntegrationTest):
                 "available_lists": [
                     {
                         "advertised": True,
+                        "moderated": False,
                         "description": "",
                         "name": "test_name@example.com",
                         "nb_recipients": 1,
@@ -185,6 +187,7 @@ class TestMemberMailingListDataView(TapirIntegrationTest):
                 "available_lists": [
                     {
                         "advertised": True,
+                        "moderated": False,
                         "description": "",
                         "name": "test_name@example.com",
                         "nb_recipients": 1,
@@ -222,6 +225,7 @@ class TestMemberMailingListDataView(TapirIntegrationTest):
                 "available_lists": [
                     {
                         "advertised": False,
+                        "moderated": False,
                         "description": "",
                         "name": "test_name@example.com",
                         "nb_recipients": 1,
@@ -259,6 +263,7 @@ class TestMemberMailingListDataView(TapirIntegrationTest):
                 "available_lists": [
                     {
                         "advertised": False,
+                        "moderated": False,
                         "description": "",
                         "name": "test_name@example.com",
                         "nb_recipients": 1,

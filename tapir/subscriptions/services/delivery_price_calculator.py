@@ -33,7 +33,6 @@ class DeliveryPriceCalculator:
                 cls.get_price_of_single_delivery_for_subscription(
                     subscription, reference_date, cache=cache
                 )
-                * subscription.quantity
                 for subscription in subscriptions
             ],
             start=Decimal(0),
@@ -78,7 +77,7 @@ class DeliveryPriceCalculator:
             delivery_price *= 2
         elif delivery_cycle == EVERY_FOUR_WEEKS[0]:
             delivery_price *= 4
-        return delivery_price
+        return delivery_price * subscription.quantity
 
     @classmethod
     def get_number_of_months_in_growing_period(

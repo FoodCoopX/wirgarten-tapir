@@ -10,6 +10,7 @@ class MinimumNumberOfSharesResponseSerializer(serializers.Serializer):
 class GetCoopShareTransactionsResponseSerializer(serializers.Serializer):
     transactions = CoopShareTransactionSerializer(many=True)
     url_of_bestell_wizard = serializers.URLField()
+    contact_email = serializers.EmailField()
 
 
 class ExistingMemberPurchasesSharesRequestSerializer(serializers.Serializer):
@@ -47,12 +48,15 @@ class MemberProfilePersonalDataResponseSerializer(serializers.Serializer):
     city = serializers.CharField()
     is_student = serializers.BooleanField(required=False)
     can_edit_student = serializers.BooleanField()
+    label_student_checkbox = serializers.CharField()
     can_edit_name = serializers.BooleanField()
     country = serializers.CharField(allow_blank=True)
     can_edit_country = serializers.BooleanField()
     contact_email = serializers.EmailField()
     member_number = serializers.CharField()
     phone_number_required = serializers.BooleanField()
+    pseudonym = serializers.CharField(allow_blank=True)
+    pseudonym_enabled = serializers.BooleanField()
 
 
 class MemberProfilePersonalDataRequestSerializer(serializers.Serializer):
@@ -69,6 +73,7 @@ class MemberProfilePersonalDataRequestSerializer(serializers.Serializer):
     city = serializers.CharField()
     country = serializers.CharField(required=False)
     is_student = serializers.BooleanField(required=False)
+    pseudonym = serializers.CharField(required=False, allow_blank=True, max_length=150)
 
 
 class MemberEmailResponseSerializer(serializers.Serializer):

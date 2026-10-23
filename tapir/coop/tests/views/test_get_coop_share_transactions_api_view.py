@@ -1,6 +1,8 @@
 from django.urls import reverse
 from rest_framework import status
 
+from tapir.configuration.models import TapirParameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import MemberFactory, CoopShareTransactionFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
@@ -52,3 +54,17 @@ class TestGetCoopShareTransactionsApiView(TapirIntegrationTest):
         transactions = response_content["transactions"]
         self.assertEqual(1, len(transactions))
         self.assertEqual(transaction.id, transactions[0]["id"])
+
+    def test_get_default_returnsContactEmail(self):
+        TapirParameter.objects.filter(key=ParameterKeys.SITE_EMAIL).update(
+            value="verwaltung@example.com"
+        )
+        member = MemberFactory.create()
+        self.client.force_login(member)
+
+        url = reverse("coop:get_coop_share_transactions")
+        url = f"{url}?member_id={member.id}"
+        response = self.client.get(url)
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assertEqual("verwaltung@example.com", response.json()["contact_email"])

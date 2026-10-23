@@ -23,7 +23,7 @@ services:
       VIRTUAL_HOST: localhost
       DEBUG: 1
       DJANGO_VITE_DEBUG: True
-      MAILMAN_ENABLED: True
+      MAILING_LISTS_ENABLED: False
       KEYCLOAK_SKIP_VERIFICATION_EMAIL: True
     depends_on:
       - db

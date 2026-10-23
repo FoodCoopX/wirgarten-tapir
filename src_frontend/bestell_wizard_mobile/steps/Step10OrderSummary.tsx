@@ -34,6 +34,7 @@ import { getProductTypeByProductId } from "../utils/getProductTypeByProductId.ts
 import { getTotalPriceForProductType } from "../utils/getTotalPriceForProductType.ts";
 import { getVisibleAssociationMembershipTypes } from "../utils/getVisibleAssociationMembershipTypes.ts";
 import { scrollIntoView } from "../utils/scrollIntoView.ts";
+import { willBecomeMemberNow } from "../utils/willBecomeMemberNow.ts";
 
 interface Step10OrderSummaryProps {
   settings: BestellWizardSettings;
@@ -319,7 +320,9 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
           <PaymentRow
             label={
               "Genossenschaftsanteile" +
-              (becomeMemberNow === false ? " (Start wenn Platz frei)" : "")
+              (willBecomeMemberNow(settings, becomeMemberNow)
+                ? ""
+                : " (Start wenn Platz frei)")
             }
             amount={numberOfCoopShares * settings.priceOfAShare}
           />
@@ -475,7 +478,7 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
           ))}
           {!singleProductType &&
             settings.showCoopContent &&
-            becomeMemberNow !== false &&
+            willBecomeMemberNow(settings, becomeMemberNow) &&
             !waitingListEntryDetails?.memberAlreadyExists && (
               <Accordion>
                 <Accordion.Item
