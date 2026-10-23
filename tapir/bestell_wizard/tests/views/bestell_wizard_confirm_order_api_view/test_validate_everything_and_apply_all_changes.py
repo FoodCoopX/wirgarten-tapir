@@ -505,3 +505,61 @@ class TestValidateEverythingAndApplyAllChanges(TapirUnitTest):
             validated_serializer_data=validated_serializer_data, cache=cache
         )
         mock_validate_and_create_waiting_list_entry_existing_member.assert_not_called()
+
+    @patch.object(
+        TapirOrderBuilder,
+        "build_tapir_order_from_shopping_cart_serializer",
+        autospec=True,
+    )
+    @patch.object(
+        BestellWizardConfirmOrderApiView,
+        "validate_and_create_waiting_list_entry_existing_member",
+        autospec=True,
+    )
+    @patch.object(
+        BestellWizardConfirmOrderApiView,
+        "validate_and_create_waiting_list_entry_potential_member",
+        autospec=True,
+    )
+    @patch.object(
+        BestellWizardConfirmOrderApiView, "validate_and_fulfill_order", autospec=True
+    )
+    def test_validateEverythingAndApplyAllChanges_forceWaitingListAndNoProductOrdered_callsCreateWaitingListEntryOnly(
+        self,
+        mock_validate_and_fulfill_order: Mock,
+        mock_validate_and_create_waiting_list_entry_potential_member: Mock,
+        mock_validate_and_create_waiting_list_entry_existing_member: Mock,
+        mock_build_tapir_order_from_shopping_cart_serializer: Mock,
+    ):
+        cache = {}
+        validated_serializer_data = {
+            "privacy_policy_read": True,
+            "shopping_cart_order": {},
+            "become_member_now": False,
+            "shopping_cart_waiting_list": {},
+            "pickup_location_ids": [],
+        }
+
+        mock_build_tapir_order_from_shopping_cart_serializer.return_value = {}
+        mock_parameter_value(
+            cache=cache,
+            key=ParameterKeys.BESTELLWIZARD_FORCE_WAITING_LIST,
+            value=True,
+        )
+        mock_parameter_value(
+            cache=cache,
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS,
+            value=LEGAL_STATUS_COOPERATIVE,
+        )
+
+        BestellWizardConfirmOrderApiView.validate_everything_and_apply_all_changes(
+            validated_serializer_data=validated_serializer_data,
+            request=Mock(),
+            cache=cache,
+        )
+
+        mock_validate_and_fulfill_order.assert_not_called()
+        mock_validate_and_create_waiting_list_entry_potential_member.assert_called_once_with(
+            validated_serializer_data=validated_serializer_data, cache=cache
+        )
+        mock_validate_and_create_waiting_list_entry_existing_member.assert_not_called()

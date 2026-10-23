@@ -283,7 +283,8 @@ class BestellWizardConfirmOrderApiView(APIView):
         )
 
         if (
-            len(order_waiting_list) > 0
+            force_waiting_list
+            or len(order_waiting_list) > 0
             or len(validated_serializer_data["pickup_location_ids"]) > 1
         ):
             if member is None:

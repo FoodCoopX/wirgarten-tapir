@@ -9,6 +9,7 @@ import { areAllOrderedProductsInWaitingList } from "../../bestell_wizard/utils/a
 import { isAtLeastOneOrderedProductWithDelivery } from "../../bestell_wizard/utils/isAtLeastOneOrderedProductWithDelivery.ts";
 import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
 import { Step } from "../types/Step.ts";
+import { isOrderWaitingListOnly } from "./isOrderWaitingListOnly.ts";
 import { shouldConfirmMemberNow } from "./shouldConfirmMemberNow.ts";
 import { shouldIncludeStepGrowingPeriodChoice } from "./shouldIncludeStepGrowingPeriodChoice.ts";
 import { willBecomeMemberNow } from "./willBecomeMemberNow.ts";
@@ -128,11 +129,12 @@ export function buildSteps(
   }
 
   if (
-    areAllOrderedProductsInWaitingList(
+    isOrderWaitingListOnly(
+      settings,
       shoppingCart,
       productTypesInWaitingList,
-    ) &&
-    !willBecomeMemberNow(settings, becomeMemberNow)
+      becomeMemberNow,
+    )
   ) {
     newSteps.push("14b_confirmation_waiting_list");
   } else {

@@ -18,7 +18,6 @@ import {
 import { BestellWizardSettings } from "../bestell_wizard/types/BestellWizardSettings.ts";
 import { PersonalData } from "../bestell_wizard/types/PersonalData.ts";
 import { ShoppingCart } from "../bestell_wizard/types/ShoppingCart.ts";
-import { areAllOrderedProductsInWaitingList } from "../bestell_wizard/utils/areAllOrderedProductsInWaitingList.ts";
 import { buildEmptySettings } from "../bestell_wizard/utils/buildEmptySettings.ts";
 import { buildEmptyShoppingCart } from "../bestell_wizard/utils/buildEmptyShoppingCart.ts";
 import { buildFilteredShoppingCart } from "../bestell_wizard/utils/buildFilteredShoppingCart.ts";
@@ -68,6 +67,7 @@ import { getProductTypeByProductId } from "./utils/getProductTypeByProductId.ts"
 import { getProductTypeFromStep } from "./utils/getProductTypeFromStep.ts";
 import { getPublicPickupLocationById } from "./utils/getPublicPickupLocationById.ts";
 import { getVisibleAssociationMembershipTypes } from "./utils/getVisibleAssociationMembershipTypes.ts";
+import { isOrderWaitingListOnly } from "./utils/isOrderWaitingListOnly.ts";
 import { updateWaitingList } from "./utils/updateWaitingList.ts";
 import { willBecomeMemberNow } from "./utils/willBecomeMemberNow.ts";
 
@@ -592,11 +592,12 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     }
 
     if (
-      areAllOrderedProductsInWaitingList(
+      isOrderWaitingListOnly(
+        settings,
         shoppingCart,
         productTypesInWaitingList,
-      ) &&
-      !willBecomeMemberNow(settings, becomeMemberNow)
+        becomeMemberNow,
+      )
     ) {
       setCurrentStep("14b_confirmation_waiting_list");
     } else {
