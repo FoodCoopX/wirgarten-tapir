@@ -221,7 +221,7 @@ class MemberSegmentProvider:
 
         member_ids_with_active_or_future_solidarity_contribution = (
             SolidarityContribution.objects.filter(
-                Q(end_date=None) | Q(end_date__gte=reference_datetime.date())
+                amount__gt=0, end_date__gte=reference_datetime.date()
             ).values_list("member_id", flat=True)
         )
 
