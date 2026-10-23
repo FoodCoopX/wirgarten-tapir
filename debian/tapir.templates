@@ -1,0 +1,37 @@
+Template: tapir/create_instance
+Type: boolean
+Default: true
+Description: Create a Tapir instance now?
+ Further instances (one per solidarity farm) are created later with
+ "tapir-instance create".
+
+Template: tapir/instance_name
+Type: string
+Default: tapir
+Description: Name of the instance:
+ Short name, also the Keycloak realm: a-z, 0-9 and -, e.g. mysolawi.
+
+Template: tapir/domain
+Type: string
+Default:
+Description: Public host name of the instance:
+ E.g. tapir.example.org. The nginx site, the Keycloak realm and all URLs are
+ derived from it.
+
+Template: tapir/port
+Type: string
+Default: 8000
+Description: Local port of the instance:
+ gunicorn listens on 127.0.0.1:<port>, redis on <port> + 10000.
+
+Template: tapir/admin_email
+Type: string
+Default:
+Description: E-mail address of the first admin:
+ Gets a Tapir account with a Keycloak login; the initial password is written
+ to /etc/tapir/initial-passwords/. Leave empty to skip.
+
+Template: tapir/image
+Type: string
+Default: ghcr.io/foodcoopx/wirgarten-tapir:latest
+Description: Container image of Tapir:

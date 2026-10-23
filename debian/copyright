@@ -1,0 +1,8 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: tapir
+Source: https://github.com/FoodCoopX/wirgarten-tapir
+
+Files: *
+Copyright: Tapir contributors
+License: AGPL-3.0
+ See /usr/share/common-licenses/ or the LICENSE file in the source repository.

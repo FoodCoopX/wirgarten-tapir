@@ -1,0 +1,14 @@
+# Build context for Dockerfile and docker/production/Containerfile
+.git
+.venv
+venv
+node_modules
+.pnpm-store
+.vite
+.pytest_cache
+build-deb
+docs
+static
+**/__pycache__
+*.tsbuildinfo
+.env.local

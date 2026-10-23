@@ -1,0 +1,143 @@
+name: Build container image, Debian package and APT repository
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+env:
+  # Number of package versions kept in the APT repository (GitHub Pages is limited to 1 GB)
+  KEEP_VERSIONS: 3
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Log in to the container registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Image tags
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=raw,value=latest
+            type=raw,value=edge
+            type=sha
+
+      - name: Build and push the production image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: docker/production/Containerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: TAPIR_VERSION=${{ github.ref_name }}-${{ github.sha }}
+
+  build:
+    needs: image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Determine version
+        id: version
+        run: |
+          base="$(dpkg-parsechangelog -SVersion)"
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            version="${GITHUB_REF_NAME#v}"
+          else
+            version="${base}+git$(date -u +%Y%m%d%H%M).$(git rev-parse --short HEAD)"
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Build .deb
+        run: packaging/build-deb.sh "${{ steps.version.outputs.version }}"
+
+      - name: Attach .deb to a GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "deb-${{ steps.version.outputs.version }}" build-deb/*.deb \
+            --title "Debian package ${{ steps.version.outputs.version }}" \
+            --notes "Built from ${{ github.sha }}" \
+            --target "${{ github.sha }}" \
+            --prerelease
+
+  publish-repo:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Download recent packages
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p debs
+          gh release list --limit 100 --json tagName,createdAt \
+              --jq "[.[] | select(.tagName | startswith(\"deb-\"))] | sort_by(.createdAt) | reverse | .[:${KEEP_VERSIONS}] | .[].tagName" \
+            | while read -r tag; do gh release download "$tag" --pattern '*.deb' --dir debs; done
+          ls -lh debs
+
+      - name: Import signing key
+        id: gpg
+        env:
+          APT_GPG_PRIVATE_KEY: ${{ secrets.APT_GPG_PRIVATE_KEY }}
+        run: |
+          echo "$APT_GPG_PRIVATE_KEY" | gpg --batch --import
+          echo "key_id=$(gpg --list-secret-keys --with-colons | awk -F: '/^sec/ {print $5; exit}')" >> "$GITHUB_OUTPUT"
+
+      - name: Build APT repository
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq apt-utils
+          packaging/build-apt-repo.sh debs site "${{ steps.gpg.outputs.key_id }}"
+          base_url="https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}"
+          cat > site/index.html <<HTML
+          <!doctype html><meta charset="utf-8"><title>Tapir APT repository</title>
+          <h1>Tapir APT repository</h1>
+          <pre>
+          sudo curl -fsSLo /usr/share/keyrings/tapir-archive-keyring.gpg ${base_url}/tapir-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/tapir-archive-keyring.gpg] ${base_url} trixie main" \\
+            | sudo tee /etc/apt/sources.list.d/tapir.list
+          sudo apt update && sudo apt install tapir
+          </pre>
+          HTML
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4

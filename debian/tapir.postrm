@@ -1,0 +1,11 @@
+#!/bin/sh
+set -e
+
+if [ "$1" = purge ]; then
+    echo "tapir: instances, databases, data (/var/lib/tapir) and Keycloak were kept." >&2
+    echo "tapir: remove an instance completely with 'tapir-instance remove <name> --purge' before purging." >&2
+fi
+
+#DEBHELPER#
+
+exit 0
