@@ -11,6 +11,7 @@ import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeast
 import { Step } from "../types/Step.ts";
 import { shouldConfirmMemberNow } from "./shouldConfirmMemberNow.ts";
 import { shouldIncludeStepGrowingPeriodChoice } from "./shouldIncludeStepGrowingPeriodChoice.ts";
+import { willBecomeMemberNow } from "./willBecomeMemberNow.ts";
 
 export function buildSteps(
   settings: BestellWizardSettings,
@@ -111,8 +112,7 @@ export function buildSteps(
   newSteps.push("8_personal_data");
 
   if (
-    !settings.forceWaitingList &&
-    becomeMemberNow !== false &&
+    willBecomeMemberNow(settings, becomeMemberNow) &&
     !waitingListEntryDetails?.memberAlreadyExists
   ) {
     newSteps.push("9_banking_data");
@@ -132,7 +132,7 @@ export function buildSteps(
       shoppingCart,
       productTypesInWaitingList,
     ) &&
-    becomeMemberNow === false
+    !willBecomeMemberNow(settings, becomeMemberNow)
   ) {
     newSteps.push("14b_confirmation_waiting_list");
   } else {
@@ -265,7 +265,7 @@ function buildCoopSteps(
     coopSteps.push("6c_coop_member_now");
   }
 
-  if (becomeMemberNow !== false) {
+  if (willBecomeMemberNow(settings, becomeMemberNow)) {
     coopSteps.push("6b_coop_shares");
   }
 
@@ -309,7 +309,7 @@ function buildAssociationSteps(
     associationSteps.push("6c_coop_member_now");
   }
 
-  if (becomeMemberNow !== false) {
+  if (willBecomeMemberNow(settings, becomeMemberNow)) {
     associationSteps.push("6b_association_membership");
   }
 

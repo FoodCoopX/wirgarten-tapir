@@ -67,8 +67,9 @@ import { getPhase } from "./utils/getPhase.ts";
 import { getProductTypeByProductId } from "./utils/getProductTypeByProductId.ts";
 import { getProductTypeFromStep } from "./utils/getProductTypeFromStep.ts";
 import { getPublicPickupLocationById } from "./utils/getPublicPickupLocationById.ts";
-import { updateWaitingList } from "./utils/updateWaitingList.ts";
 import { getVisibleAssociationMembershipTypes } from "./utils/getVisibleAssociationMembershipTypes.ts";
+import { updateWaitingList } from "./utils/updateWaitingList.ts";
+import { willBecomeMemberNow } from "./utils/willBecomeMemberNow.ts";
 
 interface BestellWizardMobileProps {
   csrfToken: string;
@@ -555,8 +556,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
           ),
           studentStatusEnabled: studentStatusEnabled,
           paymentRhythm: personalData.paymentRhythm,
-          becomeMemberNow:
-            !settings.forceWaitingList && becomeMemberNow !== false,
+          becomeMemberNow: willBecomeMemberNow(settings, becomeMemberNow),
           privacyPolicyRead: privacyPolicyRead,
           cancellationPolicyRead: cancellationPolicyRead,
           growingPeriodId: selectedGrowingPeriod!.id!,
@@ -596,7 +596,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
         shoppingCart,
         productTypesInWaitingList,
       ) &&
-      becomeMemberNow === false
+      !willBecomeMemberNow(settings, becomeMemberNow)
     ) {
       setCurrentStep("14b_confirmation_waiting_list");
     } else {
