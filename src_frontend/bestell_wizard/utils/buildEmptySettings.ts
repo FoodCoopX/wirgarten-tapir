@@ -17,6 +17,7 @@ export function buildEmptySettings(): BestellWizardSettings {
     paymentRhythmChoices: {},
     studentStatusAllowed: false,
     phoneNumberRequired: false,
+    pseudonymEnabled: false,
     introEnabled: false,
     productTypeIdsThatAreAlreadyAtCapacity: [],
     productIdsThatAreAlreadyAtCapacity: [],

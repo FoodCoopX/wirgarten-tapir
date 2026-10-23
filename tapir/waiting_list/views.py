@@ -446,6 +446,7 @@ class WaitingListApiView(APIView):
             "postcode",
             "city",
             "country",
+            "pseudonym",
         ]
         for field in personal_data_fields:
             setattr(entry, field, getattr(entry.member, field))
@@ -808,6 +809,7 @@ class PublicGetWaitingListEntryDetailsApiView(APIView):
             "postcode": entry.postcode,
             "city": entry.city,
             "country": entry.country,
+            "pseudonym": entry.pseudonym,
             "pickup_location_wishes": PickupLocation.objects.filter(
                 id__in=entry.pickup_location_wishes.values_list(
                     "pickup_location", flat=True

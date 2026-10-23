@@ -26,6 +26,7 @@ export type BestellWizardSettings = {
   paymentRhythmChoices: { [key: string]: string };
   studentStatusAllowed: boolean;
   phoneNumberRequired: boolean;
+  pseudonymEnabled: boolean;
   introEnabled: boolean;
   productTypeIdsThatAreAlreadyAtCapacity: string[];
   productIdsThatAreAlreadyAtCapacity: string[];

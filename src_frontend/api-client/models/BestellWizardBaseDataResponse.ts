@@ -124,6 +124,12 @@ export interface BestellWizardBaseDataResponse {
    * @type {boolean}
    * @memberof BestellWizardBaseDataResponse
    */
+  pseudonymEnabled: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof BestellWizardBaseDataResponse
+   */
   showCoopContent: boolean;
   /**
    *
@@ -308,6 +314,8 @@ export function instanceOfBestellWizardBaseDataResponse(
     value["phoneNumberRequired"] === undefined
   )
     return false;
+  if (!("pseudonymEnabled" in value) || value["pseudonymEnabled"] === undefined)
+    return false;
   if (!("showCoopContent" in value) || value["showCoopContent"] === undefined)
     return false;
   if (
@@ -435,6 +443,7 @@ export function BestellWizardBaseDataResponseFromJSONTyped(
     introEnabled: json["intro_enabled"],
     studentStatusAllowed: json["student_status_allowed"],
     phoneNumberRequired: json["phone_number_required"],
+    pseudonymEnabled: json["pseudonym_enabled"],
     showCoopContent: json["show_coop_content"],
     labelCheckboxSepaMandat: json["label_checkbox_sepa_mandat"],
     labelCheckboxContractPolicy: json["label_checkbox_contract_policy"],
@@ -501,6 +510,7 @@ export function BestellWizardBaseDataResponseToJSONTyped(
     intro_enabled: value["introEnabled"],
     student_status_allowed: value["studentStatusAllowed"],
     phone_number_required: value["phoneNumberRequired"],
+    pseudonym_enabled: value["pseudonymEnabled"],
     show_coop_content: value["showCoopContent"],
     label_checkbox_sepa_mandat: value["labelCheckboxSepaMandat"],
     label_checkbox_contract_policy: value["labelCheckboxContractPolicy"],

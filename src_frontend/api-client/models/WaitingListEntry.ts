@@ -95,6 +95,12 @@ export interface WaitingListEntry {
   country?: MemberCountry;
   /**
    *
+   * @type {string}
+   * @memberof WaitingListEntry
+   */
+  pseudonym?: string;
+  /**
+   *
    * @type {Date}
    * @memberof WaitingListEntry
    */
@@ -193,6 +199,7 @@ export function WaitingListEntryFromJSONTyped(
       json["country"] == null
         ? undefined
         : MemberCountryFromJSON(json["country"]),
+    pseudonym: json["pseudonym"] == null ? undefined : json["pseudonym"],
     privacyConsent: new Date(json["privacy_consent"]),
     numberOfCoopShares: json["number_of_coop_shares"],
     desiredStartDate:
@@ -236,6 +243,7 @@ export function WaitingListEntryToJSONTyped(
     postcode: value["postcode"],
     city: value["city"],
     country: MemberCountryToJSON(value["country"]),
+    pseudonym: value["pseudonym"],
     privacy_consent: value["privacyConsent"].toISOString(),
     number_of_coop_shares: value["numberOfCoopShares"],
     desired_start_date:

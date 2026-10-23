@@ -207,6 +207,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
           personalData.street2 = waitingListEntryDetails.street2;
           personalData.postcode = waitingListEntryDetails.postcode;
           personalData.city = waitingListEntryDetails.city;
+          personalData.pseudonym = waitingListEntryDetails.pseudonym;
           personalData.iban = waitingListEntryDetails.iban ?? "";
           personalData.accountOwner =
             waitingListEntryDetails.accountOwner ?? "";
@@ -536,6 +537,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             postcode: personalData.postcode,
             street: personalData.street,
             street2: personalData.street2,
+            pseudonym: personalData.pseudonym,
           },
           sepaAllowed: sepaAllowed,
           contractAccepted: contractAccepted,
