@@ -28,6 +28,7 @@ export function updateWaitingList(
 
     if (
       shouldProductTypeBeInWaitingList(
+        settings,
         productType,
         productTypeIdsOverCapacity,
         pickupLocationForcesWaitingList,
@@ -58,13 +59,14 @@ function doesPickupLocationSelectionForceWaitingListForDeliveredProducts(
 }
 
 function shouldProductTypeBeInWaitingList(
+  settings: BestellWizardSettings,
   productType: PublicProductType,
   productTypeIdsOverCapacity: string[],
   pickupLocationForcesWaitingList: boolean,
   shoppingCart: ShoppingCart,
   productIdsOverCapacity: string[],
 ) {
-  if (productType.forceWaitingList) {
+  if (settings.forceWaitingList || productType.forceWaitingList) {
     return true;
   }
 

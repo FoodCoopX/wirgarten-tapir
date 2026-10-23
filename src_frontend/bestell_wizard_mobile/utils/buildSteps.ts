@@ -111,6 +111,7 @@ export function buildSteps(
   newSteps.push("8_personal_data");
 
   if (
+    !settings.forceWaitingList &&
     becomeMemberNow !== false &&
     !waitingListEntryDetails?.memberAlreadyExists
   ) {

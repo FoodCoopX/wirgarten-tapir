@@ -5,7 +5,14 @@ from django.core.exceptions import ValidationError
 from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.bestell_wizard.views import BestellWizardConfirmOrderApiView
+from tapir.core.config import (
+    LEGAL_STATUS_ASSOCIATION,
+    LEGAL_STATUS_COMPANY,
+    LEGAL_STATUS_COOPERATIVE,
+)
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
+from tapir.utils.tests_utils import mock_parameter_value
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.tests.factories import GrowingPeriodFactory
 from tapir.wirgarten.tests.test_utils import mock_timezone
 
@@ -44,8 +51,6 @@ class TestValidateEverythingAndApplyAllChanges(TapirUnitTest):
         for mock in mocks:
             mock.assert_not_called()
 
-    @patch("tapir.bestell_wizard.views.legal_status_is_cooperative", autospec=True)
-    @patch("tapir.bestell_wizard.views.legal_status_is_association", autospec=True)
     @patch.object(
         TapirOrderBuilder,
         "build_tapir_order_from_shopping_cart_serializer",
@@ -70,11 +75,9 @@ class TestValidateEverythingAndApplyAllChanges(TapirUnitTest):
         mock_validate_and_create_waiting_list_entry_potential_member: Mock,
         mock_validate_and_create_waiting_list_entry_existing_member: Mock,
         mock_build_tapir_order_from_shopping_cart_serializer: Mock,
-        mock_legal_status_is_association: Mock,
-        mock_legal_status_is_cooperative: Mock,
     ):
         shopping_cart_order = Mock()
-        cache = Mock()
+        cache = {}
         request = Mock()
         growing_period = GrowingPeriodFactory.build()
         validated_serializer_data = {
@@ -86,8 +89,16 @@ class TestValidateEverythingAndApplyAllChanges(TapirUnitTest):
             "pickup_location_ids": [],
         }
 
-        mock_legal_status_is_association.return_value = False
-        mock_legal_status_is_cooperative.return_value = True
+        mock_parameter_value(
+            cache=cache,
+            key=ParameterKeys.BESTELLWIZARD_FORCE_WAITING_LIST,
+            value=False,
+        )
+        mock_parameter_value(
+            cache=cache,
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS,
+            value=LEGAL_STATUS_COOPERATIVE,
+        )
 
         mock_build_tapir_order_from_shopping_cart_serializer.side_effect = (
             lambda data, cache: ({Mock(): 2} if data == shopping_cart_order else {})
@@ -110,8 +121,6 @@ class TestValidateEverythingAndApplyAllChanges(TapirUnitTest):
         mock_validate_and_create_waiting_list_entry_potential_member.assert_not_called()
         mock_validate_and_create_waiting_list_entry_existing_member.assert_not_called()
 
-    @patch("tapir.bestell_wizard.views.legal_status_is_cooperative", autospec=True)
-    @patch("tapir.bestell_wizard.views.legal_status_is_association", autospec=True)
     @patch.object(
         BestellWizardConfirmOrderApiView,
         "validate_and_create_waiting_list_entry_existing_member",
@@ -130,10 +139,8 @@ class TestValidateEverythingAndApplyAllChanges(TapirUnitTest):
         mock_validate_and_fulfill_order: Mock,
         mock_validate_and_create_waiting_list_entry_potential_member: Mock,
         mock_validate_and_create_waiting_list_entry_existing_member: Mock,
-        mock_legal_status_is_association: Mock,
-        mock_legal_status_is_cooperative: Mock,
     ):
-        cache = Mock()
+        cache = {}
         request = Mock()
         growing_period = GrowingPeriodFactory.build()
         validated_serializer_data = {
@@ -145,8 +152,16 @@ class TestValidateEverythingAndApplyAllChanges(TapirUnitTest):
             "pickup_location_ids": [],
         }
 
-        mock_legal_status_is_association.return_value = False
-        mock_legal_status_is_cooperative.return_value = True
+        mock_parameter_value(
+            cache=cache,
+            key=ParameterKeys.BESTELLWIZARD_FORCE_WAITING_LIST,
+            value=False,
+        )
+        mock_parameter_value(
+            cache=cache,
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS,
+            value=LEGAL_STATUS_COOPERATIVE,
+        )
 
         BestellWizardConfirmOrderApiView.validate_everything_and_apply_all_changes(
             validated_serializer_data=validated_serializer_data,
@@ -162,8 +177,6 @@ class TestValidateEverythingAndApplyAllChanges(TapirUnitTest):
         mock_validate_and_create_waiting_list_entry_potential_member.assert_not_called()
         mock_validate_and_create_waiting_list_entry_existing_member.assert_not_called()
 
-    @patch("tapir.bestell_wizard.views.legal_status_is_cooperative", autospec=True)
-    @patch("tapir.bestell_wizard.views.legal_status_is_association", autospec=True)
     @patch.object(
         TapirOrderBuilder,
         "build_tapir_order_from_shopping_cart_serializer",
@@ -188,12 +201,10 @@ class TestValidateEverythingAndApplyAllChanges(TapirUnitTest):
         mock_validate_and_create_waiting_list_entry_potential_member: Mock,
         mock_validate_and_create_waiting_list_entry_existing_member: Mock,
         mock_build_tapir_order_from_shopping_cart_serializer: Mock,
-        mock_legal_status_is_association: Mock,
-        mock_legal_status_is_cooperative: Mock,
     ):
         shopping_cart_order = Mock()
         shopping_cart_waiting_list = Mock()
-        cache = Mock()
+        cache = {}
         request = Mock()
         growing_period = GrowingPeriodFactory.build()
         validated_serializer_data = {
@@ -204,8 +215,16 @@ class TestValidateEverythingAndApplyAllChanges(TapirUnitTest):
             "growing_period_id": growing_period.id,
         }
 
-        mock_legal_status_is_association.return_value = False
-        mock_legal_status_is_cooperative.return_value = True
+        mock_parameter_value(
+            cache=cache,
+            key=ParameterKeys.BESTELLWIZARD_FORCE_WAITING_LIST,
+            value=False,
+        )
+        mock_parameter_value(
+            cache=cache,
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS,
+            value=LEGAL_STATUS_COOPERATIVE,
+        )
 
         mock_build_tapir_order_from_shopping_cart_serializer.side_effect = (
             lambda data, cache: (
@@ -231,8 +250,6 @@ class TestValidateEverythingAndApplyAllChanges(TapirUnitTest):
         )
         mock_validate_and_create_waiting_list_entry_existing_member.assert_not_called()
 
-    @patch("tapir.bestell_wizard.views.legal_status_is_cooperative", autospec=True)
-    @patch("tapir.bestell_wizard.views.legal_status_is_association", autospec=True)
     @patch.object(
         TapirOrderBuilder,
         "build_tapir_order_from_shopping_cart_serializer",
@@ -257,12 +274,10 @@ class TestValidateEverythingAndApplyAllChanges(TapirUnitTest):
         mock_validate_and_create_waiting_list_entry_potential_member: Mock,
         mock_validate_and_create_waiting_list_entry_existing_member: Mock,
         mock_build_tapir_order_from_shopping_cart_serializer: Mock,
-        mock_legal_status_is_association: Mock,
-        mock_legal_status_is_cooperative: Mock,
     ):
         shopping_cart_order = Mock()
         shopping_cart_waiting_list = Mock()
-        cache = Mock()
+        cache = {}
         request = Mock()
         member = Mock()
         pickup_location_ids = Mock()
@@ -279,8 +294,16 @@ class TestValidateEverythingAndApplyAllChanges(TapirUnitTest):
         mock_build_tapir_order_from_shopping_cart_serializer.return_value = {Mock(): 2}
         mock_validate_and_fulfill_order.return_value = member
 
-        mock_legal_status_is_association.return_value = False
-        mock_legal_status_is_cooperative.return_value = True
+        mock_parameter_value(
+            cache=cache,
+            key=ParameterKeys.BESTELLWIZARD_FORCE_WAITING_LIST,
+            value=False,
+        )
+        mock_parameter_value(
+            cache=cache,
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS,
+            value=LEGAL_STATUS_COOPERATIVE,
+        )
 
         BestellWizardConfirmOrderApiView.validate_everything_and_apply_all_changes(
             validated_serializer_data=validated_serializer_data,
@@ -311,8 +334,6 @@ class TestValidateEverythingAndApplyAllChanges(TapirUnitTest):
         "build_tapir_order_from_shopping_cart_serializer",
         autospec=True,
     )
-    @patch("tapir.bestell_wizard.views.legal_status_is_cooperative", autospec=True)
-    @patch("tapir.bestell_wizard.views.legal_status_is_association", autospec=True)
     @patch.object(
         BestellWizardConfirmOrderApiView,
         "validate_and_create_waiting_list_entry_existing_member",
@@ -331,11 +352,9 @@ class TestValidateEverythingAndApplyAllChanges(TapirUnitTest):
         mock_validate_and_fulfill_order: Mock,
         mock_validate_and_create_waiting_list_entry_potential_member: Mock,
         mock_validate_and_create_waiting_list_entry_existing_member: Mock,
-        mock_legal_status_is_association: Mock,
-        mock_legal_status_is_cooperative: Mock,
         mock_build_tapir_order_from_shopping_cart_serializer: Mock,
     ):
-        cache = Mock()
+        cache = {}
         request = Mock()
         growing_period = GrowingPeriodFactory.build()
         shopping_cart_waiting_list = {Mock(): 2}
@@ -351,12 +370,133 @@ class TestValidateEverythingAndApplyAllChanges(TapirUnitTest):
         mock_build_tapir_order_from_shopping_cart_serializer.side_effect = (
             lambda shopping_cart, cache: ({Mock(): 2} if len(shopping_cart) > 0 else {})
         )
-        mock_legal_status_is_association.return_value = False
-        mock_legal_status_is_cooperative.return_value = False
+        mock_parameter_value(
+            cache=cache,
+            key=ParameterKeys.BESTELLWIZARD_FORCE_WAITING_LIST,
+            value=False,
+        )
+        mock_parameter_value(
+            cache=cache,
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS,
+            value=LEGAL_STATUS_COMPANY,
+        )
 
         BestellWizardConfirmOrderApiView.validate_everything_and_apply_all_changes(
             validated_serializer_data=validated_serializer_data,
             request=request,
+            cache=cache,
+        )
+
+        mock_validate_and_fulfill_order.assert_not_called()
+        mock_validate_and_create_waiting_list_entry_potential_member.assert_called_once_with(
+            validated_serializer_data=validated_serializer_data, cache=cache
+        )
+        mock_validate_and_create_waiting_list_entry_existing_member.assert_not_called()
+
+    @patch.object(
+        TapirOrderBuilder,
+        "build_tapir_order_from_shopping_cart_serializer",
+        autospec=True,
+    )
+    @patch.object(
+        BestellWizardConfirmOrderApiView,
+        "validate_and_create_waiting_list_entry_existing_member",
+        autospec=True,
+    )
+    @patch.object(
+        BestellWizardConfirmOrderApiView,
+        "validate_and_create_waiting_list_entry_potential_member",
+        autospec=True,
+    )
+    @patch.object(
+        BestellWizardConfirmOrderApiView, "validate_and_fulfill_order", autospec=True
+    )
+    def test_validateEverythingAndApplyAllChanges_forceWaitingListAndOrderIsNotEmpty_raisesValidationError(
+        self,
+        mock_validate_and_fulfill_order: Mock,
+        mock_validate_and_create_waiting_list_entry_potential_member: Mock,
+        mock_validate_and_create_waiting_list_entry_existing_member: Mock,
+        mock_build_tapir_order_from_shopping_cart_serializer: Mock,
+    ):
+        cache = {}
+        validated_serializer_data = {
+            "privacy_policy_read": True,
+            "shopping_cart_order": Mock(),
+        }
+        mock_build_tapir_order_from_shopping_cart_serializer.return_value = {Mock(): 2}
+        mock_parameter_value(
+            cache=cache,
+            key=ParameterKeys.BESTELLWIZARD_FORCE_WAITING_LIST,
+            value=True,
+        )
+
+        with self.assertRaises(ValidationError) as error:
+            BestellWizardConfirmOrderApiView.validate_everything_and_apply_all_changes(
+                validated_serializer_data=validated_serializer_data,
+                request=Mock(),
+                cache=cache,
+            )
+
+        self.assertEqual(
+            "Nur Warteliste-Einträge sind erlaubt.", error.exception.message
+        )
+        mock_validate_and_fulfill_order.assert_not_called()
+        mock_validate_and_create_waiting_list_entry_potential_member.assert_not_called()
+        mock_validate_and_create_waiting_list_entry_existing_member.assert_not_called()
+
+    @patch.object(
+        TapirOrderBuilder,
+        "build_tapir_order_from_shopping_cart_serializer",
+        autospec=True,
+    )
+    @patch.object(
+        BestellWizardConfirmOrderApiView,
+        "validate_and_create_waiting_list_entry_existing_member",
+        autospec=True,
+    )
+    @patch.object(
+        BestellWizardConfirmOrderApiView,
+        "validate_and_create_waiting_list_entry_potential_member",
+        autospec=True,
+    )
+    @patch.object(
+        BestellWizardConfirmOrderApiView, "validate_and_fulfill_order", autospec=True
+    )
+    def test_validateEverythingAndApplyAllChanges_orderIsEmptyAndBecomeMemberNowIsTrueButForceWaitingList_callsCreateWaitingListEntryOnly(
+        self,
+        mock_validate_and_fulfill_order: Mock,
+        mock_validate_and_create_waiting_list_entry_potential_member: Mock,
+        mock_validate_and_create_waiting_list_entry_existing_member: Mock,
+        mock_build_tapir_order_from_shopping_cart_serializer: Mock,
+    ):
+        cache = {}
+        growing_period = GrowingPeriodFactory.build()
+        validated_serializer_data = {
+            "privacy_policy_read": True,
+            "shopping_cart_order": {},
+            "become_member_now": True,
+            "shopping_cart_waiting_list": {Mock(): 2},
+            "growing_period_id": growing_period.id,
+            "pickup_location_ids": [],
+        }
+
+        mock_build_tapir_order_from_shopping_cart_serializer.side_effect = (
+            lambda shopping_cart, cache: ({Mock(): 2} if len(shopping_cart) > 0 else {})
+        )
+        mock_parameter_value(
+            cache=cache,
+            key=ParameterKeys.BESTELLWIZARD_FORCE_WAITING_LIST,
+            value=True,
+        )
+        mock_parameter_value(
+            cache=cache,
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS,
+            value=LEGAL_STATUS_ASSOCIATION,
+        )
+
+        BestellWizardConfirmOrderApiView.validate_everything_and_apply_all_changes(
+            validated_serializer_data=validated_serializer_data,
+            request=Mock(),
             cache=cache,
         )
 
