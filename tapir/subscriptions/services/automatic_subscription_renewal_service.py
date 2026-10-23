@@ -7,7 +7,9 @@ from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.wirgarten.models import Subscription
+from tapir.utils.services.tapir_cache_manager import TapirCacheManager
+from tapir.utils.shortcuts import get_from_cache_or_compute
+from tapir.wirgarten.models import GrowingPeriod, Subscription
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
     get_active_subscriptions,
@@ -151,6 +153,23 @@ class AutomaticSubscriptionRenewalService:
         if current_growing_period is None:
             return {}
 
+        key = "subscriptions_that_will_be_renewed_by_growing_period_id"
+        TapirCacheManager.register_key_in_category(
+            cache=cache, key=key, category=TapirCacheManager.CATEGORY_SUBSCRIPTIONS
+        )
+        by_growing_period_id = get_from_cache_or_compute(cache, key, lambda: {})
+        return get_from_cache_or_compute(
+            by_growing_period_id,
+            current_growing_period.id,
+            lambda: cls.compute_subscriptions_that_will_be_renewed_by_id(
+                current_growing_period=current_growing_period, cache=cache
+            ),
+        )
+
+    @classmethod
+    def compute_subscriptions_that_will_be_renewed_by_id(
+        cls, current_growing_period: GrowingPeriod, cache: dict
+    ) -> dict[str, Subscription]:
         current_subscriptions = TapirCache.get_subscriptions_active_at_date(
             current_growing_period.start_date, cache
         )
@@ -182,7 +201,7 @@ class AutomaticSubscriptionRenewalService:
             and TapirCache.get_product_type_capacity_at_date_by_id(
                 cache=cache,
                 product_type_id=subscription.product.type_id,
-                reference_date=reference_date,
+                reference_date=current_growing_period.start_date,
             )
             is not None
         }
