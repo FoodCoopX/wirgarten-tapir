@@ -199,6 +199,12 @@ export interface BestellWizardBaseDataResponse {
   contactMailAddress: string;
   /**
    *
+   * @type {string}
+   * @memberof BestellWizardBaseDataResponse
+   */
+  websiteUrl: string;
+  /**
+   *
    * @type {{ [key: string]: string; }}
    * @memberof BestellWizardBaseDataResponse
    */
@@ -357,6 +363,8 @@ export function instanceOfBestellWizardBaseDataResponse(
     value["contactMailAddress"] === undefined
   )
     return false;
+  if (!("websiteUrl" in value) || value["websiteUrl"] === undefined)
+    return false;
   if (
     !("distributionChannels" in value) ||
     value["distributionChannels"] === undefined
@@ -450,6 +458,7 @@ export function BestellWizardBaseDataResponseFromJSONTyped(
     organizationName: json["organization_name"],
     logoUrl: json["logo_url"],
     contactMailAddress: json["contact_mail_address"],
+    websiteUrl: json["website_url"],
     distributionChannels: json["distribution_channels"],
     solidarityContributionChoices: json["solidarity_contribution_choices"],
     solidarityContributionMinimum: json["solidarity_contribution_minimum"],
@@ -516,6 +525,7 @@ export function BestellWizardBaseDataResponseToJSONTyped(
     organization_name: value["organizationName"],
     logo_url: value["logoUrl"],
     contact_mail_address: value["contactMailAddress"],
+    website_url: value["websiteUrl"],
     distribution_channels: value["distributionChannels"],
     solidarity_contribution_choices: value["solidarityContributionChoices"],
     solidarity_contribution_minimum: value["solidarityContributionMinimum"],

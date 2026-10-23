@@ -8804,6 +8804,8 @@ components:
         contact_mail_address:
           type: string
           format: email
+        website_url:
+          type: string
         distribution_channels:
           type: object
           additionalProperties:
@@ -8873,6 +8875,7 @@ components:
       - student_status_allowed
       - theme
       - trial_period_length_in_weeks
+      - website_url
     BestellWizardCapacityCheckRequestRequest:
       type: object
       properties:
@@ -9158,6 +9161,8 @@ components:
           type: string
         step14b_text:
           type: string
+        step14_back_to_website_button_text:
+          type: string
         privacy_policy_url:
           type: string
           format: uri
@@ -9179,6 +9184,7 @@ components:
       - step12_title
       - step13_text
       - step13_title
+      - step14_back_to_website_button_text
       - step14_text
       - step14_title
       - step14b_text

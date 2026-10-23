@@ -6,6 +6,7 @@ from tapir.configuration.models import TapirParameterDatatype
 from tapir.configuration.parameter import ParameterMeta
 from tapir.wirgarten.constants import ParameterCategory
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.validators import validate_optional_url
 
 if typing.TYPE_CHECKING:
     from tapir.wirgarten.parameters import (
@@ -111,4 +112,17 @@ class ParameterDefinitionsSite:
             description="Der Link zum FAQ für Mitglieder",
             category=ParameterCategory.SITE,
             meta=ParameterMeta(validators=[URLValidator()]),
+        )
+
+        importer.parameter_definition(
+            key=ParameterKeys.SITE_WEBSITE_LINK,
+            label="Link zur Website",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="",
+            description="Der Link zur eigenen Website. Beispiel: 'https://lueneburg.wirgarten.com'. "
+            "Wird auf der letzten Seite des BestellWizards (nach einer Bestellung oder einer Eintragung auf die Warteliste) "
+            "als Button angezeigt, der zurück zur Website führt. Die Beschriftung des Buttons ist in der Kategorie BestellWizard einstellbar. "
+            "Wenn das Feld leer bleibt, wird kein Button angezeigt.",
+            category=ParameterCategory.SITE,
+            meta=ParameterMeta(validators=[validate_optional_url]),
         )

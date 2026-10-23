@@ -329,6 +329,12 @@ export interface BestellWizardStrings {
    * @type {string}
    * @memberof BestellWizardStrings
    */
+  step14BackToWebsiteButtonText: string;
+  /**
+   *
+   * @type {string}
+   * @memberof BestellWizardStrings
+   */
   privacyPolicyUrl: string;
   /**
    *
@@ -497,6 +503,11 @@ export function instanceOfBestellWizardStrings(
     return false;
   if (!("step14bText" in value) || value["step14bText"] === undefined)
     return false;
+  if (
+    !("step14BackToWebsiteButtonText" in value) ||
+    value["step14BackToWebsiteButtonText"] === undefined
+  )
+    return false;
   if (!("privacyPolicyUrl" in value) || value["privacyPolicyUrl"] === undefined)
     return false;
   if (
@@ -576,6 +587,7 @@ export function BestellWizardStringsFromJSONTyped(
     step14Text: json["step14_text"],
     step14bTitle: json["step14b_title"],
     step14bText: json["step14b_text"],
+    step14BackToWebsiteButtonText: json["step14_back_to_website_button_text"],
     privacyPolicyUrl: json["privacy_policy_url"],
     labelStudentCheckbox: json["label_student_checkbox"],
     studentCheckboxExplanationText: json["student_checkbox_explanation_text"],
@@ -647,6 +659,7 @@ export function BestellWizardStringsToJSONTyped(
     step14_text: value["step14Text"],
     step14b_title: value["step14bTitle"],
     step14b_text: value["step14bText"],
+    step14_back_to_website_button_text: value["step14BackToWebsiteButtonText"],
     privacy_policy_url: value["privacyPolicyUrl"],
     label_student_checkbox: value["labelStudentCheckbox"],
     student_checkbox_explanation_text: value["studentCheckboxExplanationText"],
