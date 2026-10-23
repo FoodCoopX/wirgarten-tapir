@@ -132,14 +132,24 @@ class AutomaticSubscriptionRenewalService:
     def get_subscriptions_that_will_be_renewed(
         cls, reference_date: datetime.date, cache: dict
     ) -> set[Subscription]:
+        return set(
+            cls.get_subscriptions_that_will_be_renewed_by_id(
+                reference_date=reference_date, cache=cache
+            ).values()
+        )
+
+    @classmethod
+    def get_subscriptions_that_will_be_renewed_by_id(
+        cls, reference_date: datetime.date, cache: dict
+    ) -> dict[str, Subscription]:
         if not get_parameter_value(ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache):
-            return set()
+            return {}
 
         current_growing_period = TapirCache.get_growing_period_at_date(
             reference_date=reference_date, cache=cache
         )
         if current_growing_period is None:
-            return set()
+            return {}
 
         current_subscriptions = TapirCache.get_subscriptions_active_at_date(
             current_growing_period.start_date, cache
@@ -163,15 +173,15 @@ class AutomaticSubscriptionRenewalService:
         )
 
         return {
-            subscription
+            subscription.id: subscription
             for subscription in subscriptions_from_previous_growing_period
             if subscription.cancellation_ts is None
             and subscription.member_id
             not in members_ids_currently_subbed_to_product_id[subscription.product_id]
             and not subscription.product.deleted
-            and TapirCache.get_product_type_capacity_at_date(
+            and TapirCache.get_product_type_capacity_at_date_by_id(
                 cache=cache,
-                product_type=subscription.product.type,
+                product_type_id=subscription.product.type_id,
                 reference_date=reference_date,
             )
             is not None
@@ -187,17 +197,19 @@ class AutomaticSubscriptionRenewalService:
         subscriptions = TapirCache.get_subscriptions_active_at_date(
             reference_date=reference_date, cache=cache
         )
-        relevant_subscriptions = set(filter(subscription_filter, subscriptions))
+        relevant_subscriptions = {
+            subscription.id: subscription
+            for subscription in subscriptions
+            if subscription_filter(subscription)
+        }
 
-        all_renewed_subscriptions = (
-            AutomaticSubscriptionRenewalService.get_subscriptions_that_will_be_renewed(
-                reference_date=reference_date, cache=cache
-            )
+        all_renewed_subscriptions = AutomaticSubscriptionRenewalService.get_subscriptions_that_will_be_renewed_by_id(
+            reference_date=reference_date, cache=cache
         )
-        relevant_renewed_subscriptions = set(
-            filter(subscription_filter, all_renewed_subscriptions)
-        )
+        for subscription_id, subscription in all_renewed_subscriptions.items():
+            if subscription_id not in relevant_subscriptions and subscription_filter(
+                subscription
+            ):
+                relevant_subscriptions[subscription_id] = subscription
 
-        relevant_subscriptions.update(relevant_renewed_subscriptions)
-
-        return relevant_subscriptions
+        return set(relevant_subscriptions.values())
