@@ -35,6 +35,7 @@ if (domNodeDeliveryListCard) {
           .membersCanChangePickupLocationThemselves === "true"
       }
       adminContactEmail={domNodeDeliveryListCard.dataset.adminContactEmail!}
+      pickupLocationLabel={domNodeDeliveryListCard.dataset.pickupLocationLabel!}
       csrfToken={getCsrfToken()}
     />,
   );
