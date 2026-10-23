@@ -29,12 +29,15 @@ class TapirFactoryMixin:
 
 
 @override_settings(
+    # This disables the ManifestStaticFilesStorage from the settings: with the manifest storage, collectstatic must be run before tests can work
     STORAGES={
         **settings.STORAGES,
         "staticfiles": {
             "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
         },
-    }
+    },
+    # This skips the WhiteNoise scan of all static files each time a test client starts, speeding up tests.
+    WHITENOISE_AUTOREFRESH=True,
 )
 class TapirIntegrationTest(TapirFactoryMixin, TestCase):
     def setUp(self) -> None:
