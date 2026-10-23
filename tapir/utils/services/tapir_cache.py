@@ -117,14 +117,20 @@ class TapirCache:
         )
 
         def compute():
-            from tapir.wirgarten.service.products import (
-                get_active_and_future_subscriptions,
+            active_and_future_subscriptions = sorted(
+                (
+                    subscription
+                    for subscription in cls.get_all_subscriptions(cache)
+                    if subscription.end_date >= reference_date
+                ),
+                key=lambda subscription: (
+                    subscription.product.type.order_in_bestellwizard,
+                    subscription.product.name,
+                ),
             )
 
             subscriptions_by_member_id: dict[str, list[Subscription]] = {}
-            for subscription in get_active_and_future_subscriptions(
-                reference_date=reference_date, cache=cache
-            ):
+            for subscription in active_and_future_subscriptions:
                 if subscription.member_id not in subscriptions_by_member_id:
                     subscriptions_by_member_id[subscription.member_id] = []
                 subscriptions_by_member_id[subscription.member_id].append(subscription)
