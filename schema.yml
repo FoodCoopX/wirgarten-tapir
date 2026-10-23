@@ -2744,7 +2744,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MailingList'
+                $ref: '#/components/schemas/MailingListAdmin'
           description: ''
   /core/api/mailing_list_delete:
     delete:
@@ -2794,7 +2794,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MailingList'
+                $ref: '#/components/schemas/MailingListAdmin'
+          description: ''
+  /core/api/mailing_list_held_messages:
+    get:
+      operationId: core_api_mailing_list_held_messages_list
+      parameters:
+      - in: query
+        name: list_name
+        schema:
+          type: string
+        required: true
+      tags:
+      - core
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MailingListHeldMessage'
           description: ''
   /core/api/mailing_list_list:
     get:
@@ -2812,7 +2836,35 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/MailingList'
+                  $ref: '#/components/schemas/MailingListAdmin'
+          description: ''
+  /core/api/mailing_list_moderate_held_message:
+    post:
+      operationId: core_api_mailing_list_moderate_held_message_create
+      tags:
+      - core
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MailingListModerateHeldMessageRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MailingListModerateHeldMessageRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MailingListModerateHeldMessageRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
           description: ''
   /core/api/mailing_list_recipient_list:
     get:
@@ -8722,8 +8774,6 @@ components:
           type: boolean
         show_coop_content:
           type: boolean
-        intro_step_text:
-          type: string
         label_checkbox_sepa_mandat:
           type: string
         label_checkbox_contract_policy:
@@ -8754,6 +8804,8 @@ components:
         contact_mail_address:
           type: string
           format: email
+        website_url:
+          type: string
         distribution_channels:
           type: object
           additionalProperties:
@@ -8801,7 +8853,6 @@ components:
       - growing_period_choices
       - images
       - intro_enabled
-      - intro_step_text
       - label_checkbox_contract_policy
       - label_checkbox_sepa_mandat
       - legal_status
@@ -8824,6 +8875,7 @@ components:
       - student_status_allowed
       - theme
       - trial_period_length_in_weeks
+      - website_url
     BestellWizardCapacityCheckRequestRequest:
       type: object
       properties:
@@ -9109,6 +9161,8 @@ components:
           type: string
         step14b_text:
           type: string
+        step14_back_to_website_button_text:
+          type: string
         privacy_policy_url:
           type: string
           format: uri
@@ -9130,6 +9184,7 @@ components:
       - step12_title
       - step13_text
       - step13_title
+      - step14_back_to_website_button_text
       - step14_text
       - step14_title
       - step14b_text
@@ -11737,7 +11792,11 @@ components:
         url_of_bestell_wizard:
           type: string
           format: uri
+        contact_email:
+          type: string
+          format: email
       required:
+      - contact_email
       - transactions
       - url_of_bestell_wizard
     GetDatesFromCustomCycleDeliveryWeeksResponse:
@@ -12200,12 +12259,37 @@ components:
           type: integer
         advertised:
           type: boolean
+        moderated:
+          type: boolean
         description:
           type: string
       required:
       - advertised
       - description
+      - moderated
       - name
+      - nb_recipients
+    MailingListAdmin:
+      type: object
+      properties:
+        name:
+          type: string
+        nb_recipients:
+          type: integer
+        advertised:
+          type: boolean
+        moderated:
+          type: boolean
+        description:
+          type: string
+        nb_held_messages:
+          type: integer
+      required:
+      - advertised
+      - description
+      - moderated
+      - name
+      - nb_held_messages
       - nb_recipients
     MailingListCreateRequest:
       type: object
@@ -12215,13 +12299,65 @@ components:
           minLength: 1
         advertised:
           type: boolean
+        moderated:
+          type: boolean
         description:
           type: string
           minLength: 1
       required:
       - advertised
       - description
+      - moderated
       - name
+    MailingListHeldMessage:
+      type: object
+      properties:
+        request_id:
+          type: integer
+        sender:
+          type: string
+        sender_name:
+          type: string
+          nullable: true
+        formatted_member_number:
+          type: string
+          nullable: true
+        link_to_member_profile:
+          type: string
+          nullable: true
+        subject:
+          type: string
+        reason:
+          type: string
+        hold_date:
+          type: string
+          format: date-time
+        body:
+          type: string
+      required:
+      - body
+      - formatted_member_number
+      - hold_date
+      - link_to_member_profile
+      - reason
+      - request_id
+      - sender
+      - sender_name
+      - subject
+    MailingListModerateHeldMessageRequestRequest:
+      type: object
+      properties:
+        list_name:
+          type: string
+          minLength: 1
+        request_id:
+          type: integer
+        moderation_action:
+          $ref: '#/components/schemas/ModerationActionEnum'
+      required:
+      - list_name
+      - moderation_action
+      - request_id
     MailingListRecipient:
       type: object
       properties:
@@ -12423,7 +12559,11 @@ components:
         order_wizard_url:
           type: string
           nullable: true
+        contact_email:
+          type: string
+          format: email
       required:
+      - contact_email
       - memberships
       - order_wizard_url
     MemberBankDataResponse:
@@ -12805,6 +12945,8 @@ components:
           type: boolean
         can_edit_student:
           type: boolean
+        label_student_checkbox:
+          type: string
         can_edit_name:
           type: boolean
         country:
@@ -12818,6 +12960,10 @@ components:
           type: string
         phone_number_required:
           type: boolean
+        pseudonym:
+          type: string
+        pseudonym_enabled:
+          type: boolean
       required:
       - can_edit_country
       - can_edit_name
@@ -12826,11 +12972,14 @@ components:
       - contact_email
       - country
       - first_name
+      - label_student_checkbox
       - last_name
       - member_number
       - phone_number
       - phone_number_required
       - postcode
+      - pseudonym
+      - pseudonym_enabled
       - street
       - street_2
     MemberSolidarityContributionsResponse:
@@ -12905,6 +13054,16 @@ components:
         * `optional_default_on` - Optional (Standard: ON)
         * `optional_default_off` - Optional (Standard: OFF)
         * `always_on` - Pflicht
+    ModerationActionEnum:
+      enum:
+      - accept
+      - reject
+      - discard
+      type: string
+      description: |-
+        * `accept` - accept
+        * `reject` - reject
+        * `discard` - discard
     NoticePeriodUnitEnum:
       enum:
       - months
@@ -13632,6 +13791,9 @@ components:
           minLength: 1
         is_student:
           type: boolean
+        pseudonym:
+          type: string
+          maxLength: 150
     PatchedPdfExportModelRequest:
       type: object
       properties:

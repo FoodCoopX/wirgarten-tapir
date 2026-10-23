@@ -27,6 +27,7 @@ class TestMailingListEditView(TapirIntegrationTest):
             data={
                 "name": "test@example.com",
                 "advertised": True,
+                "moderated": False,
                 "description": "Description after",
             },
             content_type="application/json",
@@ -51,6 +52,7 @@ class TestMailingListEditView(TapirIntegrationTest):
             data={
                 "name": "test@example.com",
                 "advertised": True,
+                "moderated": False,
                 "description": "Description after",
             },
             content_type="application/json",
@@ -80,6 +82,7 @@ class TestMailingListEditView(TapirIntegrationTest):
             data={
                 "name": "test@example.com",
                 "advertised": True,
+                "moderated": True,
                 "description": "Description after",
             },
             content_type="application/json",
@@ -91,6 +94,8 @@ class TestMailingListEditView(TapirIntegrationTest):
 
         self.assertTrue(mailing_list.settings["advertised"])
         self.assertEqual("Description after", mailing_list.settings["description"])
+        self.assertEqual("hold", mailing_list.settings["default_member_action"])
+        self.assertEqual("de", mailing_list.settings["preferred_language"])
         mailing_list.settings.save.assert_called_once_with()
 
     def test_post_listNotFound_returns404(self):
@@ -106,6 +111,7 @@ class TestMailingListEditView(TapirIntegrationTest):
             data={
                 "name": "other@example.com",
                 "advertised": True,
+                "moderated": False,
                 "description": "Description after",
             },
             content_type="application/json",

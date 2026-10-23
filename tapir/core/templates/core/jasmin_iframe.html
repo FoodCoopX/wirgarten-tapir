@@ -1,0 +1,61 @@
+{% extends "core/base.html" %}
+{% load core %}
+{% block head %}
+  {% javascript_environment_variables %}
+{% endblock %}
+{% block content %}
+  {% csrf_token %}
+  {% if synchronisation_error %}
+    <div class="alert alert-danger mt-2" role="alert">{{ synchronisation_error }}</div>
+  {% else %}
+    {% if synchronisation_warnings %}
+      <div class="alert alert-warning mt-2" role="alert">
+        {% for warning in synchronisation_warnings %}
+          <div>{{ warning }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+    <div
+      style="
+           width: calc(100% + 2.5em);
+           height: 93.75vh;
+           margin-left: -1.55em;
+           margin-right: -1.25em;
+           overflow: hidden;
+          "
+    >
+      <iframe
+        id="jasminIframe"
+        style="width: 100%; height: 100%; overflow: hidden"
+      ></iframe>
+    </div>
+    {{ jasmin_auth_metadata|json_script:"jasmin-auth-metadata" }}
+    <script>
+      window.onload = () => {
+        // Jasmin reads the logged-in user from localStorage when it starts, so
+        // it must be there before the iframe loads (same origin, same storage).
+        const authMetadataKey = "{{ jasmin_auth_metadata_local_storage_key|escapejs }}";
+        const authMetadata = JSON.parse(
+          document.getElementById("jasmin-auth-metadata").textContent,
+        );
+        try {
+          if (authMetadata) {
+            localStorage.setItem(authMetadataKey, JSON.stringify(authMetadata));
+          } else {
+            localStorage.removeItem(authMetadataKey);
+          }
+        } catch (error) {
+          console.error("Could not store the user for Jasmin:", error);
+        }
+
+        const iframe = document.getElementById("jasminIframe");
+        let subpage = window.location.hash.substring(1);
+        if (subpage.startsWith("state=")) {
+          subpage = "";
+        }
+
+        iframe.src = "/jasmin/home" + subpage;
+      };
+    </script>
+  {% endif %}
+{% endblock %}
