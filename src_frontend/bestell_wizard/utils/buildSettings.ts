@@ -32,6 +32,7 @@ export function buildSettings(
     coopStatuteLink: baseData.coopStatuteLink,
     logoUrl: baseData.logoUrl,
     contactMailAddress: baseData.contactMailAddress,
+    websiteUrl: baseData.websiteUrl,
     distributionChannels: baseData.distributionChannels,
     solidarityContributionChoices: baseData.solidarityContributionChoices,
     solidarityContributionMinimum: baseData.solidarityContributionMinimum,

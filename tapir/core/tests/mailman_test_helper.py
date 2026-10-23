@@ -1,4 +1,6 @@
 import unittest
+from email.message import Message
+from urllib.error import HTTPError
 from dataclasses import dataclass, field
 from unittest.mock import patch, Mock
 
@@ -9,18 +11,34 @@ from tapir.core.services.mailman.tapir_mailman_client import TapirMailmanClient
 
 
 @dataclass
+class MockHeldMessageData:
+    request_id: int
+    sender: str = field(default="sender@example.com")
+    subject: str = field(default="Subject")
+    reason: str = field(default="The message comes from a moderated member")
+    hold_date: str = field(default="2026-10-22T14:04:18.570413")
+    msg: str = field(default="From: sender@example.com\nSubject: Subject\n\nBody\n")
+
+
+@dataclass
 class MockMailingListData:
     name: str
     confirmed_recipients: list[str] = field(default_factory=list)
     unconfirmed_recipients: list[str] = field(default_factory=list)
     advertised: bool = field(default=False)
+    moderated: bool = field(default=False)
+    held_messages: list[MockHeldMessageData] = field(default_factory=list)
     description: str = field(default="")
 
 
 class MockListSettings:
-    def __init__(self):
+    def __init__(self, mock_list: Mock):
         self._settings = {}
-        self.save = Mock()
+        self.save = Mock(side_effect=lambda: self.apply_to_list(mock_list))
+
+    def apply_to_list(self, mock_list: Mock):
+        mock_list.advertised = self._settings.get("advertised")
+        mock_list.description = self._settings.get("description")
 
     def __getitem__(self, key):
         return self._settings.get(key)
@@ -46,12 +64,19 @@ class MailmanTestHelper:
         domain.lists = [
             cls.build_mock_list(mailing_list) for mailing_list in mailing_list_datas
         ]
-        domain.create_list.side_effect = lambda list_name: cls.build_mock_list(
-            MockMailingListData(
-                name=list_name, unconfirmed_recipients=[], confirmed_recipients=[]
-            )
-        )
+
+        def create_list(list_name):
+            created_list = cls.build_mock_list(MockMailingListData(name=list_name))
+            domain.lists.append(created_list)
+            return created_list
+
+        domain.create_list.side_effect = create_list
         return domain
+
+    @classmethod
+    def moderate_mock_message(cls, mock_list: Mock, request_id: int):
+        if request_id not in {held.request_id for held in mock_list.held}:
+            raise HTTPError(url="", code=404, msg="Not Found", hdrs=Message(), fp=None)
 
     @classmethod
     def build_mock_list(cls, mailing_list_data: MockMailingListData):
@@ -65,8 +90,22 @@ class MailmanTestHelper:
             {"email": recipient, "token": generate_id()}
             for recipient in mailing_list_data.unconfirmed_recipients
         ]
-        mock_list.settings = MockListSettings()
+        mock_list.held = [
+            Mock(**vars(held_message))
+            for held_message in mailing_list_data.held_messages
+        ]
+        mock_list.member_count = len(mock_list.members)
+        mock_list.get_requests_count.return_value = len(mock_list.requests)
+        mock_list.get_held_count.return_value = len(mock_list.held)
+        mock_list.moderate_message.side_effect = (
+            lambda request_id, action: cls.moderate_mock_message(mock_list, request_id)
+        )
+        mock_list.settings = MockListSettings(mock_list)
         mock_list.settings["advertised"] = mailing_list_data.advertised
         mock_list.settings["description"] = mailing_list_data.description
+        mock_list.settings["default_member_action"] = (
+            "hold" if mailing_list_data.moderated else "defer"
+        )
+        mock_list.settings.apply_to_list(mock_list)
 
         return mock_list

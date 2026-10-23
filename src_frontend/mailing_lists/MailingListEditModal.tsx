@@ -1,19 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { Form, Modal } from "react-bootstrap";
-import { CoreApi, MailingList } from "../api-client";
+import { CoreApi, MailingListAdmin } from "../api-client";
 import TapirButton from "../components/TapirButton.tsx";
 import TapirHelpButton from "../components/TapirHelpButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
 import { getCsrfToken } from "../utils/getCsrfToken.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
+import { MODERATED_CHECKBOX_LABEL } from "./MODERATED_CHECKBOX_LABEL.tsx";
 
 interface MailingListEditModalProps {
   show: boolean;
   onHide: () => void;
   loadData: () => void;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
-  mailingList: MailingList;
+  mailingList: MailingListAdmin;
 }
 
 const MailingListEditModal: React.FC<MailingListEditModalProps> = ({
@@ -27,6 +28,7 @@ const MailingListEditModal: React.FC<MailingListEditModalProps> = ({
   const [listName, setListName] = useState("");
   const [saving, setSaving] = useState(false);
   const [advertised, setAdvertised] = useState(false);
+  const [moderated, setModerated] = useState(false);
   const [description, setDescription] = useState("");
 
   useEffect(() => {
@@ -37,6 +39,7 @@ const MailingListEditModal: React.FC<MailingListEditModalProps> = ({
     setListName(mailingList.name);
     setDescription(mailingList.description);
     setAdvertised(mailingList.advertised);
+    setModerated(mailingList.moderated);
   }, [show, mailingList]);
 
   function onSave() {
@@ -47,6 +50,7 @@ const MailingListEditModal: React.FC<MailingListEditModalProps> = ({
         mailingListCreateRequest: {
           name: mailingList.name,
           advertised: advertised,
+          moderated: moderated,
           description: description,
         },
       })
@@ -107,13 +111,20 @@ const MailingListEditModal: React.FC<MailingListEditModalProps> = ({
               onChange={(event) => setAdvertised(event.target.checked)}
             />
           </Form.Group>
+          <Form.Group controlId={"moderated"} className={"mt-2"}>
+            <Form.Check
+              label={MODERATED_CHECKBOX_LABEL}
+              checked={moderated}
+              onChange={(event) => setModerated(event.target.checked)}
+            />
+          </Form.Group>
         </Form>
       </Modal.Body>
       <Modal.Footer>
         <TapirButton
           variant={"primary"}
           icon={"save"}
-          text={"Erzeugen"}
+          text={"Speichern"}
           onClick={onSave}
           loading={saving}
         />

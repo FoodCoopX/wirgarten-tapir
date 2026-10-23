@@ -5,6 +5,7 @@ from django.db.models import QuerySet, Q
 from tapir.deliveries.models import Joker
 from tapir.generic_exports.services.export_segment_manager import ExportSegment
 from tapir.generic_exports.services.member_column_provider import MemberColumnProvider
+from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import Subscription
 from tapir.wirgarten.service.member import (
@@ -218,9 +219,16 @@ class MemberSegmentProvider:
             ).values_list("member_id", flat=True)
         )
 
+        member_ids_with_active_or_future_solidarity_contribution = (
+            SolidarityContribution.objects.filter(
+                Q(end_date=None) | Q(end_date__gte=reference_datetime.date())
+            ).values_list("member_id", flat=True)
+        )
+
         relevant_member_ids = member_ids_with_active_shares.union(
             member_ids_with_shares_in_the_future,
             member_ids_with_active_or_future_subscriptions,
             member_ids_with_active_or_future_association_membership,
+            member_ids_with_active_or_future_solidarity_contribution,
         )
         return Member.objects.filter(id__in=relevant_member_ids)

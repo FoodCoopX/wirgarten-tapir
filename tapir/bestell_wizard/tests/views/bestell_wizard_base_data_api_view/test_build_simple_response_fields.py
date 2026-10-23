@@ -70,6 +70,11 @@ class TestBuildSimpleResponseFields(TapirUnitTest):
             key=ParameterKeys.SITE_EMAIL, value="test_site_email", cache=cache
         )
         mock_parameter_value(
+            key=ParameterKeys.SITE_WEBSITE_LINK,
+            value="test_website_link",
+            cache=cache,
+        )
+        mock_parameter_value(
             key=ParameterKeys.SOLIDARITY_DEFAULT,
             value="test_solidarity_default",
             cache=cache,
@@ -112,6 +117,7 @@ class TestBuildSimpleResponseFields(TapirUnitTest):
                 "coop_statute_link": "test_statute_link",
                 "organization_name": "test_site_name",
                 "contact_mail_address": "test_site_email",
+                "website_url": "test_website_link",
                 "solidarity_contribution_default": "test_solidarity_default",
                 "feedback_step_enabled": "test_step13",
                 "solidarity_step_position": "test_step_position",

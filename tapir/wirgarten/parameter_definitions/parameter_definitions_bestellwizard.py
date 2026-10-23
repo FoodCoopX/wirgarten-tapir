@@ -905,6 +905,18 @@ class ParameterDefinitionsBestellwizard:
         )
         bestellwizard_parameter_order -= 1
 
+        importer.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP14_BACK_TO_WEBSITE_BUTTON_TEXT,
+            label="Seite 14 und 14B: Abschluss - Beschriftung des Buttons zur Website",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Zurück zur Website",
+            description="Der Button führt zu der Website, die in der Kategorie Standort unter 'Link zur Website' eingetragen ist. "
+            "Ist dort keine Website eingetragen, wird der Button nicht angezeigt.",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+        )
+        bestellwizard_parameter_order -= 1
+
     @classmethod
     def get_legal_status_name(cls):
         parameter = TapirParameter.objects.filter(

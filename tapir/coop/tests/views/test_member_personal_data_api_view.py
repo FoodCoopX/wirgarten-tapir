@@ -197,9 +197,7 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
         )
 
         self.assertStatusCode(response, status.HTTP_200_OK)
-        response_content = response.json()
-        self.assertTrue(response_content["order_confirmed"])
-        self.assertIsNone(response_content["error"])
+        self.assert_order_confirmed(response.json())
 
         user_after_changes = Member.objects.get(id=user_before_changes.id)
         for field_name, value in data.items():
@@ -258,9 +256,7 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
         )
 
         self.assertStatusCode(response, status.HTTP_200_OK)
-        response_content = response.json()
-        self.assertTrue(response_content["order_confirmed"])
-        self.assertIsNone(response_content["error"])
+        self.assert_order_confirmed(response.json())
 
         target.refresh_from_db()
         for field_name, value in data.items():
@@ -338,7 +334,7 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
         response = self._patch_country(admin, target, "AT")
 
         self.assertStatusCode(response, status.HTTP_200_OK)
-        self.assertTrue(response.json()["order_confirmed"])
+        self.assert_order_confirmed(response.json())
         target.refresh_from_db()
         self.assertEqual("AT", target.country)
 
@@ -444,6 +440,17 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
             self.assertStatusCode(response, status.HTTP_200_OK)
             self.assertEqual(value, response.json()["phone_number_required"])
 
+    def test_get_default_returnsLabelStudentCheckboxParameter(self):
+        user = MemberFactory.create(is_superuser=False)
+        self.client.force_login(user)
+        self._set_parameter(ParameterKeys.LABEL_STUDENT_CHECKBOX, "Custom label")
+
+        url = reverse("coop:member_personal_data")
+        response = self.client.get(f"{url}?member_id={user.id}")
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assertEqual("Custom label", response.json()["label_student_checkbox"])
+
     def _patch_phone_number(self, user, phone_number):
         self.client.force_login(user)
         return self.client.patch(
@@ -518,8 +525,7 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
         )
 
         self.assertStatusCode(response, status.HTTP_200_OK)
-        response_content = response.json()
-        self.assertTrue(response_content["order_confirmed"])
+        self.assert_order_confirmed(response.json())
 
         user.refresh_from_db()
         self.assertEqual("+4930123456", user.phone_number_landline)
@@ -550,8 +556,7 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
         )
 
         self.assertStatusCode(response, status.HTTP_200_OK)
-        response_content = response.json()
-        self.assertTrue(response_content["order_confirmed"])
+        self.assert_order_confirmed(response.json())
 
         user.refresh_from_db()
         self.assertIsNone(user.phone_number_landline)
@@ -659,11 +664,7 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
         )
 
         self.assertStatusCode(response, status.HTTP_200_OK)
-        response_content = response.json()
-        self.assertTrue(response_content["order_confirmed"])
-        self.assertIsNone(
-            response_content["error"],
-        )
+        self.assert_order_confirmed(response.json())
 
         target.refresh_from_db()
         self.assertTrue(target.is_student)
@@ -674,7 +675,7 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
         self, mock_fire_action: Mock, mock_update_keycloak_user_name: Mock
     ):
         self.client.force_login(MemberFactory.create(is_superuser=True))
-        target_user = MemberFactory.create(is_superuser=False)
+        target_user = MemberFactory.create(is_superuser=False, keycloak_id="1234")
 
         static_segment = StaticSegment.objects.create(name="test_segment")
         target_recipient = StaticSegmentRecipient.objects.create(
@@ -710,9 +711,7 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
         )
 
         self.assertStatusCode(response, status.HTTP_200_OK)
-        response_content = response.json()
-        self.assertTrue(response_content["order_confirmed"])
-        self.assertIsNone(response_content["error"])
+        self.assert_order_confirmed(response.json())
 
         mock_update_keycloak_user_name.assert_called_once_with(
             user=target_user, cache=ANY
@@ -725,3 +724,144 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
         other_recipient.refresh_from_db()
         self.assertEqual("old_fn_2", other_recipient.first_name)
         self.assertEqual("old_ln_2", other_recipient.last_name)
+
+    def test_get_bakeryEnabled_returnsPseudonymAndPseudonymEnabled(self):
+        self._set_parameter(ParameterKeys.BAKERY_ENABLED, True)
+        user = MemberFactory.create(is_superuser=False, pseudonym="test_pseudonym")
+        self.client.force_login(user)
+
+        url = reverse("coop:member_personal_data")
+        response = self.client.get(f"{url}?member_id={user.id}")
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        response_content = response.json()
+        self.assertEqual("test_pseudonym", response_content["pseudonym"])
+        self.assertTrue(response_content["pseudonym_enabled"])
+
+    def test_get_bakeryDisabled_returnsPseudonymDisabled(self):
+        self._set_parameter(ParameterKeys.BAKERY_ENABLED, False)
+        user = MemberFactory.create(is_superuser=False)
+        self.client.force_login(user)
+
+        url = reverse("coop:member_personal_data")
+        response = self.client.get(f"{url}?member_id={user.id}")
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assertFalse(response.json()["pseudonym_enabled"])
+
+    def _patch_pseudonym(self, user, pseudonym):
+        self.client.force_login(user)
+        data = {
+            "member_id": user.id,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "street": "test_street",
+            "street_2": "",
+            "phone_number": "017726254738",
+            "postcode": "12345",
+            "city": "test_city",
+            "is_student": False,
+        }
+        if pseudonym is not None:
+            data["pseudonym"] = pseudonym
+        return self.client.patch(
+            reverse("coop:member_personal_data"),
+            data=data,
+            content_type="application/json",
+        )
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_patch_memberSetsOwnPseudonym_pseudonymIsSavedAndLogged(self, _):
+        self._set_parameter(ParameterKeys.BAKERY_ENABLED, True)
+        user = MemberFactory.create(is_superuser=False, pseudonym="")
+
+        response = self._patch_pseudonym(user, " test_pseudonym ")
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assert_order_confirmed(response.json())
+        user.refresh_from_db()
+        self.assertEqual("test_pseudonym", user.pseudonym)
+        log_entry = UpdateTapirUserLogEntry.objects.get()
+        self.assertEqual("test_pseudonym", log_entry.new_values["pseudonym"])
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_patch_memberSendsEmptyPseudonym_pseudonymIsRemoved(self, _):
+        self._set_parameter(ParameterKeys.BAKERY_ENABLED, True)
+        user = MemberFactory.create(is_superuser=False, pseudonym="test_pseudonym")
+
+        response = self._patch_pseudonym(user, "")
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assert_order_confirmed(response.json())
+        user.refresh_from_db()
+        self.assertEqual("", user.pseudonym)
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_patch_pseudonymNotSent_pseudonymIsNotChanged(self, _):
+        self._set_parameter(ParameterKeys.BAKERY_ENABLED, True)
+        user = MemberFactory.create(is_superuser=False, pseudonym="test_pseudonym")
+
+        response = self._patch_pseudonym(user, None)
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assert_order_confirmed(response.json())
+        user.refresh_from_db()
+        self.assertEqual("test_pseudonym", user.pseudonym)
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_patch_bakeryDisabled_pseudonymIsNotChanged(self, _):
+        self._set_parameter(ParameterKeys.BAKERY_ENABLED, False)
+        user = MemberFactory.create(is_superuser=False, pseudonym="test_pseudonym")
+
+        response = self._patch_pseudonym(user, "other_pseudonym")
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assert_order_confirmed(response.json())
+        user.refresh_from_db()
+        self.assertEqual("test_pseudonym", user.pseudonym)
+
+    def test_patch_pseudonymTooLong_returns400(self):
+        self._set_parameter(ParameterKeys.BAKERY_ENABLED, True)
+        user = MemberFactory.create(is_superuser=False, pseudonym="test_pseudonym")
+
+        response = self._patch_pseudonym(user, "a" * 151)
+
+        self.assertStatusCode(response, status.HTTP_400_BAD_REQUEST)
+        user.refresh_from_db()
+        self.assertEqual("test_pseudonym", user.pseudonym)
+
+    @patch.object(KeycloakUserManager, "update_keycloak_user_name", autospec=True)
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_patch_memberHasNoKeycloakId_doesNotUpdateKeycloak(
+        self, mock_fire_action: Mock, mock_update_keycloak_user_name: Mock
+    ):
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+        target_user = MemberFactory.create(is_superuser=False, keycloak_id=None)
+
+        url = reverse("coop:member_personal_data")
+        data = {
+            "member_id": target_user.id,
+            "first_name": "test_fn",
+            "last_name": "test_ln",
+            "street": "test_street",
+            "street_2": "test_street2",
+            "phone_number": "017726254738",
+            "postcode": "12345",
+            "city": "test_city",
+            "country": "DE",
+            "is_student": False,
+        }
+        response = self.client.patch(
+            url,
+            data=data,
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assert_order_confirmed(response.json())
+
+        mock_update_keycloak_user_name.assert_not_called()
+
+        target_user.refresh_from_db()
+        self.assertEqual("test_fn", target_user.first_name)
+        self.assertEqual("test_ln", target_user.last_name)
