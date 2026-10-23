@@ -20,6 +20,11 @@ from tapir.wirgarten.utils import is_debug_instance, legal_status_is_association
 register = template.Library()
 
 
+@register.simple_tag
+def tapir_version():
+    return settings.TAPIR_VERSION
+
+
 @register.inclusion_tag("core/sidebar_links.html", takes_context=True)
 def sidebar_links(context):
     groups = get_sidebar_link_groups(context["request"], cache=context.get("cache", {}))
