@@ -172,20 +172,23 @@ class BestellWizardAssociationMembershipView(TemplateView):
 class BestellWizardProductTypeView(TemplateView):
     template_name = "bestell_wizard/bestell_wizard_product_type.html"
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.cache = {}
+
     def get(self, request, *args, **kwargs):
         check_permission_or_self(pk=kwargs["member_id"], request=request)
         if not request.user.has_perm(
             Permission.Coop.MANAGE
         ) and not get_parameter_value(
-            ParameterKeys.MEMBERS_CAN_UPDATE_THEIR_CONTRACTS, cache={}
+            ParameterKeys.MEMBERS_CAN_UPDATE_THEIR_CONTRACTS, cache=self.cache
         ):
             raise PermissionDenied()
         return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context_data = super().get_context_data(**kwargs)
-        cache = {}
-        BestellWizardMobileView.add_body_style_context(context_data, cache)
+        BestellWizardMobileView.add_body_style_context(context_data, self.cache)
         context_data["member_id"] = kwargs["member_id"]
         context_data["product_type_id"] = kwargs["product_type_id"]
 

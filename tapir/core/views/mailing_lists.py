@@ -80,6 +80,7 @@ class MailingListsBaseView(PermissionRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context_data = super().get_context_data(**kwargs)
         context_data["show_connection_error"] = self.connection_with_mailman_failed
+        context_data["cache"] = self.cache
         return context_data
 
 
