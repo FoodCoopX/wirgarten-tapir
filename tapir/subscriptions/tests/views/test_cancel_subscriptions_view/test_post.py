@@ -835,11 +835,31 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
             member=member,
             product_ids=[subscription.product_id for subscription in subscriptions],
             cancel_association_membership=False,
-            cancel_solidarity_contribution=False,
+            cancel_solidarity_contribution=True,
         )
 
         self.assert_cancellation_confirmed(response_content)
         self.assert_solidarity_contribution_cancelled(amount=Decimal("-5"))
+
+    def test_post_negativeSolidarityMustBeCancelledButFlagIsFalse_returnsError(self):
+        member = MemberFactory.create()
+        self.client.force_login(member)
+        self._enable_subscription_cancellation_outside_trial()
+        subscriptions = self._create_subscriptions(member=member, size=2)
+        self._create_solidarity_contribution(member=member, amount=Decimal("-5"))
+
+        response_content = self._post_cancellation(
+            member=member,
+            product_ids=[subscription.product_id for subscription in subscriptions],
+            cancel_association_membership=False,
+            cancel_solidarity_contribution=False,
+        )
+
+        self.assert_cancellation_not_confirmed(
+            response_content,
+            "Der negative Solidarbeitrag muss gekündigt werden, wenn alle Verträge gekündigt werden.",
+        )
+        self.assert_solidarity_contribution_not_cancelled(amount=Decimal("-5"))
 
     def test_post_allSubscriptionsCancelledAndSolidarityIsPositive_keepsSolidarityContribution(
         self,
@@ -925,7 +945,7 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
             member=member,
             product_ids=[subscription.product_id for subscription in subscriptions],
             cancel_association_membership=False,
-            cancel_solidarity_contribution=False,
+            cancel_solidarity_contribution=True,
         )
 
         self.assert_cancellation_confirmed(response_content)
@@ -951,7 +971,7 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
             member=member,
             product_ids=[subscription.product_id for subscription in subscriptions],
             cancel_association_membership=True,
-            cancel_solidarity_contribution=False,
+            cancel_solidarity_contribution=True,
         )
 
         self.assert_cancellation_confirmed(response_content)
@@ -975,7 +995,7 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
             member=member,
             product_ids=[],
             cancel_association_membership=True,
-            cancel_solidarity_contribution=False,
+            cancel_solidarity_contribution=True,
         )
 
         self.assert_cancellation_confirmed(response_content)
@@ -1002,7 +1022,6 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         self._set_parameter(
             key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, value=True
         )
-        self._set_parameter(key=ParameterKeys.TRIAL_PERIOD_ENABLED, value=False)
 
     def _create_subscriptions(self, member, size: int):
         period = GrowingPeriodFactory.create(

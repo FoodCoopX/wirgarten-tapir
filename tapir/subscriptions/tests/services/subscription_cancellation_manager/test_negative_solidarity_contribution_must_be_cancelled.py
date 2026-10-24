@@ -34,10 +34,11 @@ class TestNegativeSolidarityContributionMustBeCancelled(TapirIntegrationTest):
         products = self._create_subscribed_products(member=member, size=2)
         self._create_solidarity_contribution(member=member, amount=Decimal("-5"))
 
-        result = self._must_be_cancelled(
+        result = SubscriptionCancellationManager.negative_solidarity_contribution_must_be_cancelled(
             member=member,
             products_selected_for_cancellation=products,
             cancel_association_membership=False,
+            cache={},
         )
 
         self.assertTrue(result)
@@ -49,10 +50,11 @@ class TestNegativeSolidarityContributionMustBeCancelled(TapirIntegrationTest):
         products = self._create_subscribed_products(member=member, size=2)
         self._create_solidarity_contribution(member=member, amount=Decimal("5"))
 
-        result = self._must_be_cancelled(
+        result = SubscriptionCancellationManager.negative_solidarity_contribution_must_be_cancelled(
             member=member,
             products_selected_for_cancellation=products,
             cancel_association_membership=False,
+            cache={},
         )
 
         self.assertFalse(result)
@@ -76,10 +78,11 @@ class TestNegativeSolidarityContributionMustBeCancelled(TapirIntegrationTest):
             amount=Decimal("5"),
         )
 
-        result = self._must_be_cancelled(
+        result = SubscriptionCancellationManager.negative_solidarity_contribution_must_be_cancelled(
             member=member,
             products_selected_for_cancellation=products,
             cancel_association_membership=False,
+            cache={},
         )
 
         self.assertTrue(result)
@@ -90,10 +93,11 @@ class TestNegativeSolidarityContributionMustBeCancelled(TapirIntegrationTest):
         member = MemberFactory.create()
         products = self._create_subscribed_products(member=member, size=2)
 
-        result = self._must_be_cancelled(
+        result = SubscriptionCancellationManager.negative_solidarity_contribution_must_be_cancelled(
             member=member,
             products_selected_for_cancellation=products,
             cancel_association_membership=False,
+            cache={},
         )
 
         self.assertFalse(result)
@@ -106,10 +110,11 @@ class TestNegativeSolidarityContributionMustBeCancelled(TapirIntegrationTest):
         self._create_solidarity_contribution(member=member, amount=Decimal("-5"))
         selected_product = products.pop()
 
-        result = self._must_be_cancelled(
+        result = SubscriptionCancellationManager.negative_solidarity_contribution_must_be_cancelled(
             member=member,
             products_selected_for_cancellation={selected_product},
             cancel_association_membership=False,
+            cache={},
         )
 
         self.assertFalse(result)
@@ -120,10 +125,11 @@ class TestNegativeSolidarityContributionMustBeCancelled(TapirIntegrationTest):
         member = MemberFactory.create()
         self._create_solidarity_contribution(member=member, amount=Decimal("-5"))
 
-        result = self._must_be_cancelled(
+        result = SubscriptionCancellationManager.negative_solidarity_contribution_must_be_cancelled(
             member=member,
             products_selected_for_cancellation=set(),
             cancel_association_membership=False,
+            cache={},
         )
 
         self.assertFalse(result)
@@ -136,10 +142,11 @@ class TestNegativeSolidarityContributionMustBeCancelled(TapirIntegrationTest):
         self._create_cancellable_association_membership(member=member)
         self._create_solidarity_contribution(member=member, amount=Decimal("-5"))
 
-        result = self._must_be_cancelled(
+        result = SubscriptionCancellationManager.negative_solidarity_contribution_must_be_cancelled(
             member=member,
             products_selected_for_cancellation=products,
             cancel_association_membership=False,
+            cache={},
         )
 
         self.assertFalse(result)
@@ -159,10 +166,11 @@ class TestNegativeSolidarityContributionMustBeCancelled(TapirIntegrationTest):
         )
         self._create_solidarity_contribution(member=member, amount=Decimal("-5"))
 
-        result = self._must_be_cancelled(
+        result = SubscriptionCancellationManager.negative_solidarity_contribution_must_be_cancelled(
             member=member,
             products_selected_for_cancellation=products,
             cancel_association_membership=False,
+            cache={},
         )
 
         self.assertTrue(result)
@@ -175,10 +183,11 @@ class TestNegativeSolidarityContributionMustBeCancelled(TapirIntegrationTest):
         self._create_cancellable_association_membership(member=member)
         self._create_solidarity_contribution(member=member, amount=Decimal("-5"))
 
-        result = self._must_be_cancelled(
+        result = SubscriptionCancellationManager.negative_solidarity_contribution_must_be_cancelled(
             member=member,
             products_selected_for_cancellation=products,
             cancel_association_membership=True,
+            cache={},
         )
 
         self.assertTrue(result)
@@ -190,26 +199,14 @@ class TestNegativeSolidarityContributionMustBeCancelled(TapirIntegrationTest):
         self._create_cancellable_association_membership(member=member)
         self._create_solidarity_contribution(member=member, amount=Decimal("-5"))
 
-        result = self._must_be_cancelled(
+        result = SubscriptionCancellationManager.negative_solidarity_contribution_must_be_cancelled(
             member=member,
             products_selected_for_cancellation=set(),
             cancel_association_membership=True,
+            cache={},
         )
 
         self.assertTrue(result)
-
-    def _must_be_cancelled(
-        self,
-        member: Member,
-        products_selected_for_cancellation: set[Product],
-        cancel_association_membership: bool,
-    ) -> bool:
-        return SubscriptionCancellationManager.negative_solidarity_contribution_must_be_cancelled(
-            member=member,
-            products_selected_for_cancellation=products_selected_for_cancellation,
-            cancel_association_membership=cancel_association_membership,
-            cache={},
-        )
 
     def _create_subscribed_products(self, member: Member, size: int) -> set[Product]:
         period = GrowingPeriodFactory.create(

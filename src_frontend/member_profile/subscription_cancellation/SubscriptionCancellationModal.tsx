@@ -11,6 +11,7 @@ import TapirHelpButton from "../../components/TapirHelpButton.tsx";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
+import { negativeSolidarityCancellationIsRequired } from "./negativeSolidarityCancellationIsRequired.ts";
 import CancellationStepConfirmation from "./steps/CancellationStepConfirmation.tsx";
 import CancellationStepReasons from "./steps/CancellationStepReasons.tsx";
 import CancellationStepSubscriptions from "./steps/CancellationStepSubscriptions.tsx";
@@ -66,6 +67,15 @@ const SubscriptionCancellationModal: React.FC<
   >();
   const [trialPeriodDuration, setTrialPeriodDuration] = useState<number>();
   const [trialPeriodIsFlexible, setTrialPeriodIsFlexible] = useState(false);
+  const solidarityContributionWillBeCancelled =
+    cancelSolidarityContribution ||
+    negativeSolidarityCancellationIsRequired(
+      subscribedProducts,
+      selectedProducts,
+      canCancelAssociationMembership,
+      cancelAssociationMembershipSelected,
+      solidarityContributionData,
+    );
 
   useEffect(() => {
     if (!show) {
@@ -124,7 +134,7 @@ const SubscriptionCancellationModal: React.FC<
           cancelAssociationMembership: cancelAssociationMembershipSelected,
           cancellationReasons: selectedCancellationReasons,
           customCancellationReason: customCancellationReason,
-          cancelSolidarityContribution: cancelSolidarityContribution,
+          cancelSolidarityContribution: solidarityContributionWillBeCancelled,
         },
       })
       .then((response) => {
@@ -221,7 +231,9 @@ const SubscriptionCancellationModal: React.FC<
               cancelAssociationMembershipSelected={
                 cancelAssociationMembershipSelected
               }
-              cancelSolidarityContribution={cancelSolidarityContribution}
+              cancelSolidarityContribution={
+                solidarityContributionWillBeCancelled
+              }
               solidarityContributionData={solidarityContributionData}
               customCancellationReasons={customCancellationReason}
               goToPreviousStep={() => setCurrentStep("reasons")}

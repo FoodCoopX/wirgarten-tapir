@@ -5,6 +5,9 @@ from tapir.deliveries.services.date_limit_for_delivery_change_calculator import 
     DateLimitForDeliveryChangeCalculator,
 )
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
+from tapir.subscriptions.services.subscribed_products_service import (
+    SubscribedProductsService,
+)
 from tapir.subscriptions.services.subscription_cancellation_manager import (
     SubscriptionCancellationManager,
 )
@@ -16,7 +19,6 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.get_next_delivery_date import get_next_delivery_date
-from tapir.wirgarten.service.products import get_active_and_future_subscriptions
 from tapir.wirgarten.utils import get_today
 
 
@@ -27,7 +29,7 @@ class ProductCancellationDataBuilder:
             cls.build_data_for_a_single_product(
                 member=member, product=subscribed_product, cache=cache
             )
-            for subscribed_product in cls.get_subscribed_products(
+            for subscribed_product in SubscribedProductsService.get_subscribed_products(
                 member=member, cache=cache
             )
         ]
@@ -37,7 +39,9 @@ class ProductCancellationDataBuilder:
         cls, member: Member, product: Product, cache: dict
     ):
         product_subscriptions = list(
-            cls.get_relevant_subscriptions(member=member, cache=cache)
+            SubscribedProductsService.get_relevant_subscriptions(
+                member=member, cache=cache
+            )
             .filter(product=product)
             .order_by("end_date")
         )
@@ -111,19 +115,4 @@ class ProductCancellationDataBuilder:
                 subscription=subscription, cache=cache
             )
             for subscription in product_subscriptions
-        )
-
-    @classmethod
-    def get_subscribed_products(cls, member: Member, cache: dict):
-        return {
-            subscription.product
-            for subscription in cls.get_relevant_subscriptions(
-                member=member, cache=cache
-            ).select_related("product")
-        }
-
-    @classmethod
-    def get_relevant_subscriptions(cls, member: Member, cache: dict):
-        return get_active_and_future_subscriptions(cache=cache).filter(
-            member=member, cancellation_ts__isnull=True
         )

@@ -1,5 +1,5 @@
 import "dayjs/locale/de";
-import React, { Dispatch, SetStateAction, useEffect, useRef } from "react";
+import React, { Dispatch, SetStateAction, useEffect } from "react";
 import { Form, Modal } from "react-bootstrap";
 import {
   ProductForCancellation,
@@ -10,6 +10,7 @@ import TapirHelpButton from "../../../components/TapirHelpButton.tsx";
 import { formatDateNumeric } from "../../../utils/formatDateNumeric.ts";
 import { formatDateText } from "../../../utils/formatDateText.ts";
 import { formatDateTextLong } from "../../../utils/formatDateTextLong.ts";
+import { negativeSolidarityCancellationIsRequired } from "../negativeSolidarityCancellationIsRequired.ts";
 
 interface CancellationStepSubscriptionsProps {
   errors: string[];
@@ -42,34 +43,6 @@ function getCheckboxLabelProduct(subscribedProduct: ProductForCancellation) {
   }
   result += ".";
   return result;
-}
-
-function negativeSolidarityCancellationIsRequired(
-  subscribedProducts: ProductForCancellation[],
-  selectedProducts: ProductForCancellation[],
-  canCancelAssociationMembership: boolean,
-  cancelAssociationMembershipSelected: boolean,
-  solidarityContributionData?: SolidarityContributionCancellationData,
-) {
-  if (
-    !solidarityContributionData?._exists ||
-    !solidarityContributionData.isNegative
-  ) {
-    return false;
-  }
-
-  const allProductsSelected =
-    selectedProducts.length === subscribedProducts.length;
-  const somethingIsCancelled =
-    selectedProducts.length > 0 || cancelAssociationMembershipSelected;
-  const associationMembershipIsHandled =
-    !canCancelAssociationMembership || cancelAssociationMembershipSelected;
-
-  return (
-    allProductsSelected &&
-    somethingIsCancelled &&
-    associationMembershipIsHandled
-  );
 }
 
 function getCheckboxLabelSolidarityContribution(
@@ -186,9 +159,6 @@ const CancellationStepSubscriptions: React.FC<
     }
   }
 
-  const solidarityCancellationChosenByUser = useRef(
-    cancelSolidarityContribution,
-  );
   const negativeSolidarityMustBeCancelled =
     negativeSolidarityCancellationIsRequired(
       subscribedProducts,
@@ -203,14 +173,6 @@ const CancellationStepSubscriptions: React.FC<
       setCancelAssociationMembershipSelected(false);
     }
   }, [selectedProducts, subscribedProducts]);
-
-  useEffect(() => {
-    if (negativeSolidarityMustBeCancelled) {
-      setCancelSolidarityContribution(true);
-      return;
-    }
-    setCancelSolidarityContribution(solidarityCancellationChosenByUser.current);
-  }, [negativeSolidarityMustBeCancelled, setCancelSolidarityContribution]);
 
   return (
     <>
@@ -263,13 +225,14 @@ const CancellationStepSubscriptions: React.FC<
           {solidarityContributionData?._exists && (
             <Form.Group controlId="cancelSolidarityContribution">
               <Form.Check
-                onChange={(event) => {
-                  solidarityCancellationChosenByUser.current =
-                    event.target.checked;
-                  setCancelSolidarityContribution(event.target.checked);
-                }}
+                onChange={(event) =>
+                  setCancelSolidarityContribution(event.target.checked)
+                }
                 required={false}
-                checked={cancelSolidarityContribution}
+                checked={
+                  cancelSolidarityContribution ||
+                  negativeSolidarityMustBeCancelled
+                }
                 disabled={negativeSolidarityMustBeCancelled}
                 label={getCheckboxLabelSolidarityContribution(
                   solidarityContributionData,

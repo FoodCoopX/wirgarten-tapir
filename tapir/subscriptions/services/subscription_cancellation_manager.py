@@ -5,13 +5,16 @@ from tapir.bakery.services.breaddelivery_service import BreadDeliveryService
 from tapir.configuration.parameter import get_parameter_value
 from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.solidarity_contribution.models import SolidarityContribution
+from tapir.subscriptions.services.subscribed_products_service import (
+    SubscribedProductsService,
+)
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.models import Product, Member
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
 )
-from tapir.wirgarten.utils import get_now, get_today, legal_status_is_association
+from tapir.wirgarten.utils import get_now, get_today
 
 
 class SubscriptionCancellationManager:
@@ -81,11 +84,7 @@ class SubscriptionCancellationManager:
         cancel_association_membership: bool,
         cache: dict,
     ) -> bool:
-        from tapir.subscriptions.services.product_cancellation_data_builder import (
-            ProductCancellationDataBuilder,
-        )
-
-        subscribed_products = ProductCancellationDataBuilder.get_subscribed_products(
+        subscribed_products = SubscribedProductsService.get_subscribed_products(
             member=member, cache=cache
         )
         if products_selected_for_cancellation != subscribed_products:
@@ -97,12 +96,8 @@ class SubscriptionCancellationManager:
         ):
             return False
 
-        member_can_cancel_association_membership = legal_status_is_association(
-            cache=cache
-        ) and AssociationMembershipCancellationManager.does_member_have_a_cancellable_membership(
-            member=member,
-            reference_date=get_today(cache=cache),
-            cache=cache,
+        member_can_cancel_association_membership = AssociationMembershipCancellationManager.can_member_cancel_association_membership(
+            member=member, cache=cache
         )
         if (
             member_can_cancel_association_membership
