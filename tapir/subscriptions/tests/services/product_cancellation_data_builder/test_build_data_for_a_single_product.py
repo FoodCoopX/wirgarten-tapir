@@ -5,6 +5,9 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
 from tapir.subscriptions.services.product_cancellation_data_builder import (
     ProductCancellationDataBuilder,
 )
+from tapir.subscriptions.services.subscribed_products_service import (
+    SubscribedProductsService,
+)
 from tapir.subscriptions.services.subscription_cancellation_manager import (
     SubscriptionCancellationManager,
 )
@@ -34,7 +37,7 @@ class TestProductCancellationDataBuilderBuildDataForASingleProduct(TapirUnitTest
         autospec=True,
     )
     @patch.object(
-        ProductCancellationDataBuilder, "get_relevant_subscriptions", autospec=True
+        SubscribedProductsService, "get_relevant_subscriptions", autospec=True
     )
     def test_buildDataForASingleProduct_default_returnsCorrectData(
         self,

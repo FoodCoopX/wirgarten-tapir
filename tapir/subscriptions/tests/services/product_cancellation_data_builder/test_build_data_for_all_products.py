@@ -5,6 +5,9 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
 from tapir.subscriptions.services.product_cancellation_data_builder import (
     ProductCancellationDataBuilder,
 )
+from tapir.subscriptions.services.subscribed_products_service import (
+    SubscribedProductsService,
+)
 from tapir.wirgarten.tests.factories import ProductFactory
 
 
@@ -14,9 +17,7 @@ class TestProductCancellationDataBuilderBuildDataForAllProducts(TapirUnitTest):
     @patch.object(
         ProductCancellationDataBuilder, "build_data_for_a_single_product", autospec=True
     )
-    @patch.object(
-        ProductCancellationDataBuilder, "get_subscribed_products", autospec=True
-    )
+    @patch.object(SubscribedProductsService, "get_subscribed_products", autospec=True)
     def test_buildDataForAllProducts_default_returnsListOfBuiltProducts(
         self,
         mock_get_subscribed_products: Mock,

@@ -15564,6 +15564,8 @@ components:
           type: boolean
         is_in_trial:
           type: boolean
+        is_negative:
+          type: boolean
         cancellation_date:
           type: string
           format: date
@@ -15571,6 +15573,7 @@ components:
       - cancellation_date
       - exists
       - is_in_trial
+      - is_negative
     SolidarityStepPositionEnum:
       enum:
       - before_pickup_location
