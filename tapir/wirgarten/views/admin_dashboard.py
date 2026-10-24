@@ -132,6 +132,7 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context["cache"] = self.cache
         today = get_today(cache=self.cache)
 
         current_growing_period = TapirCache.get_growing_period_at_date(

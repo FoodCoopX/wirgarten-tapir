@@ -170,6 +170,9 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         context["adminContactEmail"] = get_parameter_value(
             key=ParameterKeys.SITE_ADMIN_EMAIL, cache=cache
         )
+        context["pickupLocationLabel"] = get_parameter_value(
+            key=ParameterKeys.MEMBER_DASHBOARD_PICKUP_LOCATION_LABEL, cache=cache
+        )
         context["donationsEnabled"] = (
             "false"
             if get_parameter_value(ParameterKeys.DELIVERY_DONATION_MODE, cache=cache)

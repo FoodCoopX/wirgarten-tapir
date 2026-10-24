@@ -6,6 +6,7 @@ from tapir.subscriptions.services.contract_start_date_calculator import (
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
+from tapir.wirgarten.tests.factories import GrowingPeriodFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
 
@@ -77,6 +78,34 @@ class TestCanContractStartOnDate(TapirIntegrationTest):
         self.assertFalse(
             ContractStartDateCalculator.can_contract_start_in_week(
                 reference_date=datetime.date(year=2025, month=7, day=27),
+                apply_buffer_time=True,
+                cache={},
+            )
+        )
+        self.assertTrue(
+            ContractStartDateCalculator.can_contract_start_in_week(
+                reference_date=datetime.date(year=2025, month=7, day=28),
+                apply_buffer_time=True,
+                cache={},
+            )
+        )
+
+    def test_canContractStartOnDate_weekWithoutDelivery_returnsFalse(
+        self,
+    ):
+        mock_timezone(self, now=datetime.datetime(year=2025, month=7, day=15))
+        TapirParameter.objects.filter(
+            key=ParameterKeys.SUBSCRIPTION_BUFFER_TIME_BEFORE_START
+        ).update(value=0)
+        GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2025, month=1, day=1),
+            end_date=datetime.date(year=2025, month=12, day=31),
+            weeks_without_delivery=[30],
+        )
+
+        self.assertFalse(
+            ContractStartDateCalculator.can_contract_start_in_week(
+                reference_date=datetime.date(year=2025, month=7, day=21),
                 apply_buffer_time=True,
                 cache={},
             )

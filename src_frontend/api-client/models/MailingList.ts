@@ -38,6 +38,12 @@ export interface MailingList {
   advertised: boolean;
   /**
    *
+   * @type {boolean}
+   * @memberof MailingList
+   */
+  moderated: boolean;
+  /**
+   *
    * @type {string}
    * @memberof MailingList
    */
@@ -53,6 +59,7 @@ export function instanceOfMailingList(value: object): value is MailingList {
     return false;
   if (!("advertised" in value) || value["advertised"] === undefined)
     return false;
+  if (!("moderated" in value) || value["moderated"] === undefined) return false;
   if (!("description" in value) || value["description"] === undefined)
     return false;
   return true;
@@ -73,6 +80,7 @@ export function MailingListFromJSONTyped(
     name: json["name"],
     nbRecipients: json["nb_recipients"],
     advertised: json["advertised"],
+    moderated: json["moderated"],
     description: json["description"],
   };
 }
@@ -93,6 +101,7 @@ export function MailingListToJSONTyped(
     name: value["name"],
     nb_recipients: value["nbRecipients"],
     advertised: value["advertised"],
+    moderated: value["moderated"],
     description: value["description"],
   };
 }

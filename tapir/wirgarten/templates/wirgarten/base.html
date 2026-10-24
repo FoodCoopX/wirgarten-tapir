@@ -1,4 +1,4 @@
-{% load tapir_static %}
+{% load static %}
 {% load configuration %}
 {% block head %}
     <title>
@@ -6,11 +6,10 @@
     </title>
     <link rel="stylesheet"
           href="{% static 'core/bootstrap/5.3.8/css/bootstrap.min.css' %}">
-    {% with "organisation.theme"|parameter as theme %}
-        <link rel="shortcut icon"
-              type="image/png"
-              href="{% static 'core/themes/'|add:theme|add:'/favicon.ico' %}" />
-    {% endwith %}
+    {% get_parameter_value_tag "organisation.theme" cache as theme %}
+    <link rel="shortcut icon"
+          type="image/png"
+          href="{% static 'core/themes/'|add:theme|add:'/favicon.ico' %}" />
     <link rel="stylesheet" href="{% static 'core/css/base.css' %}">
     <link rel="stylesheet" href="{% static 'core/css/custom.css' %}">
     <!-- jQuery is required by select2, so load it here at the top -->

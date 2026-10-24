@@ -1,5 +1,5 @@
 {% load django_bootstrap5 %}
-{% load tapir_static %}
+{% load static %}
 {% load i18n %}
 {% load core %}
 {% load django_vite %}
@@ -74,6 +74,7 @@
                             {% block sidebar %}
                                 {% sidebar_links %}
                             {% endblock %}
+                            <div class="sidebar-item-details px-3 py-2 text-muted small">Tapir {% tapir_version %}</div>
                         </div>
                     </nav>
                 {% endif %}

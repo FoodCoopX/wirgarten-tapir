@@ -36,6 +36,12 @@ export interface MemberAssociationMembershipDetails {
    * @memberof MemberAssociationMembershipDetails
    */
   orderWizardUrl: string | null;
+  /**
+   *
+   * @type {string}
+   * @memberof MemberAssociationMembershipDetails
+   */
+  contactEmail: string;
 }
 
 /**
@@ -47,6 +53,8 @@ export function instanceOfMemberAssociationMembershipDetails(
   if (!("memberships" in value) || value["memberships"] === undefined)
     return false;
   if (!("orderWizardUrl" in value) || value["orderWizardUrl"] === undefined)
+    return false;
+  if (!("contactEmail" in value) || value["contactEmail"] === undefined)
     return false;
   return true;
 }
@@ -69,6 +77,7 @@ export function MemberAssociationMembershipDetailsFromJSONTyped(
       AssociationMembershipFromJSON,
     ),
     orderWizardUrl: json["order_wizard_url"],
+    contactEmail: json["contact_email"],
   };
 }
 
@@ -91,5 +100,6 @@ export function MemberAssociationMembershipDetailsToJSONTyped(
       AssociationMembershipToJSON,
     ),
     order_wizard_url: value["orderWizardUrl"],
+    contact_email: value["contactEmail"],
   };
 }

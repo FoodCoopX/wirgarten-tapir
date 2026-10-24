@@ -1,6 +1,7 @@
 import logging
 from functools import partial
 
+from apps.accounts.choices import ThemeChoices
 from django.contrib.auth import user_logged_out
 from django.contrib.auth.models import AbstractUser
 from django.db import models
@@ -21,6 +22,7 @@ from tapir.log.models import TextLogEntry, UpdateModelLogEntry
 from tapir.utils.models import CountryField
 from tapir.utils.shortcuts import is_running_tests
 from tapir.utils.user_utils import UserUtils
+from tapir.wirgarten.constants import Permission
 
 LOG = logging.getLogger(__name__)
 
@@ -42,15 +44,24 @@ class KeycloakUser(AbstractUser):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.roles = None
+        self._roles = None
+
+    @property
+    def roles(self):
+        roles = KeycloakUserManager.get_user_roles(self.keycloak_id)
+        if self.is_superuser or Permission.Coop.MANAGE in roles:
+            roles.append("admin")
+        return roles
+
+    @roles.setter
+    def roles(self, value):
+        self._roles = value
 
     def has_perm(self, perm, obj=None):
         if is_running_tests():
             return self.is_superuser
 
-        target = self
-        if obj is not None:
-            target = obj
+        target = obj or self
 
         if target.roles is None:
             target.roles = KeycloakUserManager.get_user_roles(
@@ -90,6 +101,11 @@ class TapirUser(KeycloakUser):
         default="de",
         max_length=16,
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user_language = self.preferred_language
+        self.theme = ThemeChoices.LIGHT.value
 
     def get_display_name(self):
         return UserUtils.build_display_name(self.first_name, self.last_name)

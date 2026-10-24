@@ -1,9 +1,11 @@
 import datetime
+from decimal import Decimal
 
 from django.utils import timezone
 
 from tapir.associations.tests.factories import AssociationMembershipFactory
 from tapir.generic_exports.services.member_segment_provider import MemberSegmentProvider
+from tapir.solidarity_contribution.tests.factories import SolidarityContributionFactory
 from tapir.wirgarten.models import CoopShareTransaction
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
@@ -179,3 +181,94 @@ class TestGetQuerysetActiveMembers(TapirIntegrationTest):
         )
 
         self.assertQuerySetEqual(result, [member])
+
+    def test_getQuerysetActiveMembers_memberHasPastSolidarityContribution_notIncluded(
+        self,
+    ):
+        member = MemberFactory.create()
+        SolidarityContributionFactory.create(
+            member=member,
+            amount=Decimal(10),
+            start_date=datetime.date(year=2026, month=1, day=1),
+            end_date=datetime.date(year=2026, month=3, day=15),
+        )
+
+        result = MemberSegmentProvider.get_queryset_active_members(
+            reference_datetime=datetime.datetime(
+                year=2026, month=4, day=1, tzinfo=datetime.timezone.utc
+            )
+        )
+
+        self.assertQuerySetEqual(result, [])
+
+    def test_getQuerysetActiveMembers_memberHasCurrentSolidarityContribution_included(
+        self,
+    ):
+        member = MemberFactory.create()
+        SolidarityContributionFactory.create(
+            member=member,
+            amount=Decimal(10),
+            start_date=datetime.date(year=2026, month=1, day=1),
+        )
+
+        result = MemberSegmentProvider.get_queryset_active_members(
+            reference_datetime=datetime.datetime(
+                year=2026, month=4, day=1, tzinfo=datetime.timezone.utc
+            )
+        )
+
+        self.assertQuerySetEqual(result, [member])
+
+    def test_getQuerysetActiveMembers_memberHasFutureSolidarityContribution_included(
+        self,
+    ):
+        member = MemberFactory.create()
+        SolidarityContributionFactory.create(
+            member=member,
+            amount=Decimal(10),
+            start_date=datetime.date(year=2027, month=1, day=1),
+        )
+
+        result = MemberSegmentProvider.get_queryset_active_members(
+            reference_datetime=datetime.datetime(
+                year=2026, month=4, day=1, tzinfo=datetime.timezone.utc
+            )
+        )
+
+        self.assertQuerySetEqual(result, [member])
+
+    def test_getQuerysetActiveMembers_memberHasNegativeSolidarityContribution_notIncluded(
+        self,
+    ):
+        member = MemberFactory.create()
+        SolidarityContributionFactory.create(
+            member=member,
+            amount=Decimal(-10),
+            start_date=datetime.date(year=2026, month=1, day=1),
+        )
+
+        result = MemberSegmentProvider.get_queryset_active_members(
+            reference_datetime=datetime.datetime(
+                year=2026, month=4, day=1, tzinfo=datetime.timezone.utc
+            )
+        )
+
+        self.assertQuerySetEqual(result, [])
+
+    def test_getQuerysetActiveMembers_memberHasZeroSolidarityContribution_notIncluded(
+        self,
+    ):
+        member = MemberFactory.create()
+        SolidarityContributionFactory.create(
+            member=member,
+            amount=Decimal(0),
+            start_date=datetime.date(year=2026, month=1, day=1),
+        )
+
+        result = MemberSegmentProvider.get_queryset_active_members(
+            reference_datetime=datetime.datetime(
+                year=2026, month=4, day=1, tzinfo=datetime.timezone.utc
+            )
+        )
+
+        self.assertQuerySetEqual(result, [])

@@ -57,20 +57,20 @@ class ProductCapacityChecker:
     def get_highest_capacity_usage_after_date(
         cls, product: Product, reference_date: datetime.date, cache: dict
     ):
-        current_date = get_monday(reference_date)
+        highest_usage = cls.get_capacity_usage_at_date(
+            product=product, reference_date=reference_date, cache=cache
+        )
 
-        highest_usage = float("-inf")
-        while (
-            current_date
-            < ProductTypeLowestFreeCapacityAfterDateCalculator.get_date_of_last_possible_capacity_change(
-                product_type=product.type, cache=cache
-            )
-        ):
+        last_date = ProductTypeLowestFreeCapacityAfterDateCalculator.get_date_of_last_possible_capacity_change(
+            product_type=product.type, cache=cache
+        )
+        current_date = get_monday(reference_date) + datetime.timedelta(weeks=1)
+        while current_date < last_date:
             highest_usage = max(
                 highest_usage,
                 cls.get_capacity_usage_at_date(
                     product=product,
-                    reference_date=reference_date,
+                    reference_date=current_date,
                     cache=cache,
                 ),
             )

@@ -20,6 +20,11 @@ from tapir.wirgarten.utils import is_debug_instance, legal_status_is_association
 register = template.Library()
 
 
+@register.simple_tag
+def tapir_version():
+    return settings.TAPIR_VERSION
+
+
 @register.inclusion_tag("core/sidebar_links.html", takes_context=True)
 def sidebar_links(context):
     groups = get_sidebar_link_groups(context["request"], cache=context.get("cache", {}))
@@ -72,6 +77,12 @@ def add_admin_links(groups, request, cache: dict):
         material_icon="dashboard",
         url=reverse_lazy("wirgarten:admin_dashboard"),
     )
+    if settings.ENABLE_JASMIN:
+        admin_group.add_link(
+            display_name=_("Kommissionierung"),
+            material_icon="package_2",
+            url=reverse_lazy("jasmin"),
+        )
     if request.user.has_perm(Permission.Coop.MANAGE):
         admin_group.add_link(
             display_name=_("Konfiguration"),

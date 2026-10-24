@@ -20,7 +20,6 @@ export type BestellWizardSettings = {
   associationsAllowInvestingMembership: boolean;
   forceWaitingList: boolean;
   showCoopContent: boolean;
-  introStepText: string;
   labelCheckboxSepaMandat: string;
   labelCheckboxContractPolicy: string;
   trialPeriodLengthInWeeks: number;
@@ -34,6 +33,7 @@ export type BestellWizardSettings = {
   organizationName: string;
   logoUrl: string;
   contactMailAddress: string;
+  websiteUrl: string;
   distributionChannels: { [key: string]: string };
   solidarityContributionChoices: string[];
   solidarityContributionMinimum: number | null;

@@ -4,6 +4,9 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.services.date_limit_for_delivery_change_calculator import (
     DateLimitForDeliveryChangeCalculator,
 )
+from tapir.deliveries.services.weeks_without_delivery_service import (
+    WeeksWithoutDeliveryService,
+)
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.shortcuts import get_monday
 from tapir.wirgarten.models import GrowingPeriod
@@ -36,6 +39,12 @@ class ContractStartDateCalculator:
     def can_contract_start_in_week(
         cls, reference_date: datetime.date, apply_buffer_time: bool, cache: dict
     ) -> bool:
+        if WeeksWithoutDeliveryService.is_delivery_cancelled_this_week(
+            delivery_date=reference_date,
+            cache=cache,
+        ):
+            return False
+
         date_limit = DateLimitForDeliveryChangeCalculator.calculate_date_limit_for_delivery_changes_in_week(
             reference_date=reference_date, cache=cache
         )

@@ -130,12 +130,6 @@ export interface BestellWizardBaseDataResponse {
    * @type {string}
    * @memberof BestellWizardBaseDataResponse
    */
-  introStepText: string;
-  /**
-   *
-   * @type {string}
-   * @memberof BestellWizardBaseDataResponse
-   */
   labelCheckboxSepaMandat: string;
   /**
    *
@@ -197,6 +191,12 @@ export interface BestellWizardBaseDataResponse {
    * @memberof BestellWizardBaseDataResponse
    */
   contactMailAddress: string;
+  /**
+   *
+   * @type {string}
+   * @memberof BestellWizardBaseDataResponse
+   */
+  websiteUrl: string;
   /**
    *
    * @type {{ [key: string]: string; }}
@@ -310,8 +310,6 @@ export function instanceOfBestellWizardBaseDataResponse(
     return false;
   if (!("showCoopContent" in value) || value["showCoopContent"] === undefined)
     return false;
-  if (!("introStepText" in value) || value["introStepText"] === undefined)
-    return false;
   if (
     !("labelCheckboxSepaMandat" in value) ||
     value["labelCheckboxSepaMandat"] === undefined
@@ -356,6 +354,8 @@ export function instanceOfBestellWizardBaseDataResponse(
     !("contactMailAddress" in value) ||
     value["contactMailAddress"] === undefined
   )
+    return false;
+  if (!("websiteUrl" in value) || value["websiteUrl"] === undefined)
     return false;
   if (
     !("distributionChannels" in value) ||
@@ -436,7 +436,6 @@ export function BestellWizardBaseDataResponseFromJSONTyped(
     studentStatusAllowed: json["student_status_allowed"],
     phoneNumberRequired: json["phone_number_required"],
     showCoopContent: json["show_coop_content"],
-    introStepText: json["intro_step_text"],
     labelCheckboxSepaMandat: json["label_checkbox_sepa_mandat"],
     labelCheckboxContractPolicy: json["label_checkbox_contract_policy"],
     trialPeriodLengthInWeeks: json["trial_period_length_in_weeks"],
@@ -450,6 +449,7 @@ export function BestellWizardBaseDataResponseFromJSONTyped(
     organizationName: json["organization_name"],
     logoUrl: json["logo_url"],
     contactMailAddress: json["contact_mail_address"],
+    websiteUrl: json["website_url"],
     distributionChannels: json["distribution_channels"],
     solidarityContributionChoices: json["solidarity_contribution_choices"],
     solidarityContributionMinimum: json["solidarity_contribution_minimum"],
@@ -502,7 +502,6 @@ export function BestellWizardBaseDataResponseToJSONTyped(
     student_status_allowed: value["studentStatusAllowed"],
     phone_number_required: value["phoneNumberRequired"],
     show_coop_content: value["showCoopContent"],
-    intro_step_text: value["introStepText"],
     label_checkbox_sepa_mandat: value["labelCheckboxSepaMandat"],
     label_checkbox_contract_policy: value["labelCheckboxContractPolicy"],
     trial_period_length_in_weeks: value["trialPeriodLengthInWeeks"],
@@ -516,6 +515,7 @@ export function BestellWizardBaseDataResponseToJSONTyped(
     organization_name: value["organizationName"],
     logo_url: value["logoUrl"],
     contact_mail_address: value["contactMailAddress"],
+    website_url: value["websiteUrl"],
     distribution_channels: value["distributionChannels"],
     solidarity_contribution_choices: value["solidarityContributionChoices"],
     solidarity_contribution_minimum: value["solidarityContributionMinimum"],
