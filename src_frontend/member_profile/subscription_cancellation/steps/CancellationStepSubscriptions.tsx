@@ -10,6 +10,7 @@ import TapirHelpButton from "../../../components/TapirHelpButton.tsx";
 import { formatDateNumeric } from "../../../utils/formatDateNumeric.ts";
 import { formatDateText } from "../../../utils/formatDateText.ts";
 import { formatDateTextLong } from "../../../utils/formatDateTextLong.ts";
+import { negativeSolidarityCancellationIsRequired } from "../negativeSolidarityCancellationIsRequired.ts";
 
 interface CancellationStepSubscriptionsProps {
   errors: string[];
@@ -158,6 +159,15 @@ const CancellationStepSubscriptions: React.FC<
     }
   }
 
+  const negativeSolidarityMustBeCancelled =
+    negativeSolidarityCancellationIsRequired(
+      subscribedProducts,
+      selectedProducts,
+      canCancelAssociationMembership,
+      cancelAssociationMembershipSelected,
+      solidarityContributionData,
+    );
+
   useEffect(() => {
     if (selectedProducts.length !== subscribedProducts.length) {
       setCancelAssociationMembershipSelected(false);
@@ -219,11 +229,21 @@ const CancellationStepSubscriptions: React.FC<
                   setCancelSolidarityContribution(event.target.checked)
                 }
                 required={false}
-                checked={cancelSolidarityContribution}
+                checked={
+                  cancelSolidarityContribution ||
+                  negativeSolidarityMustBeCancelled
+                }
+                disabled={negativeSolidarityMustBeCancelled}
                 label={getCheckboxLabelSolidarityContribution(
                   solidarityContributionData,
                 )}
               />
+              {negativeSolidarityMustBeCancelled && (
+                <Form.Text>
+                  Der negative Solidarbeitrag wird automatisch mitgekündigt,
+                  weil alle Verträge gekündigt werden.
+                </Form.Text>
+              )}
             </Form.Group>
           )}
           {canCancelCoopMembership && (
