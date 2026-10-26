@@ -2445,6 +2445,718 @@ paths:
               schema:
                 $ref: '#/components/schemas/OrderConfirmationResponse'
           description: ''
+  /bidding_rounds/api:
+    get:
+      operationId: bidding_rounds_api_list
+      tags:
+      - bidding_rounds
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Round'
+          description: ''
+    post:
+      operationId: bidding_rounds_api_create
+      tags:
+      - bidding_rounds
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoundCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RoundCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RoundCreateRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Round'
+          description: ''
+  /bidding_rounds/api/{round_id}:
+    get:
+      operationId: bidding_rounds_api_retrieve
+      parameters:
+      - in: path
+        name: round_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - bidding_rounds
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Round'
+          description: ''
+    patch:
+      operationId: bidding_rounds_api_partial_update
+      parameters:
+      - in: path
+        name: round_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - bidding_rounds
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedRoundConfigRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedRoundConfigRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedRoundConfigRequest'
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Round'
+          description: ''
+    delete:
+      operationId: bidding_rounds_api_destroy
+      parameters:
+      - in: path
+        name: round_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - bidding_rounds
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '204':
+          description: No response body
+  /bidding_rounds/api/{round_id}/bid:
+    get:
+      operationId: bidding_rounds_api_bid_retrieve
+      parameters:
+      - in: path
+        name: round_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - bidding_rounds
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberBidResponse'
+          description: ''
+    post:
+      operationId: bidding_rounds_api_bid_create
+      parameters:
+      - in: path
+        name: round_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - bidding_rounds
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BidSubmitRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BidSubmitRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BidSubmitRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
+  /bidding_rounds/api/{round_id}/bids:
+    post:
+      operationId: bidding_rounds_api_bids_create
+      parameters:
+      - in: path
+        name: round_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - bidding_rounds
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BidAdminRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BidAdminRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BidAdminRequest'
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bid'
+          description: ''
+  /bidding_rounds/api/{round_id}/bids/{bid_id}:
+    patch:
+      operationId: bidding_rounds_api_bids_partial_update
+      parameters:
+      - in: path
+        name: bid_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: round_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - bidding_rounds
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBidAdminRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBidAdminRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBidAdminRequest'
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bid'
+          description: ''
+    delete:
+      operationId: bidding_rounds_api_bids_destroy
+      parameters:
+      - in: path
+        name: bid_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: round_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - bidding_rounds
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '204':
+          description: No response body
+  /bidding_rounds/api/{round_id}/capacity_check:
+    post:
+      operationId: bidding_rounds_api_capacity_check_create
+      parameters:
+      - in: path
+        name: round_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - bidding_rounds
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BiddingRoundCapacityCheckRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BiddingRoundCapacityCheckRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BiddingRoundCapacityCheckRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BiddingRoundCapacityCheckResponse'
+          description: ''
+  /bidding_rounds/api/{round_id}/check_contracts:
+    post:
+      operationId: bidding_rounds_api_check_contracts_create
+      parameters:
+      - in: path
+        name: round_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - bidding_rounds
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckContractsRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CheckContractsRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CheckContractsRequest'
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateContractsResponse'
+          description: ''
+  /bidding_rounds/api/{round_id}/close:
+    post:
+      operationId: bidding_rounds_api_close_create
+      parameters:
+      - in: path
+        name: round_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - bidding_rounds
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Round'
+          description: ''
+  /bidding_rounds/api/{round_id}/confirm_bids:
+    post:
+      operationId: bidding_rounds_api_confirm_bids_create
+      parameters:
+      - in: path
+        name: round_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - bidding_rounds
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmBidsRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ConfirmBidsRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ConfirmBidsRequest'
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Bid'
+          description: ''
+  /bidding_rounds/api/{round_id}/create_contracts:
+    post:
+      operationId: bidding_rounds_api_create_contracts_create
+      parameters:
+      - in: path
+        name: round_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - bidding_rounds
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateContractsRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreateContractsRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateContractsRequest'
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateContractsResponse'
+          description: ''
+  /bidding_rounds/api/{round_id}/delete_contracts:
+    post:
+      operationId: bidding_rounds_api_delete_contracts_create
+      parameters:
+      - in: path
+        name: round_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - bidding_rounds
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Round'
+          description: ''
+  /bidding_rounds/api/{round_id}/export.csv:
+    get:
+      operationId: bidding_rounds_api_export.csv_retrieve
+      parameters:
+      - in: path
+        name: round_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - bidding_rounds
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
+  /bidding_rounds/api/{round_id}/lock_average_bid:
+    post:
+      operationId: bidding_rounds_api_lock_average_bid_create
+      parameters:
+      - in: path
+        name: round_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - bidding_rounds
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LockAverageBidRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LockAverageBidRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LockAverageBidRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Round'
+          description: ''
+  /bidding_rounds/api/{round_id}/public_results:
+    get:
+      operationId: bidding_rounds_api_public_results_retrieve
+      parameters:
+      - in: path
+        name: round_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - bidding_rounds
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicEvaluationResponse'
+          description: ''
+  /bidding_rounds/api/{round_id}/reopen:
+    post:
+      operationId: bidding_rounds_api_reopen_create
+      parameters:
+      - in: path
+        name: round_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - bidding_rounds
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Round'
+          description: ''
+  /bidding_rounds/api/{round_id}/results:
+    get:
+      operationId: bidding_rounds_api_results_retrieve
+      parameters:
+      - in: query
+        name: filter
+        schema:
+          type: string
+      - in: query
+        name: include_auto_renewed
+        schema:
+          type: boolean
+      - in: path
+        name: round_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: query
+        name: sort
+        schema:
+          type: string
+      - in: query
+        name: traffic_light_position
+        schema:
+          type: number
+          format: double
+        description: Solidarity axis position 0 (green) … 50 (satisfied) … 100 (red).
+      tags:
+      - bidding_rounds
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoundResultsResponse'
+          description: ''
+  /bidding_rounds/api/{round_id}/start:
+    post:
+      operationId: bidding_rounds_api_start_create
+      parameters:
+      - in: path
+        name: round_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - bidding_rounds
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Round'
+          description: ''
+  /bidding_rounds/api/{round_id}/unlock_average_bid:
+    post:
+      operationId: bidding_rounds_api_unlock_average_bid_create
+      parameters:
+      - in: path
+        name: round_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - bidding_rounds
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Round'
+          description: ''
+  /bidding_rounds/api/available_product_types:
+    get:
+      operationId: bidding_rounds_api_available_product_types_list
+      parameters:
+      - in: query
+        name: growing_period_id
+        schema:
+          type: string
+      tags:
+      - bidding_rounds
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductTypeOption'
+          description: ''
+  /bidding_rounds/api/growing_periods:
+    get:
+      operationId: bidding_rounds_api_growing_periods_list
+      tags:
+      - bidding_rounds
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GrowingPeriodOption'
+          description: ''
+  /bidding_rounds/api/public_data:
+    get:
+      operationId: bidding_rounds_api_public_data_retrieve
+      tags:
+      - bidding_rounds
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicDataResponse'
+          description: ''
   /config/member-number-preview:
     get:
       operationId: config_member_number_preview_retrieve
@@ -8751,6 +9463,19 @@ components:
       - description_in_bestell_wizard
       - name
       - order_in_bestell_wizard
+    AutoRenewedItem:
+      type: object
+      properties:
+        product_type_name:
+          type: string
+        product_name:
+          type: string
+        quantity:
+          type: integer
+      required:
+      - product_name
+      - product_type_name
+      - quantity
     AutomatedExportCycleEnum:
       enum:
       - yearly
@@ -8804,6 +9529,32 @@ components:
       - dynamic_segments
       - mail_categories
       - static_segments
+    AverageBid:
+      type: object
+      properties:
+        target_per_year:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        capacity_shares:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        amount_per_share_per_month:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        amount_per_share_per_year:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+      required:
+      - amount_per_share_per_month
+      - amount_per_share_per_year
+      - capacity_shares
+      - target_per_year
     BestellWizardBaseDataResponse:
       type: object
       properties:
@@ -9297,6 +10048,295 @@ components:
       - step9_title
       - step_10_single_product_type_hint
       - student_checkbox_explanation_text
+    Bid:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        member_id:
+          type: string
+        pickup_location_id:
+          type: string
+          nullable: true
+        pickup_location_name:
+          type: string
+          nullable: true
+        entered_by_admin:
+          type: boolean
+        admin_confirmed:
+          type: string
+          format: date-time
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+        total_per_year:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BidItem'
+      required:
+      - admin_confirmed
+      - entered_by_admin
+      - id
+      - items
+      - member_id
+      - pickup_location_id
+      - pickup_location_name
+      - total_per_year
+      - updated_at
+    BidAdminItemRequest:
+      type: object
+      properties:
+        round_product_id:
+          type: string
+          format: uuid
+        product_id:
+          type: string
+          minLength: 1
+        quantity:
+          type: integer
+        amount_1:
+          type: string
+          nullable: true
+        amount_2:
+          type: string
+          nullable: true
+        amount_3:
+          type: string
+          nullable: true
+      required:
+      - product_id
+      - quantity
+      - round_product_id
+    BidAdminRequest:
+      type: object
+      properties:
+        member_id:
+          type: string
+          minLength: 1
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BidAdminItemRequest'
+        pickup_location_id:
+          type: string
+          nullable: true
+          minLength: 1
+        entered_by_admin:
+          type: boolean
+        admin_confirmed:
+          type: boolean
+    BidCapacityCheckItemRequest:
+      type: object
+      properties:
+        product_id:
+          type: string
+          minLength: 1
+        quantity:
+          type: integer
+          minimum: 1
+      required:
+      - product_id
+      - quantity
+    BidItem:
+      type: object
+      properties:
+        round_product_id:
+          type: string
+          format: uuid
+        product_type_name:
+          type: string
+        product_id:
+          type: string
+        product_name:
+          type: string
+        quantity:
+          type: integer
+        amount_1:
+          type: string
+          nullable: true
+        amount_2:
+          type: string
+          nullable: true
+        amount_3:
+          type: string
+          nullable: true
+        effective_amount:
+          type: string
+        amount_per_year:
+          type: string
+      required:
+      - amount_1
+      - amount_2
+      - amount_3
+      - amount_per_year
+      - effective_amount
+      - product_id
+      - product_name
+      - product_type_name
+      - quantity
+      - round_product_id
+    BidOptions:
+      type: object
+      properties:
+        quantity_enabled:
+          type: boolean
+        multiple_positions_enabled:
+          type: boolean
+      required:
+      - multiple_positions_enabled
+      - quantity_enabled
+    BidProductVariant:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        reference_value:
+          type: string
+          nullable: true
+        min_amount:
+          type: string
+          nullable: true
+      required:
+      - id
+      - min_amount
+      - name
+      - reference_value
+    BidSubmitRequest:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        pickup_location_id:
+          type: string
+          nullable: true
+          minLength: 1
+      required:
+      - items
+    BidTexts:
+      type: object
+      properties:
+        product_label:
+          type: string
+        variant_label:
+          type: string
+        quantity_label:
+          type: string
+        amount_label:
+          type: string
+        reference_value_hint:
+          type: string
+        simple_explanation:
+          type: string
+        traffic_light_explanation:
+          type: string
+        simple_levels_explanation:
+          type: string
+        level_1_label:
+          type: string
+        level_2_label:
+          type: string
+        level_3_label:
+          type: string
+        green_label:
+          type: string
+        yellow_label:
+          type: string
+        red_label:
+          type: string
+        pickup_location_label:
+          type: string
+        live_yearly_label:
+          type: string
+        monthly_hint:
+          type: string
+        monthly_unit:
+          type: string
+        confirm_text:
+          type: string
+        success_text:
+          type: string
+        error_text:
+          type: string
+      required:
+      - amount_label
+      - confirm_text
+      - error_text
+      - green_label
+      - level_1_label
+      - level_2_label
+      - level_3_label
+      - live_yearly_label
+      - monthly_hint
+      - monthly_unit
+      - pickup_location_label
+      - product_label
+      - quantity_label
+      - red_label
+      - reference_value_hint
+      - simple_explanation
+      - simple_levels_explanation
+      - success_text
+      - traffic_light_explanation
+      - variant_label
+      - yellow_label
+    BiddableProduct:
+      type: object
+      properties:
+        id:
+          type: string
+        product_type_id:
+          type: string
+        product_type_name:
+          type: string
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/BidProductVariant'
+      required:
+      - id
+      - product_type_id
+      - product_type_name
+      - products
+    BiddingProcedureEnum:
+      enum:
+      - simple
+      - traffic_light
+      type: string
+      description: |-
+        * `simple` - Simple
+        * `traffic_light` - Traffic light
+    BiddingRoundCapacityCheckRequestRequest:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BidCapacityCheckItemRequest'
+          maxItems: 20
+        pickup_location_id:
+          type: string
+          nullable: true
+      required:
+      - items
+    BiddingRoundCapacityCheckResponse:
+      type: object
+      properties:
+        sufficient:
+          type: boolean
+        message:
+          type: string
+      required:
+      - sufficient
     BlankEnum:
       enum:
       - ''
@@ -10200,6 +11240,22 @@ components:
         * `CANCELLED` - Kündigung
         * `RENEWED` - Verlängerung
         * `NOT_RENEWED` - Keine Verlängerung
+    CheckContractsRequest:
+      type: object
+      properties:
+        bid_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+    ConfirmBidsRequest:
+      type: object
+      properties:
+        bid_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
     ConfirmSubscriptionChangesRequestRequest:
       type: object
       properties:
@@ -10227,6 +11283,76 @@ components:
       - confirm_creation_ids
       - confirm_deletion_ids
       - confirm_purchase_ids
+    ContractItem:
+      type: object
+      properties:
+        product_type_name:
+          type: string
+        product_name:
+          type: string
+        quantity:
+          type: integer
+      required:
+      - product_name
+      - product_type_name
+      - quantity
+    ContractRow:
+      type: object
+      properties:
+        member_id:
+          type: string
+        member_name:
+          type: string
+        member_email:
+          type: string
+        type:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContractItem'
+        pickup_location_name:
+          type: string
+        standard_amount_per_month:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        standard_amount_per_year:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        contribution_amount_per_month:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        contribution_amount_per_year:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        amount_per_month:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        amount_per_year:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        is_created:
+          type: boolean
+      required:
+      - amount_per_month
+      - amount_per_year
+      - contribution_amount_per_month
+      - contribution_amount_per_year
+      - is_created
+      - items
+      - member_email
+      - member_id
+      - member_name
+      - pickup_location_name
+      - standard_amount_per_month
+      - standard_amount_per_year
+      - type
     ConvertWeekToDateForSubscriptionChangesResponse:
       type: object
       properties:
@@ -10775,6 +11901,73 @@ components:
         * `ZR` - Zaire
         * `ZW` - Zimbabwe
         * `ZZ` - Unknown or unspecified country
+    CreateContractsError:
+      type: object
+      properties:
+        bid_id:
+          type: string
+          format: uuid
+        member_id:
+          type: string
+        member_name:
+          type: string
+        product_name:
+          type: string
+        error:
+          type: string
+      required:
+      - bid_id
+      - error
+      - member_id
+      - member_name
+      - product_name
+    CreateContractsRequest:
+      type: object
+      properties:
+        bid_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        bid_level:
+          type: integer
+          maximum: 3
+          minimum: 1
+        create_auto_renewed_contracts:
+          type: boolean
+          default: false
+        auto_renewed_member_ids:
+          type: array
+          items:
+            type: string
+            minLength: 1
+    CreateContractsResponse:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateContractsError'
+        subscriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateContractsSubscription'
+      required:
+      - errors
+      - subscriptions
+    CreateContractsSubscription:
+      type: object
+      properties:
+        id:
+          type: string
+        member_id:
+          type: string
+        product_id:
+          type: string
+      required:
+      - id
+      - member_id
+      - product_id
     CreateMissingTriggerMailRequest:
       type: object
       properties:
@@ -11919,6 +13112,116 @@ components:
       - tax_rate_change_date
       - title_bestellwizard_intro
       - title_bestellwizard_product_choice
+    ExtraPosition:
+      type: object
+      properties:
+        label:
+          type: string
+        reached_per_year:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        applicable:
+          type: boolean
+      required:
+      - applicable
+      - label
+      - reached_per_year
+    ExtraPositions:
+      type: object
+      properties:
+        membership:
+          $ref: '#/components/schemas/ExtraPosition'
+        delivery_charge:
+          $ref: '#/components/schemas/ExtraPosition'
+      required:
+      - delivery_charge
+      - membership
+    FinancingProjection:
+      type: object
+      properties:
+        target_per_year:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        capacity_shares:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        bid_shares:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        auto_shares:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        remaining_shares:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        fixed_per_year:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        auto_renew_per_year:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        membership_per_year:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        delivery_charge_per_year:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        non_bidders_min_average:
+          type: boolean
+        membership_included_in_product_type:
+          type: boolean
+        levels:
+          $ref: '#/components/schemas/FinancingProjectionLevels'
+      required:
+      - auto_renew_per_year
+      - auto_shares
+      - bid_shares
+      - capacity_shares
+      - delivery_charge_per_year
+      - fixed_per_year
+      - levels
+      - membership_included_in_product_type
+      - membership_per_year
+      - non_bidders_min_average
+      - remaining_shares
+      - target_per_year
+    FinancingProjectionLevel:
+      type: object
+      properties:
+        reached_per_year:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        average_per_share_per_month:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+      required:
+      - average_per_share_per_month
+      - reached_per_year
+    FinancingProjectionLevels:
+      type: object
+      properties:
+        green:
+          $ref: '#/components/schemas/FinancingProjectionLevel'
+        yellow:
+          $ref: '#/components/schemas/FinancingProjectionLevel'
+        red:
+          $ref: '#/components/schemas/FinancingProjectionLevel'
+      required:
+      - green
+      - red
+      - yellow
     FuturePaymentsResponse:
       type: object
       properties:
@@ -12033,6 +13336,21 @@ components:
       - end_date
       - start_date
       - updated_at
+    GrowingPeriodOption:
+      type: object
+      properties:
+        id:
+          type: string
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+      required:
+      - end_date
+      - id
+      - start_date
     GrowingPeriodRequest:
       type: object
       properties:
@@ -12354,6 +13672,28 @@ components:
           maxLength: 150
       required:
       - name
+    LockAverageBidRequest:
+      type: object
+      properties:
+        position:
+          type: number
+          format: double
+          maximum: 100
+          minimum: 0
+        surcharge_percent:
+          type: number
+          format: double
+          maximum: 100
+          minimum: 0
+          default: 0.0
+        surcharge_on_bids:
+          type: boolean
+          default: false
+        surcharge_on_average:
+          type: boolean
+          default: false
+      required:
+      - position
     MailCategory:
       type: object
       properties:
@@ -12733,6 +14073,28 @@ components:
       - account_owner
       - iban
       - organisation_name
+    MemberBidResponse:
+      type: object
+      properties:
+        round:
+          $ref: '#/components/schemas/Round'
+        biddable_product:
+          allOf:
+          - $ref: '#/components/schemas/BiddableProduct'
+          nullable: true
+        pickup_locations:
+          type: array
+          items:
+            $ref: '#/components/schemas/PickupLocationWithCharge'
+        bid:
+          allOf:
+          - $ref: '#/components/schemas/Bid'
+          nullable: true
+      required:
+      - bid
+      - biddable_product
+      - pickup_locations
+      - round
     MemberCredit:
       type: object
       properties:
@@ -13504,6 +14866,24 @@ components:
           minimum: -2147483648
         hidden_in_bestell_wizard:
           type: boolean
+    PatchedBidAdminRequest:
+      type: object
+      properties:
+        member_id:
+          type: string
+          minLength: 1
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BidAdminItemRequest'
+        pickup_location_id:
+          type: string
+          nullable: true
+          minLength: 1
+        entered_by_admin:
+          type: boolean
+        admin_confirmed:
+          type: boolean
     PatchedBreadContentRequest:
       type: object
       properties:
@@ -14005,6 +15385,33 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PickupLocationCapacityByShareRequest'
+    PatchedRoundConfigRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        comment:
+          type: string
+        start_at:
+          type: string
+          format: date-time
+          nullable: true
+        end_at:
+          type: string
+          format: date-time
+        include_auto_renewed:
+          type: boolean
+        bidding_procedure:
+          $ref: '#/components/schemas/BiddingProcedureEnum'
+        bid_levels:
+          type: integer
+          maximum: 3
+          minimum: 1
+        product_type_id:
+          type: string
+          nullable: true
+          minLength: 1
     PatchedSaveExtendedProductTypeRequest:
       type: object
       properties:
@@ -14885,6 +16292,89 @@ components:
       - open_time
       - pickup_location
       - updated_at
+    PickupLocationUtilization:
+      type: object
+      properties:
+        capacity:
+          type: string
+        demand:
+          type: string
+        fill_percent:
+          type: number
+          format: double
+          nullable: true
+        is_full:
+          type: boolean
+      required:
+      - capacity
+      - demand
+      - fill_percent
+      - is_full
+    PickupLocationWithCharge:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        name:
+          type: string
+          maxLength: 150
+        coords_lon:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,2}(?:\.\d{0,10})?$
+          title: Coordinates Longitude
+        coords_lat:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,2}(?:\.\d{0,10})?$
+          title: Coordinates Latitude
+        street:
+          type: string
+          title: Street and house number
+          maxLength: 150
+        street_2:
+          type: string
+          title: Extra address line
+          maxLength: 150
+        postcode:
+          type: string
+          maxLength: 32
+        city:
+          type: string
+          maxLength: 50
+        opening_times:
+          type: array
+          items:
+            $ref: '#/components/schemas/PickupLocationOpeningTime'
+          readOnly: true
+        current_delivery_charge:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
+          readOnly: true
+        delivery_day:
+          type: integer
+          nullable: true
+          readOnly: true
+        yearly_delivery_charge:
+          type: string
+        utilization:
+          allOf:
+          - $ref: '#/components/schemas/PickupLocationUtilization'
+          nullable: true
+      required:
+      - city
+      - coords_lat
+      - coords_lon
+      - current_delivery_charge
+      - delivery_day
+      - name
+      - opening_times
+      - postcode
+      - street
+      - utilization
+      - yearly_delivery_charge
     PickupLocationsByDeliveryDayResponse:
       type: object
       properties:
@@ -15188,6 +16678,16 @@ components:
       - description
       - order
       - title
+    ProductTypeOption:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+      required:
+      - id
+      - name
     ProductTypesAndConfig:
       type: object
       properties:
@@ -15253,6 +16753,125 @@ components:
       - payment_rhythm
       - sepa_allowed
       - solidarity_contribution
+    PublicDataResponse:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        url_enabled:
+          type: boolean
+        url:
+          type: string
+          nullable: true
+        display_name:
+          type: string
+        round:
+          allOf:
+          - $ref: '#/components/schemas/Round'
+          nullable: true
+        round_status:
+          type: string
+        texts:
+          $ref: '#/components/schemas/RoundTexts'
+        biddable_product:
+          allOf:
+          - $ref: '#/components/schemas/BiddableProduct'
+          nullable: true
+        pickup_locations:
+          type: array
+          items:
+            $ref: '#/components/schemas/PickupLocationWithCharge'
+        bid_options:
+          $ref: '#/components/schemas/BidOptions'
+        membership_included_in_product_type:
+          type: boolean
+        is_authenticated:
+          type: boolean
+        current_pickup_location_id:
+          type: string
+          nullable: true
+        bid:
+          allOf:
+          - $ref: '#/components/schemas/Bid'
+          nullable: true
+      required:
+      - enabled
+    PublicEvaluationLevel:
+      type: object
+      properties:
+        reached_per_year:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        current_total_per_year:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        current_coverage_percent:
+          type: number
+          format: double
+        bidder_average_per_month:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+      required:
+      - bidder_average_per_month
+      - current_coverage_percent
+      - current_total_per_year
+      - reached_per_year
+    PublicEvaluationLevels:
+      type: object
+      properties:
+        green:
+          $ref: '#/components/schemas/PublicEvaluationLevel'
+        yellow:
+          $ref: '#/components/schemas/PublicEvaluationLevel'
+        red:
+          $ref: '#/components/schemas/PublicEvaluationLevel'
+      required:
+      - green
+      - red
+      - yellow
+    PublicEvaluationResponse:
+      type: object
+      properties:
+        bidding_procedure:
+          type: string
+        bid_levels:
+          type: integer
+        recommended_level:
+          type: integer
+        traffic_light_position:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        target_per_year:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        capacity_shares:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        current_shares:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        utilization_percent:
+          type: number
+          format: double
+        levels:
+          $ref: '#/components/schemas/PublicEvaluationLevels'
+      required:
+      - bid_levels
+      - bidding_procedure
+      - capacity_shares
+      - current_shares
+      - levels
+      - recommended_level
+      - target_per_year
+      - traffic_light_position
+      - utilization_percent
     PublicGrowingPeriod:
       type: object
       properties:
@@ -15593,6 +17212,90 @@ components:
             minLength: 1
       required:
       - recipients
+    ResultsTable:
+      type: object
+      properties:
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResultsTableMember'
+        pickup_locations:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResultsTablePickupLocation'
+      required:
+      - members
+    ResultsTableMember:
+      type: object
+      properties:
+        member_id:
+          type: string
+        member_name:
+          type: string
+        member_email:
+          type: string
+        has_bid:
+          type: boolean
+        is_active_in_contract_period:
+          type: boolean
+        is_auto_renewed:
+          type: boolean
+        auto_renewed_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AutoRenewedItem'
+        auto_renewed_pickup_location_name:
+          type: string
+          nullable: true
+        auto_renewed_amount_per_year:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        auto_renewed_amount_per_month:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        bid:
+          allOf:
+          - $ref: '#/components/schemas/Bid'
+          nullable: true
+      required:
+      - auto_renewed_amount_per_month
+      - auto_renewed_amount_per_year
+      - bid
+      - has_bid
+      - is_active_in_contract_period
+      - is_auto_renewed
+      - member_email
+      - member_id
+      - member_name
+    ResultsTablePickupLocation:
+      type: object
+      properties:
+        pickup_location_id:
+          type: string
+        pickup_location_name:
+          type: string
+        capacity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        demand:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        fill_percent:
+          type: number
+          format: double
+          nullable: true
+      required:
+      - capacity
+      - demand
+      - fill_percent
+      - pickup_location_id
+      - pickup_location_name
     RhythmEnum:
       enum:
       - monthly
@@ -15605,6 +17308,442 @@ components:
         * `quarterly` - Vierteljährlich
         * `semiannually` - Halbjährlich
         * `yearly` - Jährlich
+    Round:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        display_name:
+          type: string
+        status:
+          type: string
+        bidding_procedure:
+          type: string
+        bid_levels:
+          type: integer
+        start_at:
+          type: string
+          format: date-time
+          nullable: true
+        end_at:
+          type: string
+          format: date-time
+        include_auto_renewed:
+          type: boolean
+        contracts_created_at:
+          type: string
+          format: date-time
+          nullable: true
+        growing_period_id:
+          type: string
+          nullable: true
+        comment:
+          type: string
+        has_bids:
+          type: boolean
+        average_bid_locked_at:
+          type: string
+          format: date-time
+          nullable: true
+        locked_traffic_light_position:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        locked_average_bid_per_share_per_month:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        locked_average_bid_per_share_per_year:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        locked_bidder_average_per_share_per_month:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        locked_bidder_average_per_share_per_year:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        locked_surcharge_percent:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        locked_surcharge_on_bids:
+          type: boolean
+        locked_surcharge_on_average:
+          type: boolean
+        product:
+          allOf:
+          - $ref: '#/components/schemas/RoundProduct'
+          nullable: true
+      required:
+      - average_bid_locked_at
+      - bid_levels
+      - bidding_procedure
+      - comment
+      - contracts_created_at
+      - display_name
+      - end_at
+      - growing_period_id
+      - has_bids
+      - id
+      - include_auto_renewed
+      - locked_average_bid_per_share_per_month
+      - locked_average_bid_per_share_per_year
+      - locked_bidder_average_per_share_per_month
+      - locked_bidder_average_per_share_per_year
+      - locked_surcharge_on_average
+      - locked_surcharge_on_bids
+      - locked_surcharge_percent
+      - locked_traffic_light_position
+      - name
+      - product
+      - start_at
+      - status
+    RoundCreateRequest:
+      type: object
+      properties:
+        growing_period_id:
+          type: string
+          nullable: true
+          minLength: 1
+        name:
+          type: string
+          minLength: 1
+        bidding_procedure:
+          $ref: '#/components/schemas/BiddingProcedureEnum'
+        bid_levels:
+          type: integer
+          maximum: 3
+          minimum: 1
+        end_at:
+          type: string
+          format: date-time
+        start_at:
+          type: string
+          format: date-time
+          nullable: true
+        include_auto_renewed:
+          type: boolean
+        comment:
+          type: string
+        product_type_id:
+          type: string
+          nullable: true
+          minLength: 1
+      required:
+      - bidding_procedure
+      - end_at
+      - name
+    RoundProduct:
+      type: object
+      properties:
+        product_type_id:
+          type: string
+        product_type_name:
+          type: string
+      required:
+      - product_type_id
+      - product_type_name
+    RoundResultsResponse:
+      type: object
+      properties:
+        display_name:
+          type: string
+        stats:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoundStatsEntry'
+        totals:
+          $ref: '#/components/schemas/RoundStatsTotals'
+        extra_positions:
+          $ref: '#/components/schemas/ExtraPositions'
+        average_bid:
+          $ref: '#/components/schemas/AverageBid'
+        include_auto_renewed:
+          type: boolean
+        auto_renewed_enabled:
+          type: boolean
+        bidding_procedure:
+          type: string
+        bid_levels:
+          type: integer
+        recommended_level:
+          type: integer
+        traffic_light_position:
+          type: number
+          format: double
+        financing_projection:
+          $ref: '#/components/schemas/FinancingProjection'
+        results_table:
+          $ref: '#/components/schemas/ResultsTable'
+        biddable_product:
+          allOf:
+          - $ref: '#/components/schemas/BiddableProduct'
+          nullable: true
+        pickup_locations:
+          type: array
+          items:
+            $ref: '#/components/schemas/PickupLocationWithCharge'
+        bid_options:
+          $ref: '#/components/schemas/BidOptions'
+        contracts_created_at:
+          type: string
+          format: date-time
+          nullable: true
+        average_bid_locked_at:
+          type: string
+          format: date-time
+          nullable: true
+        locked_traffic_light_position:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        locked_average_bid_per_share_per_month:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        locked_average_bid_per_share_per_year:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        locked_bidder_average_per_share_per_month:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        locked_bidder_average_per_share_per_year:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        locked_surcharge_percent:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        locked_surcharge_on_bids:
+          type: boolean
+        locked_surcharge_on_average:
+          type: boolean
+        growing_period_id:
+          type: string
+          nullable: true
+        contracts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContractRow'
+      required:
+      - auto_renewed_enabled
+      - average_bid
+      - average_bid_locked_at
+      - bid_levels
+      - bid_options
+      - biddable_product
+      - bidding_procedure
+      - contracts
+      - contracts_created_at
+      - display_name
+      - extra_positions
+      - financing_projection
+      - growing_period_id
+      - include_auto_renewed
+      - locked_average_bid_per_share_per_month
+      - locked_average_bid_per_share_per_year
+      - locked_bidder_average_per_share_per_month
+      - locked_bidder_average_per_share_per_year
+      - locked_surcharge_on_average
+      - locked_surcharge_on_bids
+      - locked_surcharge_percent
+      - locked_traffic_light_position
+      - pickup_locations
+      - recommended_level
+      - results_table
+      - stats
+      - totals
+      - traffic_light_position
+    RoundStatsEntry:
+      type: object
+      properties:
+        target_per_year:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        reached_per_year:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        percent:
+          type: number
+          format: double
+          nullable: true
+        deficit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        traffic_light:
+          type: string
+          nullable: true
+        target_shares:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        reached_shares:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        shares_percent:
+          type: number
+          format: double
+          nullable: true
+        shares_deficit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        shares_traffic_light:
+          type: string
+          nullable: true
+        product_type_id:
+          type: string
+        product_type_name:
+          type: string
+      required:
+      - deficit
+      - percent
+      - product_type_id
+      - product_type_name
+      - reached_per_year
+      - reached_shares
+      - shares_deficit
+      - shares_percent
+      - shares_traffic_light
+      - target_per_year
+      - target_shares
+      - traffic_light
+    RoundStatsTotals:
+      type: object
+      properties:
+        target_per_year:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        reached_per_year:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        percent:
+          type: number
+          format: double
+          nullable: true
+        deficit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        traffic_light:
+          type: string
+          nullable: true
+        target_shares:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        reached_shares:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        shares_percent:
+          type: number
+          format: double
+          nullable: true
+        shares_deficit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        shares_traffic_light:
+          type: string
+          nullable: true
+      required:
+      - deficit
+      - percent
+      - reached_per_year
+      - reached_shares
+      - shares_deficit
+      - shares_percent
+      - shares_traffic_light
+      - target_per_year
+      - target_shares
+      - traffic_light
+    RoundTexts:
+      type: object
+      properties:
+        intro_title:
+          type: string
+        intro_text:
+          type: string
+        ended_text:
+          type: string
+        login_title:
+          type: string
+        login_text:
+          type: string
+        stats_title:
+          type: string
+        stats_text:
+          type: string
+        stats_explanation:
+          type: string
+        stats_traffic_light_slider_hint:
+          type: string
+        stats_simple_levels_slider_hint:
+          type: string
+        pickup_location_title:
+          type: string
+        pickup_location_text:
+          type: string
+        summary_title:
+          type: string
+        submit_label:
+          type: string
+        bid:
+          $ref: '#/components/schemas/BidTexts'
+      required:
+      - bid
+      - ended_text
+      - intro_text
+      - intro_title
+      - login_text
+      - login_title
+      - pickup_location_text
+      - pickup_location_title
+      - stats_explanation
+      - stats_simple_levels_slider_hint
+      - stats_text
+      - stats_title
+      - stats_traffic_light_slider_hint
+      - submit_label
+      - summary_title
     SaveExtendedProductTypeRequest:
       type: object
       properties:

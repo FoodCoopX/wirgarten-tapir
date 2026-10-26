@@ -98,6 +98,18 @@ export default defineConfig(() => {
             INPUT_DIR,
             "/bakery/entries/weekly_plan_breads_entry.tsx",
           ),
+          bidding_round: join(
+            INPUT_DIR,
+            "/bidding_round/bidding_round_entry.tsx",
+          ),
+          bidding_round_config: join(
+            INPUT_DIR,
+            "/bidding_round_config/bidding_round_config_entry.tsx",
+          ),
+          bidding_round_results: join(
+            INPUT_DIR,
+            "/bidding_round_results/bidding_round_results_entry.tsx",
+          ),
         },
       },
     },

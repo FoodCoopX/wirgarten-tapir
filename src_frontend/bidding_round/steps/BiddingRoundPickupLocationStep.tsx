@@ -1,0 +1,311 @@
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import React, { useState } from "react";
+import {
+  ButtonGroup,
+  Form,
+  ListGroup,
+  ListGroupItem,
+  ToggleButton,
+} from "react-bootstrap";
+import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
+import { formatOpeningTimes } from "../../bestell_wizard/utils/formatOpeningTimes.ts";
+import "../../bestell_wizard_mobile/components/map.css";
+import NextStepButton from "../../bestell_wizard_mobile/components/NextStepButton.tsx";
+import { BUTTON_VARIANT } from "../../bestell_wizard_mobile/utils/BUTTON_VARIANT.ts";
+import TapirButton from "../../components/TapirButton.tsx";
+import formatAddress from "../../utils/formatAddress.ts";
+import { formatCurrency } from "../../utils/formatCurrency.ts";
+import { interpolate } from "../../utils/interpolate.ts";
+import {
+  BiddingRoundPickupLocation,
+  BiddingRoundTexts,
+} from "../types/BiddingRoundTypes.ts";
+import { parseEuroAmount } from "../utils/bidLevels.ts";
+
+type PickupLocationTab = "map" | "list";
+
+interface BiddingRoundPickupLocationStepProps {
+  pickupLocations: BiddingRoundPickupLocation[];
+  pickupLocationId: string;
+  setPickupLocationId: (value: string) => void;
+  texts: BiddingRoundTexts;
+  goToNextStep: () => void;
+  stepActive: boolean;
+}
+
+function getTabName(tab: PickupLocationTab) {
+  switch (tab) {
+    case "map":
+      return "Karte";
+    case "list":
+      return "Liste";
+  }
+}
+
+function getYearlyCharge(pickupLocation: BiddingRoundPickupLocation): number {
+  return parseEuroAmount(pickupLocation.yearlyDeliveryCharge) ?? 0;
+}
+
+const BiddingRoundPickupLocationStep: React.FC<
+  BiddingRoundPickupLocationStepProps
+> = ({
+  pickupLocations,
+  pickupLocationId,
+  setPickupLocationId,
+  texts,
+  goToNextStep,
+  stepActive,
+}) => {
+  const [currentTab, setCurrentTab] = useState<PickupLocationTab>("map");
+  const [showValidation, setShowValidation] = useState(false);
+
+  function validate() {
+    if (!pickupLocationId) {
+      setShowValidation(true);
+      return;
+    }
+    goToNextStep();
+  }
+
+  function getMarkerIcon(pickupLocation: BiddingRoundPickupLocation) {
+    if (pickupLocation.id === pickupLocationId) {
+      return "marker-icon-green.png";
+    }
+    if (pickupLocation.utilization?.isFull) {
+      return "marker-icon-red.png";
+    }
+    return "marker-icon.png";
+  }
+
+  function buildChargeLabel(pickupLocation: BiddingRoundPickupLocation) {
+    const yearlyCharge = getYearlyCharge(pickupLocation);
+    if (!yearlyCharge) {
+      return null;
+    }
+    return (
+      <small className={"text-muted"}>
+        {interpolate("+ {charge} / Jahr Lieferzuschlag", {
+          charge: formatCurrency(yearlyCharge),
+        })}
+      </small>
+    );
+  }
+
+  function buildFullIndicator(pickupLocation: BiddingRoundPickupLocation) {
+    if (pickupLocation.utilization?.isFull) {
+      return <small className={"text-danger"}>{"Ausgelastet"}</small>;
+    }
+    return null;
+  }
+
+  function isFull(pickupLocation: BiddingRoundPickupLocation): boolean {
+    return !!pickupLocation.utilization?.isFull;
+  }
+
+  function buildMapPopupContent(pickupLocation: BiddingRoundPickupLocation) {
+    return (
+      <div
+        className={"d-flex flex-column gap-1 align-items-center text-center"}
+      >
+        <strong>{pickupLocation.name}</strong>
+        {buildChargeLabel(pickupLocation)}
+        {buildFullIndicator(pickupLocation)}
+        <div>
+          {formatAddress(
+            pickupLocation.street,
+            pickupLocation.street2,
+            pickupLocation.postcode,
+            pickupLocation.city,
+          )}
+        </div>
+        <div>{formatOpeningTimes(pickupLocation)}</div>
+        <TapirButton
+          size={"sm"}
+          text={"Auswählen"}
+          icon={
+            pickupLocation.id === pickupLocationId
+              ? "select_check_box"
+              : "check_box_outline_blank"
+          }
+          variant={BUTTON_VARIANT}
+          disabled={isFull(pickupLocation)}
+          onClick={() => setPickupLocationId(pickupLocation.id!)}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div
+        className={"d-flex flex-column gap-2"}
+        style={{ width: "100%", flexGrow: 1 }}
+      >
+        {texts.pickupLocationText && (
+          <p
+            className={"text-center mb-0"}
+            dangerouslySetInnerHTML={{ __html: texts.pickupLocationText }}
+          />
+        )}
+
+        <ButtonGroup style={{ width: "100%" }}>
+          {(["map", "list"] as PickupLocationTab[]).map((tab) => (
+            <ToggleButton
+              key={tab}
+              id={"bidding_round_pickup_tab_" + tab}
+              value={tab}
+              type={"radio"}
+              variant={BUTTON_VARIANT}
+              name={"bidding_round_pickup_tabs"}
+              checked={currentTab === tab}
+              onChange={() => setCurrentTab(tab)}
+              style={{ width: "100%" }}
+            >
+              {getTabName(tab)}
+            </ToggleButton>
+          ))}
+        </ButtonGroup>
+
+        {currentTab === "map" && stepActive && (
+          <div style={{ position: "relative", height: "45dvh", width: "100%" }}>
+            <MapContainer
+              center={[
+                Number.parseFloat(pickupLocations[0]?.coordsLon ?? "10"),
+                Number.parseFloat(pickupLocations[0]?.coordsLat ?? "51"),
+              ]}
+              zoom={12}
+              scrollWheelZoom={true}
+              style={{
+                position: "absolute",
+                top: 0,
+                bottom: 0,
+                right: 0,
+                left: 0,
+              }}
+            >
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                referrerPolicy={"no-referrer-when-downgrade"}
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              {pickupLocations.map((pickupLocation) => (
+                <Marker
+                  position={[
+                    Number.parseFloat(pickupLocation.coordsLon),
+                    Number.parseFloat(pickupLocation.coordsLat),
+                  ]}
+                  icon={L.icon({
+                    iconUrl:
+                      "/static/subscriptions/" + getMarkerIcon(pickupLocation),
+                    shadowUrl: "/static/subscriptions/marker-shadow.png",
+                    iconAnchor: [13, 35],
+                    popupAnchor: [0, -33],
+                  })}
+                  key={pickupLocation.id}
+                >
+                  <Popup>{buildMapPopupContent(pickupLocation)}</Popup>
+                </Marker>
+              ))}
+            </MapContainer>
+          </div>
+        )}
+
+        {currentTab === "list" && (
+          <ListGroup style={{ maxHeight: "50dvh", overflow: "scroll" }}>
+            {pickupLocations
+              .toSorted((a, b) => a.name.localeCompare(b.name))
+              .map((pickupLocation) => (
+                <ListGroupItem
+                  key={pickupLocation.id}
+                  style={{ cursor: "pointer", lineHeight: "1.1rem" }}
+                  className={
+                    pickupLocation.id === pickupLocationId ? "active" : ""
+                  }
+                  onClick={() => {
+                    if (!isFull(pickupLocation)) {
+                      setPickupLocationId(pickupLocation.id!);
+                    }
+                  }}
+                >
+                  <small>
+                    <strong>{pickupLocation.name}</strong>
+                    <br />
+                    {buildChargeLabel(pickupLocation)}
+                    {pickupLocation.utilization && (
+                      <>
+                        <br />
+                        <small
+                          className={
+                            pickupLocation.utilization.isFull
+                              ? "text-danger"
+                              : "text-muted"
+                          }
+                        >
+                          {pickupLocation.utilization.fillPercent !== null
+                            ? interpolate("Auslastung: {percent}%", {
+                                percent:
+                                  pickupLocation.utilization.fillPercent.toFixed(
+                                    0,
+                                  ),
+                              })
+                            : "Auslastung unbekannt"}
+                        </small>
+                      </>
+                    )}
+                    <br />
+                    <small>
+                      {formatAddress(
+                        pickupLocation.street,
+                        pickupLocation.street2,
+                        pickupLocation.postcode,
+                        pickupLocation.city,
+                      )}
+                    </small>
+                    <br />
+                    <small>{formatOpeningTimes(pickupLocation)}</small>
+                  </small>
+                </ListGroupItem>
+              ))}
+          </ListGroup>
+        )}
+
+        <Form.Group>
+          <Form.Label>{"Verteilstation"}</Form.Label>
+          <Form.Select
+            value={pickupLocationId}
+            onChange={(event) => setPickupLocationId(event.target.value)}
+          >
+            <option value={""}>–</option>
+            {pickupLocations.map((pickupLocation) => (
+              <option
+                key={pickupLocation.id}
+                value={pickupLocation.id!}
+                disabled={
+                  isFull(pickupLocation) &&
+                  pickupLocation.id !== pickupLocationId
+                }
+              >
+                {pickupLocation.name}
+                {pickupLocation.utilization?.isFull ? " (ausgelastet)" : ""}
+              </option>
+            ))}
+          </Form.Select>
+        </Form.Group>
+      </div>
+
+      <NextStepButton
+        onClick={validate}
+        showError={showValidation && !pickupLocationId}
+        text={
+          showValidation && !pickupLocationId
+            ? "Noch keine Verteilstation ausgewählt"
+            : undefined
+        }
+        stepActive={stepActive}
+      />
+    </>
+  );
+};
+
+export default BiddingRoundPickupLocationStep;
