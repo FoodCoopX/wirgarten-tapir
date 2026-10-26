@@ -27,8 +27,14 @@ from tapir.log.models import LogEntry
 from tapir.payments.models import MemberCredit
 from tapir.utils.config import Organization
 from tapir.utils.services.test_data_generation.bakery_generator import BakeryGenerator
+from tapir.utils.services.test_data_generation.bidding_round_generator import (
+    BiddingRoundGenerator,
+)
 from tapir.utils.services.test_data_generation.configuration_generator import (
     ConfigurationGenerator,
+)
+from tapir.utils.services.test_data_generation.email_configuration_generator import (
+    EmailConfigurationGenerator,
 )
 from tapir.utils.services.test_data_generation.joker_generator import JokerGenerator
 from tapir.utils.services.test_data_generation.member_credit_generator import (
@@ -148,8 +154,12 @@ class DataGenerator:
         WaitingListGenerator.generate_waiting_list(generate_test_data_for)
         print("Creating Solidarity contributions...")
         SolidarityContributionGenerator.generate_solidarity_contributions()
+        print("Creating bidding round...")
+        BiddingRoundGenerator.generate_bidding_round()
         print("Creating member credits...")
         MemberCreditGenerator.generate_member_credits()
+        print("Creating email configurations...")
+        EmailConfigurationGenerator.generate_email_configurations()
         print("Creating payment history...")
         call_command("rebuild_payment_history", "--no-confirm")
         print("Test data generation done")
