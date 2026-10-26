@@ -48,10 +48,12 @@ class KeycloakUser(AbstractUser):
 
     @property
     def roles(self):
-        roles = KeycloakUserManager.get_user_roles(self.keycloak_id)
-        if self.is_superuser or Permission.Coop.MANAGE in roles:
-            roles.append("admin")
-        return roles
+        if self._roles is None:
+            roles = KeycloakUserManager.get_user_roles(self.keycloak_id)
+            if self.is_superuser or Permission.Coop.MANAGE in roles:
+                roles.append("admin")
+            self._roles = roles
+        return self._roles
 
     @roles.setter
     def roles(self, value):
@@ -62,12 +64,6 @@ class KeycloakUser(AbstractUser):
             return self.is_superuser
 
         target = obj or self
-
-        if target.roles is None:
-            target.roles = KeycloakUserManager.get_user_roles(
-                keycloak_id=target.keycloak_id
-            )
-
         return perm in target.roles
 
     def has_perms(self, perm_list, obj=None):
