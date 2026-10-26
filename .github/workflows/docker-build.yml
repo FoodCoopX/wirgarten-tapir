@@ -34,7 +34,7 @@ jobs:
           GITHUB_REPO: ${{ github.repository }}
           NEW_TAG: ${{ github.event.inputs.release_tag == '' && '--bump' || format('--tag {0}', github.event.inputs.release_tag) }}
         with:
-          config: https://github.com/orhun/git-cliff/blob/main/examples/github.toml
+          config: cliff.toml
           args: --verbose --unreleased --strip header --tag-pattern '^v[0-9]+\.[0-9]+\.[0-9]+$' $NEW_TAG
 
       - name: Create release with changelog
