@@ -5,2894 +5,2553 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: \n"
+"Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-03-05 19:07+0100\n"
-"PO-Revision-Date: 2022-03-05 19:07+0100\n"
-"Last-Translator: \n"
-"Language-Team: \n"
+"POT-Creation-Date: 2026-10-26 23:13+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 3.0.1\n"
 
-#: accounts/models.py:137 accounts/templates/accounts/user_detail.html:36
-#: coop/templates/coop/draftuser_detail.html:18
-msgid "Username"
-msgstr "Nutzer*innenname"
-
-#: accounts/models.py:141
-msgid "Required. 150 characters or fewer. Letters, digits and ./-/_ only."
-msgstr ""
-"Erforderlich. Maximale Zeichenanzahl: 150. Bitte nur Buchstaben, Zahlen oder ./-/_ "
-"verwenden."
-
-#: accounts/models.py:145
-msgid "A user with that username already exists."
-msgstr "Es gibt bereits eine Nutzer*in mit diesem Namen."
-
-#: accounts/models.py:149 accounts/templates/accounts/user_detail.html:44 coop/models.py:50
-#: coop/models.py:258 coop/templates/coop/draftuser_detail.html:26
-#: coop/templates/coop/shareowner_detail.html:43
-msgid "Phone number"
-msgstr "Telefonnummer"
-
-#: accounts/models.py:150 accounts/templates/accounts/user_detail.html:54 coop/models.py:51
-#: coop/models.py:259 coop/templates/coop/draftuser_detail.html:30
-#: coop/templates/coop/shareowner_detail.html:47
-msgid "Birthdate"
-msgstr "Geburtsdatum"
-
-#: accounts/models.py:151 coop/models.py:52 coop/models.py:260
-msgid "Street and house number"
-msgstr "Straße und Hausnummer"
-
-#: accounts/models.py:152 coop/models.py:53 coop/models.py:261
-msgid "Extra address line"
-msgstr "Adresszusatz"
-
-#: accounts/models.py:153 coop/models.py:54 coop/models.py:262
-msgid "Postcode"
-msgstr "Postleitzahl"
-
-#: accounts/models.py:154 coop/models.py:55 coop/models.py:263
-msgid "City"
-msgstr "Ort"
-
-#: accounts/models.py:155 coop/models.py:56 coop/models.py:264
-msgid "Country"
-msgstr "Land"
-
-#: accounts/models.py:158 accounts/templates/accounts/user_detail.html:74 coop/models.py:59
-#: coop/models.py:267 coop/templates/coop/shareowner_detail.html:67
-msgid "Preferred Language"
-msgstr "Bevorzugte Sprache"
-
-#: accounts/models.py:207
-msgid "None"
-msgstr "Keine"
-
-#: accounts/templates/accounts/email/welcome_email.default.html:9
-#, python-format
-msgid ""
-"\n"
-"    <p>Dear %(user_display_name)s,</p>\n"
-"    <p>\n"
-"        we've just created an account for you in our %(coop_name)s member system. Here you "
-"can view your upcoming shifts,\n"
-"        book an additional shift if you'd like or mark your shift as “looking for a stand-"
-"in” (for example when you go\n"
-"        on vacation).\n"
-"    </p>\n"
+#: tapir/accounts/models.py:78
+msgid "Last Name"
 msgstr ""
 
-#: accounts/templates/accounts/email/welcome_email.default.html:21
-#: accounts/templates/accounts/email/welcome_email.html:19
-#, python-format
-msgid ""
-"\n"
-"                Your regular ABCD-shift is: %(slot_display_name)s. You will receive a "
-"reminder email in advance of your first shift.\n"
-"            "
-msgstr ""
-"\n"
-"Deine regelmäßige ABCD-Schicht ist: %(slot_display_name)s. Vor deiner ersten Schicht wirst "
-"du nochmal eine Erinnerungsmail erhalten.\n"
-" "
-
-#: accounts/templates/accounts/email/welcome_email.default.html:26
-msgid ""
-"\n"
-"            Flying members: Please keep in mind that you must have at least one shift "
-"“banked” for each shift cycle.\n"
-"        "
-msgstr ""
-
-#: accounts/templates/accounts/email/welcome_email.default.html:35
-#, python-format
-msgid ""
-"\n"
-"    <p>Your username is <strong>%(username)s</strong>. In order to log in to your account, "
-"you first have to set a password: <a href=\"%(site_url)s%(password_reset_confirm_url)s"
-"\">Click here to set your password</a></p>\n"
-"    <p>This link is only valid for a few weeks. Should it expire, you can get a new one "
-"here : <a href=\"%(site_url)s%(password_reset_request_url)s\">Click here to get a new "
-"link</a></p>\n"
-"    "
-msgstr ""
-
-#: accounts/templates/accounts/email/welcome_email.html:7
-msgid "Welcome"
-msgstr "Willkommen"
-
-#: accounts/templates/accounts/email/welcome_email.html:10
-#, python-format
-msgid ""
-"\n"
-"    <p>Dear %(user_display_name)s,</p>\n"
-"    <p>we just created an account for you in our SuperCoop member system. Here you can "
-"view your upcoming shifts, book an additional shift if you'd like or mark your shift as "
-"“looking for a stand-in” (for example when you go on vacation). <br/>\n"
-"        Please see the <a href=\"https://wiki.supercoop.de/wiki/Member_Manual\">Member "
-"Manual</a> section III for more information on the Stand-in System.</p>\n"
-msgstr ""
-"\n"
-"<p> Liebe*r %(user_display_name)s,</p>\n"
-"<p>soeben haben wir für dich ein Konto in unserem SuperCoop Mitgliedersystem angelegt. "
-"Hier kannst du deine kommenden Schichten einsehen, dir nach Lust und Laune eine "
-"zusätzliche Schicht buchen oder eine deiner eigenen Schichten zur Neubesetzung freigeben, "
-"beispielsweise wenn du in den Urlaub fährst.<br />\n"
-"Mehr über Informationen über das Vertretungssystem findest du im <a href=\"https://wiki."
-"supercoop.de/wiki/Member_Manual\">Mitgliederhandbuch</a>.</p>\n"
-
-#: accounts/templates/accounts/email/welcome_email.html:24
-msgid ""
-"\n"
-"            Flying members: Please keep in mind that you must have at least one shift "
-"“banked” for each shift cycle. For more information please see the <a href=\"https://wiki."
-"supercoop.de/wiki/Member_Manual\">Member Manual</a> .\n"
-"        "
-msgstr ""
-"\n"
-"Fliegende Mitglieder: Bitte achtet darauf, zu jedem Zyklus-Ende mindestens ein "
-"Schichtguthaben auf eurem Schichtkonto zu haben. Mehr Infos findet ihr im <a href="
-"\"https://wiki.supercoop.de/wiki/Member_Manual\">Mitgliederhandbuch</a>.\n"
-" "
-
-#: accounts/templates/accounts/email/welcome_email.html:33
-#, python-format
-msgid ""
-"\n"
-"        <p>Your username is *%(username)s* . In order to login to your account, you first "
-"have to set a password : <a href=\"%(site_url)s%(password_reset_confirm_url)s\">Click here "
-"to set your password</a></p>\n"
-"        <p>This link is only valid for a few weeks. Should it expire, you can get a new "
-"one here : <a href=\"%(site_url)s%(password_reset_request_url)s\">Click here to get a new "
-"link</a></p>\n"
-"        <p>You can also login to the SuperCoop wiki with that account.</p>\n"
-"        <p>Alternatively, as for any other question, you can always contact the <a href="
-"\"https://wiki.supercoop.de/wiki/Mitgliederb%%C3%%BCro_-_Member_Office\">Member Office</"
-"a></p>\n"
-"    "
-msgstr ""
-"\n"
-"<p>Dein Nutzer*innenname ist *%(username)s* . Um dein Konto nutzen zu können, musst du "
-"zuerst ein Passwort festlegen: <a href=\"%(site_url)s%(password_reset_confirm_url)s"
-"\">Klick hier um dein Passwort zu setzen.</a></p>\n"
-"<p>Dieser Link ist nur einige Wochen gültig. Sollte er abgelaufen sein, kannst du einen "
-"neuen Link anfordern: <a href=\"%(site_url)s%(password_reset_request_url)s\">Klick hier um "
-"einen neuen Link zu bekommen.</a></p>\n"
-"<p>Mit diesem Konto kannst du dich auch in unser Wiki einloggen.</p>\n"
-"<p>Alternativ, und auch bei allen anderen Fragen, kannst du dich jederzeit an das <a href="
-"\"https://wiki.supercoop.de/wiki/Mitgliederb%%C3%%BCro_-_Member_Office\">Mitgliederbüro</"
-"a> wenden.</p>\n"
-" "
-
-#: accounts/templates/accounts/email/welcome_email.html:41
-msgid ""
-"\n"
-"        Cooperative regards, <br />\n"
-"        Your SuperCoop Berlin Member Office team.\n"
-"    "
-msgstr ""
-"\n"
-"Kooperative Grüße,<br />\n"
-"dein Team vom Mitgliederbüro SuperCoop Berlin.\n"
-" "
-
-#: accounts/templates/accounts/email/welcome_email_subject.default.html:2
-msgid "Your account in the member system"
-msgstr ""
-
-#: accounts/templates/accounts/user_detail.html:22
-#: coop/templates/coop/shareowner_detail.html:14
-msgid "Personal Data"
-msgstr "Persönliche Daten"
-
-#: accounts/templates/accounts/user_detail.html:26
-#: coop/templates/coop/draftuser_detail.html:133
-#: coop/templates/coop/shareowner_detail.html:24
-#: coop/templates/coop/user_coop_share_ownership_list_tag.html:18
-#: coop/templates/coop/user_coop_share_ownership_list_tag.html:108
-#: shifts/templates/shifts/shift_detail.html:35
-#: shifts/templates/shifts/shift_template_detail.html:17
-#: shifts/templates/shifts/user_shifts_overview_tag.html:10
-msgid "Edit"
-msgstr "Bearbeiten"
-
-#: accounts/templates/accounts/user_detail.html:32 coop/models.py:329 coop/models.py:337
-#: coop/templates/coop/draftuser_detail.html:14 coop/templates/coop/shareowner_detail.html:35
-msgid "Name"
-msgstr "Name"
-
-#: accounts/templates/accounts/user_detail.html:40
-#: coop/templates/coop/draftuser_detail.html:22 coop/templates/coop/draftuser_list.html:22
-#: coop/templates/coop/shareowner_detail.html:39
+#: tapir/accounts/models.py:79 tapir/bidding_round/views.py:986
+#: tapir/wirgarten/forms/member.py:408
+#: tapir/wirgarten/templates/wirgarten/member/member_filter.html:75
+#: tapir/wirgarten/templates/wirgarten/subscription/subscription_filter.html:34
 msgid "Email"
 msgstr "E-Mail-Adresse"
 
-#: accounts/templates/accounts/user_detail.html:49
-#: accounts/templates/accounts/user_detail.html:59
-#: accounts/templates/accounts/user_detail.html:69
-#: coop/templates/coop/draftuser_detail.html:44 coop/templates/coop/shareowner_detail.html:52
-#: coop/templates/coop/shareowner_detail.html:62
-#: shifts/templates/shifts/user_shifts_overview_tag.html:60
-msgid "Missing"
-msgstr "Fehlend"
+#: tapir/accounts/models.py:80 tapir/wirgarten/models.py:1052
+msgid "Phone number"
+msgstr "Telefonnummer"
 
-#: accounts/templates/accounts/user_detail.html:64
-#: coop/templates/coop/draftuser_detail.html:39 coop/templates/coop/shareowner_detail.html:57
-msgid "Address"
-msgstr "Adresse"
-
-#: accounts/templates/accounts/user_detail.html:79
-msgid "Permissions"
-msgstr "Berechtigungen"
-
-#: accounts/templates/accounts/user_detail.html:90
-msgid "Send account activation email"
-msgstr "Konto-Aktivierungsemail erneut senden"
-
-#: accounts/templates/accounts/user_detail.html:96
-msgid "Change Password"
-msgstr "Passwort ändern"
-
-#: accounts/templates/accounts/user_form.html:11
-#: shifts/templates/shifts/shiftuserdata_form.html:11
-msgid "Users"
-msgstr "Nutzer*innen"
-
-#: accounts/templates/accounts/user_form.html:28
-#: accounts/templates/registration/password_update.html:17
-#: coop/templates/coop/draftuser_form.html:31
-#: coop/templates/coop/draftuser_register_form.default.html:50
-#: coop/templates/coop/draftuser_register_form.html:51
-#: coop/templates/coop/financingcampaign_form.html:21
-#: coop/templates/coop/shareowner_form.html:21
-#: coop/templates/coop/shareownership_form.html:29 shifts/templates/shifts/shift_form.html:25
-#: shifts/templates/shifts/shiftaccountentry_form.html:21
-#: shifts/templates/shifts/shiftattendance_form.html:26
-#: shifts/templates/shifts/shiftexemption_form.html:26
-#: shifts/templates/shifts/shiftuserdata_form.html:29
-msgid "Save"
-msgstr "Speichern"
-
-#: accounts/templates/registration/email/password_reset_email.html:7
-msgid "Password reset"
-msgstr "Passwort gesetzt"
-
-#: accounts/templates/registration/email/password_reset_email.html:14
-#, python-format
-msgid ""
-"\n"
-"        <p>Hi %(first_name)s,</p>\n"
-"\n"
-"        <p>\n"
-"            Someone asked for password reset for %(email)s.<br/>\n"
-"            Your username is %(username)s <br/>\n"
-"            Follow this link to reset your password: <a href=\"%(protocol)s://%(domain)s"
-"%(password_reset_url)s\">%(protocol)s://%(domain)s%(password_reset_url)s</a>\n"
-"        </p>\n"
-"    "
+#: tapir/accounts/models.py:82
+msgid "Phone number (landline)"
 msgstr ""
-"\n"
-"    <p>Hallo %(first_name)s,</p>\n"
-"\n"
-"    <p>\n"
-"        Jemand hat nach einem Passwort-Reset gefragt für %(email)s.<br/>\n"
-"        Deine Benutzername ist %(username)s <br/>\n"
-"        Folge diesem Link um dein Passwort zurückzusetzen: <a href=\"%(protocol)s://"
-"%(domain)s%(password_reset_url)s\">%(protocol)s://%(domain)s%(password_reset_url)s</a>\n"
-"    </p>\n"
-" "
 
-#: accounts/templates/registration/email/password_reset_subject.html:2
-msgid ""
-"\n"
-"    Reset your password\n"
+#: tapir/accounts/models.py:84
+msgid "Birthdate"
+msgstr "Geburtsdatum"
+
+#: tapir/accounts/models.py:85 tapir/wirgarten/models.py:65
+#: tapir/wirgarten/models.py:1054
+msgid "Street and house number"
+msgstr "Straße und Hausnummer"
+
+#: tapir/accounts/models.py:86 tapir/wirgarten/models.py:66
+#: tapir/wirgarten/models.py:1055
+msgid "Extra address line"
+msgstr "Adresszusatz"
+
+#: tapir/accounts/models.py:87 tapir/wirgarten/models.py:67
+#: tapir/wirgarten/models.py:1056
+msgid "Postcode"
+msgstr "Postleitzahl"
+
+#: tapir/accounts/models.py:88 tapir/wirgarten/models.py:68
+#: tapir/wirgarten/models.py:1057
+msgid "City"
+msgstr "Ort"
+
+#: tapir/accounts/models.py:89 tapir/wirgarten/models.py:1058
+msgid "Country"
+msgstr "Land"
+
+#: tapir/accounts/models.py:91
+msgid "Liebe/Lieber"
 msgstr ""
-"\n"
-"Passwort zurücksetzen\n"
 
-#: accounts/templates/registration/login.html:16
-#: accounts/templates/registration/login.html:45
-msgid "Sign in"
-msgstr "Einloggen"
+#: tapir/accounts/models.py:95
+msgid "Preferred Language"
+msgstr "Bevorzugte Sprache"
 
-#: accounts/templates/registration/login.html:41
-msgid "Forgot your password?"
-msgstr "Passwort vergessen?"
-
-#: accounts/templates/registration/password_reset_complete.html:9
-msgid "Password set"
-msgstr "Passwort gesetzt"
-
-#: accounts/templates/registration/password_reset_complete.html:11
-msgid "Your password has been set. You may go ahead and sign in now."
-msgstr "Dein Passwort wurde gesetzt. Du kannst dich jetzt einloggen."
-
-#: accounts/templates/registration/password_reset_complete.html:12
-msgid "Go to login page"
-msgstr "Zur Anmeldeseite wechseln"
-
-#: accounts/templates/registration/password_reset_confirm.html:10
-#: accounts/templates/registration/password_update.html:9
-msgid "Set a new password"
-msgstr "Neues Passwort festlegen"
-
-#: accounts/templates/registration/password_reset_confirm.html:12
-msgid "Please enter a new password"
-msgstr "Bitte gib ein neues Passwort ein"
-
-#: accounts/templates/registration/password_reset_confirm.html:16
-msgid "Change password"
-msgstr "Passwort ändern"
-
-#: accounts/templates/registration/password_reset_confirm.html:22
-msgid ""
-"The password reset link was invalid, possibly because it has already been used. Please "
-"request a new password reset."
+#: tapir/accounts/models.py:135
+msgid "New Email"
 msgstr ""
-"Der Link zum Zurücksetzen des Passworts ist ungültig. Eventuell wurde er bereits genutzt. "
-"Bitte fordere einen neuen Link an."
 
-#: accounts/templates/registration/password_reset_done.html:9
-msgid "Password reset instructions have been sent."
-msgstr "Anleitung zum Passwort zurücksetzen wurde gesendet."
-
-#: accounts/templates/registration/password_reset_done.html:11
-msgid ""
-"We've emailed you instructions for setting your password, if an account exists with the "
-"email you entered. You should receive them shortly. If you don't receive an email, please "
-"make sure you've entered the address you registered with, and check your spam folder."
+#: tapir/accounts/models.py:137
+msgid "Secret"
 msgstr ""
-"Wir haben dir eine Anleitung geschickt, wie du ein neues Passwort für dein Konto festlegen "
-"kannst. Du solltest sie in Kürze erhalten. Wenn nicht, dann prüfe bitte, ob du auch die E-"
-"Mail-Adresse angegeben hast, mit der du dich registriert hast, und schau auch in deinem "
-"Spam-Ordner nach."
 
-#: accounts/templates/registration/password_reset_form.html:11
-msgid "Problems with logging in?"
-msgstr "Probleme beim Anmelden?"
+#: tapir/bidding_round/config.py:13
+msgid "Configuration"
+msgstr "Konfiguration"
 
-#: accounts/templates/registration/password_reset_form.html:16
-msgid ""
-"Please enter your email address, we will send you instructions to reset your password."
-msgstr ""
-"Bitte gib deine E-Mail-Adresse ein. Wir schicken dir dann eine Anleitung, wie du dein "
-"Passwort zurücksetzen kannst."
-
-#: accounts/templates/registration/password_reset_form.html:19
-msgid "Back to login form"
-msgstr "Zurück zum Login"
-
-#: accounts/templates/registration/password_reset_form.html:21
-msgid "Send me instructions!"
-msgstr "Schickt mir eine Anleitung!"
-
-#: accounts/validators.py:11
-msgid ""
-"Enter a valid username. This value may contain only letters, numbers, and ./-/_ characters."
-msgstr ""
-"Der angegebene Name ist ungültig. Er darf nur Buchstaben, Zahlen und die Symbole ./-/_ "
-"enthalten."
-
-#: accounts/views.py:88
-msgid "Account welcome email sent."
-msgstr "Willkommens-E-Mail für Nutzer'*innenkonto gesendet."
-
-#: coop/forms.py:69 coop/views/shareowner.py:232
-#, python-format
-msgid "Welcome at %(organisation_name)s!"
-msgstr "Willkommen in der %(organisation_name)s!"
-
-#: coop/models.py:41
-msgid "Is company"
-msgstr "Ist eine Firma"
-
-#: coop/models.py:47 coop/models.py:255 coop/templates/coop/draftuser_list.html:20
-msgid "First name"
-msgstr "Vorname"
-
-#: coop/models.py:48 coop/models.py:256 coop/templates/coop/draftuser_list.html:21
-msgid "Last name"
-msgstr "Nachname"
-
-#: coop/models.py:49 coop/models.py:257
-msgid "Email address"
-msgstr "E-Mail-Adresse"
-
-#: coop/models.py:66
-msgid "Is investing member"
-msgstr "Ist investierendes Mitglied"
-
-#: coop/models.py:68 coop/models.py:288 coop/templates/coop/draftuser_detail.html:61
-#: coop/templates/coop/user_coop_share_ownership_list_tag.html:44
-#: coop/templates/coop/user_coop_share_ownership_list_tag.html:159
-msgid "Ratenzahlung"
-msgstr "Ratenzahlung"
-
-#: coop/models.py:70 coop/models.py:280
-msgid "Attended Welcome Session"
-msgstr "An Willkommenstreffen teilgenommen"
-
-#: coop/models.py:72 coop/models.py:285 coop/templates/coop/draftuser_detail.html:117
-#: coop/templates/coop/user_coop_share_ownership_list_tag.html:154
-msgid "Paid Entrance Fee"
-msgstr "Eintrittsgeld bezahlt"
-
-#: coop/models.py:74
-msgid "Is willing to gift a share"
-msgstr "Ist bereit Anteile zu verschenken"
-
-#: coop/models.py:124
-msgid "Cannot be a company and have a Tapir account"
-msgstr "Kann keine Firma sein und ein Tapir-Konto haben"
-
-#: coop/models.py:140
-msgid "User info should be stored in associated Tapir account"
-msgstr "Benutzer Infos sollen in dem Tapir Konto gespeichert warden"
-
-#: coop/models.py:199 coop/templates/coop/user_coop_share_ownership_list_tag.html:100
-msgid "Sold"
-msgstr "Verkauft"
-
-#: coop/models.py:200 coop/templates/coop/draftuser_detail.html:53
-#: coop/templates/coop/user_coop_share_ownership_list_tag.html:31
-msgid "Investing"
-msgstr "Investierend"
-
-#: coop/models.py:201 coop/templates/coop/draftuser_detail.html:55
-#: coop/templates/coop/user_coop_share_ownership_list_tag.html:34
+#: tapir/bidding_round/config.py:14
 msgid "Active"
 msgstr "Aktiv"
 
-#: coop/models.py:240
-msgid "Amount paid for a share can't be negative"
-msgstr "Der Betrag kann nicht negative sein"
+#: tapir/bidding_round/config.py:15
+msgid "Closed"
+msgstr "Abgeschlossen"
 
-#: coop/models.py:244
-#, python-brace-format
-msgid "Amount paid for a share can't more than {COOP_SHARE_PRICE} (the price of a share)"
-msgstr "Der Betrag kann nicht mehr als {COOP_SHARE_PRICE} sein"
+#: tapir/bidding_round/config.py:19
+msgid "Simple"
+msgstr "Einfach"
 
-#: coop/models.py:273
-msgid "Number of Shares"
-msgstr "Anzahl an Anteilen"
+#: tapir/bidding_round/config.py:20
+msgid "Traffic light"
+msgstr "Ampel"
 
-#: coop/models.py:276
-msgid "Investing member"
-msgstr "Investierende Mitglieder"
+#: tapir/bidding_round/services/bid_validator.py:23
+#: tapir/bidding_round/services/bid_validator.py:36
+msgid "Please select at least one harvest share."
+msgstr "Bitte wähle mindestens einen Ernteanteil."
 
-#: coop/models.py:283
-msgid "Signed Beteiligungserklärung"
-msgstr "Beteiligungserklärung unterschrieben"
+#: tapir/bidding_round/services/bid_validator.py:68
+msgid "The bidding round is not active."
+msgstr "Die Beitragsrunde ist nicht aktiv."
 
-#: coop/models.py:286 coop/templates/coop/draftuser_detail.html:123
-msgid "Paid Shares"
-msgstr "Anteil(e) bezahlt"
+#: tapir/bidding_round/services/bid_validator.py:71
+msgid "The bidding round has not started yet."
+msgstr "Die Beitragsrunde hat noch nicht begonnen."
 
-#: coop/models.py:328
-msgid "Currently active"
-msgstr "Gerade aktiv"
+#: tapir/bidding_round/services/bid_validator.py:73
+msgid "The bidding round has already ended."
+msgstr "Die Beitragsrunde ist bereits beendet."
 
-#: coop/models.py:330
-msgid "Goal"
-msgstr "Ziel"
+#: tapir/bidding_round/services/bid_validator.py:80
+msgid "The amount must not be negative."
+msgstr "Der Betrag darf nicht negativ sein."
 
-#: coop/models.py:339
-msgid "Raised amount"
-msgstr "Erreichter Betrag"
+#: tapir/bidding_round/services/bid_validator.py:88
+msgid "The product does not belong to the biddable harvest share."
+msgstr "Das Produkt gehört nicht zu dem bietbaren Ernteanteil."
 
-#: coop/templates/coop/about.html:10
-msgid "About Tapir"
-msgstr "Über Tapir"
+#: tapir/bidding_round/services/bid_validator.py:95
+msgid "The amount must not be below the minimum price."
+msgstr "Der Betrag darf den Mindestpreis nicht unterschreiten."
 
-#: coop/templates/coop/about.html:23
-msgid "Latest changes"
-msgstr "Letzte Änderungen"
+#: tapir/bidding_round/services/bid_validator.py:98
+msgid "The number of shares is invalid."
+msgstr "Die Anzahl Anteile ist ungültig."
 
-#: coop/templates/coop/create_user_from_shareowner_form.html:17
-#: coop/templates/coop/shareowner_detail.html:28
-msgid "Create Tapir account"
-msgstr "Tapir-Konto erstellen"
+#: tapir/bidding_round/services/bid_validator.py:115
+msgid "Please provide the yellow amount (satisfied)."
+msgstr "Bitte gib den Gelb-Betrag (Zufrieden) an."
 
-#: coop/templates/coop/create_user_from_shareowner_form.html:26
-msgid "Create account"
-msgstr "Konto erstellen"
+#: tapir/bidding_round/services/bid_validator.py:121
+msgid "Please provide all bids."
+msgstr "Bitte gib alle Gebote an."
 
-#: coop/templates/coop/draftuser_confirm_registration.html:8
-msgid "Registration confirmed"
-msgstr "Anmeldung bestätigt"
+#: tapir/bidding_round/services/bid_validator.py:124
+msgid "Too many bids were provided."
+msgstr "Es wurden zu viele Gebote angegeben."
 
-#: coop/templates/coop/draftuser_confirm_registration.html:11
-msgid ""
-"\n"
-"            <p>Registration successful! Congratulations!</p>\n"
-"            <p>We just emailed your confirmation of your pre-registration with the "
-"Beteiligungserklärung already filled with your information. You just have to print it and "
-"send it back to us per post or scan it and send it per email.</p>\n"
-"            <p>Once we have received both your Beteiligungserklärung and the corresponding "
-"payment, we'll send you the confirmation of your membership.</p>\n"
-"            <p>We will also create for you an account for this website and for the wiki.</"
-"p>\n"
-"            "
-msgstr ""
-"\n"
-"            <p>Anmeldung erflogreich! Congratulations!</p>\n"
-"            <p>We just emailed your confirmation of your pre-registration with the "
-"Beteiligungserklärung already filled with your information. You just have to print it and "
-"send it back to us per post or scan it and send it per email.</p>\n"
-"            <p>Once we have received both your Beteiligungserklärung and the corresponding "
-"payment, we'll send you the confirmation of your membership.</p>\n"
-"            <p>We will also create for you an account for this website and for the wiki.</"
-"p>\n"
-"            "
+#: tapir/bidding_round/services/bid_validator.py:129
+msgid "The bids must be in ascending order."
+msgstr "Die Gebote müssen aufsteigend sein."
 
-#: coop/templates/coop/draftuser_detail.html:11
-msgid "Applicant"
-msgstr "Bewerber*innen"
+#: tapir/bidding_round/services/bid_validator.py:151
+msgid "Please select a pickup location."
+msgstr "Bitte wähle einen Abholort."
 
-#: coop/templates/coop/draftuser_detail.html:50
-msgid "Member Type"
-msgstr "Art der Mitgliedschaft"
-
-#: coop/templates/coop/draftuser_detail.html:67
-msgid "Shares requested"
-msgstr "Angeforderte Anteile"
-
-#: coop/templates/coop/draftuser_detail.html:71
-#: coop/templates/coop/user_coop_share_ownership_list_tag.html:50
-msgid "Welcome Session"
-msgstr "Willkommenstreffen"
-
-#: coop/templates/coop/draftuser_detail.html:89 coop/templates/coop/draftuser_list.html:23
-msgid "Beteiligungserklärung"
-msgstr "Beteiligungserklärung"
-
-#: coop/templates/coop/draftuser_detail.html:151
-msgid "Create Member"
-msgstr "Mitglied anlegen"
-
-#: coop/templates/coop/draftuser_form.html:21
-#: coop/templates/coop/draftuser_register_form.html:35
-msgid "Create applicant"
-msgstr "Bewerber*in erstellen"
-
-#: coop/templates/coop/draftuser_list.html:8
-#: coop/templates/coop/draftuser_register_form.default.html:18
-#: coop/templates/coop/draftuser_register_form.html:18
-#: coop/templates/coop/statistics.html:140 core/templatetags/core.py:31
-msgid "Applicants"
-msgstr "Bewerber*innen"
-
-#: coop/templates/coop/draftuser_list.html:18
-msgid "List of applicants"
-msgstr "Liste der Bewerber*innen"
-
-#: coop/templates/coop/draftuser_list.html:24
-msgid "Entrance Fee"
-msgstr "Eintrittsgeld"
-
-#: coop/templates/coop/draftuser_list.html:34
-msgid "Signed"
-msgstr "Unterschrieben"
-
-#: coop/templates/coop/draftuser_list.html:39
-#: coop/templates/coop/user_coop_share_ownership_list_tag.html:95
-msgid "Paid"
-msgstr "Bezahlt"
-
-#: coop/templates/coop/draftuser_register_form.default.html:35
-msgid "Create Applicant"
-msgstr "Bewerber*in erzeugen"
-
-#: coop/templates/coop/draftuser_register_form.default.html:37
-#: coop/templates/coop/draftuser_register_form.html:37
-#: shifts/templates/shifts/shift_template_detail.html:80
-#: shifts/templates/shifts/slot_register.html:23
-#: shifts/templates/shifts/slot_register.html:39
-#: shifts/templates/shifts/slot_template_register.html:23
-#: shifts/templates/shifts/slot_template_register.html:39
-msgid "Register"
-msgstr "Anmelden"
-
-#: coop/templates/coop/financingcampaign_form.html:12
-msgid "Edit financing campaign"
-msgstr "Finanzierungskampagne editieren"
-
-#: coop/templates/coop/matching_program.html:17
-msgid "Matching program members"
-msgstr ""
-
-#: coop/templates/coop/matching_program.html:21
-msgid ""
-"\n"
-"                    The members in this list have expressed that they are willing to pay "
-"the share for a potential new member that otherwise couldn't afford it.\n"
-"                "
-msgstr ""
-
-#: coop/templates/coop/shareowner_detail.html:18
-msgid "Go to user page"
-msgstr "Zur Nutzerseite"
-
-#: coop/templates/coop/shareowner_form.html:12
-msgid "Edit share owner"
-msgstr "Mitglied bearbeiten"
-
-#: coop/templates/coop/shareowner_list.html:19
-msgid "Cooperative Members"
-msgstr "Genossenschaftsmitglieder"
-
-#: coop/templates/coop/shareowner_list.html:22
-msgid "Export"
-msgstr "Exportieren"
-
-#: coop/templates/coop/shareowner_list.html:43
-msgid "Clear all filters"
-msgstr "Alle Filter entfernen"
-
-#: coop/templates/coop/shareowner_list.html:46
+#: tapir/bidding_round/services/bidding_round_capacity_service.py:66
 #, python-format
 msgid ""
-"\n"
-"                            Filtered %(filtered_member_count)s of %(total_member_count)s\n"
-"                            "
-msgstr ""
-"\n"
-"                            %(filtered_member_count)s aus %(total_member_count)s "
-"gefilterte Mitglieder\n"
-"                            "
+"Insufficient capacity for the product types %(product_types)s and for the "
+"pickup location %(pickup_locations)s."
+msgstr "Nicht genügend Kapazität für die Produktarten %(product_types)s und für die Verteilstation %(pickup_locations)s."
 
-#: coop/templates/coop/shop_extension_progress_bar.html:4
-msgid "Click this link to learn more."
-msgstr "Klick hier um mehr zu lernen."
+#: tapir/bidding_round/services/bidding_round_capacity_service.py:74
+#, python-format
+msgid "Insufficient capacity for the product types %(product_types)s."
+msgstr "Nicht genügend Kapazität für die Produktarten %(product_types)s."
 
-#: coop/templates/coop/statistics.html:27
-msgid "Statistics on members"
-msgstr "Mitglieder-Statistiken"
+#: tapir/bidding_round/services/bidding_round_capacity_service.py:77
+#, python-format
+msgid "Insufficient capacity for the pickup location %(pickup_locations)s."
+msgstr "Nicht genügend Kapazität für die Verteilstation %(pickup_locations)s."
 
-#: coop/templates/coop/statistics.html:46
-msgid "Statistics on shares"
-msgstr "Anteile-Statistiken"
+#: tapir/bidding_round/services/bidding_round_service.py:60
+msgid "The bidding round must have an end date."
+msgstr "Die Beitragsrunde muss ein Enddatum haben."
 
-#: coop/templates/coop/statistics.html:87
-msgid "Monthly evolution of the number of shares"
-msgstr "Monatliche Entwicklung der Anzahl an Anteile"
+#: tapir/bidding_round/services/bidding_round_service.py:62
+msgid "The start date must not be after the end date."
+msgstr "Das Startdatum darf nicht nach dem Enddatum liegen."
 
-#: coop/templates/coop/statistics.html:101
-msgid "Active members"
-msgstr "Aktive Mitglieder"
+#: tapir/bidding_round/services/bidding_round_service.py:74
+msgid "Please select exactly one product type."
+msgstr "Bitte genau einen Produkttyp auswählen."
 
-#: coop/templates/coop/statistics.html:114
-msgid "Active members with a Tapir account"
-msgstr "Aktive Mitglieder mit Tapir-Konto"
+#: tapir/bidding_round/services/bidding_round_service.py:101
+msgid "Another bidding round is already active."
+msgstr "Es ist bereits eine andere Beitragsrunde aktiv."
 
-#: coop/templates/coop/statistics.html:127
-msgid "Active members without a Tapir account"
-msgstr "Aktive Mitglieder ohne Tapir-Konto"
+#: tapir/bidding_round/services/bidding_round_service.py:107
+msgid "Only bidding rounds with status configuration can be started."
+msgstr "Nur Beitragsrunden im Status Konfiguration können gestartet werden."
 
-#: coop/templates/coop/statistics.html:153
-msgid "Members who bought extra shares"
-msgstr ""
+#: tapir/bidding_round/services/bidding_round_service.py:117
+msgid "Only active bidding rounds can be closed."
+msgstr "Nur aktive Beitragsrunden können beendet werden."
 
-#: coop/templates/coop/user_coop_share_ownership_list_tag.html:7
+#: tapir/bidding_round/services/bidding_round_service.py:125
+msgid "Only closed bidding rounds can be reopened."
+msgstr "Nur abgeschlossene Beitragsrunden können wieder eröffnet werden."
+
+#: tapir/bidding_round/services/bidding_round_service.py:146
+msgid "The average bid is already locked."
+msgstr "Das Durchschnittsgebot ist bereits gesperrt."
+
+#: tapir/bidding_round/services/bidding_round_service.py:150
+msgid "The surcharge must be between 0 and 100 percent."
+msgstr "Der Aufschlag muss zwischen 0 und 100 Prozent liegen."
+
+#: tapir/bidding_round/services/bidding_round_service.py:187
+msgid "The average bid is not locked."
+msgstr "Das Durchschnittsgebot ist nicht gesperrt."
+
+#: tapir/bidding_round/services/bidding_round_service.py:191
+msgid ""
+"The average bid can no longer be unlocked once contracts have been created. "
+"Delete the contracts first."
+msgstr "Das Durchschnittsgebot kann nicht mehr entsperrt werden, sobald Verträge erzeugt wurden. Löschen Sie zuerst die Verträge."
+
+#: tapir/bidding_round/services/bidding_round_service.py:213
+msgid "Bidding rounds can only be deleted with status configuration or closed."
+msgstr "Beitragsrunden können nur im Status Konfiguration oder Abgeschlossen gelöscht werden."
+
+#: tapir/bidding_round/services/bidding_round_service.py:247
+msgid ""
+"The bidding procedure, contribution mode, number of bids and biddable "
+"product types can only be changed as long as no bids have been placed."
+msgstr "Bietverfahren, Beitragsmodus, Anzahl Gebote und bietbare Produkttypen können nur geändert werden, solange noch keine Gebote abgegeben wurden."
+
+#: tapir/bidding_round/services/bidding_round_service.py:334
+msgid "Only members can place a bid."
+msgstr "Nur Mitglieder können ein Gebot abgeben."
+
+#: tapir/bidding_round/services/bidding_round_view_service.py:47
+#: tapir/bidding_round/templates/bidding_round/bidding_round.html:10
+#: tapir/bidding_round/tests/services/test_bidding_round_view_service.py:35
+msgid "Bidding round"
+msgstr "Beitragsrunde"
+
+#: tapir/bidding_round/services/bidding_round_view_service.py:51
+#: tapir/bidding_round/tests/services/test_bidding_round_view_service.py:41
+msgid "Bidding rounds"
+msgstr "Beitragsrunden"
+
+#: tapir/bidding_round/services/contract_creator.py:53
+msgid "Contracts can only be created after the bidding round has ended."
+msgstr "Verträge können erst nach Abschluss der Beitragsrunde erzeugt werden."
+
+#: tapir/bidding_round/services/contract_creator.py:58
+msgid "The average bid must be locked before contracts can be created."
+msgstr "Das Durchschnittsgebot muss gesperrt werden, bevor Verträge erzeugt werden können."
+
+#: tapir/bidding_round/services/contract_creator.py:70
 #, python-format
 msgid ""
-"\n"
-"                    Member #%(coop_share_owner_id)s\n"
-"                "
-msgstr ""
-"\n"
-"                    Mitglied #%(coop_share_owner_id)s\n"
-"                "
+"All selected bids must be confirmed before contracts can be created. Still "
+"unconfirmed: %(names)s"
+msgstr "Alle ausgewählten Gebote müssen bestätigt werden, bevor Verträge erzeugt werden können. Noch unbestätigt: %(names)s"
 
-#: coop/templates/coop/user_coop_share_ownership_list_tag.html:15
-msgid "Membership confirmation"
-msgstr "Mitgliedsbestätigung"
+#: tapir/bidding_round/services/contract_deletion_service.py:27
+msgid "No contracts have been created for this bidding round."
+msgstr "Für diese Beitragsrunde wurden keine Verträge erzeugt."
 
-#: coop/templates/coop/user_coop_share_ownership_list_tag.html:28
-#: coop/views/shareowner.py:383 shifts/templates/shifts/user_shifts_overview_tag.html:17
-msgid "Status"
-msgstr "Status"
+#: tapir/bidding_round/templates/bidding_round/bidding_round_config.html:7
+msgid "Bidding round configuration"
+msgstr "Beitragsrunde Konfiguration"
 
-#: coop/templates/coop/user_coop_share_ownership_list_tag.html:36
-msgid "Inactive"
-msgstr "Inaktiv"
+#: tapir/bidding_round/templates/bidding_round/bidding_round_results.html:7
+msgid "Bidding round results"
+msgstr "Beitragsrunde Auswertung"
 
-#: coop/templates/coop/user_coop_share_ownership_list_tag.html:53 shifts/models.py:777
-#: shifts/templates/shifts/shift_day_printable.html:56
-#: shifts/templates/shifts/shift_detail.html:205
-#: shifts/templates/shifts/shift_detail_printable.html:48
-msgid "Attended"
-msgstr "Teilgenommen"
+#: tapir/bidding_round/views.py:291
+msgid "There is no matching season for the bidding round."
+msgstr "Es gibt keine passende Saison für die Beitragsrunde."
 
-#: coop/templates/coop/user_coop_share_ownership_list_tag.html:55 shifts/models.py:776
-msgid "Pending"
-msgstr "Ausstehend"
+#: tapir/bidding_round/views.py:685
+msgid "A member must be selected."
+msgstr "Es muss ein Mitglied ausgewählt werden."
 
-#: coop/templates/coop/user_coop_share_ownership_list_tag.html:62
-msgid "Mark Attended"
-msgstr "Als teilgenommen markieren"
+#: tapir/bidding_round/views.py:690
+msgid "A bid already exists for this member."
+msgstr "Für dieses Mitglied existiert bereits ein Gebot."
 
-#: coop/templates/coop/user_coop_share_ownership_list_tag.html:71
-msgid "Owned shares"
-msgstr "Anteile"
+#: tapir/bidding_round/views.py:766
+msgid "Bids can no longer be deleted after the contracts have been created."
+msgstr "Gebote können nach der Vertragserzeugung nicht mehr gelöscht werden."
 
-#: coop/templates/coop/user_coop_share_ownership_list_tag.html:79
-msgid "List of shares owned by this member"
-msgstr "Liste der Anteile die dieses Mitglied gehören"
-
-#: coop/templates/coop/user_coop_share_ownership_list_tag.html:97
-msgid "Waiting payment"
-msgstr "Bezahlung ausstehend"
-
-#: coop/templates/coop/user_coop_share_ownership_list_tag.html:123
-msgid "Delete"
-msgstr "Löschen"
-
-#: coop/templates/coop/user_coop_share_ownership_list_tag.html:125
-msgid ""
-"\n"
-"                                                        Only use this to correct mistakes, "
-"i.e. if the share was\n"
-"                                                        erroneously\n"
-"                                                        entered into the system and the "
-"person never actually\n"
-"                                                        bought it. If the person simply "
-"sold their share back to the\n"
-"                                                        coop, please mark the share as "
-"sold instead.\n"
-"                                                    "
-msgstr ""
-"\n"
-"Bitte nur verwenden, wenn ein tatsächlicher Fehler vorliegt, z.B. ein Anteil eingetragen "
-"wurde, der nie gekauft wurde. Wenn die Person ihren Anteil einfach an den Coop "
-"zurückverkauft hat, markiere den Anteil bitte als 'verkauft'.\n"
-" "
-
-#: coop/templates/coop/user_coop_share_ownership_list_tag.html:147
-msgid "Add Share"
-msgstr "Anteil hinzufügen"
-
-#: coop/templates/coop/user_coop_share_ownership_list_tag.html:164
-msgid "Willing to gift a share"
+#: tapir/bidding_round/views.py:985
+#: tapir/wirgarten/templates/wirgarten/member/member_payments.html:167
+#: tapir/wirgarten/templates/wirgarten/subscription/subscription_filter.html:33
+#: tapir/wirgarten/views/contracts.py:55
+msgid "Mitglied"
 msgstr ""
 
-#: coop/templates/coop/user_coop_share_ownership_list_tag.html:174
-msgid "Send membership confirmation email"
-msgstr "Mitgliedsbestätigung per Mail senden"
+#: tapir/bidding_round/views.py:987
+msgid "Product"
+msgstr "Produkt"
 
-#: coop/templates/coop/user_coop_share_ownership_list_tag.html:180
-msgid "User is not a cooperative member."
-msgstr "Benutzer*in ist kein Genossenschaftsmitglied."
-
-#: coop/templates/coop/welcome_desk_search.html:18 core/templatetags/core.py:53
-#: core/templatetags/core.py:55
-msgid "Welcome Desk"
-msgstr "Welcome Desk"
-
-#: coop/templates/coop/welcome_desk_share_owner.html:25
-#, python-format
-msgid "%(name)s  can shop :)"
-msgstr "%(name)s kann einkaufen :)"
-
-#: coop/templates/coop/welcome_desk_share_owner.html:30
-#, python-format
-msgid "%(name)s does not have a Tapir account. Contact a member of the management team."
-msgstr "%(name)s hat kein Tapir-Konto. Kontaktiere eine Person aus dem Vorstand."
-
-#: coop/templates/coop/welcome_desk_share_owner.html:35
-#, python-format
-msgid "%(name)s has a negative shift balance. Contact a member of the management team."
-msgstr "%(name)s hat ein negatives Schicht-Score. Kontaktiere eine Person aus dem Vorstand."
-
-#: coop/templates/coop/welcome_desk_share_owner.html:40
-#, python-format
-msgid ""
-"%(name)s is an investing member. If they want to shop, they have to become an active "
-"member. Contact a member of the management team."
-msgstr ""
-"%(name)s ist ein investierendes Mitglied. Um einkaufen zu könne, müssen sie ein aktiv "
-"Mitglied werden. Kontaktiere eine Person aus dem Vorstand."
-
-#: coop/templates/coop/welcome_desk_share_owner.html:46
-#, python-format
-msgid "%(name)s is not registered to an ABCD shift yet. Make sure they plan to do it!"
-msgstr "%(name)s is noch zu keiner ABCD Schicht angemeldet. Er/Sie soll es planen!"
-
-#: coop/templates/coop/welcome_desk_share_owner.html:51
-#, python-format
-msgid "%(name)s has not attended a welcome session yet. Make sure they plan to do it!"
-msgstr ""
-"%(name)s hat an das Willkommenstreffen noch nicht teilgenommen. Er/Sie soll es planen!"
-
-#: coop/views/shareowner.py:259
-msgid "Welcome email with membership confirmation sent."
-msgstr "Mitgliedsbestätigung per Mail gesendet."
-
-#: coop/views/shareowner.py:384 shifts/templates/shifts/shift_filters.html:25
-msgid "Any"
-msgstr "Alle"
-
-#: coop/views/shareowner.py:389 shifts/templates/shifts/user_shifts_overview_tag.html:107
-msgid "Shift Status"
-msgstr "Schichtstatus"
-
-#: coop/views/shareowner.py:397
-msgid "Is registered to a slot that requires a qualification"
-msgstr "Ist für eine Schicht eingetragen, die Befähigung erfordert"
-
-#: coop/views/shareowner.py:405
-msgid "Has qualification"
-msgstr "Hat Befähigung"
-
-#: coop/views/shareowner.py:413
-msgid "Does not have qualification"
-msgstr "Hat die Befähigung nicht"
-
-#: coop/views/shareowner.py:423
-msgid "ABCD Week"
-msgstr "ABCD-Woche"
-
-#: coop/views/shareowner.py:430 coop/views/shareowner.py:629
-msgid "Name or member ID"
-msgstr "Name oder Mitgliedsnummer"
-
-#: coop/views/shareowner.py:582
-msgctxt "Willing to give a share"
-msgid "No"
-msgstr "Nein"
-
-#: core/templates/core/base.html:56
-msgid "Search Members"
-msgstr "Mitglieder suchen"
-
-#: core/templatetags/core.py:29
-msgid "Cooperative"
-msgstr "Genossenschaft"
-
-#: core/templatetags/core.py:36
-msgid "Members"
-msgstr "Mitglieder"
-
-#: core/templatetags/core.py:41
-msgid "Matching program"
+#: tapir/bidding_round/views.py:988
+#: tapir/wirgarten/templates/wirgarten/subscription/subscription_filter.html:38
+#: tapir/wirgarten/views/contracts.py:69
+msgid "Variante"
 msgstr ""
 
-#: core/templatetags/core.py:46
-msgid "Statistics"
-msgstr "Statistik"
+#: tapir/bidding_round/views.py:989
+msgid "Anteile"
+msgstr ""
 
-#: core/templatetags/core.py:67 shifts/templates/shifts/shift_template_detail.html:34
-#: shifts/templates/shifts/user_shifts_overview_tag.html:6
-msgid "Shifts"
-msgstr "Schichten"
+#: tapir/bidding_round/views.py:990
+msgid "Amount (effective level)"
+msgstr "Betrag (effektive Stufe)"
 
-#: core/templatetags/core.py:70 shifts/templates/shifts/shift_calendar_future.html:6
-msgid "Shift calendar"
-msgstr "Schicht-Kalender"
+#: tapir/bidding_round/views.py:991
+#: tapir/wirgarten/forms/pickup_location.py:287
+#: tapir/wirgarten/templates/wirgarten/member/member_filter.html:82
+#: tapir/wirgarten/templates/wirgarten/subscription/subscription_filter.html:41
+#: tapir/wirgarten/views/contracts.py:61
+msgid "Abholort"
+msgstr ""
 
-#: core/templatetags/core.py:75
-msgid "ABCD-shifts week-plan"
-msgstr "ABCD-Schicht-Wochenplan"
+#: tapir/configuration/templates/configuration/parameter_view.html:20
+#: tapir/core/templatetags/core.py:91
+msgid "Konfiguration"
+msgstr ""
 
-#: core/templatetags/core.py:80
-#, python-brace-format
-msgid "ABCD weeks calendar, current week: {current_week_group_name}"
-msgstr "ABCD-Wochenkalender<br />Aktuelle Woche: {current_week_group_name}"
+#: tapir/core/templatetags/core.py:54
+msgid "Debug"
+msgstr ""
 
-#: core/templatetags/core.py:87 shifts/templates/shifts/shift_calendar_past.html:6
-msgid "Past shifts"
-msgstr "Vergangene Schichten"
+#: tapir/core/templatetags/core.py:56
+msgid "Exportierte Dateien"
+msgstr ""
 
-#: core/templatetags/core.py:92 shifts/templates/shifts/shiftexemption_list.html:8
-msgid "Shift exemptions"
-msgstr "Schicht-Befreiungen"
+#: tapir/core/templatetags/core.py:61
+msgid "Geplante Tasks"
+msgstr ""
 
-#: core/templatetags/core.py:97
-msgid "Shift statistics"
-msgstr "Schicht-Statistiken"
+#: tapir/core/templatetags/core.py:66
+msgid "Jobs"
+msgstr ""
 
-#: core/templatetags/core.py:103
-msgid "Financing campaign"
-msgstr "Finanzierungskampagne"
+#: tapir/core/templatetags/core.py:72
+msgid "Test data"
+msgstr ""
 
-#: core/templatetags/core.py:112
-msgid "Miscellaneous"
-msgstr "Sonstiges"
+#: tapir/core/templatetags/core.py:77
+msgid "Administration"
+msgstr ""
 
-#: core/templatetags/core.py:115
-msgid "Wiki"
-msgstr "Wiki"
+#: tapir/core/templatetags/core.py:79
+msgid "Dashboard"
+msgstr ""
 
-#: core/templatetags/core.py:120
-msgid "Member manual"
-msgstr "Mitgliederhandbuch"
+#: tapir/core/templatetags/core.py:85
+msgid "Kommissionierung"
+msgstr ""
 
-#: core/templatetags/core.py:125
-msgid "Shop opening hours"
-msgstr "Öffnungszeiten"
+#: tapir/core/templatetags/core.py:103
+msgid "Vereinsmitgliedschaften"
+msgstr ""
 
-#: core/templatetags/core.py:130
-msgid "Contact the member office"
-msgstr "Mitgliederbüro kontaktieren"
+#: tapir/core/templatetags/core.py:109
+msgid "Vertragsperiode & Produkte"
+msgstr ""
 
-#: core/templatetags/core.py:135
-msgid "About tapir"
-msgstr "Über Tapir"
+#: tapir/core/templatetags/core.py:115
+#: tapir/wirgarten/templates/wirgarten/pickup_location/pickup_location_config.html:8
+msgid "Abholorte"
+msgstr ""
 
-#: log/models.py:14
+#: tapir/core/templatetags/core.py:135
+#: tapir/wirgarten/templates/wirgarten/member/member_detail.html:137
+msgid "E-Mail"
+msgstr ""
+
+#: tapir/core/templatetags/core.py:141
+msgid "Mailing-Listen"
+msgstr ""
+
+#: tapir/core/templatetags/core.py:148
+msgid "Lastschrift"
+msgstr ""
+
+#: tapir/core/templatetags/core.py:153
+msgid "Gutschriften"
+msgstr ""
+
+#: tapir/core/templatetags/core.py:160
+msgid "CSV-Exports"
+msgstr ""
+
+#: tapir/core/templatetags/core.py:165
+msgid "PDF-Exports"
+msgstr ""
+
+#: tapir/core/templatetags/core.py:171 tapir/core/templatetags/core.py:173
+#: tapir/wirgarten/templates/wirgarten/member/member_filter.html:10
+#: tapir/wirgarten/templates/wirgarten/member/member_filter.html:34
+msgid "Mitglieder"
+msgstr ""
+
+#: tapir/core/templatetags/core.py:179
+#: tapir/wirgarten/templates/wirgarten/subscription/subscription_filter.html:18
+msgid "Verträge"
+msgstr ""
+
+#: tapir/core/templatetags/core.py:185
+msgid "Zeichn. und Künd."
+msgstr ""
+
+#: tapir/core/templatetags/core.py:193
+msgid "Warteliste"
+msgstr ""
+
+#: tapir/core/templatetags/core.py:202
+msgid "Bäckerei"
+msgstr ""
+
+#: tapir/core/templatetags/core.py:205
+msgid "Wochenplan Brote"
+msgstr ""
+
+#: tapir/core/templatetags/core.py:211
+msgid "Berichte"
+msgstr ""
+
+#: tapir/core/templatetags/core.py:216
+msgid "Zutaten & Labels & Brote"
+msgstr ""
+
+#: tapir/log/models.py:13
 msgid "Creation Date"
 msgstr "Erstellungsdatum"
 
-#: log/templates/log/log_entry_list_tag.html:8
+#: tapir/log/templates/log/log_entry_list_tag.html:7
 msgid "Log"
 msgstr "Protokoll"
 
-#: log/templates/log/log_entry_list_tag.html:12
+#: tapir/log/templates/log/log_entry_list_tag.html:11
 msgid "List of log entries for this user"
 msgstr "List der Protokoll-Einträge für dieses Mitglied"
 
-#: log/templates/log/log_entry_list_tag.html:40
+#: tapir/log/templates/log/log_entry_list_tag.html:39
 msgid "Notes about this user"
 msgstr "Notizen über diese*n Benutzer*in"
 
-#: log/templates/log/log_entry_list_tag.html:43
+#: tapir/log/templates/log/log_entry_list_tag.html:45
 msgid "Add Note"
 msgstr "Notiz hinzufügen"
 
-#: shifts/forms.py:49
+#: tapir/subscriptions/services/subscription_change_validator.py:77
 msgid ""
-"I have read the warning about the missing qualification and confirm that the user should "
-"get registered to the shift"
+"Während dein Vertrag läuft, kannst du nur die Anteilsgröße erhöhen. Deine "
+"neu ausgewählte Vertragskonstellation ist kleiner als die bisherige."
 msgstr ""
-"Ich habe die Warnung über die fehlende Befähigung gelesen und bestätige, dass Benutzer*in "
-"für die Schicht registriert werden sollte"
 
-#: shifts/forms.py:73
-#, python-brace-format
+#: tapir/subscriptions/services/subscription_change_validator.py:224
+msgid "Dein Abholort ist leider voll. Bitte wähle einen anderen Abholort aus."
+msgstr ""
+
+#: tapir/subscriptions/services/subscription_change_validator.py:249
+msgid "Dieses Produkt ist Pflicht."
+msgstr ""
+
+#: tapir/utils/forms.py:26
 msgid ""
-"The selected user is missing the required qualification for this shift : "
-"{missing_capabilities}"
+"German phone number don't need a prefix (e.g. (0)1736160646), international "
+"always (e.g. +12125552368)"
+msgstr "Innerstädtische und Mobilfunk-Verbindungen benötigen keine Vorwahlnummer (z.B. 01736160646), internationale Verbindungen benötigen die Landesvorwahlnummer für Mobilfunk, für Festnetz die Landes- und Ortsvorwahlnummer"
+
+#: tapir/utils/forms.py:39
+msgid "I understand what I am doing"
 msgstr ""
-"Ausgewählte Nutzer*in hat nicht die erforderliche Befähigung für diese Schicht: "
-"{missing_capabilities}"
 
-#: shifts/forms.py:102
-msgid "This user is already registered to another slot in this ABCD shift."
-msgstr ""
-"Diese*r Nutzer*in ist bereits für einen anderen Platz in dieser ABCD-Schicht registriert."
-
-#: shifts/forms.py:128
-msgid "This user is already registered to another slot in this shift."
-msgstr "Diese*r Nutzer*in ist bereits für einen anderen Platz in dieser Schicht registriert."
-
-#: shifts/forms.py:142 shifts/templates/shifts/user_shifts_overview_tag.html:128
-msgid "Qualifications"
-msgstr "Befähigungen"
-
-#: shifts/forms.py:183
+#: tapir/utils/forms.py:41
 msgid ""
-"I have read the warning about the cancelled attendances and confirm that the exemption "
-"should be created"
-msgstr ""
-"Ich habe die Warnung über die Abgesagte Schicht-Anwesenheiten und bestätige das die "
-"Befreigung erzeugt warden soll"
-
-#: shifts/forms.py:190
-msgid ""
-"I have read the warning about the cancelled ABCD attendances and confirm that the "
-"exemption should be created"
-msgstr ""
-"Ich habe die Warnung über die abgesagte ABCD-Schicht-Befreiungen gelesen und bestätige das "
-"die Befreiung erzeugt werden soll"
-
-#: shifts/forms.py:223
-#, python-brace-format
-msgid ""
-"The member will be unregistered from the following shifts because they are within the "
-"range of the exemption : {attendances_display}"
-msgstr ""
-"Das Mitglied wird abgemeldet von der folgende Schichten weil die innerhalb der Befreiung "
-"sind : {attendances_display}"
-
-#: shifts/forms.py:248
-#, python-brace-format
-msgid ""
-"The user will be unregistered from the following ABCD shifts because the exemption is "
-"longer than {ShiftExemption.THRESHOLD_NB_CYCLES_UNREGISTER_FROM_ABCD_SHIFT} cycles: "
-"{attendances_display}"
-msgstr ""
-"Das Mitglierd wird von die folgende ABCD-Schichten abgemeldet weil die Befreiung länger "
-"als  {ShiftExemption.THRESHOLD_NB_CYCLES_UNREGISTER_FROM_ABCD_SHIFT} Zyklen: "
-"{attendances_display}"
-
-#: shifts/models.py:34
-msgid "Teamleader"
-msgstr "Teamleiter*in"
-
-#: shifts/models.py:35
-msgid "Cashier"
-msgstr "Kasse"
-
-#: shifts/models.py:36
-msgid "Member Office"
-msgstr "Mitgliederbüro"
-
-#: shifts/models.py:37
-msgid "Bread Delivery"
-msgstr "Brotlieferung"
-
-#: shifts/models.py:38
-msgid "Red Card"
-msgstr "Rote Karte Lebensmittel"
-
-#: shifts/models.py:39
-msgid "First Aid"
-msgstr "Erste Hilfe"
-
-#: shifts/models.py:84
-msgid "Monday"
-msgstr "Montag"
-
-#: shifts/models.py:85
-msgid "Tuesday"
-msgstr "Dienstag"
-
-#: shifts/models.py:86
-msgid "Wednesday"
-msgstr "Mittwoch"
-
-#: shifts/models.py:87
-msgid "Thursday"
-msgstr "Donnerstag"
-
-#: shifts/models.py:88
-msgid "Friday"
-msgstr "Freitag"
-
-#: shifts/models.py:89
-msgid "Saturday"
-msgstr "Samstag"
-
-#: shifts/models.py:90
-msgid "Sunday"
-msgstr "Sonntag"
-
-#: shifts/models.py:666
-msgid "You found a stand-in!"
-msgstr "Vertretung gefunden!"
-
-#: shifts/models.py:778 shifts/templates/shifts/shift_day_printable.html:57
-#: shifts/templates/shifts/shift_detail.html:215
-#: shifts/templates/shifts/shift_detail_printable.html:49
-msgid "Missed"
-msgstr "Nicht erschienen"
-
-#: shifts/models.py:779 shifts/templates/shifts/shift_day_printable.html:58
-#: shifts/templates/shifts/shift_detail.html:245
-#: shifts/templates/shifts/shift_detail_printable.html:50
-msgid "Excused"
-msgstr "Entschuldigt"
-
-#: shifts/models.py:780 shifts/templates/shifts/shift_detail.html:253
-msgid "Cancelled"
-msgstr "Abgesagt"
-
-#: shifts/models.py:781 shifts/templates/shifts/shift_detail.html:237
-#: shifts/templates/shifts/shift_filters.html:55
-msgid "Looking for a stand-in"
-msgstr "Sucht Vertretung"
-
-#: shifts/models.py:821
-msgid "🏠 ABCD"
-msgstr "🏠 ABCD"
-
-#: shifts/models.py:822
-msgid "✈ Flying"
-msgstr "✈ Fliegend"
-
-#: shifts/models.py:825
-msgid "Shift system"
-msgstr "Schichten"
-
-#: shifts/models.py:890
-#, python-format
-msgid "Your upcoming %(coop_name)s shift: %(shift)s"
-msgstr "Deine nächste %(coop_name)s Schicht: %(shift)s"
-
-#: shifts/models.py:940 shifts/templates/shifts/shiftexemption_list.html:22
-#: shifts/templates/shifts/user_shift_account_log.html:28
-msgid "Description"
-msgstr "Beschreibung"
-
-#: shifts/models.py:1006
-msgid "Cycle start date"
-msgstr "Anfangsdatum"
-
-#: shifts/templates/shifts/email/shift_missed.default.html:7
-#: shifts/templates/shifts/email/shift_missed.html:7
-msgid "Shift missed"
-msgstr "Schicht versäumt"
-
-#: shifts/templates/shifts/email/shift_missed.default.html:10
-#, python-format
-msgid ""
-"\n"
-"    <p>Hi %(first_name)s,</p>\n"
-"\n"
-"<p>This is an automated email from %(coop_name)s.</p>\n"
-"\n"
-"    <p>\n"
-"        It has been registered in the %(coop_name)s shift system that you didn't attend "
-"the following shift which you had registered for:\n"
-"        %(shift_display_name)s <br/>\n"
-"        If it's a mistake, or you think that you should be excused from this shift, please "
-"contact the member office: %(contact_email_address)s .<br/>\n"
-"    </p>\n"
+"This will delete all existing data, including members, users, "
+"subscriptions... and recreate them from scratch."
 msgstr ""
 
-#: shifts/templates/shifts/email/shift_missed.html:10
-#, python-format
-msgid ""
-"\n"
-"    <p>Hi %(first_name)s,</p>\n"
-"\n"
-"    <p>This is an automated email from SuperCoop.</p>\n"
-"\n"
-"    <p>\n"
-"        It has been registered in the Tapir system that you didn't attend the following "
-"shift which you had registered for:\n"
-"        %(shift_display_name)s <br/>\n"
-"        If it's a mistake, or you think that you should be excused from this shift, please "
-"contact the member office: mitglied@supercoop.de .<br/>\n"
-"        As stated in the Member Manual, a missed shift must be compensated for by "
-"completing 2 make-up shifts within four weeks of your missed shift. You can schedule your "
-"make-up shifts directly on <a href=\"https://members.supercoop.de/shifts/timetable"
-"\">Tapir</a>.<br/>\n"
-"        Please keep in mind that if you do not complete your make-up shifts your shopping "
-"and voting rights will be suspended. For more information please see the <a href=\"https://"
-"docs.google.com/document/d/19v91mj2MAJTtrPLCw54VMS6qlaiJqBqUAuiC6z_AKpw/edit#heading=h."
-"lk042ux0tm9c.\">Member Manual</a>\n"
-"        (Section III.F).\n"
-"    </p>\n"
-"\n"
-"    <p>Cooperatively yours,</p>\n"
-msgstr ""
-"\n"
-"    <p>Hallo %(first_name)s,</p>\n"
-"\n"
-"    <p>Dies ist eine automatische E-Mail von der SuperCoop.</p>\n"
-"\n"
-"    <p>\n"
-"       Es ist gerade im Tapir-System eingetragen worden, dass du an folgender Schicht "
-"nicht teilgenommen hast, obwohl du angemeldet warst :\n"
-"        %(shift_display_name)s <br/>\n"
-"        Wenn dies ein Fehler ist, oder du für di Schicht entschuldigt sein solltest, "
-"kontaktiere bitte das Mitgliederbüro: mitglied@supercoop.de .<br/>\n"
-"        Im Mitgliederhandbuch steht: Wenn ein Mitglied eine Schicht versäumt, muss das "
-"Mitglied innerhalb von vier Wochen nach der versäumten Schicht an zwei Nachholschichten "
-"teilnehmen, um sie auszugleichen. Du kannst dich für die Nachholschichten selbst in <a "
-"href=\"https://members.supercoop.de/shifts/timetable\">Tapir</a> eintragen.<br/>\n"
-"        Wenn du deine Nachholschichten nicht machst, können deine Einkaufs- und Wahl-"
-"Rechte ausgesetzt werden. Für mehr Information siehe <a href=\"https://docs.google.com/"
-"document/d/12qqzJxgDIilSnVrh4yVJhqA_AJ6PLGpkw4JGDe3nBRg/edit#heading=h.594fbvgmke0z"
-"\">Mitgliederhandbuch</a> III.F\n"
-"    </p>\n"
-"\n"
-"    <p>Kooperative Grüße,</p>\n"
-
-#: shifts/templates/shifts/email/shift_reminder.default.html:7
-msgid "Shift reminder"
-msgstr "Schicht-Errinerung"
-
-#: shifts/templates/shifts/email/shift_reminder.default.html:10
-#, python-format
-msgid ""
-"\n"
-"    <p>Hi %(first_name)s,</p>\n"
-"\n"
-"    <p>This is an automated email from %(coop_name)s.</p>\n"
-"\n"
-"    <p>\n"
-"        Your next shift at %(coop_name)s is: <br/>\n"
-"        <strong>%(shift_display_name)s</strong>\n"
-"    </p>\n"
-msgstr ""
-"\n"
-"    <p>Hallo %(first_name)s,</p>\n"
-"\n"
-"    <p>Dies ist eine automatische E-Mail von der %(coop_name)s.</p>\n"
-"\n"
-"    <p>\n"
-"        Deine nächste Schicht am Supercoop ist bald!<br/>\n"
-"        Deine Schicht ist: %(shift_display_name)s\n"
-"    </p>\n"
-
-#: shifts/templates/shifts/email/shift_reminder.default.html:21
-msgid "In case you can't attend the shift, contact the team leader as soon as possible."
-msgstr ""
-"Wenn du an der Schicht nicht teilnehmen kannst, kontaktiere bitte schnellstmöglich die "
-"Teamleitung."
-
-#: shifts/templates/shifts/email/stand_in_found.html:7
-msgid "Stand-in found"
-msgstr "Vertretung gefunden"
-
-#: shifts/templates/shifts/email/stand_in_found.html:10
-#, python-format
-msgid ""
-"\n"
-"    <p>Dear %(first_name)s,</p>\n"
-"\n"
-"    <p>This is an automated email from %(coop_name)s.</p>\n"
-"\n"
-"    <p>\n"
-"        You were looking for a stand-in for the following shift: %(shift_display_name)s."
-"<br/>\n"
-"        Another member has taken over your slot for that shift.\n"
-"    </p>\n"
-"\n"
-"    <p>If you haven't done so already, don't forget to attend another shift to compensate "
-"for the one you will miss!</p>\n"
-msgstr ""
-"\n"
-"    <p>Hallo %(first_name)s,</p>\n"
-"\n"
-"    <p>Dies ist eine automatische E-Mail von der %(coop_name)s.</p>\n"
-"\n"
-"    <p>\n"
-"        Du hattest nach Vertretung gesucht für die folgende Schicht: "
-"%(shift_display_name)s.<br/>\n"
-"        Ein anderes Mitglied hat diese jetzt übernommen.\n"
-"    </p>\n"
-"\n"
-"    <p>Falls du es noch nicht gemacht hast, vergiss nicht an einer anderen Schicht "
-"teilzunehmen!</p>\n"
-"\n"
-"    <p>Kooperative Grüße,</p>\n"
-
-#: shifts/templates/shifts/log/create_shift_attendance_log_entry.html:3
-msgid "Registered for Shift"
-msgstr "Für Schicht angemeldet"
-
-#: shifts/templates/shifts/log/create_shift_attendance_template_log_entry.html:3
-msgid "Registered for ABCD Shift"
-msgstr "Angemeldet zu ABCD-Schicht"
-
-#: shifts/templates/shifts/log/delete_shift_attendance_template_log_entry.html:3
-msgid "Unregistered from ABCD Shift"
-msgstr "Abgemeldet von ABCD-Schicht"
-
-#: shifts/templates/shifts/log/shift_attendance_taken_over_log_entry.html:3
-msgid "Someone took over your shift"
-msgstr "Jemand hat deine Schicht übernommen"
-
-#: shifts/templates/shifts/log/update_shift_attendance_state_log_entry.html:3
-msgid "Set shift attendance to"
-msgstr "Ändere den Schichtstatus zu"
-
-#: shifts/templates/shifts/log/update_shift_user_data_log_entry.html:3
-msgid "Update Shift User Data"
-msgstr "Nutzer*innendaten der Schicht aktualisieren"
-
-#: shifts/templates/shifts/shift_calendar_future.html:10
-#, python-format
-msgid ""
-"\n"
-"        <p>Below you can find all the upcoming shifts, and who is registered for each "
-"shift.</p>\n"
-"        <p>You can sign yourself up for any shift that has a free slot here on TAPIR. You "
-"may also cancel it yourself if done at least %(nb_days_for_self_unregister)s days before "
-"the shift.<br/>\n"
-"            When you sign up for one of these shifts, you only commit to the shift on that "
-"specific day.</p>\n"
-"        <p>To register for a regular ABCD shift you must contact the Member Office.</p>\n"
-"    "
-msgstr ""
-"\n"
-"<p>Unten findest du alle anstehenden Schichten und wer für die einzelnen Schichten "
-"angemeldet ist.</p></p> Du kannst dich für jede Schicht, die einen freien Platz hat, hier "
-"auf TAPIR anmelden. Du kannst dich auch selbst abmelden, wenn du dies mindestens "
-"%(nb_days_for_self_unregister)s Tage vor der Schicht tust. </p></p>Wenn du dich für eine "
-"dieser Schichten anmeldest, verpflichtest du dich nur für die Schicht an diesem bestimmten "
-"Tag.</p><p> Um dich für eine reguläre ABCD-Schicht anzumelden, musst du das Mitgliederbüro "
-"kontaktieren.</p> "
-
-#: shifts/templates/shifts/shift_calendar_template.html:32
-#: shifts/templates/shifts/shift_template_group_calendar.html:16
-msgid "starting"
-msgstr "beginnt"
-
-#: shifts/templates/shifts/shift_calendar_template.html:33
-#: shifts/templates/shifts/shift_template_group_calendar.html:16
-#: shifts/templates/shifts/shift_template_overview.html:38
-msgid "Week "
-msgstr "Woche "
-
-#: shifts/templates/shifts/shift_day_printable.html:54
-#: shifts/templates/shifts/shift_detail_printable.html:46
-msgid "Slot"
-msgstr "Platz"
-
-#: shifts/templates/shifts/shift_day_printable.html:55
-#: shifts/templates/shifts/shift_detail_printable.html:47
-msgid "Member"
-msgstr "Mitglied"
-
-#: shifts/templates/shifts/shift_day_printable.html:66
-#: shifts/templates/shifts/shift_template_detail.html:44
-msgid "optional"
-msgstr "optional"
-
-#: shifts/templates/shifts/shift_day_printable.html:69
-#: shifts/templates/shifts/shift_detail_printable.html:61
-msgid "Required qualifications: "
-msgstr "Erforderliche Befähigung: "
-
-#: shifts/templates/shifts/shift_day_printable.html:79
-#: shifts/templates/shifts/shift_detail_printable.html:71
-msgid "Has qualifications: "
-msgstr "Hat Befähigungen: "
-
-#: shifts/templates/shifts/shift_detail.html:31
-msgid "Get printable version"
-msgstr "Druckversion erhalten"
-
-#: shifts/templates/shifts/shift_detail.html:41
-msgid "Generated from"
-msgstr "Erzeugt von"
-
-#: shifts/templates/shifts/shift_detail.html:54
-msgid "List of slots for this shift"
-msgstr "Liste der Slots für diese Schicht"
-
-#: shifts/templates/shifts/shift_detail.html:58
-#: shifts/templates/shifts/shift_template_detail.html:32
-msgid "Details"
-msgstr "Details"
-
-#: shifts/templates/shifts/shift_detail.html:59
-#: shifts/templates/shifts/shift_template_detail.html:33
-msgid "Registered user"
-msgstr "Angemeldete*r Nutzer*in"
-
-#: shifts/templates/shifts/shift_detail.html:60
-msgid "Attendance"
-msgstr "Anwesenheit"
-
-#: shifts/templates/shifts/shift_detail.html:61
-msgid "Actions"
-msgstr "Aktionen"
-
-#: shifts/templates/shifts/shift_detail.html:63
-msgid "Member-Office actions"
-msgstr "Mitgliederbüro Aktionen"
-
-#: shifts/templates/shifts/shift_detail.html:64
-msgid "Previous attendances"
-msgstr "Vorherige Anwesenheiten"
-
-#: shifts/templates/shifts/shift_detail.html:86
-msgid "since"
-msgstr "seit"
-
-#: shifts/templates/shifts/shift_detail.html:90
-msgid "Vacant"
-msgstr "Frei"
-
-#: shifts/templates/shifts/shift_detail.html:102
-msgid "Cancels the search for a stand-in. Use this if you want to attend the shift."
-msgstr ""
-"Beendet die Suche nach Vertretung. Benutze dies, wenn du die Schicht wahrnehmen möchtest."
-
-#: shifts/templates/shifts/shift_detail.html:104
-#: shifts/templates/shifts/shift_detail.html:226
-msgid "Cancel looking for a stand-in"
-msgstr "Beende die Suche nach Vertretung"
-
-#: shifts/templates/shifts/shift_detail.html:112
-#, python-format
-msgid ""
-"You can only look for a\n"
-"                                                    stand-in\n"
-"                                                    %(NB_DAYS_FOR_SELF_LOOK_FOR_STAND_IN)s "
-"days before the shift. If\n"
-"                                                    you can't\n"
-"                                                    attend, contact your shift leader as "
-"soon as\n"
-"                                                    possible."
-msgstr ""
-"Du kannst nur bis %(NB_DAYS_FOR_SELF_LOOK_FOR_STAND_IN)s Tage vor der Schicht nach einer "
-"Vertretung suchen. Wenn du die Schicht nicht wahrnehmen kannst, wende dich bitte "
-"schnellstmöglich an die Teamleitung."
-
-#: shifts/templates/shifts/shift_detail.html:125
-msgid "Look for a stand-in"
-msgstr "Suche nach Vertretung"
-
-#: shifts/templates/shifts/shift_detail.html:135
-#, python-format
-msgid ""
-"You can only unregister\n"
-"                                                yourself\n"
-"                                                %(NB_DAYS_FOR_SELF_UNREGISTER)s days "
-"before the shift. Also,\n"
-"                                                ABCD-Shifts\n"
-"                                                can't be unregistered from. If you can't\n"
-"                                                attend, look for a stand-in or contact "
-"your shift leader as soon as\n"
-"                                                possible."
-msgstr ""
-"Du kannst dich nur bis %(NB_DAYS_FOR_SELF_UNREGISTER)s Tage vor deiner Schicht abmelden. "
-"Von ABCD-Schichten kannst du dich überhaupt nicht abmelden. Wenn du die Schicht nicht "
-"wahrnehmen kannst, suche bitte eine Vertretung oder melde dich schnellstmöglich bei deiner "
-"Teamleitung."
-
-#: shifts/templates/shifts/shift_detail.html:149
-msgid "Unregister myself"
-msgstr "Melde mich ab"
-
-#: shifts/templates/shifts/shift_detail.html:158
-msgid ""
-"You can only register\n"
-"                                                yourself\n"
-"                                                for a shift if:<br/>\n"
-"                                                -You are not registered to another slot in "
-"that shift<br/>\n"
-"                                                -You have the required qualification (if "
-"you want to get a\n"
-"                                                qualification, contact the member "
-"office)<br/>\n"
-"                                                -The shift is in the future<br/>\n"
-"                                            "
-msgstr ""
-"Du kannst dich nur für eine Schicht anmelden, wenn\n"
-"- du keinen anderen Platz in derselben Schicht gebucht hast\n"
-"- du das erforderliche Training gemacht hast (wenn du ein Training möchtest, wende dich "
-"bitte ans Mitgliederbüro\n"
-"- die Schicht in der Zukunft liegt\n"
-" "
-
-#: shifts/templates/shifts/shift_detail.html:173
-msgid "Register myself"
-msgstr "Melde mich an"
-
-#: shifts/templates/shifts/shift_detail.html:191
-msgid "Register a member"
-msgstr "Melde ein Mitglied an"
-
-#: shifts/templates/shifts/shift_filters.html:4
-msgid "Filters"
-msgstr "Filter"
-
-#: shifts/templates/shifts/shift_filters.html:6
-msgid "Use the buttons below to filter the shifts that are relevant to you."
-msgstr "Bitte wähle unten den gewünschten Filter für dich aus."
-
-#: shifts/templates/shifts/shift_filters.html:11
-msgid "No filter"
-msgstr "Kein Filter"
-
-#: shifts/templates/shifts/shift_filters.html:14
-msgid "Has a free slot"
-msgstr "Hat einen freien Platz"
-
-#: shifts/templates/shifts/shift_filters.html:17
-msgid "Most help needed"
-msgstr "Hilfe am meisten gebraucht"
-
-#: shifts/templates/shifts/shift_filters.html:39
-msgid "Legend"
-msgstr "Legende"
-
-#: shifts/templates/shifts/shift_filters.html:45
-msgctxt "Filters"
-msgid "Other shifts"
-msgstr "Andere Schichten"
-
-#: shifts/templates/shifts/shift_filters.html:49
-msgid "Free slot"
-msgstr "Hat einen freien Platz"
-
-#: shifts/templates/shifts/shift_filters.html:51
-msgid "ABCD attendance"
-msgstr "ABCD Anwesenheit"
-
-#: shifts/templates/shifts/shift_filters.html:53
-msgid "Flying attendance"
-msgstr "Fliegende Anwesenheit"
-
-#: shifts/templates/shifts/shift_template_detail.html:28
-msgid "List of slots for this ABCD shifts"
-msgstr "Liste des Slots für diese ABCD-Schicht"
-
-#: shifts/templates/shifts/shift_template_detail.html:64
-#: shifts/templates/shifts/user_shifts_overview_tag.html:52
-msgid "Unregister"
-msgstr "Abmelden"
-
-#: shifts/templates/shifts/shift_template_detail.html:93
-msgid "Future generated Shifts"
-msgstr "Zukünftige erstellte Schichten"
-
-#: shifts/templates/shifts/shift_template_detail.html:107
-msgid "Past generated Shifts"
-msgstr "Vergangene Schichten"
-
-#: shifts/templates/shifts/shift_template_group_calendar.html:10
-msgid "ABCD weeks calendar"
-msgstr "ABCD-Wochenkalender"
-
-#: shifts/templates/shifts/shift_template_group_calendar.html:13
-msgid "Download the calendar as a file."
-msgstr "Kalender als Dokument herunterladen."
-
-#: shifts/templates/shifts/shift_template_overview.html:19
-msgid "ABCD schedule overview, current week: "
-msgstr "ABCD-Zeitplan Übersicht, laufende Woche: "
-
-#: shifts/templates/shifts/shift_template_overview.html:22
-msgid ""
-"\n"
-"                    <p>This is the ABCD shiftplan. It repeats every four weeks. That's why "
-"you see only weekdays\n"
-"                        (Monday, Tuesday...) and the week (A,B,C or D), instead of "
-"specific dates (e.g. 23.8.2021).\n"
-"                        To see the date of your next shift, please go to your profile.</"
-"p>\n"
-"                    <p>If you would like to change your regular ABCD shift, please contact "
-"the Member Office.</p>\n"
-"                "
-msgstr ""
-"\n"
-"<p>Dies ist der ABCD-Zeitplan. Er wiederholt sich alle vier Wochen. Deswegen siehst du nur "
-"Wochentage (Montag, Dienstag...) und die Woche (A,B,C oder D) anstatt genauer "
-"Datumsangaben (z.B. 23.8.2021). Um das Datum deiner nächsten Schicht zu sehen, geh bitte "
-"zu deinem Kontoprofil. </p>\n"
-"<p>Wenn du deine regelmäßige ABCD-Schicht ändern möchtest, wende dich bitte ans "
-"Mitgliederbüro.</p>\n"
-" "
-
-#: shifts/templates/shifts/shift_template_overview.html:33
-msgid "Calendar of ABCD shifts"
-msgstr "Kalender der ABCD-Schichten"
-
-#: shifts/templates/shifts/shiftaccountentry_form.html:13
-msgid "Create manual shift account entry for: "
-msgstr "Erzeuge Schicht-Kontoeintrag für: "
-
-#: shifts/templates/shifts/shiftattendance_form.html:15
-msgid "Updating shift attendance: "
-msgstr "Schichtanwesenheit aktualisieren: "
-
-#: shifts/templates/shifts/shiftexemption_form.html:11
-msgid "Edit shift exemption for: "
-msgstr "Schicht-Befreiung bearbeiten für: "
-
-#: shifts/templates/shifts/shiftexemption_form.html:13
-msgid "Create shift exemption for:"
-msgstr "Erzeuge Schicht-Befreiung für:"
-
-#: shifts/templates/shifts/shiftexemption_list.html:17
-msgid "List of shift exemptions"
-msgstr "Liste der Schicht-Befreiungen"
-
-#: shifts/templates/shifts/shiftexemption_list.html:19
-msgid "User"
-msgstr "Benutzer*in"
-
-#: shifts/templates/shifts/shiftexemption_list.html:20
-msgid "Start date"
-msgstr "Anfangsdatum"
-
-#: shifts/templates/shifts/shiftexemption_list.html:21
-msgid "End date"
-msgstr "Endsdatum"
-
-#: shifts/templates/shifts/shiftexemption_list.html:23
-msgid "Is active"
-msgstr "Inaktiv"
-
-#: shifts/templates/shifts/shiftuserdata_form.html:16
-msgid "Edit user shift data"
-msgstr "Bearbeite Nutzer*in-Schichtdaten"
-
-#: shifts/templates/shifts/slot_register.html:16
-msgid "Shift"
-msgstr "Schicht"
-
-#: shifts/templates/shifts/slot_register.html:29
-msgid "Register for Shift"
-msgstr "Für eine Schicht anmelden"
-
-#: shifts/templates/shifts/slot_template_register.html:16
-#: shifts/templates/shifts/user_shifts_overview_tag.html:34
-msgid "ABCD Shift"
-msgstr "ABCD-Schicht"
-
-#: shifts/templates/shifts/slot_template_register.html:29
-msgid "Register for ABCD Shift"
-msgstr "Für eine ABCD-Schicht anmelden"
-
-#: shifts/templates/shifts/slot_template_register.html:47
-msgid "Some shifts are already occupied"
-msgstr "Manche Schichten sind bereits besetzt"
-
-#: shifts/templates/shifts/slot_template_register.html:49
-msgid ""
-"\n"
-"                        <p>A flying member has already registered to the shifts linked "
-"below.</p>\n"
-"                        <p>It is still possible to sign someone up for this shift using "
-"the ABCD system. This would mean that the member is signing up to work this shift on a "
-"recurring 4 week basis (i.e. once per shift cycle).</p>\n"
-"                        <p>IMPORTANT: If a flying member had previously signed up for the "
-"same shift, the ABCD member will have to sign up for a different shift for that particular "
-"cycle.</p>\n"
-"                    "
-msgstr ""
-"\n"
-"<p>Ein fliegendes Mitglied hat sich bereits für die unten verlinkten Schichten angemeldet."
-"</p><p>Es ist immer noch möglich, jemanden für diese Schicht über das ABCD-System "
-"anzumelden. Dies würde bedeuten, dass sich das Mitglied für diese Schicht auf einer "
-"wiederkehrenden 4-Wochen-Basis (d.h. einmal pro Schichtzyklus) anmeldet.</p><p>WICHTIG: "
-"Wenn sich ein fliegendes Mitglied zuvor für dieselbe Schicht angemeldet hat, muss sich das "
-"ABCD-Mitglied für eine andere Schicht für diesen bestimmten Zyklus anmelden.</p> "
-
-#: shifts/templates/shifts/slot_template_register.html:54
-msgid "Already occupied shifts :"
-msgstr "Schon besetzte Schichten:"
-
-#: shifts/templates/shifts/statistics.html:11
-msgid "Statistics on shifts"
-msgstr "Shicht-Statistiken"
-
-#: shifts/templates/shifts/user_shift_account_log.html:10
-msgid "Shift account log for: "
-msgstr "Schichtkonto-Protokoll für: "
-
-#: shifts/templates/shifts/user_shift_account_log.html:16
-msgid "Add a manual entry"
-msgstr "Füge per Hand einen Eintrag hinzu"
-
-#: shifts/templates/shifts/user_shift_account_log.html:23
-msgid "List of changes to this members shift account "
-msgstr ""
-
-#: shifts/templates/shifts/user_shift_account_log.html:26
-msgid "Date"
-msgstr "Datum"
-
-#: shifts/templates/shifts/user_shift_account_log.html:27
-msgid "Value"
-msgstr "Wert"
-
-#: shifts/templates/shifts/user_shifts_overview_tag.html:26
-msgid "Set ABCD 🏠️"
-msgstr "Als ABCD markieren 🏠️"
-
-#: shifts/templates/shifts/user_shifts_overview_tag.html:66
-msgid "Find an ABCD shift"
-msgstr "ABCD-Schicht auswählen"
-
-#: shifts/templates/shifts/user_shifts_overview_tag.html:73
-msgid "Set Flying️"
-msgstr "Als fliegend markieren"
-
-#: shifts/templates/shifts/user_shifts_overview_tag.html:83
-msgid "Upcoming Shift"
-msgstr "Nächste Schicht"
-
-#: shifts/templates/shifts/user_shifts_overview_tag.html:91
-msgid "Show more"
-msgstr "Mehr anzeigen"
-
-#: shifts/templates/shifts/user_shifts_overview_tag.html:100
-msgctxt "No upcoming shift"
-msgid "None"
-msgstr "Keine"
-
-#: shifts/templates/shifts/user_shifts_overview_tag.html:110
-msgid "OK"
-msgstr "OK"
-
-#: shifts/templates/shifts/user_shifts_overview_tag.html:113
-msgid "Shift for ongoing cycle pending"
-msgstr "Shift für aktuellen Zyklus ausstehend"
-
-#: shifts/templates/shifts/user_shifts_overview_tag.html:115
-#, python-format
-msgid ""
-"\n"
-"                            %(num_banked_shifts)s banked shifts\n"
-"                        "
-msgstr ""
-
-#: shifts/templates/shifts/user_shifts_overview_tag.html:120
-msgid "On alert"
-msgstr ""
-
-#: shifts/templates/shifts/user_shifts_overview_tag.html:123
-msgid "log"
-msgstr "Protokoll"
-
-#: shifts/templates/shifts/user_shifts_overview_tag.html:133
-msgctxt "No qualifications"
-msgid "None"
-msgstr "Keine"
-
-#: shifts/templates/shifts/user_shifts_overview_tag.html:138
-msgid "Exemption"
-msgstr "Befreiung"
-
-#: shifts/templates/shifts/user_shifts_overview_tag.html:143
-msgid "until"
-msgstr "bis"
-
-#: shifts/templates/shifts/user_shifts_overview_tag.html:150
-msgctxt "No shift exemption"
-msgid "None"
-msgstr "Keine"
-
-#: shifts/templates/shifts/user_shifts_overview_tag.html:156
-msgid "View all"
-msgstr "Alle ansehen"
-
-#: shifts/templatetags/shifts.py:46 shifts/templatetags/shifts.py:118 shifts/views.py:535
-msgid "General"
-msgstr "Allgemein"
-
-#: shifts/views.py:337
-msgid "You missed your shift!"
-msgstr "Du hast deine Schicht versäumt!"
-
-#: shifts/views.py:731
-msgid "Is covered by shift exemption: "
-msgstr "Ist abgedeckt durch Schicht Befreiung : "
-
-#: utils/forms.py:23
-msgid ""
-"German phone number don't need a prefix (e.g. (0)1736160646), international always (e.g. "
-"+12125552368)"
-msgstr ""
-"Innerstädtische und Mobilfunk-Verbindungen benötigen keine Vorwahlnummer (z.B. "
-"01736160646), internationale Verbindungen benötigen die Landesvorwahlnummer für Mobilfunk, "
-"für Festnetz die Landes- und Ortsvorwahlnummer"
-
-#: utils/models.py:13
+#: tapir/utils/models.py:10
 msgid "Andorra"
 msgstr ""
 
-#: utils/models.py:14
+#: tapir/utils/models.py:11
 msgid "United Arab Emirates"
 msgstr ""
 
-#: utils/models.py:15
+#: tapir/utils/models.py:12
 msgid "Afghanistan"
 msgstr ""
 
-#: utils/models.py:16
+#: tapir/utils/models.py:13
 msgid "Antigua & Barbuda"
 msgstr ""
 
-#: utils/models.py:17
+#: tapir/utils/models.py:14
 msgid "Anguilla"
 msgstr ""
 
-#: utils/models.py:18
+#: tapir/utils/models.py:15
 msgid "Albania"
 msgstr ""
 
-#: utils/models.py:19
+#: tapir/utils/models.py:16
 msgid "Armenia"
 msgstr ""
 
-#: utils/models.py:20
+#: tapir/utils/models.py:17
 msgid "Netherlands Antilles"
 msgstr ""
 
-#: utils/models.py:21
+#: tapir/utils/models.py:18
 msgid "Angola"
 msgstr ""
 
-#: utils/models.py:22
+#: tapir/utils/models.py:19
 msgid "Antarctica"
 msgstr ""
 
-#: utils/models.py:23
+#: tapir/utils/models.py:20
 msgid "Argentina"
 msgstr ""
 
-#: utils/models.py:24
+#: tapir/utils/models.py:21
 msgid "American Samoa"
 msgstr ""
 
-#: utils/models.py:25
+#: tapir/utils/models.py:22
 msgid "Austria"
 msgstr ""
 
-#: utils/models.py:26
+#: tapir/utils/models.py:23
 msgid "Australia"
 msgstr ""
 
-#: utils/models.py:27
+#: tapir/utils/models.py:24
 msgid "Aruba"
 msgstr ""
 
-#: utils/models.py:28
+#: tapir/utils/models.py:25
 msgid "Azerbaijan"
 msgstr ""
 
-#: utils/models.py:29
+#: tapir/utils/models.py:26
 msgid "Bosnia and Herzegovina"
 msgstr ""
 
-#: utils/models.py:30
+#: tapir/utils/models.py:27
 msgid "Barbados"
 msgstr ""
 
-#: utils/models.py:31
+#: tapir/utils/models.py:28
 msgid "Bangladesh"
 msgstr ""
 
-#: utils/models.py:32
+#: tapir/utils/models.py:29
 msgid "Belgium"
 msgstr ""
 
-#: utils/models.py:33
+#: tapir/utils/models.py:30
 msgid "Burkina Faso"
 msgstr ""
 
-#: utils/models.py:34
+#: tapir/utils/models.py:31
 msgid "Bulgaria"
 msgstr ""
 
-#: utils/models.py:35
+#: tapir/utils/models.py:32
 msgid "Bahrain"
 msgstr ""
 
-#: utils/models.py:36
+#: tapir/utils/models.py:33
 msgid "Burundi"
 msgstr ""
 
-#: utils/models.py:37
+#: tapir/utils/models.py:34
 msgid "Benin"
 msgstr ""
 
-#: utils/models.py:38
+#: tapir/utils/models.py:35
 msgid "Bermuda"
 msgstr ""
 
-#: utils/models.py:39
+#: tapir/utils/models.py:36
 msgid "Brunei Darussalam"
 msgstr ""
 
-#: utils/models.py:40
+#: tapir/utils/models.py:37
 msgid "Bolivia"
 msgstr ""
 
-#: utils/models.py:41
+#: tapir/utils/models.py:38
 msgid "Brazil"
 msgstr ""
 
-#: utils/models.py:42
+#: tapir/utils/models.py:39
 msgid "Bahama"
 msgstr ""
 
-#: utils/models.py:43
+#: tapir/utils/models.py:40
 msgid "Bhutan"
 msgstr ""
 
-#: utils/models.py:44
+#: tapir/utils/models.py:41
 msgid "Bouvet Island"
 msgstr ""
 
-#: utils/models.py:45
+#: tapir/utils/models.py:42
 msgid "Botswana"
 msgstr ""
 
-#: utils/models.py:46
+#: tapir/utils/models.py:43
 msgid "Belarus"
 msgstr ""
 
-#: utils/models.py:47
+#: tapir/utils/models.py:44
 msgid "Belize"
 msgstr ""
 
-#: utils/models.py:48
+#: tapir/utils/models.py:45
 msgid "Canada"
 msgstr ""
 
-#: utils/models.py:49
+#: tapir/utils/models.py:46
 msgid "Cocos (Keeling) Islands"
 msgstr ""
 
-#: utils/models.py:50
+#: tapir/utils/models.py:47
 msgid "Central African Republic"
 msgstr ""
 
-#: utils/models.py:51
+#: tapir/utils/models.py:48
 msgid "Congo"
 msgstr ""
 
-#: utils/models.py:52
+#: tapir/utils/models.py:49
 msgid "Switzerland"
 msgstr ""
 
-#: utils/models.py:53
+#: tapir/utils/models.py:50
 msgid "Ivory Coast"
 msgstr ""
 
-#: utils/models.py:54
+#: tapir/utils/models.py:51
 msgid "Cook Iislands"
 msgstr ""
 
-#: utils/models.py:55
+#: tapir/utils/models.py:52
 msgid "Chile"
 msgstr ""
 
-#: utils/models.py:56
+#: tapir/utils/models.py:53
 msgid "Cameroon"
 msgstr ""
 
-#: utils/models.py:57
+#: tapir/utils/models.py:54
 msgid "China"
 msgstr ""
 
-#: utils/models.py:58
+#: tapir/utils/models.py:55
 msgid "Colombia"
 msgstr ""
 
-#: utils/models.py:59
+#: tapir/utils/models.py:56
 msgid "Costa Rica"
 msgstr ""
 
-#: utils/models.py:60
+#: tapir/utils/models.py:57
 msgid "Cuba"
 msgstr ""
 
-#: utils/models.py:61
+#: tapir/utils/models.py:58
 msgid "Cape Verde"
 msgstr ""
 
-#: utils/models.py:62
+#: tapir/utils/models.py:59
 msgid "Christmas Island"
 msgstr ""
 
-#: utils/models.py:63
+#: tapir/utils/models.py:60
 msgid "Cyprus"
 msgstr ""
 
-#: utils/models.py:64
+#: tapir/utils/models.py:61
 msgid "Czech Republic"
 msgstr ""
 
-#: utils/models.py:65
+#: tapir/utils/models.py:62
 msgid "Germany"
 msgstr ""
 
-#: utils/models.py:66
+#: tapir/utils/models.py:63
 msgid "Djibouti"
 msgstr ""
 
-#: utils/models.py:67
+#: tapir/utils/models.py:64
 msgid "Denmark"
 msgstr ""
 
-#: utils/models.py:68
+#: tapir/utils/models.py:65
 msgid "Dominica"
 msgstr ""
 
-#: utils/models.py:69
+#: tapir/utils/models.py:66
 msgid "Dominican Republic"
 msgstr ""
 
-#: utils/models.py:70
+#: tapir/utils/models.py:67
 msgid "Algeria"
 msgstr ""
 
-#: utils/models.py:71
+#: tapir/utils/models.py:68
 msgid "Ecuador"
 msgstr ""
 
-#: utils/models.py:72
+#: tapir/utils/models.py:69
 msgid "Estonia"
 msgstr ""
 
-#: utils/models.py:73
+#: tapir/utils/models.py:70
 msgid "Egypt"
 msgstr ""
 
-#: utils/models.py:74
+#: tapir/utils/models.py:71
 msgid "Western Sahara"
 msgstr ""
 
-#: utils/models.py:75
+#: tapir/utils/models.py:72
 msgid "Eritrea"
 msgstr ""
 
-#: utils/models.py:76
+#: tapir/utils/models.py:73
 msgid "Spain"
 msgstr ""
 
-#: utils/models.py:77
+#: tapir/utils/models.py:74
 msgid "Ethiopia"
 msgstr ""
 
-#: utils/models.py:78
+#: tapir/utils/models.py:75
 msgid "Finland"
 msgstr ""
 
-#: utils/models.py:79
+#: tapir/utils/models.py:76
 msgid "Fiji"
 msgstr ""
 
-#: utils/models.py:80
+#: tapir/utils/models.py:77
 msgid "Falkland Islands (Malvinas)"
 msgstr ""
 
-#: utils/models.py:81
+#: tapir/utils/models.py:78
 msgid "Micronesia"
 msgstr ""
 
-#: utils/models.py:82
+#: tapir/utils/models.py:79
 msgid "Faroe Islands"
 msgstr ""
 
-#: utils/models.py:83
+#: tapir/utils/models.py:80
 msgid "France"
 msgstr ""
 
-#: utils/models.py:84
+#: tapir/utils/models.py:81
 msgid "France, Metropolitan"
 msgstr ""
 
-#: utils/models.py:85
+#: tapir/utils/models.py:82
 msgid "Gabon"
 msgstr ""
 
-#: utils/models.py:86
+#: tapir/utils/models.py:83
 msgid "United Kingdom (Great Britain)"
 msgstr ""
 
-#: utils/models.py:87
+#: tapir/utils/models.py:84
 msgid "Grenada"
 msgstr ""
 
-#: utils/models.py:88
+#: tapir/utils/models.py:85
 msgid "Georgia"
 msgstr ""
 
-#: utils/models.py:89
+#: tapir/utils/models.py:86
 msgid "French Guiana"
 msgstr ""
 
-#: utils/models.py:90
+#: tapir/utils/models.py:87
 msgid "Ghana"
 msgstr ""
 
-#: utils/models.py:91
+#: tapir/utils/models.py:88
 msgid "Gibraltar"
 msgstr ""
 
-#: utils/models.py:92
+#: tapir/utils/models.py:89
 msgid "Greenland"
 msgstr ""
 
-#: utils/models.py:93
+#: tapir/utils/models.py:90
 msgid "Gambia"
 msgstr ""
 
-#: utils/models.py:94
+#: tapir/utils/models.py:91
 msgid "Guinea"
 msgstr ""
 
-#: utils/models.py:95
+#: tapir/utils/models.py:92
 msgid "Guadeloupe"
 msgstr ""
 
-#: utils/models.py:96
+#: tapir/utils/models.py:93
 msgid "Equatorial Guinea"
 msgstr ""
 
-#: utils/models.py:97
+#: tapir/utils/models.py:94
 msgid "Greece"
 msgstr ""
 
-#: utils/models.py:98
+#: tapir/utils/models.py:95
 msgid "South Georgia and the South Sandwich Islands"
 msgstr ""
 
-#: utils/models.py:99
+#: tapir/utils/models.py:96
 msgid "Guatemala"
 msgstr ""
 
-#: utils/models.py:100
+#: tapir/utils/models.py:97
 msgid "Guam"
 msgstr ""
 
-#: utils/models.py:101
+#: tapir/utils/models.py:98
 msgid "Guinea-Bissau"
 msgstr ""
 
-#: utils/models.py:102
+#: tapir/utils/models.py:99
 msgid "Guyana"
 msgstr ""
 
-#: utils/models.py:103
+#: tapir/utils/models.py:100
 msgid "Hong Kong"
 msgstr ""
 
-#: utils/models.py:104
+#: tapir/utils/models.py:101
 msgid "Heard & McDonald Islands"
 msgstr ""
 
-#: utils/models.py:105
+#: tapir/utils/models.py:102
 msgid "Honduras"
 msgstr ""
 
-#: utils/models.py:106
+#: tapir/utils/models.py:103
 msgid "Croatia"
 msgstr ""
 
-#: utils/models.py:107
+#: tapir/utils/models.py:104
 msgid "Haiti"
 msgstr ""
 
-#: utils/models.py:108
+#: tapir/utils/models.py:105
 msgid "Hungary"
 msgstr ""
 
-#: utils/models.py:109
+#: tapir/utils/models.py:106
 msgid "Indonesia"
 msgstr ""
 
-#: utils/models.py:110
+#: tapir/utils/models.py:107
 msgid "Ireland"
 msgstr ""
 
-#: utils/models.py:111
+#: tapir/utils/models.py:108
 msgid "Israel"
 msgstr ""
 
-#: utils/models.py:112
+#: tapir/utils/models.py:109
 msgid "India"
 msgstr ""
 
-#: utils/models.py:113
+#: tapir/utils/models.py:110
 msgid "British Indian Ocean Territory"
 msgstr ""
 
-#: utils/models.py:114
+#: tapir/utils/models.py:111
 msgid "Iraq"
 msgstr ""
 
-#: utils/models.py:115
+#: tapir/utils/models.py:112
 msgid "Islamic Republic of Iran"
 msgstr ""
 
-#: utils/models.py:116
+#: tapir/utils/models.py:113
 msgid "Iceland"
 msgstr ""
 
-#: utils/models.py:117
+#: tapir/utils/models.py:114
 msgid "Italy"
 msgstr ""
 
-#: utils/models.py:118
+#: tapir/utils/models.py:115
 msgid "Jamaica"
 msgstr ""
 
-#: utils/models.py:119
+#: tapir/utils/models.py:116
 msgid "Jordan"
 msgstr ""
 
-#: utils/models.py:120
+#: tapir/utils/models.py:117
 msgid "Japan"
 msgstr ""
 
-#: utils/models.py:121
+#: tapir/utils/models.py:118
 msgid "Kenya"
 msgstr ""
 
-#: utils/models.py:122
+#: tapir/utils/models.py:119
 msgid "Kyrgyzstan"
 msgstr ""
 
-#: utils/models.py:123
+#: tapir/utils/models.py:120
 msgid "Cambodia"
 msgstr ""
 
-#: utils/models.py:124
+#: tapir/utils/models.py:121
 msgid "Kiribati"
 msgstr ""
 
-#: utils/models.py:125
+#: tapir/utils/models.py:122
 msgid "Comoros"
 msgstr ""
 
-#: utils/models.py:126
+#: tapir/utils/models.py:123
 msgid "St. Kitts and Nevis"
 msgstr ""
 
-#: utils/models.py:127
+#: tapir/utils/models.py:124
 msgid "Korea, Democratic People's Republic of"
 msgstr ""
 
-#: utils/models.py:128
+#: tapir/utils/models.py:125
 msgid "Korea, Republic of"
 msgstr ""
 
-#: utils/models.py:129
+#: tapir/utils/models.py:126
 msgid "Kuwait"
 msgstr ""
 
-#: utils/models.py:130
+#: tapir/utils/models.py:127
 msgid "Cayman Islands"
 msgstr ""
 
-#: utils/models.py:131
+#: tapir/utils/models.py:128
 msgid "Kazakhstan"
 msgstr ""
 
-#: utils/models.py:132
+#: tapir/utils/models.py:129
 msgid "Lao People's Democratic Republic"
 msgstr ""
 
-#: utils/models.py:133
+#: tapir/utils/models.py:130
 msgid "Lebanon"
 msgstr ""
 
-#: utils/models.py:134
+#: tapir/utils/models.py:131
 msgid "Saint Lucia"
 msgstr ""
 
-#: utils/models.py:135
+#: tapir/utils/models.py:132
 msgid "Liechtenstein"
 msgstr ""
 
-#: utils/models.py:136
+#: tapir/utils/models.py:133
 msgid "Sri Lanka"
 msgstr ""
 
-#: utils/models.py:137
+#: tapir/utils/models.py:134
 msgid "Liberia"
 msgstr ""
 
-#: utils/models.py:138
+#: tapir/utils/models.py:135
 msgid "Lesotho"
 msgstr ""
 
-#: utils/models.py:139
+#: tapir/utils/models.py:136
 msgid "Lithuania"
 msgstr ""
 
-#: utils/models.py:140
+#: tapir/utils/models.py:137
 msgid "Luxembourg"
 msgstr ""
 
-#: utils/models.py:141
+#: tapir/utils/models.py:138
 msgid "Latvia"
 msgstr ""
 
-#: utils/models.py:142
+#: tapir/utils/models.py:139
 msgid "Libyan Arab Jamahiriya"
 msgstr ""
 
-#: utils/models.py:143
+#: tapir/utils/models.py:140
 msgid "Morocco"
 msgstr ""
 
-#: utils/models.py:144
+#: tapir/utils/models.py:141
 msgid "Monaco"
 msgstr ""
 
-#: utils/models.py:145
+#: tapir/utils/models.py:142
 msgid "Moldova, Republic of"
 msgstr ""
 
-#: utils/models.py:146
+#: tapir/utils/models.py:143
 msgid "Madagascar"
 msgstr ""
 
-#: utils/models.py:147
+#: tapir/utils/models.py:144
 msgid "Marshall Islands"
 msgstr ""
 
-#: utils/models.py:148
+#: tapir/utils/models.py:145
 msgid "Mali"
 msgstr ""
 
-#: utils/models.py:149
+#: tapir/utils/models.py:146
 msgid "Mongolia"
 msgstr ""
 
-#: utils/models.py:150
+#: tapir/utils/models.py:147
 msgid "Myanmar"
 msgstr ""
 
-#: utils/models.py:151
+#: tapir/utils/models.py:148
 msgid "Macau"
 msgstr ""
 
-#: utils/models.py:152
+#: tapir/utils/models.py:149
 msgid "Northern Mariana Islands"
 msgstr ""
 
-#: utils/models.py:153
+#: tapir/utils/models.py:150
 msgid "Martinique"
 msgstr ""
 
-#: utils/models.py:154
+#: tapir/utils/models.py:151
 msgid "Mauritania"
 msgstr ""
 
-#: utils/models.py:155
+#: tapir/utils/models.py:152
 msgid "Monserrat"
 msgstr ""
 
-#: utils/models.py:156
+#: tapir/utils/models.py:153
 msgid "Malta"
 msgstr ""
 
-#: utils/models.py:157
+#: tapir/utils/models.py:154
 msgid "Mauritius"
 msgstr ""
 
-#: utils/models.py:158
+#: tapir/utils/models.py:155
 msgid "Maldives"
 msgstr ""
 
-#: utils/models.py:159
+#: tapir/utils/models.py:156
 msgid "Malawi"
 msgstr ""
 
-#: utils/models.py:160
+#: tapir/utils/models.py:157
 msgid "Mexico"
 msgstr ""
 
-#: utils/models.py:161
+#: tapir/utils/models.py:158
 msgid "Malaysia"
 msgstr ""
 
-#: utils/models.py:162
+#: tapir/utils/models.py:159
 msgid "Mozambique"
 msgstr ""
 
-#: utils/models.py:163
+#: tapir/utils/models.py:160
 msgid "Namibia"
 msgstr ""
 
-#: utils/models.py:164
+#: tapir/utils/models.py:161
 msgid "New Caledonia"
 msgstr ""
 
-#: utils/models.py:165
+#: tapir/utils/models.py:162
 msgid "Niger"
 msgstr ""
 
-#: utils/models.py:166
+#: tapir/utils/models.py:163
 msgid "Norfolk Island"
 msgstr ""
 
-#: utils/models.py:167
+#: tapir/utils/models.py:164
 msgid "Nigeria"
 msgstr ""
 
-#: utils/models.py:168
+#: tapir/utils/models.py:165
 msgid "Nicaragua"
 msgstr ""
 
-#: utils/models.py:169
+#: tapir/utils/models.py:166
 msgid "Netherlands"
 msgstr ""
 
-#: utils/models.py:170
+#: tapir/utils/models.py:167
 msgid "Norway"
 msgstr ""
 
-#: utils/models.py:171
+#: tapir/utils/models.py:168
 msgid "Nepal"
 msgstr ""
 
-#: utils/models.py:172
+#: tapir/utils/models.py:169
 msgid "Nauru"
 msgstr ""
 
-#: utils/models.py:173
+#: tapir/utils/models.py:170
 msgid "Niue"
 msgstr ""
 
-#: utils/models.py:174
+#: tapir/utils/models.py:171
 msgid "New Zealand"
 msgstr ""
 
-#: utils/models.py:175
+#: tapir/utils/models.py:172
 msgid "Oman"
 msgstr ""
 
-#: utils/models.py:176
+#: tapir/utils/models.py:173
 msgid "Panama"
 msgstr ""
 
-#: utils/models.py:177
+#: tapir/utils/models.py:174
 msgid "Peru"
 msgstr ""
 
-#: utils/models.py:178
+#: tapir/utils/models.py:175
 msgid "French Polynesia"
 msgstr ""
 
-#: utils/models.py:179
+#: tapir/utils/models.py:176
 msgid "Papua New Guinea"
 msgstr ""
 
-#: utils/models.py:180
+#: tapir/utils/models.py:177
 msgid "Philippines"
 msgstr ""
 
-#: utils/models.py:181
+#: tapir/utils/models.py:178
 msgid "Pakistan"
 msgstr ""
 
-#: utils/models.py:182
+#: tapir/utils/models.py:179
 msgid "Poland"
 msgstr ""
 
-#: utils/models.py:183
+#: tapir/utils/models.py:180
 msgid "St. Pierre & Miquelon"
 msgstr ""
 
-#: utils/models.py:184
+#: tapir/utils/models.py:181
 msgid "Pitcairn"
 msgstr ""
 
-#: utils/models.py:185
+#: tapir/utils/models.py:182
 msgid "Puerto Rico"
 msgstr ""
 
-#: utils/models.py:186
+#: tapir/utils/models.py:183
 msgid "Portugal"
 msgstr ""
 
-#: utils/models.py:187
+#: tapir/utils/models.py:184
 msgid "Palau"
 msgstr ""
 
-#: utils/models.py:188
+#: tapir/utils/models.py:185
 msgid "Paraguay"
 msgstr ""
 
-#: utils/models.py:189
+#: tapir/utils/models.py:186
 msgid "Qatar"
 msgstr ""
 
-#: utils/models.py:190
+#: tapir/utils/models.py:187
 msgid "Reunion"
 msgstr ""
 
-#: utils/models.py:191
+#: tapir/utils/models.py:188
 msgid "Romania"
 msgstr ""
 
-#: utils/models.py:192
+#: tapir/utils/models.py:189
 msgid "Russian Federation"
 msgstr ""
 
-#: utils/models.py:193
+#: tapir/utils/models.py:190
 msgid "Rwanda"
 msgstr ""
 
-#: utils/models.py:194
+#: tapir/utils/models.py:191
 msgid "Saudi Arabia"
 msgstr ""
 
-#: utils/models.py:195
+#: tapir/utils/models.py:192
 msgid "Solomon Islands"
 msgstr ""
 
-#: utils/models.py:196
+#: tapir/utils/models.py:193
 msgid "Seychelles"
 msgstr ""
 
-#: utils/models.py:197
+#: tapir/utils/models.py:194
 msgid "Sudan"
 msgstr ""
 
-#: utils/models.py:198
+#: tapir/utils/models.py:195
 msgid "Sweden"
 msgstr ""
 
-#: utils/models.py:199
+#: tapir/utils/models.py:196
 msgid "Singapore"
 msgstr ""
 
-#: utils/models.py:200
+#: tapir/utils/models.py:197
 msgid "St. Helena"
 msgstr ""
 
-#: utils/models.py:201
+#: tapir/utils/models.py:198
 msgid "Slovenia"
 msgstr ""
 
-#: utils/models.py:202
+#: tapir/utils/models.py:199
 msgid "Svalbard & Jan Mayen Islands"
 msgstr ""
 
-#: utils/models.py:203
+#: tapir/utils/models.py:200
 msgid "Slovakia"
 msgstr ""
 
-#: utils/models.py:204
+#: tapir/utils/models.py:201
 msgid "Sierra Leone"
 msgstr ""
 
-#: utils/models.py:205
+#: tapir/utils/models.py:202
 msgid "San Marino"
 msgstr ""
 
-#: utils/models.py:206
+#: tapir/utils/models.py:203
 msgid "Senegal"
 msgstr ""
 
-#: utils/models.py:207
+#: tapir/utils/models.py:204
 msgid "Somalia"
 msgstr ""
 
-#: utils/models.py:208
+#: tapir/utils/models.py:205
 msgid "Suriname"
 msgstr ""
 
-#: utils/models.py:209
+#: tapir/utils/models.py:206
 msgid "Sao Tome & Principe"
 msgstr ""
 
-#: utils/models.py:210
+#: tapir/utils/models.py:207
 msgid "El Salvador"
 msgstr ""
 
-#: utils/models.py:211
+#: tapir/utils/models.py:208
 msgid "Syrian Arab Republic"
 msgstr ""
 
-#: utils/models.py:212
+#: tapir/utils/models.py:209
 msgid "Swaziland"
 msgstr ""
 
-#: utils/models.py:213
+#: tapir/utils/models.py:210
 msgid "Turks & Caicos Islands"
 msgstr ""
 
-#: utils/models.py:214
+#: tapir/utils/models.py:211
 msgid "Chad"
 msgstr ""
 
-#: utils/models.py:215
+#: tapir/utils/models.py:212
 msgid "French Southern Territories"
 msgstr ""
 
-#: utils/models.py:216
+#: tapir/utils/models.py:213
 msgid "Togo"
 msgstr ""
 
-#: utils/models.py:217
+#: tapir/utils/models.py:214
 msgid "Thailand"
 msgstr ""
 
-#: utils/models.py:218
+#: tapir/utils/models.py:215
 msgid "Tajikistan"
 msgstr ""
 
-#: utils/models.py:219
+#: tapir/utils/models.py:216
 msgid "Tokelau"
 msgstr ""
 
-#: utils/models.py:220
+#: tapir/utils/models.py:217
 msgid "Turkmenistan"
 msgstr ""
 
-#: utils/models.py:221
+#: tapir/utils/models.py:218
 msgid "Tunisia"
 msgstr ""
 
-#: utils/models.py:222
+#: tapir/utils/models.py:219
 msgid "Tonga"
 msgstr ""
 
-#: utils/models.py:223
+#: tapir/utils/models.py:220
 msgid "East Timor"
 msgstr ""
 
-#: utils/models.py:224
+#: tapir/utils/models.py:221
 msgid "Turkey"
 msgstr ""
 
-#: utils/models.py:225
+#: tapir/utils/models.py:222
 msgid "Trinidad & Tobago"
 msgstr ""
 
-#: utils/models.py:226
+#: tapir/utils/models.py:223
 msgid "Tuvalu"
 msgstr ""
 
-#: utils/models.py:227
+#: tapir/utils/models.py:224
 msgid "Taiwan, Province of China"
 msgstr ""
 
-#: utils/models.py:228
+#: tapir/utils/models.py:225
 msgid "Tanzania, United Republic of"
 msgstr ""
 
-#: utils/models.py:229
+#: tapir/utils/models.py:226
 msgid "Ukraine"
 msgstr ""
 
-#: utils/models.py:230
+#: tapir/utils/models.py:227
 msgid "Uganda"
 msgstr ""
 
-#: utils/models.py:231
+#: tapir/utils/models.py:228
 msgid "United States Minor Outlying Islands"
 msgstr ""
 
-#: utils/models.py:232
+#: tapir/utils/models.py:229
 msgid "United States of America"
 msgstr ""
 
-#: utils/models.py:233
+#: tapir/utils/models.py:230
 msgid "Uruguay"
 msgstr ""
 
-#: utils/models.py:234
+#: tapir/utils/models.py:231
 msgid "Uzbekistan"
 msgstr ""
 
-#: utils/models.py:235
+#: tapir/utils/models.py:232
 msgid "Vatican City State (Holy See)"
 msgstr ""
 
-#: utils/models.py:236
+#: tapir/utils/models.py:233
 msgid "St. Vincent & the Grenadines"
 msgstr ""
 
-#: utils/models.py:237
+#: tapir/utils/models.py:234
 msgid "Venezuela"
 msgstr ""
 
-#: utils/models.py:238
+#: tapir/utils/models.py:235
 msgid "British Virgin Islands"
 msgstr ""
 
-#: utils/models.py:239
+#: tapir/utils/models.py:236
 msgid "United States Virgin Islands"
 msgstr ""
 
-#: utils/models.py:240
+#: tapir/utils/models.py:237
 msgid "Viet Nam"
 msgstr ""
 
-#: utils/models.py:241
+#: tapir/utils/models.py:238
 msgid "Vanuatu"
 msgstr ""
 
-#: utils/models.py:242
+#: tapir/utils/models.py:239
 msgid "Wallis & Futuna Islands"
 msgstr ""
 
-#: utils/models.py:243
+#: tapir/utils/models.py:240
 msgid "Samoa"
 msgstr ""
 
-#: utils/models.py:244
+#: tapir/utils/models.py:241
 msgid "Yemen"
 msgstr ""
 
-#: utils/models.py:245
+#: tapir/utils/models.py:242
 msgid "Mayotte"
 msgstr ""
 
-#: utils/models.py:246
+#: tapir/utils/models.py:243
 msgid "Yugoslavia"
 msgstr ""
 
-#: utils/models.py:247
+#: tapir/utils/models.py:244
 msgid "South Africa"
 msgstr ""
 
-#: utils/models.py:248
+#: tapir/utils/models.py:245
 msgid "Zambia"
 msgstr ""
 
-#: utils/models.py:249
+#: tapir/utils/models.py:246
 msgid "Zaire"
 msgstr ""
 
-#: utils/models.py:250
+#: tapir/utils/models.py:247
 msgid "Zimbabwe"
 msgstr ""
 
-#: utils/models.py:251
+#: tapir/utils/models.py:248
 msgid "Unknown or unspecified country"
 msgstr ""
 
-#: utils/models.py:255
+#: tapir/utils/models.py:252
 msgid "🇩🇪 Deutsch"
 msgstr "🇩🇪 Deutsch"
 
-#: utils/models.py:256
+#: tapir/utils/models.py:253
 msgid "🇬🇧 English"
 msgstr "🇬🇧 English"
 
-#: utils/models.py:359
-msgid "start date must be set"
-msgstr "Anfangsdatum muss gesetzt sein"
+#: tapir/utils/templates/utils/reset_test_data.html:30
+msgid "Reset test data"
+msgstr ""
 
-#: utils/models.py:362
-msgid "Start date must be prior to end date"
-msgstr "Anfangsdatum muss vor Endsdatum sein"
+#: tapir/wirgarten/constants.py:6
+msgid "Keine Lieferung/Abholung"
+msgstr ""
 
-#~ msgid ""
-#~ "Since this is your first shift, remember to arrive 20 minutes before the beginning of "
-#~ "the shift in order to get the instructions you need."
-#~ msgstr ""
-#~ "Weil es deine erste Schicht ist, komm bitte 20 Minuten vor der Schicht an um die "
-#~ "Erklärungen zu bekommen."
+#: tapir/wirgarten/constants.py:7
+msgid "1x pro Woche"
+msgstr ""
 
-#~ msgid "Welcome at SuperCoop eG!"
-#~ msgstr "Willkommen in der SuperCoop eG!"
+#: tapir/wirgarten/constants.py:8
+msgid "Jede 2. Woche (ungerade KW)"
+msgstr ""
 
-#~ msgid "Members in the ABCD system"
-#~ msgstr "Mitglieder im ABCD-Schichtsystem"
+#: tapir/wirgarten/constants.py:9
+msgid "Jede 2. Woche (gerade KW)"
+msgstr ""
 
-#~ msgid "Members in the flying system"
-#~ msgstr "Mitglieder im fliegenden Schichtsystem"
+#: tapir/wirgarten/constants.py:12
+msgid "Jede 4. Woche"
+msgstr ""
 
-#~ msgid "ABCD members not registered to an ABCD shift"
-#~ msgstr "ABCD-Mitglieder ohne Schichtregistrierung"
+#: tapir/wirgarten/constants.py:16
+msgid "Benutzerdefinierte Lieferwochen"
+msgstr ""
 
-#~ msgid "ABCD shift missing at least one member"
-#~ msgstr "ABCD-Schicht, wo min. ein Mitglied fehlt"
+#: tapir/wirgarten/constants.py:23 tapir/wirgarten/forms/pickup_location.py:402
+msgid "Montag"
+msgstr ""
 
-#~ msgid "Paid Membership Fee"
-#~ msgstr "Mitgliedsgebühr bezahlt"
+#: tapir/wirgarten/constants.py:24 tapir/wirgarten/forms/pickup_location.py:407
+msgid "Dienstag"
+msgstr ""
 
-#~ msgid "Payment"
-#~ msgstr "Bezahlung"
+#: tapir/wirgarten/constants.py:25 tapir/wirgarten/forms/pickup_location.py:412
+msgid "Mittwoch"
+msgstr ""
 
-#~ msgid "Open"
-#~ msgstr "Offen"
+#: tapir/wirgarten/constants.py:26 tapir/wirgarten/forms/pickup_location.py:417
+msgid "Donnerstag"
+msgstr ""
 
-#~ msgid "Register Payment"
-#~ msgstr "Als bezahlt markieren"
+#: tapir/wirgarten/constants.py:27 tapir/wirgarten/forms/pickup_location.py:422
+msgid "Freitag"
+msgstr ""
 
-#~ msgid "Has paid"
-#~ msgstr "Hat bezahlt"
+#: tapir/wirgarten/constants.py:28 tapir/wirgarten/forms/pickup_location.py:427
+msgid "Samstag"
+msgstr ""
 
-#~ msgid "Shop-expansion funding"
-#~ msgstr "Laden-Erweiterung-Finanzierung"
+#: tapir/wirgarten/constants.py:29 tapir/wirgarten/forms/pickup_location.py:432
+msgid "Sonntag"
+msgstr ""
 
-#~ msgid "Filter by free slot: "
-#~ msgstr "Nach freien Plätzen filtern: "
+#: tapir/wirgarten/forms/member.py:72
+msgid "Telefon-Nr (optional)"
+msgstr ""
 
-#~ msgid "Needs help"
-#~ msgstr "Hilfe gebraucht"
+#: tapir/wirgarten/forms/member.py:78 tapir/wirgarten/forms/member.py:405
+#: tapir/wirgarten/templates/wirgarten/member/member_filter.html:73
+msgid "Vorname"
+msgstr ""
 
-#~ msgid "Filtered"
-#~ msgstr "Gefiltert"
+#: tapir/wirgarten/forms/member.py:79 tapir/wirgarten/forms/member.py:406
+#: tapir/wirgarten/templates/wirgarten/member/member_filter.html:74
+msgid "Nachname"
+msgstr ""
 
-#~ msgid "Not filtered"
-#~ msgstr "Nicht gefiltert"
+#: tapir/wirgarten/forms/member.py:80
+#: tapir/wirgarten/forms/pickup_location.py:333
+msgid "Straße & Hausnummer"
+msgstr ""
 
-#~ msgid "Help urgently needed"
-#~ msgstr "Hilfe dringend gebraucht"
+#: tapir/wirgarten/forms/member.py:81 tapir/wirgarten/forms/member.py:412
+msgid "Adresszusatz"
+msgstr ""
 
-#~ msgid "Some help needed"
-#~ msgstr "Hilfe gewünscht"
+#: tapir/wirgarten/forms/member.py:82 tapir/wirgarten/forms/member.py:413
+#: tapir/wirgarten/forms/pickup_location.py:336
+msgid "Postleitzahl"
+msgstr ""
 
-#~ msgid "Is valid"
-#~ msgstr "Ist gültig"
+#: tapir/wirgarten/forms/member.py:83 tapir/wirgarten/forms/member.py:414
+msgid "Stadt"
+msgstr ""
 
-#~ msgid "Someone took over the shift your were looking for a stand-in for"
-#~ msgstr "Jemandem hat deine Schicht übernommen"
+#: tapir/wirgarten/forms/member.py:84
+msgid "Land"
+msgstr ""
 
-#, fuzzy
-#~| msgid "ABCD schedule overview"
-#~ msgid "Shift schedule overview"
-#~ msgstr "ABCD Schichtkalender"
+#: tapir/wirgarten/forms/member.py:85
+msgid "Geburtsdatum"
+msgstr ""
 
-#~ msgid "Create Share Owner"
-#~ msgstr "Anteilseigner*in anlegen"
+#: tapir/wirgarten/forms/member.py:87
+msgid "Pseudonym (optional)"
+msgstr ""
 
-#~ msgid "Help wanted"
-#~ msgstr "Hilfe gewünscht"
+#: tapir/wirgarten/forms/member.py:89
+msgid "Dieser Name erscheint auf der Abholliste anstelle deines echten Namens."
+msgstr ""
 
-#~ msgid "Regular Shift"
-#~ msgstr "Regelmäßige Schicht"
+#: tapir/wirgarten/forms/member.py:116 tapir/wirgarten/forms/member.py:410
+msgid "Telefon-Nr"
+msgstr ""
 
-#, fuzzy
-#~| msgid "Regular"
-#~ msgid "🏠 Regular"
-#~ msgstr "Regelmäßig"
+#: tapir/wirgarten/forms/member.py:131 tapir/wirgarten/forms/member.py:149
+msgid "Ein Nutzer mit dieser Email Adresse existiert bereits."
+msgstr ""
 
-#~ msgid "Shift Coordinator"
-#~ msgstr "Teamleitung"
+#: tapir/wirgarten/forms/member.py:168
+msgid "Bitte wähle ein gültiges Datum aus."
+msgstr ""
 
-#, fuzzy
-#~| msgid "Create Tapir account"
-#~ msgid "Create Tapir account for member"
-#~ msgstr "Erzeuge Tapir-Konto"
+#: tapir/wirgarten/forms/member.py:173
+msgid ""
+"Du musst mindestens 18 Jahre alt sein um der Genossenschaft beizutreten."
+msgstr ""
 
-#, fuzzy
-#~| msgid "Create user"
-#~ msgid "Create Tapir User"
-#~ msgstr "Benutzer anlegen"
+#: tapir/wirgarten/forms/member.py:276
+msgid "Änderungsgrund"
+msgstr ""
 
-#~ msgid "Special Capabilties"
-#~ msgstr "Spezielle Fähigkeiten"
+#: tapir/wirgarten/forms/member.py:278
+msgid "Neuer Betrag [€]"
+msgstr ""
 
-#, fuzzy
-#~| msgid "None"
-#~ msgctxt "No special shift capabilities"
-#~ msgid "None"
-#~ msgstr "Keine"
+#: tapir/wirgarten/forms/member.py:282
+msgid "Ich weiß was ich tue und bin mir der möglichen Konsequenzen bewusst."
+msgstr ""
 
-#, fuzzy
-#~| msgid "Special Capabilties"
-#~ msgid "Has capabilities: "
-#~ msgstr "Spezielle Fähigkeiten"
+#: tapir/wirgarten/forms/member.py:314
+msgid "Ursprünglicher Anteilseigner"
+msgstr ""
 
-#, fuzzy
-#~| msgid "Special Capabilties"
-#~ msgid "Capabilities"
-#~ msgstr "Spezielle Fähigkeiten"
+#: tapir/wirgarten/forms/member.py:320
+msgid "Empfänger der Genossenschaftsanteile"
+msgstr ""
 
-#~ msgid "Create user"
-#~ msgstr "Benutzer anlegen"
+#: tapir/wirgarten/forms/member.py:323
+msgid "Anzahl der Anteile"
+msgstr ""
 
-#~ msgid "Password reset instructions are sent"
-#~ msgstr "Anleitung zum Passwort zurücksetzen wurde gesendet."
+#: tapir/wirgarten/forms/member.py:329 tapir/wirgarten/forms/member.py:381
+msgid "Ich weiß was ich tue und bin mir der Konsequenzen bewusst."
+msgstr ""
 
-#~ msgid "Beteiligungserkärung"
-#~ msgstr "Beteiligungserkärung"
+#: tapir/wirgarten/forms/member.py:343 tapir/wirgarten/forms/member.py:393
+#, python-brace-format
+msgid "Ein Mitglied muss mindestens {min_shares} Genossenschaftsanteile haben."
+msgstr ""
 
-#~ msgid "Phone Number"
-#~ msgstr "Telefonnummer"
+#: tapir/wirgarten/forms/member.py:361
+msgid "Kündigungsdatum"
+msgstr ""
 
-#, fuzzy
-#~| msgid "Username"
-#~ msgid "username"
-#~ msgstr "Nutzer:innenname"
+#: tapir/wirgarten/forms/member.py:367
+msgid "Kündigung gültig zum"
+msgstr ""
 
-#~ msgid "Upcoming shifts"
-#~ msgstr "Schichtübersicht"
+#: tapir/wirgarten/forms/member.py:374
+#, python-brace-format
+msgid "Anzahl der gekündigten Anteile (Insgesamt: {share_quantity})"
+msgstr ""
 
-#~ msgid "ABCD schedule overview"
-#~ msgstr "ABCD Schichtkalender"
+#: tapir/wirgarten/forms/member.py:411
+#: tapir/wirgarten/templates/wirgarten/member/member_detail.html:181
+msgid "Adresse"
+msgstr ""
 
-#~ msgid "Personal Details"
-#~ msgstr "Persönliche Daten"
+#: tapir/wirgarten/forms/member.py:416
+#: tapir/wirgarten/forms/registration/consents.py:24
+msgid "Ja, ich habe die Datenschutzerklärung zur Kenntnis genommen."
+msgstr ""
+
+#: tapir/wirgarten/forms/member.py:419
+#: tapir/wirgarten/forms/registration/consents.py:27
+#, python-brace-format
+msgid ""
+"Wir behandeln deine Daten vertraulich, verwenden diese nur im Rahmen der "
+"Mitgliederverwaltung und geben sie nicht an Dritte weiter. Unsere "
+"Datenschutzerklärung kannst du hier einsehen: <a target=\"_blank\" "
+"href=\"{privacy_link}\">Datenschutzerklärung - {site_name}</a>"
+msgstr ""
+
+#: tapir/wirgarten/forms/pickup_location.py:310
+msgid "Bitte wähle deinen gewünschten Abholort aus!"
+msgstr ""
+
+#: tapir/wirgarten/forms/pickup_location.py:324
+msgid "Koordinaten"
+msgstr ""
+
+#: tapir/wirgarten/forms/pickup_location.py:327
+msgid "Ausfahrrunde"
+msgstr ""
+
+#: tapir/wirgarten/forms/pickup_location.py:331 tapir/wirgarten/models.py:47
+#: tapir/wirgarten/models.py:58
+#: tapir/wirgarten/templates/wirgarten/member/member_detail.html:133
+msgid "Name"
+msgstr "Name"
+
+#: tapir/wirgarten/forms/pickup_location.py:338
+msgid "Ort"
+msgstr ""
+
+#: tapir/wirgarten/forms/pickup_location.py:341
+msgid "Zugangscode"
+msgstr ""
+
+#: tapir/wirgarten/forms/pickup_location.py:344
+msgid "Link zur Messenger-Gruppe"
+msgstr ""
+
+#: tapir/wirgarten/forms/pickup_location.py:347
+msgid "Name der Abholort-Pat*innen"
+msgstr ""
+
+#: tapir/wirgarten/forms/pickup_location.py:350
+msgid "Link zum Foto des Abholorts"
+msgstr ""
+
+#: tapir/wirgarten/forms/pickup_location.py:353 tapir/wirgarten/models.py:95
+msgid "Im Gesamtkistenanzahls-Zettel Details anzeigen"
+msgstr ""
+
+#: tapir/wirgarten/forms/pickup_location.py:357
+msgid "Zusätzliche Informationen zur Abholung"
+msgstr ""
+
+#: tapir/wirgarten/forms/pickup_location.py:366
+msgid "Information Fahrer"
+msgstr ""
+
+#: tapir/wirgarten/forms/pickup_location.py:373
+msgid "Verfügbar ab"
+msgstr ""
+
+#: tapir/wirgarten/forms/pickup_location.py:379
+msgid "Verfügbar bis"
+msgstr ""
+
+#: tapir/wirgarten/forms/product_cfg/period_product_cfg_forms.py:58
+#: tapir/wirgarten/models.py:182
+msgid "Produkt Name"
+msgstr ""
+
+#: tapir/wirgarten/forms/product_cfg/period_product_cfg_forms.py:61
+msgid "Preis"
+msgstr ""
+
+#: tapir/wirgarten/forms/product_cfg/period_product_cfg_forms.py:64
+msgid "Größe"
+msgstr ""
+
+#: tapir/wirgarten/forms/product_cfg/period_product_cfg_forms.py:67
+msgid "Basisprodukt"
+msgstr ""
+
+#: tapir/wirgarten/forms/product_cfg/period_product_cfg_forms.py:77
+msgid "Bitte lege zuerst ein Basisprodukt an."
+msgstr ""
+
+#: tapir/wirgarten/forms/product_cfg/period_product_cfg_forms.py:117
+#: tapir/wirgarten/templates/wirgarten/product/period_product_cfg_view.html:206
+msgid "Von"
+msgstr ""
+
+#: tapir/wirgarten/forms/product_cfg/period_product_cfg_forms.py:123
+#: tapir/wirgarten/templates/wirgarten/product/period_product_cfg_view.html:208
+msgid "Bis"
+msgstr ""
+
+#: tapir/wirgarten/forms/product_cfg/period_product_cfg_forms.py:130
+msgid "Maximal Anzahl an Joker per Mitglied"
+msgstr ""
+
+#: tapir/wirgarten/forms/product_cfg/period_product_cfg_forms.py:150
+msgid ", "
+msgstr ""
+
+#: tapir/wirgarten/forms/registration/consents.py:14
+msgid "Ja, ich habe die Widerrufsbelehrung zur Kenntnis genommen."
+msgstr ""
+
+#: tapir/wirgarten/forms/registration/consents.py:17
+#, python-brace-format
+msgid ""
+"Du kannst deine Verträge und Beitrittserklärung innerhalb von zwei Wochen in "
+"Textform (z.B. Brief, E-Mail) widerrufen. Die Frist beginnt spätestens mit "
+"Erhalt dieser Belehrung. Zur Wahrung der Widerrufsfrist genügt die "
+"rechtzeitige Absendung eines formlosen Widerrufsschreibens an <a "
+"target=\"_blank\" href=\"mailto:{site_email}\">{site_email}</a>."
+msgstr ""
+
+#: tapir/wirgarten/forms/registration/coop_shares.py:49
+msgid "Genossenschaftsanteile (€)"
+msgstr ""
+
+#: tapir/wirgarten/forms/registration/coop_shares.py:58
+msgid "Ich bin Student*in und kann keine Genossenschaftsanteile zeichnen"
+msgstr ""
+
+#: tapir/wirgarten/forms/registration/coop_shares.py:64
+msgid ""
+"Ja, ich habe die Satzung und die Kündigungsfrist von einem Jahr zum "
+"Jahresende zur Kenntnis genommen. Ich verpflichte mich, die nach Gesetz und "
+"Satzung geschuldete Einzahlungen auf die Geschäftsanteile zu leisten."
+msgstr ""
+
+#: tapir/wirgarten/forms/registration/payment_data.py:12
+msgid "Kontoinhaber*in"
+msgstr ""
+
+#: tapir/wirgarten/forms/registration/payment_data.py:13
+#: tapir/wirgarten/models.py:373
+#: tapir/wirgarten/templates/wirgarten/member/member_detail.html:342
+msgid "IBAN"
+msgstr ""
+
+#: tapir/wirgarten/forms/registration/payment_data.py:24
+#, python-brace-format
+msgid ""
+"Ich ermächtige die {site_name} {coop_shares_part}die monatlichen Beträge für "
+"den \n"
+"                Ernteanteil und ggf. weitere Produkte mittels Lastschrift "
+"von meinem Bankkonto einzuziehen. Zugleich \n"
+"                weise ich mein Kreditinstitut an, die gezogene Lastschrift "
+"einzulösen. "
+msgstr ""
+
+#: tapir/wirgarten/forms/registration/payment_data.py:53
+msgid "Ungültige IBAN"
+msgstr ""
+
+#: tapir/wirgarten/forms/subscription.py:175
+#: tapir/wirgarten/forms/subscription.py:614
+#: tapir/wirgarten/templates/wirgarten/product/period_product_cfg_view.html:22
+#: tapir/wirgarten/templates/wirgarten/product/period_product_cfg_view.html:205
+#: tapir/wirgarten/views/contracts.py:50
+msgid "Vertragsperiode"
+msgstr ""
+
+#: tapir/wirgarten/forms/subscription.py:183
+msgid ""
+"<span style='font-weight: bold; color: #CC3333;'>Hinweis: Wenn du sowohl für "
+"die aktuelle (bis zum 30.6.) als auch kommende Vertragsperiode (ab 1.7.) "
+"Ernteanteile zeichnen möchtest, dann wähle die aktuelle Vertragsperiode aus "
+"und verlängere anschließend bequem über den Mitgliederbereich deinen Vertrag "
+"für die kommende Vertragsperiode. So musst du nicht erneut die "
+"Formularseiten ausfüllen</span>"
+msgstr ""
+
+#: tapir/wirgarten/forms/subscription.py:227
+#: tapir/wirgarten/forms/subscription.py:657
+msgid "Ja, ich habe die Vertragsgrundsätze gelesen und stimme diesen zu."
+msgstr ""
+
+#: tapir/wirgarten/forms/subscription.py:271
+#: tapir/wirgarten/forms/subscription.py:705
+msgid "Neuen Abholort auswählen"
+msgstr ""
+
+#: tapir/wirgarten/forms/subscription.py:285
+#: tapir/wirgarten/forms/subscription.py:711
+msgid "Abholortwechsel zum"
+msgstr ""
+
+#: tapir/wirgarten/forms/subscription.py:440
+#: tapir/wirgarten/forms/subscription.py:909
+msgid "Bitte wähle einen Abholort aus!"
+msgstr ""
+
+#: tapir/wirgarten/models.py:60
+msgid "Coordinates Longitude"
+msgstr ""
+
+#: tapir/wirgarten/models.py:63
+msgid "Coordinates Latitude"
+msgstr ""
+
+#: tapir/wirgarten/models.py:69
+msgid "Additional info"
+msgstr ""
+
+#: tapir/wirgarten/models.py:70
+msgid "Access Code"
+msgstr ""
+
+#: tapir/wirgarten/models.py:72
+msgid "Messenger Group Link"
+msgstr ""
+
+#: tapir/wirgarten/models.py:75
+msgid "Name of the contact"
+msgstr ""
+
+#: tapir/wirgarten/models.py:77
+msgid "Photo Link"
+msgstr ""
+
+#: tapir/wirgarten/models.py:81
+msgid "Driver/Route info"
+msgstr ""
+
+#: tapir/wirgarten/models.py:83
+msgid "Available from"
+msgstr ""
+
+#: tapir/wirgarten/models.py:89
+msgid "Available until"
+msgstr ""
+
+#: tapir/wirgarten/models.py:188
+msgid "Lieferzyklus"
+msgstr ""
+
+#: tapir/wirgarten/models.py:194
+msgid "Link zu den Vertragsgrundsätzen"
+msgstr ""
+
+#: tapir/wirgarten/models.py:200
+msgid "Link zum Icon"
+msgstr ""
+
+#: tapir/wirgarten/models.py:203
+msgid "Nur Einzelabonnement erlaubt"
+msgstr ""
+
+#: tapir/wirgarten/models.py:206
+msgid "Nimmt am Joker-Verfahren teil"
+msgstr ""
+
+#: tapir/wirgarten/models.py:210
+msgid "Verträge haben ein End-Datum"
+msgstr ""
+
+#: tapir/wirgarten/models.py:212
+msgid ""
+"Bestimmte Produkte wie Vereinsmitgliedschaften laufen permanent bis sie "
+"gekündigt werden und haben nicht zwangsläufig ein End-Datum. Solche Produkte "
+"sind nicht mit Vertragsperiode verbunden."
+msgstr ""
+
+#: tapir/wirgarten/models.py:219
+msgid "Muss gezeichnet werden"
+msgstr ""
+
+#: tapir/wirgarten/models.py:221
+msgid "Ob es Pflicht ist, ein Abonnement an dieses Produkt zu zu zeichnen."
+msgstr ""
+
+#: tapir/wirgarten/models.py:227
+msgid "Beschreibung im Bestellwizard bei der erste Seite (Produkt-Typ Auswahl)"
+msgstr ""
+
+#: tapir/wirgarten/models.py:233
+msgid "Beschreibung im Bestellwizard bei der Produkt-Spezifische Seite"
+msgstr ""
+
+#: tapir/wirgarten/models.py:238
+msgid "Reihenfolge im BestellWizard (kleiner ist früher)"
+msgstr ""
+
+#: tapir/wirgarten/models.py:372
+msgid "Account owner"
+msgstr ""
+
+#: tapir/wirgarten/models.py:374
+msgid "SEPA Consent"
+msgstr ""
+
+#: tapir/wirgarten/models.py:376
+msgid "Right of withdrawal consent"
+msgstr ""
+
+#: tapir/wirgarten/models.py:378
+msgid "Privacy consent"
+msgstr ""
+
+#: tapir/wirgarten/models.py:380
+#: tapir/wirgarten/templates/wirgarten/member/member_detail.html:129
+msgid "Mitgliedsnummer"
+msgstr ""
+
+#: tapir/wirgarten/models.py:381
+msgid "Student*in"
+msgstr ""
+
+#: tapir/wirgarten/models.py:382
+#: tapir/wirgarten/templates/wirgarten/member/member_detail.html:192
+msgid "Pseudonym"
+msgstr ""
+
+#: tapir/wirgarten/models.py:729
+msgid "CSV"
+msgstr ""
+
+#: tapir/wirgarten/models.py:730
+msgid "PDF"
+msgstr ""
+
+#: tapir/wirgarten/models.py:731
+msgid "XML"
+msgstr ""
+
+#: tapir/wirgarten/models.py:767
+msgid "Bezahlt"
+msgstr ""
+
+#: tapir/wirgarten/models.py:768
+msgid "Offen"
+msgstr ""
+
+#: tapir/wirgarten/models.py:818
+msgid "Zeichnung von Anteilen"
+msgstr ""
+
+#: tapir/wirgarten/models.py:819
+msgid "Kündigung von Anteilen"
+msgstr ""
+
+#: tapir/wirgarten/models.py:820
+msgid "Abgabe von Anteilen"
+msgstr ""
+
+#: tapir/wirgarten/models.py:821
+msgid "Empfang von Anteilen"
+msgstr ""
+
+#: tapir/wirgarten/models.py:861
+msgid "For CANCELLATION and TRANSFER_OUT, the quantity must be negative."
+msgstr ""
+
+#: tapir/wirgarten/models.py:876
+msgid "For PURCHASE and TRANSFER_IN, the quantity must be positive."
+msgstr ""
+
+#: tapir/wirgarten/models.py:892
+msgid "For TRANSFER_OUT and TRANSFER_IN, the transfer_member must be set."
+msgstr ""
+
+#: tapir/wirgarten/models.py:1006
+msgid "Vertragsabschluss"
+msgstr ""
+
+#: tapir/wirgarten/models.py:1007
+msgid "Kündigung"
+msgstr ""
+
+#: tapir/wirgarten/models.py:1008
+msgid "Verlängerung"
+msgstr ""
+
+#: tapir/wirgarten/models.py:1009
+msgid "Keine Verlängerung"
+msgstr ""
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:21
+msgid "Enable bidding round"
+msgstr "Beitragsrunde aktivieren"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:23
+msgid ""
+"Master switch for the bidding round feature. When disabled, all bidding "
+"round pages are unreachable."
+msgstr "Master-Schalter für das Beitragsrunden-Feature. Bei Deaktivierung sind alle Beitragsrunden-Seiten nicht erreichbar."
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:34
+msgid "Enable public bidding round page"
+msgstr "Öffentliche Beitragsrunden-Seite aktivieren"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:36
+msgid ""
+"Only enables the public bidding round endpoint. The admin pages remain "
+"reachable."
+msgstr "Schaltet nur den öffentlichen Beitragsrunden-Endpoint frei. Die Admin-Seiten bleiben erreichbar."
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:48
+msgid "Allow changing the pickup location in the bidding round"
+msgstr "Ändern des Abholorts in der Beitragsrunde erlauben"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:51
+msgid ""
+"When enabled, members can change their pickup location while bidding, as "
+"long as the chosen location has free capacity. The member's own pickup "
+"location is always shown."
+msgstr "Wenn aktiviert, können Mitglieder beim Bieten ihren Abholort ändern, solange an der gewählten Station Kapazität frei ist. Der eigene Abholort wird immer angezeigt."
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:64
+msgid "Include automatically renewed members in the evaluation"
+msgstr "Automatisch verlängerte Mitglieder in der Auswertung berücksichtigen"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:67
+msgid ""
+"When enabled, members who did not bid and whose contract is automatically "
+"renewed are included in the evaluation with their reference value."
+msgstr "Wenn aktiviert, fließen Mitglieder, die nicht geboten haben und deren Vertrag automatisch verlängert wird, mit ihrem Richtwert in die Auswertung ein."
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:79
+msgid "Include membership in the harvest share"
+msgstr "Mitgliedschaft an Ernteanteil anrechnen"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:81
+msgid ""
+"When enabled, the membership of members with a paid membership is not "
+"charged separately but included in the harvest share (shown in the harvest "
+"shares line instead of as a separate item)."
+msgstr "Wenn aktiviert, wird die Mitgliedschaft von Mitgliedern mit kostenpflichtiger Mitgliedschaft nicht extra berechnet, sondern an den Ernteanteil angerechnet (in der Auswertung in der Ernteanteile-Zeile ausgewiesen statt als eigene Position)."
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:93
+msgid "Non-bidders pay at least the average bid"
+msgstr "Nicht-Bietende zahlen mindestens das Ø-Gebot"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:95
+msgid ""
+"When enabled, non-bidders (auto-renewers and late joiners) pay at least the "
+"average bid of the bidders. Above-average bids then lead to a surplus "
+"(solidarity fund)."
+msgstr "Wenn aktiviert, zahlen Nicht-Bietende (Auto-Verlängerer und Nachzügler) mindestens das durchschnittliche Gebot der Bietenden. Überdurchschnittliche Gebote führen dann zu einem Überschuss (Solidartopf)."
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:107
+msgid "Bidding round: show number of shares"
+msgstr "Beitragsrunde: Anzahl Anteile anzeigen"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:109
+msgid ""
+"When enabled, members can enter the number of shares per item. By default "
+"exactly one share is set."
+msgstr "Wenn aktiviert, können Mitglieder die Anzahl der Anteile je Position angeben. Standardmäßig ist immer genau ein Anteil gesetzt."
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:120
+msgid "Bidding round: add further positions"
+msgstr "Beitragsrunde: Weitere Positionen hinzufügen"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:122
+msgid ""
+"When enabled, members can enter several positions (harvest shares) in their "
+"bid. By default exactly one position exists."
+msgstr "Wenn aktiviert, können Mitglieder mehrere Positionen (Ernteanteile) im Gebot angeben. Standardmäßig ist genau eine Position vorhanden."
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:133
+msgid "Public bidding round page: title"
+msgstr "Öffentliche Beitragsrunden-Seite: Titel"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:134
+msgid "Title of the public bidding round page."
+msgstr "Titel der öffentlichen Beitragsrunden-Seite."
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:143
+msgid "Public bidding round page: intro text"
+msgstr "Öffentliche Beitragsrunden-Seite: Einleitungstext"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:144
+msgid "Intro text on the public bidding round page."
+msgstr "Einleitungstext auf der öffentlichen Beitragsrunden-Seite."
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:155
+msgid "Public bidding round page: text when no bidding round is active"
+msgstr "Öffentliche Beitragsrunden-Seite: Text wenn keine Beitragsrunde aktiv ist"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:158
+msgid ""
+"Shown when no bidding round is active or it has already ended. Registration "
+"via the bidding round page is not possible."
+msgstr "Wird angezeigt, wenn keine Beitragsrunde aktiv oder diese bereits beendet ist. Keine Registrierung über die Beitragsrunden-Seite möglich."
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:170
+msgid "Public bidding round page: login title"
+msgstr "Öffentliche Beitragsrunden-Seite: Titel Anmelden"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:171
+msgid "Title of the login block for existing members."
+msgstr "Titel des Anmelden-Blocks für bereits Mitglieder."
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:180
+msgid "Public bidding round page: login text"
+msgstr "Öffentliche Beitragsrunden-Seite: Text Anmelden"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:181
+msgid "Text of the login block for existing members."
+msgstr "Text des Anmelden-Blocks für bereits Mitglieder."
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:191
+msgid "Public bidding round page: pickup location title"
+msgstr "Öffentliche Beitragsrunden-Seite: Titel Verteilstation"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:192
+msgid "Title of the pickup location step."
+msgstr "Titel des Verteilstation-Schrittes."
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:201
+msgid "Public bidding round page: pickup location text"
+msgstr "Öffentliche Beitragsrunden-Seite: Text Verteilstation"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:203
+msgid ""
+"Text of the pickup location step. Your own pickup location is always shown; "
+"it can only be changed if the corresponding setting is enabled."
+msgstr "Text des Abholort-Schritts. Der eigene Abholort wird immer angezeigt; er kann nur geändert werden, wenn die entsprechende Einstellung aktiviert ist."
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:215
+msgid "Public bidding round page: bid summary title"
+msgstr "Öffentliche Beitragsrunden-Seite: Titel Zusammenfassung Gebot"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:217
+msgid "Title of the step where the bid is summarized and submitted."
+msgstr "Titel des Schrittes, in dem das Gebot zusammengefasst und abgesendet wird."
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:227
+msgid "Public bidding round page: submit bid label"
+msgstr "Öffentliche Beitragsrunden-Seite: Label Gebot abgeben"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:228
+msgid "Label of the button that submits the bid."
+msgstr "Beschriftung des Buttons zum Absenden des Gebots."
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:237
+msgid "Public bidding round page: progress title"
+msgstr "Öffentliche Beitragsrunden-Seite: Titel Zwischenstand"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:239
+msgid "Title of the public progress of the bidding round."
+msgstr "Titel des öffentlichen Zwischenstands der Beitragsrunde."
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:249
+msgid "Public bidding round page: progress text"
+msgstr "Öffentliche Beitragsrunden-Seite: Text Zwischenstand"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:251
+msgid "Text of the public progress of the bidding round."
+msgstr "Text des öffentlichen Zwischenstands der Beitragsrunde."
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:262
+msgid "Public bidding round page: progress explanation"
+msgstr "Öffentliche Beitragsrunden-Seite: Erklärung Zwischenstand"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:264
+msgid ""
+"Explains in the public progress what utilization, coverage and the average "
+"bid of the bidders mean."
+msgstr "Erklärt im öffentlichen Zwischenstand, was Auslastung, Deckung und der durchschnittliche Beitrag der Bietenden bedeuten."
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:276
+msgid "Public bidding round page: traffic light slider hint"
+msgstr "Öffentliche Beitragsrunden-Seite: Hinweis Ampel-Regler"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:278
+msgid "Explanation of the solidarity slider in the public evaluation."
+msgstr "Erklärung des Solidaritäts-Reglers in der öffentlichen Auswertung."
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:289
+msgid "Public bidding round page: levels slider hint"
+msgstr "Öffentliche Beitragsrunden-Seite: Hinweis Stufen-Regler"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:291
+msgid "Explanation of the levels slider in the public evaluation."
+msgstr "Erklärung des Stufen-Reglers in der öffentlichen Auswertung."
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:302
+msgid "Bidding round: harvest share label"
+msgstr "Beitragsrunde: Label Ernteanteil"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:304
+msgid "Label for the harvest share selection in the bid form."
+msgstr "Label für die Auswahl des Ernteanteils im Gebotsformular."
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:314
+msgid "Bidding round: variant label"
+msgstr "Beitragsrunde: Label Variante"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:316
+msgid "Label for the product variant selection in the bid form."
+msgstr "Label für die Auswahl der Produktvariante im Gebotsformular."
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:326
+msgid "Bidding round: shares label"
+msgstr "Beitragsrunde: Label Anteile"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:328
+msgid "Label for the number of shares selection in the bid form."
+msgstr "Label für die Auswahl der Anzahl Anteile im Gebotsformular."
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:338
+msgid "Bidding round: amount label"
+msgstr "Beitragsrunde: Label Betrag"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:339
+msgid "Label for the amount input in the bid form."
+msgstr "Label für die Betragseingabe im Gebotsformular."
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:348
+msgid "Bidding round: reference value hint"
+msgstr "Beitragsrunde: Hinweis Richtwert"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:349
+#, python-brace-format
+msgid "Available variable: {reference_value}"
+msgstr "Verfügbare Variable: {reference_value}"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:359
+msgid "Bidding round: simple bid explanation"
+msgstr "Beitragsrunde: Erklärung einfaches Gebot"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:361
+msgid "Explanation text for the simple bid (one amount)."
+msgstr "Erklärungstext für das einfache Gebot (ein Betrag)."
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:372
+msgid "Bidding round: traffic light bid explanation"
+msgstr "Beitragsrunde: Erklärung Ampel-Gebot"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:374
+msgid "Explanation text for the traffic light bid (three amounts)."
+msgstr "Erklärungstext für das Ampel-Gebot (drei Beträge)."
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:386
+msgid "Bidding round: simple bid explanation (multiple levels)"
+msgstr "Beitragsrunde: Erklärung einfaches Gebot (mehrere Stufen)"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:389
+msgid "Explanation text for a simple bid with several levels."
+msgstr "Erklärungstext für ein einfaches Gebot mit mehreren Stufen."
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:400
+msgid "Bidding round: level 1 label"
+msgstr "Beitragsrunde: Label Stufe 1"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:401
+msgid "Label of the first bid level in the simple bid."
+msgstr "Label der ersten Gebotsstufe im einfachen Gebot."
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:410
+msgid "Bidding round: level 2 label"
+msgstr "Beitragsrunde: Label Stufe 2"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:412
+msgid "Label of the second bid level in the simple bid."
+msgstr "Label der zweiten Gebotsstufe im einfachen Gebot."
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:422
+msgid "Bidding round: level 3 label"
+msgstr "Beitragsrunde: Label Stufe 3"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:423
+msgid "Label of the third bid level in the simple bid."
+msgstr "Label der dritten Gebotsstufe im einfachen Gebot."
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:432
+msgid "Bidding round: green label"
+msgstr "Beitragsrunde: Label Grün"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:434
+msgid "Label of the green amount (wish) in the traffic light bid."
+msgstr "Label des Grün-Betrags (Wunsch) im Ampel-Gebot."
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:444
+msgid "Bidding round: yellow label"
+msgstr "Beitragsrunde: Label Gelb"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:446
+msgid "Label of the yellow amount (satisfied) in the traffic light bid."
+msgstr "Label des Gelb-Betrags (Zufrieden) im Ampel-Gebot."
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:456
+msgid "Bidding round: red label"
+msgstr "Beitragsrunde: Label Rot"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:458
+msgid "Label of the red amount (pain threshold) in the traffic light bid."
+msgstr "Label des Rot-Betrags (Schmerzgrenze) im Ampel-Gebot."
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:468
+msgid "Bidding round: pickup location label"
+msgstr "Beitragsrunde: Label Abholort"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:470
+msgid "Label of the pickup location selection in the bid form."
+msgstr "Beschriftung der Abholort-Auswahl im Gebotsformular."
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:480
+msgid "Bidding round: yearly contribution label"
+msgstr "Beitragsrunde: Label Jahresbeitrag"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:482
+msgid "Label for the live yearly contribution calculation in the bid form."
+msgstr "Label für die Live-Berechnung des Jahresbeitrags im Gebotsformular."
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:492
+msgid "Bidding round: monthly amounts hint"
+msgstr "Beitragsrunde: Hinweis auf Monatsbeträge"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:494
+msgid "Hint telling members that all entered amounts are monthly amounts."
+msgstr "Hinweis, dass alle eingegebenen Beträge Monatsbeträge sind."
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:504
+msgid "Bidding round: monthly unit"
+msgstr "Beitragsrunde: Monatseinheit"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:506
+msgid "Unit shown next to the amount input fields, e.g. €/Monat."
+msgstr "Einheit neben den Betragsfeldern, z. B. €/Monat."
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:516
+msgid "Bidding round: confirmation text"
+msgstr "Beitragsrunde: Bestätigungstext"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:518
+msgid "Text on the confirmation screen before submitting the bid."
+msgstr "Text auf dem Bestätigungs-Screen vor dem Absenden des Gebots."
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:529
+msgid "Bidding round: success text"
+msgstr "Beitragsrunde: Erfolgstext"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:530
+msgid "Text after the bid has been saved successfully."
+msgstr "Text nach erfolgreichem Speichern des Gebots."
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:540
+msgid "Bidding round: error text"
+msgstr "Beitragsrunde: Fehlertext"
+
+#: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:541
+msgid "Text on an error while saving the bid."
+msgstr "Text bei einem Fehler beim Speichern des Gebots."
+
+#: tapir/wirgarten/templates/wirgarten/generic/filter-list.html:85
+msgid "Filter"
+msgstr ""
+
+#: tapir/wirgarten/templates/wirgarten/generic/filter-list.html:107
+msgid "Suchen"
+msgstr ""
+
+#: tapir/wirgarten/templates/wirgarten/generic/modal/form-modal-content.html:48
+#: tapir/wirgarten/templates/wirgarten/member/member_payments.html:127
+msgid "Abbrechen"
+msgstr ""
+
+#: tapir/wirgarten/templates/wirgarten/generic/modal/form-modal-content.html:49
+msgid "Speichern"
+msgstr ""
+
+#: tapir/wirgarten/templates/wirgarten/member/member_detail.html:120
+msgid "Persönliche Daten"
+msgstr ""
+
+#: tapir/wirgarten/templates/wirgarten/member/member_detail.html:163
+#: tapir/wirgarten/templates/wirgarten/member/member_filter.html:76
+msgid "Telefon"
+msgstr ""
+
+#: tapir/wirgarten/templates/wirgarten/member/member_detail.html:168
+#: tapir/wirgarten/templates/wirgarten/member/member_detail.html:186
+#: tapir/wirgarten/templates/wirgarten/member/member_detail.html:337
+#: tapir/wirgarten/templates/wirgarten/member/member_detail.html:347
+msgid "Fehlt"
+msgstr ""
+
+#: tapir/wirgarten/templates/wirgarten/member/member_detail.html:174
+msgid "Telefon 2"
+msgstr ""
+
+#: tapir/wirgarten/templates/wirgarten/member/member_detail.html:197
+msgid "nicht gesetzt"
+msgstr ""
+
+#: tapir/wirgarten/templates/wirgarten/member/member_detail.html:210
+msgid "Passwort ändern"
+msgstr ""
+
+#: tapir/wirgarten/templates/wirgarten/member/member_detail.html:227
+msgid "Zum FAQ"
+msgstr ""
+
+#: tapir/wirgarten/templates/wirgarten/member/member_detail.html:327
+msgid "Bankverbindung"
+msgstr ""
+
+#: tapir/wirgarten/templates/wirgarten/member/member_detail.html:332
+msgid "Kontoinhaber"
+msgstr ""
+
+#: tapir/wirgarten/templates/wirgarten/member/member_detail.html:352
+msgid "Zahlungsintervall"
+msgstr ""
+
+#: tapir/wirgarten/templates/wirgarten/member/member_filter.html:78
+msgid "Geschäftsguthaben"
+msgstr ""
+
+#: tapir/wirgarten/templates/wirgarten/member/member_filter.html:80
+msgid "Umsatz/Monat"
+msgstr ""
+
+#: tapir/wirgarten/templates/wirgarten/member/member_filter.html:81
+msgid "Solidarbeitrag"
+msgstr ""
+
+#: tapir/wirgarten/templates/wirgarten/member/member_filter.html:83
+msgid "Eintritt"
+msgstr ""
+
+#: tapir/wirgarten/templates/wirgarten/member/member_filter.html:84
+msgid "Ausstieg"
+msgstr ""
+
+#: tapir/wirgarten/templates/wirgarten/member/member_payments.html:17
+#: tapir/wirgarten/templates/wirgarten/member/member_payments.html:171
+msgid "Datum"
+msgstr ""
+
+#: tapir/wirgarten/templates/wirgarten/member/member_payments.html:18
+msgid "Mandatsreferenz"
+msgstr ""
+
+#: tapir/wirgarten/templates/wirgarten/member/member_payments.html:19
+#: tapir/wirgarten/templates/wirgarten/member/member_payments.html:179
+#: tapir/wirgarten/templates/wirgarten/subscription/subscription_filter.html:40
+msgid "Betrag"
+msgstr ""
+
+#: tapir/wirgarten/templates/wirgarten/member/member_payments.html:54
+#: tapir/wirgarten/templates/wirgarten/subscription/subscription_filter.html:86
+msgid "Manuell editiert!"
+msgstr ""
+
+#: tapir/wirgarten/templates/wirgarten/member/member_payments.html:105
+msgid "Betrag bearbeiten"
+msgstr ""
+
+#: tapir/wirgarten/templates/wirgarten/member/member_payments.html:128
+msgid "Betrag ändern"
+msgstr ""
+
+#: tapir/wirgarten/templates/wirgarten/member/member_payments.html:175
+msgid "Mandat"
+msgstr ""
+
+#: tapir/wirgarten/templates/wirgarten/member/member_payments.html:180
+msgid "(berechnet)"
+msgstr ""
+
+#: tapir/wirgarten/templates/wirgarten/product/period_product_cfg_view.html:73
+msgid "Produkttypen"
+msgstr ""
+
+#: tapir/wirgarten/templates/wirgarten/product/period_product_cfg_view.html:126
+msgid "Produkte"
+msgstr ""
+
+#: tapir/wirgarten/templates/wirgarten/product/period_product_cfg_view.html:199
+msgid "Details"
+msgstr "Details"
+
+#: tapir/wirgarten/templates/wirgarten/subscription/subscription_filter.html:35
+msgid "Abgeschlossen am"
+msgstr ""
+
+#: tapir/wirgarten/templates/wirgarten/subscription/subscription_filter.html:36
+msgid "Vertragslaufzeit"
+msgstr ""
+
+#: tapir/wirgarten/templates/wirgarten/subscription/subscription_filter.html:37
+msgid "Vertrag"
+msgstr ""
+
+#: tapir/wirgarten/templates/wirgarten/subscription/subscription_filter.html:39
+msgid "Menge"
+msgstr ""
+
+#: tapir/wirgarten/validators.py:28
+msgid "The growing periods must not overlap! Colliding period:"
+msgstr ""
+
+#: tapir/wirgarten/validators.py:42
+msgid "The start date must be before the end date!"
+msgstr ""
+
+#: tapir/wirgarten/validators.py:47
+msgid "The start date must not be the same as the end date!"
+msgstr ""
+
+#: tapir/wirgarten/views/contracts.py:66
+msgid "Vertragsart"
+msgstr ""
+
+#: tapir/wirgarten/views/contracts.py:71
+#: tapir/wirgarten/views/member/list/member_list.py:162
+msgid "Sortierung"
+msgstr ""
+
+#: tapir/wirgarten/views/contracts.py:95
+msgid "Nur Verträge in der Probezeit anzeigen"
+msgstr ""
+
+#: tapir/wirgarten/views/contracts.py:101
+msgid "Nur Beitragsbefreite Verträge anzeigen"
+msgstr ""
+
+#: tapir/wirgarten/views/contracts.py:107
+msgid "Innerhalb der Vertragsperiode beendete Verträge anzeigen"
+msgstr ""
+
+#: tapir/wirgarten/views/contracts.py:114
+msgid ""
+"Nur Verträge mit manuell deaktivierter Probezeit oder manuell festgelegter "
+"Probezeit-Dauer anzeigen"
+msgstr ""
