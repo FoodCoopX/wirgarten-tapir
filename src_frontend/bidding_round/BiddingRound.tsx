@@ -129,7 +129,6 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({
 
   const [orderLoading, setOrderLoading] = useState(false);
   const [confirmationText, setConfirmationText] = useState("");
-  const [confirmationShowsLogin, setConfirmationShowsLogin] = useState(false);
 
   const [evaluation, setEvaluation] =
     useState<BiddingRoundPublicEvaluation | null>(null);
@@ -289,7 +288,6 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({
       })
       .then(() => {
         setConfirmationText(data.texts.bid.successText);
-        setConfirmationShowsLogin(false);
         setCurrentStep("bidding_round_confirmation");
       })
       .catch(async (error) => {
@@ -496,12 +494,7 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({
           />
         );
       case "bidding_round_confirmation":
-        return (
-          <BiddingRoundConfirmationStep
-            contentHtml={confirmationText}
-            showLoginButton={confirmationShowsLogin}
-          />
-        );
+        return <BiddingRoundConfirmationStep contentHtml={confirmationText} />;
       default:
         return getProductTypeStepContent(step);
     }

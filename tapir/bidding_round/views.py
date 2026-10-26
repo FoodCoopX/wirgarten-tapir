@@ -1,6 +1,7 @@
 import csv
 from decimal import Decimal
 
+from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.exceptions import ValidationError
 from django.db.models import Exists, OuterRef
 from django.http import Http404, HttpResponse
@@ -12,8 +13,10 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework.throttling import AnonRateThrottle
+from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 from rest_framework.views import APIView
+
+from tapir.wirgarten.constants import Permission
 
 from tapir.bidding_round.config import ACTIVE
 from tapir.bidding_round.models import Bid, BiddingRound
@@ -85,24 +88,26 @@ class BiddingRoundView(TemplateView):
         return context_data
 
 
-class BiddingRoundConfigView(TemplateView):
+class BiddingRoundConfigView(PermissionRequiredMixin, TemplateView):
+    permission_required = Permission.Coop.MANAGE
     template_name = "bidding_round/bidding_round_config.html"
 
-    def get(self, request, *args, **kwargs):
+    def dispatch(self, request, *args, **kwargs):
         cache = {}
         if not BiddingRoundViewService.is_feature_flag_enabled(cache):
             raise Http404
-        return super().get(request, *args, **kwargs)
+        return super().dispatch(request, *args, **kwargs)
 
 
-class BiddingRoundResultsView(TemplateView):
+class BiddingRoundResultsView(PermissionRequiredMixin, TemplateView):
+    permission_required = Permission.Coop.MANAGE
     template_name = "bidding_round/bidding_round_results.html"
 
-    def get(self, request, *args, **kwargs):
+    def dispatch(self, request, *args, **kwargs):
         cache = {}
         if not BiddingRoundViewService.is_feature_flag_enabled(cache):
             raise Http404
-        return super().get(request, *args, **kwargs)
+        return super().dispatch(request, *args, **kwargs)
 
 
 # --- Public API ---
@@ -152,9 +157,6 @@ class PublicDataView(APIView):
                 else []
             ),
             "bid_options": BiddingRoundViewService.build_bid_options(cache),
-            "membership_included_in_product_type": (
-                BiddingRoundViewService.is_membership_included_in_product_type(cache)
-            ),
             "is_authenticated": request.user.is_authenticated,
         }
 
@@ -203,9 +205,16 @@ class BiddingRoundCapacityCheckThrottle(AnonRateThrottle):
     rate = "120/min"
 
 
+class BiddingRoundCapacityCheckUserThrottle(UserRateThrottle):
+    rate = "240/min"
+
+
 class BiddingRoundCapacityCheckView(APIView):
     permission_classes = [AllowAny]
-    throttle_classes = [BiddingRoundCapacityCheckThrottle]
+    throttle_classes = [
+        BiddingRoundCapacityCheckThrottle,
+        BiddingRoundCapacityCheckUserThrottle,
+    ]
 
     @extend_schema(
         request=BiddingRoundCapacityCheckRequestSerializer,
@@ -795,7 +804,11 @@ class ConfirmBidsView(APIView):
         return Response(
             [
                 BiddingRoundViewService.serialize_bid(bid, effective_position, cache)
-                for bid in bidding_round.bids.all()
+                for bid in bidding_round.bids.prefetch_related(
+                    "items__product",
+                    "items__round_product__product_type",
+                    "pickup_location",
+                )
             ],
             status=status.HTTP_200_OK,
         )
@@ -994,7 +1007,9 @@ class ExportCsvView(APIView):
         effective_position = BiddingRoundStatsService.get_default_position(
             bidding_round, cache=cache
         )
-        for bid in bidding_round.bids.select_related("member", "pickup_location"):
+        for bid in bidding_round.bids.select_related(
+            "member", "pickup_location"
+        ).prefetch_related("items__product", "items__round_product__product_type"):
             for item in bid.items.select_related(
                 "product", "round_product__product_type"
             ):

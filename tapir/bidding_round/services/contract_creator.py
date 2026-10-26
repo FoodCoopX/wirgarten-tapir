@@ -73,9 +73,12 @@ class ContractCreator:
                 % {"names": ", ".join(str(bid.member) for bid in unconfirmed_bids)}
             )
 
-        position = BiddingRoundStatsService.get_default_position(
-            bidding_round, cache=cache
-        )
+        if bid_level is not None:
+            position = BiddingRoundStatsService.get_level_position(bid_level)
+        else:
+            position = BiddingRoundStatsService.get_default_position(
+                bidding_round, cache=cache
+            )
 
         errors = []
         created_subscriptions = []

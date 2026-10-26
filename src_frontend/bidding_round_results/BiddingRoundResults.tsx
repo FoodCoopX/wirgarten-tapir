@@ -140,17 +140,16 @@ function computeUpliftedBidReached(
   let total = 0;
   for (const entry of members) {
     for (const item of entry.bid?.items ?? []) {
-      const a1 = item.amount1 != null ? Number(item.amount1) : null;
-      const a2 = item.amount2 != null ? Number(item.amount2) : null;
-      const a3 = item.amount3 != null ? Number(item.amount3) : null;
-      const base = a2 ?? a1 ?? a3 ?? 0;
-      const red = a3 ?? base;
-      const baseAmount = itemAmountAtPosition(item, position);
-      const value = applyToBids
-        ? isTrafficLight
-          ? Math.min(baseAmount * factor, red)
-          : baseAmount * factor
-        : baseAmount;
+      const levels = itemLevels(item);
+      const value = effectiveAmount(
+        levels.green,
+        levels.yellow,
+        levels.red,
+        position,
+        applyToBids,
+        factor,
+        isTrafficLight,
+      );
       total += value * item.quantity * 12;
     }
   }
@@ -335,8 +334,6 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
   const [createMemberId, setCreateMemberId] = useState("");
   const [bidItems, setBidItems] = useState<BidItemDraft[]>([]);
   const [bidPickupLocationId, setBidPickupLocationId] = useState("");
-  const [bidPickupLocationFallbackId, setBidPickupLocationFallbackId] =
-    useState("");
   const [bidAdminConfirmed, setBidAdminConfirmed] = useState(false);
   const [bidEnteredByAdmin, setBidEnteredByAdmin] = useState(true);
   const [savingBid, setSavingBid] = useState(false);
@@ -650,7 +647,6 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
     setBidAdminConfirmed(false);
     setBidEnteredByAdmin(true);
     setBidPickupLocationId("");
-    setBidPickupLocationFallbackId("");
     setBidItems(emptyBidItems());
     setShowBidModal(true);
   };
@@ -664,7 +660,6 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
     setBidAdminConfirmed(!!bid.adminConfirmed);
     setBidEnteredByAdmin(!!bid.enteredByAdmin);
     setBidPickupLocationId(bid.pickupLocationId ?? "");
-    setBidPickupLocationFallbackId(bid.pickupLocationFallbackId ?? "");
     setBidItems(
       (bid.items ?? []).map((item: any) => ({
         roundProductId: item.roundProductId,
@@ -700,7 +695,6 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
         amount3: item.amount3 ?? null,
       })),
       pickupLocationId: bidPickupLocationId || null,
-      pickupLocationFallbackId: bidPickupLocationFallbackId || null,
       enteredByAdmin: bidEnteredByAdmin,
       adminConfirmed: bidAdminConfirmed,
     };
@@ -975,14 +969,9 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
         backgroundColor: "rgba(13, 110, 253, 0.6)",
       },
       {
-        label: "Nachfrage (1. Wahl)",
+        label: "Nachfrage",
         data: pickupFill.map((entry: any) => Number(entry.demand)),
         backgroundColor: "rgba(25, 135, 84, 0.6)",
-      },
-      {
-        label: "Nachfrage (2. Wahl)",
-        data: pickupFill.map((entry: any) => Number(entry.fallbackDemand)),
-        backgroundColor: "rgba(255, 193, 7, 0.6)",
       },
     ],
   };
@@ -1867,8 +1856,7 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
                       <tr>
                         <th>{"Verteilstation"}</th>
                         <th>{"Kapazität"}</th>
-                        <th>{"Nachfrage 1. Wahl"}</th>
-                        <th>{"Nachfrage 2. Wahl"}</th>
+                        <th>{"Nachfrage"}</th>
                         <th>{"Füllstand"}</th>
                       </tr>
                     </thead>
@@ -1878,7 +1866,6 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
                           <td>{entry.pickupLocationName}</td>
                           <td>{formatNumber(entry.capacity)}</td>
                           <td>{formatNumber(entry.demand)}</td>
-                          <td>{formatNumber(entry.fallbackDemand)}</td>
                           <td style={{ minWidth: "140px" }}>
                             <ProgressBar
                               now={Math.min(entry.fillPercent ?? 0, 100)}
@@ -2122,11 +2109,6 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
                         {entry.bid ? (
                           <>
                             <div>{entry.bid.pickupLocationName || "–"}</div>
-                            {entry.bid.pickupLocationFallbackName && (
-                              <div className="text-muted">
-                                {entry.bid.pickupLocationFallbackName}
-                              </div>
-                            )}
                           </>
                         ) : entry.isAutoRenewed ? (
                           entry.autoRenewedPickupLocationName || "–"
@@ -2142,11 +2124,6 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
                           : "–"}
                       </td>
                       <td>
-                        {entry.bid?.isNewMember && (
-                          <span className="badge bg-info text-dark me-1">
-                            {"Neues Mitglied"}
-                          </span>
-                        )}
                         {entry.bid?.enteredByAdmin && (
                           <span className="badge bg-secondary me-1">
                             {"von Admin erfasst"}
@@ -2193,7 +2170,6 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
                               setBidAdminConfirmed(false);
                               setBidEnteredByAdmin(true);
                               setBidPickupLocationId("");
-                              setBidPickupLocationFallbackId("");
                               setBidItems(emptyBidItems());
                               setShowBidModal(true);
                             }}
@@ -2602,22 +2578,6 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
                     value={bidPickupLocationId}
                     onChange={(event) =>
                       setBidPickupLocationId(event.target.value)
-                    }
-                  >
-                    <option value={""}>–</option>
-                    {pickupLocations.map((location: any) => (
-                      <option key={location.id} value={location.id}>
-                        {location.name}
-                      </option>
-                    ))}
-                  </Form.Select>
-                </Form.Group>
-                <Form.Group className={"mt-2"}>
-                  <Form.Label>{"Abholort (2. Wahl)"}</Form.Label>
-                  <Form.Select
-                    value={bidPickupLocationFallbackId}
-                    onChange={(event) =>
-                      setBidPickupLocationFallbackId(event.target.value)
                     }
                   >
                     <option value={""}>–</option>

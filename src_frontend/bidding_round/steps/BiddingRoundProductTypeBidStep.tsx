@@ -441,7 +441,7 @@ const BiddingRoundProductTypeBidStep: React.FC<
                 ),
               )
             : amountKeys.map((key) => {
-                const level = Number.parseInt(key.slice("amount_".length));
+                const level = Number.parseInt(key.replace("amount", ""));
                 return renderAmountField(
                   key,
                   getBidLevelLabel(level, bidLevels, texts),

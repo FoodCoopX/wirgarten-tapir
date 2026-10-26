@@ -102,12 +102,6 @@ export interface PublicDataResponse {
    * @type {boolean}
    * @memberof PublicDataResponse
    */
-  membershipIncludedInProductType?: boolean;
-  /**
-   *
-   * @type {boolean}
-   * @memberof PublicDataResponse
-   */
   isAuthenticated?: boolean;
   /**
    *
@@ -169,10 +163,6 @@ export function PublicDataResponseFromJSONTyped(
       json["bid_options"] == null
         ? undefined
         : BidOptionsFromJSON(json["bid_options"]),
-    membershipIncludedInProductType:
-      json["membership_included_in_product_type"] == null
-        ? undefined
-        : json["membership_included_in_product_type"],
     isAuthenticated:
       json["is_authenticated"] == null ? undefined : json["is_authenticated"],
     currentPickupLocationId:
@@ -211,8 +201,6 @@ export function PublicDataResponseToJSONTyped(
             PickupLocationWithChargeToJSON,
           ),
     bid_options: BidOptionsToJSON(value["bidOptions"]),
-    membership_included_in_product_type:
-      value["membershipIncludedInProductType"],
     is_authenticated: value["isAuthenticated"],
     current_pickup_location_id: value["currentPickupLocationId"],
     bid: BidToJSON(value["bid"]),

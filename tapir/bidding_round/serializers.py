@@ -259,7 +259,6 @@ class PublicDataResponseSerializer(serializers.Serializer):
     biddable_product = BiddableProductSerializer(allow_null=True, required=False)
     pickup_locations = PickupLocationWithChargeSerializer(many=True, required=False)
     bid_options = BidOptionsSerializer(required=False)
-    membership_included_in_product_type = serializers.BooleanField(required=False)
     is_authenticated = serializers.BooleanField(required=False)
     current_pickup_location_id = serializers.CharField(allow_null=True, required=False)
     bid = BidSerializer(allow_null=True, required=False)

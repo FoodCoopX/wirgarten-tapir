@@ -320,6 +320,25 @@ class TestContractCreator(TapirIntegrationTest):
             link.subscription_id,
         )
 
+    def test_createContracts_withBidLevel_usesLevelAmount(self, mock_capacity):
+        mock_capacity.return_value = []
+        round_ = create_closed_round(position=Decimal("50"))
+        round_.bid_levels = 3
+        round_.save()
+        bid, _ = self._create_bid(
+            round_,
+            amount_1=Decimal("60.00"),
+            amount_2=Decimal("80.00"),
+            amount_3=Decimal("100.00"),
+        )
+
+        ContractCreator.create_contracts_from_bids(
+            round_, actor=bid.member, cache={}, bid_level=3
+        )
+
+        contribution = SolidarityContribution.objects.get(member=bid.member)
+        self.assertEqual(Decimal("40.00"), contribution.amount)
+
 
 class TestContractCreatorCapacityWithWaitingList(TapirIntegrationTest):
     """The real global capacity check must not be blocked by the waiting list

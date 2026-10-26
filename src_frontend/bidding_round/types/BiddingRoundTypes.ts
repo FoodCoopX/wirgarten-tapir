@@ -145,7 +145,6 @@ export type BiddingRoundPublicData = {
   pickupLocations: BiddingRoundPickupLocation[];
   bidOptions: BiddingRoundBidOptions;
   isAuthenticated: boolean;
-  membershipIncludedInProductType?: boolean;
   currentPickupLocationId?: string | null;
   bid?: BiddingRoundBid | null;
 };

@@ -138,8 +138,19 @@ class BiddingRoundStatsService:
 
     @classmethod
     def _apply_surcharge_to_amount(cls, amount, bid_item, bidding_round) -> Decimal:
-        amount = amount * cls.get_surcharge_factor(bidding_round)
-        if bidding_round.bidding_procedure == TRAFFIC_LIGHT:
+        return cls._apply_surcharge_factor(
+            amount,
+            bid_item,
+            bidding_round.bidding_procedure == TRAFFIC_LIGHT,
+            cls.get_surcharge_factor(bidding_round),
+        )
+
+    @classmethod
+    def _apply_surcharge_factor(
+        cls, amount, bid_item, is_traffic_light: bool, factor
+    ) -> Decimal:
+        amount = amount * factor
+        if is_traffic_light:
             amount = min(amount, cls._get_red_amount(bid_item))
         return amount
 
@@ -387,10 +398,12 @@ class BiddingRoundStatsService:
             for bid_item in BidItem.objects.filter(
                 bid__round=bidding_round
             ).select_related("product"):
-                amount = cls._get_amount_for_position(bid_item, position)
-                amount = amount * factor
-                if is_traffic_light:
-                    amount = min(amount, cls._get_red_amount(bid_item))
+                amount = cls._apply_surcharge_factor(
+                    cls._get_amount_for_position(bid_item, position),
+                    bid_item,
+                    is_traffic_light,
+                    factor,
+                )
                 bid_reached += amount * bid_item.quantity * 12
         else:
             bid_reached = base_bid_reached
@@ -770,15 +783,36 @@ class BiddingRoundStatsService:
         if product_type is None:
             return position
 
-        position["reached_per_year"] = sum(
-            (
-                BiddingRoundDeliveryChargeService.get_yearly_delivery_charge(
-                    pickup_location_id=bid.pickup_location_id,
+        bids_per_pickup_location = {}
+        for bid in bidding_round.bids.all():
+            if bid.pickup_location_id is None:
+                continue
+            bids_per_pickup_location[bid.pickup_location_id] = (
+                bids_per_pickup_location.get(bid.pickup_location_id, 0) + 1
+            )
+
+        cache_key = (
+            "bidding_round_delivery_charge_per_location",
+            bidding_round.id,
+            product_type.id,
+        )
+        charge_by_location = cache.get(cache_key)
+        if charge_by_location is None:
+            charge_by_location = {
+                pickup_location_id: BiddingRoundDeliveryChargeService.get_yearly_delivery_charge(
+                    pickup_location_id=pickup_location_id,
                     product_type=product_type,
                     growing_period=bidding_round.growing_period,
                     cache=cache,
                 )
-                for bid in bidding_round.bids.all()
+                for pickup_location_id in bids_per_pickup_location
+            }
+            cache[cache_key] = charge_by_location
+
+        position["reached_per_year"] = sum(
+            (
+                charge_by_location.get(pickup_location_id, Decimal("0")) * count
+                for pickup_location_id, count in bids_per_pickup_location.items()
             ),
             Decimal("0"),
         )
@@ -787,7 +821,15 @@ class BiddingRoundStatsService:
 
     @classmethod
     def build_results_table(cls, bidding_round, cache):
-        bids = list(bidding_round.bids.select_related("member", "round").all())
+        bids = list(
+            bidding_round.bids.select_related("member", "round")
+            .prefetch_related(
+                "items__product",
+                "items__round_product__product_type",
+                "pickup_location",
+            )
+            .all()
+        )
         bids_by_member_id = {bid.member_id: bid for bid in bids}
         members = list(Member.objects.all())
 
@@ -878,7 +920,7 @@ class BiddingRoundStatsService:
             if subscription.product.type_id not in product_type_ids:
                 continue
             reference_value = cls.get_reference_value(
-                bidding_round, subscription.product
+                bidding_round, subscription.product, cache=cache
             )
             size = cls._get_product_size(
                 subscription.product, reference_date, cache=cache
@@ -916,6 +958,9 @@ class BiddingRoundStatsService:
 
     @classmethod
     def _get_auto_renewed_contributions(cls, bidding_round, cache):
+        product_type_ids = set(
+            bidding_round.products.values_list("product_type_id", flat=True)
+        )
         bid_member_ids = set(bidding_round.bids.values_list("member_id", flat=True))
         try:
             subscriptions = AutomaticSubscriptionRenewalService.get_subscriptions_that_will_be_renewed(
@@ -930,8 +975,10 @@ class BiddingRoundStatsService:
         for subscription in subscriptions:
             if subscription.member_id in bid_member_ids:
                 continue
+            if subscription.product.type_id not in product_type_ids:
+                continue
             reference_value = cls.get_reference_value(
-                bidding_round, subscription.product
+                bidding_round, subscription.product, cache=cache
             )
             size = cls._get_product_size(
                 subscription.product, reference_date, cache=cache
@@ -945,7 +992,19 @@ class BiddingRoundStatsService:
         return contributions
 
     @classmethod
-    def get_reference_value(cls, bidding_round, product) -> Decimal:
+    def get_reference_value(cls, bidding_round, product, cache=None) -> Decimal:
+        if cache is not None:
+            cache_key = ("bidding_round_reference_values", bidding_round.id)
+            reference_values = cache.get(cache_key)
+            if reference_values is None:
+                reference_values = {
+                    price.product_id: price.reference_value
+                    for price in BiddingRoundProductPrice.objects.filter(
+                        round_product__round=bidding_round
+                    )
+                }
+                cache[cache_key] = reference_values
+            return reference_values.get(product.id) or Decimal("0")
         price = BiddingRoundProductPrice.objects.filter(
             round_product__round=bidding_round, product=product
         ).first()

@@ -25,8 +25,6 @@ interface BiddingRoundSummaryStepProps {
   biddableProduct: BiddingRoundProductType | null;
   pickupLocations: BiddingRoundPickupLocation[];
   pickupLocationId: string;
-  membershipPerYear?: number;
-  membershipHint?: string | null;
   texts: BiddingRoundTexts;
   submitBid: () => void;
   submitLabel?: string;
@@ -45,8 +43,6 @@ const BiddingRoundSummaryStep: React.FC<BiddingRoundSummaryStepProps> = ({
   biddableProduct,
   pickupLocations,
   pickupLocationId,
-  membershipPerYear = 0,
-  membershipHint = null,
   texts,
   submitBid,
   submitLabel,
@@ -75,9 +71,7 @@ const BiddingRoundSummaryStep: React.FC<BiddingRoundSummaryStepProps> = ({
     amountValue: string | null | undefined,
   ): number | null => {
     const yearly = yearlyAmountOf(item, amountValue);
-    return yearly === null
-      ? null
-      : yearly + deliveryChargePerYear + membershipPerYear;
+    return yearly === null ? null : yearly + deliveryChargePerYear;
   };
 
   const renderYearlyBreakdown = (
@@ -98,11 +92,6 @@ const BiddingRoundSummaryStep: React.FC<BiddingRoundSummaryStepProps> = ({
           <div className={"text-end text-muted small"}>
             + {"Lieferzuschlag pro Jahr"}:{" "}
             {formatCurrency(deliveryChargePerYear)}
-          </div>
-        )}
-        {membershipPerYear > 0 && (
-          <div className={"text-end text-muted small"}>
-            + {"Mitgliedschaft pro Jahr"}: {formatCurrency(membershipPerYear)}
           </div>
         )}
         <div className={"text-end small fw-semibold"}>
@@ -193,10 +182,6 @@ const BiddingRoundSummaryStep: React.FC<BiddingRoundSummaryStepProps> = ({
               <span>{primaryLocation.name}</span>
             </div>
           </div>
-        )}
-
-        {membershipHint && (
-          <p className={"text-muted small mb-0"}>{membershipHint}</p>
         )}
 
         <p className={"text-center"}>{texts.bid.confirmText}</p>

@@ -24,10 +24,7 @@ from tapir.wirgarten.models import (
     Subscription,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.service.products import (
-    get_active_subscriptions,
-    get_product_price,
-)
+from tapir.wirgarten.service.products import get_active_subscriptions
 from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.utils import get_now, get_today
 

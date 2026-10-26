@@ -16783,8 +16783,6 @@ components:
             $ref: '#/components/schemas/PickupLocationWithCharge'
         bid_options:
           $ref: '#/components/schemas/BidOptions'
-        membership_included_in_product_type:
-          type: boolean
         is_authenticated:
           type: boolean
         current_pickup_location_id:

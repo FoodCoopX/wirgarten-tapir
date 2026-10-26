@@ -256,7 +256,7 @@ class BiddingRoundViewService:
         )
         for subscription in subscriptions:
             reference_value = BiddingRoundStatsService.get_reference_value(
-                bidding_round, subscription.product
+                bidding_round, subscription.product, cache=cache
             )
             product_price = get_product_price(
                 subscription.product, reference_date, cache=cache
@@ -270,17 +270,16 @@ class BiddingRoundViewService:
                 product_price.price if product_price is not None else Decimal("0")
             ) * subscription.quantity
             is_created = subscription.id in linked_subscription_ids
-            row = rows.setdefault(
-                subscription.member_id,
-                cls._new_contract_row(
+            if subscription.member_id not in rows:
+                rows[subscription.member_id] = cls._new_contract_row(
                     member=subscription.member,
                     type_="auto_renewed",
                     pickup_location_name=cls._get_member_pickup_location_name(
                         subscription.member_id, reference_date, cache
                     ),
                     is_created=is_created,
-                ),
-            )
+                )
+            row = rows[subscription.member_id]
             row["is_created"] = row["is_created"] or is_created
             row["items"].append(cls._build_contract_item(subscription))
             row["standard_amount_per_month"] += standard_amount_per_month

@@ -78,13 +78,17 @@ class NonBidderContributionService:
                 bidding_round=bidding_round,
                 actor=actor,
                 cache=cache,
+                rate=rate,
             ):
                 applied.append(member_id)
         return applied
 
     @classmethod
-    def apply_floor_to_member(cls, member, bidding_round, actor, cache) -> bool:
-        rate = cls._get_rate(bidding_round, cache)
+    def apply_floor_to_member(
+        cls, member, bidding_round, actor, cache, rate=None
+    ) -> bool:
+        if rate is None:
+            rate = cls._get_rate(bidding_round, cache)
         if rate is None:
             return False
 
@@ -180,6 +184,9 @@ class NonBidderContributionService:
             ParameterKeys.BIDDING_ROUND_NON_BIDDERS_MIN_AVERAGE, cache=cache
         ):
             return None
-        return BiddingRoundStatsService.build_non_bidder_rate_per_share(
-            bidding_round, cache=cache
-        )
+        cache_key = ("bidding_round_non_bidder_rate", bidding_round.id)
+        if cache_key not in cache:
+            cache[cache_key] = BiddingRoundStatsService.build_non_bidder_rate_per_share(
+                bidding_round, cache=cache
+            )
+        return cache[cache_key]

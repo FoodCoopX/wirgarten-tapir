@@ -4,7 +4,7 @@ from decimal import Decimal
 from dateutil.relativedelta import relativedelta
 from django.utils.translation import gettext
 
-from tapir.bidding_round.config import CLOSED, SOLIDARITY
+from tapir.bidding_round.config import CLOSED
 from tapir.bidding_round.models import BiddingRoundCreatedSubscription
 from tapir.bidding_round.services.bidding_round_view_service import (
     BiddingRoundViewService,

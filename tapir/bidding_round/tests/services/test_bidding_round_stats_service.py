@@ -34,6 +34,7 @@ from tapir.wirgarten.tests.factories import (
     PickupLocationFactory,
     ProductFactory,
     ProductPriceFactory,
+    ProductTypeFactory,
     SubscriptionFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
@@ -345,16 +346,19 @@ class TestBiddingRoundStatsService(TapirIntegrationTest):
     def test_buildExtraPositions_deliveryCharge_sumsOverBids(self, mock_charge):
         round_ = create_open_round()
         round_product, product = create_round_product_with_product(round_)
+        pickup_location = PickupLocationFactory.create()
         BiddingRoundService.save_bid(
             MemberFactory.create(),
             round_,
             [build_item(round_product, product)],
+            pickup_location_id=pickup_location.id,
             cache={},
         )
         BiddingRoundService.save_bid(
             MemberFactory.create(),
             round_,
             [build_item(round_product, product)],
+            pickup_location_id=pickup_location.id,
             cache={},
         )
 
@@ -961,3 +965,25 @@ class TestBiddingRoundStatsService(TapirIntegrationTest):
         self.assertEqual("3", entry["demand"])
         self.assertTrue(entry["is_full"])
         self.assertAlmostEqual(100.0, entry["fill_percent"])
+
+    @patch.object(
+        AutomaticSubscriptionRenewalService,
+        "get_subscriptions_that_will_be_renewed",
+    )
+    def test_buildFinancingProjection_autoRenewedOfOtherProductType_ignored(
+        self, mock_get_subscriptions
+    ):
+        round_ = create_open_round()
+        create_round_product_with_product(round_)
+        other_product_type = ProductTypeFactory.create()
+        other_product = ProductFactory.create(type=other_product_type)
+        mock_get_subscriptions.return_value = {
+            SubscriptionFactory.create(product=other_product, quantity=2)
+        }
+
+        projection = BiddingRoundStatsService.build_financing_projection(
+            round_, cache={}, include_auto_renewed=True
+        )
+
+        self.assertEqual(Decimal("0"), projection["auto_shares"])
+        self.assertEqual(Decimal("0"), projection["auto_renew_per_year"])
