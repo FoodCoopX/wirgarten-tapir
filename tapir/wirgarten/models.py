@@ -799,6 +799,10 @@ class Payment(TapirModel):
         return f"{format_currency(self.amount)} €, due_date:{self.due_date}, type:{self.type}, range:{self.subscription_payment_range_start} to {self.subscription_payment_range_end}, member:{self.mandate_ref.member}"
 
 
+# Shown instead of the transfer partner after that member was deleted
+FORMER_MEMBER = "ehemaliges Mitglied"
+
+
 class CoopShareTransaction(TapirModel, Payable, AdminConfirmableMixin):
     """
     The CoopShareTransaction model represents a transaction related to cooperative shares. It provides a way to track various types of transactions that can occur within a cooperative, such as purchasing, canceling, transferring out, and transferring in shares.
@@ -901,9 +905,9 @@ class CoopShareTransaction(TapirModel, Payable, AdminConfirmableMixin):
         elif self.transaction_type == self.CoopShareTransactionType.CANCELLATION:
             suffix = "gekündigt"
         elif self.transaction_type == self.CoopShareTransactionType.TRANSFER_OUT:
-            suffix = f"übertragen an {self.transfer_member}"
+            suffix = f"übertragen an {self.transfer_member or FORMER_MEMBER}"
         elif self.transaction_type == self.CoopShareTransactionType.TRANSFER_IN:
-            suffix = f"empfangen von {self.transfer_member}"
+            suffix = f"empfangen von {self.transfer_member or FORMER_MEMBER}"
         else:
             suffix = f"Unknown transaction type ({self.transaction_type})"
         return f"{prefix} {suffix} - Valid at:{self.valid_at} - Member:{self.member}"

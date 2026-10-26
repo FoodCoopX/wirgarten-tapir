@@ -377,6 +377,11 @@ class DeleteMemberApiView(APIView):
             ]
             for model in models:
                 model.objects.filter(member=member).delete()
+            # The other member keeps their own booking, only the reference to the
+            # deleted person goes
+            CoopShareTransaction.objects.filter(transfer_member=member).update(
+                transfer_member=None
+            )
             EmailConfigurationDispatch.objects.filter(
                 is_sent=False,
                 override_recipients__0__recipient_id_in_base_queryset=member.id,

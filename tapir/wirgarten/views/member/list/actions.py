@@ -24,7 +24,7 @@ from tapir.solidarity_contribution.services.member_solidarity_contribution_servi
     MemberSolidarityContributionService,
 )
 from tapir.wirgarten.constants import Permission
-from tapir.wirgarten.models import CoopShareTransaction, Member
+from tapir.wirgarten.models import FORMER_MEMBER, CoopShareTransaction, Member
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.file_export import begin_csv_string
 from tapir.wirgarten.service.member import (
@@ -233,18 +233,31 @@ def export_coop_member_list(request, **kwargs):
                 else "von"
             )
 
+        def get_transfer_partner_name(t: CoopShareTransaction):
+            if t.transfer_member is None:  # the partner was deleted
+                return FORMER_MEMBER
+            return f"{t.transfer_member.first_name} {t.transfer_member.last_name}"
+
+        def get_transfer_partner_number(t: CoopShareTransaction):
+            if t.transfer_member is None:
+                return ""
+            number = MemberNumberService.format_member_number(
+                t.transfer_member.member_no, cache=cache
+            )
+            return f" (Nr. {number})"
+
         data[KEY_COOP_SHARES_TRANSFER_EURO] = transfer_euro_string
         data[KEY_COOP_SHARES_TRANSFER_FROM_TO] = "\n".join(
             map(
                 lambda x: f"Übertragung {format_currency(abs(x.quantity) * get_parameter_value(
                     ParameterKeys.COOP_SHARE_PRICE, cache=cache
-                ))} € {get_transaction_verb(x)} {x.transfer_member.first_name} {x.transfer_member.last_name} (Nr. {MemberNumberService.format_member_number(x.transfer_member.member_no, cache=cache)})",
+                ))} € {get_transaction_verb(x)} {get_transfer_partner_name(x)}{get_transfer_partner_number(x)}",
                 transfers,
             )
         )
         data[KEY_COOP_SHARES_TRANSFER_DATE] = "\n".join(
             map(
-                lambda x: f"{get_transaction_verb(x)} {x.transfer_member.first_name} {x.transfer_member.last_name}: {format_date(x.valid_at)}",
+                lambda x: f"{get_transaction_verb(x)} {get_transfer_partner_name(x)}: {format_date(x.valid_at)}",
                 transfers,
             )
         )
