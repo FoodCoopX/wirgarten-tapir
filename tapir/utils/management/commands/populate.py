@@ -1,5 +1,6 @@
 import sys
 
+from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
 from tapir.utils.config import Organization
@@ -37,8 +38,9 @@ class Command(BaseCommand):
         if options["clear"]:
             DataGenerator.clear()
         elif options["reset_all"]:
+            organization = self.resolve_organization(options)
             DataGenerator.clear()
-            DataGenerator.generate_all(self.resolve_organization(options))
+            DataGenerator.generate_all(organization)
         else:
             self.print_help("manage.py", "populate")
             sys.exit(1)
@@ -50,9 +52,15 @@ class Command(BaseCommand):
             return Organization.BIOTOP
 
         try:
-            return Organization[str(name).upper()]
+            organization = Organization[str(name).upper()]
         except KeyError:
             raise CommandError(
                 f"Unknown organization '{name}'. "
                 f"Valid names: {valid_organization_names()}"
             )
+
+        if organization is Organization.BAKERY and not settings.BAKERY_ENABLED:
+            raise CommandError(
+                "The bakery test data needs the environment variable BAKERY_ENABLED=True."
+            )
+        return organization

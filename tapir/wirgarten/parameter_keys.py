@@ -290,7 +290,6 @@ class ParameterKeys:
     BCC_MAIL_MODULE_TRANSACTIONAL_MAILS = (
         f"{PREFIX}.emails.bcc_mail_module_transactional_mails"
     )
-    BAKERY_ENABLED = f"{PREFIX}.bakery.enabled"
     BAKERY_BAKING_DAY_BEFORE_DELIVERY_DAY = (
         f"{PREFIX}.bakery.baking_day_before_delivery_day"
     )

@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.core.exceptions import BadRequest
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
@@ -529,7 +530,7 @@ class MemberPersonalDataApiView(APIView):
         return user.has_perm(Permission.Coop.MANAGE)
 
     def is_pseudonym_enabled(self):
-        return get_parameter_value(ParameterKeys.BAKERY_ENABLED, cache=self.cache)
+        return settings.BAKERY_ENABLED
 
     def get_formatted_member_number(self, member: Member) -> str:
         if not MemberNumberService.should_display_member_number(

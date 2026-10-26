@@ -1,5 +1,7 @@
 from unittest.mock import patch
 
+from django.test import override_settings
+
 from tapir.bakery.models import (
     AvailableBreadsForDeliveryDay,
     Bread,
@@ -22,6 +24,7 @@ from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
+@override_settings(BAKERY_ENABLED=True)
 @patch.object(UserGenerator, "get_user_count", return_value=25, autospec=True)
 class TestGenerateAllWithBakery(TapirIntegrationTest):
     @classmethod

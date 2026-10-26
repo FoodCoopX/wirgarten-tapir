@@ -1,5 +1,6 @@
 from unittest.mock import patch, Mock, ANY
 
+from django.test import override_settings
 from django.urls import reverse
 from rest_framework import status
 from tapir_mail.models import StaticSegment, StaticSegmentRecipient
@@ -725,8 +726,8 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
         self.assertEqual("old_fn_2", other_recipient.first_name)
         self.assertEqual("old_ln_2", other_recipient.last_name)
 
+    @override_settings(BAKERY_ENABLED=True)
     def test_get_bakeryEnabled_returnsPseudonymAndPseudonymEnabled(self):
-        self._set_parameter(ParameterKeys.BAKERY_ENABLED, True)
         user = MemberFactory.create(is_superuser=False, pseudonym="test_pseudonym")
         self.client.force_login(user)
 
@@ -738,8 +739,8 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
         self.assertEqual("test_pseudonym", response_content["pseudonym"])
         self.assertTrue(response_content["pseudonym_enabled"])
 
+    @override_settings(BAKERY_ENABLED=False)
     def test_get_bakeryDisabled_returnsPseudonymDisabled(self):
-        self._set_parameter(ParameterKeys.BAKERY_ENABLED, False)
         user = MemberFactory.create(is_superuser=False)
         self.client.force_login(user)
 
@@ -770,9 +771,9 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
             content_type="application/json",
         )
 
+    @override_settings(BAKERY_ENABLED=True)
     @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_patch_memberSetsOwnPseudonym_pseudonymIsSavedAndLogged(self, _):
-        self._set_parameter(ParameterKeys.BAKERY_ENABLED, True)
         user = MemberFactory.create(is_superuser=False, pseudonym="")
 
         response = self._patch_pseudonym(user, " test_pseudonym ")
@@ -784,9 +785,9 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
         log_entry = UpdateTapirUserLogEntry.objects.get()
         self.assertEqual("test_pseudonym", log_entry.new_values["pseudonym"])
 
+    @override_settings(BAKERY_ENABLED=True)
     @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_patch_memberSendsEmptyPseudonym_pseudonymIsRemoved(self, _):
-        self._set_parameter(ParameterKeys.BAKERY_ENABLED, True)
         user = MemberFactory.create(is_superuser=False, pseudonym="test_pseudonym")
 
         response = self._patch_pseudonym(user, "")
@@ -796,9 +797,9 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
         user.refresh_from_db()
         self.assertEqual("", user.pseudonym)
 
+    @override_settings(BAKERY_ENABLED=True)
     @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_patch_pseudonymNotSent_pseudonymIsNotChanged(self, _):
-        self._set_parameter(ParameterKeys.BAKERY_ENABLED, True)
         user = MemberFactory.create(is_superuser=False, pseudonym="test_pseudonym")
 
         response = self._patch_pseudonym(user, None)
@@ -808,9 +809,9 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
         user.refresh_from_db()
         self.assertEqual("test_pseudonym", user.pseudonym)
 
+    @override_settings(BAKERY_ENABLED=False)
     @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_patch_bakeryDisabled_pseudonymIsNotChanged(self, _):
-        self._set_parameter(ParameterKeys.BAKERY_ENABLED, False)
         user = MemberFactory.create(is_superuser=False, pseudonym="test_pseudonym")
 
         response = self._patch_pseudonym(user, "other_pseudonym")
@@ -820,8 +821,8 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
         user.refresh_from_db()
         self.assertEqual("test_pseudonym", user.pseudonym)
 
+    @override_settings(BAKERY_ENABLED=True)
     def test_patch_pseudonymTooLong_returns400(self):
-        self._set_parameter(ParameterKeys.BAKERY_ENABLED, True)
         user = MemberFactory.create(is_superuser=False, pseudonym="test_pseudonym")
 
         response = self._patch_pseudonym(user, "a" * 151)

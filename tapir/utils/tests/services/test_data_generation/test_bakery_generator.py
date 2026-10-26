@@ -1,5 +1,7 @@
 import datetime
 
+from django.test import override_settings
+
 from tapir.bakery.models import (
     AvailableBreadsForDeliveryDay,
     Bread,
@@ -13,7 +15,6 @@ from tapir.bakery.models import (
 from tapir.bakery.services.bread_delivery_context_service import (
     BreadDeliveryContextService,
 )
-from tapir.configuration.models import TapirParameter
 from tapir.pickup_locations.services.pickup_location_delivery_day_service import (
     PickupLocationDeliveryDayService,
 )
@@ -30,7 +31,6 @@ from tapir.wirgarten.models import (
     Product,
     ProductType,
 )
-from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     GrowingPeriodFactory,
@@ -41,6 +41,7 @@ from tapir.wirgarten.tests.factories import (
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
+@override_settings(BAKERY_ENABLED=True)
 class TestBakeryGenerator(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
@@ -66,14 +67,6 @@ class TestBakeryGenerator(TapirIntegrationTest):
         for bread in Bread.objects.all():
             self.assertTrue(bread.pieces_per_stove_layer)
             self.assertGreater(bread.weight, 0)
-
-    def test_generateMasterdata_switchesTheBakeryOn(self):
-        BakeryGenerator.generate_masterdata()
-
-        self.assertEqual(
-            TapirParameter.objects.get(key=ParameterKeys.BAKERY_ENABLED).value,
-            "True",
-        )
 
     def test_generateProductsBakery_createsTheWeeklyBreadShare(self):
         ProductGenerator.generate_products_bakery()
