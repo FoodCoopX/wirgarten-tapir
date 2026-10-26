@@ -2555,3 +2555,35 @@ msgid ""
 "Nur Verträge mit manuell deaktivierter Probezeit oder manuell festgelegter "
 "Probezeit-Dauer anzeigen"
 msgstr ""
+
+#: tapir/bidding_round/services/bidding_round_service.py
+msgid "A product was selected that does not belong to the bidding round's product type."
+msgstr "Es wurde ein Produkt gewählt, das nicht zum Produkttyp der Beitragsrunde gehört."
+
+#: tapir/bidding_round/services/bidding_round_service.py
+msgid "A target amount per year is required before the round can be started."
+msgstr "Ein Zielbetrag pro Jahr muss vor dem Start der Runde gesetzt werden."
+
+#: tapir/bidding_round/services/bidding_round_service.py
+msgid "Please enter a valid number."
+msgstr "Bitte eine gültige Zahl eingeben."
+
+#: tapir/bidding_round/services/bidding_round_service.py
+msgid "The minimum amount must not be higher than the reference value."
+msgstr "Der Mindestpreis darf nicht höher als der Richtwert sein."
+
+#: tapir/bidding_round/services/bidding_round_service.py
+msgid "The minimum amount must not be negative."
+msgstr "Der Mindestpreis darf nicht negativ sein."
+
+#: tapir/bidding_round/services/bidding_round_service.py
+msgid "The reference value must not be negative."
+msgstr "Der Richtwert darf nicht negativ sein."
+
+#: tapir/bidding_round/services/bidding_round_service.py
+msgid "The target amount per year must not be negative."
+msgstr "Der Zielbetrag pro Jahr darf nicht negativ sein."
+
+#: tapir/bidding_round/services/bidding_round_service.py
+msgid "The bidding procedure, the number of bids, the biddable product types and the bidding round values can only be changed as long as no bids have been placed."
+msgstr "Bietverfahren, Anzahl Gebote, bietbare Produkttypen und die Bietrunden-Werte können nur geändert werden, solange keine Gebote abgegeben wurden."

@@ -105,7 +105,8 @@ class BiddingRoundService:
             return
         target_amount_per_year = cls._parse_optional_decimal(value)
         cls._validate_non_negative(
-            target_amount_per_year, _("The target amount per year")
+            target_amount_per_year,
+            _("The target amount per year must not be negative."),
         )
         round_product.target_amount_per_year = target_amount_per_year
         round_product.save(update_fields=["target_amount_per_year"])
@@ -130,8 +131,12 @@ class BiddingRoundService:
             payload_product_ids.add(product_id)
             reference_value = cls._parse_optional_decimal(entry.get("reference_value"))
             min_amount = cls._parse_optional_decimal(entry.get("min_amount"))
-            cls._validate_non_negative(reference_value, _("The reference value"))
-            cls._validate_non_negative(min_amount, _("The minimum amount"))
+            cls._validate_non_negative(
+                reference_value, _("The reference value must not be negative.")
+            )
+            cls._validate_non_negative(
+                min_amount, _("The minimum amount must not be negative.")
+            )
             if (
                 reference_value is not None
                 and min_amount is not None
@@ -156,11 +161,9 @@ class BiddingRoundService:
         ).delete()
 
     @classmethod
-    def _validate_non_negative(cls, value, label) -> None:
+    def _validate_non_negative(cls, value, message) -> None:
         if value is not None and value < 0:
-            raise ValidationError(
-                _("%(label)s must not be negative.") % {"label": label}
-            )
+            raise ValidationError(message)
 
     @classmethod
     def _ensure_no_other_active_round(cls, bidding_round: BiddingRound) -> None:
@@ -321,7 +324,7 @@ class BiddingRoundService:
                 )
                 cls._validate_non_negative(
                     round_product.target_amount_per_year,
-                    _("The target amount per year"),
+                    _("The target amount per year must not be negative."),
                 )
                 round_product.save(update_fields=["target_amount_per_year"])
             if "prices" in changes:
