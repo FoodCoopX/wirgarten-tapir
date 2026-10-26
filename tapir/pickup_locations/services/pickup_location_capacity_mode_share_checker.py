@@ -42,6 +42,8 @@ class PickupLocationCapacityModeShareChecker:
         subscription_start: datetime.date,
         cache: dict,
         check_waiting_list_entries: bool = True,
+        extra_capacity_used_by_member_by_product_type: dict | None = None,
+        extra_capacity_used_by_other_members_by_product_type: dict | None = None,
     ) -> bool:
         product_type_to_available_capacity_map = SharesCapacityService.get_available_share_capacities_for_pickup_location_by_product_type(
             pickup_location=pickup_location, cache=cache
@@ -62,6 +64,14 @@ class PickupLocationCapacityModeShareChecker:
                 subscription_start=subscription_start,
                 ordered_product_to_quantity_map=order,
                 check_waiting_list_entries=check_waiting_list_entries,
+                extra_capacity_used_by_member_by_product_type=(
+                    extra_capacity_used_by_member_by_product_type
+                ),
+                extra_capacity_used_by_other_members=(
+                    (extra_capacity_used_by_other_members_by_product_type or {}).get(
+                        product_type.id, 0
+                    )
+                ),
                 cache=cache,
             ):
                 return False
@@ -78,6 +88,8 @@ class PickupLocationCapacityModeShareChecker:
         ordered_product_to_quantity_map: dict[Product, int],
         check_waiting_list_entries: bool,
         cache: dict,
+        extra_capacity_used_by_member_by_product_type: dict | None = None,
+        extra_capacity_used_by_other_members: float = 0,
     ):
         capacity_used_by_the_order = (
             cls.calculate_capacity_used_by_the_ordered_products(
@@ -115,11 +127,19 @@ class PickupLocationCapacityModeShareChecker:
                 cache=cache,
             )
 
+        extra_capacity_used_by_member = 0
+        if extra_capacity_used_by_member_by_product_type:
+            extra_capacity_used_by_member = (
+                extra_capacity_used_by_member_by_product_type.get(product_type.id, 0)
+            )
+
         return (
             free_capacity
             + amount_used_by_member_before_changes
+            + float(extra_capacity_used_by_member)
             - capacity_used_by_the_order
             - float(reserved_capacity)
+            - float(extra_capacity_used_by_other_members)
             >= 0
         )
 

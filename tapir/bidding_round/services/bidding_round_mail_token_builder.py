@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from django.urls import reverse
+from django.urls import NoReverseMatch, reverse
 
 from tapir.bidding_round.models import Bid
 from tapir.wirgarten.utils import format_currency, format_date
@@ -25,9 +25,16 @@ class BiddingRoundMailTokenBuilder:
             "pickup_location": (
                 bid.pickup_location.name if bid.pickup_location else ""
             ),
-            "bid_link": reverse("bidding_rounds:bidding_rounds"),
+            "bid_link": cls._build_bid_link(),
             "bid_end_date": format_date(bid.round.end_at),
         }
+
+    @classmethod
+    def _build_bid_link(cls) -> str:
+        try:
+            return reverse("bidding_rounds:bidding_rounds")
+        except NoReverseMatch:
+            return ""
 
     @classmethod
     def _get_bid_total_per_year(cls, bid, effective_position, cache) -> Decimal:

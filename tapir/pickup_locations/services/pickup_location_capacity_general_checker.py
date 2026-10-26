@@ -23,6 +23,8 @@ class PickupLocationCapacityGeneralChecker:
         subscription_start: datetime.date,
         cache: dict,
         check_waiting_list_entries: bool = True,
+        extra_capacity_used_by_member_by_product_type: dict | None = None,
+        extra_capacity_used_by_other_members_by_product_type: dict | None = None,
     ) -> bool:
         if (
             already_registered_member
@@ -34,6 +36,10 @@ class PickupLocationCapacityGeneralChecker:
             != pickup_location.id
         ):
             already_registered_member = None
+            # The member is new at this pickup location, so their existing capacity (and
+            # any projected renewal) must not be credited back here - otherwise the
+            # location's free capacity would be overstated and could be overbooked.
+            extra_capacity_used_by_member_by_product_type = None
 
         return PickupLocationCapacityModeShareChecker.check_for_picking_mode_share(
             pickup_location=pickup_location,
@@ -42,4 +48,10 @@ class PickupLocationCapacityGeneralChecker:
             subscription_start=subscription_start,
             cache=cache,
             check_waiting_list_entries=check_waiting_list_entries,
+            extra_capacity_used_by_member_by_product_type=(
+                extra_capacity_used_by_member_by_product_type
+            ),
+            extra_capacity_used_by_other_members_by_product_type=(
+                extra_capacity_used_by_other_members_by_product_type
+            ),
         )

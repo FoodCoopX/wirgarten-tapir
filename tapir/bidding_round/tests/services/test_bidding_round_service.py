@@ -1,0 +1,232 @@
+import datetime
+
+import pytest
+from django.core.exceptions import ValidationError
+
+from tapir.bidding_round.config import ACTIVE, CLOSED, CONFIGURATION
+from tapir.bidding_round.models import BiddingRoundProduct
+from tapir.bidding_round.services.bidding_round_service import BiddingRoundService
+from tapir.bidding_round.tests.factories import BidFactory, BiddingRoundFactory
+from tapir.configuration.models import TapirParameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.parameters import ParameterDefinitions
+from tapir.wirgarten.tests.factories import (
+    GrowingPeriodFactory,
+    MemberFactory,
+    ProductCapacityFactory,
+    ProductTypeFactory,
+)
+from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
+from tapir.wirgarten.utils import get_now
+
+
+class TestBiddingRoundService(TapirIntegrationTest):
+    @classmethod
+    def setUpTestData(cls):
+        ParameterDefinitions().import_definitions(bulk_create=True)
+
+    def test_createRound_createsConfigurationRound(self):
+        growing_period = GrowingPeriodFactory.create()
+        product_type = ProductTypeFactory.create()
+        bidding_round = BiddingRoundService.create_round(
+            growing_period=growing_period,
+            name="Beitragsrunde Test",
+            bidding_procedure="simple",
+            end_at=datetime.datetime.combine(
+                growing_period.start_date,
+                datetime.time(hour=23, minute=59),
+                tzinfo=datetime.timezone.utc,
+            ),
+            product_type_id=product_type.id,
+            cache={},
+        )
+        self.assertEqual(CONFIGURATION, bidding_round.status)
+        self.assertEqual("Beitragsrunde Test", bidding_round.name)
+        self.assertEqual(growing_period, bidding_round.growing_period)
+
+    def test_createRound_withoutEndDate_raisesValidationError(self):
+        with pytest.raises(ValidationError):
+            BiddingRoundService.create_round(
+                growing_period=GrowingPeriodFactory.create(),
+                name="Beitragsrunde Test",
+                bidding_procedure="simple",
+                end_at=None,
+                cache={},
+            )
+
+    def test_createRound_withProductTypeId_createsBiddingRoundProduct(self):
+        growing_period = GrowingPeriodFactory.create()
+        product_type = ProductTypeFactory.create()
+        bidding_round = BiddingRoundService.create_round(
+            growing_period=growing_period,
+            name="Beitragsrunde Test",
+            bidding_procedure="simple",
+            end_at=datetime.datetime.combine(
+                growing_period.start_date,
+                datetime.time(hour=23, minute=59),
+                tzinfo=datetime.timezone.utc,
+            ),
+            product_type_id=product_type.id,
+            cache={},
+        )
+        self.assertEqual(
+            [product_type.id],
+            list(
+                BiddingRoundProduct.objects.filter(round=bidding_round).values_list(
+                    "product_type_id", flat=True
+                )
+            ),
+        )
+
+    def test_createRound_withoutProductTypeId_defaultsToTheOnlyProductType(self):
+        growing_period = GrowingPeriodFactory.create()
+        capacity = ProductCapacityFactory.create(period=growing_period)
+        bidding_round = BiddingRoundService.create_round(
+            growing_period=growing_period,
+            name="Beitragsrunde Test",
+            bidding_procedure="simple",
+            end_at=datetime.datetime.combine(
+                growing_period.start_date,
+                datetime.time(hour=23, minute=59),
+                tzinfo=datetime.timezone.utc,
+            ),
+            cache={},
+        )
+        self.assertEqual(
+            [capacity.product_type_id],
+            list(
+                BiddingRoundProduct.objects.filter(round=bidding_round).values_list(
+                    "product_type_id", flat=True
+                )
+            ),
+        )
+
+    def test_createRound_withoutProductTypeIdAndMultipleCapacities_raisesValidationError(
+        self,
+    ):
+        growing_period = GrowingPeriodFactory.create()
+        ProductCapacityFactory.create(period=growing_period)
+        ProductCapacityFactory.create(period=growing_period)
+        with pytest.raises(ValidationError):
+            BiddingRoundService.create_round(
+                growing_period=growing_period,
+                name="Beitragsrunde Test",
+                bidding_procedure="simple",
+                end_at=datetime.datetime.combine(
+                    growing_period.start_date,
+                    datetime.time(hour=23, minute=59),
+                    tzinfo=datetime.timezone.utc,
+                ),
+                cache={},
+            )
+
+    def test_startRound_transitionsToActive(self):
+        bidding_round = BiddingRoundFactory.create()
+        BiddingRoundService.start_round(bidding_round, cache={})
+        self.assertEqual(ACTIVE, bidding_round.status)
+
+    def test_startRound_notInConfiguration_raisesValidationError(self):
+        bidding_round = BiddingRoundFactory.create(status=ACTIVE)
+        with pytest.raises(ValidationError):
+            BiddingRoundService.start_round(bidding_round, cache={})
+
+    def test_startRound_withAnotherActiveRound_raisesValidationError(self):
+        BiddingRoundFactory.create(status=ACTIVE)
+        bidding_round = BiddingRoundFactory.create()
+        with pytest.raises(ValidationError):
+            BiddingRoundService.start_round(bidding_round, cache={})
+
+    def test_startRound_afterOtherRoundClosed_succeeds(self):
+        other_active = BiddingRoundFactory.create(status=ACTIVE)
+        BiddingRoundService.close_round(other_active, cache={})
+        bidding_round = BiddingRoundFactory.create()
+        BiddingRoundService.start_round(bidding_round, cache={})
+        self.assertEqual(ACTIVE, bidding_round.status)
+
+    def test_closeRound_transitionsToClosed(self):
+        bidding_round = BiddingRoundFactory.create(status=ACTIVE)
+        BiddingRoundService.close_round(bidding_round, cache={})
+        self.assertEqual(CLOSED, bidding_round.status)
+
+    def test_reopenRound_transitionsToActive(self):
+        bidding_round = BiddingRoundFactory.create(status=CLOSED)
+        BiddingRoundService.reopen_round(bidding_round, cache={})
+        self.assertEqual(ACTIVE, bidding_round.status)
+
+    def test_reopenRound_notClosed_raisesValidationError(self):
+        bidding_round = BiddingRoundFactory.create(status=CONFIGURATION)
+        with pytest.raises(ValidationError):
+            BiddingRoundService.reopen_round(bidding_round, cache={})
+
+    def test_reopenRound_withAnotherActiveRound_raisesValidationError(self):
+        BiddingRoundFactory.create(status=ACTIVE)
+        bidding_round = BiddingRoundFactory.create(status=CLOSED)
+        with pytest.raises(ValidationError):
+            BiddingRoundService.reopen_round(bidding_round, cache={})
+
+    def test_reopenRound_afterOtherRoundClosed_succeeds(self):
+        other_active = BiddingRoundFactory.create(status=ACTIVE)
+        BiddingRoundService.close_round(other_active, cache={})
+        bidding_round = BiddingRoundFactory.create(status=CLOSED)
+        BiddingRoundService.reopen_round(bidding_round, cache={})
+        self.assertEqual(ACTIVE, bidding_round.status)
+
+    def test_getCurrentOpenRound_returnsEarliestActiveWithFutureEndDate(self):
+        earlier_round = BiddingRoundFactory.create(
+            status=ACTIVE, end_at=get_now() + datetime.timedelta(days=10)
+        )
+        BiddingRoundFactory.create(
+            status=ACTIVE, end_at=get_now() + datetime.timedelta(days=20)
+        )
+        self.assertEqual(
+            earlier_round, BiddingRoundService.get_current_open_round(cache={})
+        )
+
+    def test_getCurrentOpenRound_onlyExpiredOrClosed_returnsNone(self):
+        BiddingRoundFactory.create(
+            status=ACTIVE, end_at=get_now() - datetime.timedelta(days=1)
+        )
+        BiddingRoundFactory.create(
+            status=CLOSED, end_at=get_now() + datetime.timedelta(days=10)
+        )
+        self.assertIsNone(BiddingRoundService.get_current_open_round(cache={}))
+
+    def test_getBiddableProductTypesForRound_returnsActiveTypesOfTargetPeriod(
+        self,
+    ):
+        bidding_round = BiddingRoundFactory.create()
+        capacity = ProductCapacityFactory.create(period=bidding_round.growing_period)
+        ProductCapacityFactory.create(period=GrowingPeriodFactory.create())
+
+        biddable = BiddingRoundService.get_biddable_product_types_for_round(
+            bidding_round, cache={}
+        )
+
+        self.assertIn(capacity.product_type, biddable)
+        self.assertEqual(1, len(biddable))
+
+    def test_getOrCreateBid_existingBid_returnsSameBid(self):
+        bid = BidFactory.create()
+        result = BiddingRoundService.get_or_create_bid(bid.member, bid.round, cache={})
+        self.assertEqual(bid, result)
+        self.assertEqual(1, bid.round.bids.count())
+
+    def test_getOrCreateBid_newMember_createsBid(self):
+        member = MemberFactory.create()
+        bidding_round = BiddingRoundFactory.create()
+        bid = BiddingRoundService.get_or_create_bid(member, bidding_round, cache={})
+        self.assertEqual(member, bid.member)
+        self.assertEqual(bidding_round, bid.round)
+
+    def test_isPickupLocationsEnabled_respectsParameter(self):
+        TapirParameter.objects.filter(
+            key=ParameterKeys.BIDDING_ROUND_PICKUP_LOCATION_CHANGE_ENABLED
+        ).update(value="true")
+        self.assertTrue(BiddingRoundService.is_pickup_location_change_enabled(cache={}))
+
+        TapirParameter.objects.filter(
+            key=ParameterKeys.BIDDING_ROUND_PICKUP_LOCATION_CHANGE_ENABLED
+        ).update(value="false")
+        self.assertFalse(
+            BiddingRoundService.is_pickup_location_change_enabled(cache={})
+        )

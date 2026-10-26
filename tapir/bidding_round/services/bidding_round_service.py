@@ -1,0 +1,393 @@
+import datetime
+from decimal import Decimal
+
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
+from tapir_mail.triggers.transactional_trigger import (
+    TransactionalTrigger,
+    TransactionalTriggerData,
+)
+
+from tapir.bidding_round.config import ACTIVE, CLOSED, CONFIGURATION
+from tapir.bidding_round.models import (
+    Bid,
+    BidItem,
+    BiddingRound,
+    BiddingRoundProduct,
+)
+from tapir.bidding_round.services.bid_validator import BidValidator
+from tapir.bidding_round.services.bidding_round_mail_token_builder import (
+    BiddingRoundMailTokenBuilder,
+)
+from tapir.configuration.parameter import get_parameter_value
+from tapir.wirgarten.mail_events import Events
+from tapir.wirgarten.models import GrowingPeriod, Member, ProductType
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.utils import get_now
+
+
+class BiddingRoundService:
+    EDITABLE_FIELDS = (
+        "name",
+        "comment",
+        "start_at",
+        "end_at",
+        "include_auto_renewed",
+        "bidding_procedure",
+        "bid_levels",
+    )
+    SENSITIVE_FIELDS = (
+        "bidding_procedure",
+        "bid_levels",
+        "product_type_id",
+    )
+
+    @classmethod
+    def create_round(
+        cls,
+        growing_period: GrowingPeriod,
+        name: str,
+        bidding_procedure: str,
+        end_at: datetime.datetime,
+        cache: dict,
+        start_at: datetime.datetime | None = None,
+        include_auto_renewed: bool | None = None,
+        comment: str = "",
+        product_type_id: str | None = None,
+        bid_levels: int = 1,
+    ) -> BiddingRound:
+        if end_at is None:
+            raise ValidationError(_("The bidding round must have an end date."))
+        if start_at is not None and start_at > end_at:
+            raise ValidationError(_("The start date must not be after the end date."))
+
+        if include_auto_renewed is None:
+            include_auto_renewed = get_parameter_value(
+                ParameterKeys.BIDDING_ROUND_STATS_INCLUDE_AUTO_RENEWED, cache=cache
+            )
+
+        if product_type_id is None:
+            product_types = cls.get_product_types_with_capacity_for_period(
+                growing_period, cache=cache
+            )
+            if len(product_types) != 1:
+                raise ValidationError(_("Please select exactly one product type."))
+            product_type_id = product_types[0].id
+
+        bidding_round = BiddingRound.objects.create(
+            growing_period=growing_period,
+            name=name,
+            bidding_procedure=bidding_procedure,
+            bid_levels=bid_levels,
+            start_at=start_at or get_now(cache=cache),
+            end_at=end_at,
+            include_auto_renewed=include_auto_renewed,
+            comment=comment,
+        )
+
+        BiddingRoundProduct.objects.get_or_create(
+            round=bidding_round, product_type_id=product_type_id
+        )
+
+        return bidding_round
+
+    @classmethod
+    def _ensure_no_other_active_round(cls, bidding_round: BiddingRound) -> None:
+        if (
+            BiddingRound.objects.filter(status=ACTIVE)
+            .exclude(pk=bidding_round.pk)
+            .exists()
+        ):
+            raise ValidationError(_("Another bidding round is already active."))
+
+    @classmethod
+    def start_round(cls, bidding_round: BiddingRound, cache: dict) -> BiddingRound:
+        if bidding_round.status != CONFIGURATION:
+            raise ValidationError(
+                _("Only bidding rounds with status configuration can be started.")
+            )
+        cls._ensure_no_other_active_round(bidding_round)
+        bidding_round.status = ACTIVE
+        bidding_round.save()
+        return bidding_round
+
+    @classmethod
+    def close_round(cls, bidding_round: BiddingRound, cache: dict) -> BiddingRound:
+        if bidding_round.status != ACTIVE:
+            raise ValidationError(_("Only active bidding rounds can be closed."))
+        bidding_round.status = CLOSED
+        bidding_round.save()
+        return bidding_round
+
+    @classmethod
+    def reopen_round(cls, bidding_round: BiddingRound, cache: dict) -> BiddingRound:
+        if bidding_round.status != CLOSED:
+            raise ValidationError(_("Only closed bidding rounds can be reopened."))
+        cls._ensure_no_other_active_round(bidding_round)
+        bidding_round.status = ACTIVE
+        bidding_round.save()
+        return bidding_round
+
+    @classmethod
+    def lock_average_bid(
+        cls,
+        bidding_round: BiddingRound,
+        position,
+        surcharge_percent,
+        surcharge_on_bids,
+        surcharge_on_average,
+        cache: dict,
+    ) -> BiddingRound:
+        from tapir.bidding_round.services.bidding_round_stats_service import (
+            BiddingRoundStatsService,
+        )
+
+        if bidding_round.average_bid_locked_at is not None:
+            raise ValidationError(_("The average bid is already locked."))
+
+        surcharge_percent = Decimal(str(surcharge_percent or 0))
+        if surcharge_percent < 0 or surcharge_percent > 100:
+            raise ValidationError(_("The surcharge must be between 0 and 100 percent."))
+
+        position = BiddingRoundStatsService.clamp_traffic_light_position(position)
+        amounts = BiddingRoundStatsService.build_locked_average_bid(
+            bidding_round=bidding_round,
+            position=position,
+            surcharge_percent=surcharge_percent,
+            surcharge_on_bids=bool(surcharge_on_bids),
+            surcharge_on_average=bool(surcharge_on_average),
+            cache=cache,
+        )
+
+        bidding_round.average_bid_locked_at = get_now(cache=cache)
+        bidding_round.locked_traffic_light_position = position
+        bidding_round.locked_surcharge_percent = surcharge_percent
+        bidding_round.locked_surcharge_on_bids = bool(surcharge_on_bids)
+        bidding_round.locked_surcharge_on_average = bool(surcharge_on_average)
+        bidding_round.locked_average_bid_per_share_per_month = amounts[
+            "amount_per_share_per_month"
+        ]
+        bidding_round.locked_average_bid_per_share_per_year = amounts[
+            "amount_per_share_per_year"
+        ]
+        bidding_round.locked_bidder_average_per_share_per_month = amounts[
+            "bidder_amount_per_share_per_month"
+        ]
+        bidding_round.locked_bidder_average_per_share_per_year = amounts[
+            "bidder_amount_per_share_per_year"
+        ]
+        bidding_round.save()
+        return bidding_round
+
+    @classmethod
+    def unlock_average_bid(
+        cls, bidding_round: BiddingRound, cache: dict
+    ) -> BiddingRound:
+        if bidding_round.average_bid_locked_at is None:
+            raise ValidationError(_("The average bid is not locked."))
+        if bidding_round.contracts_created_at is not None:
+            raise ValidationError(
+                _(
+                    "The average bid can no longer be unlocked once contracts have "
+                    "been created. Delete the contracts first."
+                )
+            )
+
+        bidding_round.average_bid_locked_at = None
+        bidding_round.locked_traffic_light_position = None
+        bidding_round.locked_surcharge_percent = Decimal("0")
+        bidding_round.locked_surcharge_on_bids = False
+        bidding_round.locked_surcharge_on_average = False
+        bidding_round.locked_average_bid_per_share_per_month = None
+        bidding_round.locked_average_bid_per_share_per_year = None
+        bidding_round.locked_bidder_average_per_share_per_month = None
+        bidding_round.locked_bidder_average_per_share_per_year = None
+        bidding_round.save()
+        return bidding_round
+
+    @classmethod
+    def delete_round(cls, bidding_round: BiddingRound, cache: dict) -> None:
+        if bidding_round.status not in (CONFIGURATION, CLOSED):
+            raise ValidationError(
+                _(
+                    "Bidding rounds can only be deleted with status configuration "
+                    "or closed."
+                )
+            )
+        bidding_round.delete()
+
+    @classmethod
+    def update_round_config(
+        cls, bidding_round: BiddingRound, changes: dict, cache: dict
+    ) -> BiddingRound:
+        cls._validate_round_config_change(bidding_round, changes)
+
+        for field in cls.EDITABLE_FIELDS:
+            if field in changes:
+                setattr(bidding_round, field, changes[field])
+
+        if changes.get("product_type_id"):
+            bidding_round.products.all().delete()
+            BiddingRoundProduct.objects.create(
+                round=bidding_round, product_type_id=changes["product_type_id"]
+            )
+
+        bidding_round.save()
+        return bidding_round
+
+    @classmethod
+    def _validate_round_config_change(
+        cls, bidding_round: BiddingRound, changes: dict
+    ) -> None:
+        if not bidding_round.bids.exists():
+            return
+        if any(field in changes for field in cls.SENSITIVE_FIELDS):
+            raise ValidationError(
+                _(
+                    "The bidding procedure, contribution mode, number of bids and "
+                    "biddable product types can only be changed as long as no bids "
+                    "have been placed."
+                )
+            )
+
+    @classmethod
+    def get_current_open_round(cls, cache: dict) -> BiddingRound | None:
+        now = get_now(cache=cache)
+        return (
+            BiddingRound.objects.filter(status=ACTIVE, end_at__gte=now)
+            .order_by("end_at")
+            .first()
+        )
+
+    @classmethod
+    def get_product_types_with_capacity_for_period(
+        cls, growing_period: GrowingPeriod, cache: dict
+    ) -> list[ProductType]:
+        return list(
+            ProductType.objects.filter(
+                productcapacity__period=growing_period,
+                productcapacity__capacity__gt=0,
+            ).distinct()
+        )
+
+    @classmethod
+    def get_biddable_product_types_for_round(
+        cls, bidding_round: BiddingRound, cache: dict
+    ) -> list[ProductType]:
+        configured_type_ids = bidding_round.products.values_list(
+            "product_type_id", flat=True
+        )
+        return [
+            product_type
+            for product_type in cls.get_product_types_with_capacity_for_period(
+                bidding_round.growing_period, cache=cache
+            )
+            if product_type.id not in configured_type_ids
+        ]
+
+    @classmethod
+    def get_or_create_bid(
+        cls, member: Member, bidding_round: BiddingRound, cache: dict
+    ) -> Bid:
+        bid, _ = Bid.objects.get_or_create(member=member, round=bidding_round)
+        return bid
+
+    @classmethod
+    def is_pickup_location_change_enabled(cls, cache: dict) -> bool:
+        try:
+            return get_parameter_value(
+                ParameterKeys.BIDDING_ROUND_PICKUP_LOCATION_CHANGE_ENABLED, cache=cache
+            )
+        except KeyError:
+            return False
+
+    @classmethod
+    def _parse_optional_decimal(cls, value) -> Decimal | None:
+        if value in (None, ""):
+            return None
+        if isinstance(value, str):
+            value = value.strip().replace("€", "").replace(",", ".")
+        return Decimal(value)
+
+    @classmethod
+    def _build_bid_item(cls, bid: Bid, item: dict) -> BidItem:
+        return BidItem(
+            bid=bid,
+            round_product_id=item["round_product_id"],
+            product_id=item["product_id"],
+            quantity=item["quantity"],
+            amount_1=cls._parse_optional_decimal(item.get("amount_1")),
+            amount_2=cls._parse_optional_decimal(item.get("amount_2")),
+            amount_3=cls._parse_optional_decimal(item.get("amount_3")),
+        )
+
+    @classmethod
+    def save_bid(
+        cls,
+        member: Member,
+        bidding_round: BiddingRound,
+        items: list[dict],
+        cache: dict,
+        pickup_location_id: str | None = None,
+    ) -> Bid:
+        if not isinstance(member, Member):
+            raise ValidationError(_("Only members can place a bid."))
+
+        BidValidator.validate(
+            bidding_round, items, pickup_location_id, cache=cache, member=member
+        )
+
+        bid_exists = Bid.objects.filter(member=member, round=bidding_round).exists()
+        bid = cls.get_or_create_bid(member, bidding_round, cache=cache)
+        bid.pickup_location_id = pickup_location_id
+        bid.save()
+
+        bid.items.all().delete()
+        BidItem.objects.bulk_create([cls._build_bid_item(bid, item) for item in items])
+
+        TransactionalTrigger.fire_action(
+            trigger_data=TransactionalTriggerData(
+                key=(
+                    Events.BIDDING_ROUND_BID_RECEIVED
+                    if not bid_exists
+                    else Events.BIDDING_ROUND_BID_UPDATED
+                ),
+                recipient_id_in_base_queryset=member.id,
+                token_data=BiddingRoundMailTokenBuilder.build_bid_tokens(
+                    bid, cache=cache
+                ),
+            )
+        )
+        return bid
+
+    @classmethod
+    def save_admin_bid(
+        cls,
+        bidding_round: BiddingRound,
+        member: Member,
+        cache: dict,
+        items: list[dict] | None = None,
+        pickup_location_id: str | None = None,
+        entered_by_admin: bool | None = None,
+        admin_confirmed: bool | None = None,
+    ) -> Bid:
+        if items:
+            BidValidator.validate_admin_edit(
+                bidding_round, items, pickup_location_id, cache=cache, member=member
+            )
+
+        bid, _ = Bid.objects.get_or_create(member=member, round=bidding_round)
+        bid.pickup_location_id = pickup_location_id
+        if entered_by_admin is not None:
+            bid.entered_by_admin = entered_by_admin
+        if admin_confirmed is not None:
+            bid.admin_confirmed = get_now(cache=cache) if admin_confirmed else None
+        bid.save()
+
+        if items is not None:
+            bid.items.all().delete()
+            BidItem.objects.bulk_create(
+                [cls._build_bid_item(bid, item) for item in items]
+            )
+
+        return bid
