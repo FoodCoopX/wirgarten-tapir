@@ -84,7 +84,7 @@
               data-donations-enabled="{{ donationsEnabled }}"
               data-can-change-pickup-location="{{ canChangePickupLocation }}"
               data-members-can-change-pickup-location-themselves="{{ membersCanChangePickupLocationThemselves }}"
-              data-admin-contact-email="{{ adminContactEmail }}"
+              data-contact-email="{{ contactEmail }}"
               data-pickup-location-label="{{ pickupLocationLabel }}">
           <span class="spinner-border">
             <span class="visually-hidden">Loading...</span>
@@ -243,7 +243,7 @@
         <div class="row mt-2">
           <div id="member_profile_waiting_list_entry"
                data-member-id="{{ object.pk }}"
-               data-admin-email="{% get_parameter_value_tag 'wirgarten.site.admin_email' cache %}">
+               data-contact-email="{% get_parameter_value_tag 'wirgarten.site.email' cache %}">
             <div class="card">
               <div class="card-header">
                 <h5 class="mb-0">Wartelisteneintrag</h5>
@@ -259,7 +259,7 @@
         <div class="row mt-2">
           <div id="member_profile_solidarity_contribution"
                data-member-id="{{ object.pk }}"
-               data-admin-email="{% get_parameter_value_tag 'wirgarten.site.admin_email' cache %}"
+               data-contact-email="{% get_parameter_value_tag 'wirgarten.site.email' cache %}"
                data-user-is-admin="{{ perms.accounts.manage }}"
                data-members-can-change-contribution="{% get_parameter_value_tag 'wirgarten.harvest.members_are_allowed_to_change_soliprice' cache %}">
             <div class="card">

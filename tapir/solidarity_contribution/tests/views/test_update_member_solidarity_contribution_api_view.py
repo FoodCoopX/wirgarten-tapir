@@ -66,7 +66,7 @@ class TestUpdateMemberSolidarityContributionApiView(TapirIntegrationTest):
         response_content = response.json()
         self.assertFalse(response_content["updated"])
         self.assertEqual(
-            "Du kannst deinen Solidarbeitrag nur erhöhen, aber nicht selbstständig reduzieren. Bitte wende dich dazu an die Verwaltung (admin@example.com).",
+            "Du kannst deinen Solidarbeitrag nur erhöhen, aber nicht selbstständig reduzieren. Bitte wende dich dazu an die Verwaltung (contact@example.com).",
             response_content["error"],
         )
 
@@ -114,7 +114,7 @@ class TestUpdateMemberSolidarityContributionApiView(TapirIntegrationTest):
         response_content = response.json()
         self.assertFalse(response_content["updated"])
         self.assertEqual(
-            "Du kannst deinen Solidarbeitrag nur erhöhen, aber nicht selbstständig reduzieren. Bitte wende dich dazu an die Verwaltung (admin@example.com).",
+            "Du kannst deinen Solidarbeitrag nur erhöhen, aber nicht selbstständig reduzieren. Bitte wende dich dazu an die Verwaltung (contact@example.com).",
             response_content["error"],
         )
 

@@ -27,7 +27,7 @@ interface DeliveryListCardProps {
   areDonationsEnabled: boolean;
   canChangePickupLocation: boolean;
   membersCanChangePickupLocationThemselves: boolean;
-  adminContactEmail: string;
+  contactEmail: string;
   pickupLocationLabel: string;
   csrfToken: string;
 }
@@ -38,7 +38,7 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
   areDonationsEnabled,
   canChangePickupLocation,
   membersCanChangePickupLocationThemselves,
-  adminContactEmail,
+  contactEmail,
   pickupLocationLabel,
   csrfToken,
 }) => {
@@ -130,7 +130,7 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
               <>
                 Für eine Änderung deines Abholorts wende dich bitte an die
                 Verwaltung (
-                <a href={`mailto:${adminContactEmail}`}>{adminContactEmail}</a>
+                <a href={`mailto:${contactEmail}`}>{contactEmail}</a>
                 ).
               </>
             }
