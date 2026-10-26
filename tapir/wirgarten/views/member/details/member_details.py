@@ -167,8 +167,8 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         context["membersCanChangePickupLocationThemselves"] = (
             "true" if members_can_change_pickup_location else "false"
         )
-        context["adminContactEmail"] = get_parameter_value(
-            key=ParameterKeys.SITE_ADMIN_EMAIL, cache=cache
+        context["contactEmail"] = get_parameter_value(
+            key=ParameterKeys.SITE_EMAIL, cache=cache
         )
         context["pickupLocationLabel"] = get_parameter_value(
             key=ParameterKeys.MEMBER_DASHBOARD_PICKUP_LOCATION_LABEL, cache=cache

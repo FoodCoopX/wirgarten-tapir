@@ -8,11 +8,11 @@ import FuturePaymentsCard from "./future_payments/FuturePaymentsCard.tsx";
 import MemberMailCategoryCard from "./mail_category/MemberMailCategoryCard.tsx";
 import MemberMailingListsCard from "./mailing_lists/MemberMailingListsCard.tsx";
 import MemberProfilePaymentRhythmBase from "./payment_rhythm/MemberProfilePaymentRhythmBase.tsx";
+import PersonalDataDropdown from "./personal_data/PersonalDataDropdown.tsx";
 import MemberProfileSolidarityContributionCard from "./solidarity_contribution/MemberProfileSolidarityContributionCard.tsx";
 import SubscriptionCancellationCard from "./subscription_cancellation/SubscriptionCancellationCard.tsx";
 import SubscriptionCards from "./subscriptions/SubscriptionCards.tsx";
 import MemberProfileWaitingListCard from "./waiting_list/MemberProfileWaitingListCard.tsx";
-import PersonalDataDropdown from "./personal_data/PersonalDataDropdown.tsx";
 
 const domNodeDeliveryListCard = document.getElementById("delivery_list_card");
 if (domNodeDeliveryListCard) {
@@ -34,7 +34,7 @@ if (domNodeDeliveryListCard) {
         domNodeDeliveryListCard.dataset
           .membersCanChangePickupLocationThemselves === "true"
       }
-      adminContactEmail={domNodeDeliveryListCard.dataset.adminContactEmail!}
+      contactEmail={domNodeDeliveryListCard.dataset.contactEmail!}
       pickupLocationLabel={domNodeDeliveryListCard.dataset.pickupLocationLabel!}
       csrfToken={getCsrfToken()}
     />,
@@ -76,7 +76,7 @@ if (domNodeWaitingListCard) {
   root.render(
     <MemberProfileWaitingListCard
       memberId={domNodeWaitingListCard.dataset.memberId!}
-      adminEmail={domNodeWaitingListCard.dataset.adminEmail!}
+      contactEmail={domNodeWaitingListCard.dataset.contactEmail!}
     />,
   );
 } else {
@@ -92,7 +92,7 @@ if (domNodeSolidarityCard) {
   root.render(
     <MemberProfileSolidarityContributionCard
       memberId={domNodeSolidarityCard.dataset.memberId!}
-      adminEmail={domNodeSolidarityCard.dataset.adminEmail!}
+      contactEmail={domNodeSolidarityCard.dataset.contactEmail!}
       adminVersion={domNodeSolidarityCard.dataset.userIsAdmin === "True"}
       membersCanChangeContribution={
         domNodeSolidarityCard.dataset.membersCanChangeContribution === "True"
