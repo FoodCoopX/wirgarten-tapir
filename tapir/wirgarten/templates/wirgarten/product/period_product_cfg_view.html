@@ -21,7 +21,7 @@
     <div class="card">
       <div class="card-header d-flex flex-row justify-content-between align-items-center">
         <h5 class="mb-0">{% translate 'Vertragsperiode' %}</h5>
-        <div class="d-flex flex-row">
+        <div class="d-flex flex-row list-actions">
           {% if perms.coop.manage %}
             {% include 'wirgarten/generic/action-button.html' with onclick='getGrowingPeriodAddForm()' title='Vertragsperiode hinzufügen' type='dark' icon='add' id='growing-period-add-btn' %}
             {% include 'wirgarten/generic/action-button.html' with onclick='getGrowingPeriodCopyForm()' title='Vertragsperiode kopieren' disabled=True class='need-growing-period copy-btn' type='success' icon='folder_copy' id='growing-period-copy-form-btn' %}
@@ -73,11 +73,13 @@
       <div style="display: flex;flex-direction: row" class="card-header">
         <h5 style="margin: auto; width: 100%">{% translate 'Produkttypen' %}</h5>
         {% if perms.products.manage %}
-          <div id="edit_product_type_button" class="mx-1">
-            <span class="spinner-border"></span>
+          <div class="d-flex flex-row list-actions">
+            <div id="edit_product_type_button" class="mx-1">
+              <span class="spinner-border"></span>
+            </div>
+            <div style="width: 3em"></div>
+            {% include 'wirgarten/generic/action-button.html' with onclick='deleteCapacity()' title='Produkttyp/Kapazität löschen' disabled=True class='need-product-type delete-btn' type='danger' icon='delete' id='del-capacity-btn' %}
           </div>
-          <div style="width: 3em"></div>
-          {% include 'wirgarten/generic/action-button.html' with onclick='deleteCapacity()' title='Produkttyp/Kapazität löschen' disabled=True class='need-product-type delete-btn' type='danger' icon='delete' id='del-capacity-btn' %}
         {% endif %}
       </div>
       <div style="overflow: auto" class="card-body">
@@ -126,7 +128,7 @@
       <div class="d-flex flex-row justify-content-between card-header">
         <h5 style="margin: auto; width: 100%">{% translate 'Produkte' %}</h5>
         {% if perms.products.manage %}
-          <div class="d-flex flex-row">
+          <div class="d-flex flex-row list-actions">
             {% include 'wirgarten/generic/action-button.html' with onclick='getProductAddForm()' title='Produkt hinzufügen' disabled=True class='need-product-type' type='success' icon='add' id='add-product-btn' %}
             <div id="edit_product_button" class="mx-1">
               <span class="spinner-border"></span>

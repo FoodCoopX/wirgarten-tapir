@@ -158,7 +158,6 @@
   }
 
   /* Page layouts with grids made for the desktop: one column */
-  .dashboard-container,
   #member-detail-container,
   .filter-list-layout {
     display: flex !important;
@@ -225,5 +224,144 @@
 
   .pickup-location-layout > div:last-child {
     height: 60vh;
+  }
+
+  /* The button row of a list (member list) holds 15 buttons, some of them inside wrappers
+   * that React fills and some separated by empty spacer divs. The wrappers get
+   * display: contents (!important, as some have the bootstrap class d-flex) so that all buttons are cells of one grid, the spacers vanish. The
+   * grid wraps into as many rows as needed and every row is stretched to the full width,
+   * like justified text, with all buttons of the same width. */
+  .list-actions {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(4.25rem, 1fr));
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .list-actions > :not(.btn),
+  .list-actions > :not(.btn) > :not(.btn),
+  .list-actions > :not(.btn) > :not(.btn) > :not(.btn) {
+    display: contents !important;
+  }
+
+  .list-actions .btn {
+    margin: 0 !important;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* Pickup locations: the search field of the filter shrank to an empty box next to the
+   * checkbox and the buttons. It gets its own row, the rest wraps below it. */
+  .pickup-location-filter {
+    flex-wrap: wrap;
+  }
+
+  .pickup-location-filter input[name="search"] {
+    flex: 1 1 100%;
+    max-width: none !important;
+  }
+
+  /* The action buttons used to sit left-aligned and crowded. They now fill the row evenly
+   * and the route button goes below them over the full width. */
+  .pickup-location-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  /* The capacity button is rendered by React inside two wrappers, the others are plain
+   * buttons with a side margin. With flex the buttons differ in width, because only they
+   * have padding. A grid with equal columns gives all of them the same width and the
+   * wrappers do not show. */
+  .pickup-location-buttons {
+    display: grid !important;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+  }
+
+  .pickup-location-buttons > *,
+  #pickup_location_capacity_edit_button > div {
+    display: grid;
+    margin: 0 !important;
+  }
+
+  .pickup-location-buttons .btn {
+    width: 100%;
+    margin: 0 !important;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* Six columns do not fit on a phone and the last ones were cut off behind a sideways
+   * scroll, so every location is shown as a card instead. The head row is dropped and each
+   * cell names itself with its data-label (the labels are set in the template). */
+  .pickup-location-layout table.table thead {
+    display: none;
+  }
+
+  .pickup-location-layout table.table tbody,
+  .pickup-location-layout table.table tr,
+  .pickup-location-layout table.table td {
+    display: block;
+    text-align: left !important;
+    white-space: normal !important;
+  }
+
+  .pickup-location-layout table.table tr.location-row {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+  }
+
+  .pickup-location-layout table.table td {
+    border: 0;
+    padding: 0.15rem 0.5rem;
+  }
+
+  .pickup-location-layout table.table td::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 12px;
+    color: var(--bs-secondary-color, #6c757d);
+  }
+
+  /* The name is the heading of the card, so its label is dropped and the text is larger.
+   * The address is what members look for first, so it is bold and larger as well. */
+  .pickup-location-layout table.table td[data-label="Name"]::before {
+    display: none;
+  }
+
+  .pickup-location-layout table.table td[data-label="Name"] {
+    font-size: 1.3em;
+  }
+
+  .pickup-location-layout table.table td[data-label="Adresse"] {
+    font-size: 1.15em;
+    font-weight: 600;
+  }
+}
+
+/* The dashboard grid has three columns between 768px and 991px, but some tiles ask for
+ * four (inline grid-area in admin_dashboard.html). The grid then gets a fourth column that
+ * the heading (grid-column 1 / -1) does not cover, so the heading sits off-centre and the
+ * tiles run to the edge. Up to 991px the tiles are stacked like on a phone. From 992px the
+ * grid has enough columns and stays as it is. */
+@media (max-width: 991.98px) {
+  .dashboard-container {
+    display: flex !important;
+    flex-direction: column;
+    gap: 1em;
+  }
+}
+
+/* The member page has three columns, and the left one holds two tiles side by side. At
+ * 820px wide each tile is only about 100px, so the buttons and the cross of the tiles
+ * overlap the text (also without this file). Up to 1199px the page is stacked like on a
+ * phone. This includes tablets (768px and wider), which the phone breakpoint above does
+ * not cover. */
+@media (max-width: 1199.98px) {
+  #member-detail-container {
+    display: flex !important;
+    flex-direction: column;
+    gap: 1em;
   }
 }

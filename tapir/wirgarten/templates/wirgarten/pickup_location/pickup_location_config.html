@@ -15,7 +15,7 @@
     <script src="{% static 'wirgarten/js/pickup-location-config.js' %} "></script>
     <div style="margin-top: 1em">
         <form method="get"
-              class="card card-body py-2 mb-2 d-flex flex-row gap-2 align-items-center">
+              class="card card-body py-2 mb-2 d-flex flex-row gap-2 align-items-center pickup-location-filter">
             <input type="text"
                    name="search"
                    value="{{ search }}"
@@ -37,8 +37,9 @@
         <div class="card">
             <div class="card-header" style="display: flex; flex-direction:row;">
                 <h4 style="margin-right: 3em">{{ pickup_locations|length }} Abholorte</h4>
-                <div class="d-flex justify-content-between" style="flex-grow: 2">
-                    <div class="d-flex gap-2">{% if perms.coop.manage %}
+                <div class="d-flex justify-content-between pickup-location-actions"
+                     style="flex-grow: 2">
+                    <div class="d-flex gap-2 pickup-location-buttons">{% if perms.coop.manage %}
                         {% include 'wirgarten/generic/action-button.html' with onclick='handleAddPickupLocation()' title='Abholort hinzufügen' type='success' icon='add_location_alt' %}
                         {% include 'wirgarten/generic/action-button.html' with onclick='handleEdit()' id='edit-location' title='Abholort bearbeiten' disabled=True type='primary' icon='edit' %}
                         <div id="pickup_location_capacity_edit_button"
@@ -78,21 +79,22 @@
                             <tr id="row-{{ pl.id }}"
                                 class="tr-clickable location-row"
                                 onclick="handleRowClick('{{ pl.id }}')">
-                                <td style="text-align:left">
+                                <td style="text-align:left" data-label="Name">
                                     {% if pl.location_route %}
                                         {{ pl.location_route }}
                                     {% endif %}
                                     <strong>{{ pl.name }}</strong>
                                 </td>
-                                <td>
+                                <td data-label="Abholtage">
                                     <small style="line-height: 1em;">{{ pl.opening_times|safe }}</small>
                                 </td>
-                                <td>
+                                <td data-label="Adresse">
                                     {{ pl.street }}
                                     <br/>
                                     <small>{{ pl.postcode }} {{ pl.city }}</small>
                                 </td>
-                                <td style="white-space:nowrap; text-align:left;">
+                                <td style="white-space:nowrap; text-align:left;"
+                                    data-label="Kapazitäten">
                                     {% for cap in pl.capabilities %}
                                         <img width="24em" title="{{ cap.name }}" src="{{ cap.icon }}"/>
                                         <small> {{ cap.current_capacity }} / {{ cap.max_capacity|default:'∞' }}
@@ -105,14 +107,14 @@
                                         <br/>
                                     {% endfor %}
                                 </td>
-                                <td>
+                                <td data-label="Mitglieder">
                                     {% if pl.members == 0 %}
                                         -
                                     {% else %}
                                         {{ pl.members }}
                                     {% endif %}
                                 </td>
-                                <td>
+                                <td data-label="Verfügbar">
                                     {% if pl.start_date and pl.end_date %}
                                         {{ pl.start_date|format_date }} – {{ pl.end_date|format_date }}
                                     {% elif pl.start_date %}
