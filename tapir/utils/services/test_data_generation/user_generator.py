@@ -174,7 +174,6 @@ class UserGenerator:
         KeycloakUserManager.create_keycloak_user_if_necessary(
             user=member,
             initial_password=member.email.split("@")[0],
-            cache=cache,
         )
 
         member_without_subscriptions = random.random() < 0.20

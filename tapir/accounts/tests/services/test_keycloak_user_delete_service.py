@@ -19,7 +19,7 @@ class TestKeycloakUserDeleteService(TapirUnitTest):
         mock_get_keycloak_client.return_value = mock_client
         user = MemberFactory.build(keycloak_id="")
 
-        KeycloakUserDeleteService.delete_user_if_exists(user=user, cache=MagicMock())
+        KeycloakUserDeleteService.delete_user_if_exists(user=user)
 
         mock_get_keycloak_client.assert_not_called()
         mock_client.delete_user.assert_not_called()
@@ -31,11 +31,10 @@ class TestKeycloakUserDeleteService(TapirUnitTest):
         mock_client = MagicMock()
         mock_get_keycloak_client.return_value = mock_client
         user = MemberFactory.build(keycloak_id="1234")
-        cache = MagicMock()
 
-        KeycloakUserDeleteService.delete_user_if_exists(user=user, cache=cache)
+        KeycloakUserDeleteService.delete_user_if_exists(user=user)
 
-        mock_get_keycloak_client.assert_called_once_with(cache)
+        mock_get_keycloak_client.assert_called_once_with()
         mock_client.delete_user.assert_called_once_with("1234")
 
     @patch.object(KeycloakUserManager, "get_keycloak_client", autospec=True)
@@ -48,11 +47,10 @@ class TestKeycloakUserDeleteService(TapirUnitTest):
         )
         mock_get_keycloak_client.return_value = mock_client
         user = MemberFactory.build(keycloak_id="1234")
-        cache = MagicMock()
 
-        KeycloakUserDeleteService.delete_user_if_exists(user=user, cache=cache)
+        KeycloakUserDeleteService.delete_user_if_exists(user=user)
 
-        mock_get_keycloak_client.assert_called_once_with(cache)
+        mock_get_keycloak_client.assert_called_once_with()
         mock_client.delete_user.assert_called_once_with("1234")
 
     @patch.object(KeycloakUserManager, "get_keycloak_client", autospec=True)
@@ -65,10 +63,9 @@ class TestKeycloakUserDeleteService(TapirUnitTest):
         )
         mock_get_keycloak_client.return_value = mock_client
         user = MemberFactory.build(keycloak_id="1234")
-        cache = MagicMock()
 
         with self.assertRaises(KeycloakDeleteError):
-            KeycloakUserDeleteService.delete_user_if_exists(user=user, cache=cache)
+            KeycloakUserDeleteService.delete_user_if_exists(user=user)
 
-        mock_get_keycloak_client.assert_called_once_with(cache)
+        mock_get_keycloak_client.assert_called_once_with()
         mock_client.delete_user.assert_called_once_with("1234")

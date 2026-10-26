@@ -1,4 +1,4 @@
-from unittest.mock import patch, Mock, ANY
+from unittest.mock import patch, Mock
 
 from django.test import override_settings
 from django.urls import reverse
@@ -714,9 +714,7 @@ class TestMemberPersonalDataApiView(TapirIntegrationTest):
         self.assertStatusCode(response, status.HTTP_200_OK)
         self.assert_order_confirmed(response.json())
 
-        mock_update_keycloak_user_name.assert_called_once_with(
-            user=target_user, cache=ANY
-        )
+        mock_update_keycloak_user_name.assert_called_once_with(user=target_user)
 
         target_recipient.refresh_from_db()
         self.assertEqual("test_fn", target_recipient.first_name)

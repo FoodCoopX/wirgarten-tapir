@@ -122,7 +122,7 @@ def terminate_session(sender, request, user, **kwargs):
 
     from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
 
-    keycloak_client = KeycloakUserManager.get_keycloak_client(cache={})
+    keycloak_client = KeycloakUserManager.get_keycloak_client()
     keycloak_client.user_logout(user.keycloak_id)
 
 

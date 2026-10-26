@@ -355,7 +355,6 @@ class DeleteMemberApiView(APIView):
         parameters=[OpenApiParameter(name="member_id", type=str)],
     )
     def delete(self, request):
-        cache = {}
         member_id = request.query_params.get("member_id")
         member = get_object_or_404(Member, id=member_id)
 
@@ -385,7 +384,7 @@ class DeleteMemberApiView(APIView):
 
             member.delete()
 
-            KeycloakUserDeleteService.delete_user_if_exists(user=member, cache=cache)
+            KeycloakUserDeleteService.delete_user_if_exists(user=member)
 
         return Response("deleted")
 
@@ -639,9 +638,7 @@ class MemberPersonalDataApiView(APIView):
                 first_name=member.first_name, last_name=member.last_name
             )
             if member.keycloak_id:
-                KeycloakUserManager.update_keycloak_user_name(
-                    user=member, cache=self.cache
-                )
+                KeycloakUserManager.update_keycloak_user_name(user=member)
 
             member.save()
 
@@ -671,7 +668,7 @@ class MemberEmailApiView(APIView):
                 {
                     "email": member.email,
                     "verified": EmailVerificationService.is_user_email_verified(
-                        user=member, cache=self.cache
+                        user=member
                     ),
                     "contact_email": get_parameter_value(
                         ParameterKeys.SITE_EMAIL, cache=self.cache
@@ -704,7 +701,6 @@ class MemberEmailApiView(APIView):
             PersonalDataValidator.validate_email_address_not_in_use(
                 email=new_email,
                 check_waiting_list=True,
-                cache=self.cache,
             )
         except DjangoValidationError as error:
             return Response(
@@ -715,12 +711,10 @@ class MemberEmailApiView(APIView):
 
         with transaction.atomic():
             KeycloakUserManager.create_keycloak_user_if_necessary(
-                user=member, initial_password=None, cache=self.cache
+                user=member, initial_password=None
             )
 
-            if EmailVerificationService.is_user_email_verified(
-                user=member, cache=self.cache
-            ):
+            if EmailVerificationService.is_user_email_verified(user=member):
                 MailChangeService.start_email_change_process(
                     user=member, new_email=new_email, orig_email=member.email
                 )
@@ -751,11 +745,9 @@ class MemberEmailApiView(APIView):
         ).save()
 
         try:
-            EmailVerificationService.send_verification_email(
-                user=member, actor=actor, cache=self.cache
-            )
+            EmailVerificationService.send_verification_email(user=member, actor=actor)
         except KeycloakPutError:
-            kc = KeycloakUserManager.get_keycloak_client(cache=self.cache)
+            kc = KeycloakUserManager.get_keycloak_client()
             kc.update_user(
                 user_id=member.keycloak_id,
                 payload={

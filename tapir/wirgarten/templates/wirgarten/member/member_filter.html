@@ -93,7 +93,7 @@
             <td>{{ member.first_name }}</td>
             <td>{{ member.last_name }}</td>
             <td>
-                {% member_email_verified member cache as verified %}
+                {% member_email_verified member as verified %}
                 {% if not verified %}
                     <span title="Nicht verifiziert!"
                           style="color: var(--secondary);

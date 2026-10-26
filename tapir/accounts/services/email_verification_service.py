@@ -11,8 +11,8 @@ LOG = logging.getLogger(__name__)
 
 class EmailVerificationService:
     @classmethod
-    def is_user_email_verified(cls, user: KeycloakUser, cache: dict) -> bool:
-        kc = KeycloakUserManager.get_keycloak_client(cache=cache)
+    def is_user_email_verified(cls, user: KeycloakUser) -> bool:
+        kc = KeycloakUserManager.get_keycloak_client()
         try:
             kc_user = kc.get_user(user.keycloak_id)
             return kc_user["emailVerified"]
@@ -20,9 +20,7 @@ class EmailVerificationService:
             return False
 
     @classmethod
-    def send_verification_email(
-        cls, user: KeycloakUser, actor: TapirUser | None, cache: dict
-    ):
+    def send_verification_email(cls, user: KeycloakUser, actor: TapirUser | None):
         if settings.KEYCLOAK_SKIP_VERIFICATION_EMAIL:
             print(f"Skipping email verification for {user.email}")
         else:
@@ -32,7 +30,7 @@ class EmailVerificationService:
             # Mitgliedskonto ..."). From Keycloak 24 on it renders email-verification.ftl with
             # Keycloak's generic text instead. Calling the execute-actions email directly keeps
             # the same mail and link on Keycloak 23 and 26.
-            kc = KeycloakUserManager.get_keycloak_client(cache=cache)
+            kc = KeycloakUserManager.get_keycloak_client()
             kc.send_update_account(
                 user_id=user.keycloak_id,
                 payload=["VERIFY_EMAIL"],

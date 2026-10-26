@@ -210,15 +210,13 @@ class BestellWizardOrderFulfiller:
         )
 
         KeycloakUserManager.create_keycloak_user_if_necessary(
-            user=member, initial_password=None, cache=cache
+            user=member, initial_password=None
         )
 
         try:
-            EmailVerificationService.send_verification_email(
-                user=member, actor=member, cache=cache
-            )
+            EmailVerificationService.send_verification_email(user=member, actor=member)
         except KeycloakPutError:
-            KeycloakUserDeleteService.delete_user_if_exists(user=member, cache=cache)
+            KeycloakUserDeleteService.delete_user_if_exists(user=member)
             raise
 
         return member

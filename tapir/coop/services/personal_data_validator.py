@@ -28,7 +28,7 @@ class PersonalDataValidator:
         # checking that the required fields are filled and that the email is valid is already done by the serializer class
 
         cls.validate_email_address_not_in_use(
-            email, cache=cache, check_waiting_list=check_waiting_list
+            email, check_waiting_list=check_waiting_list
         )
         cls.validate_phone_number_is_valid(phone_number, cache=cache)
 
@@ -63,9 +63,7 @@ class PersonalDataValidator:
             raise ValidationError("Ungültige Telefonnummer")
 
     @classmethod
-    def validate_email_address_not_in_use(
-        cls, email: str, cache: dict, check_waiting_list: bool
-    ):
+    def validate_email_address_not_in_use(cls, email: str, check_waiting_list: bool):
         duplicate_email_query = Member.objects.filter(
             Q(email=email) | Q(username=email)
         )
@@ -75,7 +73,7 @@ class PersonalDataValidator:
                 "Diese E-Mail-Adresse ist schon einem anderen Mitglied zugewiesen."
             )
 
-        kc = KeycloakUserManager.get_keycloak_client(cache=cache)
+        kc = KeycloakUserManager.get_keycloak_client()
         keycloak_id = kc.get_user_id(email)
         if keycloak_id is not None:
             raise ValidationError(
