@@ -233,14 +233,15 @@ const MemberProfileSolidarityContributionCard: React.FC<
       return (
         <p className={"mb-0"}>
           Beachte: Du kannst deinen Solidarbeitrag nur nach oben verändern. Um
-          ihn zu reduzieren, kontaktiere deinen Betrieb ({adminEmailLink}).
+          ihn zu reduzieren, wende dich bitte an die Verwaltung (
+          {adminEmailLink}).
         </p>
       );
     }
     return (
       <p className={"mb-0"}>
-        Beachte: Du kannst deinen Solidarbeitrag nicht selbstständig
-        anpassen. Kontaktiere dazu deinen Betrieb ({adminEmailLink}).
+        Beachte: Du kannst deinen Solidarbeitrag nicht selbstständig anpassen.
+        Wende dich dazu bitte an die Verwaltung ({adminEmailLink}).
       </p>
     );
   }
@@ -356,7 +357,7 @@ const MemberProfileSolidarityContributionCard: React.FC<
                 <>
                   <Form.Text className={"text-danger"}>
                     Du kannst deinen Beitrag nicht selber nach unten anpassen.
-                    Kontaktiere bitte {adminEmail}.
+                    Bitte wende dich an die Verwaltung ({adminEmail}).
                   </Form.Text>
                   <br />
                 </>

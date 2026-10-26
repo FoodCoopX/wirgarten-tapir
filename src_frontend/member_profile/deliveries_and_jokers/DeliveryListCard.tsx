@@ -128,9 +128,10 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
             title={`${pickupLocationLabel} ändern`}
             text={
               <>
-                Für eine Änderung deines Abholorts wende dich bitte an deinen
-                Betrieb unter{" "}
-                <a href={`mailto:${adminContactEmail}`}>{adminContactEmail}</a>.
+                Für eine Änderung deines Abholorts wende dich bitte an die
+                Verwaltung (
+                <a href={`mailto:${adminContactEmail}`}>{adminContactEmail}</a>
+                ).
               </>
             }
           />
