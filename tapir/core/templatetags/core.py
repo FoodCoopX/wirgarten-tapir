@@ -169,9 +169,7 @@ def add_admin_links(groups, request, cache: dict):
             display_name=_("Zeichn. und Künd."),
             material_icon="contract_edit",
             url=reverse_lazy("wirgarten:contract_updates"),
-            notification_count=MemberDataToConfirmApiView.get_number_of_unconfirmed_changes(
-                cache=cache
-            ),
+            notification_count=MemberDataToConfirmApiView.get_number_of_unconfirmed_changes(),
         )
 
         waitlist_entries = WaitingListEntry.objects.count()

@@ -18,6 +18,9 @@ from tapir.pickup_locations.models import PickupLocationDeliveryCharge
 from tapir.pickup_locations.models import ProductBasketSizeEquivalence
 from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.subscriptions.models import NoticePeriod
+from tapir.subscriptions.services.unconfirmed_changes_provider import (
+    UnconfirmedChangesProvider,
+)
 from tapir.utils.services.tapir_cache_manager import TapirCacheManager
 from tapir.utils.shortcuts import get_from_cache_or_compute
 from tapir.wirgarten.models import (
@@ -418,12 +421,7 @@ class TapirCache:
         return get_from_cache_or_compute(
             cache,
             "unconfirmed_coop_share_purchases",
-            lambda: list(
-                CoopShareTransaction.objects.filter(
-                    admin_confirmed__isnull=True,
-                    transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,
-                )
-            ),
+            lambda: list(UnconfirmedChangesProvider.get_unconfirmed_share_purchases()),
         )
 
     @classmethod
