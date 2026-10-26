@@ -15,14 +15,19 @@ import { handleRequestError } from "../../utils/handleRequestError.ts";
 
 interface MemberProfileSolidarityContributionCardProps {
   memberId: string;
-  adminEmail: string;
+  contactEmail: string;
   adminVersion: boolean;
   membersCanChangeContribution: boolean;
 }
 
 const MemberProfileSolidarityContributionCard: React.FC<
   MemberProfileSolidarityContributionCardProps
-> = ({ memberId, adminEmail, adminVersion, membersCanChangeContribution }) => {
+> = ({
+  memberId,
+  contactEmail,
+  adminVersion,
+  membersCanChangeContribution,
+}) => {
   const api = useApi(SolidarityContributionApi, getCsrfToken());
   const [loading, setLoading] = useState(true);
   const [solidarityContributions, setSolidarityContributions] = useState<
@@ -204,7 +209,9 @@ const MemberProfileSolidarityContributionCard: React.FC<
   }
 
   function buildHelpText() {
-    const adminEmailLink = <a href={"mailto:" + adminEmail}>{adminEmail}</a>;
+    const contactEmailLink = (
+      <a href={"mailto:" + contactEmail}>{contactEmail}</a>
+    );
 
     if (adminVersion) {
       if (membersCanChangeContribution) {
@@ -233,14 +240,15 @@ const MemberProfileSolidarityContributionCard: React.FC<
       return (
         <p className={"mb-0"}>
           Beachte: Du kannst deinen Solidarbeitrag nur nach oben verändern. Um
-          ihn zu reduzieren, kontaktiere deinen Betrieb ({adminEmailLink}).
+          ihn zu reduzieren, wende dich bitte an die Verwaltung (
+          {contactEmailLink}).
         </p>
       );
     }
     return (
       <p className={"mb-0"}>
-        Beachte: Du kannst deinen Solidarbeitrag nicht selbstständig
-        anpassen. Kontaktiere dazu deinen Betrieb ({adminEmailLink}).
+        Beachte: Du kannst deinen Solidarbeitrag nicht selbstständig anpassen.
+        Wende dich dazu bitte an die Verwaltung ({contactEmailLink}).
       </p>
     );
   }
@@ -356,7 +364,7 @@ const MemberProfileSolidarityContributionCard: React.FC<
                 <>
                   <Form.Text className={"text-danger"}>
                     Du kannst deinen Beitrag nicht selber nach unten anpassen.
-                    Kontaktiere bitte {adminEmail}.
+                    Bitte wende dich an die Verwaltung ({contactEmail}).
                   </Form.Text>
                   <br />
                 </>
