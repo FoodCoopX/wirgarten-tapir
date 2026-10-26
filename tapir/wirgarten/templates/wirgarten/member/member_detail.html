@@ -234,6 +234,9 @@
           {% include "wirgarten/member/loading_card.html" with title="Mailing-Listen" %}
         </div>
       {% endif %}
+      <div id="member_data_disclosure" data-member-id="{{ object.pk }}">
+        {% include "wirgarten/member/loading_card.html" with title="Meine Daten" %}
+      </div>
       <div id="member-payment-data" class="card">
         <h5 class="card-header d-flex justify-content-between align-items-center">
           {% translate "Bankverbindung" %}
