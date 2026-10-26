@@ -4,6 +4,16 @@ from tapir.bidding_round.config import OPTIONS_BIDDING_ROUND_PROCEDURE
 from tapir.pickup_locations.serializers import PublicPickupLocationSerializer
 
 
+class RoundProductPriceInputSerializer(serializers.Serializer):
+    product_id = serializers.CharField()
+    reference_value = serializers.CharField(
+        required=False, allow_null=True, allow_blank=True
+    )
+    min_amount = serializers.CharField(
+        required=False, allow_null=True, allow_blank=True
+    )
+
+
 class RoundCreateSerializer(serializers.Serializer):
     growing_period_id = serializers.CharField(required=False, allow_null=True)
     name = serializers.CharField()
@@ -14,6 +24,10 @@ class RoundCreateSerializer(serializers.Serializer):
     include_auto_renewed = serializers.BooleanField(required=False)
     comment = serializers.CharField(required=False, allow_blank=True)
     product_type_id = serializers.CharField(required=False, allow_null=True)
+    target_amount_per_year = serializers.CharField(
+        required=False, allow_null=True, allow_blank=True
+    )
+    prices = RoundProductPriceInputSerializer(many=True, required=False)
 
 
 class RoundConfigSerializer(serializers.Serializer):
@@ -27,6 +41,10 @@ class RoundConfigSerializer(serializers.Serializer):
     )
     bid_levels = serializers.IntegerField(required=False, min_value=1, max_value=3)
     product_type_id = serializers.CharField(required=False, allow_null=True)
+    target_amount_per_year = serializers.CharField(
+        required=False, allow_null=True, allow_blank=True
+    )
+    prices = RoundProductPriceInputSerializer(many=True, required=False)
 
 
 class BidSubmitSerializer(serializers.Serializer):
@@ -103,9 +121,18 @@ class LockAverageBidSerializer(serializers.Serializer):
 MONEY_FIELD_KWARGS = {"max_digits": 12, "decimal_places": 2}
 
 
+class RoundProductPriceSerializer(serializers.Serializer):
+    product_id = serializers.CharField()
+    product_name = serializers.CharField()
+    reference_value = serializers.CharField(allow_null=True)
+    min_amount = serializers.CharField(allow_null=True)
+
+
 class RoundProductSerializer(serializers.Serializer):
     product_type_id = serializers.CharField()
     product_type_name = serializers.CharField()
+    target_amount_per_year = serializers.CharField(allow_null=True)
+    prices = RoundProductPriceSerializer(many=True)
 
 
 class RoundSerializer(serializers.Serializer):
@@ -270,9 +297,15 @@ class GrowingPeriodOptionSerializer(serializers.Serializer):
     end_date = serializers.DateField()
 
 
+class ProductOptionSerializer(serializers.Serializer):
+    id = serializers.CharField()
+    name = serializers.CharField()
+
+
 class ProductTypeOptionSerializer(serializers.Serializer):
     id = serializers.CharField()
     name = serializers.CharField()
+    products = ProductOptionSerializer(many=True)
 
 
 class RoundStatsTotalsSerializer(serializers.Serializer):

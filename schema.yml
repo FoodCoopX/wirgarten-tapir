@@ -15412,6 +15412,13 @@ components:
           type: string
           nullable: true
           minLength: 1
+        target_amount_per_year:
+          type: string
+          nullable: true
+        prices:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoundProductPriceInputRequest'
     PatchedSaveExtendedProductTypeRequest:
       type: object
       properties:
@@ -16576,6 +16583,16 @@ components:
       - notice_period_unit
       - product
       - subscription_end_date
+    ProductOption:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+      required:
+      - id
+      - name
     ProductType:
       type: object
       properties:
@@ -16685,9 +16702,14 @@ components:
           type: string
         name:
           type: string
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductOption'
       required:
       - id
       - name
+      - products
     ProductTypesAndConfig:
       type: object
       properties:
@@ -17438,6 +17460,13 @@ components:
           type: string
           nullable: true
           minLength: 1
+        target_amount_per_year:
+          type: string
+          nullable: true
+        prices:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoundProductPriceInputRequest'
       required:
       - bidding_procedure
       - end_at
@@ -17449,9 +17478,50 @@ components:
           type: string
         product_type_name:
           type: string
+        target_amount_per_year:
+          type: string
+          nullable: true
+        prices:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoundProductPrice'
       required:
+      - prices
       - product_type_id
       - product_type_name
+      - target_amount_per_year
+    RoundProductPrice:
+      type: object
+      properties:
+        product_id:
+          type: string
+        product_name:
+          type: string
+        reference_value:
+          type: string
+          nullable: true
+        min_amount:
+          type: string
+          nullable: true
+      required:
+      - min_amount
+      - product_id
+      - product_name
+      - reference_value
+    RoundProductPriceInputRequest:
+      type: object
+      properties:
+        product_id:
+          type: string
+          minLength: 1
+        reference_value:
+          type: string
+          nullable: true
+        min_amount:
+          type: string
+          nullable: true
+      required:
+      - product_id
     RoundResultsResponse:
       type: object
       properties:

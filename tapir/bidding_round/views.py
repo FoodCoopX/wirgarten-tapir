@@ -61,7 +61,7 @@ from tapir.bestell_wizard.services.bestell_wizard_style_service import (
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
-from tapir.wirgarten.models import GrowingPeriod, Member
+from tapir.wirgarten.models import GrowingPeriod, Member, Product
 from tapir.wirgarten.service.products import get_next_growing_period
 from tapir.wirgarten.utils import get_now, get_today
 
@@ -311,6 +311,8 @@ class RoundListCreateView(APIView):
                 comment=validated.get("comment", ""),
                 product_type_id=validated.get("product_type_id"),
                 bid_levels=validated.get("bid_levels", 1),
+                target_amount_per_year=validated.get("target_amount_per_year"),
+                prices=validated.get("prices"),
                 cache=cache,
             )
         except ValidationError as error:
@@ -374,7 +376,16 @@ class AvailableProductTypesView(APIView):
         )
         return Response(
             [
-                {"id": product_type.id, "name": product_type.name}
+                {
+                    "id": product_type.id,
+                    "name": product_type.name,
+                    "products": [
+                        {"id": product.id, "name": product.name}
+                        for product in Product.objects.filter(
+                            type_id=product_type.id, deleted=False
+                        )
+                    ],
+                }
                 for product_type in product_types
             ],
             status=status.HTTP_200_OK,

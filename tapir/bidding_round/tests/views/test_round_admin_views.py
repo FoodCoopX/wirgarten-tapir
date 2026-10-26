@@ -16,7 +16,13 @@ from tapir.bidding_round.config import (
     CONFIGURATION,
     SIMPLE,
 )
-from tapir.bidding_round.models import Bid, BidItem, BiddingRound, BiddingRoundProduct
+from tapir.bidding_round.models import (
+    Bid,
+    BidItem,
+    BiddingRound,
+    BiddingRoundProduct,
+    BiddingRoundProductPrice,
+)
 from tapir.bidding_round.tests.factories import (
     BidFactory,
     BidItemFactory,
@@ -144,6 +150,42 @@ class TestRoundListCreateView(RoundAdminViewTestBase):
             list(round_.products.values_list("product_type_id", flat=True)),
         )
 
+    def test_roundCreate_withValues_storesValues(self):
+        growing_period = GrowingPeriodFactory.create()
+        product_type = ProductTypeFactory.create()
+        product = ProductFactory.create(type=product_type)
+        response = self.client.post(
+            reverse("bidding_rounds:round_list_create"),
+            data={
+                "growing_period_id": growing_period.id,
+                "name": "Beitragsrunde Test",
+                "bidding_procedure": "simple",
+                "end_at": "2026-12-31T23:59:00+01:00",
+                "product_type_id": product_type.id,
+                "target_amount_per_year": "1000.00",
+                "prices": [
+                    {
+                        "product_id": product.id,
+                        "reference_value": "80.00",
+                        "min_amount": "60.00",
+                    }
+                ],
+            },
+            content_type="application/json",
+        )
+        self.assertStatusCode(response, status.HTTP_201_CREATED)
+        round_ = BiddingRound.objects.get(id=response.json()["id"])
+        round_product = round_.products.get()
+        self.assertEqual(Decimal("1000.00"), round_product.target_amount_per_year)
+        price = BiddingRoundProductPrice.objects.get(
+            round_product=round_product, product=product
+        )
+        self.assertEqual(Decimal("80.00"), price.reference_value)
+        self.assertEqual(Decimal("60.00"), price.min_amount)
+        self.assertEqual(
+            "80.00", response.json()["product"]["prices"][0]["reference_value"]
+        )
+
     def test_roundList_returnsRounds(self):
         BiddingRoundFactory.create()
         response = self.client.get(reverse("bidding_rounds:round_list_create"))
@@ -172,13 +214,20 @@ class TestAvailableProductTypesView(RoundAdminViewTestBase):
     def test_availableProductTypes_returnsTypesWithCapacityForPeriod(self):
         growing_period = GrowingPeriodFactory.create()
         capacity = ProductCapacityFactory.create(period=growing_period)
+        product = ProductFactory.create(type=capacity.product_type)
         response = self.client.get(
             reverse("bidding_rounds:available_product_types"),
             {"growing_period_id": growing_period.id},
         )
         self.assertStatusCode(response, status.HTTP_200_OK)
         self.assertEqual(
-            [{"id": capacity.product_type.id, "name": capacity.product_type.name}],
+            [
+                {
+                    "id": capacity.product_type.id,
+                    "name": capacity.product_type.name,
+                    "products": [{"id": product.id, "name": product.name}],
+                }
+            ],
             response.json(),
         )
 
@@ -250,6 +299,64 @@ class TestRoundDetailView(RoundAdminViewTestBase):
         round_.refresh_from_db()
         self.assertEqual("Umbenannt", round_.name)
 
+    def test_roundPatch_updatesValues(self):
+        round_ = BiddingRoundFactory.create()
+        round_product = BiddingRoundProductFactory.create(round=round_)
+        product = ProductFactory.create(type=round_product.product_type)
+
+        response = self.client.patch(
+            reverse("bidding_rounds:round_detail", args=[round_.id]),
+            data={
+                "target_amount_per_year": "500.00",
+                "prices": [
+                    {
+                        "product_id": product.id,
+                        "reference_value": "70.00",
+                        "min_amount": "50.00",
+                    }
+                ],
+            },
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        round_product.refresh_from_db()
+        self.assertEqual(Decimal("500.00"), round_product.target_amount_per_year)
+        price = BiddingRoundProductPrice.objects.get(
+            round_product=round_product, product=product
+        )
+        self.assertEqual(Decimal("70.00"), price.reference_value)
+        self.assertEqual(Decimal("50.00"), price.min_amount)
+
+    def test_roundPatch_valuesWithBids_rejects(self):
+        round_ = BiddingRoundFactory.create()
+        round_product = BiddingRoundProductFactory.create(round=round_)
+        product = ProductFactory.create(type=round_product.product_type)
+        BidFactory.create(round=round_, member=MemberFactory.create())
+
+        response = self.client.patch(
+            reverse("bidding_rounds:round_detail", args=[round_.id]),
+            data={"prices": [{"product_id": product.id, "reference_value": "70.00"}]},
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, status.HTTP_400_BAD_REQUEST)
+
+    def test_roundPatch_wrongProductForPrices_rejects(self):
+        round_ = BiddingRoundFactory.create()
+        BiddingRoundProductFactory.create(round=round_)
+        other_product = ProductFactory.create()
+
+        response = self.client.patch(
+            reverse("bidding_rounds:round_detail", args=[round_.id]),
+            data={
+                "prices": [{"product_id": other_product.id, "reference_value": "70.00"}]
+            },
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, status.HTTP_400_BAD_REQUEST)
+
     def test_roundDelete_configurationRound_succeeds(self):
         round_ = BiddingRoundFactory.create()
         response = self.client.delete(
@@ -287,8 +394,15 @@ class TestRoundDetailView(RoundAdminViewTestBase):
 
 
 class TestRoundStartView(RoundAdminViewTestBase):
-    def test_roundStart_transitionsToActive(self):
+    def _create_round_with_target(self):
         round_ = BiddingRoundFactory.create()
+        round_product = BiddingRoundProductFactory.create(round=round_)
+        round_product.target_amount_per_year = Decimal("1000.00")
+        round_product.save()
+        return round_
+
+    def test_roundStart_transitionsToActive(self):
+        round_ = self._create_round_with_target()
         response = self.client.post(
             reverse("bidding_rounds:round_start", args=[round_.id])
         )
@@ -296,9 +410,19 @@ class TestRoundStartView(RoundAdminViewTestBase):
         round_.refresh_from_db()
         self.assertEqual(ACTIVE, round_.status)
 
+    def test_roundStart_withoutTargetAmount_rejects(self):
+        round_ = BiddingRoundFactory.create()
+        BiddingRoundProductFactory.create(round=round_)
+        response = self.client.post(
+            reverse("bidding_rounds:round_start", args=[round_.id])
+        )
+        self.assertStatusCode(response, status.HTTP_400_BAD_REQUEST)
+        round_.refresh_from_db()
+        self.assertEqual(CONFIGURATION, round_.status)
+
     def test_roundStart_withAnotherActiveRound_rejects(self):
         active_round = BiddingRoundFactory.create(status=ACTIVE)
-        round_ = BiddingRoundFactory.create()
+        round_ = self._create_round_with_target()
         response = self.client.post(
             reverse("bidding_rounds:round_start", args=[round_.id])
         )

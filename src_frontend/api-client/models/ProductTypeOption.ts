@@ -12,6 +12,9 @@
  * Do not edit the class manually.
  */
 
+import type { ProductOption } from "./ProductOption";
+import { ProductOptionFromJSON, ProductOptionToJSON } from "./ProductOption";
+
 /**
  *
  * @export
@@ -30,6 +33,12 @@ export interface ProductTypeOption {
    * @memberof ProductTypeOption
    */
   name: string;
+  /**
+   *
+   * @type {Array<ProductOption>}
+   * @memberof ProductTypeOption
+   */
+  products: Array<ProductOption>;
 }
 
 /**
@@ -40,6 +49,7 @@ export function instanceOfProductTypeOption(
 ): value is ProductTypeOption {
   if (!("id" in value) || value["id"] === undefined) return false;
   if (!("name" in value) || value["name"] === undefined) return false;
+  if (!("products" in value) || value["products"] === undefined) return false;
   return true;
 }
 
@@ -57,6 +67,7 @@ export function ProductTypeOptionFromJSONTyped(
   return {
     id: json["id"],
     name: json["name"],
+    products: (json["products"] as Array<any>).map(ProductOptionFromJSON),
   };
 }
 
@@ -75,5 +86,6 @@ export function ProductTypeOptionToJSONTyped(
   return {
     id: value["id"],
     name: value["name"],
+    products: (value["products"] as Array<any>).map(ProductOptionToJSON),
   };
 }

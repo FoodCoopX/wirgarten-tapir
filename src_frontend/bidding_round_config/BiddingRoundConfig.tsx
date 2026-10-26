@@ -24,15 +24,49 @@ interface BiddingRoundConfigProps {
   csrfToken: string;
 }
 
+interface ProductOption {
+  id: string;
+  name: string;
+}
+
 interface ProductTypeOption {
   id: string;
   name: string;
+  products: ProductOption[];
+}
+
+interface PriceInput {
+  productId: string;
+  productName: string;
+  referenceValue: string;
+  minAmount: string;
 }
 
 interface GrowingPeriodOption {
   id: string;
   startDate: Date;
   endDate: Date;
+}
+
+function buildPriceInputs(
+  products: ProductOption[] | undefined,
+  existingPrices?: {
+    productId: string;
+    referenceValue?: string | null;
+    minAmount?: string | null;
+  }[],
+): PriceInput[] {
+  return (products ?? []).map((product) => {
+    const existing = existingPrices?.find(
+      (price) => price.productId === product.id,
+    );
+    return {
+      productId: product.id,
+      productName: product.name,
+      referenceValue: existing?.referenceValue ?? "",
+      minAmount: existing?.minAmount ?? "",
+    };
+  });
 }
 
 function toDateInputValue(value: Date | string | null | undefined): string {
@@ -146,6 +180,10 @@ const BiddingRoundConfig: React.FC<BiddingRoundConfigProps> = ({
   const [includeAutoRenewed, setIncludeAutoRenewed] = useState(true);
   const [comment, setComment] = useState("");
   const [selectedProductTypeId, setSelectedProductTypeId] = useState("");
+  const [targetAmountPerYear, setTargetAmountPerYear] = useState("");
+  const [priceInputs, setPriceInputs] = useState<PriceInput[]>([]);
+  const valuesLocked = !!editingRound?.hasBids;
+
   const loadRounds = () => {
     api
       .biddingRoundsApiList()
@@ -163,18 +201,42 @@ const BiddingRoundConfig: React.FC<BiddingRoundConfigProps> = ({
   useEffect(loadRounds, [api]);
 
   const loadProductTypeOptions = (growingPeriodIdValue: string) => {
-    api
+    return api
       .biddingRoundsApiAvailableProductTypesList({
         growingPeriodId: growingPeriodIdValue || undefined,
       })
-      .then((response: any) => setProductTypeOptions(response))
-      .catch((e) =>
+      .then((response: any) => {
+        setProductTypeOptions(response);
+        return response as ProductTypeOption[];
+      })
+      .catch((e) => {
         handleRequestError(
           e,
           "Produkttypen konnten nicht geladen werden.",
           setToastDatas,
-        ),
-      );
+        );
+        return [] as ProductTypeOption[];
+      });
+  };
+
+  const selectProductType = (productTypeId: string, existingPrices?: any[]) => {
+    setSelectedProductTypeId(productTypeId);
+    const productType = productTypeOptions.find(
+      (option) => option.id === productTypeId,
+    );
+    setPriceInputs(buildPriceInputs(productType?.products, existingPrices));
+  };
+
+  const updatePriceInput = (
+    index: number,
+    field: "referenceValue" | "minAmount",
+    value: string,
+  ) => {
+    setPriceInputs((previous) =>
+      previous.map((input, currentIndex) =>
+        currentIndex === index ? { ...input, [field]: value } : input,
+      ),
+    );
   };
 
   const openCreateModal = () => {
@@ -190,6 +252,8 @@ const BiddingRoundConfig: React.FC<BiddingRoundConfigProps> = ({
     setIncludeAutoRenewed(true);
     setComment("");
     setSelectedProductTypeId("");
+    setTargetAmountPerYear("");
+    setPriceInputs([]);
     setShowModal(true);
     api
       .biddingRoundsApiGrowingPeriodsList()
@@ -216,7 +280,8 @@ const BiddingRoundConfig: React.FC<BiddingRoundConfigProps> = ({
     setBidLevels(round.bidLevels ?? 1);
     setIncludeAutoRenewed(round.includeAutoRenewed);
     setComment(round.comment ?? "");
-    setSelectedProductTypeId(round.product?.productTypeId ?? "");
+    setTargetAmountPerYear(round.product?.targetAmountPerYear ?? "");
+    setPriceInputs([]);
     setShowModal(true);
     api
       .biddingRoundsApiGrowingPeriodsList()
@@ -228,8 +293,25 @@ const BiddingRoundConfig: React.FC<BiddingRoundConfigProps> = ({
           setToastDatas,
         ),
       );
-    loadProductTypeOptions(round.growingPeriodId ?? "");
+    loadProductTypeOptions(round.growingPeriodId ?? "").then(
+      (productTypeOptions: ProductTypeOption[]) => {
+        const productType = productTypeOptions.find(
+          (option) => option.id === round.product?.productTypeId,
+        );
+        setSelectedProductTypeId(round.product?.productTypeId ?? "");
+        setPriceInputs(
+          buildPriceInputs(productType?.products, round.product?.prices),
+        );
+      },
+    );
   };
+
+  const buildPricesPayload = () =>
+    priceInputs.map((input) => ({
+      productId: input.productId,
+      referenceValue: input.referenceValue || null,
+      minAmount: input.minAmount || null,
+    }));
 
   const saveRound = async () => {
     const form = document.getElementById("roundForm") as HTMLFormElement;
@@ -249,6 +331,9 @@ const BiddingRoundConfig: React.FC<BiddingRoundConfigProps> = ({
             selectedProductTypeId || null;
           patchedRoundConfigRequest.biddingProcedure = procedure as any;
           patchedRoundConfigRequest.bidLevels = bidLevels;
+          patchedRoundConfigRequest.targetAmountPerYear =
+            targetAmountPerYear || null;
+          patchedRoundConfigRequest.prices = buildPricesPayload();
         }
         await api.biddingRoundsApiPartialUpdate({
           roundId: editingRound.id,
@@ -266,6 +351,8 @@ const BiddingRoundConfig: React.FC<BiddingRoundConfigProps> = ({
             includeAutoRenewed,
             comment,
             productTypeId: selectedProductTypeId || null,
+            targetAmountPerYear: targetAmountPerYear || null,
+            prices: buildPricesPayload(),
           } as any,
         } as any);
       }
@@ -394,7 +481,6 @@ const BiddingRoundConfig: React.FC<BiddingRoundConfigProps> = ({
                   <th>{"Name"}</th>
                   <th>{"Status"}</th>
                   <th>{"Verfahren"}</th>
-                  <th>{"Modus"}</th>
                   <th>{"Start"}</th>
                   <th>{"Ende"}</th>
                   <th>{"Aktionen"}</th>
@@ -403,7 +489,7 @@ const BiddingRoundConfig: React.FC<BiddingRoundConfigProps> = ({
               <tbody>
                 {rounds.length === 0 ? (
                   <tr>
-                    <td colSpan={7}>
+                    <td colSpan={6}>
                       {applyDisplayName(
                         "Keine Beitragsrunden vorhanden.",
                         displayName,
@@ -458,6 +544,14 @@ const BiddingRoundConfig: React.FC<BiddingRoundConfigProps> = ({
                               variant="success"
                               size="sm"
                               onClick={() => startRound(round.id)}
+                              disabled={
+                                round.product?.targetAmountPerYear == null
+                              }
+                              title={
+                                round.product?.targetAmountPerYear == null
+                                  ? "Zielbetrag pro Jahr muss zuerst gesetzt werden."
+                                  : undefined
+                              }
                             >
                               {"Start"}
                             </Button>
@@ -585,8 +679,8 @@ const BiddingRoundConfig: React.FC<BiddingRoundConfigProps> = ({
               ) : (
                 <Form.Select
                   value={selectedProductTypeId}
-                  onChange={(e) => setSelectedProductTypeId(e.target.value)}
-                  disabled={!!editingRound?.hasBids}
+                  onChange={(e) => selectProductType(e.target.value)}
+                  disabled={valuesLocked}
                   required
                 >
                   <option value="">{"Bitte wählen"}</option>
@@ -635,6 +729,85 @@ const BiddingRoundConfig: React.FC<BiddingRoundConfigProps> = ({
                 </Form.Select>
               </Form.Group>
             )}
+            {selectedProductTypeId && (
+              <>
+                <Form.Group className="mb-2">
+                  <Form.Label>{"Zielbetrag pro Jahr (€)"}</Form.Label>
+                  <Form.Control
+                    type="text"
+                    inputMode="decimal"
+                    placeholder="z. B. 220800"
+                    value={targetAmountPerYear}
+                    onChange={(e) => setTargetAmountPerYear(e.target.value)}
+                    disabled={valuesLocked}
+                  />
+                  <Form.Text className="text-muted">
+                    {
+                      "Wird für die Deckungs-Auswertung der Runde benötigt und muss vor dem Start gesetzt sein."
+                    }
+                  </Form.Text>
+                </Form.Group>
+                <Form.Group className="mb-2">
+                  <Form.Label>
+                    {"Ernteanteile: Richtwert und Mindestpreis (€/Monat)"}
+                  </Form.Label>
+                  {priceInputs.length === 0 ? (
+                    <p className="text-muted small mb-0">
+                      {"Keine Ernteanteile für diesen Produkttyp gefunden."}
+                    </p>
+                  ) : (
+                    <Table size="sm" borderless className="mb-0">
+                      <thead>
+                        <tr>
+                          <th>{"Ernteanteil"}</th>
+                          <th>{"Richtwert"}</th>
+                          <th>{"Mindestpreis"}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {priceInputs.map((input, index) => (
+                          <tr key={input.productId}>
+                            <td className="align-middle">
+                              {input.productName}
+                            </td>
+                            <td>
+                              <Form.Control
+                                type="text"
+                                inputMode="decimal"
+                                value={input.referenceValue}
+                                disabled={valuesLocked}
+                                onChange={(e) =>
+                                  updatePriceInput(
+                                    index,
+                                    "referenceValue",
+                                    e.target.value,
+                                  )
+                                }
+                              />
+                            </td>
+                            <td>
+                              <Form.Control
+                                type="text"
+                                inputMode="decimal"
+                                value={input.minAmount}
+                                disabled={valuesLocked}
+                                onChange={(e) =>
+                                  updatePriceInput(
+                                    index,
+                                    "minAmount",
+                                    e.target.value,
+                                  )
+                                }
+                              />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </Table>
+                  )}
+                </Form.Group>
+              </>
+            )}
             <Form.Group className="mb-2">
               <Form.Check
                 type="switch"
@@ -657,7 +830,7 @@ const BiddingRoundConfig: React.FC<BiddingRoundConfigProps> = ({
             {editingRound?.hasBids && (
               <p className="text-muted small mb-0">
                 {
-                  "Saison, Bietverfahren, Beitragsmodus und bietbare Produkttypen können nicht mehr geändert werden, sobald Gebote abgegeben wurden."
+                  "Saison, Bietverfahren, Anzahl Gebote, bietbare Produkttypen und die Bietrunden-Werte (Zielbetrag, Richtwert, Mindestpreis) können nicht mehr geändert werden, sobald Gebote abgegeben wurden."
                 }
               </p>
             )}

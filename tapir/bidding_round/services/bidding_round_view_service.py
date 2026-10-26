@@ -109,9 +109,42 @@ class BiddingRoundViewService:
         round_product = bidding_round.products.select_related("product_type").first()
         if round_product is None:
             return None
+        prices_by_product_id = {
+            price.product_id: price
+            for price in BiddingRoundProductPrice.objects.filter(
+                round_product=round_product
+            )
+        }
+        serialized_prices = []
+        for product in Product.objects.filter(
+            type_id=round_product.product_type_id, deleted=False
+        ):
+            price = prices_by_product_id.get(product.id)
+            serialized_prices.append(
+                {
+                    "product_id": product.id,
+                    "product_name": product.name,
+                    "reference_value": (
+                        str(price.reference_value)
+                        if price is not None and price.reference_value is not None
+                        else None
+                    ),
+                    "min_amount": (
+                        str(price.min_amount)
+                        if price is not None and price.min_amount is not None
+                        else None
+                    ),
+                }
+            )
         return {
             "product_type_id": round_product.product_type_id,
             "product_type_name": round_product.product_type.name,
+            "target_amount_per_year": (
+                str(round_product.target_amount_per_year)
+                if round_product.target_amount_per_year is not None
+                else None
+            ),
+            "prices": serialized_prices,
         }
 
     @classmethod

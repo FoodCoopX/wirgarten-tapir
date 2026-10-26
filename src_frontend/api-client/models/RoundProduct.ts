@@ -12,6 +12,12 @@
  * Do not edit the class manually.
  */
 
+import type { RoundProductPrice } from "./RoundProductPrice";
+import {
+  RoundProductPriceFromJSON,
+  RoundProductPriceToJSON,
+} from "./RoundProductPrice";
+
 /**
  *
  * @export
@@ -30,6 +36,18 @@ export interface RoundProduct {
    * @memberof RoundProduct
    */
   productTypeName: string;
+  /**
+   *
+   * @type {string}
+   * @memberof RoundProduct
+   */
+  targetAmountPerYear: string | null;
+  /**
+   *
+   * @type {Array<RoundProductPrice>}
+   * @memberof RoundProduct
+   */
+  prices: Array<RoundProductPrice>;
 }
 
 /**
@@ -40,6 +58,12 @@ export function instanceOfRoundProduct(value: object): value is RoundProduct {
     return false;
   if (!("productTypeName" in value) || value["productTypeName"] === undefined)
     return false;
+  if (
+    !("targetAmountPerYear" in value) ||
+    value["targetAmountPerYear"] === undefined
+  )
+    return false;
+  if (!("prices" in value) || value["prices"] === undefined) return false;
   return true;
 }
 
@@ -57,6 +81,8 @@ export function RoundProductFromJSONTyped(
   return {
     productTypeId: json["product_type_id"],
     productTypeName: json["product_type_name"],
+    targetAmountPerYear: json["target_amount_per_year"],
+    prices: (json["prices"] as Array<any>).map(RoundProductPriceFromJSON),
   };
 }
 
@@ -75,5 +101,7 @@ export function RoundProductToJSONTyped(
   return {
     product_type_id: value["productTypeId"],
     product_type_name: value["productTypeName"],
+    target_amount_per_year: value["targetAmountPerYear"],
+    prices: (value["prices"] as Array<any>).map(RoundProductPriceToJSON),
   };
 }

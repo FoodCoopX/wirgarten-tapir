@@ -17,6 +17,11 @@ import {
   BiddingProcedureEnumFromJSON,
   BiddingProcedureEnumToJSON,
 } from "./BiddingProcedureEnum";
+import type { RoundProductPriceInputRequest } from "./RoundProductPriceInputRequest";
+import {
+  RoundProductPriceInputRequestFromJSON,
+  RoundProductPriceInputRequestToJSON,
+} from "./RoundProductPriceInputRequest";
 
 /**
  *
@@ -72,6 +77,18 @@ export interface PatchedRoundConfigRequest {
    * @memberof PatchedRoundConfigRequest
    */
   productTypeId?: string | null;
+  /**
+   *
+   * @type {string}
+   * @memberof PatchedRoundConfigRequest
+   */
+  targetAmountPerYear?: string | null;
+  /**
+   *
+   * @type {Array<RoundProductPriceInputRequest>}
+   * @memberof PatchedRoundConfigRequest
+   */
+  prices?: Array<RoundProductPriceInputRequest>;
 }
 
 /**
@@ -112,6 +129,16 @@ export function PatchedRoundConfigRequestFromJSONTyped(
     bidLevels: json["bid_levels"] == null ? undefined : json["bid_levels"],
     productTypeId:
       json["product_type_id"] == null ? undefined : json["product_type_id"],
+    targetAmountPerYear:
+      json["target_amount_per_year"] == null
+        ? undefined
+        : json["target_amount_per_year"],
+    prices:
+      json["prices"] == null
+        ? undefined
+        : (json["prices"] as Array<any>).map(
+            RoundProductPriceInputRequestFromJSON,
+          ),
   };
 }
 
@@ -141,5 +168,12 @@ export function PatchedRoundConfigRequestToJSONTyped(
     bidding_procedure: BiddingProcedureEnumToJSON(value["biddingProcedure"]),
     bid_levels: value["bidLevels"],
     product_type_id: value["productTypeId"],
+    target_amount_per_year: value["targetAmountPerYear"],
+    prices:
+      value["prices"] == null
+        ? undefined
+        : (value["prices"] as Array<any>).map(
+            RoundProductPriceInputRequestToJSON,
+          ),
   };
 }

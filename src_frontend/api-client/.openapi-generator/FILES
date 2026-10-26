@@ -281,6 +281,7 @@ models/Product.ts
 models/ProductBasketSizeEquivalence.ts
 models/ProductBasketSizeEquivalenceRequest.ts
 models/ProductForCancellation.ts
+models/ProductOption.ts
 models/ProductType.ts
 models/ProductTypeAccordionInBestellWizard.ts
 models/ProductTypeAccordionInBestellWizardRequest.ts
@@ -308,6 +309,8 @@ models/RhythmEnum.ts
 models/Round.ts
 models/RoundCreateRequest.ts
 models/RoundProduct.ts
+models/RoundProductPrice.ts
+models/RoundProductPriceInputRequest.ts
 models/RoundResultsResponse.ts
 models/RoundStatsEntry.ts
 models/RoundStatsTotals.ts
