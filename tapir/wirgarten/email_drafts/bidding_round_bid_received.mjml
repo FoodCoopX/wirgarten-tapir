@@ -1,0 +1,38 @@
+<mjml>
+<mj-body>
+<mj-wrapper padding="20px 0px 20px 0px" border="none" direction="ltr" text-align="center">
+    <mj-section padding="0px" text-align="left">
+        <mj-column>
+            <mj-text padding="10px 25px 10px 25px" align="left">
+                Moin {{Empfänger.Vorname}}, <br /><br />
+
+                vielen Dank für dein Gebot in der Beitragsrunde {{Beitragsrunde: Gebot erhalten.Rundenname}}! <br /><br />
+
+                Dein Gebot im Überblick: <br />
+                {{Beitragsrunde: Gebot erhalten.Gebotsliste}} <br /><br />
+
+                Das ergibt pro Jahr: {{Beitragsrunde: Gebot erhalten.Gesamtbetrag pro Jahr}} <br />
+                Abholort: {{Beitragsrunde: Gebot erhalten.Abholort}} <br /><br />
+
+                Du kannst dein Gebot bis zum {{Beitragsrunde: Gebot erhalten.Enddatum der Beitragsrunde}} jederzeit ändern. <br />
+                Hier geht es direkt zu deinem Gebot: {{Beitragsrunde: Gebot erhalten.Link zur Beitragsrunde}} <br /><br />
+
+                Liebe Grüße, <br />
+                dein {{Allgemein.Admin Name}} <br />
+                {{Allgemein.Admin Email}} <br /><br />
+
+                __________________ <br /><br />
+
+                Folgende Tokens sind hier relevant: <br />
+                {{Beitragsrunde: Gebot erhalten.Rundenname}} <br />
+                {{Beitragsrunde: Gebot erhalten.Gebotsliste}} <br />
+                {{Beitragsrunde: Gebot erhalten.Gesamtbetrag pro Jahr}} <br />
+                {{Beitragsrunde: Gebot erhalten.Abholort}} <br />
+                {{Beitragsrunde: Gebot erhalten.Link zur Beitragsrunde}} <br />
+                {{Beitragsrunde: Gebot erhalten.Enddatum der Beitragsrunde}}
+            </mj-text>
+        </mj-column>
+    </mj-section>
+</mj-wrapper>
+</mj-body>
+</mjml>
