@@ -61,6 +61,8 @@ class TestPickupLocationCapacityGeneralChecker(TapirIntegrationTest):
             subscription_start=subscription_start,
             cache=cache,
             check_waiting_list_entries=True,
+            extra_capacity_used_by_member_by_product_type=None,
+            extra_capacity_used_by_other_members_by_product_type=None,
         )
 
     @patch.object(
@@ -101,4 +103,6 @@ class TestPickupLocationCapacityGeneralChecker(TapirIntegrationTest):
             subscription_start=subscription_start,
             cache=cache,
             check_waiting_list_entries=True,
+            extra_capacity_used_by_member_by_product_type=None,
+            extra_capacity_used_by_other_members_by_product_type=None,
         )
