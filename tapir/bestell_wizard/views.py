@@ -470,7 +470,7 @@ class BestellWizardBaseDataApiView(APIView):
 
     @staticmethod
     def build_logo_url(cache: dict):
-        # The wizard has a light background: themes can ship a dark logo for it
+        # The wizard may have a light background: themes can ship a dark logo for it
         theme = get_parameter_value(key=ParameterKeys.ORGANISATION_THEME, cache=cache)
         dark_logo = f"core/themes/{theme}/images/Logo_dark.webp"
         if staticfiles_storage.exists(dark_logo):

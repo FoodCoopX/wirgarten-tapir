@@ -23,6 +23,8 @@
   --primary: #28476e;
   --primary-hover: #3f6491;
   --secondary: #bd4a55;
+  --secondary-hover: #a23e49;
+  --secondary-active: #8a343e;
   --background: #f4f1e7;
   --surface-muted: #edefed;
   --platinum: #e9e7e5;
@@ -129,11 +131,14 @@ a:hover {
   background-color: var(--secondary);
   border-color: var(--secondary);
 }
+.btn-secondary {
+  color: var(--white);
+}
 .btn-secondary:hover,
 .btn-secondary:focus {
-  background-color: var(--secondary);
-  border-color: var(--secondary);
-  filter: brightness(90%);
+  background-color: var(--secondary-hover);
+  border-color: var(--secondary-hover);
+  color: var(--white);
 }
 .btn-secondary:disabled,
 .btn-secondary.disabled {
@@ -143,9 +148,15 @@ a:hover {
 }
 .btn-secondary:not(:disabled):not(.disabled):active,
 .btn-secondary:not(:disabled):not(.disabled).active {
-  background-color: var(--secondary);
-  border-color: var(--secondary);
-  filter: brightness(75%);
+  background-color: var(--secondary-active);
+  border-color: var(--secondary-active);
+  color: var(--white);
+}
+.btn-danger,
+.btn-danger:hover,
+.btn-danger:focus,
+.btn-danger:active {
+  color: var(--white);
 }
 .is-valid {
   border-color: var(--primary) !important;
