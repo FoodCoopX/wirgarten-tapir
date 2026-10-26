@@ -1666,6 +1666,66 @@ paths:
               schema:
                 $ref: '#/components/schemas/BreadsPerPickupLocationPerWeek'
           description: ''
+  /bakery/breads-to-bake-per-week/:
+    get:
+      operationId: bakery_breads_to_bake_per_week_list
+      description: |-
+        The solver's total per bread, including breads with fixed_pieces that
+        occupy no stove layers.
+      parameters:
+      - in: query
+        name: delivery_day
+        schema:
+          type: integer
+      - in: query
+        name: delivery_week
+        schema:
+          type: integer
+      - in: query
+        name: year
+        schema:
+          type: integer
+      tags:
+      - bakery
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BreadsToBakePerWeek'
+          description: ''
+  /bakery/breads-to-bake-per-week/{id}/:
+    get:
+      operationId: bakery_breads_to_bake_per_week_retrieve
+      description: |-
+        The solver's total per bread, including breads with fixed_pieces that
+        occupy no stove layers.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der breads to bake per week identifiziert.
+        required: true
+      tags:
+      - bakery
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BreadsToBakePerWeek'
+          description: ''
   /bakery/ingredients/:
     get:
       operationId: bakery_ingredients_list
@@ -9903,6 +9963,57 @@ components:
       - pickup_location_name
       - updated_at
       - year
+    BreadsToBakePerWeek:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        bread_name:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        year:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        delivery_week:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        delivery_day:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+        quantity:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          description: Total pieces to bake
+        remaining:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          description: Pieces beyond what the deliveries need
+        bread:
+          type: string
+      required:
+      - bread
+      - bread_name
+      - created_at
+      - delivery_week
+      - id
+      - quantity
+      - updated_at
+      - year
     BuildCsvExportResponse:
       type: object
       properties:
@@ -11243,7 +11354,16 @@ components:
           type: string
           format: date-time
           nullable: true
+        not_before:
+          type: string
+          format: date-time
+          nullable: true
+        is_automatic_retry:
+          type: boolean
         next_retry:
+          type: string
+          nullable: true
+        email_configuration_version:
           type: string
           nullable: true
       required:
@@ -11300,7 +11420,17 @@ components:
           type: string
           format: date-time
           nullable: true
+        not_before:
+          type: string
+          format: date-time
+          nullable: true
+        is_automatic_retry:
+          type: boolean
         next_retry:
+          type: string
+          minLength: 1
+          nullable: true
+        email_configuration_version:
           type: string
           minLength: 1
           nullable: true
@@ -11367,7 +11497,16 @@ components:
           type: string
           format: date-time
           nullable: true
+        not_before:
+          type: string
+          format: date-time
+          nullable: true
+        is_automatic_retry:
+          type: boolean
         next_retry:
+          type: string
+          nullable: true
+        email_configuration_version:
           type: string
           nullable: true
       required:

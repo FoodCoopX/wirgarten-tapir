@@ -53,6 +53,7 @@ models/BreadSpecificsPerDeliveryDayBulkUpdateItemRequest.ts
 models/BreadSpecificsPerDeliveryDayBulkUpdateRequest.ts
 models/BreadSpecificsPerDeliveryDayRequest.ts
 models/BreadsPerPickupLocationPerWeek.ts
+models/BreadsToBakePerWeek.ts
 models/BuildCsvExportResponse.ts
 models/BundledEmailConfiguration.ts
 models/BundledEmailConfigurationRequest.ts

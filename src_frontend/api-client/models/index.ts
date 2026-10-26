@@ -38,6 +38,7 @@ export * from "./BreadSpecificsPerDeliveryDayBulkUpdateItemRequest";
 export * from "./BreadSpecificsPerDeliveryDayBulkUpdateRequest";
 export * from "./BreadSpecificsPerDeliveryDayRequest";
 export * from "./BreadsPerPickupLocationPerWeek";
+export * from "./BreadsToBakePerWeek";
 export * from "./BuildCsvExportResponse";
 export * from "./BundledEmailConfiguration";
 export * from "./BundledEmailConfigurationRequest";
