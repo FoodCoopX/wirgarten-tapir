@@ -187,6 +187,28 @@ class ParameterDefinitionsPayments:
         order_priority -= 1
 
         importer.parameter_definition(
+            key=ParameterKeys.PAYMENT_INTENDED_USE_COOP_SHARES_INSTALMENT,
+            label="Verwendungszweck für Genoanteilsbuchungen in Raten",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="{anzahl_geno_anteile} {betriebsname} GenoAnteil Rate\nBeitritt {beitrittsdatum}\n9{mitgliedsnummer_ohne_prefix}\n{mitgliedsnummer_lang}",
+            description=WARNING_USE_EDITOR,
+            category=ParameterCategory.PAYMENT,
+            order_priority=order_priority,
+            meta=ParameterMeta(
+                show_only_when=lambda cache: get_parameter_value(
+                    ParameterKeys.PAYMENT_INTENDED_USE_ENABLE_CUSTOM, cache=cache
+                )
+                and get_parameter_value(
+                    ParameterKeys.COOP_SHARES_INSTALMENTS_ENABLED, cache=cache
+                ),
+                textarea=True,
+                vars_hint=IntendedUseTokens.COMMON_TOKENS
+                + IntendedUseTokens.COOP_SHARE_TOKENS,
+            ),
+        )
+        order_priority -= 1
+
+        importer.parameter_definition(
             key=ParameterKeys.PAYMENT_INTENDED_USE_MONTHLY_INVOICE,
             label="Verwendungszweck für Beitragsabbuchungen regulär",
             datatype=TapirParameterDatatype.STRING,

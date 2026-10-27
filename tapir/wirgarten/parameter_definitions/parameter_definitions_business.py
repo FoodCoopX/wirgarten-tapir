@@ -1,9 +1,13 @@
 import typing
+from decimal import Decimal
 
 from django.core.validators import URLValidator, MinValueValidator
 
 from tapir.configuration.models import TapirParameterDatatype
-from tapir.configuration.parameter import ParameterMeta
+from tapir.configuration.parameter import ParameterMeta, get_parameter_value
+from tapir.coop.services.coop_share_instalment_config_validator import (
+    CoopShareInstalmentConfigValidator,
+)
 from tapir.wirgarten.constants import ParameterCategory
 from tapir.wirgarten.is_debug_instance import is_debug_instance
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -105,6 +109,38 @@ class ParameterDefinitionsBusiness:
                     (False, "nicht separat zeichenbar"),
                 ],
                 show_only_when=legal_status_is_cooperative,
+            ),
+            order_priority=order_priority,
+        )
+        order_priority -= 1
+
+        importer.parameter_definition(
+            key=ParameterKeys.COOP_SHARES_INSTALMENTS_ENABLED,
+            label="Ratenzahlung des Pflichtanteils",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=False,
+            description="Neue Mitglieder können im Bestellwizard den Pflichtanteil in monatlichen Raten zahlen. Der Pflichtanteil ist die Mindestanzahl an Genossenschaftsanteilen, die sich aus der Konfiguration und den bestellten Produkten ergibt. Die Ratenzahlung ist nur möglich, wenn das Mitglied genau diese Mindestanzahl zeichnet: werden mehr Anteile gezeichnet, muss der gesamte Betrag auf einmal gezahlt werden.",
+            category=ParameterCategory.BUSINESS,
+            meta=ParameterMeta(show_only_when=legal_status_is_cooperative),
+            order_priority=order_priority,
+        )
+        order_priority -= 1
+
+        importer.parameter_definition(
+            key=ParameterKeys.COOP_SHARES_INSTALMENT_AMOUNT,
+            label="Höhe einer Rate",
+            datatype=TapirParameterDatatype.DECIMAL,
+            initial_value=Decimal(10),
+            description="Betrag in € einer monatlichen Rate. Der Preis eines Anteils muss durch diesen Betrag teilbar sein. Die Anzahl der Raten ergibt sich aus dem Betrag des Pflichtanteils.",
+            category=ParameterCategory.BUSINESS,
+            meta=ParameterMeta(
+                validators=[
+                    MinValueValidator(limit_value=Decimal("0.01")),
+                    CoopShareInstalmentConfigValidator.validate_instalment_amount,
+                ],
+                show_only_when=lambda cache: get_parameter_value(
+                    ParameterKeys.COOP_SHARES_INSTALMENTS_ENABLED, cache=cache
+                ),
             ),
             order_priority=order_priority,
         )

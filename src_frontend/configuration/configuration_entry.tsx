@@ -35,7 +35,11 @@ function createEditorRoot(
 ) {
   const inputElement = document.getElementById(
     "id_" + parameterKey,
-  ) as HTMLTextAreaElement;
+  ) as HTMLTextAreaElement | null;
+  if (!inputElement) {
+    // The parameter is hidden in the current configuration
+    return;
+  }
 
   const previewDiv = document.createElement("div");
 
