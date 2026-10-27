@@ -470,6 +470,7 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({
           <BiddingRoundPickupLocationStep
             pickupLocations={data.pickupLocations}
             pickupLocationId={pickupLocationId}
+            currentPickupLocationId={data.currentPickupLocationId ?? ""}
             setPickupLocationId={setPickupLocationId}
             texts={data.texts}
             goToNextStep={goToNextStep}

@@ -20,6 +20,7 @@ from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     GrowingPeriodFactory,
     MemberFactory,
+    MemberPickupLocationFactory,
     PickupLocationCapabilityFactory,
     PickupLocationFactory,
     ProductPriceFactory,
@@ -220,6 +221,112 @@ class TestBiddingRoundCapacityService(TapirIntegrationTest):
         )
 
         self.assertEqual([], reasons)
+
+    def _enable_pickup_location_change(self):
+        TapirParameter.objects.filter(
+            key=ParameterKeys.BIDDING_ROUND_PICKUP_LOCATION_CHANGE_ENABLED
+        ).update(value="true")
+
+    def test_getInsufficientCapacityReasons_ownFullPickupLocation_allowsOrder(self):
+        self._enable_pickup_location_change()
+        TapirParameter.objects.filter(
+            key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
+        ).update(value="true")
+        round_ = create_open_round()
+        round_product, product = create_round_product_with_product(round_, capacity=2)
+        round_product.product_type.delivery_cycle = WEEKLY[0]
+        round_product.product_type.save()
+        pickup_location = PickupLocationFactory.create()
+        PickupLocationCapabilityFactory.create(
+            pickup_location=pickup_location,
+            product_type=round_product.product_type,
+            max_capacity=1,
+        )
+        previous_period = GrowingPeriodFactory.create(
+            start_date=round_.growing_period.start_date - relativedelta(years=1),
+            end_date=round_.growing_period.start_date - datetime.timedelta(days=1),
+        )
+        ProductPriceFactory.create(
+            product=product,
+            price=Decimal("50.00"),
+            size=1,
+            valid_from=previous_period.start_date,
+        )
+        member = MemberFactory.create()
+        SubscriptionFactory.create(
+            member=member,
+            period=previous_period,
+            product=product,
+            quantity=1,
+            start_date=previous_period.start_date,
+            end_date=previous_period.end_date,
+        )
+        MemberPickupLocationFactory.create(
+            member=member,
+            pickup_location=pickup_location,
+            valid_from=previous_period.start_date,
+        )
+
+        reasons = BiddingRoundCapacityService.get_insufficient_capacity_reasons(
+            bidding_round=round_,
+            items=[build_item(round_product, product, quantity=1)],
+            pickup_location_id=pickup_location.id,
+            member=member,
+            cache={},
+            subscription_start_date=round_.growing_period.start_date,
+        )
+
+        self.assertEqual([], reasons)
+
+    def test_getInsufficientCapacityReasons_otherFullPickupLocation_rejects(self):
+        self._enable_pickup_location_change()
+        round_ = create_open_round()
+        round_product, product = create_round_product_with_product(round_, capacity=100)
+        round_product.product_type.delivery_cycle = WEEKLY[0]
+        round_product.product_type.save()
+        own_location = PickupLocationFactory.create()
+        PickupLocationCapabilityFactory.create(
+            pickup_location=own_location,
+            product_type=round_product.product_type,
+            max_capacity=10,
+        )
+        other_location = PickupLocationFactory.create()
+        PickupLocationCapabilityFactory.create(
+            pickup_location=other_location,
+            product_type=round_product.product_type,
+            max_capacity=1,
+        )
+        ProductPriceFactory.create(
+            product=product,
+            price=Decimal("50.00"),
+            size=1,
+            valid_from=round_.growing_period.start_date,
+        )
+        member = MemberFactory.create()
+        MemberPickupLocationFactory.create(
+            member=member,
+            pickup_location=own_location,
+            valid_from=round_.growing_period.start_date,
+        )
+        self._create_bid(
+            round_,
+            round_product,
+            product,
+            MemberFactory.create(),
+            pickup_location=other_location,
+        )
+
+        reasons = BiddingRoundCapacityService.get_insufficient_capacity_reasons(
+            bidding_round=round_,
+            items=[build_item(round_product, product, quantity=1)],
+            pickup_location_id=other_location.id,
+            member=member,
+            cache={},
+            subscription_start_date=round_.growing_period.start_date,
+        )
+
+        self.assertEqual(1, len(reasons))
+        self.assertEqual("pickup_location", reasons[0]["type"])
 
     def test_getInsufficientCapacityReasons_materializedBidNotCountedTwice_allowsOrder(
         self,

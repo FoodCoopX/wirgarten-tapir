@@ -28,6 +28,7 @@ type PickupLocationTab = "map" | "list";
 interface BiddingRoundPickupLocationStepProps {
   pickupLocations: BiddingRoundPickupLocation[];
   pickupLocationId: string;
+  currentPickupLocationId: string;
   setPickupLocationId: (value: string) => void;
   texts: BiddingRoundTexts;
   goToNextStep: () => void;
@@ -52,6 +53,7 @@ const BiddingRoundPickupLocationStep: React.FC<
 > = ({
   pickupLocations,
   pickupLocationId,
+  currentPickupLocationId,
   setPickupLocationId,
   texts,
   goToNextStep,
@@ -93,14 +95,39 @@ const BiddingRoundPickupLocationStep: React.FC<
   }
 
   function buildFullIndicator(pickupLocation: BiddingRoundPickupLocation) {
-    if (pickupLocation.utilization?.isFull) {
-      return <small className={"text-danger"}>{"Ausgelastet"}</small>;
+    if (!isFull(pickupLocation)) {
+      return null;
     }
-    return null;
+    return (
+      <small className={"text-danger"}>
+        {isOwnFullLocation(pickupLocation)
+          ? "Ausgelastet (dein aktueller Ort)"
+          : "Ausgelastet"}
+      </small>
+    );
   }
 
   function isFull(pickupLocation: BiddingRoundPickupLocation): boolean {
     return !!pickupLocation.utilization?.isFull;
+  }
+
+  // A full pickup location stays selectable when it is the currently selected one or
+  // the member's own location (their renewal already occupies it), so that switching
+  // away and back is possible.
+  function isSelectable(pickupLocation: BiddingRoundPickupLocation): boolean {
+    return (
+      !isFull(pickupLocation) ||
+      pickupLocation.id === pickupLocationId ||
+      pickupLocation.id === currentPickupLocationId
+    );
+  }
+
+  function isOwnFullLocation(
+    pickupLocation: BiddingRoundPickupLocation,
+  ): boolean {
+    return (
+      isFull(pickupLocation) && pickupLocation.id === currentPickupLocationId
+    );
   }
 
   function buildMapPopupContent(pickupLocation: BiddingRoundPickupLocation) {
@@ -129,7 +156,7 @@ const BiddingRoundPickupLocationStep: React.FC<
               : "check_box_outline_blank"
           }
           variant={BUTTON_VARIANT}
-          disabled={isFull(pickupLocation)}
+          disabled={!isSelectable(pickupLocation)}
           onClick={() => setPickupLocationId(pickupLocation.id!)}
         />
       </div>
@@ -223,7 +250,7 @@ const BiddingRoundPickupLocationStep: React.FC<
                     pickupLocation.id === pickupLocationId ? "active" : ""
                   }
                   onClick={() => {
-                    if (!isFull(pickupLocation)) {
+                    if (isSelectable(pickupLocation)) {
                       setPickupLocationId(pickupLocation.id!);
                     }
                   }}
@@ -281,10 +308,7 @@ const BiddingRoundPickupLocationStep: React.FC<
               <option
                 key={pickupLocation.id}
                 value={pickupLocation.id!}
-                disabled={
-                  isFull(pickupLocation) &&
-                  pickupLocation.id !== pickupLocationId
-                }
+                disabled={!isSelectable(pickupLocation)}
               >
                 {pickupLocation.name}
                 {pickupLocation.utilization?.isFull ? " (ausgelastet)" : ""}
