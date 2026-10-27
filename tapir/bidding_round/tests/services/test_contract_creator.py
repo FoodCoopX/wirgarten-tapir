@@ -7,6 +7,9 @@ from django.core.exceptions import ValidationError
 
 from tapir.bidding_round.config import ACTIVE, CLOSED
 from tapir.bidding_round.models import BiddingRoundCreatedSubscription
+from tapir.bidding_round.services.bidding_round_stats_service import (
+    BiddingRoundStatsService,
+)
 from tapir.bidding_round.services.contract_creator import ContractCreator
 from tapir.bidding_round.tests.factories import (
     BidFactory,
@@ -465,3 +468,19 @@ class TestContractCreatorAutoRenewed(TapirIntegrationTest):
                 member=member, period=round_.growing_period
             ).exists()
         )
+
+    def test_autoRenewedEvaluation_stableBeforeAndAfterContractCreation(self):
+        round_, member = self._prepare_round_with_renewal()
+
+        before = BiddingRoundStatsService.get_auto_renewed_by_member(round_, cache={})
+        self.assertIn(member.id, before)
+        shares_before = before[member.id]["shares"]
+
+        ContractCreator.create_contracts_from_bids(
+            round_, cache={}, create_auto_renewed_contracts=True
+        )
+
+        after = BiddingRoundStatsService.get_auto_renewed_by_member(round_, cache={})
+        self.assertIn(member.id, after)
+        self.assertEqual(shares_before, after[member.id]["shares"])
+        self.assertGreater(after[member.id]["shares"], 0)

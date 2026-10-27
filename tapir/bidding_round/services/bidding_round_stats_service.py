@@ -7,6 +7,7 @@ from tapir.associations.services.association_membership_price_type_getter import
 from tapir.bidding_round.config import TRAFFIC_LIGHT
 from tapir.bidding_round.models import (
     BidItem,
+    BiddingRoundCreatedSubscription,
     BiddingRoundProduct,
     BiddingRoundProductPrice,
 )
@@ -892,6 +893,42 @@ class BiddingRoundStatsService:
         return table
 
     @classmethod
+    def get_auto_renewed_subscriptions(cls, bidding_round, cache) -> list:
+        """
+        The non-bidder subscriptions of the round: the subscriptions that will be
+        renewed (before the contracts are created) plus the non-bidder contracts the
+        round has already created. Creating the contracts materialises the renewals,
+        so they no longer count as "will be renewed"; this keeps the evaluation stable
+        before and after the contracts are created.
+        """
+        subscriptions = {}
+        try:
+            for (
+                subscription
+            ) in AutomaticSubscriptionRenewalService.get_subscriptions_that_will_be_renewed(
+                reference_date=bidding_round.growing_period.start_date,
+                cache=cache,
+            ):
+                subscriptions[subscription.id] = subscription
+        except KeyError:
+            pass
+
+        # Filter by growing period (not by round), because several rounds can share a
+        # season and any of them may have materialised the renewals.
+        created_subscription_ids = list(
+            BiddingRoundCreatedSubscription.objects.filter(
+                round__growing_period_id=bidding_round.growing_period_id,
+                is_bidder_contract=False,
+            ).values_list("subscription_id", flat=True)
+        )
+        for subscription in Subscription.objects.filter(
+            id__in=created_subscription_ids
+        ).select_related("product", "product__type"):
+            subscriptions[subscription.id] = subscription
+
+        return list(subscriptions.values())
+
+    @classmethod
     def get_auto_renewed_by_member(cls, bidding_round, cache) -> dict:
         """Auto-renewed members without a bid, with the reference amount they
         would contribute (reference value per month/year), the renewed products and
@@ -900,13 +937,7 @@ class BiddingRoundStatsService:
         product_type_ids = set(
             bidding_round.products.values_list("product_type_id", flat=True)
         )
-        try:
-            subscriptions = AutomaticSubscriptionRenewalService.get_subscriptions_that_will_be_renewed(
-                reference_date=bidding_round.growing_period.start_date,
-                cache=cache,
-            )
-        except KeyError:
-            return {}
+        subscriptions = cls.get_auto_renewed_subscriptions(bidding_round, cache)
         pickup_location_names = {
             pickup_location.id: pickup_location.name
             for pickup_location in PickupLocation.objects.all()
@@ -962,13 +993,7 @@ class BiddingRoundStatsService:
             bidding_round.products.values_list("product_type_id", flat=True)
         )
         bid_member_ids = set(bidding_round.bids.values_list("member_id", flat=True))
-        try:
-            subscriptions = AutomaticSubscriptionRenewalService.get_subscriptions_that_will_be_renewed(
-                reference_date=bidding_round.growing_period.start_date,
-                cache=cache,
-            )
-        except KeyError:
-            return {}
+        subscriptions = cls.get_auto_renewed_subscriptions(bidding_round, cache)
 
         contributions = {}
         reference_date = bidding_round.growing_period.start_date
