@@ -30,6 +30,12 @@ export interface ProductOption {
    * @memberof ProductOption
    */
   name: string;
+  /**
+   *
+   * @type {string}
+   * @memberof ProductOption
+   */
+  size: string | null;
 }
 
 /**
@@ -38,6 +44,7 @@ export interface ProductOption {
 export function instanceOfProductOption(value: object): value is ProductOption {
   if (!("id" in value) || value["id"] === undefined) return false;
   if (!("name" in value) || value["name"] === undefined) return false;
+  if (!("size" in value) || value["size"] === undefined) return false;
   return true;
 }
 
@@ -55,6 +62,7 @@ export function ProductOptionFromJSONTyped(
   return {
     id: json["id"],
     name: json["name"],
+    size: json["size"],
   };
 }
 
@@ -73,5 +81,6 @@ export function ProductOptionToJSONTyped(
   return {
     id: value["id"],
     name: value["name"],
+    size: value["size"],
   };
 }

@@ -220,16 +220,14 @@ class TestAvailableProductTypesView(RoundAdminViewTestBase):
             {"growing_period_id": growing_period.id},
         )
         self.assertStatusCode(response, status.HTTP_200_OK)
-        self.assertEqual(
-            [
-                {
-                    "id": capacity.product_type.id,
-                    "name": capacity.product_type.name,
-                    "products": [{"id": product.id, "name": product.name}],
-                }
-            ],
-            response.json(),
-        )
+        body = response.json()
+        self.assertEqual(1, len(body))
+        self.assertEqual(capacity.product_type.id, body[0]["id"])
+        self.assertEqual(capacity.product_type.name, body[0]["name"])
+        self.assertEqual(1, len(body[0]["products"]))
+        self.assertEqual(product.id, body[0]["products"][0]["id"])
+        self.assertEqual(product.name, body[0]["products"][0]["name"])
+        self.assertIn("size", body[0]["products"][0])
 
 
 class TestRoundDetailView(RoundAdminViewTestBase):

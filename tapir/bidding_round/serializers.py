@@ -300,6 +300,7 @@ class GrowingPeriodOptionSerializer(serializers.Serializer):
 class ProductOptionSerializer(serializers.Serializer):
     id = serializers.CharField()
     name = serializers.CharField()
+    size = serializers.DecimalField(max_digits=8, decimal_places=2, allow_null=True)
 
 
 class ProductTypeOptionSerializer(serializers.Serializer):

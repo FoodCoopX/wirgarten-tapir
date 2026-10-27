@@ -10313,8 +10313,8 @@ components:
       - traffic_light
       type: string
       description: |-
-        * `simple` - Simple
-        * `traffic_light` - Traffic light
+        * `simple` - Einfach
+        * `traffic_light` - Ampel
     BiddingRoundCapacityCheckRequestRequest:
       type: object
       properties:
@@ -13973,21 +13973,25 @@ components:
           type: string
           format: date
           nullable: true
+          title: Geburtsdatum
         street:
           type: string
-          title: Street and house number
+          title: Straße und Hausnummer
           maxLength: 150
         street_2:
           type: string
-          title: Extra address line
+          title: Adresszusatz
           maxLength: 150
         postcode:
           type: string
+          title: Postleitzahl
           maxLength: 32
         city:
           type: string
+          title: Ort
           maxLength: 50
         country:
+          title: Land
           oneOf:
           - $ref: '#/components/schemas/CountryEnum'
           - $ref: '#/components/schemas/BlankEnum'
@@ -13997,7 +14001,9 @@ components:
           title: Liebe/Lieber
           maxLength: 20
         preferred_language:
-          $ref: '#/components/schemas/PreferredLanguageEnum'
+          allOf:
+          - $ref: '#/components/schemas/PreferredLanguageEnum'
+          title: Bevorzugte Sprache
         account_owner:
           type: string
           nullable: true
@@ -15555,19 +15561,22 @@ components:
           maxLength: 256
         street:
           type: string
-          title: Street and house number
+          title: Straße und Hausnummer
           maxLength: 150
         street_2:
           type: string
-          title: Extra address line
+          title: Adresszusatz
           maxLength: 150
         postcode:
           type: string
+          title: Postleitzahl
           maxLength: 32
         city:
           type: string
+          title: Ort
           maxLength: 50
         country:
+          title: Land
           oneOf:
           - $ref: '#/components/schemas/CountryEnum'
           - $ref: '#/components/schemas/BlankEnum'
@@ -16049,17 +16058,19 @@ components:
           title: Coordinates Latitude
         street:
           type: string
-          title: Street and house number
+          title: Straße und Hausnummer
           maxLength: 150
         street_2:
           type: string
-          title: Extra address line
+          title: Adresszusatz
           maxLength: 150
         postcode:
           type: string
+          title: Postleitzahl
           maxLength: 32
         city:
           type: string
+          title: Ort
           maxLength: 50
         info:
           type: string
@@ -16338,17 +16349,19 @@ components:
           title: Coordinates Latitude
         street:
           type: string
-          title: Street and house number
+          title: Straße und Hausnummer
           maxLength: 150
         street_2:
           type: string
-          title: Extra address line
+          title: Adresszusatz
           maxLength: 150
         postcode:
           type: string
+          title: Postleitzahl
           maxLength: 32
         city:
           type: string
+          title: Ort
           maxLength: 50
         opening_times:
           type: array
@@ -16590,9 +16603,15 @@ components:
           type: string
         name:
           type: string
+        size:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
+          nullable: true
       required:
       - id
       - name
+      - size
     ProductType:
       type: object
       properties:
@@ -16939,17 +16958,19 @@ components:
           title: Coordinates Latitude
         street:
           type: string
-          title: Street and house number
+          title: Straße und Hausnummer
           maxLength: 150
         street_2:
           type: string
-          title: Extra address line
+          title: Adresszusatz
           maxLength: 150
         postcode:
           type: string
+          title: Postleitzahl
           maxLength: 32
         city:
           type: string
+          title: Ort
           maxLength: 50
         opening_times:
           type: array
@@ -18492,7 +18513,7 @@ components:
           type: string
           format: date-time
           readOnly: true
-          title: Creation Date
+          title: Erstellungsdatum
         change_type:
           $ref: '#/components/schemas/ChangeTypeEnum'
         subscriptions:
@@ -18964,19 +18985,22 @@ components:
           maxLength: 256
         street:
           type: string
-          title: Street and house number
+          title: Straße und Hausnummer
           maxLength: 150
         street_2:
           type: string
-          title: Extra address line
+          title: Adresszusatz
           maxLength: 150
         postcode:
           type: string
+          title: Postleitzahl
           maxLength: 32
         city:
           type: string
+          title: Ort
           maxLength: 50
         country:
+          title: Land
           oneOf:
           - $ref: '#/components/schemas/CountryEnum'
           - $ref: '#/components/schemas/BlankEnum'
@@ -19141,19 +19165,22 @@ components:
           maxLength: 256
         street:
           type: string
-          title: Street and house number
+          title: Straße und Hausnummer
           maxLength: 150
         street_2:
           type: string
-          title: Extra address line
+          title: Adresszusatz
           maxLength: 150
         postcode:
           type: string
+          title: Postleitzahl
           maxLength: 32
         city:
           type: string
+          title: Ort
           maxLength: 50
         country:
+          title: Land
           oneOf:
           - $ref: '#/components/schemas/CountryEnum'
           - $ref: '#/components/schemas/BlankEnum'

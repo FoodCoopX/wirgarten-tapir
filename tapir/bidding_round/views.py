@@ -62,8 +62,21 @@ from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
 from tapir.wirgarten.models import GrowingPeriod, Member, Product
-from tapir.wirgarten.service.products import get_next_growing_period
+from tapir.wirgarten.service.products import (
+    get_next_growing_period,
+    get_product_price,
+)
 from tapir.wirgarten.utils import get_now, get_today
+
+
+def get_product_size(product, growing_period, cache):
+    product_price = get_product_price(
+        product=product, reference_date=growing_period.start_date, cache=cache
+    )
+    if product_price is None or not product_price.size:
+        return None
+    return product_price.size
+
 
 # --- Page views (React roots; the frontend apps land in Schritt 10) ---
 
@@ -380,7 +393,11 @@ class AvailableProductTypesView(APIView):
                     "id": product_type.id,
                     "name": product_type.name,
                     "products": [
-                        {"id": product.id, "name": product.name}
+                        {
+                            "id": product.id,
+                            "name": product.name,
+                            "size": get_product_size(product, growing_period, cache),
+                        }
                         for product in Product.objects.filter(
                             type_id=product_type.id, deleted=False
                         )

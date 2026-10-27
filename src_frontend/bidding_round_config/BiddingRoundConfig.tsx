@@ -13,6 +13,10 @@ import { BestellWizardApi } from "../api-client/apis/BestellWizardApi.ts";
 import { BiddingRoundsApi } from "../api-client/apis/BiddingRoundsApi.ts";
 import { BiddingProcedureEnum } from "../api-client/models/BiddingProcedureEnum.ts";
 import { applyDisplayName } from "../bidding_round/utils/applyDisplayName.ts";
+import {
+  formatEuroNumber,
+  parseEuroAmount,
+} from "../bidding_round/utils/bidLevels.ts";
 import TapirButton from "../components/TapirButton.tsx";
 import TapirToastContainer from "../components/TapirToastContainer.tsx";
 import { useApi } from "../hooks/useApi.ts";
@@ -27,6 +31,7 @@ interface BiddingRoundConfigProps {
 interface ProductOption {
   id: string;
   name: string;
+  size?: string | number | null;
 }
 
 interface ProductTypeOption {
@@ -40,6 +45,15 @@ interface PriceInput {
   productName: string;
   referenceValue: string;
   minAmount: string;
+  size: number;
+}
+
+function parseProductSize(value: string | number | null | undefined): number {
+  if (value === null || value === undefined) {
+    return 1;
+  }
+  const parsed = typeof value === "number" ? value : Number.parseFloat(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
 }
 
 interface GrowingPeriodOption {
@@ -65,6 +79,7 @@ function buildPriceInputs(
       productName: product.name,
       referenceValue: existing?.referenceValue ?? "",
       minAmount: existing?.minAmount ?? "",
+      size: parseProductSize(product.size),
     };
   });
 }
@@ -232,11 +247,25 @@ const BiddingRoundConfig: React.FC<BiddingRoundConfigProps> = ({
     field: "referenceValue" | "minAmount",
     value: string,
   ) => {
-    setPriceInputs((previous) =>
-      previous.map((input, currentIndex) =>
-        currentIndex === index ? { ...input, [field]: value } : input,
-      ),
-    );
+    setPriceInputs((previous) => {
+      const edited = previous[index];
+      const parsedValue = parseEuroAmount(value);
+      return previous.map((input, currentIndex) => {
+        if (currentIndex === index) {
+          return { ...input, [field]: value };
+        }
+        // Pre-fill sizes that are still empty proportionally to the edited one, so
+        // the admin does not have to compute the per-size values by hand. Values
+        // that were already entered are never overwritten.
+        if (input[field] !== "" || parsedValue === null || edited.size <= 0) {
+          return input;
+        }
+        return {
+          ...input,
+          [field]: formatEuroNumber((parsedValue * input.size) / edited.size),
+        };
+      });
+    });
   };
 
   const openCreateModal = () => {

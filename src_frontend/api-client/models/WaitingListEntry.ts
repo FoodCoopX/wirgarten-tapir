@@ -12,8 +12,8 @@
  * Do not edit the class manually.
  */
 
-import type { MemberCountry } from "./MemberCountry";
-import { MemberCountryFromJSON, MemberCountryToJSON } from "./MemberCountry";
+import type { Land } from "./Land";
+import { LandFromJSON, LandToJSON } from "./Land";
 
 /**
  *
@@ -89,10 +89,10 @@ export interface WaitingListEntry {
   city?: string;
   /**
    *
-   * @type {MemberCountry}
+   * @type {Land}
    * @memberof WaitingListEntry
    */
-  country?: MemberCountry;
+  country?: Land;
   /**
    *
    * @type {Date}
@@ -190,9 +190,7 @@ export function WaitingListEntryFromJSONTyped(
     postcode: json["postcode"] == null ? undefined : json["postcode"],
     city: json["city"] == null ? undefined : json["city"],
     country:
-      json["country"] == null
-        ? undefined
-        : MemberCountryFromJSON(json["country"]),
+      json["country"] == null ? undefined : LandFromJSON(json["country"]),
     privacyConsent: new Date(json["privacy_consent"]),
     numberOfCoopShares: json["number_of_coop_shares"],
     desiredStartDate:
@@ -235,7 +233,7 @@ export function WaitingListEntryToJSONTyped(
     street_2: value["street2"],
     postcode: value["postcode"],
     city: value["city"],
-    country: MemberCountryToJSON(value["country"]),
+    country: LandToJSON(value["country"]),
     privacy_consent: value["privacyConsent"].toISOString(),
     number_of_coop_shares: value["numberOfCoopShares"],
     desired_start_date:

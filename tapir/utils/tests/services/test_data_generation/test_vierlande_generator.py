@@ -1,3 +1,4 @@
+from decimal import Decimal
 from unittest.mock import patch
 
 from tapir.associations.models import AssociationMembershipType
@@ -95,3 +96,21 @@ class TestVierlandeGenerator(TapirIntegrationTest):
         self.assertEqual(1, rounds.filter(status=ACTIVE).count())
         self.assertTrue(BiddingRoundProductPrice.objects.exists())
         self.assertTrue(Bid.objects.exists())
+
+        # The per-size values are proportional to the share size so that switching
+        # the share scales the bid.
+        active_round = rounds.get(status=ACTIVE)
+        prices_by_product_name = {
+            price.product.name: price
+            for price in BiddingRoundProductPrice.objects.filter(
+                round_product__round=active_round
+            ).select_related("product")
+        }
+        self.assertEqual(
+            Decimal("80.00"), prices_by_product_name["einfach"].reference_value
+        )
+        self.assertEqual(
+            Decimal("160.00"), prices_by_product_name["groß"].reference_value
+        )
+        self.assertEqual(Decimal("60.00"), prices_by_product_name["einfach"].min_amount)
+        self.assertEqual(Decimal("120.00"), prices_by_product_name["groß"].min_amount)

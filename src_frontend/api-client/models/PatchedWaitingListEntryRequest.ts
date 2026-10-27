@@ -12,8 +12,8 @@
  * Do not edit the class manually.
  */
 
-import type { MemberCountry } from "./MemberCountry";
-import { MemberCountryFromJSON, MemberCountryToJSON } from "./MemberCountry";
+import type { Land } from "./Land";
+import { LandFromJSON, LandToJSON } from "./Land";
 
 /**
  *
@@ -77,10 +77,10 @@ export interface PatchedWaitingListEntryRequest {
   city?: string;
   /**
    *
-   * @type {MemberCountry}
+   * @type {Land}
    * @memberof PatchedWaitingListEntryRequest
    */
-  country?: MemberCountry;
+  country?: Land;
   /**
    *
    * @type {Date}
@@ -165,9 +165,7 @@ export function PatchedWaitingListEntryRequestFromJSONTyped(
     postcode: json["postcode"] == null ? undefined : json["postcode"],
     city: json["city"] == null ? undefined : json["city"],
     country:
-      json["country"] == null
-        ? undefined
-        : MemberCountryFromJSON(json["country"]),
+      json["country"] == null ? undefined : LandFromJSON(json["country"]),
     privacyConsent:
       json["privacy_consent"] == null
         ? undefined
@@ -218,7 +216,7 @@ export function PatchedWaitingListEntryRequestToJSONTyped(
     street_2: value["street2"],
     postcode: value["postcode"],
     city: value["city"],
-    country: MemberCountryToJSON(value["country"]),
+    country: LandToJSON(value["country"]),
     privacy_consent:
       value["privacyConsent"] == null
         ? undefined

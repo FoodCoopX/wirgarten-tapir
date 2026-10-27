@@ -147,6 +147,7 @@ models/Joker.ts
 models/JokerCreditIntendedUsePreviewResponse.ts
 models/JokerRestriction.ts
 models/JokerWithCancellationLimit.ts
+models/Land.ts
 models/LegalStatusEnum.ts
 models/LevelEnum.ts
 models/LocaleEnum.ts
@@ -169,7 +170,6 @@ models/Member.ts
 models/MemberAssociationMembershipDetails.ts
 models/MemberBankDataResponse.ts
 models/MemberBidResponse.ts
-models/MemberCountry.ts
 models/MemberCredit.ts
 models/MemberCreditCreateRequest.ts
 models/MemberCreditSettleRequest.ts

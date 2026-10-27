@@ -13,8 +13,8 @@
  */
 
 /**
- * * `simple` - Simple
- * * `traffic_light` - Traffic light
+ * * `simple` - Einfach
+ * * `traffic_light` - Ampel
  * @export
  */
 export const BiddingProcedureEnum = {

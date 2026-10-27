@@ -175,6 +175,21 @@ class BiddingRoundGenerator:
         products = list(
             Product.objects.filter(type=harvest_share_product_type, deleted=False)
         )
+        # The reference value and the minimum amount are stored per share size (1:1,
+        # no scaling in the app). The demo values are proportional to the size so that
+        # switching the share scales the bid, as in the previous implementation.
+        size_by_product_id = {}
+        for product in products:
+            product_price = get_product_price(
+                product=product,
+                reference_date=next_period.start_date,
+                cache=cache,
+            )
+            size_by_product_id[product.id] = (
+                Decimal(product_price.size)
+                if product_price is not None and product_price.size
+                else Decimal("1")
+            )
         for bidding_round in (
             traffic_light_round,
             simple_round,
@@ -185,12 +200,15 @@ class BiddingRoundGenerator:
             round_product.target_amount_per_year = TARGET_AMOUNT_PER_YEAR
             round_product.save(update_fields=["target_amount_per_year"])
             for product in products:
+                size = size_by_product_id[product.id]
                 BiddingRoundProductPrice.objects.update_or_create(
                     round_product=round_product,
                     product=product,
                     defaults={
-                        "reference_value": REFERENCE_VALUE,
-                        "min_amount": MIN_AMOUNT,
+                        "reference_value": (REFERENCE_VALUE * size).quantize(
+                            Decimal("0.01")
+                        ),
+                        "min_amount": (MIN_AMOUNT * size).quantize(Decimal("0.01")),
                     },
                 )
 
