@@ -190,7 +190,7 @@ class ParameterDefinitionsPayments:
             key=ParameterKeys.PAYMENT_INTENDED_USE_COOP_SHARES_INSTALMENT,
             label="Verwendungszweck für Genoanteilsbuchungen in Raten",
             datatype=TapirParameterDatatype.STRING,
-            initial_value="{anzahl_geno_anteile} {betriebsname} GenoAnteil Rate\nBeitritt {beitrittsdatum}\n9{mitgliedsnummer_ohne_prefix}\n{mitgliedsnummer_lang}",
+            initial_value="{anzahl_geno_anteile} {betriebsname} GenoAnteil Rate {ratennummer}/{anzahl_raten}\nBeitritt {beitrittsdatum}\n9{mitgliedsnummer_ohne_prefix}\n{mitgliedsnummer_lang}",
             description=WARNING_USE_EDITOR,
             category=ParameterCategory.PAYMENT,
             order_priority=order_priority,

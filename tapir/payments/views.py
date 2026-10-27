@@ -90,7 +90,6 @@ from tapir.utils.shortcuts import (
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
     Payment,
-    CoopShareTransaction,
     MandateReference,
     Member,
     PickupLocation,
@@ -160,12 +159,15 @@ class GetFutureMemberPaymentsApiView(APIView):
             member_id=member_id
         ).values_list("ref", flat=True)
         member_payments = set(
-            Payment.objects.filter(mandate_ref__ref__in=mandate_ref_ids).filter(
+            Payment.objects.filter(mandate_ref__ref__in=mandate_ref_ids)
+            .filter(
                 Q(
                     due_date__gte=get_today(cache=self.cache),
                 )
                 | Q(status=Payment.PaymentStatus.DUE)
             )
+            .select_related("coop_share_transaction")
+            .prefetch_related("coop_share_transaction__payments")
         )
         current_month = get_today(cache=self.cache)
         current_month = current_month.replace(day=1)
@@ -210,12 +212,17 @@ class GetFutureMemberPaymentsApiView(APIView):
             delivery_charge_pickup_location = None
             association_memberships = []
             delivery_dates = []
+            number_of_instalments = None
 
             match payment.type:
                 case payments_config.PAYMENT_TYPE_COOP_SHARES:
-                    coop_share_transactions = CoopShareTransaction.objects.filter(
-                        payments=payment
-                    )
+                    if payment.coop_share_transaction is not None:
+                        coop_share_transactions = [payment.coop_share_transaction]
+                        if payment.instalment_number is not None:
+                            # all() instead of count() to use the prefetched payments
+                            number_of_instalments = len(
+                                payment.coop_share_transaction.payments.all()
+                            )
                 case (
                     MonthPaymentBuilderSolidarityContributions.PAYMENT_TYPE_SOLIDARITY_CONTRIBUTION
                 ):
@@ -277,6 +284,7 @@ class GetFutureMemberPaymentsApiView(APIView):
                         key=lambda membership: membership.start_date,
                     ),
                     "delivery_dates": delivery_dates,
+                    "number_of_instalments": number_of_instalments,
                 }
             )
         return extended_payments
@@ -427,9 +435,10 @@ class GetPastMemberPaymentsApiView(APIView):
         ).values_list("ref", flat=True)
 
         member_payments = set(
-            Payment.objects.filter(mandate_ref__ref__in=mandate_ref_ids).filter(
-                due_date__lte=get_today(cache=self.cache)
-            )
+            Payment.objects.filter(mandate_ref__ref__in=mandate_ref_ids)
+            .filter(due_date__lte=get_today(cache=self.cache))
+            .select_related("coop_share_transaction")
+            .prefetch_related("coop_share_transaction__payments")
         )
 
         return member_payments
