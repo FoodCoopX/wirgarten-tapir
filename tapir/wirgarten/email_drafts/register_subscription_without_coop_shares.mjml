@@ -2,7 +2,7 @@
     <mj-section padding="0px" text-align="left">
         <mj-column>
             <mj-text padding="10px 25px 10px 25px" align="left">
-Trigger: Transaktionale Mail, die versendet wird, wenn über den Bestellwizard Produktverträge ohne Geno-Anteile gezeichnet werden. Das ist nur bei Genossenschaften möglich, wenn der Studierenden-Status erlaubt ist und im Bestellwizard ausgewählt wurde. In allen anderen Fällen wird die Mail "BestellWizard: Mitgliedschaft + Ernteanteile" verschickt. <br /><br />
+Trigger: Transaktionale Mail, die versendet wird, wenn über den Bestellwizard Produktverträge ohne Geno-Anteile gezeichnet werden. Das ist nur bei Genossenschaften möglich, wenn der "Studierenden-Status" erlaubt ist und im Bestellwizard die entsprechende Checkbox durch den Nutzer:in  aktiviert wurde. In allen anderen Fällen wird die Mail "BestellWizard: Mitgliedschaft + Ernteanteile" verschickt. <br /><br />
 Zweck: Bestellbestätigung und Information. Ihr könnt die Mail so gestalten, dass es eine reine Bestellübersicht ist, aber noch keine Bestätigung der Bestellung ist (dann braucht ihr unbedingt die transaktionale Mail "Admin bestätigt"). Ihr könnt die Mail aber auch direkt so gestalten, als wäre die Bestellung bestätigt. <br /><br />
 Text-Vorschlag: Ihr könnt diesen kopieren und nach dem Laden eurer Vorlage einfügen. Ihr könnt diesen Text natürlich jederzeit nach euren Bedürfnissen anpassen. <br /><br />
 
@@ -22,7 +22,7 @@ Erste Abholung am: {{BestellWizard: Ernteanteile ohne Geno-Anteile.Erste Abholun
 Gesamtbetrag monatlich: {{BestellWizard: Ernteanteile ohne Geno-Anteile.Gesamtbetrag monatlich}} € <br />
 Abbuchungsrhythmus: {{BestellWizard: Ernteanteile ohne Geno-Anteile.Abbuchungsrhythmus}} <br />
 
-Da du als Studierende*r bestellt hast, zeichnest du keine Genossenschaftsanteile. <br /><br />
+Da du als [Studierende*r] bestellt hast, zeichnest du keine Genossenschaftsanteile. Du kannst diese im Mitgliederbereich allerdings nachzeichnen, wenn du das möchtest.<br /><br />
 
 Wir prüfen nun die Bestellung und melden uns bei dir, sobald dies geschehen ist. <br /><br />
 
