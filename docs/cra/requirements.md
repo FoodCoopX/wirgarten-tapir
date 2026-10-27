@@ -29,6 +29,7 @@ Annex I, Part I. Applies from 11 December 2027.
 | No known exploitable vulnerabilities at release | **partly** | Dependency review on pull requests |
 | Secure default configuration | **open** | To be reviewed, e.g. debug settings and default credentials in examples |
 | Protection against unauthorised access | **partly** | Login and roles through Keycloak |
+| Limited attack surface, including external interfaces | **unknown** | Is the Keycloak admin console reachable from the internet in production? If so, its login can be attacked by brute force. One option: the reverse proxy forwards only `/realms/` and `/resources/`, and Keycloak is administered from the server's command line, so administration needs shell access to the server. A proof of concept has tested this approach |
 | Confidentiality and integrity of stored and transmitted data | **open** | To be reviewed |
 | Data minimisation | **open** | See [Relation to the GDPR](gdpr.md) |
 | Users can securely and permanently delete their data | **open** | See [Relation to the GDPR](gdpr.md), issue #1123 |
