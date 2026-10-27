@@ -1,7 +1,6 @@
 import datetime
 
 from django.core.exceptions import ValidationError
-
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.coop_membership_cancellation_manager import (
     CoopMembershipCancellationManager,
@@ -28,8 +27,7 @@ from tapir.wirgarten.utils import format_date, format_currency
 
 
 class IntendedUsePatternExpander:
-    MAX_LENGTH_PER_LINE = 27
-    MIN_TOKEN_LENGTH = 5
+    MAX_LENGTH = 140
 
     @classmethod
     def expand_pattern_contracts(
@@ -205,43 +203,29 @@ class IntendedUsePatternExpander:
                 )
             )
 
-        return "\n".join(expanded_lines)
+        result = "\n".join(expanded_lines)
+        cls._validate_length(result)
+        return result
+
+    @classmethod
+    def _validate_length(cls, intended_use: str):
+        from tapir.payments.services.pain_008_xml_string_generator import (
+            Pain008XmlStringGenerator,
+        )
+
+        as_in_export = Pain008XmlStringGenerator.replace_special_characters(
+            intended_use
+        )
+        if len(as_in_export) > cls.MAX_LENGTH:
+            raise ValidationError(
+                f"Der Verwendungszweck ist zu lang ({len(as_in_export)} Zeichen, maximal {cls.MAX_LENGTH}): '{as_in_export}'"
+            )
 
     @classmethod
     def _apply_replacements_for_line(
         cls,
         line: str,
         replacements: TokenReplacers,
-        token_value_overrides: dict[str, str],
-    ):
-        current_max_token_length = cls.MAX_LENGTH_PER_LINE
-        result = cls._apply_replacements_for_line_with_max_length(
-            line=line,
-            replacements=replacements,
-            max_length=current_max_token_length,
-            token_value_overrides=token_value_overrides,
-        )
-        while len(result) > cls.MAX_LENGTH_PER_LINE:
-            current_max_token_length -= 1
-            if current_max_token_length < cls.MIN_TOKEN_LENGTH:
-                raise ValidationError(
-                    f"Diese Zeile: '{line}' ist zu lang wenn die Tokens expandiert sind."
-                )
-
-            result = cls._apply_replacements_for_line_with_max_length(
-                line=line,
-                replacements=replacements,
-                max_length=current_max_token_length,
-                token_value_overrides=token_value_overrides,
-            )
-        return result
-
-    @classmethod
-    def _apply_replacements_for_line_with_max_length(
-        cls,
-        line: str,
-        replacements: TokenReplacers,
-        max_length: int,
         token_value_overrides: dict[str, str],
     ):
         result = line
@@ -255,7 +239,7 @@ class IntendedUsePatternExpander:
             else:
                 value = provider()
 
-            result = result.replace(token_with_braces, value[:max_length])
+            result = result.replace(token_with_braces, value)
         return result
 
     @classmethod
