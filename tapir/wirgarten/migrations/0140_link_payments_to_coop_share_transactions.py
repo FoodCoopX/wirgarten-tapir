@@ -18,9 +18,7 @@ def link_payments_to_coop_share_transactions(apps, schema):
     for payment in payment_class.objects.filter(
         id__in=transactions_by_payment_id.keys()
     ):
-        first_transaction, *other_transactions = transactions_by_payment_id[
-            payment.id
-        ]
+        first_transaction, *other_transactions = transactions_by_payment_id[payment.id]
         for other_transaction in other_transactions:
             amount = other_transaction.share_price * other_transaction.quantity
             payment_class.objects.create(
