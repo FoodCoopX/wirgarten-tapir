@@ -29,13 +29,16 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.triggers.onboarding_trigger import OnboardingTrigger
 from tapir.wirgarten.utils import get_today, legal_status_is_cooperative
 
+TOKENS_SOLIDARITY_CONTRIBUTION = {
+    "Solidarbeitrag - Betrag": "solidarity_contribution_amount",
+    "Solidarbeitrag - Startdatum": "solidarity_contribution_start_date",
+}
+
 TOKENS_COOP_ENTRY = {
     "Anzahl der gezeichneten Genossenschaftsanteile": "number_of_coop_shares",
     "Wert Genossenschaftsanteil": "price_of_a_coop_share",
     "Gesamtwert der gezeichneten Genossenschaftsanteile": "total_cost",
     "Beitrittsdatum Geno/Verein": "membership_start_date",
-    "Solidarbeitrag - Betrag": "solidarity_contribution_amount",
-    "Solidarbeitrag - Startdatum": "solidarity_contribution_start_date",
     "Vereinsmitgliedschaft - Monatspreis": "membership_monthly_price",
 }
 
@@ -142,13 +145,32 @@ def _register_triggers():
             TOKEN_FIRST_PICKUP_DATE: "first_pickup_date",
         }
         | TOKENS_ORDER_PAYMENT
-        | TOKENS_COOP_ENTRY,
+        | TOKENS_COOP_ENTRY
+        | TOKENS_SOLIDARITY_CONTRIBUTION,
         required=True,
+    )
+    register_transactional_trigger(
+        name="BestellWizard: Ernteanteile ohne Geno-Anteile",
+        key=Events.REGISTER_SUBSCRIPTION_WITHOUT_COOP_SHARES,
+        tokens={
+            "Vertragsliste": "contract_list",
+            "Vertragsstart": "contract_start_date",
+            "Vertragsende": "contract_end_date",
+            TOKEN_FIRST_PICKUP_DATE: "first_pickup_date",
+        }
+        | TOKENS_ORDER_PAYMENT
+        | TOKENS_SOLIDARITY_CONTRIBUTION,
+        required=lambda: legal_status_is_cooperative(cache={})
+        and get_parameter_value(
+            ParameterKeys.ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES, cache={}
+        ),
     )
     register_transactional_trigger(
         name="BestellWizard: Nur Geno-/Vereinsmitgliedschaft",
         key=Events.REGISTER_MEMBERSHIP_ONLY,
-        tokens=TOKENS_ORDER_PAYMENT | TOKENS_COOP_ENTRY,
+        tokens=TOKENS_ORDER_PAYMENT
+        | TOKENS_COOP_ENTRY
+        | TOKENS_SOLIDARITY_CONTRIBUTION,
         required=lambda: legal_status_is_cooperative(cache={}),
     )
     register_transactional_trigger(
@@ -280,7 +302,8 @@ def _register_triggers():
             TOKEN_FIRST_PICKUP_DATE: "first_pickup_date",
         }
         | TOKENS_ORDER_PAYMENT
-        | TOKENS_COOP_ENTRY,
+        | TOKENS_COOP_ENTRY
+        | TOKENS_SOLIDARITY_CONTRIBUTION,
         required=True,
     )
 

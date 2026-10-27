@@ -1,0 +1,50 @@
+<mj-wrapper padding="20px 0px 20px 0px" border="none" direction="ltr" text-align="center">
+    <mj-section padding="0px" text-align="left">
+        <mj-column>
+            <mj-text padding="10px 25px 10px 25px" align="left">
+Trigger: Transaktionale Mail, die versendet wird, wenn über den Bestellwizard Produktverträge ohne Geno-Anteile gezeichnet werden. Das ist nur bei Genossenschaften möglich, wenn der "Studierenden-Status" erlaubt ist und im Bestellwizard die entsprechende Checkbox durch den Nutzer:in  aktiviert wurde. In allen anderen Fällen wird die Mail "BestellWizard: Mitgliedschaft + Ernteanteile" verschickt. <br /><br />
+Zweck: Bestellbestätigung und Information. Ihr könnt die Mail so gestalten, dass es eine reine Bestellübersicht ist, aber noch keine Bestätigung der Bestellung ist (dann braucht ihr unbedingt die transaktionale Mail "Admin bestätigt"). Ihr könnt die Mail aber auch direkt so gestalten, als wäre die Bestellung bestätigt. <br /><br />
+Text-Vorschlag: Ihr könnt diesen kopieren und nach dem Laden eurer Vorlage einfügen. Ihr könnt diesen Text natürlich jederzeit nach euren Bedürfnissen anpassen. <br /><br />
+
+_______________ <br /><br />
+
+Moin {{Empfänger.Vorname}}, <br /><br />
+
+danke für deine Bestellung bei uns.  <br /><br />
+
+Du hast folgende Bestellung bei uns aufgegeben: <br />
+{{BestellWizard: Ernteanteile ohne Geno-Anteile.Vertragsliste}} <br />
+Vertragsstart: {{BestellWizard: Ernteanteile ohne Geno-Anteile.Vertragsstart}} <br />
+Vertragsende: {{BestellWizard: Ernteanteile ohne Geno-Anteile.Vertragsende}} <br /> <br />
+
+Erste Abholung am: {{BestellWizard: Ernteanteile ohne Geno-Anteile.Erste Abholung am}} <br /><br />
+
+Gesamtbetrag monatlich: {{BestellWizard: Ernteanteile ohne Geno-Anteile.Gesamtbetrag monatlich}} € <br />
+Abbuchungsrhythmus: {{BestellWizard: Ernteanteile ohne Geno-Anteile.Abbuchungsrhythmus}} <br />
+
+Da du als [Studierende*r] bestellt hast, zeichnest du keine Genossenschaftsanteile. Du kannst diese im Mitgliederbereich allerdings nachzeichnen, wenn du das möchtest.<br /><br />
+
+Wir prüfen nun die Bestellung und melden uns bei dir, sobald dies geschehen ist. <br /><br />
+
+Wenn Du noch eine Frage oder Rückmeldung hast, melde Dich gerne bei uns! <br /><br />
+
+Liebe Grüße, <br />
+dein {{Allgemein.Admin Name}} <br />
+{{Allgemein.Admin Telefonnr}} <br />
+{{Allgemein.Admin Email}} <br />
+
+__________________ <br /><br />
+
+Folgende Tokens sind hier relevant: <br />
+{{BestellWizard: Ernteanteile ohne Geno-Anteile.Vertragsliste}} <br />
+{{BestellWizard: Ernteanteile ohne Geno-Anteile.Vertragsstart}} <br />
+{{BestellWizard: Ernteanteile ohne Geno-Anteile.Vertragsende}} <br />
+{{BestellWizard: Ernteanteile ohne Geno-Anteile.Erste Abholung am}} <br />
+{{BestellWizard: Ernteanteile ohne Geno-Anteile.Gesamtbetrag monatlich}} <br />
+{{BestellWizard: Ernteanteile ohne Geno-Anteile.Abbuchungsrhythmus}} <br />
+{{BestellWizard: Ernteanteile ohne Geno-Anteile.Solidarbeitrag - Betrag}} <br />
+{{BestellWizard: Ernteanteile ohne Geno-Anteile.Solidarbeitrag - Startdatum}} <br />
+            </mj-text>
+        </mj-column>
+    </mj-section>
+</mj-wrapper>

@@ -1014,7 +1014,12 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         )
 
         self.assert_mail_event_has_been_triggered(
-            mock_fire_action, key=Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION
+            mock_fire_action,
+            key=(
+                Events.REGISTER_SUBSCRIPTION_WITHOUT_COOP_SHARES
+                if is_student
+                else Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION
+            ),
         )
 
         self.assertEqual(1, QuestionaireTrafficSourceResponse.objects.count())

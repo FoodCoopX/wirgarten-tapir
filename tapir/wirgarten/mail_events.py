@@ -1,6 +1,11 @@
 class Events:
     REGISTER_MEMBERSHIP_AND_SUBSCRIPTION = "register_membership_and_subscription"
 
+    # Used only for cooperatives, in cases where it's possible to place an order without becoming a member (typically student status)
+    REGISTER_SUBSCRIPTION_WITHOUT_COOP_SHARES = (
+        "register_subscription_without_coop_shares"
+    )
+
     # Absenden Bestellwizzard Mitgliedschaft (nur Geno-Anteile)
     REGISTER_MEMBERSHIP_ONLY = "register_membership_only"
 

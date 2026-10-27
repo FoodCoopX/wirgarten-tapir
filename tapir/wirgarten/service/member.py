@@ -309,8 +309,10 @@ def send_investing_membership_confirmation(
             token_data=TokenBuilderCoopEntry.build_mail_tokens_for_coop_entry(
                 coop_share_transaction=coop_share_transaction,
                 association_membership=association_membership,
-                solidarity_contribution=solidarity_contribution,
                 cache=cache,
+            )
+            | TokenBuilderCoopEntry.build_mail_tokens_for_solidarity_contribution(
+                solidarity_contribution
             )
             | OrderConfirmationMailTokenBuilder.build_membership_only_tokens(
                 member=member,
@@ -329,36 +331,55 @@ def send_product_order_confirmation(
     coop_share_transaction: CoopShareTransaction | None,
     association_membership: AssociationMembership | None,
     solidarity_contribution: SolidarityContribution | None,
+    without_coop_shares: bool = False,
 ):
     min_contract_start_date = min([subscription.start_date for subscription in subs])
     min_contract_end_date = min([subscription.end_date for subscription in subs])
+    event = _get_product_order_confirmation_event(
+        from_waiting_list=from_waiting_list,
+        without_coop_shares=without_coop_shares,
+    )
+
+    token_data = (
+        {
+            "contract_start_date": format_date(min_contract_start_date),
+            "contract_end_date": format_date(min_contract_end_date),
+        }
+        | OrderConfirmationMailTokenBuilder.build_product_order_tokens(
+            member=member,
+            subscriptions=subs,
+            solidarity_contribution=solidarity_contribution,
+            cache=cache,
+        )
+        | TokenBuilderCoopEntry.build_mail_tokens_for_solidarity_contribution(
+            solidarity_contribution
+        )
+    )
+
+    if event != Events.REGISTER_SUBSCRIPTION_WITHOUT_COOP_SHARES:
+        token_data |= TokenBuilderCoopEntry.build_mail_tokens_for_coop_entry(
+            coop_share_transaction=coop_share_transaction,
+            association_membership=association_membership,
+            cache=cache,
+        )
 
     TransactionalTrigger.fire_action(
         trigger_data=TransactionalTriggerData(
-            key=(
-                Events.WAITING_LIST_ORDER_CONFIRMATION
-                if from_waiting_list
-                else Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION
-            ),
+            key=event,
             recipient_id_in_base_queryset=member.id,
-            token_data={
-                "contract_start_date": format_date(min_contract_start_date),
-                "contract_end_date": format_date(min_contract_end_date),
-            }
-            | OrderConfirmationMailTokenBuilder.build_product_order_tokens(
-                member=member,
-                subscriptions=subs,
-                solidarity_contribution=solidarity_contribution,
-                cache=cache,
-            )
-            | TokenBuilderCoopEntry.build_mail_tokens_for_coop_entry(
-                coop_share_transaction=coop_share_transaction,
-                association_membership=association_membership,
-                solidarity_contribution=solidarity_contribution,
-                cache=cache,
-            ),
+            token_data=token_data,
         ),
     )
+
+
+def _get_product_order_confirmation_event(
+    from_waiting_list: bool, without_coop_shares: bool
+) -> str:
+    if from_waiting_list:
+        return Events.WAITING_LIST_ORDER_CONFIRMATION
+    if without_coop_shares:
+        return Events.REGISTER_SUBSCRIPTION_WITHOUT_COOP_SHARES
+    return Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION
 
 
 def annotate_member_queryset_with_coop_shares_total_value(
