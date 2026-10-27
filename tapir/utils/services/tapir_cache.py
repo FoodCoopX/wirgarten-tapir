@@ -416,7 +416,7 @@ class TapirCache:
         )
 
     @classmethod
-    def get_delivery_day_by_pickup_location_id(cls, cache: Dict) -> Dict:
+    def get_delivery_day_by_pickup_location_id(cls, cache: dict) -> dict:
         def compute():
             delivery_days = {}
             for (
