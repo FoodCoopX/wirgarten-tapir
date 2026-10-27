@@ -11,7 +11,6 @@ from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES
 from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.wirgarten.models import (
     Member,
-    MandateReference,
     Payment,
     CoopShareTransaction,
 )
@@ -34,13 +33,6 @@ class CoopSharePurchaseHandler:
             member=member, cache=cache
         )
 
-        payment = cls.create_or_update_payment(
-            shares_valid_at=shares_valid_at,
-            mandate_ref=mandate_ref,
-            quantity=quantity,
-            cache=cache,
-        )
-
         coop_share_transaction = CoopShareTransaction.objects.create(
             member=member,
             quantity=quantity,
@@ -50,8 +42,9 @@ class CoopSharePurchaseHandler:
             valid_at=shares_valid_at,
             mandate_ref=mandate_ref,
             transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,
-            payment=payment,
         )
+
+        cls.create_payment(coop_share_transaction=coop_share_transaction, cache=cache)
 
         now = get_now(cache=cache)
         if member.sepa_consent != now:
@@ -72,37 +65,18 @@ class CoopSharePurchaseHandler:
         return coop_share_transaction
 
     @classmethod
-    def create_or_update_payment(
-        cls,
-        shares_valid_at: datetime.date,
-        mandate_ref: MandateReference,
-        quantity: int,
-        cache: dict,
+    def create_payment(
+        cls, coop_share_transaction: CoopShareTransaction, cache: dict
     ) -> Payment:
-        share_price = get_parameter_value(ParameterKeys.COOP_SHARE_PRICE, cache=cache)
-        due_date = cls.get_payment_due_date(
-            shares_valid_at=shares_valid_at, cache=cache
-        )
-
-        existing_payment = Payment.objects.filter(
-            due_date=due_date,
-            mandate_ref=mandate_ref,
-            status=Payment.PaymentStatus.DUE,
-            type=PAYMENT_TYPE_COOP_SHARES,
-        ).first()
-        if existing_payment is not None:
-            existing_payment.amount = (
-                float(existing_payment.amount) + share_price * quantity
-            )
-            existing_payment.save()
-            return existing_payment
-
         return Payment.objects.create(
-            due_date=due_date,
-            amount=share_price * quantity,
-            mandate_ref=mandate_ref,
+            due_date=cls.get_payment_due_date(
+                shares_valid_at=coop_share_transaction.valid_at, cache=cache
+            ),
+            amount=coop_share_transaction.total_price,
+            mandate_ref=coop_share_transaction.mandate_ref,
             status=Payment.PaymentStatus.DUE,
             type=PAYMENT_TYPE_COOP_SHARES,
+            coop_share_transaction=coop_share_transaction,
         )
 
     @classmethod

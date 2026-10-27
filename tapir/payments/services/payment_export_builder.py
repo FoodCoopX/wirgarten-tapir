@@ -193,7 +193,7 @@ class PaymentExportBuilder:
         max_due_date = get_last_day_of_month(reference_date)
         return Payment.objects.filter(
             transaction__isnull=True, due_date__lte=max_due_date
-        ).select_related("mandate_ref__member")
+        ).select_related("mandate_ref__member", "coop_share_transaction")
 
     @classmethod
     def create_csv_and_xml_files(

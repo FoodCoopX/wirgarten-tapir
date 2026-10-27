@@ -10271,9 +10271,6 @@ components:
         transfer_member:
           type: string
           nullable: true
-        payment:
-          type: string
-          nullable: true
       required:
       - created_at
       - member
@@ -14207,12 +14204,20 @@ components:
           type: string
           format: date
           nullable: true
+        instalment_number:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
         mandate_ref:
           type: string
         transaction:
           type: string
           nullable: true
         pickup_location:
+          type: string
+          nullable: true
+        coop_share_transaction:
           type: string
           nullable: true
       required:

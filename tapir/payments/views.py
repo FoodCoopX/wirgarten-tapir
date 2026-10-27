@@ -214,7 +214,7 @@ class GetFutureMemberPaymentsApiView(APIView):
             match payment.type:
                 case payments_config.PAYMENT_TYPE_COOP_SHARES:
                     coop_share_transactions = CoopShareTransaction.objects.filter(
-                        payment=payment
+                        payments=payment
                     )
                 case (
                     MonthPaymentBuilderSolidarityContributions.PAYMENT_TYPE_SOLIDARITY_CONTRIBUTION
@@ -1109,9 +1109,8 @@ class PaymentIntendedUsePreviewCoopSharesApiView(APIView):
             pattern=pattern,
             member=payment.mandate_ref.member,
             payment=payment,
-            number_of_shares=round(
-                payment.amount
-                / get_parameter_value(ParameterKeys.COOP_SHARE_PRICE, cache=cache)
+            number_of_shares=PaymentExportIntendedUseBuilder.get_number_of_coop_shares(
+                payment=payment, cache=cache
             ),
             cache=cache,
         )
@@ -1120,7 +1119,7 @@ class PaymentIntendedUsePreviewCoopSharesApiView(APIView):
     def _get_random_payments(cls, cache: dict):
         return list(
             Payment.objects.filter(type=payments_config.PAYMENT_TYPE_COOP_SHARES)
-            .select_related("mandate_ref__member")
+            .select_related("mandate_ref__member", "coop_share_transaction")
             .order_by("?")[:5]
         )
 
@@ -1195,7 +1194,9 @@ class PaymentTransactionDetailsView(APIView):
         )
         cache = {}
 
-        payments = transaction.payment_set.select_related("mandate_ref__member")
+        payments = transaction.payment_set.select_related(
+            "mandate_ref__member", "coop_share_transaction"
+        )
 
         payments_by_mandate_ref = {}
         members_by_mandate_ref = {}

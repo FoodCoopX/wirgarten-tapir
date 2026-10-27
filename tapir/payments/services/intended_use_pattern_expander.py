@@ -154,8 +154,8 @@ class IntendedUsePatternExpander:
                     member, cache=cache
                 )
             ),
-            IntendedUseTokens.COOP_SHARE_VALID_AT: lambda: cls._get_coop_share_validity_dates(
-                member=member, payment=payment, cache=cache
+            IntendedUseTokens.COOP_SHARE_VALID_AT: lambda: cls._get_coop_share_validity_date(
+                payment=payment
             ),
             IntendedUseTokens.PRICE_SINGLE_SHARE: lambda: format_currency(
                 get_parameter_value(key=ParameterKeys.COOP_SHARE_PRICE, cache=cache)
@@ -165,17 +165,10 @@ class IntendedUsePatternExpander:
         return cls._apply_replacements(pattern, replacements, token_value_overrides)
 
     @classmethod
-    def _get_coop_share_validity_dates(
-        cls, member: Member, payment: Payment, cache: dict
-    ):
-        purchase_dates = {
-            transaction.valid_at
-            for transaction in TapirCache.get_coop_share_transaction_by_member_id(
-                cache=cache, member_id=member.id
-            )
-            if transaction.payment_id == payment.id
-        }
-        return ", ".join(format_date(date) for date in sorted(purchase_dates))
+    def _get_coop_share_validity_date(cls, payment: Payment):
+        if payment.coop_share_transaction is None:
+            return ""
+        return format_date(payment.coop_share_transaction.valid_at)
 
     @classmethod
     def _get_common_token_replacers(cls, member: Member, cache: dict):

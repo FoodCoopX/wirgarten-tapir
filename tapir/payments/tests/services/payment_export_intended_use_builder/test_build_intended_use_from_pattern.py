@@ -8,6 +8,10 @@ from tapir.payments.services.payment_export_intended_use_builder import (
 )
 from tapir.utils.tests_utils import mock_parameter_value
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.tests.factories import (
+    CoopShareTransactionFactory,
+    PaymentFactory,
+)
 from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
@@ -63,8 +67,10 @@ class TestBuildIntendedUseFromPattern(TapirUnitTest):
             value=50,
         )
         mock_expand_pattern_coop_shares_bought.return_value = "expanded"
-        payment = Mock(amount=300)
-        payment.mandate_ref.member = Mock()
+        payment = PaymentFactory.build(
+            amount=300,
+            coop_share_transaction=CoopShareTransactionFactory.build(quantity=4),
+        )
 
         result = PaymentExportIntendedUseBuilder._build_intended_use_from_pattern(
             payment=payment, is_contracts=False, cache=cache
@@ -75,6 +81,23 @@ class TestBuildIntendedUseFromPattern(TapirUnitTest):
             pattern="test_pattern_coop",
             member=payment.mandate_ref.member,
             payment=payment,
-            number_of_shares=6,
+            number_of_shares=4,
             cache=cache,
         )
+
+    def test_getNumberOfCoopShares_paymentWithoutTransaction_derivedFromAmount(
+        self,
+    ):
+        cache = {}
+        mock_parameter_value(
+            cache=cache,
+            key=ParameterKeys.COOP_SHARE_PRICE,
+            value=50,
+        )
+        payment = PaymentFactory.build(amount=300, coop_share_transaction=None)
+
+        result = PaymentExportIntendedUseBuilder.get_number_of_coop_shares(
+            payment=payment, cache=cache
+        )
+
+        self.assertEqual(6, result)
