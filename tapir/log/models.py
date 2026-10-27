@@ -149,11 +149,16 @@ class UpdateModelLogEntry(LogEntry):
     def get_context_data(self):
         context = super().get_context_data()
 
+        # Be robust against log rows whose stored value is not a dict (e.g. legacy or
+        # manually written rows), so that rendering a log list cannot break a page.
+        old_values = self.old_values if isinstance(self.old_values, dict) else {}
+        new_values = self.new_values if isinstance(self.new_values, dict) else {}
+
         changes = []
-        for k in self.old_values.keys():
+        for k in old_values.keys():
             if hasattr(self, "excluded_fields") and k in self.excluded_fields:
                 continue
-            changes.append((k, self.old_values[k], self.new_values[k]))
+            changes.append((k, old_values[k], new_values.get(k)))
         context["changes"] = changes
 
         return context
@@ -177,5 +182,7 @@ class ModelLogEntry(LogEntry):
 
     def get_context_data(self):
         context = super().get_context_data()
-        context["values"] = self.values.items()
+        # See UpdateModelLogEntry.get_context_data: tolerate non-dict values.
+        values = self.values if isinstance(self.values, dict) else {}
+        context["values"] = values.items()
         return context
