@@ -37,3 +37,11 @@ class TestCoopShareInstalmentConfigValidator(TapirUnitTest):
         mock_get_parameter_value.side_effect = KeyError()
 
         CoopShareInstalmentConfigValidator.validate_instalment_amount(Decimal(15))
+
+    def test_validateInstalmentAmount_amountIsZero_noErrorRaisedHere(
+        self, mock_get_parameter_value: Mock
+    ):
+        # The error will be raised by a min value validator instead.
+        CoopShareInstalmentConfigValidator.validate_instalment_amount(Decimal(0))
+
+        mock_get_parameter_value.assert_not_called()

@@ -9,6 +9,10 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 class CoopShareInstalmentConfigValidator:
     @staticmethod
     def validate_instalment_amount(instalment_amount: Decimal):
+        if instalment_amount <= 0:
+            # Already rejected by MinValueValidator, but all validators run
+            return
+
         try:
             share_price = get_parameter_value(key=ParameterKeys.COOP_SHARE_PRICE)
         except KeyError:

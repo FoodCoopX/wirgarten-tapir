@@ -130,7 +130,8 @@ class ParameterDefinitionsBusiness:
             key=ParameterKeys.COOP_SHARES_INSTALMENT_AMOUNT,
             label="Höhe einer Rate",
             datatype=TapirParameterDatatype.DECIMAL,
-            initial_value=Decimal(10),
+            # 1 because the share price is an integer, so it is always divisible by 1
+            initial_value=Decimal(1),
             description="Betrag in € einer monatlichen Rate. Der Preis eines Anteils muss durch diesen Betrag teilbar sein. Die Anzahl der Raten ergibt sich aus dem Betrag des Pflichtanteils.",
             category=ParameterCategory.BUSINESS,
             meta=ParameterMeta(
