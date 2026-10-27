@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+from django.conf import settings
 from django.urls import NoReverseMatch, reverse
 
 from tapir.bidding_round.models import Bid
@@ -32,7 +33,8 @@ class BiddingRoundMailTokenBuilder:
     @classmethod
     def _build_bid_link(cls) -> str:
         try:
-            return reverse("bidding_rounds:bidding_rounds")
+            # Absolute URL, so the link is usable in an email.
+            return settings.SITE_URL + reverse("bidding_rounds:bidding_rounds")
         except NoReverseMatch:
             return ""
 

@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+from django.conf import settings
 from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
 from tapir.bidding_round.config import TRAFFIC_LIGHT
@@ -78,7 +79,7 @@ class TestBiddingRoundMail(TapirIntegrationTest):
         self.assertEqual(round_.name, tokens["round_name"])
         self.assertIn("80,00", tokens["bid_items_html"])
         self.assertIn("960", tokens["bid_total_per_year"])
-        self.assertEqual("/bidding_rounds/", tokens["bid_link"])
+        self.assertEqual(settings.SITE_URL + "/bidding_rounds/", tokens["bid_link"])
 
     def test_getDefaultMailContent_draftsExist(self):
         for key in [
