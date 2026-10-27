@@ -48,6 +48,8 @@ THEME_SCHINKELER_HOEFE = "sch"
 THEME_FALKENHOF = "fkh"
 THEME_HECKENGAEU = "hkg"
 THEME_ACKERNATIVE = "ack"
+THEME_SUPERSCHMELZ = "sup"
+THEME_VIERLANDE = "vie"
 
 
 THEME_OPTIONS = [
@@ -71,6 +73,8 @@ THEME_OPTIONS = [
     (THEME_SCHINKELER_HOEFE, "Schinkeler Höfe"),
     (THEME_SOLAWI_ODERSCHWALBE, "Solawi Oderschwalbe"),
     (THEME_SOLAWI_HALL, "Solawi Hall"),
+    (THEME_SUPERSCHMELZ, "Solawi Superschmelz"),
+    (THEME_VIERLANDE, "Solawi Vierlande"),
     (THEME_WIRGARTEN, "WirGarten Lüneburg"),
     (THEME_TEST, "Test"),
 ]
