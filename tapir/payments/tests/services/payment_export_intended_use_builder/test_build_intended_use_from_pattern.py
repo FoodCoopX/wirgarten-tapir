@@ -85,6 +85,42 @@ class TestBuildIntendedUseFromPattern(TapirUnitTest):
             cache=cache,
         )
 
+    @patch.object(
+        IntendedUsePatternExpander, "expand_pattern_coop_shares_bought", autospec=True
+    )
+    def test_buildIntendedUseFromPattern_isCoopShareInstalment_usesInstalmentPattern(
+        self,
+        mock_expand_pattern_coop_shares_bought: Mock,
+    ):
+        cache = {}
+        mock_parameter_value(
+            cache=cache,
+            key=ParameterKeys.PAYMENT_INTENDED_USE_COOP_SHARES,
+            value="test_pattern_coop",
+        )
+        mock_parameter_value(
+            cache=cache,
+            key=ParameterKeys.PAYMENT_INTENDED_USE_COOP_SHARES_INSTALMENT,
+            value="test_pattern_coop_instalment",
+        )
+        payment = PaymentFactory.build(
+            amount=20,
+            instalment_number=2,
+            coop_share_transaction=CoopShareTransactionFactory.build(quantity=4),
+        )
+
+        PaymentExportIntendedUseBuilder._build_intended_use_from_pattern(
+            payment=payment, is_contracts=False, cache=cache
+        )
+
+        mock_expand_pattern_coop_shares_bought.assert_called_once_with(
+            pattern="test_pattern_coop_instalment",
+            member=payment.mandate_ref.member,
+            payment=payment,
+            number_of_shares=4,
+            cache=cache,
+        )
+
     def test_getNumberOfCoopShares_paymentWithoutTransaction_derivedFromAmount(
         self,
     ):

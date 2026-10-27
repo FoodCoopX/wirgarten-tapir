@@ -121,6 +121,7 @@ class BestellWizardOrderFulfiller:
                 subscriptions=subscriptions,
                 cache=cache,
                 actor=actor,
+                pay_in_instalments=False,
             )
         if legal_status_is_association(cache=cache):
             association_membership = cls.create_association_membership(
@@ -229,6 +230,7 @@ class BestellWizardOrderFulfiller:
         subscriptions: list[Subscription],
         cache: dict,
         actor: TapirUser,
+        pay_in_instalments: bool,
     ):
         earliest_trial_period_end = cls.get_earliest_trial_period_end(
             subscriptions=subscriptions, cache=cache
@@ -247,6 +249,7 @@ class BestellWizardOrderFulfiller:
             shares_valid_at=shares_valid_at,
             cache=cache,
             actor=actor,
+            pay_in_instalments=pay_in_instalments,
         )
 
     @classmethod

@@ -145,6 +145,7 @@ class WaitingListEntryConfirmationApplier:
                 subscriptions=new_subscriptions,
                 cache=cache,
                 actor=actor,
+                pay_in_instalments=False,
             )
 
         if len(new_subscriptions) > 0:

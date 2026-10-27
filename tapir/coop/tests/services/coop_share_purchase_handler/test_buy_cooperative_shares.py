@@ -54,6 +54,7 @@ class TestBuyCooperativeShares(TapirUnitTest):
             shares_valid_at=shares_valid_at,
             cache=cache,
             actor=actor,
+            pay_in_instalments=False,
         )
 
         mock_get_or_create_mandate_reference.assert_called_once_with(
@@ -127,6 +128,7 @@ class TestBuyCooperativeShares(TapirUnitTest):
             shares_valid_at=shares_valid_at,
             cache=cache,
             actor=actor,
+            pay_in_instalments=False,
         )
 
         mock_get_or_create_mandate_reference.assert_called_once_with(
@@ -155,3 +157,46 @@ class TestBuyCooperativeShares(TapirUnitTest):
         )
 
         self.assertEqual(result, transaction)
+
+    @patch.object(CoopSharesPurchasedLogEntry, "populate_transaction", autospec=True)
+    @patch(
+        "tapir.coop.services.coop_share_purchase_handler.get_parameter_value",
+        autospec=True,
+    )
+    @patch.object(
+        CoopSharePurchaseHandler, "send_warning_mail_if_necessary", autospec=True
+    )
+    @patch.object(CoopShareTransaction, "objects")
+    @patch.object(CoopSharePurchaseHandler, "create_instalment_payments", autospec=True)
+    @patch.object(CoopSharePurchaseHandler, "create_payment", autospec=True)
+    @patch.object(
+        MandateReferenceProvider,
+        "get_or_create_mandate_reference",
+        autospec=True,
+    )
+    def test_buyCooperativeShares_payInInstalments_createsInstalmentPayments(
+        self,
+        mock_get_or_create_mandate_reference: Mock,
+        mock_create_payment: Mock,
+        mock_create_instalment_payments: Mock,
+        mock_coop_share_transaction_objects: Mock,
+        *_,
+    ):
+        mock_timezone(self, datetime.datetime(year=2024, month=1, day=17))
+        transaction = Mock()
+        mock_coop_share_transaction_objects.create.return_value = transaction
+        cache = {}
+
+        CoopSharePurchaseHandler.buy_cooperative_shares(
+            quantity=2,
+            member=Mock(),
+            shares_valid_at=datetime.date(year=2024, month=2, day=13),
+            cache=cache,
+            actor=Mock(),
+            pay_in_instalments=True,
+        )
+
+        mock_create_instalment_payments.assert_called_once_with(
+            coop_share_transaction=transaction, cache=cache
+        )
+        mock_create_payment.assert_not_called()

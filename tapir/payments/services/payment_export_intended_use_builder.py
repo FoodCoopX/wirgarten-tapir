@@ -53,7 +53,12 @@ class PaymentExportIntendedUseBuilder:
             )
         return IntendedUsePatternExpander.expand_pattern_coop_shares_bought(
             pattern=get_parameter_value(
-                key=ParameterKeys.PAYMENT_INTENDED_USE_COOP_SHARES, cache=cache
+                key=(
+                    ParameterKeys.PAYMENT_INTENDED_USE_COOP_SHARES
+                    if payment.instalment_number is None
+                    else ParameterKeys.PAYMENT_INTENDED_USE_COOP_SHARES_INSTALMENT
+                ),
+                cache=cache,
             ),
             member=payment.mandate_ref.member,
             payment=payment,

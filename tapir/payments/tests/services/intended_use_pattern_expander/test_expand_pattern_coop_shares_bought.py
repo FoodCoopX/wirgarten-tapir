@@ -75,6 +75,52 @@ class TestExpandPatternCoopSharesBought(TapirIntegrationTest):
 
         self.assertEqual("", result)
 
+    def test_expandPatternCoopSharesBought_mandateReference_patternCorrectlyExpanded(
+        self,
+    ):
+        payment = PaymentFactory.build(mandate_ref__ref="DOEJOHN/A1B2C3")
+
+        result = self._expand_token(
+            IntendedUseTokens.MANDATE_REFERENCE, member=Mock(), payment=payment
+        )
+
+        self.assertEqual("DOEJOHN/A1B2C3", result)
+
+    def test_expandPatternCoopSharesBought_instalmentTokens_patternCorrectlyExpanded(
+        self,
+    ):
+        transaction = CoopShareTransactionFactory.create()
+        payments = [
+            PaymentFactory.create(
+                coop_share_transaction=transaction, instalment_number=number
+            )
+            for number in [1, 2, 3]
+        ]
+
+        result = self._expand_token(
+            f"{IntendedUseTokens.INSTALMENT_NUMBER}}}/{{{IntendedUseTokens.NUMBER_OF_INSTALMENTS}",
+            member=Mock(),
+            payment=payments[1],
+        )
+
+        self.assertEqual("2/3", result)
+
+    def test_expandPatternCoopSharesBought_instalmentTokensOnPaymentWithoutInstalments_expandedToEmpty(
+        self,
+    ):
+        payment = PaymentFactory.build(
+            coop_share_transaction=CoopShareTransactionFactory.build(),
+            instalment_number=None,
+        )
+
+        result = self._expand_token(
+            f"{IntendedUseTokens.INSTALMENT_NUMBER}}}/{{{IntendedUseTokens.NUMBER_OF_INSTALMENTS}",
+            member=Mock(),
+            payment=payment,
+        )
+
+        self.assertEqual("/", result)
+
     def _expand_token(self, token: str, member: Member, payment: Payment = None):
         return IntendedUsePatternExpander.expand_pattern_coop_shares_bought(
             pattern=f"{{{token}}}",

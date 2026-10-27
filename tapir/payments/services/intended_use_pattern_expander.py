@@ -160,9 +160,25 @@ class IntendedUsePatternExpander:
             IntendedUseTokens.PRICE_SINGLE_SHARE: lambda: format_currency(
                 get_parameter_value(key=ParameterKeys.COOP_SHARE_PRICE, cache=cache)
             ),
+            IntendedUseTokens.MANDATE_REFERENCE: lambda: payment.mandate_ref.ref,
+            IntendedUseTokens.INSTALMENT_NUMBER: lambda: (
+                ""
+                if payment.instalment_number is None
+                else str(payment.instalment_number)
+            ),
+            IntendedUseTokens.NUMBER_OF_INSTALMENTS: lambda: cls._get_number_of_instalments(
+                payment=payment
+            ),
         }
 
         return cls._apply_replacements(pattern, replacements, token_value_overrides)
+
+    @classmethod
+    def _get_number_of_instalments(cls, payment: Payment):
+        if payment.instalment_number is None or payment.coop_share_transaction is None:
+            return ""
+        # all() instead of count() to use the prefetched payments
+        return str(len(payment.coop_share_transaction.payments.all()))
 
     @classmethod
     def _get_coop_share_validity_date(cls, payment: Payment):

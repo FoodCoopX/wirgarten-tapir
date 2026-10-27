@@ -203,7 +203,8 @@ class ParameterDefinitionsPayments:
                 ),
                 textarea=True,
                 vars_hint=IntendedUseTokens.COMMON_TOKENS
-                + IntendedUseTokens.COOP_SHARE_TOKENS,
+                + IntendedUseTokens.COOP_SHARE_TOKENS
+                + IntendedUseTokens.COOP_SHARE_INSTALMENT_TOKENS,
             ),
         )
         order_priority -= 1

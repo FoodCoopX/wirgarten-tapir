@@ -28,6 +28,7 @@ class CoopSharePurchaseHandler:
         shares_valid_at: datetime.date,
         cache: dict,
         actor: TapirUser | None,
+        pay_in_instalments: bool,
     ):
         mandate_ref = MandateReferenceProvider.get_or_create_mandate_reference(
             member=member, cache=cache
@@ -44,7 +45,14 @@ class CoopSharePurchaseHandler:
             transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,
         )
 
-        cls.create_payment(coop_share_transaction=coop_share_transaction, cache=cache)
+        if pay_in_instalments:
+            cls.create_instalment_payments(
+                coop_share_transaction=coop_share_transaction, cache=cache
+            )
+        else:
+            cls.create_payment(
+                coop_share_transaction=coop_share_transaction, cache=cache
+            )
 
         now = get_now(cache=cache)
         if member.sepa_consent != now:
@@ -77,6 +85,35 @@ class CoopSharePurchaseHandler:
             status=Payment.PaymentStatus.DUE,
             type=PAYMENT_TYPE_COOP_SHARES,
             coop_share_transaction=coop_share_transaction,
+        )
+
+    @classmethod
+    def create_instalment_payments(
+        cls, coop_share_transaction: CoopShareTransaction, cache: dict
+    ) -> list[Payment]:
+        instalment_amount = get_parameter_value(
+            key=ParameterKeys.COOP_SHARES_INSTALMENT_AMOUNT, cache=cache
+        )
+        first_due_date = cls.get_payment_due_date(
+            shares_valid_at=coop_share_transaction.valid_at, cache=cache
+        )
+        number_of_instalments = int(
+            coop_share_transaction.total_price / instalment_amount
+        )
+
+        return Payment.objects.bulk_create(
+            [
+                Payment(
+                    due_date=first_due_date + relativedelta(months=index),
+                    amount=instalment_amount,
+                    mandate_ref=coop_share_transaction.mandate_ref,
+                    status=Payment.PaymentStatus.DUE,
+                    type=PAYMENT_TYPE_COOP_SHARES,
+                    coop_share_transaction=coop_share_transaction,
+                    instalment_number=index + 1,
+                )
+                for index in range(number_of_instalments)
+            ]
         )
 
     @classmethod

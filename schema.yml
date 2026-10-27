@@ -4239,6 +4239,10 @@ paths:
       operationId: payments_api_intended_use_preview_coop_shares_retrieve
       parameters:
       - in: query
+        name: instalments
+        schema:
+          type: boolean
+      - in: query
         name: pattern_new
         schema:
           type: string
