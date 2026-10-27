@@ -159,7 +159,7 @@ class ParameterDefinitionsBiddingRound:
                 "Registration via the bidding round page is not possible."
             ),
             datatype=TapirParameterDatatype.STRING,
-            initial_value="Die aktuelle Beitragsrunde ist beendet. Du kannst jederzeit Mitglied werden – über unseren [Bestell-Wizard](/bestell_wizard/bestell_wizard_mobile) gelangst du direkt zur Anmeldung. Wir freuen uns auf dich!",
+            initial_value='Die aktuelle Beitragsrunde ist beendet. Du kannst jederzeit Mitglied werden – über unseren <a href="/bestell_wizard/bestell_wizard_mobile">Bestell-Wizard</a> gelangst du direkt zur Anmeldung. Wir freuen uns auf dich!',
             category=ParameterCategory.BIDDING_ROUND,
             order_priority=6,
             meta=ParameterMeta(textarea=True),

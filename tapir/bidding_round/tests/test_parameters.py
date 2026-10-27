@@ -78,4 +78,5 @@ class TestParameterDefinitions(TapirIntegrationTest):
         ended_text = TapirParameter.objects.get(
             key=ParameterKeys.BIDDING_ROUND_PUBLIC_ENDED_TEXT
         ).get_value()
-        self.assertIn("/bestell_wizard/bestell_wizard_mobile", ended_text)
+        self.assertIn('<a href="/bestell_wizard/bestell_wizard_mobile">', ended_text)
+        self.assertNotIn("](", ended_text)
