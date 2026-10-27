@@ -554,6 +554,7 @@ class Product(TapirModel):
     capacity = models.PositiveIntegerField(null=True, blank=False)
     min_coop_shares = models.IntegerField(default=0)
     hidden_in_bestell_wizard = models.BooleanField(default=False)
+    solidarity_choices = models.CharField(max_length=512, default="", blank=True)
 
     def clean(self):
         # Check if there is exactly one base product per ProductType

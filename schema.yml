@@ -11724,6 +11724,8 @@ components:
           readOnly: true
         hidden_in_bestell_wizard:
           type: boolean
+        solidarity_choices:
+          type: string
       required:
       - base
       - basket_size_equivalences
@@ -11739,6 +11741,7 @@ components:
       - price_per_delivery
       - show_min_coop_shares
       - size
+      - solidarity_choices
       - url_of_image_in_bestellwizard
     ExtendedProductType:
       type: object
@@ -13784,6 +13787,8 @@ components:
           type: integer
         hidden_in_bestell_wizard:
           type: boolean
+        solidarity_choices:
+          type: string
     PatchedGrowingPeriodRequest:
       type: object
       properties:
@@ -14995,6 +15000,9 @@ components:
           minimum: -2147483648
         hidden_in_bestell_wizard:
           type: boolean
+        solidarity_choices:
+          type: string
+          maxLength: 512
       required:
       - created_at
       - name
@@ -15321,9 +15329,16 @@ components:
           type: string
         hidden_in_bestell_wizard:
           type: boolean
+        solidarity_choices:
+          type: array
+          items:
+            type: number
+            format: double
+          readOnly: true
       required:
       - name
       - price
+      - solidarity_choices
       - url_of_image_in_bestellwizard
     PublicProductPricesResponse:
       type: object

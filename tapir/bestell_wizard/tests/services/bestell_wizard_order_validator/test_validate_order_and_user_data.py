@@ -282,7 +282,7 @@ class TestValidateOrderAndUserData(TapirUnitTest):
         pickup_location_ids = Mock()
         contract_start_date = Mock()
         shopping_cart = Mock()
-        order = Mock()
+        order = {}
         distribution_channels = Mock()
         data = {
             "personal_data": {
@@ -419,7 +419,7 @@ class TestValidateOrderAndUserData(TapirUnitTest):
             cache=cache,
         )
         mock_is_the_ordered_solidarity_allowed.assert_called_once_with(
-            amount=12, start_date=contract_start_date, cache=cache
+            amount=12, start_date=contract_start_date, order=order, cache=cache
         )
 
     @patch.object(
@@ -513,7 +513,7 @@ class TestValidateOrderAndUserData(TapirUnitTest):
             cache=cache,
         )
         mock_is_the_ordered_solidarity_allowed.assert_called_once_with(
-            amount=12, start_date=contract_start_date, cache=cache
+            amount=12, start_date=contract_start_date, order=order, cache=cache
         )
         mock_legal_status_is_cooperative.assert_called_once_with(cache=cache)
         mock_validate_coop_content.assert_called_once_with(
@@ -624,7 +624,7 @@ class TestValidateOrderAndUserData(TapirUnitTest):
             cache=cache,
         )
         mock_is_the_ordered_solidarity_allowed.assert_called_once_with(
-            amount=12, start_date=contract_start_date, cache=cache
+            amount=12, start_date=contract_start_date, order=order, cache=cache
         )
         mock_legal_status_is_cooperative.assert_called_once_with(cache=cache)
         mock_validate_coop_content.assert_not_called()
@@ -735,7 +735,7 @@ class TestValidateOrderAndUserData(TapirUnitTest):
             cache=cache,
         )
         mock_is_the_ordered_solidarity_allowed.assert_called_once_with(
-            amount=12, start_date=contract_start_date, cache=cache
+            amount=12, start_date=contract_start_date, order=order, cache=cache
         )
         mock_legal_status_is_cooperative.assert_called_once_with(cache=cache)
         mock_validate_coop_content.assert_not_called()

@@ -100,6 +100,7 @@ class BestellWizardOrderValidator:
         if not SolidarityValidator.is_the_ordered_solidarity_allowed(
             amount=validated_serializer_data["solidarity_contribution"],
             start_date=contract_start_date,
+            order=order,
             cache=cache,
         ):
             raise ValidationError("Solidarbeitrag zu niedrig")

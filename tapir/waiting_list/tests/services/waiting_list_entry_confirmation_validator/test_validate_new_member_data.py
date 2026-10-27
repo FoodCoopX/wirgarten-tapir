@@ -103,7 +103,7 @@ class TestValidateNewMemberData(TapirUnitTest):
             waiting_list_entry=waiting_list_entry, cache=cache
         )
         mock_is_the_ordered_solidarity_allowed.assert_called_once_with(
-            amount=12, start_date=contract_start_date, cache=cache
+            amount=12, start_date=contract_start_date, order=order, cache=cache
         )
 
     @patch.object(
@@ -185,7 +185,7 @@ class TestValidateNewMemberData(TapirUnitTest):
             waiting_list_entry=waiting_list_entry, cache=cache
         )
         mock_is_the_ordered_solidarity_allowed.assert_called_once_with(
-            amount=12, start_date=contract_start_date, cache=cache
+            amount=12, start_date=contract_start_date, order=order, cache=cache
         )
 
     @patch.object(
@@ -265,7 +265,7 @@ class TestValidateNewMemberData(TapirUnitTest):
             waiting_list_entry=waiting_list_entry, cache=cache
         )
         mock_is_the_ordered_solidarity_allowed.assert_called_once_with(
-            amount=12, start_date=contract_start_date, cache=cache
+            amount=12, start_date=contract_start_date, order=order, cache=cache
         )
 
     @patch.object(
@@ -344,5 +344,8 @@ class TestValidateNewMemberData(TapirUnitTest):
             waiting_list_entry=waiting_list_entry, cache=cache
         )
         mock_is_the_ordered_solidarity_allowed.assert_called_once_with(
-            amount=-16, start_date=contract_start_date, cache=cache
+            amount=-16,
+            start_date=contract_start_date,
+            order=mock_build_tapir_order_from_waiting_list_entry.return_value,
+            cache=cache,
         )

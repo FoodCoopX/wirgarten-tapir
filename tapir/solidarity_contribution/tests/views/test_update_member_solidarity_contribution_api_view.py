@@ -12,7 +12,12 @@ from tapir.solidarity_contribution.models import (
 from tapir.solidarity_contribution.tests.factories import SolidarityContributionFactory
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
-from tapir.wirgarten.tests.factories import MemberFactory, GrowingPeriodFactory, NOW
+from tapir.wirgarten.tests.factories import (
+    MemberFactory,
+    GrowingPeriodFactory,
+    NOW,
+    SubscriptionFactory,
+)
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
 
@@ -212,6 +217,56 @@ class TestUpdateMemberSolidarityContributionApiView(TapirIntegrationTest):
             end_date=self.growing_period.end_date,
             trial_disabled=False,
             trial_end_date_override=datetime.date(year=2023, month=1, day=28),
+        )
+
+    def test_post_normalMemberSendsValueBelowProductMinimum_returnsError(self):
+        member = MemberFactory.create(is_superuser=False)
+        self.client.force_login(member)
+        SolidarityContribution.objects.create(
+            member=member,
+            amount=-20,
+            start_date=self.growing_period.start_date,
+            end_date=self.growing_period.end_date,
+        )
+        SubscriptionFactory.create(
+            member=member,
+            period=self.growing_period,
+            product__solidarity_choices="-10,0,10",
+        )
+
+        response = self.client.post(
+            reverse("solidarity_contribution:update_member_contribution"),
+            data={"amount": -15, "member_id": member.id},
+        )
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        response_content = response.json()
+        self.assertFalse(response_content["updated"])
+        self.assertEqual(
+            "Der Solidarbeitrag muss mindestens -10,00€ betragen.",
+            response_content["error"],
+        )
+        self.assertEqual(1, SolidarityContribution.objects.count())
+
+    def test_post_adminSendsValueBelowProductMinimum_createsContribution(self):
+        admin = MemberFactory.create(is_superuser=True)
+        self.client.force_login(admin)
+        member = MemberFactory.create()
+        SubscriptionFactory.create(
+            member=member,
+            period=self.growing_period,
+            product__solidarity_choices="-10,0,10",
+        )
+
+        response = self.client.post(
+            reverse("solidarity_contribution:update_member_contribution"),
+            data={"amount": -15, "member_id": member.id},
+        )
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assertTrue(response.json()["updated"])
+        self.assertEqual(
+            Decimal(-15), SolidarityContribution.objects.get(member=member).amount
         )
 
     def test_post_newValueIsZero_dontCreateANewContribution(self):
