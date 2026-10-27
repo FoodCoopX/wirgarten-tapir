@@ -1108,6 +1108,7 @@ class PaymentIntendedUsePreviewCoopSharesApiView(APIView):
         return IntendedUsePatternExpander.expand_pattern_coop_shares_bought(
             pattern=pattern,
             member=payment.mandate_ref.member,
+            payment=payment,
             number_of_shares=round(
                 payment.amount
                 / get_parameter_value(ParameterKeys.COOP_SHARE_PRICE, cache=cache)
@@ -1134,14 +1135,15 @@ class PaymentIntendedUsePreviewCoopSharesApiView(APIView):
 
         token_value_overrides = {
             IntendedUseTokens.COOP_ENTRY_DATE: format_date(get_today(cache=cache)),
+            IntendedUseTokens.COOP_SHARE_VALID_AT: format_date(get_today(cache=cache)),
         }
 
         for fake_member in fake_members:
             response_data["members"].insert(0, fake_member)
-            response_data["payments"].insert(
-                0,
-                Payment(mandate_ref=MandateReference(member=fake_member), amount=100),
+            fake_payment = Payment(
+                mandate_ref=MandateReference(member=fake_member), amount=100
             )
+            response_data["payments"].insert(0, fake_payment)
             number_of_shares = 1 if fake_member.first_name == "John" else 123
 
             response_data["previews_old"].insert(
@@ -1149,6 +1151,7 @@ class PaymentIntendedUsePreviewCoopSharesApiView(APIView):
                 IntendedUsePatternExpander.expand_pattern_coop_shares_bought(
                     pattern=pattern_old,
                     member=fake_member,
+                    payment=fake_payment,
                     number_of_shares=number_of_shares,
                     cache=cache,
                     token_value_overrides=token_value_overrides,
@@ -1159,6 +1162,7 @@ class PaymentIntendedUsePreviewCoopSharesApiView(APIView):
                 IntendedUsePatternExpander.expand_pattern_coop_shares_bought(
                     pattern=pattern_new,
                     member=fake_member,
+                    payment=fake_payment,
                     number_of_shares=number_of_shares,
                     cache=cache,
                     token_value_overrides=token_value_overrides,

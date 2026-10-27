@@ -56,6 +56,7 @@ class PaymentExportIntendedUseBuilder:
                 key=ParameterKeys.PAYMENT_INTENDED_USE_COOP_SHARES, cache=cache
             ),
             member=payment.mandate_ref.member,
+            payment=payment,
             number_of_shares=round(
                 payment.amount
                 / get_parameter_value(key=ParameterKeys.COOP_SHARE_PRICE, cache=cache)

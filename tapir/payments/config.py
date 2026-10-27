@@ -10,6 +10,7 @@ class IntendedUseTokens:
     MEMBER_NUMBER_WITHOUT_PREFIX = "mitgliedsnummer_ohne_prefix"
     NUMBER_OF_COOP_SHARES = "anzahl_geno_anteile"
     COOP_ENTRY_DATE = "beitrittsdatum"
+    COOP_SHARE_VALID_AT = "geno_anteilte_gueltigkeitsdatum"
     PRICE_SINGLE_SHARE = "preis_einzelne_geno_anteil"
     MONTHLY_PRICE_CONTRACTS_WITHOUT_SOLI = "monatsbeitrag_ohne_soli"
     MONTHLY_PRICE_CONTRACTS_WITH_SOLI = "monatsbeitrag_mit_soli"
@@ -32,7 +33,12 @@ class IntendedUseTokens:
         MEMBER_NUMBER_WITHOUT_PREFIX,
     ]
 
-    COOP_SHARE_TOKENS = [NUMBER_OF_COOP_SHARES, COOP_ENTRY_DATE, PRICE_SINGLE_SHARE]
+    COOP_SHARE_TOKENS = [
+        NUMBER_OF_COOP_SHARES,
+        COOP_ENTRY_DATE,
+        COOP_SHARE_VALID_AT,
+        PRICE_SINGLE_SHARE,
+    ]
 
     CONTRACT_TOKENS = [
         MONTHLY_PRICE_CONTRACTS_WITHOUT_SOLI,

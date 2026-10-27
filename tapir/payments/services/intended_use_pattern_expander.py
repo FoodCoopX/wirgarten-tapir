@@ -1,6 +1,7 @@
 import datetime
 
 from django.core.exceptions import ValidationError
+
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.coop_membership_cancellation_manager import (
     CoopMembershipCancellationManager,
@@ -138,6 +139,7 @@ class IntendedUsePatternExpander:
         cls,
         pattern: str,
         member: Member,
+        payment: Payment,
         number_of_shares: int,
         cache: dict,
         token_value_overrides: dict | None = None,
@@ -152,12 +154,28 @@ class IntendedUsePatternExpander:
                     member, cache=cache
                 )
             ),
+            IntendedUseTokens.COOP_SHARE_VALID_AT: lambda: cls._get_coop_share_validity_dates(
+                member=member, payment=payment, cache=cache
+            ),
             IntendedUseTokens.PRICE_SINGLE_SHARE: lambda: format_currency(
                 get_parameter_value(key=ParameterKeys.COOP_SHARE_PRICE, cache=cache)
             ),
         }
 
         return cls._apply_replacements(pattern, replacements, token_value_overrides)
+
+    @classmethod
+    def _get_coop_share_validity_dates(
+        cls, member: Member, payment: Payment, cache: dict
+    ):
+        purchase_dates = {
+            transaction.valid_at
+            for transaction in TapirCache.get_coop_share_transaction_by_member_id(
+                cache=cache, member_id=member.id
+            )
+            if transaction.payment_id == payment.id
+        }
+        return ", ".join(format_date(date) for date in sorted(purchase_dates))
 
     @classmethod
     def _get_common_token_replacers(cls, member: Member, cache: dict):

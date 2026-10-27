@@ -74,6 +74,7 @@ class TestBuildIntendedUseFromPattern(TapirUnitTest):
         mock_expand_pattern_coop_shares_bought.assert_called_once_with(
             pattern="test_pattern_coop",
             member=payment.mandate_ref.member,
+            payment=payment,
             number_of_shares=6,
             cache=cache,
         )
