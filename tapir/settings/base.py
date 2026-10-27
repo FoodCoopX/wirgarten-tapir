@@ -174,7 +174,7 @@ LOGIN_REDIRECT_URL = "/"
 
 PHONENUMBER_DEFAULT_REGION = env.str("PHONENUMBER_DEFAULT_REGION", default="DE")
 
-LOCALE_PATHS = [os.path.join(BASE_DIR, "tapir/translations/locale")]
+LOCALE_PATHS = [os.path.join(BASE_DIR, "translations/locale")]
 
 if ENABLE_SILK_PROFILING:
     SILKY_PYTHON_PROFILER = True

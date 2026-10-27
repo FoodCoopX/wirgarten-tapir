@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-26 23:13+0100\n"
+"POT-Creation-Date: 2026-10-27 18:20+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,11 +17,15 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
+#: tapir/accounts/models.py:77
+msgid "First Name"
+msgstr ""
+
 #: tapir/accounts/models.py:78
 msgid "Last Name"
 msgstr ""
 
-#: tapir/accounts/models.py:79 tapir/bidding_round/views.py:986
+#: tapir/accounts/models.py:79 tapir/bidding_round/views.py:1010
 #: tapir/wirgarten/forms/member.py:408
 #: tapir/wirgarten/templates/wirgarten/member/member_filter.html:75
 #: tapir/wirgarten/templates/wirgarten/subscription/subscription_filter.html:34
@@ -80,23 +84,23 @@ msgstr ""
 msgid "Secret"
 msgstr ""
 
-#: tapir/bidding_round/config.py:13
+#: tapir/bidding_round/config.py:11
 msgid "Configuration"
 msgstr "Konfiguration"
 
-#: tapir/bidding_round/config.py:14
+#: tapir/bidding_round/config.py:12
 msgid "Active"
 msgstr "Aktiv"
 
-#: tapir/bidding_round/config.py:15
+#: tapir/bidding_round/config.py:13
 msgid "Closed"
 msgstr "Abgeschlossen"
 
-#: tapir/bidding_round/config.py:19
+#: tapir/bidding_round/config.py:17
 msgid "Simple"
 msgstr "Einfach"
 
-#: tapir/bidding_round/config.py:20
+#: tapir/bidding_round/config.py:18
 msgid "Traffic light"
 msgstr "Ampel"
 
@@ -158,7 +162,9 @@ msgstr "Bitte wähle einen Abholort."
 msgid ""
 "Insufficient capacity for the product types %(product_types)s and for the "
 "pickup location %(pickup_locations)s."
-msgstr "Nicht genügend Kapazität für die Produktarten %(product_types)s und für die Verteilstation %(pickup_locations)s."
+msgstr ""
+"Nicht genügend Kapazität für die Produktarten %(product_types)s und für die "
+"Verteilstation %(pickup_locations)s."
 
 #: tapir/bidding_round/services/bidding_round_capacity_service.py:74
 #, python-format
@@ -170,63 +176,103 @@ msgstr "Nicht genügend Kapazität für die Produktarten %(product_types)s."
 msgid "Insufficient capacity for the pickup location %(pickup_locations)s."
 msgstr "Nicht genügend Kapazität für die Verteilstation %(pickup_locations)s."
 
-#: tapir/bidding_round/services/bidding_round_service.py:60
+#: tapir/bidding_round/services/bidding_round_service.py:65
 msgid "The bidding round must have an end date."
 msgstr "Die Beitragsrunde muss ein Enddatum haben."
 
-#: tapir/bidding_round/services/bidding_round_service.py:62
+#: tapir/bidding_round/services/bidding_round_service.py:67
 msgid "The start date must not be after the end date."
 msgstr "Das Startdatum darf nicht nach dem Enddatum liegen."
 
-#: tapir/bidding_round/services/bidding_round_service.py:74
+#: tapir/bidding_round/services/bidding_round_service.py:79
 msgid "Please select exactly one product type."
 msgstr "Bitte genau einen Produkttyp auswählen."
 
-#: tapir/bidding_round/services/bidding_round_service.py:101
+#: tapir/bidding_round/services/bidding_round_service.py:109
+#: tapir/bidding_round/services/bidding_round_service.py:327
+msgid "The target amount per year must not be negative."
+msgstr "Der Zielbetrag pro Jahr darf nicht negativ sein."
+
+#: tapir/bidding_round/services/bidding_round_service.py:127
+msgid ""
+"A product was selected that does not belong to the bidding round's product "
+"type."
+msgstr ""
+"Es wurde ein Produkt gewählt, das nicht zum Produkttyp der Beitragsrunde "
+"gehört."
+
+#: tapir/bidding_round/services/bidding_round_service.py:135
+msgid "The reference value must not be negative."
+msgstr "Der Richtwert darf nicht negativ sein."
+
+#: tapir/bidding_round/services/bidding_round_service.py:138
+msgid "The minimum amount must not be negative."
+msgstr "Der Mindestpreis darf nicht negativ sein."
+
+#: tapir/bidding_round/services/bidding_round_service.py:147
+msgid "The minimum amount must not be higher than the reference value."
+msgstr "Der Mindestpreis darf nicht höher als der Richtwert sein."
+
+#: tapir/bidding_round/services/bidding_round_service.py:175
 msgid "Another bidding round is already active."
 msgstr "Es ist bereits eine andere Beitragsrunde aktiv."
 
-#: tapir/bidding_round/services/bidding_round_service.py:107
+#: tapir/bidding_round/services/bidding_round_service.py:181
 msgid "Only bidding rounds with status configuration can be started."
 msgstr "Nur Beitragsrunden im Status Konfiguration können gestartet werden."
 
-#: tapir/bidding_round/services/bidding_round_service.py:117
+#: tapir/bidding_round/services/bidding_round_service.py:187
+msgid "A target amount per year is required before the round can be started."
+msgstr "Ein Zielbetrag pro Jahr muss vor dem Start der Runde gesetzt werden."
+
+#: tapir/bidding_round/services/bidding_round_service.py:199
 msgid "Only active bidding rounds can be closed."
 msgstr "Nur aktive Beitragsrunden können beendet werden."
 
-#: tapir/bidding_round/services/bidding_round_service.py:125
+#: tapir/bidding_round/services/bidding_round_service.py:207
 msgid "Only closed bidding rounds can be reopened."
 msgstr "Nur abgeschlossene Beitragsrunden können wieder eröffnet werden."
 
-#: tapir/bidding_round/services/bidding_round_service.py:146
+#: tapir/bidding_round/services/bidding_round_service.py:228
 msgid "The average bid is already locked."
 msgstr "Das Durchschnittsgebot ist bereits gesperrt."
 
-#: tapir/bidding_round/services/bidding_round_service.py:150
+#: tapir/bidding_round/services/bidding_round_service.py:232
 msgid "The surcharge must be between 0 and 100 percent."
 msgstr "Der Aufschlag muss zwischen 0 und 100 Prozent liegen."
 
-#: tapir/bidding_round/services/bidding_round_service.py:187
+#: tapir/bidding_round/services/bidding_round_service.py:269
 msgid "The average bid is not locked."
 msgstr "Das Durchschnittsgebot ist nicht gesperrt."
 
-#: tapir/bidding_round/services/bidding_round_service.py:191
+#: tapir/bidding_round/services/bidding_round_service.py:273
 msgid ""
 "The average bid can no longer be unlocked once contracts have been created. "
 "Delete the contracts first."
-msgstr "Das Durchschnittsgebot kann nicht mehr entsperrt werden, sobald Verträge erzeugt wurden. Löschen Sie zuerst die Verträge."
+msgstr ""
+"Das Durchschnittsgebot kann nicht mehr entsperrt werden, sobald Verträge "
+"erzeugt wurden. Löschen Sie zuerst die Verträge."
 
-#: tapir/bidding_round/services/bidding_round_service.py:213
+#: tapir/bidding_round/services/bidding_round_service.py:295
 msgid "Bidding rounds can only be deleted with status configuration or closed."
-msgstr "Beitragsrunden können nur im Status Konfiguration oder Abgeschlossen gelöscht werden."
+msgstr ""
+"Beitragsrunden können nur im Status Konfiguration oder Abgeschlossen "
+"gelöscht werden."
 
-#: tapir/bidding_round/services/bidding_round_service.py:247
+#: tapir/bidding_round/services/bidding_round_service.py:344
 msgid ""
-"The bidding procedure, contribution mode, number of bids and biddable "
-"product types can only be changed as long as no bids have been placed."
-msgstr "Bietverfahren, Beitragsmodus, Anzahl Gebote und bietbare Produkttypen können nur geändert werden, solange noch keine Gebote abgegeben wurden."
+"The bidding procedure, the number of bids, the biddable product types and "
+"the bidding round values can only be changed as long as no bids have been "
+"placed."
+msgstr ""
+"Bietverfahren, Anzahl Gebote, bietbare Produkttypen und die Bietrunden-Werte "
+"können nur geändert werden, solange keine Gebote abgegeben wurden."
 
-#: tapir/bidding_round/services/bidding_round_service.py:334
+#: tapir/bidding_round/services/bidding_round_service.py:410
+msgid "Please enter a valid number."
+msgstr "Bitte eine gültige Zahl eingeben."
+
+#: tapir/bidding_round/services/bidding_round_service.py:434
 msgid "Only members can place a bid."
 msgstr "Nur Mitglieder können ein Gebot abgeben."
 
@@ -247,14 +293,18 @@ msgstr "Verträge können erst nach Abschluss der Beitragsrunde erzeugt werden."
 
 #: tapir/bidding_round/services/contract_creator.py:58
 msgid "The average bid must be locked before contracts can be created."
-msgstr "Das Durchschnittsgebot muss gesperrt werden, bevor Verträge erzeugt werden können."
+msgstr ""
+"Das Durchschnittsgebot muss gesperrt werden, bevor Verträge erzeugt werden "
+"können."
 
 #: tapir/bidding_round/services/contract_creator.py:70
 #, python-format
 msgid ""
 "All selected bids must be confirmed before contracts can be created. Still "
 "unconfirmed: %(names)s"
-msgstr "Alle ausgewählten Gebote müssen bestätigt werden, bevor Verträge erzeugt werden können. Noch unbestätigt: %(names)s"
+msgstr ""
+"Alle ausgewählten Gebote müssen bestätigt werden, bevor Verträge erzeugt "
+"werden können. Noch unbestätigt: %(names)s"
 
 #: tapir/bidding_round/services/contract_deletion_service.py:27
 msgid "No contracts have been created for this bidding round."
@@ -268,48 +318,48 @@ msgstr "Beitragsrunde Konfiguration"
 msgid "Bidding round results"
 msgstr "Beitragsrunde Auswertung"
 
-#: tapir/bidding_round/views.py:291
+#: tapir/bidding_round/views.py:300
 msgid "There is no matching season for the bidding round."
 msgstr "Es gibt keine passende Saison für die Beitragsrunde."
 
-#: tapir/bidding_round/views.py:685
+#: tapir/bidding_round/views.py:705
 msgid "A member must be selected."
 msgstr "Es muss ein Mitglied ausgewählt werden."
 
-#: tapir/bidding_round/views.py:690
+#: tapir/bidding_round/views.py:710
 msgid "A bid already exists for this member."
 msgstr "Für dieses Mitglied existiert bereits ein Gebot."
 
-#: tapir/bidding_round/views.py:766
+#: tapir/bidding_round/views.py:786
 msgid "Bids can no longer be deleted after the contracts have been created."
 msgstr "Gebote können nach der Vertragserzeugung nicht mehr gelöscht werden."
 
-#: tapir/bidding_round/views.py:985
+#: tapir/bidding_round/views.py:1009
 #: tapir/wirgarten/templates/wirgarten/member/member_payments.html:167
 #: tapir/wirgarten/templates/wirgarten/subscription/subscription_filter.html:33
 #: tapir/wirgarten/views/contracts.py:55
 msgid "Mitglied"
 msgstr ""
 
-#: tapir/bidding_round/views.py:987
+#: tapir/bidding_round/views.py:1011
 msgid "Product"
 msgstr "Produkt"
 
-#: tapir/bidding_round/views.py:988
+#: tapir/bidding_round/views.py:1012
 #: tapir/wirgarten/templates/wirgarten/subscription/subscription_filter.html:38
 #: tapir/wirgarten/views/contracts.py:69
 msgid "Variante"
 msgstr ""
 
-#: tapir/bidding_round/views.py:989
+#: tapir/bidding_round/views.py:1013
 msgid "Anteile"
 msgstr ""
 
-#: tapir/bidding_round/views.py:990
+#: tapir/bidding_round/views.py:1014
 msgid "Amount (effective level)"
 msgstr "Betrag (effektive Stufe)"
 
-#: tapir/bidding_round/views.py:991
+#: tapir/bidding_round/views.py:1015
 #: tapir/wirgarten/forms/pickup_location.py:287
 #: tapir/wirgarten/templates/wirgarten/member/member_filter.html:82
 #: tapir/wirgarten/templates/wirgarten/subscription/subscription_filter.html:41
@@ -465,7 +515,11 @@ msgstr ""
 msgid ""
 "German phone number don't need a prefix (e.g. (0)1736160646), international "
 "always (e.g. +12125552368)"
-msgstr "Innerstädtische und Mobilfunk-Verbindungen benötigen keine Vorwahlnummer (z.B. 01736160646), internationale Verbindungen benötigen die Landesvorwahlnummer für Mobilfunk, für Festnetz die Landes- und Ortsvorwahlnummer"
+msgstr ""
+"Innerstädtische und Mobilfunk-Verbindungen benötigen keine Vorwahlnummer "
+"(z.B. 01736160646), internationale Verbindungen benötigen die "
+"Landesvorwahlnummer für Mobilfunk, für Festnetz die Landes- und "
+"Ortsvorwahlnummer"
 
 #: tapir/utils/forms.py:39
 msgid "I understand what I am doing"
@@ -2010,7 +2064,9 @@ msgstr "Beitragsrunde aktivieren"
 msgid ""
 "Master switch for the bidding round feature. When disabled, all bidding "
 "round pages are unreachable."
-msgstr "Master-Schalter für das Beitragsrunden-Feature. Bei Deaktivierung sind alle Beitragsrunden-Seiten nicht erreichbar."
+msgstr ""
+"Master-Schalter für das Beitragsrunden-Feature. Bei Deaktivierung sind alle "
+"Beitragsrunden-Seiten nicht erreichbar."
 
 #: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:34
 msgid "Enable public bidding round page"
@@ -2020,7 +2076,9 @@ msgstr "Öffentliche Beitragsrunden-Seite aktivieren"
 msgid ""
 "Only enables the public bidding round endpoint. The admin pages remain "
 "reachable."
-msgstr "Schaltet nur den öffentlichen Beitragsrunden-Endpoint frei. Die Admin-Seiten bleiben erreichbar."
+msgstr ""
+"Schaltet nur den öffentlichen Beitragsrunden-Endpoint frei. Die Admin-Seiten "
+"bleiben erreichbar."
 
 #: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:48
 msgid "Allow changing the pickup location in the bidding round"
@@ -2031,7 +2089,10 @@ msgid ""
 "When enabled, members can change their pickup location while bidding, as "
 "long as the chosen location has free capacity. The member's own pickup "
 "location is always shown."
-msgstr "Wenn aktiviert, können Mitglieder beim Bieten ihren Abholort ändern, solange an der gewählten Station Kapazität frei ist. Der eigene Abholort wird immer angezeigt."
+msgstr ""
+"Wenn aktiviert, können Mitglieder beim Bieten ihren Abholort ändern, solange "
+"an der gewählten Station Kapazität frei ist. Der eigene Abholort wird immer "
+"angezeigt."
 
 #: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:64
 msgid "Include automatically renewed members in the evaluation"
@@ -2041,7 +2102,10 @@ msgstr "Automatisch verlängerte Mitglieder in der Auswertung berücksichtigen"
 msgid ""
 "When enabled, members who did not bid and whose contract is automatically "
 "renewed are included in the evaluation with their reference value."
-msgstr "Wenn aktiviert, fließen Mitglieder, die nicht geboten haben und deren Vertrag automatisch verlängert wird, mit ihrem Richtwert in die Auswertung ein."
+msgstr ""
+"Wenn aktiviert, fließen Mitglieder, die nicht geboten haben und deren "
+"Vertrag automatisch verlängert wird, mit ihrem Richtwert in die Auswertung "
+"ein."
 
 #: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:79
 msgid "Include membership in the harvest share"
@@ -2052,7 +2116,11 @@ msgid ""
 "When enabled, the membership of members with a paid membership is not "
 "charged separately but included in the harvest share (shown in the harvest "
 "shares line instead of as a separate item)."
-msgstr "Wenn aktiviert, wird die Mitgliedschaft von Mitgliedern mit kostenpflichtiger Mitgliedschaft nicht extra berechnet, sondern an den Ernteanteil angerechnet (in der Auswertung in der Ernteanteile-Zeile ausgewiesen statt als eigene Position)."
+msgstr ""
+"Wenn aktiviert, wird die Mitgliedschaft von Mitgliedern mit "
+"kostenpflichtiger Mitgliedschaft nicht extra berechnet, sondern an den "
+"Ernteanteil angerechnet (in der Auswertung in der Ernteanteile-Zeile "
+"ausgewiesen statt als eigene Position)."
 
 #: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:93
 msgid "Non-bidders pay at least the average bid"
@@ -2063,7 +2131,10 @@ msgid ""
 "When enabled, non-bidders (auto-renewers and late joiners) pay at least the "
 "average bid of the bidders. Above-average bids then lead to a surplus "
 "(solidarity fund)."
-msgstr "Wenn aktiviert, zahlen Nicht-Bietende (Auto-Verlängerer und Nachzügler) mindestens das durchschnittliche Gebot der Bietenden. Überdurchschnittliche Gebote führen dann zu einem Überschuss (Solidartopf)."
+msgstr ""
+"Wenn aktiviert, zahlen Nicht-Bietende (Auto-Verlängerer und Nachzügler) "
+"mindestens das durchschnittliche Gebot der Bietenden. Überdurchschnittliche "
+"Gebote führen dann zu einem Überschuss (Solidartopf)."
 
 #: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:107
 msgid "Bidding round: show number of shares"
@@ -2073,7 +2144,9 @@ msgstr "Beitragsrunde: Anzahl Anteile anzeigen"
 msgid ""
 "When enabled, members can enter the number of shares per item. By default "
 "exactly one share is set."
-msgstr "Wenn aktiviert, können Mitglieder die Anzahl der Anteile je Position angeben. Standardmäßig ist immer genau ein Anteil gesetzt."
+msgstr ""
+"Wenn aktiviert, können Mitglieder die Anzahl der Anteile je Position "
+"angeben. Standardmäßig ist immer genau ein Anteil gesetzt."
 
 #: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:120
 msgid "Bidding round: add further positions"
@@ -2083,7 +2156,9 @@ msgstr "Beitragsrunde: Weitere Positionen hinzufügen"
 msgid ""
 "When enabled, members can enter several positions (harvest shares) in their "
 "bid. By default exactly one position exists."
-msgstr "Wenn aktiviert, können Mitglieder mehrere Positionen (Ernteanteile) im Gebot angeben. Standardmäßig ist genau eine Position vorhanden."
+msgstr ""
+"Wenn aktiviert, können Mitglieder mehrere Positionen (Ernteanteile) im Gebot "
+"angeben. Standardmäßig ist genau eine Position vorhanden."
 
 #: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:133
 msgid "Public bidding round page: title"
@@ -2103,13 +2178,16 @@ msgstr "Einleitungstext auf der öffentlichen Beitragsrunden-Seite."
 
 #: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:155
 msgid "Public bidding round page: text when no bidding round is active"
-msgstr "Öffentliche Beitragsrunden-Seite: Text wenn keine Beitragsrunde aktiv ist"
+msgstr ""
+"Öffentliche Beitragsrunden-Seite: Text wenn keine Beitragsrunde aktiv ist"
 
 #: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:158
 msgid ""
 "Shown when no bidding round is active or it has already ended. Registration "
 "via the bidding round page is not possible."
-msgstr "Wird angezeigt, wenn keine Beitragsrunde aktiv oder diese bereits beendet ist. Keine Registrierung über die Beitragsrunden-Seite möglich."
+msgstr ""
+"Wird angezeigt, wenn keine Beitragsrunde aktiv oder diese bereits beendet "
+"ist. Keine Registrierung über die Beitragsrunden-Seite möglich."
 
 #: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:170
 msgid "Public bidding round page: login title"
@@ -2143,7 +2221,9 @@ msgstr "Öffentliche Beitragsrunden-Seite: Text Verteilstation"
 msgid ""
 "Text of the pickup location step. Your own pickup location is always shown; "
 "it can only be changed if the corresponding setting is enabled."
-msgstr "Text des Abholort-Schritts. Der eigene Abholort wird immer angezeigt; er kann nur geändert werden, wenn die entsprechende Einstellung aktiviert ist."
+msgstr ""
+"Text des Abholort-Schritts. Der eigene Abholort wird immer angezeigt; er "
+"kann nur geändert werden, wenn die entsprechende Einstellung aktiviert ist."
 
 #: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:215
 msgid "Public bidding round page: bid summary title"
@@ -2151,7 +2231,8 @@ msgstr "Öffentliche Beitragsrunden-Seite: Titel Zusammenfassung Gebot"
 
 #: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:217
 msgid "Title of the step where the bid is summarized and submitted."
-msgstr "Titel des Schrittes, in dem das Gebot zusammengefasst und abgesendet wird."
+msgstr ""
+"Titel des Schrittes, in dem das Gebot zusammengefasst und abgesendet wird."
 
 #: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:227
 msgid "Public bidding round page: submit bid label"
@@ -2185,7 +2266,9 @@ msgstr "Öffentliche Beitragsrunden-Seite: Erklärung Zwischenstand"
 msgid ""
 "Explains in the public progress what utilization, coverage and the average "
 "bid of the bidders mean."
-msgstr "Erklärt im öffentlichen Zwischenstand, was Auslastung, Deckung und der durchschnittliche Beitrag der Bietenden bedeuten."
+msgstr ""
+"Erklärt im öffentlichen Zwischenstand, was Auslastung, Deckung und der "
+"durchschnittliche Beitrag der Bietenden bedeuten."
 
 #: tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py:276
 msgid "Public bidding round page: traffic light slider hint"
@@ -2556,34 +2639,9 @@ msgid ""
 "Probezeit-Dauer anzeigen"
 msgstr ""
 
-#: tapir/bidding_round/services/bidding_round_service.py
-msgid "A product was selected that does not belong to the bidding round's product type."
-msgstr "Es wurde ein Produkt gewählt, das nicht zum Produkttyp der Beitragsrunde gehört."
-
-#: tapir/bidding_round/services/bidding_round_service.py
-msgid "A target amount per year is required before the round can be started."
-msgstr "Ein Zielbetrag pro Jahr muss vor dem Start der Runde gesetzt werden."
-
-#: tapir/bidding_round/services/bidding_round_service.py
-msgid "Please enter a valid number."
-msgstr "Bitte eine gültige Zahl eingeben."
-
-#: tapir/bidding_round/services/bidding_round_service.py
-msgid "The minimum amount must not be higher than the reference value."
-msgstr "Der Mindestpreis darf nicht höher als der Richtwert sein."
-
-#: tapir/bidding_round/services/bidding_round_service.py
-msgid "The minimum amount must not be negative."
-msgstr "Der Mindestpreis darf nicht negativ sein."
-
-#: tapir/bidding_round/services/bidding_round_service.py
-msgid "The reference value must not be negative."
-msgstr "Der Richtwert darf nicht negativ sein."
-
-#: tapir/bidding_round/services/bidding_round_service.py
-msgid "The target amount per year must not be negative."
-msgstr "Der Zielbetrag pro Jahr darf nicht negativ sein."
-
-#: tapir/bidding_round/services/bidding_round_service.py
-msgid "The bidding procedure, the number of bids, the biddable product types and the bidding round values can only be changed as long as no bids have been placed."
-msgstr "Bietverfahren, Anzahl Gebote, bietbare Produkttypen und die Bietrunden-Werte können nur geändert werden, solange keine Gebote abgegeben wurden."
+#~ msgid ""
+#~ "The bidding procedure, contribution mode, number of bids and biddable "
+#~ "product types can only be changed as long as no bids have been placed."
+#~ msgstr ""
+#~ "Bietverfahren, Beitragsmodus, Anzahl Gebote und bietbare Produkttypen "
+#~ "können nur geändert werden, solange noch keine Gebote abgegeben wurden."
