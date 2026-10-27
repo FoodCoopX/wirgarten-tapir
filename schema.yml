@@ -8810,6 +8810,11 @@ components:
         price_of_a_share:
           type: number
           format: double
+        coop_share_instalments_enabled:
+          type: boolean
+        coop_share_instalment_amount:
+          type: number
+          format: double
         theme:
           type: string
         allow_investing_membership:
@@ -8906,6 +8911,8 @@ components:
       - association_membership_types
       - associations_allow_investing_membership
       - contact_mail_address
+      - coop_share_instalment_amount
+      - coop_share_instalments_enabled
       - coop_statute_link
       - debug
       - default_payment_rhythm
@@ -8985,6 +8992,9 @@ components:
           type: boolean
         number_of_coop_shares:
           type: integer
+        pay_coop_shares_in_instalments:
+          type: boolean
+          default: false
         pickup_location_ids:
           type: array
           items:
@@ -15215,6 +15225,9 @@ components:
           type: boolean
         number_of_coop_shares:
           type: integer
+        pay_coop_shares_in_instalments:
+          type: boolean
+          default: false
         payment_rhythm:
           type: string
           minLength: 1

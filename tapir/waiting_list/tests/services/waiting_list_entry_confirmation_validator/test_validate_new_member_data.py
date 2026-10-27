@@ -69,6 +69,7 @@ class TestValidateNewMemberData(TapirUnitTest):
             "account_owner": "test_account_owner",
             "payment_rhythm": "test_payment_rhythm",
             "number_of_coop_shares": 5,
+            "pay_coop_shares_in_instalments": True,
             "solidarity_contribution": 12,
         }
         order = Mock()
@@ -96,7 +97,10 @@ class TestValidateNewMemberData(TapirUnitTest):
             waiting_list_entry
         )
         mock_validate_number_of_shares.assert_called_once_with(
-            order=order, desired_number_of_coop_shares=5, cache=cache
+            order=order,
+            desired_number_of_coop_shares=5,
+            pay_in_instalments=True,
+            cache=cache,
         )
         mock_validate_association_content.assert_not_called()
         mock_get_contract_start_date.assert_called_once_with(

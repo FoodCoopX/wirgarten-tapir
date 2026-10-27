@@ -121,7 +121,9 @@ class BestellWizardOrderFulfiller:
                 subscriptions=subscriptions,
                 cache=cache,
                 actor=actor,
-                pay_in_instalments=False,
+                pay_in_instalments=validated_serializer_data[
+                    "pay_coop_shares_in_instalments"
+                ],
             )
         if legal_status_is_association(cache=cache):
             association_membership = cls.create_association_membership(
