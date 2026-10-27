@@ -68,6 +68,12 @@ export interface BestellWizardConfirmOrderRequestRequest {
   numberOfCoopShares: number;
   /**
    *
+   * @type {boolean}
+   * @memberof BestellWizardConfirmOrderRequestRequest
+   */
+  payCoopSharesInInstalments?: boolean;
+  /**
+   *
    * @type {Array<string>}
    * @memberof BestellWizardConfirmOrderRequestRequest
    */
@@ -223,6 +229,10 @@ export function BestellWizardConfirmOrderRequestRequestFromJSONTyped(
     contractAccepted: json["contract_accepted"],
     statuteAccepted: json["statute_accepted"],
     numberOfCoopShares: json["number_of_coop_shares"],
+    payCoopSharesInInstalments:
+      json["pay_coop_shares_in_instalments"] == null
+        ? undefined
+        : json["pay_coop_shares_in_instalments"],
     pickupLocationIds: json["pickup_location_ids"],
     studentStatusEnabled: json["student_status_enabled"],
     paymentRhythm: json["payment_rhythm"],
@@ -262,6 +272,7 @@ export function BestellWizardConfirmOrderRequestRequestToJSONTyped(
     contract_accepted: value["contractAccepted"],
     statute_accepted: value["statuteAccepted"],
     number_of_coop_shares: value["numberOfCoopShares"],
+    pay_coop_shares_in_instalments: value["payCoopSharesInInstalments"],
     pickup_location_ids: value["pickupLocationIds"],
     student_status_enabled: value["studentStatusEnabled"],
     payment_rhythm: value["paymentRhythm"],

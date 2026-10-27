@@ -62,6 +62,12 @@ export interface PublicConfirmWaitingListEntryRequestRequest {
   numberOfCoopShares: number;
   /**
    *
+   * @type {boolean}
+   * @memberof PublicConfirmWaitingListEntryRequestRequest
+   */
+  payCoopSharesInInstalments?: boolean;
+  /**
+   *
    * @type {string}
    * @memberof PublicConfirmWaitingListEntryRequestRequest
    */
@@ -136,6 +142,10 @@ export function PublicConfirmWaitingListEntryRequestRequestFromJSONTyped(
     sepaAllowed: json["sepa_allowed"],
     contractAccepted: json["contract_accepted"],
     numberOfCoopShares: json["number_of_coop_shares"],
+    payCoopSharesInInstalments:
+      json["pay_coop_shares_in_instalments"] == null
+        ? undefined
+        : json["pay_coop_shares_in_instalments"],
     paymentRhythm: json["payment_rhythm"],
     solidarityContribution: json["solidarity_contribution"],
     associationMembershipTypeId: json["association_membership_type_id"],
@@ -164,6 +174,7 @@ export function PublicConfirmWaitingListEntryRequestRequestToJSONTyped(
     sepa_allowed: value["sepaAllowed"],
     contract_accepted: value["contractAccepted"],
     number_of_coop_shares: value["numberOfCoopShares"],
+    pay_coop_shares_in_instalments: value["payCoopSharesInInstalments"],
     payment_rhythm: value["paymentRhythm"],
     solidarity_contribution: value["solidarityContribution"],
     association_membership_type_id: value["associationMembershipTypeId"],

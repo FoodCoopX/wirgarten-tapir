@@ -86,6 +86,12 @@ export interface Payment {
   subscriptionPaymentRangeEnd?: Date | null;
   /**
    *
+   * @type {number}
+   * @memberof Payment
+   */
+  instalmentNumber?: number | null;
+  /**
+   *
    * @type {string}
    * @memberof Payment
    */
@@ -102,6 +108,12 @@ export interface Payment {
    * @memberof Payment
    */
   pickupLocation?: string | null;
+  /**
+   *
+   * @type {string}
+   * @memberof Payment
+   */
+  coopShareTransaction?: string | null;
 }
 
 /**
@@ -149,10 +161,16 @@ export function PaymentFromJSONTyped(
       json["subscription_payment_range_end"] == null
         ? undefined
         : new Date(json["subscription_payment_range_end"]),
+    instalmentNumber:
+      json["instalment_number"] == null ? undefined : json["instalment_number"],
     mandateRef: json["mandate_ref"],
     transaction: json["transaction"] == null ? undefined : json["transaction"],
     pickupLocation:
       json["pickup_location"] == null ? undefined : json["pickup_location"],
+    coopShareTransaction:
+      json["coop_share_transaction"] == null
+        ? undefined
+        : json["coop_share_transaction"],
   };
 }
 
@@ -187,8 +205,10 @@ export function PaymentToJSONTyped(
         : (value["subscriptionPaymentRangeEnd"] as any)
             .toISOString()
             .substring(0, 10),
+    instalment_number: value["instalmentNumber"],
     mandate_ref: value["mandateRef"],
     transaction: value["transaction"],
     pickup_location: value["pickupLocation"],
+    coop_share_transaction: value["coopShareTransaction"],
   };
 }

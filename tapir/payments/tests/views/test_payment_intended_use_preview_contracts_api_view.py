@@ -55,19 +55,31 @@ class TestPaymentIntendedUsePreviewContractsApiView(TapirIntegrationTest):
         self.assertEqual(["Maximilian", "John"], data["previews_old"])
         self.assertEqual(["Maximilian", "John"], data["previews_new"])
 
-    def test_get_patternIsTooLong_returnsError(self):
+    def test_get_patternExactlyMaxLength_returnsFullPreviewWithoutError(self):
         self._login_as_admin()
-        too_long = "X" * 50
+        pattern = "X" * 140
+
+        response = self.client.get(
+            reverse(self.URL_NAME) + f"?pattern_old={pattern}&pattern_new={pattern}"
+        )
+
+        self.assertStatusCode(response, 200)
+        data = response.json()
+        self.assertEqual("", data["error"])
+        self.assertEqual([pattern for _ in data["previews_new"]], data["previews_new"])
+
+    def test_get_patternLongerThanMaxLength_returnsError(self):
+        self._login_as_admin()
+        too_long = "X" * 141
 
         response = self.client.get(
             reverse(self.URL_NAME) + f"?pattern_old={too_long}&pattern_new={too_long}"
         )
 
         self.assertStatusCode(response, 200)
-        data = response.json()
         self.assertEqual(
-            "Diese Zeile: 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX' ist zu lang wenn die Tokens expandiert sind.",
-            data["error"],
+            f"Der Verwendungszweck ist zu lang (141 Zeichen, maximal 140): '{too_long}'",
+            response.json()["error"],
         )
 
     def test_get_default_returnsTokenListWithCommonAndContractTokens(self):

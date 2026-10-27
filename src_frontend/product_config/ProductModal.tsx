@@ -60,6 +60,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
   const [saving, setSaving] = useState(false);
   const [priceIsPerDelivery, setPriceIsPerDelivery] = useState(false);
   const [hiddenInBestellWizard, setHiddenInBestellWizard] = useState(false);
+  const [solidarityChoices, setSolidarityChoices] = useState("");
 
   useEffect(() => {
     if (!show) return;
@@ -89,6 +90,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
         setShowMinCoopShares(extendedProduct.showMinCoopShares);
         setPriceIsPerDelivery(extendedProduct.pricePerDelivery);
         setHiddenInBestellWizard(extendedProduct.hiddenInBestellWizard);
+        setSolidarityChoices(extendedProduct.solidarityChoices);
       })
       .catch((error) =>
         handleRequestError(
@@ -122,6 +124,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
           capacity: capacity,
           minCoopShares: minCoopShares,
           hiddenInBestellWizard: hiddenInBestellWizard,
+          solidarityChoices: solidarityChoices,
         },
       })
       .then(() => location.reload())
@@ -273,6 +276,30 @@ const ProductModal: React.FC<ProductModalProps> = ({
                     normale Mitglieder die nicht mehr bestellen können. Diese
                     Produkte können nur von Betrieb-Admins verteilt werden in
                     dem sie Warteliste-Einträge erzeugen und erfüllen.
+                  </Form.Text>
+                </Form.Group>
+              </Col>
+            </Row>
+            <Row className={"mt-2"}>
+              <Col>
+                <Form.Group controlId={"solidarity_choices"}>
+                  <Form.Label>Solidarbeitrag-Stufen</Form.Label>
+                  <Form.Control
+                    type={"text"}
+                    value={solidarityChoices}
+                    maxLength={512}
+                    pattern={"[\\d\\s.,\\-]*"}
+                    onChange={(e) => setSolidarityChoices(e.target.value)}
+                  />
+                  <Form.Text>
+                    Komma-getrennte Beträge in €, z.B. "-10, 0, 10, 20".
+                    Nachkommastellen mit Punkt angeben, z.B. "2.5" für 2,50 €.
+                    Wenn ausgefüllt, ersetzen diese Stufen im BestellWizard die
+                    allgemeinen Solidarbeitrag-Stufen aus der Konfiguration,
+                    sobald dieses Produkt bestellt wird. Der kleinste Wert ist
+                    dann der Mindestbeitrag, auch bei manueller Eingabe und bei
+                    Änderungen im Mitgliederbereich. Leer lassen, um die
+                    allgemeinen Stufen zu verwenden.
                   </Form.Text>
                 </Form.Group>
               </Col>

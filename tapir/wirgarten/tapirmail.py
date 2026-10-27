@@ -33,6 +33,7 @@ TOKENS_COOP_ENTRY = {
     "Anzahl der gezeichneten Genossenschaftsanteile": "number_of_coop_shares",
     "Wert Genossenschaftsanteil": "price_of_a_coop_share",
     "Gesamtwert der gezeichneten Genossenschaftsanteile": "total_cost",
+    "Zahlungsweise der Genossenschaftsanteile": "coop_shares_payment_method",
     "Beitrittsdatum Geno/Verein": "membership_start_date",
     "Solidarbeitrag - Betrag": "solidarity_contribution_amount",
     "Solidarbeitrag - Startdatum": "solidarity_contribution_start_date",

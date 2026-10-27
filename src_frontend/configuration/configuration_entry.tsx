@@ -20,6 +20,12 @@ if (configElementIntendedUse) {
     createEditorRoot(parameterKey, "coop_share");
   }
 
+  const coopInstalmentKeys =
+    configElementIntendedUse.dataset.coopSharesInstalmentKeys?.split(",") ?? [];
+  for (const parameterKey of coopInstalmentKeys) {
+    createEditorRoot(parameterKey, "coop_share_instalment");
+  }
+
   const jokerKeys =
     configElementIntendedUse.dataset.jokerKeys?.split(",") ?? [];
   for (const parameterKey of jokerKeys) {
@@ -35,7 +41,11 @@ function createEditorRoot(
 ) {
   const inputElement = document.getElementById(
     "id_" + parameterKey,
-  ) as HTMLTextAreaElement;
+  ) as HTMLTextAreaElement | null;
+  if (!inputElement) {
+    // The parameter is hidden in the current configuration
+    return;
+  }
 
   const previewDiv = document.createElement("div");
 

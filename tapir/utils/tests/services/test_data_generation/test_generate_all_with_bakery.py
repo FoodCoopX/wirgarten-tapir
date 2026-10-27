@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+import pytest
 from django.test import override_settings
 
 from tapir.bakery.models import (
@@ -24,6 +25,7 @@ from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
+@pytest.mark.slow
 @override_settings(BAKERY_ENABLED=True)
 @patch.object(UserGenerator, "get_user_count", return_value=25, autospec=True)
 class TestGenerateAllWithBakery(TapirIntegrationTest):
@@ -75,6 +77,7 @@ class TestGenerateAllWithBakery(TapirIntegrationTest):
                 ).exists()
             )
 
+    @pytest.mark.slow
     def test_generateAll_twiceWithBakery_doesNotCollide(self, _count):
         DataGenerator.generate_all(Organization.BAKERY)
         DataGenerator.clear()

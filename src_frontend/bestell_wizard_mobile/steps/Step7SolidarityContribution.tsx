@@ -7,6 +7,7 @@ import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeast
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
 import { getMonthlyPayment } from "../utils/getMonthlyPayment.ts";
+import { getProductSolidarityChoices } from "../utils/getProductSolidarityChoices.ts";
 
 interface Step7SolidarityContributionProps {
   goToNextStep: () => void;
@@ -40,18 +41,18 @@ const Step7SolidarityContribution: React.FC<
   const [showValidation, setShowValidation] = useState(false);
   const [defaultValueSet, setDefaultValueSet] = useState(false);
 
+  const productChoices = getProductSolidarityChoices(shoppingCart, settings);
+  const productMinimum =
+    productChoices.size === 0 ? null : Math.min(...productChoices);
+  const minimum = getMinimum();
+
   useEffect(() => {
     if (defaultValueSet) {
       return;
     }
     setDefaultValueSet(true);
 
-    if (getValues().includes(settings.solidarityContributionDefault)) {
-      setSelectedValue(settings.solidarityContributionDefault);
-    } else {
-      setSelectedValue("custom");
-      setCustomValue(settings.solidarityContributionDefault + SUFFIX);
-    }
+    selectDefaultValue();
   }, [settings]);
 
   useEffect(() => {
@@ -71,8 +72,32 @@ const Step7SolidarityContribution: React.FC<
   useEffect(() => {
     if (!stepActive) {
       setTimeout(() => setShowValidation(false), 200);
+      return;
     }
+
+    makeSureTheSelectedValueIsValid();
   }, [stepActive]);
+
+  function makeSureTheSelectedValueIsValid() {
+    // in case the ordered products have changed since the last time the step was active
+    if (
+      selectedValue === "custom" ||
+      (getValues().includes(selectedValue) && isValueValid(selectedValue))
+    ) {
+      return;
+    }
+
+    selectDefaultValue();
+  }
+
+  function selectDefaultValue() {
+    if (getValues().includes(settings.solidarityContributionDefault)) {
+      setSelectedValue(settings.solidarityContributionDefault);
+    } else {
+      setSelectedValue("custom");
+      setCustomValue(settings.solidarityContributionDefault + SUFFIX);
+    }
+  }
 
   function validate() {
     setShowValidation(true);
@@ -85,11 +110,31 @@ const Step7SolidarityContribution: React.FC<
   }
 
   function getValues(): (number | "custom")[] {
-    return settings.solidarityContributionChoices.map((choiceAsString) =>
-      choiceAsString === "custom"
-        ? "custom"
-        : Number.parseFloat(choiceAsString),
-    );
+    if (productChoices.size === 0) {
+      return settings.solidarityContributionChoices.map((choiceAsString) =>
+        choiceAsString === "custom"
+          ? "custom"
+          : Number.parseFloat(choiceAsString),
+      );
+    }
+
+    const values = [...productChoices];
+    if (!values.includes(0) && Math.min(...values) <= 0) {
+      values.push(0);
+    }
+    values.sort((a, b) => a - b);
+    return [...values, "custom"];
+  }
+
+  function getMinimum() {
+    const minimums = [
+      settings.solidarityContributionMinimum,
+      productMinimum,
+    ].filter((value) => value !== null);
+    if (minimums.length === 0) {
+      return null;
+    }
+    return Math.max(...minimums);
   }
 
   function getDisplay(value: number | "custom") {
@@ -108,6 +153,10 @@ const Step7SolidarityContribution: React.FC<
   }
 
   function isValueValid(value: number) {
+    if (productMinimum !== null && value < productMinimum) {
+      return false;
+    }
+
     if (value < 0 && !isAtLeastOneProductOrdered(shoppingCart)) {
       return false;
     }
@@ -205,13 +254,12 @@ const Step7SolidarityContribution: React.FC<
               />
               <span>pro Monat</span>
             </span>
-            {!isValueValid(solidarityContribution) &&
-              (settings.solidarityContributionMinimum ?? 0) < 0 && (
-                <Alert variant={"danger"}>
-                  Der niedrigste mögliche Solidarbeitrag beträgt{" "}
-                  {formatCurrency(settings.solidarityContributionMinimum ?? 0)}
-                </Alert>
-              )}
+            {minimum !== null && solidarityContribution < minimum && (
+              <Alert variant={"danger"}>
+                Der niedrigste mögliche Solidarbeitrag beträgt{" "}
+                {formatCurrency(minimum)}
+              </Alert>
+            )}
           </Form.Group>
         )}
       </div>

@@ -102,12 +102,6 @@ export interface CoopShareTransaction {
    * @memberof CoopShareTransaction
    */
   transferMember?: string | null;
-  /**
-   *
-   * @type {string}
-   * @memberof CoopShareTransaction
-   */
-  payment?: string | null;
 }
 
 /**
@@ -161,7 +155,6 @@ export function CoopShareTransactionFromJSONTyped(
     mandateRef: json["mandate_ref"] == null ? undefined : json["mandate_ref"],
     transferMember:
       json["transfer_member"] == null ? undefined : json["transfer_member"],
-    payment: json["payment"] == null ? undefined : json["payment"],
   };
 }
 
@@ -196,6 +189,5 @@ export function CoopShareTransactionToJSONTyped(
     member: value["member"],
     mandate_ref: value["mandateRef"],
     transfer_member: value["transferMember"],
-    payment: value["payment"],
   };
 }

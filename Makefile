@@ -46,6 +46,9 @@ reset: ## Full rebuild: containers, migrations, parameters and test data
 test-fast: ## Whole suite, no coverage, reusing the test database
 	$(IN_WEB) poetry run pytest --reuse-db -n auto
 
+test-migrations: ## Migration tests, excluded from the default run because they are slow
+	$(IN_WEB) poetry run pytest -m migration_test --reuse-db -n auto
+
 test-app: ## Tests of one app, e.g. make test-app APP=subscriptions
 	@test -n "$(APP)" || { echo 'usage: make test-app APP=<django app>'; exit 1; }
 	$(IN_WEB) poetry run pytest tapir/$(APP)/tests --reuse-db
@@ -54,6 +57,7 @@ test: test-lint ## Full run as CI does it: format check, collectstatic, coverage
 	find tapir -path "*/tests/*.py" | grep -q . || exit 0; \
 	$(IN_WEB) poetry run python manage.py collectstatic --noinput
 	$(IN_WEB) poetry run pytest --cov-report xml:coverage.xml --cov=tapir --cov-config=pyproject.toml -n auto
+	$(IN_WEB) poetry run pytest -m migration_test --cov-append --cov-report xml:coverage.xml --cov=tapir --cov-config=pyproject.toml -n auto
 
 ## --- Formatting -----------------------------------------------------------
 

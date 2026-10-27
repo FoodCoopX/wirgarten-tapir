@@ -54,6 +54,12 @@ export interface PublicProduct {
    * @memberof PublicProduct
    */
   hiddenInBestellWizard?: boolean;
+  /**
+   *
+   * @type {Array<number>}
+   * @memberof PublicProduct
+   */
+  readonly solidarityChoices: Array<number>;
 }
 
 /**
@@ -65,6 +71,11 @@ export function instanceOfPublicProduct(value: object): value is PublicProduct {
   if (
     !("urlOfImageInBestellwizard" in value) ||
     value["urlOfImageInBestellwizard"] === undefined
+  )
+    return false;
+  if (
+    !("solidarityChoices" in value) ||
+    value["solidarityChoices"] === undefined
   )
     return false;
   return true;
@@ -94,6 +105,7 @@ export function PublicProductFromJSONTyped(
       json["hidden_in_bestell_wizard"] == null
         ? undefined
         : json["hidden_in_bestell_wizard"],
+    solidarityChoices: json["solidarity_choices"],
   };
 }
 
@@ -102,7 +114,7 @@ export function PublicProductToJSON(json: any): PublicProduct {
 }
 
 export function PublicProductToJSONTyped(
-  value?: Omit<PublicProduct, "price"> | null,
+  value?: Omit<PublicProduct, "price" | "solidarity_choices"> | null,
   ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {

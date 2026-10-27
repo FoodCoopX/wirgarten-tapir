@@ -2,12 +2,14 @@ import React, { useEffect, useState } from "react";
 import { Form } from "react-bootstrap";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import TapirButton from "../../components/TapirButton.tsx";
+import TapirHelpButton from "../../components/TapirHelpButton.tsx";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { getHtmlDescription } from "../../utils/getHtmlDescription.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
 import TapirCheckbox from "../components/TapirCheckbox.tsx";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import "../utils/flexColOnSmallScreen.css";
+import { getNumberOfCoopShareInstalments } from "../utils/getNumberOfCoopShareInstalments.ts";
 
 interface Step6BCoopSharesProps {
   goToNextStep: () => void;
@@ -25,6 +27,8 @@ interface Step6BCoopSharesProps {
   nextButtonText?: string;
   canChangeNumberOfShares: boolean;
   forceHideStudentCheckbox: boolean;
+  payInInstalments?: boolean;
+  setPayInInstalments?: (payInInstalments: boolean) => void;
 }
 
 const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
@@ -43,6 +47,8 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
   nextButtonText,
   canChangeNumberOfShares,
   forceHideStudentCheckbox,
+  payInInstalments,
+  setPayInInstalments,
 }) => {
   const [statuteRead, setStatuteRead] = useState(false);
   const [commitmentChecked, setCommitmentChecked] = useState(false);
@@ -106,6 +112,37 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
       setSelectedNumberOfCoopShares(newNumberOfShares);
     }
   }, [internalNumberOfShares]);
+
+  const instalmentsPossible =
+    !studentStatusEnabled &&
+    selectedNumberOfCoopShares === minimumNumberOfShares;
+
+  useEffect(() => {
+    if (payInInstalments && !instalmentsPossible) {
+      setPayInInstalments?.(false);
+    }
+  }, [instalmentsPossible]);
+
+  function buildLabelInstalments() {
+    return (
+      "Ich möchte den Pflichtanteil in " +
+      getNumberOfCoopShareInstalments(minimumNumberOfShares, settings) +
+      " Raten à " +
+      formatCurrency(settings.coopShareInstalmentAmount) +
+      " zahlen"
+    );
+  }
+
+  function buildInstalmentsNotPossibleExplanation() {
+    if (studentStatusEnabled) {
+      return "Mit dem Studenten-Status werden keine Genossenschaftsanteile gezeichnet, es gibt daher nichts in Raten zu zahlen.";
+    }
+    return (
+      "Die Ratenzahlung ist nur für den Pflichtanteil möglich, also für genau " +
+      minimumNumberOfShares +
+      " Genossenschaftsanteile. Wenn du mehr Anteile zeichnest, wird der gesamte Betrag auf einmal gezahlt."
+    );
+  }
 
   function buildLabelStatute() {
     let label = settings.strings.step6cCheckboxStatute;
@@ -212,6 +249,26 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
             )}
           </>
         )}
+        {settings.coopShareInstalmentsEnabled &&
+          setPayInInstalments &&
+          canChangeNumberOfShares && (
+            <div className={"d-flex flex-row align-items-center gap-2"}>
+              <TapirCheckbox
+                controlId={"payInInstalments"}
+                checked={!!payInInstalments && instalmentsPossible}
+                onChange={setPayInInstalments}
+                label={buildLabelInstalments()}
+                disabled={!instalmentsPossible}
+              />
+              {!instalmentsPossible && (
+                <TapirHelpButton
+                  title={"Ratenzahlung nicht möglich"}
+                  text={buildInstalmentsNotPossibleExplanation()}
+                  buttonSize={"sm"}
+                />
+              )}
+            </div>
+          )}
         <TapirCheckbox
           controlId={"statuteRead"}
           checked={statuteRead && !studentStatusEnabled}
