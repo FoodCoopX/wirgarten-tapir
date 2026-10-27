@@ -55,6 +55,7 @@ class ParameterView(PermissionRequiredMixin, generic.FormView):
                 ParameterKeys.PAYMENT_INTENDED_USE_MONTHLY_INVOICE,
                 ParameterKeys.PAYMENT_INTENDED_USE_MONTHLY_INVOICE_SOLIDARITY_SUPPORTED,
                 ParameterKeys.PAYMENT_INTENDED_USE_MULTIPLE_MONTH_INVOICE,
+                ParameterKeys.PAYMENT_INTENDED_USE_LAST_INVOICE,
                 ParameterKeys.PAYMENT_INTENDED_USE_SOLI_CONTRIBUTION_ONLY,
             ]
         )

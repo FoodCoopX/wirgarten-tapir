@@ -264,6 +264,27 @@ class ParameterDefinitionsPayments:
         order_priority -= 1
 
         importer.parameter_definition(
+            key=ParameterKeys.PAYMENT_INTENDED_USE_LAST_INVOICE,
+            label="Verwendungszweck für Beitragsabbuchungen letztmalig",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="{betriebsname}\n{nachname} {mitgliedsnummer_lang}\n{vertragsliste}\nLetzte Abbuchung",
+            description="Wird verwendet für die letzte Buchung, wenn alle Verträge, positiven Solidarbeiträge und kostenpflichtigen Vereinsmitgliedschaften des Mitglieds gekündigt sind und spätestens am Ende des abgebuchten Zeitraums enden. "
+            + "Nicht gekündigte Verträge gelten als verlängert, da sie automatisch oder vom Mitglied noch im letzten Monat der Anbauperiode verlängert werden können. "
+            + WARNING_USE_EDITOR,
+            category=ParameterCategory.PAYMENT,
+            order_priority=order_priority,
+            meta=ParameterMeta(
+                show_only_when=lambda cache: get_parameter_value(
+                    ParameterKeys.PAYMENT_INTENDED_USE_ENABLE_CUSTOM, cache=cache
+                ),
+                textarea=True,
+                vars_hint=IntendedUseTokens.COMMON_TOKENS
+                + IntendedUseTokens.CONTRACT_TOKENS,
+            ),
+        )
+        order_priority -= 1
+
+        importer.parameter_definition(
             key=ParameterKeys.PAYMENT_INTENDED_USE_JOKER_CREDIT,
             label="Verwendungszweck für Joker-Gutschriften",
             datatype=TapirParameterDatatype.STRING,

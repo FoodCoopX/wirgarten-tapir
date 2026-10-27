@@ -70,6 +70,39 @@ class TapirCache:
         )
 
     @classmethod
+    def get_all_subscriptions_for_member(
+        cls, member_id: str, cache: dict
+    ) -> list[Subscription]:
+        key = "all_subscriptions_by_member_id"
+        TapirCacheManager.register_key_in_category(
+            cache=cache, key=key, category=TapirCacheManager.CATEGORY_SUBSCRIPTIONS
+        )
+
+        def compute():
+            result = {}
+            for subscription in cls.get_all_subscriptions(cache=cache):
+                result.setdefault(subscription.member_id, []).append(subscription)
+            return result
+
+        subscriptions_by_member_id = get_from_cache_or_compute(cache, key, compute)
+        return subscriptions_by_member_id.get(member_id, [])
+
+    @classmethod
+    def get_all_solidarity_contributions_for_member(
+        cls, member_id: str, cache: dict
+    ) -> list[SolidarityContribution]:
+        def compute():
+            result = {}
+            for contribution in cls.get_all_solidarity_contributions(cache=cache):
+                result.setdefault(contribution.member_id, []).append(contribution)
+            return result
+
+        contributions_by_member_id = get_from_cache_or_compute(
+            cache, "all_solidarity_contributions_by_member_id", compute
+        )
+        return contributions_by_member_id.get(member_id, [])
+
+    @classmethod
     def get_subscriptions_active_at_date(
         cls, reference_date: datetime.date, cache: dict
     ):

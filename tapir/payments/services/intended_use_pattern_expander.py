@@ -111,9 +111,10 @@ class IntendedUsePatternExpander:
     def get_relevant_subscriptions(cls, member: Member, payment: Payment, cache: dict):
         return [
             subscription
-            for subscription in TapirCache.get_all_subscriptions(cache=cache)
-            if subscription.member_id == member.id
-            and DateRangeOverlapChecker.do_ranges_overlap(
+            for subscription in TapirCache.get_all_subscriptions_for_member(
+                member_id=member.id, cache=cache
+            )
+            if DateRangeOverlapChecker.do_ranges_overlap(
                 range_1_start=payment.subscription_payment_range_start,
                 range_1_end=payment.subscription_payment_range_end,
                 range_2_start=subscription.start_date,
