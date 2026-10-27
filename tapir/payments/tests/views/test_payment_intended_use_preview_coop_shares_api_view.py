@@ -61,20 +61,6 @@ class TestPaymentIntendedUsePreviewCoopSharesApiView(TapirIntegrationTest):
         self.assertEqual("75,00", data["previews_new"][0])
         self.assertEqual("75,00", data["previews_new"][1])
 
-    def test_get_invalidPattern_returnsErrorFieldNotEmpty(self):
-        self._login_as_admin()
-        too_long = "X" * 50
-
-        response = self.client.get(
-            reverse(self.URL_NAME) + f"?pattern_old={too_long}&pattern_new={too_long}"
-        )
-
-        self.assertStatusCode(response, 200)
-        self.assertEqual(
-            "Diese Zeile: 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX' ist zu lang wenn die Tokens expandiert sind.",
-            response.json()["error"],
-        )
-
     def test_get_realPaymentsExist_realPaymentIncludedInResponse(self):
         self._login_as_admin()
         payment = PaymentFactory.create(

@@ -2,6 +2,7 @@ import sys
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
+from django.db import transaction
 
 from tapir.utils.config import Organization
 from tapir.utils.services.test_data_generation.data_generator import DataGenerator
@@ -34,6 +35,7 @@ class Command(BaseCommand):
             help=f"Same as the positional argument, case-insensitive. One of: {valid_organization_names()}",
         )
 
+    @transaction.atomic
     def handle(self, *args, **options):
         if options["clear"]:
             DataGenerator.clear()

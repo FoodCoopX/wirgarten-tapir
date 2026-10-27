@@ -1,4 +1,4 @@
-FROM node:20-trixie-slim AS mjml
+FROM node:24-trixie-slim AS mjml
 RUN npm install -g mjml@4.14.1
 
 FROM python:3.14.9 AS python-base

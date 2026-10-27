@@ -225,7 +225,7 @@ class UserGenerator:
                 upper_boundary=get_today(cache=cache),
             ),
             cache=cache,
-            actor=member,
+            actor=None,
         )
 
     @classmethod

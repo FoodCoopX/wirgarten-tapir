@@ -1,4 +1,5 @@
 import datetime
+import functools
 from decimal import Decimal
 from pathlib import Path
 
@@ -374,12 +375,17 @@ class Pain008XmlStringGenerator:
         return header
 
     @classmethod
-    def _validate_document(cls, document: Element) -> list[str]:
+    @functools.cache
+    def _get_schema(cls) -> etree.XMLSchema:
         path = Path(__file__).with_name("pain.008.001.08.xsd")
         with path.open("rb") as file:
             schema_root = etree.XML(file.read())
 
-        schema = etree.XMLSchema(schema_root)
+        return etree.XMLSchema(schema_root)
+
+    @classmethod
+    def _validate_document(cls, document: Element) -> list[str]:
+        schema = cls._get_schema()
 
         if schema.validate(document):
             return []

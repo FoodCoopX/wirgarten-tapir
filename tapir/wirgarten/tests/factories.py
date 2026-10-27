@@ -4,6 +4,7 @@ from datetime import timedelta
 
 import factory
 from dateutil.relativedelta import relativedelta
+from django.db.models import Max
 
 from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.subscriptions.config import NOTICE_PERIOD_UNIT_MONTHS
@@ -47,28 +48,12 @@ class MemberFactory(factory.django.DjangoModelFactory[Member]):
     sepa_consent = factory.Faker("date_time", tzinfo=datetime.timezone.utc)
     username = factory.LazyAttribute(lambda member: member.email)
 
-    @factory.post_generation
-    def member_no(self: Member, create, member_no, **kwargs):
-        if member_no is not None:
-            self.member_no = member_no
-
-        if not create:
-            return
-
-        if member_no is not None:
-            self.save()
-            return
-
-        member_no = 1
-        member_with_highest_number = (
-            Member.objects.filter(member_no__isnull=False).order_by("member_no").last()
-        )
-        if member_with_highest_number is not None:
-            member_no = member_with_highest_number.member_no + 1
-
-        self.member_no = member_no
-
-        self.save()
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        if kwargs.get("member_no") is None:
+            highest = Member.objects.aggregate(Max("member_no"))["member_no__max"]
+            kwargs["member_no"] = (highest or 0) + 1
+        return super()._create(model_class, *args, **kwargs)
 
 
 class MemberWithCoopSharesFactory(MemberFactory):

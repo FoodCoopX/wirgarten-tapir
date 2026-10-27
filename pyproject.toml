@@ -72,3 +72,4 @@ relative_files = true
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "tapir.settings"
 testpaths = "tapir"
+markers = ["slow: scheduled first to shorten parallel runs"]
