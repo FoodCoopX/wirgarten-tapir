@@ -192,16 +192,12 @@ class GetFutureMemberPaymentsApiView(APIView):
         cls, member_id: str, member_payments: set[Payment], cache: dict
     ):
         extended_payments = []
-        existing_subscriptions = [
-            subscription
-            for subscription in TapirCache.get_all_subscriptions(cache=cache)
-            if subscription.member_id == member_id
-        ]
-        existing_contributions = [
-            contribution
-            for contribution in TapirCache.get_all_solidarity_contributions(cache=cache)
-            if contribution.member_id == member_id
-        ]
+        existing_subscriptions = TapirCache.get_all_subscriptions_for_member(
+            member_id=member_id, cache=cache
+        )
+        existing_contributions = TapirCache.get_all_solidarity_contributions_for_member(
+            member_id=member_id, cache=cache
+        )
         existing_memberships = [
             membership
             for membership in TapirCache.get_all_association_memberships(cache=cache)
