@@ -4239,6 +4239,10 @@ paths:
       operationId: payments_api_intended_use_preview_coop_shares_retrieve
       parameters:
       - in: query
+        name: instalments
+        schema:
+          type: boolean
+      - in: query
         name: pattern_new
         schema:
           type: string
@@ -8806,6 +8810,11 @@ components:
         price_of_a_share:
           type: number
           format: double
+        coop_share_instalments_enabled:
+          type: boolean
+        coop_share_instalment_amount:
+          type: number
+          format: double
         theme:
           type: string
         allow_investing_membership:
@@ -8902,6 +8911,8 @@ components:
       - association_membership_types
       - associations_allow_investing_membership
       - contact_mail_address
+      - coop_share_instalment_amount
+      - coop_share_instalments_enabled
       - coop_statute_link
       - debug
       - default_payment_rhythm
@@ -8981,6 +8992,9 @@ components:
           type: boolean
         number_of_coop_shares:
           type: integer
+        pay_coop_shares_in_instalments:
+          type: boolean
+          default: false
         pickup_location_ids:
           type: array
           items:
@@ -10269,9 +10283,6 @@ components:
           type: string
           nullable: true
         transfer_member:
-          type: string
-          nullable: true
-        payment:
           type: string
           nullable: true
       required:
@@ -11672,11 +11683,15 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AssociationMembership'
+        number_of_instalments:
+          type: integer
+          nullable: true
       required:
       - association_memberships
       - coop_share_transactions
       - delivery_charge_pickup_location
       - delivery_dates
+      - number_of_instalments
       - payment
       - solidarity_contributions
       - subscriptions
@@ -14207,12 +14222,20 @@ components:
           type: string
           format: date
           nullable: true
+        instalment_number:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
         mandate_ref:
           type: string
         transaction:
           type: string
           nullable: true
         pickup_location:
+          type: string
+          nullable: true
+        coop_share_transaction:
           type: string
           nullable: true
       required:
@@ -15206,6 +15229,9 @@ components:
           type: boolean
         number_of_coop_shares:
           type: integer
+        pay_coop_shares_in_instalments:
+          type: boolean
+          default: false
         payment_rhythm:
           type: string
           minLength: 1

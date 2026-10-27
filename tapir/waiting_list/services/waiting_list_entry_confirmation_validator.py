@@ -5,6 +5,9 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404
 
 from tapir.associations.models import AssociationMembershipType
+from tapir.coop.services.coop_share_instalment_order_validator import (
+    CoopShareInstalmentOrderValidator,
+)
 from tapir.coop.services.minimum_number_of_shares_validator import (
     MinimumNumberOfSharesValidator,
 )
@@ -70,6 +73,7 @@ class WaitingListEntryConfirmationValidator:
             cls.validate_number_of_shares(
                 order=order,
                 desired_number_of_coop_shares=validated_data["number_of_coop_shares"],
+                pay_in_instalments=validated_data["pay_coop_shares_in_instalments"],
                 cache=cache,
             )
 
@@ -108,7 +112,11 @@ class WaitingListEntryConfirmationValidator:
 
     @classmethod
     def validate_number_of_shares(
-        cls, order: TapirOrder, desired_number_of_coop_shares: int, cache: dict
+        cls,
+        order: TapirOrder,
+        desired_number_of_coop_shares: int,
+        pay_in_instalments: bool,
+        cache: dict,
     ):
         min_number_of_shares = (
             MinimumNumberOfSharesValidator.get_minimum_number_of_shares_for_tapir_order(
@@ -118,6 +126,12 @@ class WaitingListEntryConfirmationValidator:
         if desired_number_of_coop_shares < min_number_of_shares:
             raise ValidationError(
                 f"Diese Bestellung erfordert mindestens {min_number_of_shares} Genossenschaftsanteile"
+            )
+        if pay_in_instalments:
+            CoopShareInstalmentOrderValidator.validate_instalments(
+                number_of_coop_shares=desired_number_of_coop_shares,
+                minimum_number_of_coop_shares=min_number_of_shares,
+                cache=cache,
             )
 
     @classmethod

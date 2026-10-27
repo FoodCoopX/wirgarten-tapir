@@ -193,6 +193,7 @@ class ExistingMemberPurchasesSharesApiView(APIView):
                 shares_valid_at=shares_valid_at,
                 cache=self.cache,
                 actor=request.user,
+                pay_in_instalments=False,
             )
             if needs_banking_data:
                 member.iban = iban

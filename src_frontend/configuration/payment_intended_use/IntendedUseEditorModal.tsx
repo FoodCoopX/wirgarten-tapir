@@ -102,6 +102,12 @@ const IntendedUseEditorModal: React.FC<IntendedUseEditorModalProps> = ({
           { signal: localController.signal },
         );
         break;
+      case "coop_share_instalment":
+        promise = paymentsApi.paymentsApiIntendedUsePreviewCoopSharesRetrieve(
+          { ...requestData, instalments: true },
+          { signal: localController.signal },
+        );
+        break;
       case "joker":
         promise = paymentsApi.paymentsApiIntendedUsePreviewJokerRetrieve(
           requestData,

@@ -53,15 +53,30 @@ class PaymentExportIntendedUseBuilder:
             )
         return IntendedUsePatternExpander.expand_pattern_coop_shares_bought(
             pattern=get_parameter_value(
-                key=ParameterKeys.PAYMENT_INTENDED_USE_COOP_SHARES, cache=cache
+                key=(
+                    ParameterKeys.PAYMENT_INTENDED_USE_COOP_SHARES
+                    if payment.instalment_number is None
+                    else ParameterKeys.PAYMENT_INTENDED_USE_COOP_SHARES_INSTALMENT
+                ),
+                cache=cache,
             ),
             member=payment.mandate_ref.member,
             payment=payment,
-            number_of_shares=round(
-                payment.amount
-                / get_parameter_value(key=ParameterKeys.COOP_SHARE_PRICE, cache=cache)
+            number_of_shares=cls.get_number_of_coop_shares(
+                payment=payment, cache=cache
             ),
             cache=cache,
+        )
+
+    @classmethod
+    def get_number_of_coop_shares(cls, payment: Payment, cache: dict) -> int:
+        if payment.coop_share_transaction is not None:
+            return payment.coop_share_transaction.quantity
+
+        # Payments created before 27.10.26  were not linked to their transaction
+        return round(
+            payment.amount
+            / get_parameter_value(key=ParameterKeys.COOP_SHARE_PRICE, cache=cache)
         )
 
     @classmethod

@@ -189,25 +189,21 @@ class ShareImporter:
 
         should_have_a_payment = transaction.valid_at >= get_today()
 
+        payment = transaction.payments.first()
+
         if not should_have_a_payment:
-            if transaction.payment is None:
+            if payment is None:
                 return False
 
-            cls.delete_payment(transaction)
+            payment.delete()
             return True
 
-        if transaction.payment is None:
-            payment = CoopSharePurchaseHandler.create_or_update_payment(
-                shares_valid_at=transaction.valid_at,
-                mandate_ref=transaction.mandate_ref,
-                quantity=transaction.quantity,
-                cache={},
+        if payment is None:
+            CoopSharePurchaseHandler.create_payment(
+                coop_share_transaction=transaction, cache={}
             )
-            transaction.payment = payment
-            transaction.save()
             return True
 
-        payment = transaction.payment
         updated = False
 
         due_date = CoopSharePurchaseHandler.get_payment_due_date(
@@ -221,10 +217,3 @@ class ShareImporter:
             updated = True
 
         return updated
-
-    @classmethod
-    def delete_payment(cls, transaction: CoopShareTransaction):
-        payment = transaction.payment
-        transaction.payment = None
-        transaction.save()
-        payment.delete()

@@ -166,6 +166,12 @@ const PaymentComponent: React.FC<PaymentProps> = ({
           <span key={transaction.id}>
             {transaction.quantity}
             {" × Genossenschaftsanteile"}
+            {extendedPayment.payment.instalmentNumber &&
+              extendedPayment.numberOfInstalments &&
+              ", Rate " +
+                extendedPayment.payment.instalmentNumber +
+                " von " +
+                extendedPayment.numberOfInstalments}
           </span>
         ))}
         {extendedPayment.solidarityContributions.length > 0 && (

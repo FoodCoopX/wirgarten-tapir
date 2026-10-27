@@ -55,6 +55,7 @@ pytest-sugar = "^1.1.1"
 black = "^26.5.1"
 django-upgrade = "^1.31.1"
 pytest-xdist = "^3.8.0"
+django-test-migrations = "^1.7.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -73,3 +74,5 @@ relative_files = true
 DJANGO_SETTINGS_MODULE = "tapir.settings"
 testpaths = "tapir"
 markers = ["slow: scheduled first to shorten parallel runs"]
+# Migration tests are slow, run them with "make test-migrations". They also run in "make test".
+addopts = "-m 'not migration_test'"

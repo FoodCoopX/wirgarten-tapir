@@ -1,12 +1,11 @@
 import datetime
-from decimal import Decimal
 
 from tapir.accounts.models import TapirUser
 from tapir.coop.models import (
     CoopSharesCancelledDuringTrialLogEntry,
 )
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.wirgarten.models import Member, CoopShareTransaction
+from tapir.wirgarten.models import Member, CoopShareTransaction, Payment
 from tapir.wirgarten.utils import get_today
 
 
@@ -50,12 +49,10 @@ class CoopMembershipCancellationManager:
             valid_at__gte=reference_date,
         )
 
-        for purchase in future_coop_share_purchases:
-            purchase.payment.amount -= purchase.share_price * purchase.quantity
-            if purchase.payment.amount <= Decimal(0):
-                purchase.payment.delete()
-            else:
-                purchase.payment.save()
+        Payment.objects.filter(
+            coop_share_transaction__in=future_coop_share_purchases,
+            transaction__isnull=True,
+        ).delete()
 
         for purchase in future_coop_share_purchases:
             CoopSharesCancelledDuringTrialLogEntry.populate_transaction(
