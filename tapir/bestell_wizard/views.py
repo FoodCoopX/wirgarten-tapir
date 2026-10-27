@@ -604,6 +604,7 @@ class BestellWizardBaseDataApiView(APIView):
             "step3b_text": ParameterKeys.BESTELLWIZARD_STEP3B_TEXT,
             "step4b_waiting_list_modal_title": ParameterKeys.BESTELL_WIZARD_STEP4B_WAITING_LIST_MODAL_HEADER,
             "step4b_waiting_list_modal_text": ParameterKeys.BESTELL_WIZARD_STEP4B_WAITING_LIST_MODAL_TEXT,
+            "step4b_base_price_label": ParameterKeys.BESTELLWIZARD_STEP4B_BASE_PRICE_LABEL,
             "step4d_title": ParameterKeys.BESTELLWIZARD_STEP4D_TITLE,
             "step4d_text": ParameterKeys.BESTELLWIZARD_STEP4D_TEXT,
             "step4d_text_supporting_member": ParameterKeys.BESTELLWIZARD_STEP4D_TEXT_SUPPORTING_MEMBER,
