@@ -33,7 +33,7 @@ urlpatterns = [
     path("accounts/", include("tapir.accounts.urls")),
     path(
         "accounts/login/",
-        RedirectView.as_view(url="/accounts/oidc/keycloak/login"),
+        RedirectView.as_view(url="/accounts/oidc/keycloak/login", query_string=True),
         name="account_login",
     ),
     path("accounts/", include("allauth.urls")),
