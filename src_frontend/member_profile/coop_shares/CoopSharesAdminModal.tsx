@@ -1,15 +1,15 @@
+import "dayjs/locale/de";
 import React, { useEffect, useState } from "react";
 import { Form, Modal } from "react-bootstrap";
-import "dayjs/locale/de";
-import { useApi } from "../../hooks/useApi.ts";
+import { v4 as uuidv4 } from "uuid";
 import { CoopApi } from "../../api-client";
 import TapirButton from "../../components/TapirButton.tsx";
-import { handleRequestError } from "../../utils/handleRequestError.ts";
 import TapirDateInput from "../../components/TapirDateInput.tsx";
 import TapirHelpButton from "../../components/TapirHelpButton.tsx";
-import { addToast } from "../../utils/addToast.ts";
-import { v4 as uuidv4 } from "uuid";
+import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
+import { addToast } from "../../utils/addToast.ts";
+import { handleRequestError } from "../../utils/handleRequestError.ts";
 
 interface CoopSharesAdminModalProps {
   memberId: string;
@@ -138,7 +138,7 @@ const CoopSharesAdminModal: React.FC<CoopSharesAdminModalProps> = ({
 
   function buildChoice() {
     return (
-      <div className={"d-flex flex-row gap-2"}>
+      <div className={"d-flex flex-column gap-2"}>
         <TapirButton
           variant={"outline-primary"}
           text={
