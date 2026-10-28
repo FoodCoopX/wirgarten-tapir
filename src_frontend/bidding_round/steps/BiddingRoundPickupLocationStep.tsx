@@ -30,6 +30,10 @@ interface BiddingRoundPickupLocationStepProps {
   pickupLocationId: string;
   currentPickupLocationId: string;
   setPickupLocationId: (value: string) => void;
+  checkCapacity: (
+    pickupLocationIdOverride?: string,
+  ) => Promise<{ sufficient: boolean; message: string }>;
+  onCapacityCheckError: (error: unknown) => void;
   texts: BiddingRoundTexts;
   goToNextStep: () => void;
   stepActive: boolean;
@@ -55,16 +59,46 @@ const BiddingRoundPickupLocationStep: React.FC<
   pickupLocationId,
   currentPickupLocationId,
   setPickupLocationId,
+  checkCapacity,
+  onCapacityCheckError,
   texts,
   goToNextStep,
   stepActive,
 }) => {
   const [currentTab, setCurrentTab] = useState<PickupLocationTab>("map");
   const [showValidation, setShowValidation] = useState(false);
+  const [capacityError, setCapacityError] = useState("");
 
-  function validate() {
+  async function selectLocation(id: string) {
+    setPickupLocationId(id);
+    setCapacityError("");
+    try {
+      const result = await checkCapacity(id);
+      if (!result.sufficient) {
+        setCapacityError(
+          result.message || "An diesem Abholort ist keine Kapazität mehr frei.",
+        );
+      }
+    } catch (error) {
+      onCapacityCheckError(error);
+    }
+  }
+
+  async function validate() {
     if (!pickupLocationId) {
       setShowValidation(true);
+      return;
+    }
+    try {
+      const result = await checkCapacity(pickupLocationId);
+      if (!result.sufficient) {
+        setCapacityError(
+          result.message || "An diesem Abholort ist keine Kapazität mehr frei.",
+        );
+        return;
+      }
+    } catch (error) {
+      onCapacityCheckError(error);
       return;
     }
     goToNextStep();
@@ -157,7 +191,7 @@ const BiddingRoundPickupLocationStep: React.FC<
           }
           variant={BUTTON_VARIANT}
           disabled={!isSelectable(pickupLocation)}
-          onClick={() => setPickupLocationId(pickupLocation.id!)}
+          onClick={() => selectLocation(pickupLocation.id!)}
         />
       </div>
     );
@@ -251,7 +285,7 @@ const BiddingRoundPickupLocationStep: React.FC<
                   }
                   onClick={() => {
                     if (isSelectable(pickupLocation)) {
-                      setPickupLocationId(pickupLocation.id!);
+                      void selectLocation(pickupLocation.id!);
                     }
                   }}
                 >
@@ -301,7 +335,7 @@ const BiddingRoundPickupLocationStep: React.FC<
           <Form.Label>{"Verteilstation"}</Form.Label>
           <Form.Select
             value={pickupLocationId}
-            onChange={(event) => setPickupLocationId(event.target.value)}
+            onChange={(event) => void selectLocation(event.target.value)}
           >
             <option value={""}>–</option>
             {pickupLocations.map((pickupLocation) => (
@@ -315,6 +349,9 @@ const BiddingRoundPickupLocationStep: React.FC<
               </option>
             ))}
           </Form.Select>
+          {capacityError && (
+            <div className={"text-danger small"}>{capacityError}</div>
+          )}
         </Form.Group>
       </div>
 

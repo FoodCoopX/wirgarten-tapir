@@ -610,7 +610,6 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
   const biddableProduct = data?.biddableProduct ?? null;
   const bidOptions = data?.bidOptions ?? {
     quantityEnabled: false,
-    multiplePositionsEnabled: false,
   };
   const pickupLocationsEnabled = pickupLocations.length > 0;
 
@@ -2527,9 +2526,7 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
                             (_, i) => (i + 1) as 1 | 2 | 3,
                           ).map((level) => {
                             const key = `amount${level}` as
-                              | "amount1"
-                              | "amount2"
-                              | "amount3";
+                              "amount1" | "amount2" | "amount3";
                             return (
                               <Form.Group
                                 className={"col-md-3 mb-2"}

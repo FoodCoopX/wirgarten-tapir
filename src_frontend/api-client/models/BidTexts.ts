@@ -23,18 +23,6 @@ export interface BidTexts {
    * @type {string}
    * @memberof BidTexts
    */
-  productLabel: string;
-  /**
-   *
-   * @type {string}
-   * @memberof BidTexts
-   */
-  variantLabel: string;
-  /**
-   *
-   * @type {string}
-   * @memberof BidTexts
-   */
   quantityLabel: string;
   /**
    *
@@ -150,10 +138,6 @@ export interface BidTexts {
  * Check if a given object implements the BidTexts interface.
  */
 export function instanceOfBidTexts(value: object): value is BidTexts {
-  if (!("productLabel" in value) || value["productLabel"] === undefined)
-    return false;
-  if (!("variantLabel" in value) || value["variantLabel"] === undefined)
-    return false;
   if (!("quantityLabel" in value) || value["quantityLabel"] === undefined)
     return false;
   if (!("amountLabel" in value) || value["amountLabel"] === undefined)
@@ -220,8 +204,6 @@ export function BidTextsFromJSONTyped(
     return json;
   }
   return {
-    productLabel: json["product_label"],
-    variantLabel: json["variant_label"],
     quantityLabel: json["quantity_label"],
     amountLabel: json["amount_label"],
     referenceValueHint: json["reference_value_hint"],
@@ -257,8 +239,6 @@ export function BidTextsToJSONTyped(
   }
 
   return {
-    product_label: value["productLabel"],
-    variant_label: value["variantLabel"],
     quantity_label: value["quantityLabel"],
     amount_label: value["amountLabel"],
     reference_value_hint: value["referenceValueHint"],

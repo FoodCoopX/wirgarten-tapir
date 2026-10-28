@@ -461,7 +461,11 @@ const BiddingRoundProductTypeBidStep: React.FC<
       <NextStepButton
         onClick={validateAndContinue}
         showError={hasErrors}
-        text={hasErrors ? "Bitte prüfe deine Beträge" : undefined}
+        text={
+          hasErrors
+            ? texts.bid.errorText || "Bitte prüfe deine Beträge"
+            : undefined
+        }
         stepActive={stepActive}
       />
     </>

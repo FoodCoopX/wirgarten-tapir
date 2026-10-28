@@ -19,6 +19,11 @@ import {
   BiddableProductFromJSON,
   BiddableProductToJSON,
 } from "./BiddableProduct";
+import type { CurrentPickupLocation } from "./CurrentPickupLocation";
+import {
+  CurrentPickupLocationFromJSON,
+  CurrentPickupLocationToJSON,
+} from "./CurrentPickupLocation";
 import type { PickupLocationWithCharge } from "./PickupLocationWithCharge";
 import {
   PickupLocationWithChargeFromJSON,
@@ -53,6 +58,12 @@ export interface MemberBidResponse {
   pickupLocations: Array<PickupLocationWithCharge>;
   /**
    *
+   * @type {CurrentPickupLocation}
+   * @memberof MemberBidResponse
+   */
+  currentPickupLocation: CurrentPickupLocation | null;
+  /**
+   *
    * @type {Bid}
    * @memberof MemberBidResponse
    */
@@ -69,6 +80,11 @@ export function instanceOfMemberBidResponse(
   if (!("biddableProduct" in value) || value["biddableProduct"] === undefined)
     return false;
   if (!("pickupLocations" in value) || value["pickupLocations"] === undefined)
+    return false;
+  if (
+    !("currentPickupLocation" in value) ||
+    value["currentPickupLocation"] === undefined
+  )
     return false;
   if (!("bid" in value) || value["bid"] === undefined) return false;
   return true;
@@ -91,6 +107,9 @@ export function MemberBidResponseFromJSONTyped(
     pickupLocations: (json["pickup_locations"] as Array<any>).map(
       PickupLocationWithChargeFromJSON,
     ),
+    currentPickupLocation: CurrentPickupLocationFromJSON(
+      json["current_pickup_location"],
+    ),
     bid: BidFromJSON(json["bid"]),
   };
 }
@@ -112,6 +131,9 @@ export function MemberBidResponseToJSONTyped(
     biddable_product: BiddableProductToJSON(value["biddableProduct"]),
     pickup_locations: (value["pickupLocations"] as Array<any>).map(
       PickupLocationWithChargeToJSON,
+    ),
+    current_pickup_location: CurrentPickupLocationToJSON(
+      value["currentPickupLocation"],
     ),
     bid: BidToJSON(value["bid"]),
   };

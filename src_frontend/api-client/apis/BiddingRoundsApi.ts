@@ -170,6 +170,7 @@ export interface BiddingRoundsApiUnlockAverageBidCreateRequest {
  */
 export class BiddingRoundsApi extends runtime.BaseAPI {
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiAvailableProductTypesListRaw(
     requestParameters: BiddingRoundsApiAvailableProductTypesListRequest,
@@ -214,6 +215,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiAvailableProductTypesList(
     requestParameters: BiddingRoundsApiAvailableProductTypesListRequest = {},
@@ -227,6 +229,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiBidCreateRaw(
     requestParameters: BiddingRoundsApiBidCreateRequest,
@@ -288,6 +291,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiBidCreate(
     requestParameters: BiddingRoundsApiBidCreateRequest,
@@ -301,6 +305,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiBidRetrieveRaw(
     requestParameters: BiddingRoundsApiBidRetrieveRequest,
@@ -350,6 +355,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiBidRetrieve(
     requestParameters: BiddingRoundsApiBidRetrieveRequest,
@@ -363,6 +369,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiBidsCreateRaw(
     requestParameters: BiddingRoundsApiBidsCreateRequest,
@@ -415,6 +422,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiBidsCreate(
     requestParameters: BiddingRoundsApiBidsCreateRequest,
@@ -428,6 +436,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiBidsDestroyRaw(
     requestParameters: BiddingRoundsApiBidsDestroyRequest,
@@ -487,6 +496,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiBidsDestroy(
     requestParameters: BiddingRoundsApiBidsDestroyRequest,
@@ -496,6 +506,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiBidsPartialUpdateRaw(
     requestParameters: BiddingRoundsApiBidsPartialUpdateRequest,
@@ -562,6 +573,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiBidsPartialUpdate(
     requestParameters: BiddingRoundsApiBidsPartialUpdateRequest,
@@ -575,6 +587,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiCapacityCheckCreateRaw(
     requestParameters: BiddingRoundsApiCapacityCheckCreateRequest,
@@ -636,6 +649,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiCapacityCheckCreate(
     requestParameters: BiddingRoundsApiCapacityCheckCreateRequest,
@@ -649,6 +663,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiCheckContractsCreateRaw(
     requestParameters: BiddingRoundsApiCheckContractsCreateRequest,
@@ -703,6 +718,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiCheckContractsCreate(
     requestParameters: BiddingRoundsApiCheckContractsCreateRequest,
@@ -716,6 +732,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiCloseCreateRaw(
     requestParameters: BiddingRoundsApiCloseCreateRequest,
@@ -765,6 +782,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiCloseCreate(
     requestParameters: BiddingRoundsApiCloseCreateRequest,
@@ -778,6 +796,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiConfirmBidsCreateRaw(
     requestParameters: BiddingRoundsApiConfirmBidsCreateRequest,
@@ -830,6 +849,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiConfirmBidsCreate(
     requestParameters: BiddingRoundsApiConfirmBidsCreateRequest,
@@ -843,6 +863,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiCreateRaw(
     requestParameters: BiddingRoundsApiCreateRequest,
@@ -892,6 +913,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiCreate(
     requestParameters: BiddingRoundsApiCreateRequest,
@@ -905,6 +927,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiCreateContractsCreateRaw(
     requestParameters: BiddingRoundsApiCreateContractsCreateRequest,
@@ -959,6 +982,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiCreateContractsCreate(
     requestParameters: BiddingRoundsApiCreateContractsCreateRequest,
@@ -972,6 +996,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiDeleteContractsCreateRaw(
     requestParameters: BiddingRoundsApiDeleteContractsCreateRequest,
@@ -1021,6 +1046,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiDeleteContractsCreate(
     requestParameters: BiddingRoundsApiDeleteContractsCreateRequest,
@@ -1034,6 +1060,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiDestroyRaw(
     requestParameters: BiddingRoundsApiDestroyRequest,
@@ -1081,6 +1108,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiDestroy(
     requestParameters: BiddingRoundsApiDestroyRequest,
@@ -1090,6 +1118,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiExportCsvRetrieveRaw(
     requestParameters: BiddingRoundsApiExportCsvRetrieveRequest,
@@ -1141,6 +1170,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiExportCsvRetrieve(
     requestParameters: BiddingRoundsApiExportCsvRetrieveRequest,
@@ -1154,6 +1184,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiGrowingPeriodsListRaw(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
@@ -1192,6 +1223,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiGrowingPeriodsList(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
@@ -1202,6 +1234,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiListRaw(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
@@ -1240,6 +1273,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiList(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
@@ -1249,6 +1283,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiLockAverageBidCreateRaw(
     requestParameters: BiddingRoundsApiLockAverageBidCreateRequest,
@@ -1310,6 +1345,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiLockAverageBidCreate(
     requestParameters: BiddingRoundsApiLockAverageBidCreateRequest,
@@ -1323,6 +1359,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiPartialUpdateRaw(
     requestParameters: BiddingRoundsApiPartialUpdateRequest,
@@ -1377,6 +1414,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiPartialUpdate(
     requestParameters: BiddingRoundsApiPartialUpdateRequest,
@@ -1390,6 +1428,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiPublicDataRetrieveRaw(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
@@ -1428,6 +1467,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiPublicDataRetrieve(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
@@ -1438,6 +1478,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiPublicResultsRetrieveRaw(
     requestParameters: BiddingRoundsApiPublicResultsRetrieveRequest,
@@ -1487,6 +1528,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiPublicResultsRetrieve(
     requestParameters: BiddingRoundsApiPublicResultsRetrieveRequest,
@@ -1500,6 +1542,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiReopenCreateRaw(
     requestParameters: BiddingRoundsApiReopenCreateRequest,
@@ -1549,6 +1592,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiReopenCreate(
     requestParameters: BiddingRoundsApiReopenCreateRequest,
@@ -1562,6 +1606,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiResultsRetrieveRaw(
     requestParameters: BiddingRoundsApiResultsRetrieveRequest,
@@ -1629,6 +1674,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiResultsRetrieve(
     requestParameters: BiddingRoundsApiResultsRetrieveRequest,
@@ -1642,6 +1688,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiRetrieveRaw(
     requestParameters: BiddingRoundsApiRetrieveRequest,
@@ -1691,6 +1738,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiRetrieve(
     requestParameters: BiddingRoundsApiRetrieveRequest,
@@ -1704,6 +1752,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiStartCreateRaw(
     requestParameters: BiddingRoundsApiStartCreateRequest,
@@ -1753,6 +1802,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiStartCreate(
     requestParameters: BiddingRoundsApiStartCreateRequest,
@@ -1766,6 +1816,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiUnlockAverageBidCreateRaw(
     requestParameters: BiddingRoundsApiUnlockAverageBidCreateRequest,
@@ -1815,6 +1866,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
+   * Applies :class:`BiddingRoundFeaturePermission` to a DRF view.  ``require_public_url`` marks the public (member-facing) endpoints.
    */
   async biddingRoundsApiUnlockAverageBidCreate(
     requestParameters: BiddingRoundsApiUnlockAverageBidCreateRequest,

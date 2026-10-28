@@ -2448,6 +2448,10 @@ paths:
   /bidding_rounds/api:
     get:
       operationId: bidding_rounds_api_list
+      description: |-
+        Applies :class:`BiddingRoundFeaturePermission` to a DRF view.
+
+        ``require_public_url`` marks the public (member-facing) endpoints.
       tags:
       - bidding_rounds
       security:
@@ -2465,6 +2469,10 @@ paths:
           description: ''
     post:
       operationId: bidding_rounds_api_create
+      description: |-
+        Applies :class:`BiddingRoundFeaturePermission` to a DRF view.
+
+        ``require_public_url`` marks the public (member-facing) endpoints.
       tags:
       - bidding_rounds
       requestBody:
@@ -2493,6 +2501,10 @@ paths:
   /bidding_rounds/api/{round_id}:
     get:
       operationId: bidding_rounds_api_retrieve
+      description: |-
+        Applies :class:`BiddingRoundFeaturePermission` to a DRF view.
+
+        ``require_public_url`` marks the public (member-facing) endpoints.
       parameters:
       - in: path
         name: round_id
@@ -2515,6 +2527,10 @@ paths:
           description: ''
     patch:
       operationId: bidding_rounds_api_partial_update
+      description: |-
+        Applies :class:`BiddingRoundFeaturePermission` to a DRF view.
+
+        ``require_public_url`` marks the public (member-facing) endpoints.
       parameters:
       - in: path
         name: round_id
@@ -2548,6 +2564,10 @@ paths:
           description: ''
     delete:
       operationId: bidding_rounds_api_destroy
+      description: |-
+        Applies :class:`BiddingRoundFeaturePermission` to a DRF view.
+
+        ``require_public_url`` marks the public (member-facing) endpoints.
       parameters:
       - in: path
         name: round_id
@@ -2567,6 +2587,10 @@ paths:
   /bidding_rounds/api/{round_id}/bid:
     get:
       operationId: bidding_rounds_api_bid_retrieve
+      description: |-
+        Applies :class:`BiddingRoundFeaturePermission` to a DRF view.
+
+        ``require_public_url`` marks the public (member-facing) endpoints.
       parameters:
       - in: path
         name: round_id
@@ -2580,7 +2604,6 @@ paths:
       - tokenAuth: []
       - cookieAuth: []
       - DrfForwardAuthentication: []
-      - {}
       responses:
         '200':
           content:
@@ -2590,6 +2613,10 @@ paths:
           description: ''
     post:
       operationId: bidding_rounds_api_bid_create
+      description: |-
+        Applies :class:`BiddingRoundFeaturePermission` to a DRF view.
+
+        ``require_public_url`` marks the public (member-facing) endpoints.
       parameters:
       - in: path
         name: round_id
@@ -2615,7 +2642,6 @@ paths:
       - tokenAuth: []
       - cookieAuth: []
       - DrfForwardAuthentication: []
-      - {}
       responses:
         '200':
           content:
@@ -2626,6 +2652,10 @@ paths:
   /bidding_rounds/api/{round_id}/bids:
     post:
       operationId: bidding_rounds_api_bids_create
+      description: |-
+        Applies :class:`BiddingRoundFeaturePermission` to a DRF view.
+
+        ``require_public_url`` marks the public (member-facing) endpoints.
       parameters:
       - in: path
         name: round_id
@@ -2660,6 +2690,10 @@ paths:
   /bidding_rounds/api/{round_id}/bids/{bid_id}:
     patch:
       operationId: bidding_rounds_api_bids_partial_update
+      description: |-
+        Applies :class:`BiddingRoundFeaturePermission` to a DRF view.
+
+        ``require_public_url`` marks the public (member-facing) endpoints.
       parameters:
       - in: path
         name: bid_id
@@ -2699,6 +2733,10 @@ paths:
           description: ''
     delete:
       operationId: bidding_rounds_api_bids_destroy
+      description: |-
+        Applies :class:`BiddingRoundFeaturePermission` to a DRF view.
+
+        ``require_public_url`` marks the public (member-facing) endpoints.
       parameters:
       - in: path
         name: bid_id
@@ -2724,6 +2762,10 @@ paths:
   /bidding_rounds/api/{round_id}/capacity_check:
     post:
       operationId: bidding_rounds_api_capacity_check_create
+      description: |-
+        Applies :class:`BiddingRoundFeaturePermission` to a DRF view.
+
+        ``require_public_url`` marks the public (member-facing) endpoints.
       parameters:
       - in: path
         name: round_id
@@ -2749,7 +2791,6 @@ paths:
       - tokenAuth: []
       - cookieAuth: []
       - DrfForwardAuthentication: []
-      - {}
       responses:
         '200':
           content:
@@ -2760,6 +2801,10 @@ paths:
   /bidding_rounds/api/{round_id}/check_contracts:
     post:
       operationId: bidding_rounds_api_check_contracts_create
+      description: |-
+        Applies :class:`BiddingRoundFeaturePermission` to a DRF view.
+
+        ``require_public_url`` marks the public (member-facing) endpoints.
       parameters:
       - in: path
         name: round_id
@@ -2794,6 +2839,10 @@ paths:
   /bidding_rounds/api/{round_id}/close:
     post:
       operationId: bidding_rounds_api_close_create
+      description: |-
+        Applies :class:`BiddingRoundFeaturePermission` to a DRF view.
+
+        ``require_public_url`` marks the public (member-facing) endpoints.
       parameters:
       - in: path
         name: round_id
@@ -2817,6 +2866,10 @@ paths:
   /bidding_rounds/api/{round_id}/confirm_bids:
     post:
       operationId: bidding_rounds_api_confirm_bids_create
+      description: |-
+        Applies :class:`BiddingRoundFeaturePermission` to a DRF view.
+
+        ``require_public_url`` marks the public (member-facing) endpoints.
       parameters:
       - in: path
         name: round_id
@@ -2853,6 +2906,10 @@ paths:
   /bidding_rounds/api/{round_id}/create_contracts:
     post:
       operationId: bidding_rounds_api_create_contracts_create
+      description: |-
+        Applies :class:`BiddingRoundFeaturePermission` to a DRF view.
+
+        ``require_public_url`` marks the public (member-facing) endpoints.
       parameters:
       - in: path
         name: round_id
@@ -2887,6 +2944,10 @@ paths:
   /bidding_rounds/api/{round_id}/delete_contracts:
     post:
       operationId: bidding_rounds_api_delete_contracts_create
+      description: |-
+        Applies :class:`BiddingRoundFeaturePermission` to a DRF view.
+
+        ``require_public_url`` marks the public (member-facing) endpoints.
       parameters:
       - in: path
         name: round_id
@@ -2910,6 +2971,10 @@ paths:
   /bidding_rounds/api/{round_id}/export.csv:
     get:
       operationId: bidding_rounds_api_export.csv_retrieve
+      description: |-
+        Applies :class:`BiddingRoundFeaturePermission` to a DRF view.
+
+        ``require_public_url`` marks the public (member-facing) endpoints.
       parameters:
       - in: path
         name: round_id
@@ -2933,6 +2998,10 @@ paths:
   /bidding_rounds/api/{round_id}/lock_average_bid:
     post:
       operationId: bidding_rounds_api_lock_average_bid_create
+      description: |-
+        Applies :class:`BiddingRoundFeaturePermission` to a DRF view.
+
+        ``require_public_url`` marks the public (member-facing) endpoints.
       parameters:
       - in: path
         name: round_id
@@ -2968,6 +3037,10 @@ paths:
   /bidding_rounds/api/{round_id}/public_results:
     get:
       operationId: bidding_rounds_api_public_results_retrieve
+      description: |-
+        Applies :class:`BiddingRoundFeaturePermission` to a DRF view.
+
+        ``require_public_url`` marks the public (member-facing) endpoints.
       parameters:
       - in: path
         name: round_id
@@ -2981,7 +3054,6 @@ paths:
       - tokenAuth: []
       - cookieAuth: []
       - DrfForwardAuthentication: []
-      - {}
       responses:
         '200':
           content:
@@ -2992,6 +3064,10 @@ paths:
   /bidding_rounds/api/{round_id}/reopen:
     post:
       operationId: bidding_rounds_api_reopen_create
+      description: |-
+        Applies :class:`BiddingRoundFeaturePermission` to a DRF view.
+
+        ``require_public_url`` marks the public (member-facing) endpoints.
       parameters:
       - in: path
         name: round_id
@@ -3015,6 +3091,10 @@ paths:
   /bidding_rounds/api/{round_id}/results:
     get:
       operationId: bidding_rounds_api_results_retrieve
+      description: |-
+        Applies :class:`BiddingRoundFeaturePermission` to a DRF view.
+
+        ``require_public_url`` marks the public (member-facing) endpoints.
       parameters:
       - in: query
         name: filter
@@ -3056,6 +3136,10 @@ paths:
   /bidding_rounds/api/{round_id}/start:
     post:
       operationId: bidding_rounds_api_start_create
+      description: |-
+        Applies :class:`BiddingRoundFeaturePermission` to a DRF view.
+
+        ``require_public_url`` marks the public (member-facing) endpoints.
       parameters:
       - in: path
         name: round_id
@@ -3079,6 +3163,10 @@ paths:
   /bidding_rounds/api/{round_id}/unlock_average_bid:
     post:
       operationId: bidding_rounds_api_unlock_average_bid_create
+      description: |-
+        Applies :class:`BiddingRoundFeaturePermission` to a DRF view.
+
+        ``require_public_url`` marks the public (member-facing) endpoints.
       parameters:
       - in: path
         name: round_id
@@ -3102,6 +3190,10 @@ paths:
   /bidding_rounds/api/available_product_types:
     get:
       operationId: bidding_rounds_api_available_product_types_list
+      description: |-
+        Applies :class:`BiddingRoundFeaturePermission` to a DRF view.
+
+        ``require_public_url`` marks the public (member-facing) endpoints.
       parameters:
       - in: query
         name: growing_period_id
@@ -3125,6 +3217,10 @@ paths:
   /bidding_rounds/api/growing_periods:
     get:
       operationId: bidding_rounds_api_growing_periods_list
+      description: |-
+        Applies :class:`BiddingRoundFeaturePermission` to a DRF view.
+
+        ``require_public_url`` marks the public (member-facing) endpoints.
       tags:
       - bidding_rounds
       security:
@@ -3143,13 +3239,16 @@ paths:
   /bidding_rounds/api/public_data:
     get:
       operationId: bidding_rounds_api_public_data_retrieve
+      description: |-
+        Applies :class:`BiddingRoundFeaturePermission` to a DRF view.
+
+        ``require_public_url`` marks the public (member-facing) endpoints.
       tags:
       - bidding_rounds
       security:
       - tokenAuth: []
       - cookieAuth: []
       - DrfForwardAuthentication: []
-      - {}
       responses:
         '200':
           content:
@@ -10185,10 +10284,7 @@ components:
       properties:
         quantity_enabled:
           type: boolean
-        multiple_positions_enabled:
-          type: boolean
       required:
-      - multiple_positions_enabled
       - quantity_enabled
     BidProductVariant:
       type: object
@@ -10225,10 +10321,6 @@ components:
     BidTexts:
       type: object
       properties:
-        product_label:
-          type: string
-        variant_label:
-          type: string
         quantity_label:
           type: string
         amount_label:
@@ -10279,7 +10371,6 @@ components:
       - monthly_hint
       - monthly_unit
       - pickup_location_label
-      - product_label
       - quantity_label
       - red_label
       - reference_value_hint
@@ -10287,7 +10378,6 @@ components:
       - simple_levels_explanation
       - success_text
       - traffic_light_explanation
-      - variant_label
       - yellow_label
     BiddableProduct:
       type: object
@@ -12097,6 +12187,19 @@ components:
       - file_name
       - name
       - separator
+    CurrentPickupLocation:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        yearly_delivery_charge:
+          type: string
+      required:
+      - id
+      - name
+      - yearly_delivery_charge
     CustomCycleDeliveryWeeksRequest:
       type: object
       properties:
@@ -14092,6 +14195,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PickupLocationWithCharge'
+        current_pickup_location:
+          allOf:
+          - $ref: '#/components/schemas/CurrentPickupLocation'
+          nullable: true
         bid:
           allOf:
           - $ref: '#/components/schemas/Bid'
@@ -14099,6 +14206,7 @@ components:
       required:
       - bid
       - biddable_product
+      - current_pickup_location
       - pickup_locations
       - round
     MemberCredit:
@@ -16828,6 +16936,10 @@ components:
           type: boolean
         current_pickup_location_id:
           type: string
+          nullable: true
+        current_pickup_location:
+          allOf:
+          - $ref: '#/components/schemas/CurrentPickupLocation'
           nullable: true
         bid:
           allOf:

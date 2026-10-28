@@ -3,6 +3,7 @@ import NextStepButton from "../../bestell_wizard_mobile/components/NextStepButto
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import {
   BiddingRoundBidItem,
+  BiddingRoundCurrentPickupLocation,
   BiddingRoundPickupLocation,
   BiddingRoundProductType,
   BiddingRoundRound,
@@ -24,6 +25,7 @@ interface BiddingRoundSummaryStepProps {
   items: BiddingRoundBidItem[];
   biddableProduct: BiddingRoundProductType | null;
   pickupLocations: BiddingRoundPickupLocation[];
+  currentPickupLocation?: BiddingRoundCurrentPickupLocation | null;
   pickupLocationId: string;
   texts: BiddingRoundTexts;
   submitBid: () => void;
@@ -42,6 +44,7 @@ const BiddingRoundSummaryStep: React.FC<BiddingRoundSummaryStepProps> = ({
   items,
   biddableProduct,
   pickupLocations,
+  currentPickupLocation,
   pickupLocationId,
   texts,
   submitBid,
@@ -60,11 +63,16 @@ const BiddingRoundSummaryStep: React.FC<BiddingRoundSummaryStepProps> = ({
     return amount === null ? null : amount * item.quantity * 12;
   };
 
+  // The member's own location is shown (and its charge counted) even when changing
+  // the location is disabled and the selectable list is therefore empty or the stored
+  // bid location does not resolve.
+  const selectedLocation =
+    pickupLocations.find((location) => location.id === pickupLocationId) ??
+    currentPickupLocation ??
+    undefined;
+
   const deliveryChargePerYear =
-    parseEuroAmount(
-      pickupLocations.find((location) => location.id === pickupLocationId)
-        ?.yearlyDeliveryCharge,
-    ) ?? 0;
+    parseEuroAmount(selectedLocation?.yearlyDeliveryCharge) ?? 0;
 
   const totalYearlyOf = (
     item: BiddingRoundBidItem,
@@ -101,9 +109,7 @@ const BiddingRoundSummaryStep: React.FC<BiddingRoundSummaryStepProps> = ({
     );
   };
 
-  const primaryLocation = pickupLocations.find(
-    (location) => location.id === pickupLocationId,
-  );
+  const primaryLocation = selectedLocation;
 
   return (
     <>

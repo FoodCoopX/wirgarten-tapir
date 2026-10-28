@@ -87,8 +87,6 @@ export type BiddingRoundPublicEvaluation = {
 };
 
 export type BiddingRoundBidTexts = {
-  productLabel: string;
-  variantLabel: string;
   quantityLabel: string;
   amountLabel: string;
   referenceValueHint: string;
@@ -130,7 +128,12 @@ export type BiddingRoundTexts = {
 
 export type BiddingRoundBidOptions = {
   quantityEnabled: boolean;
-  multiplePositionsEnabled: boolean;
+};
+
+export type BiddingRoundCurrentPickupLocation = {
+  id: string;
+  name: string;
+  yearlyDeliveryCharge: string | number;
 };
 
 export type BiddingRoundPublicData = {
@@ -146,5 +149,6 @@ export type BiddingRoundPublicData = {
   bidOptions: BiddingRoundBidOptions;
   isAuthenticated: boolean;
   currentPickupLocationId?: string | null;
+  currentPickupLocation?: BiddingRoundCurrentPickupLocation | null;
   bid?: BiddingRoundBid | null;
 };

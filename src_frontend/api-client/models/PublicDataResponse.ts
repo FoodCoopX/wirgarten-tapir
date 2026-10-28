@@ -21,6 +21,11 @@ import {
 } from "./BiddableProduct";
 import type { BidOptions } from "./BidOptions";
 import { BidOptionsFromJSON, BidOptionsToJSON } from "./BidOptions";
+import type { CurrentPickupLocation } from "./CurrentPickupLocation";
+import {
+  CurrentPickupLocationFromJSON,
+  CurrentPickupLocationToJSON,
+} from "./CurrentPickupLocation";
 import type { PickupLocationWithCharge } from "./PickupLocationWithCharge";
 import {
   PickupLocationWithChargeFromJSON,
@@ -111,6 +116,12 @@ export interface PublicDataResponse {
   currentPickupLocationId?: string | null;
   /**
    *
+   * @type {CurrentPickupLocation}
+   * @memberof PublicDataResponse
+   */
+  currentPickupLocation?: CurrentPickupLocation | null;
+  /**
+   *
    * @type {Bid}
    * @memberof PublicDataResponse
    */
@@ -169,6 +180,10 @@ export function PublicDataResponseFromJSONTyped(
       json["current_pickup_location_id"] == null
         ? undefined
         : json["current_pickup_location_id"],
+    currentPickupLocation:
+      json["current_pickup_location"] == null
+        ? undefined
+        : CurrentPickupLocationFromJSON(json["current_pickup_location"]),
     bid: json["bid"] == null ? undefined : BidFromJSON(json["bid"]),
   };
 }
@@ -203,6 +218,9 @@ export function PublicDataResponseToJSONTyped(
     bid_options: BidOptionsToJSON(value["bidOptions"]),
     is_authenticated: value["isAuthenticated"],
     current_pickup_location_id: value["currentPickupLocationId"],
+    current_pickup_location: CurrentPickupLocationToJSON(
+      value["currentPickupLocation"],
+    ),
     bid: BidToJSON(value["bid"]),
   };
 }

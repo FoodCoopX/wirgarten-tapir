@@ -5,10 +5,16 @@ import BiddingRound from "./BiddingRound.tsx";
 const domNode = document.getElementById("bidding_round-root");
 if (domNode) {
   const root = createRoot(domNode);
-  const skipIntro =
-    new URLSearchParams(window.location.search).get("skip_intro") === "1";
+  const searchParams = new URLSearchParams(window.location.search);
+  const skipIntro = searchParams.get("skip_intro") === "1";
+  const skipProductDescription =
+    searchParams.get("skip_product_description") === "1";
   root.render(
-    <BiddingRound csrfToken={getCsrfToken()} skipIntro={skipIntro} />,
+    <BiddingRound
+      csrfToken={getCsrfToken()}
+      skipIntro={skipIntro}
+      skipProductDescription={skipProductDescription}
+    />,
   );
 } else {
   console.error("Failed to render bidding_round from React");

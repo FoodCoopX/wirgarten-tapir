@@ -43,6 +43,7 @@ import { getBiddingRoundProductTypeFromStep } from "./utils/getBiddingRoundProdu
 interface BiddingRoundProps {
   csrfToken: string;
   skipIntro: boolean;
+  skipProductDescription: boolean;
 }
 
 /** Recursively replaces "Beitragsrunde" with the configured display name. */
@@ -81,8 +82,6 @@ const EMPTY_TEXTS: BiddingRoundTexts = {
   summaryTitle: "",
   submitLabel: "",
   bid: {
-    productLabel: "",
-    variantLabel: "",
     quantityLabel: "",
     amountLabel: "",
     referenceValueHint: "",
@@ -108,6 +107,7 @@ const EMPTY_TEXTS: BiddingRoundTexts = {
 const BiddingRound: React.FC<BiddingRoundProps> = ({
   csrfToken,
   skipIntro,
+  skipProductDescription,
 }) => {
   const biddingRoundsApi = useApi(BiddingRoundsApi, csrfToken);
   const bestellWizardApi = useApi(BestellWizardApi, csrfToken);
@@ -195,12 +195,14 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({
       isAuthenticated: data.isAuthenticated,
       activeProductTypeId: data.biddableProduct?.productTypeId,
       pickupLocationsEnabled: data.pickupLocations.length > 0,
+      skipIntro,
+      skipProductDescription,
     });
     setSteps(newSteps);
     setCurrentStep((current) => {
-      if (skipIntro && !skipIntroApplied.current && newSteps.length > 1) {
+      if ((skipIntro || skipProductDescription) && !skipIntroApplied.current) {
         skipIntroApplied.current = true;
-        return newSteps[1];
+        return newSteps[0];
       }
       return newSteps.includes(current) ? current : newSteps[0];
     });
@@ -243,7 +245,9 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({
     setCurrentStep(steps[currentIndex + 1]);
   }
 
-  function checkCapacity(): Promise<{ sufficient: boolean; message: string }> {
+  function checkCapacity(
+    pickupLocationIdOverride?: string,
+  ): Promise<{ sufficient: boolean; message: string }> {
     if (!data?.round) {
       return Promise.resolve({ sufficient: true, message: "" });
     }
@@ -255,7 +259,8 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({
             productId: item.productId,
             quantity: item.quantity,
           })),
-          pickupLocationId: pickupLocationIdRef.current || null,
+          pickupLocationId:
+            (pickupLocationIdOverride ?? pickupLocationIdRef.current) || null,
         },
       })
       .then((response) => ({
@@ -291,7 +296,9 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({
         setCurrentStep("bidding_round_confirmation");
       })
       .catch(async (error) => {
-        let message = "Dein Gebot konnte nicht gespeichert werden.";
+        let message =
+          data.texts.bid.errorText ||
+          "Dein Gebot konnte nicht gespeichert werden.";
         if (error instanceof ResponseError) {
           const body = await error.response.json().catch(() => null);
           if (body?.error) {
@@ -472,6 +479,14 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({
             pickupLocationId={pickupLocationId}
             currentPickupLocationId={data.currentPickupLocationId ?? ""}
             setPickupLocationId={setPickupLocationId}
+            checkCapacity={checkCapacity}
+            onCapacityCheckError={(error) =>
+              handleRequestError(
+                error,
+                "Die Kapazität konnte nicht geprüft werden.",
+                setToastDatas,
+              )
+            }
             texts={data.texts}
             goToNextStep={goToNextStep}
             stepActive={step === currentStep}
@@ -487,6 +502,7 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({
             items={bidItems}
             biddableProduct={data.biddableProduct}
             pickupLocations={data.pickupLocations}
+            currentPickupLocation={data.currentPickupLocation ?? null}
             pickupLocationId={pickupLocationId}
             texts={data.texts}
             submitBid={submitBid}

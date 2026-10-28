@@ -78,6 +78,7 @@ export * from "./CreateContractsSubscription";
 export * from "./CreateMissingTriggerMailRequest";
 export * from "./CsvExportModel";
 export * from "./CsvExportModelRequest";
+export * from "./CurrentPickupLocation";
 export * from "./CustomCycleDeliveryWeeksRequest";
 export * from "./DayOfWeekEnum";
 export * from "./Delivery";

@@ -24,12 +24,6 @@ export interface BidOptions {
    * @memberof BidOptions
    */
   quantityEnabled: boolean;
-  /**
-   *
-   * @type {boolean}
-   * @memberof BidOptions
-   */
-  multiplePositionsEnabled: boolean;
 }
 
 /**
@@ -37,11 +31,6 @@ export interface BidOptions {
  */
 export function instanceOfBidOptions(value: object): value is BidOptions {
   if (!("quantityEnabled" in value) || value["quantityEnabled"] === undefined)
-    return false;
-  if (
-    !("multiplePositionsEnabled" in value) ||
-    value["multiplePositionsEnabled"] === undefined
-  )
     return false;
   return true;
 }
@@ -59,7 +48,6 @@ export function BidOptionsFromJSONTyped(
   }
   return {
     quantityEnabled: json["quantity_enabled"],
-    multiplePositionsEnabled: json["multiple_positions_enabled"],
   };
 }
 
@@ -77,6 +65,5 @@ export function BidOptionsToJSONTyped(
 
   return {
     quantity_enabled: value["quantityEnabled"],
-    multiple_positions_enabled: value["multiplePositionsEnabled"],
   };
 }

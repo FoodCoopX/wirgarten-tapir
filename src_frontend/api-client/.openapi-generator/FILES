@@ -94,6 +94,7 @@ models/CreateContractsSubscription.ts
 models/CreateMissingTriggerMailRequest.ts
 models/CsvExportModel.ts
 models/CsvExportModelRequest.ts
+models/CurrentPickupLocation.ts
 models/CustomCycleDeliveryWeeksRequest.ts
 models/DayOfWeekEnum.ts
 models/Delivery.ts
