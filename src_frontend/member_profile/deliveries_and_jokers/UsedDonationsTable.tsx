@@ -1,15 +1,15 @@
+import dayjs from "dayjs";
+import "dayjs/locale/de";
 import React from "react";
+import { Button, OverlayTrigger, Table, Tooltip } from "react-bootstrap";
 import {
   DeliveryDonation,
   DeliveryDonationWithCancellationLimit,
 } from "../../api-client";
-import "dayjs/locale/de";
-import { Button, OverlayTrigger, Table, Tooltip } from "react-bootstrap";
-import dayjs from "dayjs";
-import { formatDateText } from "../../utils/formatDateText.ts";
-import TapirButton from "../../components/TapirButton.tsx";
-import { getWeekdayDisplay } from "../../utils/getWeekdayDisplay.ts";
 import PlaceholderTableRows from "../../components/PlaceholderTableRows.tsx";
+import TapirButton from "../../components/TapirButton.tsx";
+import { formatDateText } from "../../utils/formatDateText.ts";
+import { getWeekdayDisplay } from "../../utils/getWeekdayDisplay.ts";
 
 interface UsedDonationsTableProps {
   donations: DeliveryDonationWithCancellationLimit[];
@@ -29,25 +29,27 @@ const UsedDonationsTable: React.FC<UsedDonationsTableProps> = ({
   deliveriesLoading,
 }) => {
   return (
-    <Table striped hover responsive className={"fixed_header"}>
+    <Table striped hover responsive size={"sm"}>
       <thead>
         <tr>
-          <th>KW</th>
           <th>Lieferdatum</th>
           <th></th>
         </tr>
       </thead>
       <tbody>
         {deliveriesLoading ? (
-          <PlaceholderTableRows nbRows={4} nbColumns={3} size={"sm"} />
+          <PlaceholderTableRows nbRows={4} nbColumns={2} size={"sm"} />
         ) : (
           <>
             {donations.map((donationWithCancellation) => (
               <tr key={donationWithCancellation.donation.id}>
                 <td>
-                  KW{dayjs(donationWithCancellation.donation.date).week()}
+                  {formatDateText(donationWithCancellation.deliveryDate)}
+                  <br />
+                  <small>
+                    KW{dayjs(donationWithCancellation.donation.date).week()}
+                  </small>
                 </td>
-                <td>{formatDateText(donationWithCancellation.deliveryDate)}</td>
                 <td>
                   {donationWithCancellation.cancellationLimit >= new Date() ? (
                     <TapirButton

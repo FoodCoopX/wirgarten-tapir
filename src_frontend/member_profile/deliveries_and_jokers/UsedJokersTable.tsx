@@ -29,23 +29,27 @@ const UsedJokersTable: React.FC<UsedJokersTableProps> = ({
   dayjs.extend(isSameOrAfter);
 
   return (
-    <Table striped hover responsive className={"fixed_header"}>
+    <Table striped hover responsive size={"sm"}>
       <thead>
         <tr>
-          <th>KW</th>
           <th>Lieferdatum</th>
           <th></th>
         </tr>
       </thead>
       <tbody>
         {deliveriesLoading ? (
-          <PlaceholderTableRows nbRows={4} nbColumns={3} size={"sm"} />
+          <PlaceholderTableRows nbRows={4} nbColumns={2} size={"sm"} />
         ) : (
           <>
             {jokers.map((jokerWithCancellation) => (
               <tr key={jokerWithCancellation.joker.id}>
-                <td>KW{dayjs(jokerWithCancellation.joker.date).week()}</td>
-                <td>{formatDateText(jokerWithCancellation.deliveryDate)}</td>
+                <td>
+                  {formatDateText(jokerWithCancellation.deliveryDate)}
+                  <br />
+                  <small>
+                    KW{dayjs(jokerWithCancellation.joker.date).week()}
+                  </small>
+                </td>
                 <td>
                   {dayjs(jokerWithCancellation.cancellationLimit).isSameOrAfter(
                     new Date(),
