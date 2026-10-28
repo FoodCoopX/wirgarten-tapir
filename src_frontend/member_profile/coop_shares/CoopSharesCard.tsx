@@ -1,16 +1,16 @@
+import "dayjs/locale/de";
 import React, { useEffect, useState } from "react";
 import { Card, Spinner } from "react-bootstrap";
-import "dayjs/locale/de";
-import { useApi } from "../../hooks/useApi.ts";
 import { CoopApi, CoopShareTransaction } from "../../api-client";
-import { handleRequestError } from "../../utils/handleRequestError.ts";
-import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
-import { formatCurrency } from "../../utils/formatCurrency.ts";
 import TapirButton from "../../components/TapirButton.tsx";
 import TapirHelpButton from "../../components/TapirHelpButton.tsx";
-import CoopSharesAdminModal from "./CoopSharesAdminModal.tsx";
-import { ToastData } from "../../types/ToastData.ts";
 import TapirToastContainer from "../../components/TapirToastContainer.tsx";
+import { useApi } from "../../hooks/useApi.ts";
+import { ToastData } from "../../types/ToastData.ts";
+import { formatCurrency } from "../../utils/formatCurrency.ts";
+import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
+import { handleRequestError } from "../../utils/handleRequestError.ts";
+import CoopSharesAdminModal from "./CoopSharesAdminModal.tsx";
 
 interface CoopSharesCardProps {
   memberId: string;
@@ -94,7 +94,7 @@ const CoopSharesCard: React.FC<CoopSharesCardProps> = ({
 
   return (
     <>
-      <Card style={{ marginBottom: "1rem", textAlign: "center" }}>
+      <Card style={{ textAlign: "center" }}>
         <Card.Body>
           {loading ? (
             <Spinner />

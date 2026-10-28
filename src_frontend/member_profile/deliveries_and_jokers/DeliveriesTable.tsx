@@ -84,7 +84,7 @@ const DeliveriesTable: React.FC<DeliveriesTableProps> = ({
   function pickupLocationCell(delivery: Delivery) {
     return (
       <div className={"d-flex flex-column align-items-center"}>
-        <strong>{delivery.pickupLocation.name}</strong>
+        <strong className={"text-break"}>{delivery.pickupLocation.name}</strong>
         <div style={{ width: "32px" }}>
           <TapirButton
             variant={"outline-secondary"}
@@ -103,11 +103,11 @@ const DeliveriesTable: React.FC<DeliveriesTableProps> = ({
   }
 
   return (
-    <div style={{ overflowY: "scroll", maxHeight: "30em" }}>
+    <div style={{ overflowY: "auto", maxHeight: "30em" }}>
       {!deliveriesLoading && deliveries.length === 0 ? (
         <p className={"text-center mb-0"}>Keine Abholungen</p>
       ) : (
-        <Table striped hover responsive className={"text-center"}>
+        <Table striped hover responsive size={"sm"} className={"text-center"}>
           <thead>
             <tr>
               <th>Datum</th>

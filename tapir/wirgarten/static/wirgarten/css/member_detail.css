@@ -1,22 +1,54 @@
 #member-detail-container{
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr);
     grid-gap: 1em;
     margin-top: 2em;
 }
 
+@media (min-width: 1200px) {
+    #member-detail-container{
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+#member-detail-container .card-header.d-flex,
+#member-detail-container .card-header .d-flex {
+    flex-wrap: wrap;
+    gap: 0.5em;
+}
+
+#member-detail-container > div {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+}
+
+#member-detail-container > div > * {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+#member-detail-container > div > :empty {
+    display: none;
+}
+
 #member-detail-left-column {
     grid-row: span 2;
-    display:flex;
-    flex-direction: column;
 }
 
-#member-contracts{
-    margin-bottom: 1em;
-}
+@media (max-width: 1199.98px) {
+    #member-detail-container > div {
+        display: contents;
+    }
 
-#member-pickup-location{
-    margin-bottom: 1em;
+    #member-detail-container > div > .alert {
+        order: -2;
+    }
+
+    #delivery_list_card,
+    #future_payments_card {
+        order: -1;
+    }
 }
 
 .contract-tile-number{
@@ -25,12 +57,12 @@
 }
 
 .contract-tile-number > .material-icons {
-     font-size: 0.7em;
+    font-size: 0.7em;
 }
 
 #contract-tiles {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(13em, 1fr));
     grid-gap:1em;
     text-align: center;
 }

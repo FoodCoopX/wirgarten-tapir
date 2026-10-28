@@ -1,0 +1,40 @@
+/* Mobile layout, identical in every login theme: keep the copies in sync. */
+@media (max-width: 767.98px) {
+    .login-pf body {
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: scroll;
+    }
+
+    #kc-header-wrapper {
+        min-height: 100px;
+        margin-top: 0;
+        padding: 10px;
+    }
+
+    .login-pf-page {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    .login-pf-page .card-pf {
+        width: auto;
+        margin: 0 auto 16px;
+        border-radius: 10px;
+    }
+
+    .login-pf-page #kc-page-title {
+        font-size: 24px !important;
+    }
+
+    .login-pf-page #kc-info {
+        margin-left: -20px;
+        margin-right: -20px;
+    }
+
+    .login-pf-page input[type="submit"],
+    .login-pf-page button[type="submit"] {
+        min-height: 44px;
+    }
+}
