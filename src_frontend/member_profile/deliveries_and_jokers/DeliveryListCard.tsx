@@ -142,7 +142,7 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
 
   return (
     <>
-      <Card style={{ marginBottom: "1rem" }}>
+      <Card>
         <Card.Header>
           <div
             className={"d-flex justify-content-between align-items-center mb-0"}

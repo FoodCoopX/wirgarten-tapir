@@ -98,7 +98,7 @@ const FuturePaymentsCard: React.FC<FuturePaymentsCardProps> = ({
 
   return (
     <>
-      <Card className={"mb-2"}>
+      <Card>
         <Card.Header>
           <span
             className={

@@ -17,14 +17,23 @@
     gap: 0.5em;
 }
 
-#member-detail-left-column {
-    grid-row: span 2;
-    display:flex;
+#member-detail-container > div {
+    display: flex;
     flex-direction: column;
+    gap: 1em;
 }
 
-#member-contracts{
-    margin-bottom: 1em;
+#member-detail-container > div > * {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+#member-detail-container > div > :empty {
+    display: none;
+}
+
+#member-detail-left-column {
+    grid-row: span 2;
 }
 
 .contract-tile-number{
