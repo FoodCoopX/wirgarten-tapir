@@ -173,13 +173,10 @@
           </dl>
         </div>
         {% if object.pk == request.user.pk %}
-          <div class="card-footer">
-            <span class="d-flex flex-row gap-2 justify-content-end" style="width: 100%;">
-              <a style="float: right"
-                 class="btn tapir-btn btn-outline-primary ms-1"
-                 href="{% url 'accounts:password_change' %}"><span
-                class="material-icons">vpn_key</span>{% translate "Passwort ändern" %}</a>
-            </span>
+          <div class="card-footer text-end">
+            <a class="btn tapir-btn btn-outline-primary"
+               href="{% url 'accounts:password_change' %}"><span
+              class="material-icons">vpn_key</span>{% translate "Passwort ändern" %}</a>
           </div>
         {% endif %}
       </div>
@@ -200,20 +197,16 @@
               </div>
             </div>
             <div class="card-body" style="padding-right: 0">
-              <div class="d-flex flex-row justify-content-between">
+              <div class="d-flex justify-content-between">
                 <div class="d-flex flex-column">
                   <strong class="card-title">{% get_parameter_value_tag 'wirgarten.site.admin_name' cache %}</strong>
                   {% get_parameter_value_tag 'wirgarten.site.admin_telephone' cache as admin_telephone %}
                   {% if admin_telephone %}
-                    <a class="card-text"
-                       style="text-decoration:none;
-                              color:inherit"
+                    <a class="card-text text-reset text-decoration-none"
                        href="tel:{{ admin_telephone }}"
                        target="_blank">📞&nbsp;&nbsp;{{ admin_telephone }}</a>
                   {% endif %}
-                  <a class="card-text"
-                     style="text-decoration:none;
-                            color:inherit"
+                  <a class="card-text text-reset text-decoration-none"
                      href="mailto:{% get_parameter_value_tag 'wirgarten.site.admin_email' cache %}"
                      target="_blank">📧&nbsp;&nbsp;{% get_parameter_value_tag 'wirgarten.site.admin_email' cache %}</a>
                 </div>
@@ -318,7 +311,7 @@
                 </dd>
                 <dt>{% translate "Zahlungsintervall" %}</dt>
                 <dd id="tapir_user_payment_rhythm">
-                  <div class="d-flex flex-row gap-2">
+                  <div class="d-flex gap-2">
                     {{ payment_rhythm }}
                     {% if perms.accounts.manage %}<span id="payment_rhythm_button"
                                                         data-member-id="{{ object.id }}"></span>{% endif %}
