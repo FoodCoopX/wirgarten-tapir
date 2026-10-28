@@ -22,6 +22,7 @@
         {% get_parameter_value_tag "organisation.theme" cache as theme %}
         <link rel="stylesheet"
               href="{% static 'core/themes/'|add:theme|add:'/css/custom.css' %}" />
+        <link rel="stylesheet" href="{% static 'core/css/mobile.css' %}">
         <link rel="shortcut icon"
               type="image/png"
               href="{% static 'core/themes/'|add:theme|add:'/favicon.ico' %}" />
@@ -44,6 +45,15 @@
     <body>
         <div id="page-content">
             <nav class="navbar navbar-expand-sm navbar-dark bg-dark sticky-top shadow px-3">
+                {% if perms.coop.view %}
+                    <button id="sidebar-toggle"
+                            type="button"
+                            aria-label="Menü"
+                            aria-controls="sidebar"
+                            aria-expanded="false">
+                        <span class="material-icons">menu</span>
+                    </button>
+                {% endif %}
                 <span class="navbar-brand">
                     <img alt="Wirgarten Logo"
                          height="30"
@@ -77,6 +87,7 @@
                             <div class="sidebar-item-details px-3 py-2 text-muted small">Tapir {% tapir_version %}</div>
                         </div>
                     </nav>
+                    <div id="sidebar-backdrop"></div>
                 {% endif %}
                 <main id="main-content"
                       role="main"
@@ -92,6 +103,17 @@
         $(function() {
             $('[data-bs-toggle="tooltip"]').tooltip();
         })
+        // Phones: the sidebar is a drawer behind the menu button (see core/css/mobile.css)
+        const sidebarToggle = document.getElementById("sidebar-toggle");
+        if (sidebarToggle) {
+            const setSidebarOpen = (open) => {
+                document.body.classList.toggle("sidebar-open", open);
+                sidebarToggle.setAttribute("aria-expanded", open);
+            };
+            sidebarToggle.addEventListener("click", () => setSidebarOpen(!document.body.classList.contains("sidebar-open")));
+            document.getElementById("sidebar-backdrop").addEventListener("click", () => setSidebarOpen(false));
+            document.querySelectorAll("#sidebar a").forEach((link) => link.addEventListener("click", () => setSidebarOpen(false)));
+        }
         // Style selectize inputs like bootstrap
         $(".searchable-select>select").selectize({
             plugins: ["clear_button"],

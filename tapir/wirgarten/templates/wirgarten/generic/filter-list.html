@@ -8,7 +8,8 @@
     <div style="margin-top: 1em;">
         {% block page_top %}{% endblock %}
     </div>
-    <div {% if filter.form %}style="grid-gap: 1em; display:grid; grid-template-columns: 5fr 1fr"{% endif %}>
+    <div class="filter-list-layout"
+         {% if filter.form %}style="grid-gap: 1em; display:grid; grid-template-columns: 5fr 1fr"{% endif %}>
         <div class="card">
             <div class="card-header"
                  style="display: flex;
@@ -16,7 +17,7 @@
                         align-items: center">
                 {% block card_header %}{% endblock %}
             </div>
-            <div class="card-body"
+            <div class="card-body filter-list-table-body"
                  style="height: calc(100vh - {% if is_paginated %}14em{% else %}9.5em{% endif %});
                         overflow-y: scroll;
                         padding: 0px">
@@ -80,7 +81,7 @@
             {% endif %}
         </div>
         {% if filter.form %}
-            <div class="card">
+            <div class="card filter-list-filter">
                 <div class="card-header">
                     <h4>{% translate "Filter" %}</h4>
                 </div>
