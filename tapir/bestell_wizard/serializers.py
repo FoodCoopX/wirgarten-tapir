@@ -35,6 +35,7 @@ class BestellWizardConfirmOrderRequestSerializer(serializers.Serializer):
     contract_accepted = serializers.BooleanField()
     statute_accepted = serializers.BooleanField()
     number_of_coop_shares = serializers.IntegerField()
+    pay_coop_shares_in_instalments = serializers.BooleanField(default=False)
     pickup_location_ids = serializers.ListField(child=serializers.CharField())
     student_status_enabled = serializers.BooleanField()
     payment_rhythm = serializers.CharField()
@@ -140,6 +141,8 @@ class BestellWizardImagesSerializer(serializers.Serializer):
 
 class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
     price_of_a_share = serializers.FloatField()
+    coop_share_instalments_enabled = serializers.BooleanField()
+    coop_share_instalment_amount = serializers.FloatField()
     theme = serializers.CharField()
     allow_investing_membership = serializers.BooleanField()
     product_types = PublicProductTypeSerializer(many=True)

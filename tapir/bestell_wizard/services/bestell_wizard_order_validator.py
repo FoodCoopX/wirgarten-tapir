@@ -9,6 +9,9 @@ from tapir.bestell_wizard.services.questionnaire_source_service import (
     QuestionnaireSourceService,
 )
 from tapir.configuration.parameter import get_parameter_value
+from tapir.coop.services.coop_share_instalment_order_validator import (
+    CoopShareInstalmentOrderValidator,
+)
 from tapir.coop.services.minimum_number_of_shares_validator import (
     MinimumNumberOfSharesValidator,
 )
@@ -203,10 +206,15 @@ class BestellWizardOrderValidator:
             raise ValidationError("Studenten-Status ist nicht erlaubt")
 
         nb_ordered_coop_shares = validated_data["number_of_coop_shares"]
+        pay_in_instalments = validated_data["pay_coop_shares_in_instalments"]
         if student_status_enabled:
             if nb_ordered_coop_shares > 0:
                 raise ValidationError(
                     "Studenten-Status aktiviert, es sollen keine Genossenschaftsanteilen bestellt werden."
+                )
+            if pay_in_instalments:
+                raise ValidationError(
+                    "Studenten-Status aktiviert, Ratenzahlung ist nicht möglich."
                 )
         else:
             if not validated_data["statute_accepted"]:
@@ -218,6 +226,12 @@ class BestellWizardOrderValidator:
             if nb_ordered_coop_shares < minimum_number_of_shares:
                 raise ValidationError(
                     f"Genossenschaftsanteile bestellt: {nb_ordered_coop_shares}, minimum: {minimum_number_of_shares}."
+                )
+            if pay_in_instalments:
+                CoopShareInstalmentOrderValidator.validate_instalments(
+                    number_of_coop_shares=nb_ordered_coop_shares,
+                    minimum_number_of_coop_shares=minimum_number_of_shares,
+                    cache=cache,
                 )
 
     @classmethod

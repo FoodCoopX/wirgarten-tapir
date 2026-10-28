@@ -789,6 +789,15 @@ class Payment(TapirModel):
     pickup_location = models.ForeignKey(
         PickupLocation, on_delete=models.DO_NOTHING, null=True
     )
+    # Only set for coop share payments
+    coop_share_transaction = models.ForeignKey(
+        "CoopShareTransaction",
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="payments",
+    )
+    # Only set if the coop shares are paid in instalments
+    instalment_number = models.PositiveSmallIntegerField(null=True)
 
     class Meta:
         indexes = [
@@ -834,9 +843,6 @@ class CoopShareTransaction(TapirModel, Payable, AdminConfirmableMixin):
     )
     transfer_member = models.ForeignKey(
         Member, on_delete=models.DO_NOTHING, null=True, related_name="transfer_member"
-    )
-    payment = models.ForeignKey(
-        Payment, on_delete=models.DO_NOTHING, null=True, related_name="payment"
     )
 
     @property
