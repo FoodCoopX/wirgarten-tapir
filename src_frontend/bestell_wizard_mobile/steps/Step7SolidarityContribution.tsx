@@ -193,7 +193,7 @@ const Step7SolidarityContribution: React.FC<
       return;
     }
 
-    setCustomValue(formatCurrency(Number.parseFloat(cleanedValue)));
+    setCustomValue(floatValue.toFixed(2) + SUFFIX);
     const input = document.getElementById(
       "custom_solidarity_contribution",
     ) as HTMLInputElement;

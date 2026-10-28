@@ -133,7 +133,7 @@
                             <small>
                                 <ul>
                                     {% for sub in subs %}
-                                        <li>{{ sub.quantity }} × {{ sub.product.name }} - {{ sub.price_at_renewal_date }}€</li>
+                                        <li>{{ sub.quantity }} × {{ sub.product.name }} - {{ sub.price_at_renewal_date|format_currency }} €</li>
                                     {% endfor %}
                                 </ul>
                             </small>
