@@ -111,18 +111,14 @@
             </span>
           </div>
           <div class="card-body">
-            <div class="row m-1">
-              <div class="col-sm-4 fw-bold text-sm-end">{% translate "Mitgliedsnummer" %}:</div>
-              <div class="col-sm-8" id="tapir_user_member_number">{% formatted_member_number object cache %}</div>
-            </div>
-            <div class="row m-1">
-              <div class="col-sm-4 fw-bold text-sm-end">{% translate "Name" %}:</div>
-              <div class="col-sm-8" id="tapir_user_display_name">{{ object.get_display_name }}</div>
-            </div>
-            <div class="row m-1">
-              <div class="col-sm-4 fw-bold text-sm-end">{% translate "E-Mail" %}:</div>
+            <dl class="mb-0">
+              <dt>{% translate "Mitgliedsnummer" %}</dt>
+              <dd id="tapir_user_member_number">{% formatted_member_number object cache %}</dd>
+              <dt>{% translate "Name" %}</dt>
+              <dd id="tapir_user_display_name">{{ object.get_display_name }}</dd>
+              <dt>{% translate "E-Mail" %}</dt>
               {% if email_change_request %}
-                <div class="col-sm-8" id="tapir_user_changed_email">
+                <dd id="tapir_user_changed_email">
                   <span style="text-decoration: line-through; color:#6A6A6A">{{ object.email }}</span>
                   <br />
                   <span>{{ email_change_request.new_email }}&nbsp;&nbsp;&nbsp;<span
@@ -140,52 +136,43 @@
                       </button>
                     </form>
                   {% endif %}
-                </div>
+                </dd>
               {% else %}
-                <div class="col-sm-8" id="tapir_user_email">{{ object.email }}</div>
+                <dd id="tapir_user_email">{{ object.email }}</dd>
               {% endif %}
-            </div>
-            <div class="row m-1">
-              <div class="col-sm-4 fw-bold text-sm-end">{% translate "Telefon" %}:</div>
-              <div class="col-sm-8" id="tapir_user_phone_number">
+              <dt>{% translate "Telefon" %}</dt>
+              <dd id="tapir_user_phone_number">
                 {% if object.phone_number %}
                   {{ object.phone_number|format_phone_number }}
                 {% else %}
                   <span class="text-danger">{% translate "Fehlt" %}</span>
                 {% endif %}
-              </div>
-            </div>
-            {% if object.phone_number_landline %}
-              <div class="row m-1">
-                <div class="col-sm-4 fw-bold text-sm-end">{% translate "Telefon 2" %}:</div>
-                <div class="col-sm-8" id="tapir_user_phone_number_landline">
+              </dd>
+              {% if object.phone_number_landline %}
+                <dt>{% translate "Telefon 2" %}</dt>
+                <dd id="tapir_user_phone_number_landline">
                   {{ object.phone_number_landline|format_phone_number }}
-                </div>
-              </div>
-            {% endif %}
-            <div class="row m-1">
-              <div class="col-sm-4 fw-bold text-sm-end">{% translate "Adresse" %}:</div>
-              <div class="col-sm-8" id="tapir_user_address">
+                </dd>
+              {% endif %}
+              <dt>{% translate "Adresse" %}</dt>
+              <dd id="tapir_user_address">
                 {% if object.street and object.city %}
                   {{ object.get_display_address }}
                 {% else %}
                   <span class="text-danger">{% translate "Fehlt" %}</span>
                 {% endif %}
-              </div>
-            </div>
-            {% if bakery_enabled %}
-              <div class="row m-1">
-                <div class="col-sm-4 fw-bold text-sm-end">{% translate "Pseudonym" %}:</div>
-                <div class="col-sm-8" id="tapir_user_pseudonym">
+              </dd>
+              {% if bakery_enabled %}
+                <dt>{% translate "Pseudonym" %}</dt>
+                <dd id="tapir_user_pseudonym">
                   {% if object.pseudonym %}
                     {{ object.pseudonym }}
                   {% else %}
                     <span class="text-muted">{% translate "nicht gesetzt" %}</span>
                   {% endif %}
-                </div>
-              </div>
-            {% endif %}
-
+                </dd>
+              {% endif %}
+            </dl>
           </div>
           {% if object.pk == request.user.pk %}
             <div class="card-footer">
@@ -314,36 +301,32 @@
                 <span id="bank_data_button" data-member-id="{{ object.id }}"></span>
               </h5>
               <div class="card-body">
-                <div class="row m-1">
-                  <div class="col-sm-4 fw-bold text-sm-end">{% translate "Kontoinhaber" %}:</div>
-                  <div class="col-sm-8" id="tapir_user_account_owner">
+                <dl class="mb-0">
+                  <dt>{% translate "Kontoinhaber" %}</dt>
+                  <dd id="tapir_user_account_owner">
                     {% if object.account_owner %}
                       {{ object.account_owner }}
                     {% else %}
                       <span class="text-danger">{% translate "Fehlt" %}</span>
                     {% endif %}
-                  </div>
-                </div>
-                <div class="row m-1">
-                  <div class="col-sm-4 fw-bold text-sm-end">{% translate "IBAN" %}:</div>
-                  <div class="col-sm-8" id="tapir_user_iban">
+                  </dd>
+                  <dt>{% translate "IBAN" %}</dt>
+                  <dd id="tapir_user_iban">
                     {% if object.iban %}
                       {{ object.iban }}
                     {% else %}
                       <span class="text-danger">{% translate "Fehlt" %}</span>
                     {% endif %}
-                  </div>
-                </div>
-                <div class="row m-1">
-                  <div class="col-sm-4 fw-bold text-sm-end">{% translate "Zahlungsintervall" %}:</div>
-                  <div class="col-sm-8" id="tapir_user_payment_rhythm">
+                  </dd>
+                  <dt>{% translate "Zahlungsintervall" %}</dt>
+                  <dd id="tapir_user_payment_rhythm">
                     <div class="d-flex flex-row gap-2">
                       {{ payment_rhythm }}
                       {% if perms.accounts.manage %}<span id="payment_rhythm_button"
                                                           data-member-id="{{ object.id }}"></span>{% endif %}
                     </div>
-                  </div>
-                </div>
+                  </dd>
+                </dl>
               </div>
             </div>
           </div>
