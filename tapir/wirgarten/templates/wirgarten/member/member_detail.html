@@ -112,17 +112,17 @@
           </div>
           <div class="card-body">
             <div class="row m-1">
-              <div class="col-4 fw-bold text-end">{% translate "Mitgliedsnummer" %}:</div>
-              <div class="col-8" id="tapir_user_member_number">{% formatted_member_number object cache %}</div>
+              <div class="col-sm-4 fw-bold text-sm-end">{% translate "Mitgliedsnummer" %}:</div>
+              <div class="col-sm-8" id="tapir_user_member_number">{% formatted_member_number object cache %}</div>
             </div>
             <div class="row m-1">
-              <div class="col-4 fw-bold text-end">{% translate "Name" %}:</div>
-              <div class="col-8" id="tapir_user_display_name">{{ object.get_display_name }}</div>
+              <div class="col-sm-4 fw-bold text-sm-end">{% translate "Name" %}:</div>
+              <div class="col-sm-8" id="tapir_user_display_name">{{ object.get_display_name }}</div>
             </div>
             <div class="row m-1">
-              <div class="col-4 fw-bold text-end">{% translate "E-Mail" %}:</div>
+              <div class="col-sm-4 fw-bold text-sm-end">{% translate "E-Mail" %}:</div>
               {% if email_change_request %}
-                <div class="col-8" id="tapir_user_changed_email">
+                <div class="col-sm-8" id="tapir_user_changed_email">
                   <span style="text-decoration: line-through; color:#6A6A6A">{{ object.email }}</span>
                   <br />
                   <span>{{ email_change_request.new_email }}&nbsp;&nbsp;&nbsp;<span
@@ -142,12 +142,12 @@
                   {% endif %}
                 </div>
               {% else %}
-                <div class="col-8" id="tapir_user_email">{{ object.email }}</div>
+                <div class="col-sm-8" id="tapir_user_email">{{ object.email }}</div>
               {% endif %}
             </div>
             <div class="row m-1">
-              <div class="col-4 fw-bold text-end">{% translate "Telefon" %}:</div>
-              <div class="col-8" id="tapir_user_phone_number">
+              <div class="col-sm-4 fw-bold text-sm-end">{% translate "Telefon" %}:</div>
+              <div class="col-sm-8" id="tapir_user_phone_number">
                 {% if object.phone_number %}
                   {{ object.phone_number|format_phone_number }}
                 {% else %}
@@ -157,15 +157,15 @@
             </div>
             {% if object.phone_number_landline %}
               <div class="row m-1">
-                <div class="col-4 fw-bold text-end">{% translate "Telefon 2" %}:</div>
-                <div class="col-8" id="tapir_user_phone_number_landline">
+                <div class="col-sm-4 fw-bold text-sm-end">{% translate "Telefon 2" %}:</div>
+                <div class="col-sm-8" id="tapir_user_phone_number_landline">
                   {{ object.phone_number_landline|format_phone_number }}
                 </div>
               </div>
             {% endif %}
             <div class="row m-1">
-              <div class="col-4 fw-bold text-end">{% translate "Adresse" %}:</div>
-              <div class="col-8" id="tapir_user_address">
+              <div class="col-sm-4 fw-bold text-sm-end">{% translate "Adresse" %}:</div>
+              <div class="col-sm-8" id="tapir_user_address">
                 {% if object.street and object.city %}
                   {{ object.get_display_address }}
                 {% else %}
@@ -175,8 +175,8 @@
             </div>
             {% if bakery_enabled %}
               <div class="row m-1">
-                <div class="col-4 fw-bold text-end">{% translate "Pseudonym" %}:</div>
-                <div class="col-8" id="tapir_user_pseudonym">
+                <div class="col-sm-4 fw-bold text-sm-end">{% translate "Pseudonym" %}:</div>
+                <div class="col-sm-8" id="tapir_user_pseudonym">
                   {% if object.pseudonym %}
                     {{ object.pseudonym }}
                   {% else %}
@@ -234,7 +234,7 @@
                   </div>
                   <img src="{% get_parameter_value_tag 'wirgarten.site.admin_image' cache %}"
                        alt="{% get_parameter_value_tag 'wirgarten.site.admin_name' cache %}"
-                       style="max-width: 200px">
+                       style="max-width: min(200px, 40%)">
                 </div>
               </div>
             </div>
@@ -315,8 +315,8 @@
               </h5>
               <div class="card-body">
                 <div class="row m-1">
-                  <div class="col-4 fw-bold text-end">{% translate "Kontoinhaber" %}:</div>
-                  <div class="col-8" id="tapir_user_account_owner">
+                  <div class="col-sm-4 fw-bold text-sm-end">{% translate "Kontoinhaber" %}:</div>
+                  <div class="col-sm-8" id="tapir_user_account_owner">
                     {% if object.account_owner %}
                       {{ object.account_owner }}
                     {% else %}
@@ -325,8 +325,8 @@
                   </div>
                 </div>
                 <div class="row m-1">
-                  <div class="col-4 fw-bold text-end">{% translate "IBAN" %}:</div>
-                  <div class="col-8" id="tapir_user_iban">
+                  <div class="col-sm-4 fw-bold text-sm-end">{% translate "IBAN" %}:</div>
+                  <div class="col-sm-8" id="tapir_user_iban">
                     {% if object.iban %}
                       {{ object.iban }}
                     {% else %}
@@ -335,8 +335,8 @@
                   </div>
                 </div>
                 <div class="row m-1">
-                  <div class="col-4 fw-bold text-end">{% translate "Zahlungsintervall" %}:</div>
-                  <div class="col-8" id="tapir_user_payment_rhythm">
+                  <div class="col-sm-4 fw-bold text-sm-end">{% translate "Zahlungsintervall" %}:</div>
+                  <div class="col-sm-8" id="tapir_user_payment_rhythm">
                     <div class="d-flex flex-row gap-2">
                       {{ payment_rhythm }}
                       {% if perms.accounts.manage %}<span id="payment_rhythm_button"
