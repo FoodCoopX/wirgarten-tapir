@@ -1,3 +1,4 @@
+import datetime
 import typing
 from functools import partial
 
@@ -27,13 +28,25 @@ class SubscriptionsConfig(AppConfig):
         from tapir.configuration.parameter import get_parameter_value
         from tapir.wirgarten.tapirmail import Segments
 
+        cache = {}
+
         segment_registry = {
             Segments.WITH_ACTIVE_SUBSCRIPTION: Member.objects.with_active_subscription,
             Segments.WITHOUT_ACTIVE_SUBSCRIPTION: Member.objects.without_active_subscription,
             Segments.MEMBERS_WITH_CONTRACT_SINCE_MORE_THAN_ONE_YEAR_BUT_NO: MemberSegmentProvider.get_queryset_members_with_contract_since_more_than_one_year_but_no_coop_share,
+            Segments.WITH_DELIVERY_THIS_WEEK: partial(
+                cls._get_segment_members_with_delivery_for_product_type,
+                product_type=None,
+                weeks_from_now=0,
+                cache=cache,
+            ),
+            Segments.WITH_DELIVERY_NEXT_WEEK: partial(
+                cls._get_segment_members_with_delivery_for_product_type,
+                product_type=None,
+                weeks_from_now=1,
+                cache=cache,
+            ),
         }
-
-        cache = {}
 
         trial_period_enabled = get_parameter_value(
             key=ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache
@@ -73,16 +86,35 @@ class SubscriptionsConfig(AppConfig):
 
         cache = {}
 
-        segment_registry = {
-            cls._build_segment_name_subscription_with_product_type(
-                product_type
-            ): partial(
+        segment_registry = {}
+        for product_type in TapirCache.get_all_product_types(cache=cache):
+            segment_registry[
+                cls._build_segment_name_subscription_with_product_type(product_type)
+            ] = partial(
                 cls._get_segment_members_with_subscription_for_product_type,
                 product_type=product_type,
                 cache=cache,
             )
-            for product_type in TapirCache.get_all_product_types(cache=cache)
-        }
+            segment_registry[
+                cls._build_segment_name_delivery_this_week_with_product_type(
+                    product_type
+                )
+            ] = partial(
+                cls._get_segment_members_with_delivery_for_product_type,
+                product_type=product_type,
+                weeks_from_now=0,
+                cache=cache,
+            )
+            segment_registry[
+                cls._build_segment_name_delivery_next_week_with_product_type(
+                    product_type
+                )
+            ] = partial(
+                cls._get_segment_members_with_delivery_for_product_type,
+                product_type=product_type,
+                weeks_from_now=1,
+                cache=cache,
+            )
 
         return segment_registry
 
@@ -104,7 +136,35 @@ class SubscriptionsConfig(AppConfig):
         )
 
     @classmethod
+    def _get_segment_members_with_delivery_for_product_type(
+        cls, product_type: ProductType | None, weeks_from_now: int, cache: dict
+    ):
+        from tapir.deliveries.services.members_with_delivery_in_week_getter import (
+            MembersWithDeliveryInWeekGetter,
+        )
+        from tapir.wirgarten.utils import get_today
+
+        return MembersWithDeliveryInWeekGetter.get_members_with_delivery_in_week(
+            product_type=product_type,
+            reference_date=get_today(cache=cache)
+            + datetime.timedelta(weeks=weeks_from_now),
+            cache=cache,
+        )
+
+    @classmethod
     def _build_segment_name_subscription_with_product_type(
         cls, product_type: ProductType
     ):
         return f"Mitglieder mit Vertrag: {product_type.name}"
+
+    @classmethod
+    def _build_segment_name_delivery_this_week_with_product_type(
+        cls, product_type: ProductType
+    ):
+        return f"Mitglieder mit Lieferung diese Woche: {product_type.name}"
+
+    @classmethod
+    def _build_segment_name_delivery_next_week_with_product_type(
+        cls, product_type: ProductType
+    ):
+        return f"Mitglieder mit Lieferung nächste Woche: {product_type.name}"

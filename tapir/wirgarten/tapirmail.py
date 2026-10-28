@@ -52,8 +52,10 @@ class Segments:
     ALL_USERS = "Alle Benutzer"
     COOP_MEMBERS = "Geno-Mitglieder"
     NON_COOP_MEMBERS = "Nicht Geno-Mitglieder"
-    WITH_ACTIVE_SUBSCRIPTION = "Mit laufendem Ertevertrag"
-    WITHOUT_ACTIVE_SUBSCRIPTION = "Ohne laufenden Ertevertrag"
+    WITH_ACTIVE_SUBSCRIPTION = "Mit laufendem Vertrag (alle Produkte)"
+    WITHOUT_ACTIVE_SUBSCRIPTION = "Ohne laufenden Vertrag (alle Produkte)"
+    WITH_DELIVERY_THIS_WEEK = "Alle mit Lieferung diese Woche"
+    WITH_DELIVERY_NEXT_WEEK = "Alle mit Lieferung nächste Woche"
     MEMBERS_WITH_CONTRACT_SINCE_MORE_THAN_ONE_YEAR_BUT_NO = (
         "Mit Vertrag über einem Jahr aber kein Geno-Anteil"
     )
