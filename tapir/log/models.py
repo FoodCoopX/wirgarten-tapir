@@ -1,3 +1,6 @@
+import logging
+from collections.abc import Mapping
+
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import HStoreField
 from django.core.mail import EmailMessage
@@ -6,6 +9,9 @@ from django.template.loader import render_to_string
 from django.utils.translation import gettext_lazy as _
 
 from tapir.log.util import freeze_for_log
+
+
+LOG = logging.getLogger(__name__)
 
 
 class LogEntry(models.Model):
@@ -149,7 +155,19 @@ class UpdateModelLogEntry(LogEntry):
         context = super().get_context_data()
 
         changes = []
-        for k in self.old_values.keys():
+        if not isinstance(self.old_values, Mapping) or not isinstance(
+            self.new_values, Mapping
+        ):
+            LOG.warning(
+                "Skipping malformed update log entry %s: old_values=%s, new_values=%s",
+                self.pk,
+                type(self.old_values).__name__,
+                type(self.new_values).__name__,
+            )
+            context["changes"] = changes
+            return context
+
+        for k in self.old_values:
             if hasattr(self, "excluded_fields") and k in self.excluded_fields:
                 continue
             changes.append((k, self.old_values[k], self.new_values[k]))
