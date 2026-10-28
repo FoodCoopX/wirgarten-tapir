@@ -36,6 +36,21 @@
     grid-row: span 2;
 }
 
+@media (max-width: 1199.98px) {
+    #member-detail-container > div {
+        display: contents;
+    }
+
+    #member-detail-container > div > .alert {
+        order: -2;
+    }
+
+    #delivery_list_card,
+    #future_payments_card {
+        order: -1;
+    }
+}
+
 .contract-tile-number{
     font-size: 3em;
     height:1.5em;
