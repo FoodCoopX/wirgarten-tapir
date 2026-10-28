@@ -66,3 +66,9 @@
     grid-gap:1em;
     text-align: center;
 }
+/* Overrides the nowrap on table rows from most themes */
+.table tr,
+.table th,
+.table td {
+    white-space: normal;
+}
