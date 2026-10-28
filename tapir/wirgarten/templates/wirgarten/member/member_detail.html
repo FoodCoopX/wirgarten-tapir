@@ -28,7 +28,7 @@
           <div id="email-change-verify" class="alert alert-success">
             <h4 class="alert-heading">Bitte bestätige deine neue E-Mail-Adresse</h4>
             <p>
-              Wir haben dir eine Mail an <strong>{{ object.email }}</strong> geschickt.
+              Wir haben dir eine Mail an <strong class="text-break">{{ object.email }}</strong> geschickt.
               <br />
               Bitte klicke auf den Link, um deine Änderung wirksam zu machen.
             </p>
@@ -234,7 +234,7 @@
                   </div>
                   <img src="{% get_parameter_value_tag 'wirgarten.site.admin_image' cache %}"
                        alt="{% get_parameter_value_tag 'wirgarten.site.admin_name' cache %}"
-                       style="max-width: min(200px, 40%)">
+                       style="max-width: min(200px, 40%); min-width: 0">
                 </div>
               </div>
             </div>
