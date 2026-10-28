@@ -58,15 +58,11 @@
            data-member-id="{{ object.pk }}"
            data-show-contract-edit="{{ show_contract_edit }}">
         <div id="subscription_cards" data-member-id="{{ object.pk }}">
-          <span class="spinner-border">
-            <span class="visually-hidden">Loading...</span>
-          </span>
+          {% include "wirgarten/member/loading_spinner.html" %}
         </div>
         {% if subscriptionAutomaticRenewal %}
           <div id="subscription_cancellation_card" data-member-id="{{ object.pk }}">
-            <span class="spinner-border">
-              <span class="visually-hidden">Loading...</span>
-            </span>
+            {% include "wirgarten/member/loading_spinner.html" %}
           </div>
         {% endif %}
       </div>
@@ -80,16 +76,12 @@
            data-members-can-change-pickup-location-themselves="{{ membersCanChangePickupLocationThemselves }}"
            data-contact-email="{{ contactEmail }}"
            data-pickup-location-label="{{ pickupLocationLabel }}">
-        <span class="spinner-border">
-          <span class="visually-hidden">Loading...</span>
-        </span>
+        {% include "wirgarten/member/loading_spinner.html" %}
       </div>
       {% if show_payments_card %}
         <div id="future_payments_card" data-member-id="{{ object.pk }}"
              data-delivery-charge-enabled="{{ delivery_charge_enabled }}">
-          <span class="spinner-border">
-            <span class="visually-hidden">Loading...</span>
-          </span>
+          {% include "wirgarten/member/loading_spinner.html" %}
         </div>
       {% endif %}
       <div id="member-personal-data" class="card">
@@ -207,59 +199,23 @@
       <div id="member_profile_waiting_list_entry"
            data-member-id="{{ object.pk }}"
            data-contact-email="{% get_parameter_value_tag 'wirgarten.site.email' cache %}">
-        <div class="card">
-          <div class="card-header">
-            <h5 class="mb-0">Wartelisteneintrag</h5>
-          </div>
-          <div class="card-body">
-            <span class="spinner-border">
-              <span class="visually-hidden">Loading...</span>
-            </span>
-          </div>
-        </div>
+        {% include "wirgarten/member/loading_card.html" with title="Wartelisteneintrag" %}
       </div>
       <div id="member_profile_solidarity_contribution"
            data-member-id="{{ object.pk }}"
            data-contact-email="{% get_parameter_value_tag 'wirgarten.site.email' cache %}"
            data-user-is-admin="{{ perms.accounts.manage }}"
            data-members-can-change-contribution="{% get_parameter_value_tag 'wirgarten.harvest.members_are_allowed_to_change_soliprice' cache %}">
-        <div class="card">
-          <div class="card-header">
-            <h5 class="mb-0">Solidarbeitrag</h5>
-          </div>
-          <div class="card-body">
-            <span class="spinner-border">
-              <span class="visually-hidden">Loading...</span>
-            </span>
-          </div>
-        </div>
+        {% include "wirgarten/member/loading_card.html" with title="Solidarbeitrag" %}
       </div>
       {% if show_mail_category_content %}
         <div id="member_mail_category" data-member-id="{{ object.pk }}">
-          <div class="card">
-            <div class="card-header">
-              <h5 class="mb-0">Mail-Abos</h5>
-            </div>
-            <div class="card-body">
-              <span class="spinner-border">
-                <span class="visually-hidden">Loading...</span>
-              </span>
-            </div>
-          </div>
+          {% include "wirgarten/member/loading_card.html" with title="Mail-Abos" %}
         </div>
       {% endif %}
       {% if show_mailing_list_content %}
         <div id="member_mailing_list" data-member-id="{{ object.pk }}">
-          <div class="card">
-            <div class="card-header">
-              <h5 class="mb-0">Mailing-Listen</h5>
-            </div>
-            <div class="card-body">
-              <span class="spinner-border">
-                <span class="visually-hidden">Loading...</span>
-              </span>
-            </div>
-          </div>
+          {% include "wirgarten/member/loading_card.html" with title="Mailing-Listen" %}
         </div>
       {% endif %}
       <div id="member-payment-data" class="card">
