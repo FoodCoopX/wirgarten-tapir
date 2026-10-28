@@ -11,7 +11,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views.generic import TemplateView
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import status
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 from rest_framework.views import APIView
@@ -20,6 +20,7 @@ from tapir.wirgarten.constants import Permission
 
 from tapir.bidding_round.config import ACTIVE
 from tapir.bidding_round.models import Bid, BiddingRound
+from tapir.bidding_round.permissions import BiddingRoundFeatureFlagMixin
 from tapir.bidding_round.serializers import (
     BidAdminSerializer,
     BidSerializer,
@@ -78,6 +79,14 @@ def get_product_size(product, growing_period, cache):
     return product_price.size
 
 
+def _sanitize_csv_cell(value) -> str:
+    """Neutralises spreadsheet formula injection for text cells."""
+    text = "" if value is None else str(value)
+    if text and text[0] in ("=", "+", "-", "@"):
+        return "'" + text
+    return text
+
+
 # --- Page views (React roots; the frontend apps land in Schritt 10) ---
 
 
@@ -126,15 +135,13 @@ class BiddingRoundResultsView(PermissionRequiredMixin, TemplateView):
 # --- Public API ---
 
 
-class PublicDataView(APIView):
+class PublicDataView(BiddingRoundFeatureFlagMixin, APIView):
+    require_public_url = True
     permission_classes = [AllowAny]
 
     @extend_schema(responses={200: PublicDataResponseSerializer})
     def get(self, request):
         cache = {}
-        if not BiddingRoundViewService.is_feature_flag_enabled(cache):
-            return Response({"enabled": False}, status=status.HTTP_200_OK)
-
         bidding_round = BiddingRoundService.get_current_open_round(cache=cache)
         pickup_location_change_enabled = (
             BiddingRoundService.is_pickup_location_change_enabled(cache=cache)
@@ -171,6 +178,7 @@ class PublicDataView(APIView):
             ),
             "bid_options": BiddingRoundViewService.build_bid_options(cache),
             "is_authenticated": request.user.is_authenticated,
+            "current_pickup_location": None,
         }
 
         if bidding_round and request.user.is_authenticated:
@@ -182,6 +190,11 @@ class PublicDataView(APIView):
                         reference_date=BiddingRoundCapacityService.get_contract_start_date(
                             bidding_round, cache
                         ),
+                    )
+                )
+                response_data["current_pickup_location"] = (
+                    BiddingRoundViewService.build_current_pickup_location(
+                        bidding_round, member, cache
                     )
                 )
                 bid = Bid.objects.filter(round=bidding_round, member=member).first()
@@ -197,7 +210,8 @@ class PublicDataView(APIView):
         return Response(response_data, status=status.HTTP_200_OK)
 
 
-class PublicResultsView(APIView):
+class PublicResultsView(BiddingRoundFeatureFlagMixin, APIView):
+    require_public_url = True
     permission_classes = [AllowAny]
 
     @extend_schema(responses={200: PublicEvaluationResponseSerializer})
@@ -222,8 +236,9 @@ class BiddingRoundCapacityCheckUserThrottle(UserRateThrottle):
     rate = "240/min"
 
 
-class BiddingRoundCapacityCheckView(APIView):
-    permission_classes = [AllowAny]
+class BiddingRoundCapacityCheckView(BiddingRoundFeatureFlagMixin, APIView):
+    require_public_url = True
+    permission_classes = [IsAuthenticated]
     throttle_classes = [
         BiddingRoundCapacityCheckThrottle,
         BiddingRoundCapacityCheckUserThrottle,
@@ -235,9 +250,6 @@ class BiddingRoundCapacityCheckView(APIView):
     )
     def post(self, request, round_id):
         cache = {}
-        if not BiddingRoundViewService.is_feature_flag_enabled(cache):
-            raise Http404
-
         bidding_round = BiddingRoundService.get_current_open_round(cache=cache)
         if bidding_round is None or str(bidding_round.id) != str(round_id):
             raise Http404
@@ -246,9 +258,9 @@ class BiddingRoundCapacityCheckView(APIView):
         serializer.is_valid(raise_exception=True)
         validated = serializer.validated_data
 
-        member = None
-        if request.user.is_authenticated:
-            member = Member.objects.filter(id=request.user.id).first()
+        member = Member.objects.filter(id=request.user.id).first()
+        if member is None:
+            return Response(status=status.HTTP_403_FORBIDDEN)
 
         reasons = BiddingRoundCapacityService.get_insufficient_capacity_reasons(
             bidding_round=bidding_round,
@@ -275,7 +287,7 @@ class BiddingRoundCapacityCheckView(APIView):
 # --- Admin API ---
 
 
-class RoundListCreateView(APIView):
+class RoundListCreateView(BiddingRoundFeatureFlagMixin, APIView):
     @extend_schema(responses={200: RoundSerializer(many=True)})
     def get(self, request):
         cache = {}
@@ -339,7 +351,7 @@ class RoundListCreateView(APIView):
         )
 
 
-class GrowingPeriodsView(APIView):
+class GrowingPeriodsView(BiddingRoundFeatureFlagMixin, APIView):
     @extend_schema(responses={200: GrowingPeriodOptionSerializer(many=True)})
     def get(self, request):
         cache = {}
@@ -361,7 +373,7 @@ class GrowingPeriodsView(APIView):
         )
 
 
-class AvailableProductTypesView(APIView):
+class AvailableProductTypesView(BiddingRoundFeatureFlagMixin, APIView):
     @extend_schema(
         responses={200: ProductTypeOptionSerializer(many=True)},
         parameters=[
@@ -409,7 +421,7 @@ class AvailableProductTypesView(APIView):
         )
 
 
-class RoundDetailView(APIView):
+class RoundDetailView(BiddingRoundFeatureFlagMixin, APIView):
     @extend_schema(responses={200: RoundSerializer})
     def get(self, request, round_id):
         cache = {}
@@ -460,7 +472,7 @@ class RoundDetailView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class RoundStartView(APIView):
+class RoundStartView(BiddingRoundFeatureFlagMixin, APIView):
     @extend_schema(request=None, responses={200: RoundSerializer})
     def post(self, request, round_id):
         cache = {}
@@ -480,7 +492,7 @@ class RoundStartView(APIView):
         )
 
 
-class RoundCloseView(APIView):
+class RoundCloseView(BiddingRoundFeatureFlagMixin, APIView):
     @extend_schema(request=None, responses={200: RoundSerializer})
     def post(self, request, round_id):
         cache = {}
@@ -500,7 +512,7 @@ class RoundCloseView(APIView):
         )
 
 
-class RoundReopenView(APIView):
+class RoundReopenView(BiddingRoundFeatureFlagMixin, APIView):
     @extend_schema(request=None, responses={200: RoundSerializer})
     def post(self, request, round_id):
         cache = {}
@@ -520,7 +532,7 @@ class RoundReopenView(APIView):
         )
 
 
-class RoundResultsView(APIView):
+class RoundResultsView(BiddingRoundFeatureFlagMixin, APIView):
     @extend_schema(
         responses={200: RoundResultsResponseSerializer},
         parameters=[
@@ -706,7 +718,7 @@ class RoundResultsView(APIView):
         )
 
 
-class BidCreateView(APIView):
+class BidCreateView(BiddingRoundFeatureFlagMixin, APIView):
     @extend_schema(responses={201: BidSerializer}, request=BidAdminSerializer())
     def post(self, request, round_id):
         cache = {}
@@ -755,7 +767,7 @@ class BidCreateView(APIView):
         )
 
 
-class BidEditView(APIView):
+class BidEditView(BiddingRoundFeatureFlagMixin, APIView):
     @extend_schema(responses={200: BidSerializer}, request=BidAdminSerializer())
     def patch(self, request, round_id, bid_id):
         cache = {}
@@ -810,7 +822,7 @@ class BidEditView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class ConfirmBidsView(APIView):
+class ConfirmBidsView(BiddingRoundFeatureFlagMixin, APIView):
     @extend_schema(
         responses={200: BidSerializer(many=True)}, request=ConfirmBidsSerializer()
     )
@@ -842,7 +854,7 @@ class ConfirmBidsView(APIView):
         )
 
 
-class CreateContractsView(APIView):
+class CreateContractsView(BiddingRoundFeatureFlagMixin, APIView):
     @extend_schema(
         responses={200: CreateContractsResponseSerializer},
         request=CreateContractsSerializer(),
@@ -898,7 +910,7 @@ class CreateContractsView(APIView):
         )
 
 
-class RoundLockAverageBidView(APIView):
+class RoundLockAverageBidView(BiddingRoundFeatureFlagMixin, APIView):
     @extend_schema(responses={200: RoundSerializer}, request=LockAverageBidSerializer())
     def post(self, request, round_id):
         cache = {}
@@ -931,7 +943,7 @@ class RoundLockAverageBidView(APIView):
         )
 
 
-class RoundUnlockAverageBidView(APIView):
+class RoundUnlockAverageBidView(BiddingRoundFeatureFlagMixin, APIView):
     @extend_schema(responses={200: RoundSerializer})
     def post(self, request, round_id):
         cache = {}
@@ -951,7 +963,7 @@ class RoundUnlockAverageBidView(APIView):
         )
 
 
-class RoundDeleteContractsView(APIView):
+class RoundDeleteContractsView(BiddingRoundFeatureFlagMixin, APIView):
     @extend_schema(responses={200: RoundSerializer})
     def post(self, request, round_id):
         cache = {}
@@ -973,7 +985,7 @@ class RoundDeleteContractsView(APIView):
         )
 
 
-class RoundCheckContractsView(APIView):
+class RoundCheckContractsView(BiddingRoundFeatureFlagMixin, APIView):
     @extend_schema(
         responses={200: CreateContractsResponseSerializer},
         request=CheckContractsSerializer(),
@@ -1008,7 +1020,7 @@ class RoundCheckContractsView(APIView):
         )
 
 
-class ExportCsvView(APIView):
+class ExportCsvView(BiddingRoundFeatureFlagMixin, APIView):
     @extend_schema(responses={200: str})
     def get(self, request, round_id):
         cache = {}
@@ -1020,15 +1032,17 @@ class ExportCsvView(APIView):
         response["Content-Disposition"] = (
             f'attachment; filename="bidding_round_{bidding_round.id}.csv"'
         )
+        # UTF-8 BOM so Excel detects the encoding.
+        response.write("\ufeff")
         writer = csv.writer(response, delimiter=";")
         writer.writerow(
             [
                 _("Mitglied"),
                 _("Email"),
-                _("Product"),
-                _("Variante"),
+                _("Produkttyp"),
+                _("Produkt"),
                 _("Anteile"),
-                _("Amount (effective level)"),
+                _("Betrag (effektive Stufe)"),
                 _("Abholort"),
             ]
         )
@@ -1043,10 +1057,12 @@ class ExportCsvView(APIView):
             ):
                 writer.writerow(
                     [
-                        f"{bid.member.first_name} {bid.member.last_name}",
-                        bid.member.email,
-                        item.round_product.product_type.name,
-                        item.product.name,
+                        _sanitize_csv_cell(
+                            f"{bid.member.first_name} {bid.member.last_name}"
+                        ),
+                        _sanitize_csv_cell(bid.member.email),
+                        _sanitize_csv_cell(item.round_product.product_type.name),
+                        _sanitize_csv_cell(item.product.name),
                         item.quantity,
                         BiddingRoundStatsService.get_effective_amount(
                             item,
@@ -1054,7 +1070,9 @@ class ExportCsvView(APIView):
                             position=effective_position,
                             cache=cache,
                         ),
-                        bid.pickup_location.name if bid.pickup_location else "",
+                        _sanitize_csv_cell(
+                            bid.pickup_location.name if bid.pickup_location else ""
+                        ),
                     ]
                 )
         return response
@@ -1063,7 +1081,8 @@ class ExportCsvView(APIView):
 # --- Member API ---
 
 
-class MemberBidView(APIView):
+class MemberBidView(BiddingRoundFeatureFlagMixin, APIView):
+    require_public_url = True
     permission_classes = [AllowAny]
 
     def _get_member(self, request):
@@ -1091,6 +1110,11 @@ class MemberBidView(APIView):
                         cache=cache
                     )
                     else []
+                ),
+                "current_pickup_location": (
+                    BiddingRoundViewService.build_current_pickup_location(
+                        bidding_round, member, cache
+                    )
                 ),
                 "bid": (
                     BiddingRoundViewService.serialize_bid(

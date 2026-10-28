@@ -26,6 +26,10 @@ class TestBiddingRoundCapacityCheckView(TapirIntegrationTest):
             value="true"
         )
 
+    def setUp(self):
+        super().setUp()
+        self.client.force_login(MemberFactory.create())
+
     def _build_round(self, capacity):
         round_ = create_open_round()
         round_product, product = create_round_product_with_product(

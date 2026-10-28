@@ -18,6 +18,7 @@ from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     GrowingPeriodFactory,
     MemberFactory,
+    PickupLocationFactory,
     ProductCapacityFactory,
     ProductFactory,
     ProductTypeFactory,
@@ -277,6 +278,62 @@ class TestBiddingRoundService(TapirIntegrationTest):
         bidding_round = BiddingRoundFactory.create(status=CLOSED)
         BiddingRoundService.reopen_round(bidding_round, cache={})
         self.assertEqual(ACTIVE, bidding_round.status)
+
+    def test_reopenRound_contractsCreated_raisesValidationError(self):
+        bidding_round = BiddingRoundFactory.create(
+            status=CLOSED, contracts_created_at=get_now()
+        )
+        with pytest.raises(ValidationError):
+            BiddingRoundService.reopen_round(bidding_round, cache={})
+
+    def test_deleteRound_contractsCreated_raisesValidationError(self):
+        bidding_round = BiddingRoundFactory.create(
+            status=CLOSED, contracts_created_at=get_now()
+        )
+        with pytest.raises(ValidationError):
+            BiddingRoundService.delete_round(bidding_round, cache={})
+
+    def test_saveAdminBid_afterContractsCreated_raisesValidationError(self):
+        bidding_round = BiddingRoundFactory.create(
+            status=CLOSED, contracts_created_at=get_now()
+        )
+        round_product = BiddingRoundProductFactory.create(round=bidding_round)
+        product = ProductFactory.create(type=round_product.product_type)
+        member = MemberFactory.create()
+
+        with pytest.raises(ValidationError):
+            BiddingRoundService.save_admin_bid(
+                bidding_round,
+                member,
+                cache={},
+                items=[
+                    {
+                        "round_product_id": round_product.id,
+                        "product_id": product.id,
+                        "quantity": 1,
+                        "amount_1": "80.00",
+                    }
+                ],
+            )
+
+    def test_saveAdminBid_pickupChangeAfterContracts_raisesValidationError(self):
+        TapirParameter.objects.filter(
+            key=ParameterKeys.BIDDING_ROUND_PICKUP_LOCATION_CHANGE_ENABLED
+        ).update(value="true")
+        bidding_round = BiddingRoundFactory.create(
+            status=CLOSED, contracts_created_at=get_now()
+        )
+        member = MemberFactory.create()
+        BidFactory.create(round=bidding_round, member=member)
+        pickup_location = PickupLocationFactory.create()
+
+        with pytest.raises(ValidationError):
+            BiddingRoundService.save_admin_bid(
+                bidding_round,
+                member,
+                cache={},
+                pickup_location_id=pickup_location.id,
+            )
 
     def test_getCurrentOpenRound_returnsEarliestActiveWithFutureEndDate(self):
         earlier_round = BiddingRoundFactory.create(

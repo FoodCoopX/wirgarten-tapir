@@ -143,9 +143,6 @@ class ParameterKeys:
         f"{PREFIX}.bidding_round.non_bidders_min_average"
     )
     BIDDING_ROUND_BID_QUANTITY_ENABLED = f"{PREFIX}.bidding_round.bid.quantity_enabled"
-    BIDDING_ROUND_BID_MULTIPLE_POSITIONS_ENABLED = (
-        f"{PREFIX}.bidding_round.bid.multiple_positions_enabled"
-    )
     BIDDING_ROUND_PUBLIC_INTRO_TITLE = f"{PREFIX}.bidding_round.public.intro_title"
     BIDDING_ROUND_PUBLIC_INTRO_TEXT = f"{PREFIX}.bidding_round.public.intro_text"
     BIDDING_ROUND_PUBLIC_ENDED_TEXT = f"{PREFIX}.bidding_round.public.ended_text"
@@ -170,8 +167,6 @@ class ParameterKeys:
     BIDDING_ROUND_PUBLIC_STATS_SIMPLE_LEVELS_SLIDER_HINT = (
         f"{PREFIX}.bidding_round.public.stats_simple_levels_slider_hint"
     )
-    BIDDING_ROUND_BID_PRODUCT_LABEL = f"{PREFIX}.bidding_round.bid.product_label"
-    BIDDING_ROUND_BID_VARIANT_LABEL = f"{PREFIX}.bidding_round.bid.variant_label"
     BIDDING_ROUND_BID_QUANTITY_LABEL = f"{PREFIX}.bidding_round.bid.quantity_label"
     BIDDING_ROUND_BID_AMOUNT_LABEL = f"{PREFIX}.bidding_round.bid.amount_label"
     BIDDING_ROUND_BID_REFERENCE_VALUE_HINT = (

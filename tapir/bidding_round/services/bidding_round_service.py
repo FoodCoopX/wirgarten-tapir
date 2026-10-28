@@ -1,7 +1,9 @@
 import datetime
+import logging
 from decimal import Decimal, InvalidOperation
 
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 from tapir_mail.triggers.transactional_trigger import (
     TransactionalTrigger,
@@ -25,6 +27,8 @@ from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import GrowingPeriod, Member, Product, ProductType
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import get_now
+
+logger = logging.getLogger(__name__)
 
 
 class BiddingRoundService:
@@ -205,6 +209,13 @@ class BiddingRoundService:
     def reopen_round(cls, bidding_round: BiddingRound, cache: dict) -> BiddingRound:
         if bidding_round.status != CLOSED:
             raise ValidationError(_("Only closed bidding rounds can be reopened."))
+        if bidding_round.contracts_created_at is not None:
+            raise ValidationError(
+                _(
+                    "The bidding round can no longer be reopened once contracts have "
+                    "been created. Delete the contracts first."
+                )
+            )
         cls._ensure_no_other_active_round(bidding_round)
         bidding_round.status = ACTIVE
         bidding_round.save()
@@ -224,67 +235,77 @@ class BiddingRoundService:
             BiddingRoundStatsService,
         )
 
-        if bidding_round.average_bid_locked_at is not None:
-            raise ValidationError(_("The average bid is already locked."))
-
         surcharge_percent = Decimal(str(surcharge_percent or 0))
         if surcharge_percent < 0 or surcharge_percent > 100:
             raise ValidationError(_("The surcharge must be between 0 and 100 percent."))
 
         position = BiddingRoundStatsService.clamp_traffic_light_position(position)
-        amounts = BiddingRoundStatsService.build_locked_average_bid(
-            bidding_round=bidding_round,
-            position=position,
-            surcharge_percent=surcharge_percent,
-            surcharge_on_bids=bool(surcharge_on_bids),
-            surcharge_on_average=bool(surcharge_on_average),
-            cache=cache,
+        with transaction.atomic():
+            locked = BiddingRound.objects.select_for_update().get(pk=bidding_round.pk)
+            if locked.average_bid_locked_at is not None:
+                raise ValidationError(_("The average bid is already locked."))
+            amounts = BiddingRoundStatsService.build_locked_average_bid(
+                bidding_round=locked,
+                position=position,
+                surcharge_percent=surcharge_percent,
+                surcharge_on_bids=bool(surcharge_on_bids),
+                surcharge_on_average=bool(surcharge_on_average),
+                cache=cache,
+            )
+            locked.average_bid_locked_at = get_now(cache=cache)
+            locked.locked_traffic_light_position = position
+            locked.locked_surcharge_percent = surcharge_percent
+            locked.locked_surcharge_on_bids = bool(surcharge_on_bids)
+            locked.locked_surcharge_on_average = bool(surcharge_on_average)
+            locked.locked_average_bid_per_share_per_month = amounts[
+                "amount_per_share_per_month"
+            ]
+            locked.locked_average_bid_per_share_per_year = amounts[
+                "amount_per_share_per_year"
+            ]
+            locked.locked_bidder_average_per_share_per_month = amounts[
+                "bidder_amount_per_share_per_month"
+            ]
+            locked.locked_bidder_average_per_share_per_year = amounts[
+                "bidder_amount_per_share_per_year"
+            ]
+            locked.save()
+        bidding_round.refresh_from_db()
+        logger.info(
+            "Bidding round %s average bid locked at position %s (surcharge %s%%)",
+            bidding_round.id,
+            position,
+            surcharge_percent,
         )
-
-        bidding_round.average_bid_locked_at = get_now(cache=cache)
-        bidding_round.locked_traffic_light_position = position
-        bidding_round.locked_surcharge_percent = surcharge_percent
-        bidding_round.locked_surcharge_on_bids = bool(surcharge_on_bids)
-        bidding_round.locked_surcharge_on_average = bool(surcharge_on_average)
-        bidding_round.locked_average_bid_per_share_per_month = amounts[
-            "amount_per_share_per_month"
-        ]
-        bidding_round.locked_average_bid_per_share_per_year = amounts[
-            "amount_per_share_per_year"
-        ]
-        bidding_round.locked_bidder_average_per_share_per_month = amounts[
-            "bidder_amount_per_share_per_month"
-        ]
-        bidding_round.locked_bidder_average_per_share_per_year = amounts[
-            "bidder_amount_per_share_per_year"
-        ]
-        bidding_round.save()
         return bidding_round
 
     @classmethod
     def unlock_average_bid(
         cls, bidding_round: BiddingRound, cache: dict
     ) -> BiddingRound:
-        if bidding_round.average_bid_locked_at is None:
-            raise ValidationError(_("The average bid is not locked."))
-        if bidding_round.contracts_created_at is not None:
-            raise ValidationError(
-                _(
-                    "The average bid can no longer be unlocked once contracts have "
-                    "been created. Delete the contracts first."
+        with transaction.atomic():
+            locked = BiddingRound.objects.select_for_update().get(pk=bidding_round.pk)
+            if locked.average_bid_locked_at is None:
+                raise ValidationError(_("The average bid is not locked."))
+            if locked.contracts_created_at is not None:
+                raise ValidationError(
+                    _(
+                        "The average bid can no longer be unlocked once contracts have "
+                        "been created. Delete the contracts first."
+                    )
                 )
-            )
-
-        bidding_round.average_bid_locked_at = None
-        bidding_round.locked_traffic_light_position = None
-        bidding_round.locked_surcharge_percent = Decimal("0")
-        bidding_round.locked_surcharge_on_bids = False
-        bidding_round.locked_surcharge_on_average = False
-        bidding_round.locked_average_bid_per_share_per_month = None
-        bidding_round.locked_average_bid_per_share_per_year = None
-        bidding_round.locked_bidder_average_per_share_per_month = None
-        bidding_round.locked_bidder_average_per_share_per_year = None
-        bidding_round.save()
+            locked.average_bid_locked_at = None
+            locked.locked_traffic_light_position = None
+            locked.locked_surcharge_percent = Decimal("0")
+            locked.locked_surcharge_on_bids = False
+            locked.locked_surcharge_on_average = False
+            locked.locked_average_bid_per_share_per_month = None
+            locked.locked_average_bid_per_share_per_year = None
+            locked.locked_bidder_average_per_share_per_month = None
+            locked.locked_bidder_average_per_share_per_year = None
+            locked.save()
+        bidding_round.refresh_from_db()
+        logger.info("Bidding round %s average bid unlocked", bidding_round.id)
         return bidding_round
 
     @classmethod
@@ -294,6 +315,13 @@ class BiddingRoundService:
                 _(
                     "Bidding rounds can only be deleted with status configuration "
                     "or closed."
+                )
+            )
+        if bidding_round.contracts_created_at is not None:
+            raise ValidationError(
+                _(
+                    "The bidding round can no longer be deleted once contracts have "
+                    "been created. Delete the contracts first."
                 )
             )
         bidding_round.delete()
@@ -422,6 +450,32 @@ class BiddingRoundService:
         )
 
     @classmethod
+    def _resolve_pickup_location_id(
+        cls,
+        member: Member,
+        bidding_round: BiddingRound,
+        pickup_location_id,
+        cache: dict,
+    ):
+        """When changing the pickup location is disabled, the submitted value is
+        ignored and the member's current pickup location is kept."""
+        if cls.is_pickup_location_change_enabled(cache=cache):
+            return pickup_location_id
+        from tapir.bidding_round.services.bidding_round_capacity_service import (
+            BiddingRoundCapacityService,
+        )
+        from tapir.pickup_locations.services.member_pickup_location_getter import (
+            MemberPickupLocationGetter,
+        )
+
+        return MemberPickupLocationGetter.get_member_pickup_location_id(
+            member=member,
+            reference_date=BiddingRoundCapacityService.get_contract_start_date(
+                bidding_round, cache
+            ),
+        )
+
+    @classmethod
     def save_bid(
         cls,
         member: Member,
@@ -433,17 +487,26 @@ class BiddingRoundService:
         if not isinstance(member, Member):
             raise ValidationError(_("Only members can place a bid."))
 
-        BidValidator.validate(
-            bidding_round, items, pickup_location_id, cache=cache, member=member
-        )
+        with transaction.atomic():
+            bidding_round = BiddingRound.objects.select_for_update().get(
+                pk=bidding_round.pk
+            )
+            pickup_location_id = cls._resolve_pickup_location_id(
+                member, bidding_round, pickup_location_id, cache
+            )
+            BidValidator.validate(
+                bidding_round, items, pickup_location_id, cache=cache, member=member
+            )
 
-        bid_exists = Bid.objects.filter(member=member, round=bidding_round).exists()
-        bid = cls.get_or_create_bid(member, bidding_round, cache=cache)
-        bid.pickup_location_id = pickup_location_id
-        bid.save()
+            bid_exists = Bid.objects.filter(member=member, round=bidding_round).exists()
+            bid = cls.get_or_create_bid(member, bidding_round, cache=cache)
+            bid.pickup_location_id = pickup_location_id
+            bid.save()
 
-        bid.items.all().delete()
-        BidItem.objects.bulk_create([cls._build_bid_item(bid, item) for item in items])
+            bid.items.all().delete()
+            BidItem.objects.bulk_create(
+                [cls._build_bid_item(bid, item) for item in items]
+            )
 
         TransactionalTrigger.fire_action(
             trigger_data=TransactionalTriggerData(
@@ -471,23 +534,50 @@ class BiddingRoundService:
         entered_by_admin: bool | None = None,
         admin_confirmed: bool | None = None,
     ) -> Bid:
-        if items:
-            BidValidator.validate_admin_edit(
-                bidding_round, items, pickup_location_id, cache=cache, member=member
+        with transaction.atomic():
+            locked_round = BiddingRound.objects.select_for_update().get(
+                pk=bidding_round.pk
             )
+            if items:
+                BidValidator.validate_admin_edit(
+                    locked_round,
+                    items,
+                    pickup_location_id,
+                    cache=cache,
+                    member=member,
+                )
 
-        bid, _ = Bid.objects.get_or_create(member=member, round=bidding_round)
-        bid.pickup_location_id = pickup_location_id
-        if entered_by_admin is not None:
-            bid.entered_by_admin = entered_by_admin
-        if admin_confirmed is not None:
-            bid.admin_confirmed = get_now(cache=cache) if admin_confirmed else None
-        bid.save()
+            bid, _created = Bid.objects.get_or_create(member=member, round=locked_round)
 
-        if items is not None:
-            bid.items.all().delete()
-            BidItem.objects.bulk_create(
-                [cls._build_bid_item(bid, item) for item in items]
-            )
+            if locked_round.contracts_created_at is not None:
+                if items is not None:
+                    raise ValidationError(
+                        _(
+                            "Bids can no longer be changed once the contracts have been "
+                            "created. Delete the contracts first."
+                        )
+                    )
+                if pickup_location_id is not None and str(pickup_location_id) != str(
+                    bid.pickup_location_id
+                ):
+                    raise ValidationError(
+                        _(
+                            "The pickup location can no longer be changed once the "
+                            "contracts have been created. Delete the contracts first."
+                        )
+                    )
+
+            bid.pickup_location_id = pickup_location_id
+            if entered_by_admin is not None:
+                bid.entered_by_admin = entered_by_admin
+            if admin_confirmed is not None:
+                bid.admin_confirmed = get_now(cache=cache) if admin_confirmed else None
+            bid.save()
+
+            if items is not None:
+                bid.items.all().delete()
+                BidItem.objects.bulk_create(
+                    [cls._build_bid_item(bid, item) for item in items]
+                )
 
         return bid

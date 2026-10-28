@@ -7,9 +7,16 @@ from tapir.bidding_round.tests.factories import (
     BiddingRoundProductFactory,
 )
 from tapir.bidding_round.tests.helpers import create_open_round
+from tapir.configuration.models import TapirParameter
 from tapir.wirgarten.models import Member
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
-from tapir.wirgarten.tests.factories import MemberFactory, ProductFactory
+from tapir.wirgarten.tests.factories import (
+    MemberFactory,
+    MemberPickupLocationFactory,
+    PickupLocationFactory,
+    ProductFactory,
+)
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
@@ -17,6 +24,12 @@ class TestMemberBidView(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
+
+    def setUp(self):
+        super().setUp()
+        TapirParameter.objects.filter(key=ParameterKeys.BIDDING_ROUND_ENABLED).update(
+            value="true"
+        )
 
     def test_bidGet_prefilledForMember(self):
         round_ = create_open_round()
@@ -69,3 +82,22 @@ class TestMemberBidView(TapirIntegrationTest):
             content_type="application/json",
         )
         self.assertStatusCode(response, status.HTTP_403_FORBIDDEN)
+
+    def test_bidGet_exposesCurrentPickupLocationEvenWhenChangeDisabled(self):
+        round_ = create_open_round()
+        round_product = BiddingRoundProductFactory.create(round=round_)
+        ProductFactory.create(type=round_product.product_type)
+        member = MemberFactory.create()
+        own_location = PickupLocationFactory.create()
+        MemberPickupLocationFactory.create(member=member, pickup_location=own_location)
+
+        self.client.force_login(member)
+        response = self.client.get(
+            reverse("bidding_rounds:member_bid", args=[round_.id])
+        )
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual([], data["pickup_locations"])
+        self.assertIsNotNone(data["current_pickup_location"])
+        self.assertEqual(str(own_location.id), data["current_pickup_location"]["id"])

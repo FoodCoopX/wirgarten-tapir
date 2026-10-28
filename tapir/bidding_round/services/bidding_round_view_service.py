@@ -426,8 +426,6 @@ class BiddingRoundViewService:
             "submit_label": ParameterKeys.BIDDING_ROUND_PUBLIC_SUBMIT_LABEL,
         }
         bid_string_id_to_parameter_key_map = {
-            "product_label": ParameterKeys.BIDDING_ROUND_BID_PRODUCT_LABEL,
-            "variant_label": ParameterKeys.BIDDING_ROUND_BID_VARIANT_LABEL,
             "quantity_label": ParameterKeys.BIDDING_ROUND_BID_QUANTITY_LABEL,
             "amount_label": ParameterKeys.BIDDING_ROUND_BID_AMOUNT_LABEL,
             "reference_value_hint": ParameterKeys.BIDDING_ROUND_BID_REFERENCE_VALUE_HINT,
@@ -565,13 +563,53 @@ class BiddingRoundViewService:
         return result
 
     @classmethod
+    def build_current_pickup_location(cls, bidding_round, member, cache) -> dict | None:
+        """The member's own pickup location incl. its yearly delivery charge.
+
+        Always returned, independently of the pickup-location-change flag, so the bid
+        summary can show the location and the delivery charge even while changing the
+        location is disabled.
+        """
+        if bidding_round is None or member is None:
+            return None
+        from tapir.bidding_round.services.bidding_round_capacity_service import (
+            BiddingRoundCapacityService,
+        )
+
+        reference_date = BiddingRoundCapacityService.get_contract_start_date(
+            bidding_round, cache
+        )
+        location_id = MemberPickupLocationGetter.get_member_pickup_location_id(
+            member=member, reference_date=reference_date
+        )
+        if not location_id:
+            return None
+        location = PickupLocation.objects.filter(id=location_id).first()
+        if location is None:
+            return None
+
+        yearly_delivery_charge = Decimal("0.00")
+        round_product = bidding_round.products.select_related("product_type").first()
+        if round_product is not None:
+            yearly_delivery_charge = (
+                BiddingRoundDeliveryChargeService.get_yearly_delivery_charge(
+                    pickup_location_id=location_id,
+                    product_type=round_product.product_type,
+                    growing_period=bidding_round.growing_period,
+                    cache=cache,
+                )
+            )
+        return {
+            "id": location.id,
+            "name": location.name,
+            "yearly_delivery_charge": str(yearly_delivery_charge),
+        }
+
+    @classmethod
     def build_bid_options(cls, cache) -> dict:
         return {
             "quantity_enabled": get_parameter_value(
                 ParameterKeys.BIDDING_ROUND_BID_QUANTITY_ENABLED, cache=cache
-            ),
-            "multiple_positions_enabled": get_parameter_value(
-                ParameterKeys.BIDDING_ROUND_BID_MULTIPLE_POSITIONS_ENABLED, cache=cache
             ),
         }
 

@@ -43,25 +43,20 @@ class TestPublicDataView(TapirIntegrationTest):
         self.assertEqual(str(round_.id), data["round"]["id"])
         self.assertEqual("active", data["round_status"])
         self.assertTrue(data["texts"]["intro_title"])
-        self.assertTrue(data["texts"]["bid"]["product_label"])
+        self.assertTrue(data["texts"]["bid"]["quantity_label"])
 
     def test_publicData_bidOptions_defaultToFalse(self):
         create_open_round()
         response = self.client.get(reverse("bidding_rounds:public_data"))
         self.assertStatusCode(response, status.HTTP_200_OK)
         self.assertFalse(response.json()["bid_options"]["quantity_enabled"])
-        self.assertFalse(response.json()["bid_options"]["multiple_positions_enabled"])
 
         TapirParameter.objects.filter(
             key=ParameterKeys.BIDDING_ROUND_BID_QUANTITY_ENABLED
         ).update(value="true")
-        TapirParameter.objects.filter(
-            key=ParameterKeys.BIDDING_ROUND_BID_MULTIPLE_POSITIONS_ENABLED
-        ).update(value="true")
         response = self.client.get(reverse("bidding_rounds:public_data"))
         self.assertStatusCode(response, status.HTTP_200_OK)
         self.assertTrue(response.json()["bid_options"]["quantity_enabled"])
-        self.assertTrue(response.json()["bid_options"]["multiple_positions_enabled"])
 
     def test_publicData_noOpenRound_returnsEndedState(self):
         response = self.client.get(reverse("bidding_rounds:public_data"))
@@ -111,6 +106,15 @@ class TestPublicResultsView(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
+
+    def setUp(self):
+        super().setUp()
+        TapirParameter.objects.filter(key=ParameterKeys.BIDDING_ROUND_ENABLED).update(
+            value="true"
+        )
+        TapirParameter.objects.filter(
+            key=ParameterKeys.BIDDING_ROUND_URL_ENABLED
+        ).update(value="true")
 
     def test_publicResults_returnsReducedEvaluation(self):
         round_ = create_open_round()

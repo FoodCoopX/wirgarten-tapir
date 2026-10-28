@@ -237,7 +237,8 @@ class TestContractCreator(TapirIntegrationTest):
         self.assertEqual(1, len(result["errors"]))
         self.assertEqual(0, Subscription.objects.filter(member=bid.member).count())
         round_.refresh_from_db()
-        self.assertIsNotNone(round_.contracts_created_at)
+        # No contract was created, so the round stays re-runnable.
+        self.assertIsNone(round_.contracts_created_at)
 
     def test_createContracts_setsContractsCreatedAt(self, mock_capacity):
         mock_capacity.return_value = []

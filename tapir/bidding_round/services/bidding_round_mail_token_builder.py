@@ -2,6 +2,7 @@ from decimal import Decimal
 
 from django.conf import settings
 from django.urls import NoReverseMatch, reverse
+from django.utils.html import escape
 
 from tapir.bidding_round.models import Bid
 from tapir.wirgarten.utils import format_currency, format_date
@@ -18,13 +19,13 @@ class BiddingRoundMailTokenBuilder:
             bid.round, cache=cache
         )
         return {
-            "round_name": bid.round.name,
+            "round_name": escape(bid.round.name),
             "bid_items_html": cls._build_items_html(bid, effective_position, cache),
             "bid_total_per_year": format_currency(
                 cls._get_bid_total_per_year(bid, effective_position, cache)
             ),
             "pickup_location": (
-                bid.pickup_location.name if bid.pickup_location else ""
+                escape(bid.pickup_location.name) if bid.pickup_location else ""
             ),
             "bid_link": cls._build_bid_link(),
             "bid_end_date": format_date(bid.round.end_at),
@@ -68,7 +69,8 @@ class BiddingRoundMailTokenBuilder:
                 item, bid.round, cache=cache, position=effective_position
             )
             items.append(
-                f"{item.round_product.product_type.name} ({item.product.name}): "
+                f"{escape(item.round_product.product_type.name)} "
+                f"({escape(item.product.name)}): "
                 f"{item.quantity} x {format_currency(amount)} = "
                 f"{format_currency(amount * item.quantity * 12)} pro Jahr"
             )

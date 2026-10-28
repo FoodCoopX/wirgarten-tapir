@@ -1,3 +1,5 @@
+import logging
+
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils.translation import gettext_lazy as _
@@ -8,6 +10,8 @@ from tapir.subscriptions.services.automatic_subscription_renewal_service import 
 )
 from tapir.wirgarten.models import Subscription
 from tapir.wirgarten.utils import get_now
+
+logger = logging.getLogger(__name__)
 
 
 class BiddingRoundContractDeletionService:
@@ -36,11 +40,25 @@ class BiddingRoundContractDeletionService:
             Subscription.objects.filter(id__in=subscription_ids).delete()
             bidding_round.created_subscriptions.all().delete()
 
+            cls._restore_replaced_subscriptions(bidding_round)
             cls._revert_non_bidder_contributions(bidding_round, cache=cache)
 
             bidding_round.contracts_created_at = None
             bidding_round.save(update_fields=["contracts_created_at", "updated_at"])
+        logger.info(
+            "Bidding round %s contracts deleted by %s: %s subscriptions removed",
+            bidding_round.id,
+            getattr(actor, "id", actor),
+            len(subscription_ids),
+        )
         return bidding_round
+
+    @classmethod
+    def _restore_replaced_subscriptions(cls, bidding_round) -> None:
+        """Recreates everything that contract creation replaced and deleted."""
+        for snapshot in bidding_round.replaced_subscriptions.all():
+            snapshot.restore()
+            snapshot.delete()
 
     @classmethod
     def _revert_non_bidder_contributions(cls, bidding_round, cache) -> None:

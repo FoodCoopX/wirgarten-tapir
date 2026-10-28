@@ -228,14 +228,17 @@ class PickupLocationWithChargeSerializer(PublicPickupLocationSerializer):
         ]
 
 
+class CurrentPickupLocationSerializer(serializers.Serializer):
+    id = serializers.CharField()
+    name = serializers.CharField()
+    yearly_delivery_charge = serializers.CharField()
+
+
 class BidOptionsSerializer(serializers.Serializer):
     quantity_enabled = serializers.BooleanField()
-    multiple_positions_enabled = serializers.BooleanField()
 
 
 class BidTextsSerializer(serializers.Serializer):
-    product_label = serializers.CharField()
-    variant_label = serializers.CharField()
     quantity_label = serializers.CharField()
     amount_label = serializers.CharField()
     reference_value_hint = serializers.CharField()
@@ -288,6 +291,9 @@ class PublicDataResponseSerializer(serializers.Serializer):
     bid_options = BidOptionsSerializer(required=False)
     is_authenticated = serializers.BooleanField(required=False)
     current_pickup_location_id = serializers.CharField(allow_null=True, required=False)
+    current_pickup_location = CurrentPickupLocationSerializer(
+        allow_null=True, required=False
+    )
     bid = BidSerializer(allow_null=True, required=False)
 
 
@@ -525,4 +531,5 @@ class MemberBidResponseSerializer(serializers.Serializer):
     round = RoundSerializer()
     biddable_product = BiddableProductSerializer(allow_null=True)
     pickup_locations = PickupLocationWithChargeSerializer(many=True)
+    current_pickup_location = CurrentPickupLocationSerializer(allow_null=True)
     bid = BidSerializer(allow_null=True)

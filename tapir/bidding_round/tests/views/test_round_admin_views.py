@@ -69,6 +69,9 @@ class RoundAdminViewTestBase(TapirIntegrationTest):
 
     def setUp(self):
         super().setUp()
+        TapirParameter.objects.filter(key=ParameterKeys.BIDDING_ROUND_ENABLED).update(
+            value="true"
+        )
         self.client.force_login(MemberFactory.create(is_superuser=True))
 
 

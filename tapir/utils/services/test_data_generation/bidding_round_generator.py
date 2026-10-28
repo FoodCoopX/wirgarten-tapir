@@ -25,9 +25,6 @@ from tapir.subscriptions.services.automatic_subscription_renewal_service import 
     AutomaticSubscriptionRenewalService,
 )
 from tapir.utils.config import Organization
-from tapir.utils.services.test_data_generation.vierlande_generator import (
-    VierlandeGenerator,
-)
 from tapir.wirgarten.models import (
     GrowingPeriod,
     Member,
@@ -698,6 +695,12 @@ class BiddingRoundGenerator:
             return {}
 
         if organization == Organization.VIERLANDE:
+            # Optional organisation strategy: imported lazily so the bidding round
+            # generator does not hard-depend on the Vierlande profile.
+            from tapir.utils.services.test_data_generation.vierlande_generator import (
+                VierlandeGenerator,
+            )
+
             vierlande_assignment = VierlandeGenerator.assign_bidder_pickup_locations(
                 bidder_assignments=bidder_assignments,
                 pickup_locations=pickup_locations,

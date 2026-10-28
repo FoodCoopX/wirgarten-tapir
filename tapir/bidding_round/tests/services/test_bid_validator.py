@@ -19,6 +19,7 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
+    MemberPickupLocationFactory,
     PickupLocationFactory,
     ProductFactory,
 )
@@ -356,3 +357,112 @@ class TestBidValidator(TapirIntegrationTest):
         )
 
         self.assertIsNone(bid.pickup_location)
+
+    def test_validate_quantityDisabled_quantityTwo_rejects(self):
+        round_ = create_open_round()
+        round_product = BiddingRoundProductFactory.create(round=round_)
+        product = ProductFactory.create(type=round_product.product_type)
+
+        with pytest.raises(ValidationError):
+            BiddingRoundService.save_bid(
+                MemberFactory.create(),
+                round_,
+                [build_item(round_product, product, quantity=2)],
+                cache={},
+            )
+
+    def test_validate_quantityEnabled_quantityTwo_accepts(self):
+        TapirParameter.objects.filter(
+            key=ParameterKeys.BIDDING_ROUND_BID_QUANTITY_ENABLED
+        ).update(value="true")
+        round_ = create_open_round()
+        round_product = BiddingRoundProductFactory.create(round=round_)
+        product = ProductFactory.create(type=round_product.product_type)
+
+        bid = BiddingRoundService.save_bid(
+            MemberFactory.create(),
+            round_,
+            [build_item(round_product, product, quantity=2)],
+            cache={},
+        )
+
+        self.assertEqual(2, bid.items.get().quantity)
+
+    def test_validate_roundProductOfAnotherRound_rejects(self):
+        round_ = create_open_round()
+        other_round = create_open_round()
+        other_round_product = BiddingRoundProductFactory.create(round=other_round)
+        product = ProductFactory.create(type=other_round_product.product_type)
+
+        with pytest.raises(ValidationError):
+            BiddingRoundService.save_bid(
+                MemberFactory.create(),
+                round_,
+                [build_item(other_round_product, product)],
+                cache={},
+            )
+
+    def test_validate_nonNumericAmount_rejects(self):
+        round_ = create_open_round()
+        round_product = BiddingRoundProductFactory.create(round=round_)
+        product = ProductFactory.create(type=round_product.product_type)
+
+        with pytest.raises(ValidationError):
+            BiddingRoundService.save_bid(
+                MemberFactory.create(),
+                round_,
+                [build_item(round_product, product, amount_1="not a number")],
+                cache={},
+            )
+
+    def test_validate_nonFiniteAmount_rejects(self):
+        round_ = create_open_round()
+        round_product = BiddingRoundProductFactory.create(round=round_)
+        product = ProductFactory.create(type=round_product.product_type)
+
+        with pytest.raises(ValidationError):
+            BiddingRoundService.save_bid(
+                MemberFactory.create(),
+                round_,
+                [build_item(round_product, product, amount_1="NaN")],
+                cache={},
+            )
+
+    def test_validate_unknownPickupLocation_rejects(self):
+        TapirParameter.objects.filter(
+            key=ParameterKeys.BIDDING_ROUND_PICKUP_LOCATION_CHANGE_ENABLED
+        ).update(value="true")
+        round_ = create_open_round()
+        round_product = BiddingRoundProductFactory.create(round=round_)
+        product = ProductFactory.create(type=round_product.product_type)
+
+        with pytest.raises(ValidationError):
+            BiddingRoundService.save_bid(
+                MemberFactory.create(),
+                round_,
+                [build_item(round_product, product)],
+                pickup_location_id="does-not-exist",
+                cache={},
+            )
+
+    def test_validate_pickupLocationsDisabled_keepsMemberCurrentLocation(self):
+        TapirParameter.objects.filter(
+            key=ParameterKeys.BIDDING_ROUND_PICKUP_LOCATION_CHANGE_ENABLED
+        ).update(value="false")
+        round_ = create_open_round()
+        round_product = BiddingRoundProductFactory.create(round=round_)
+        product = ProductFactory.create(type=round_product.product_type)
+        member = MemberFactory.create()
+        own_location = PickupLocationFactory.create()
+        MemberPickupLocationFactory.create(member=member, pickup_location=own_location)
+        other_location = PickupLocationFactory.create()
+
+        bid = BiddingRoundService.save_bid(
+            member,
+            round_,
+            [build_item(round_product, product)],
+            pickup_location_id=other_location.id,
+            cache={},
+        )
+
+        self.assertEqual(own_location, bid.pickup_location)

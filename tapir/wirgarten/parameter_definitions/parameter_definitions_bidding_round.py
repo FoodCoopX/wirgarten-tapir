@@ -116,19 +116,6 @@ class ParameterDefinitionsBiddingRound:
         )
 
         importer.parameter_definition(
-            key=ParameterKeys.BIDDING_ROUND_BID_MULTIPLE_POSITIONS_ENABLED,
-            label=gettext_noop("Bidding round: add further positions"),
-            description=gettext_noop(
-                "When enabled, members can enter several positions (harvest shares) "
-                "in their bid. By default exactly one position exists."
-            ),
-            datatype=TapirParameterDatatype.BOOLEAN,
-            initial_value=False,
-            category=ParameterCategory.BIDDING_ROUND,
-            order_priority=7,
-        )
-
-        importer.parameter_definition(
             key=ParameterKeys.BIDDING_ROUND_PUBLIC_INTRO_TITLE,
             label=gettext_noop("Public bidding round page: title"),
             description=gettext_noop("Title of the public bidding round page."),
@@ -295,30 +282,6 @@ class ParameterDefinitionsBiddingRound:
             category=ParameterCategory.BIDDING_ROUND,
             order_priority=6,
             meta=ParameterMeta(textarea=True),
-        )
-
-        importer.parameter_definition(
-            key=ParameterKeys.BIDDING_ROUND_BID_PRODUCT_LABEL,
-            label=gettext_noop("Bidding round: harvest share label"),
-            description=gettext_noop(
-                "Label for the harvest share selection in the bid form."
-            ),
-            datatype=TapirParameterDatatype.STRING,
-            initial_value="Ernteanteil",
-            category=ParameterCategory.BIDDING_ROUND,
-            order_priority=5,
-        )
-
-        importer.parameter_definition(
-            key=ParameterKeys.BIDDING_ROUND_BID_VARIANT_LABEL,
-            label=gettext_noop("Bidding round: variant label"),
-            description=gettext_noop(
-                "Label for the product variant selection in the bid form."
-            ),
-            datatype=TapirParameterDatatype.STRING,
-            initial_value="Variante",
-            category=ParameterCategory.BIDDING_ROUND,
-            order_priority=5,
         )
 
         importer.parameter_definition(

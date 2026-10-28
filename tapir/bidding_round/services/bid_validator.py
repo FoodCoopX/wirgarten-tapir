@@ -1,4 +1,4 @@
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
@@ -6,7 +6,7 @@ from django.utils.translation import gettext_lazy as _
 from tapir.bidding_round.config import ACTIVE, TRAFFIC_LIGHT
 from tapir.bidding_round.models import BiddingRoundProduct, BiddingRoundProductPrice
 from tapir.configuration.parameter import get_parameter_value
-from tapir.wirgarten.models import Product
+from tapir.wirgarten.models import PickupLocation, Product
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import get_now
 
@@ -81,9 +81,15 @@ class BidValidator:
 
         cls._validate_levels(bidding_round, amounts)
 
-        round_product = BiddingRoundProduct.objects.get(id=item["round_product_id"])
-        product = Product.objects.get(id=item["product_id"])
-        if product.type_id != round_product.product_type_id:
+        round_product = BiddingRoundProduct.objects.filter(
+            id=item.get("round_product_id")
+        ).first()
+        if round_product is None or round_product.round_id != bidding_round.id:
+            raise ValidationError(
+                _("The harvest share does not belong to this bidding round.")
+            )
+        product = Product.objects.filter(id=item.get("product_id")).first()
+        if product is None or product.type_id != round_product.product_type_id:
             raise ValidationError(
                 _("The product does not belong to the biddable harvest share.")
             )
@@ -94,8 +100,11 @@ class BidValidator:
                     raise ValidationError(
                         _("The amount must not be below the minimum price.")
                     )
-        if item["quantity"] not in cls.ALLOWED_QUANTITIES:
+        quantity = item.get("quantity")
+        if quantity not in cls.ALLOWED_QUANTITIES:
             raise ValidationError(_("The number of shares is invalid."))
+        if not cls._is_quantity_enabled(cache) and quantity != 1:
+            raise ValidationError(_("Only one share can be entered."))
 
     @classmethod
     def _parse_amounts(cls, item) -> dict:
@@ -104,7 +113,16 @@ class BidValidator:
             raw = item.get(f"amount_{level}")
             if isinstance(raw, str):
                 raw = raw.strip().replace("€", "").replace(",", ".")
-            amounts[level] = None if raw in (None, "") else Decimal(raw)
+            if raw in (None, ""):
+                amounts[level] = None
+                continue
+            try:
+                value = Decimal(raw)
+            except (InvalidOperation, ValueError, TypeError):
+                raise ValidationError(_("Please enter a valid number."))
+            if not value.is_finite():
+                raise ValidationError(_("Please enter a valid number."))
+            amounts[level] = value
         return amounts
 
     @classmethod
@@ -138,6 +156,15 @@ class BidValidator:
         return price.min_amount
 
     @classmethod
+    def _is_quantity_enabled(cls, cache) -> bool:
+        try:
+            return get_parameter_value(
+                ParameterKeys.BIDDING_ROUND_BID_QUANTITY_ENABLED, cache=cache
+            )
+        except KeyError:
+            return False
+
+    @classmethod
     def _validate_pickup_locations(cls, bidding_round, pickup_location_id, cache):
         try:
             pickup_location_change_enabled = get_parameter_value(
@@ -149,3 +176,5 @@ class BidValidator:
             return
         if not pickup_location_id:
             raise ValidationError(_("Please select a pickup location."))
+        if not PickupLocation.objects.filter(id=pickup_location_id).exists():
+            raise ValidationError(_("The selected pickup location does not exist."))

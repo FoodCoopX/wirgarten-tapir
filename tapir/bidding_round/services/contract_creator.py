@@ -1,3 +1,4 @@
+import logging
 from decimal import Decimal
 
 from django.core.exceptions import ValidationError
@@ -5,7 +6,10 @@ from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 
 from tapir.bidding_round.config import CLOSED
-from tapir.bidding_round.models import BiddingRoundCreatedSubscription
+from tapir.bidding_round.models import (
+    BiddingRoundCreatedSubscription,
+    BiddingRoundReplacedSubscription,
+)
 from tapir.bidding_round.services.bidding_round_capacity_service import (
     BiddingRoundCapacityService,
 )
@@ -33,6 +37,8 @@ from tapir.subscriptions.services.subscription_price_calculator import (
     SubscriptionPriceCalculator,
 )
 from tapir.wirgarten.models import Subscription
+
+logger = logging.getLogger(__name__)
 from tapir.wirgarten.utils import get_now
 
 
@@ -51,6 +57,14 @@ class ContractCreator:
         if bidding_round.status != CLOSED:
             raise ValidationError(
                 _("Contracts can only be created after the bidding round has ended.")
+            )
+
+        if bidding_round.contracts_created_at is not None:
+            raise ValidationError(
+                _(
+                    "Contracts have already been created for this bidding round. "
+                    "Delete them first to create them again."
+                )
             )
 
         if bidding_round.average_bid_locked_at is None:
@@ -119,8 +133,19 @@ class ContractCreator:
             )
         )
 
-        bidding_round.contracts_created_at = get_now(cache=cache)
-        bidding_round.save(update_fields=["contracts_created_at", "updated_at"])
+        # Only mark the round as done when at least one contract was actually created,
+        # so a failed run can be retried without unlocking.
+        if created_subscriptions:
+            bidding_round.contracts_created_at = get_now(cache=cache)
+            bidding_round.save(update_fields=["contracts_created_at", "updated_at"])
+        logger.info(
+            "Bidding round %s contract creation by %s: %s subscriptions created, "
+            "%s errors",
+            bidding_round.id,
+            getattr(actor, "id", actor),
+            len(created_subscriptions),
+            len(errors),
+        )
         return {
             "errors": errors,
             "subscriptions": created_subscriptions,
@@ -237,13 +262,27 @@ class ContractCreator:
 
         new_subscriptions = []
         now = get_now(cache=cache)
+        own_created_subscription_ids = set(
+            bidding_round.created_subscriptions.values_list(
+                "subscription_id", flat=True
+            )
+        )
         for item in bid.items.select_related("product").all():
-            Subscription.objects.filter(
-                member=bid.member,
-                period=period,
-                product=item.product,
-                cancellation_ts__isnull=True,
-            ).delete()
+            replaced = [
+                subscription
+                for subscription in Subscription.objects.filter(
+                    member=bid.member,
+                    period=period,
+                    product=item.product,
+                    cancellation_ts__isnull=True,
+                )
+                if subscription.id not in own_created_subscription_ids
+            ]
+            if replaced:
+                BiddingRoundReplacedSubscription.capture(bidding_round, replaced)
+                Subscription.objects.filter(
+                    id__in=[subscription.id for subscription in replaced]
+                ).delete()
 
             subscription = Subscription(
                 member=bid.member,

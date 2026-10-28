@@ -45,6 +45,13 @@ class TestBiddingRoundStatsService(TapirIntegrationTest):
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
+    def setUp(self):
+        super().setUp()
+        # These tests exercise multi-share bids, so the quantity flag must be on.
+        TapirParameter.objects.filter(
+            key=ParameterKeys.BIDDING_ROUND_BID_QUANTITY_ENABLED
+        ).update(value="true")
+
     def test_buildStats_perProduct_calculatesTargetReachedPercentAndDeficit(self):
         round_ = create_open_round()
         round_product, product = create_round_product_with_product(
@@ -344,6 +351,9 @@ class TestBiddingRoundStatsService(TapirIntegrationTest):
         return_value=Decimal("78.00"),
     )
     def test_buildExtraPositions_deliveryCharge_sumsOverBids(self, mock_charge):
+        TapirParameter.objects.filter(
+            key=ParameterKeys.BIDDING_ROUND_PICKUP_LOCATION_CHANGE_ENABLED
+        ).update(value="true")
         round_ = create_open_round()
         round_product, product = create_round_product_with_product(round_)
         pickup_location = PickupLocationFactory.create()
@@ -939,6 +949,9 @@ class TestBiddingRoundStatsService(TapirIntegrationTest):
         self.assertNotIn("pickup_locations", table)
 
     def test_buildPublicPickupLocationUtilization_marksFullDepots(self):
+        TapirParameter.objects.filter(
+            key=ParameterKeys.BIDDING_ROUND_PICKUP_LOCATION_CHANGE_ENABLED
+        ).update(value="true")
         round_ = create_open_round()
         round_product, product = create_round_product_with_product(round_)
         pickup_location = PickupLocationFactory.create()

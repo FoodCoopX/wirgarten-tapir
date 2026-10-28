@@ -1,6 +1,9 @@
 from django.core.exceptions import ValidationError
 
-from tapir.bidding_round.models import BiddingRoundCreatedSubscription
+from tapir.bidding_round.models import (
+    BiddingRoundCreatedSubscription,
+    BiddingRoundReplacedSubscription,
+)
 from tapir.bidding_round.services.contract_deletion_service import (
     BiddingRoundContractDeletionService,
 )
@@ -52,3 +55,38 @@ class TestBiddingRoundContractDeletionService(TapirIntegrationTest):
             BiddingRoundContractDeletionService.delete_contracts(
                 round_, actor=None, cache={}
             )
+
+    def test_deleteContracts_restoresReplacedSubscriptions(self):
+        round_ = create_open_round()
+        _, product = create_round_product_with_product(round_, capacity=100)
+        member = MemberFactory.create()
+        replaced = SubscriptionFactory.create(
+            member=member,
+            period=round_.growing_period,
+            product=product,
+            quantity=3,
+        )
+        BiddingRoundReplacedSubscription.capture(round_, [replaced])
+        replaced.delete()
+
+        created = SubscriptionFactory.create(
+            member=member,
+            period=round_.growing_period,
+            product=product,
+            quantity=1,
+        )
+        BiddingRoundCreatedSubscription.objects.create(
+            round=round_, subscription=created, is_bidder_contract=True
+        )
+        round_.contracts_created_at = get_now()
+        round_.save()
+
+        BiddingRoundContractDeletionService.delete_contracts(
+            round_, actor=member, cache={}
+        )
+
+        restored = Subscription.objects.get(
+            member=member, product=product, period=round_.growing_period
+        )
+        self.assertEqual(3, restored.quantity)
+        self.assertEqual(0, round_.replaced_subscriptions.count())
