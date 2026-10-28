@@ -3,6 +3,41 @@
 The bidding round lets members submit a bid (monthly contribution) for harvest shares. After the
 round ends, the operator locks an average bid and creates the matching subscriptions.
 
+## User journey (who bids, and when)
+
+**Only logged-in existing members bid during the round.** New members are created **before or after**
+the round through the regular **order wizard** (join → Keycloak user → personal data → association
+membership or cooperative shares → bank details → legal), never during the round. There is **no**
+registration, no waiting list and no pickup-location fallback inside the bidding round.
+
+Bid journey of an existing member:
+
+1. Open `/bidding_rounds/` (login first if needed).
+2. Intro, skippable via `skip_intro` (only for logged-in members, the intro carries the login).
+3. Product description, skippable via `skip_product_description`.
+4. Bid: variant, optional quantity, amount(s) — with a live capacity check (see below).
+5. Pickup location, only when `BIDDING_ROUND_PICKUP_LOCATION_CHANGE_ENABLED` is on.
+6. Summary (location and yearly delivery charge) → submit.
+7. Mail (`BIDDING_ROUND_BID_RECEIVED` / `BIDDING_ROUND_BID_UPDATED`) and confirmation.
+
+A member's bid **replaces their own projected auto-renewal**; a member either renews (contract) or
+bids, so their renewal is not counted twice.
+
+```mermaid
+flowchart TD
+    VISIT["Open /bidding_rounds/"] --> FLAG{"BIDDING_ROUND_ENABLED?"}
+    FLAG -- No --> D404["404"]
+    FLAG -- Yes --> URL{"BIDDING_ROUND_URL_ENABLED?"}
+    URL -- No --> D404
+    URL -- Yes --> OPEN{"Round open?<br/>status ACTIVE within start_at/end_at"}
+    OPEN -- No --> ENDED["Intro: 'ended' / 'not available'"]
+    OPEN -- Yes --> MEMBER{"Logged-in member?"}
+    MEMBER -- No --> LOGIN["Intro with login button<br/>login returns to /bidding_rounds/"]
+    MEMBER -- Yes --> JOURNEY["Bid journey (diagram 3 below)"]
+    NEW["New member"] --> WIZARD["Order wizard BEFORE or AFTER the round<br/>join, personal data, association/coop, bank, legal<br/>becomes a member"]
+    WIZARD -. "may bid while a round is still open" .-> MEMBER
+```
+
 ## Feature flags
 
 Two parameters gate the feature (see `tapir/wirgarten/parameter_definitions/parameter_definitions_bidding_round.py`):
@@ -11,7 +46,7 @@ Two parameters gate the feature (see `tapir/wirgarten/parameter_definitions/para
   answers with `404` (enforced by `BiddingRoundFeatureFlagMixin` / `BiddingRoundFeaturePermission` in
   `tapir/bidding_round/permissions.py`).
 - `BIDDING_ROUND_URL_ENABLED` – additionally gates the public, member-facing endpoints
-  (`public_data`, `public_results`, `public_bids/capacity_check`, `member_bid`). Admin endpoints stay
+  (`public_data`, `public_results`, `capacity_check`, `member_bid`). Admin endpoints stay
   reachable so an operator can still configure the round.
 
 ## Lifecycle
@@ -21,6 +56,12 @@ transitions:
 
 `CONFIGURATION` → `ACTIVE` (`start_round`, one active round at a time) → `CLOSED` (`close_round`).
 `reopen_round` and `delete_round` are blocked once `contracts_created_at` is set.
+
+Admin order after the round ended: **confirm bids** (`admin_confirmed`, single or bulk) →
+**lock the average bid** → **create contracts** (requires `CLOSED`, a locked average bid, no
+contracts created yet, and all selected bids confirmed) → **delete contracts** (restores snapshots)
+/ **CSV export** / **results**. Individual bid errors create a per-bid error report and do not roll
+back the successful bids.
 
 ## Bidding
 
@@ -34,6 +75,48 @@ transitions:
   `current_pickup_location` (incl. yearly delivery charge), independently of that flag.
 - Bids can no longer be changed once contracts have been created.
 
+## Capacity check
+
+`BiddingRoundCapacityService.get_insufficient_capacity_reasons` is the shared capacity core for both
+submitting a bid and creating contracts, so both paths check the exact same capacities: the global
+harvest-share capacity of the round's product types and the capacity of the primary pickup location.
+
+What the check counts:
+
+- **Auto-renewals** count as usage (via the underlying capacity checkers).
+- The **checking member's own** projected renewal is credited back, so a member can always replace
+  their own renewal with a bid.
+- Bids of **other** members of the round count as usage, but their projected renewal is subtracted
+  once, so a bid replacing a renewal is counted exactly once (and only for the product types the bid
+  actually contains).
+- Bids whose contracts have **already been created** (`BiddingRoundCreatedSubscription`) are not
+  counted again.
+- Only product types **with a configured `ProductCapacity`** for the round's period are constrained;
+  a missing product price skips the check instead of blocking the bid.
+- The **pickup-location** part is only evaluated when `BIDDING_ROUND_PICKUP_LOCATION_CHANGE_ENABLED`
+  is on.
+
+```mermaid
+flowchart LR
+    A["get_insufficient_capacity_reasons"] --> B["global: product-type capacity<br/>in the round's period"]
+    A --> C["pickup location: primary location<br/>(only when change is enabled)"]
+    B --> D["count: auto-renewals"]
+    B --> E["count: other bidders' bids<br/>(their replaced renewal subtracted once)"]
+    B --> F["credit: the checking member's own renewal"]
+    B --> G["exclude: already materialised contracts<br/>(BiddingRoundCreatedSubscription)"]
+```
+
+### Endpoint `POST /bidding_rounds/api/<round_id>/capacity_check`
+
+- **Authenticated** (`IsAuthenticated`, `member` required) and gated: requires
+  `BIDDING_ROUND_ENABLED` (and, being a public endpoint, `BIDDING_ROUND_URL_ENABLED`) and that
+  `round_id` is the currently open round — otherwise `404`.
+- Request: `items` (max 20, each `{ product_id, quantity }`) and an optional `pickup_location_id`;
+  invalid items → `400`. There is **no** fallback pickup location.
+- Response: `{ "sufficient": bool, "message": str }`.
+- The frontend calls it debounced on the share/quantity selection and again on "next", and on the
+  pickup step on selection and on "next".
+
 ## Evaluation and contracts
 
 - `BiddingRoundStatsService` builds the results, statistics, traffic-light position and financing
@@ -44,6 +127,20 @@ transitions:
   Existing non-cancelled subscriptions for the same product/season are replaced; the originals are
   snapshotted in `BiddingRoundReplacedSubscription` and restored by
   `BiddingRoundContractDeletionService.delete_contracts`.
+
+## Emails
+
+| Event | Trigger |
+|---|---|
+| `BIDDING_ROUND_BID_RECEIVED` | new bid |
+| `BIDDING_ROUND_BID_UPDATED` | a member changes an existing bid |
+
+Drafts: `tapir/wirgarten/email_drafts/bidding_round_bid_received.mjml` and
+`bidding_round_bid_updated.mjml`; both are `required=True`. The token builder inserts the bid
+details, yearly total, pickup location and change link, and HTML-escapes names and the location.
+
+Membership-creation, waiting-list and e-mail-verification mails belong to the **order wizard**, not
+to the bidding round.
 
 ## Flow diagrams
 
@@ -164,7 +261,7 @@ flowchart TD
 | Item | shares belong to the round, product to the product type, amounts finite/non-negative/ascending, min amount, quantity 1-5 | `BidValidator._validate_item` / `_validate_levels` / `_parse_amounts` |
 | Quantity flag | `BIDDING_ROUND_BID_QUANTITY_ENABLED=false` -> only `quantity == 1` | `BidValidator._is_quantity_enabled` |
 | Pickup | when change is off, submitted location is ignored; otherwise must exist | `BiddingRoundService._resolve_pickup_location_id`, `BidValidator._validate_pickup_locations` |
-| Capacity | products/quantity/location must fit remaining capacity | `BidValidator._validate_capacity`, `capacity_check` |
+| Capacity | products/quantity/location must fit remaining capacity; `capacity_check` requires auth and the open round | `BidValidator._validate_capacity`, `capacity_check` |
 | Bid edit after contracts | item changes and pickup changes are blocked | `save_admin_bid` |
 | Lock average bid | not already locked; surcharge 0-100% | `BiddingRoundService.lock_average_bid` |
 | Unlock average bid | blocked once `contracts_created_at` is set | `BiddingRoundService.unlock_average_bid` |
