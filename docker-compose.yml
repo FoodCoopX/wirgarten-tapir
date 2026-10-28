@@ -83,6 +83,7 @@ services:
       context: .
       dockerfile: ./vite.Dockerfile
     tty: true
+    init: true
     ports:
       - '5173:5173'
     volumes:
