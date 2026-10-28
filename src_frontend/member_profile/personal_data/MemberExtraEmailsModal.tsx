@@ -144,6 +144,7 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
               <div className={"d-flex flex-column gap-2 my-2"}>
                 <Form.Control
                   placeholder={"Vorname"}
+                  aria-label={"Vorname"}
                   value={editFirstName}
                   onChange={(event) => {
                     setEditFirstName(event.target.value);
@@ -151,6 +152,7 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
                 />
                 <Form.Control
                   placeholder={"Nachname"}
+                  aria-label={"Nachname"}
                   value={editLastName}
                   onChange={(event) => {
                     setEditLastName(event.target.value);

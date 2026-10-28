@@ -47,7 +47,7 @@ const UsedDonationsTable: React.FC<UsedDonationsTableProps> = ({
                   {formatDateText(donationWithCancellation.deliveryDate)}
                   <br />
                   <small>
-                    KW{dayjs(donationWithCancellation.donation.date).week()}
+                    KW{dayjs(donationWithCancellation.deliveryDate).week()}
                   </small>
                 </td>
                 <td>

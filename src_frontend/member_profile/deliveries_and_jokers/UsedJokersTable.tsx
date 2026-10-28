@@ -47,7 +47,7 @@ const UsedJokersTable: React.FC<UsedJokersTableProps> = ({
                   {formatDateText(jokerWithCancellation.deliveryDate)}
                   <br />
                   <small>
-                    KW{dayjs(jokerWithCancellation.joker.date).week()}
+                    KW{dayjs(jokerWithCancellation.deliveryDate).week()}
                   </small>
                 </td>
                 <td>
