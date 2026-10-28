@@ -30,6 +30,7 @@ class ExtendedPaymentSerializer(serializers.Serializer):
     delivery_charge_pickup_location = PublicPickupLocationSerializer(allow_null=True)
     delivery_dates = serializers.ListField(child=serializers.DateField())
     association_memberships = AssociationMembershipSerializer(many=True)
+    number_of_instalments = serializers.IntegerField(allow_null=True)
 
 
 class MemberCreditSerializer(serializers.ModelSerializer):

@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.core.exceptions import BadRequest
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
@@ -192,6 +193,7 @@ class ExistingMemberPurchasesSharesApiView(APIView):
                 shares_valid_at=shares_valid_at,
                 cache=self.cache,
                 actor=request.user,
+                pay_in_instalments=False,
             )
             if needs_banking_data:
                 member.iban = iban
@@ -332,6 +334,9 @@ class GetCoopShareTransactionsApiView(APIView):
             "url_of_bestell_wizard": reverse(
                 "bestell_wizard:bestell_wizard_coop_shares", args=[member_id]
             ),
+            "contact_email": get_parameter_value(
+                ParameterKeys.SITE_EMAIL, cache=self.cache
+            ),
         }
 
         return Response(GetCoopShareTransactionsResponseSerializer(data).data)
@@ -351,7 +356,6 @@ class DeleteMemberApiView(APIView):
         parameters=[OpenApiParameter(name="member_id", type=str)],
     )
     def delete(self, request):
-        cache = {}
         member_id = request.query_params.get("member_id")
         member = get_object_or_404(Member, id=member_id)
 
@@ -381,7 +385,7 @@ class DeleteMemberApiView(APIView):
 
             member.delete()
 
-            KeycloakUserDeleteService.delete_user_if_exists(user=member, cache=cache)
+            KeycloakUserDeleteService.delete_user_if_exists(user=member)
 
         return Response("deleted")
 
@@ -494,6 +498,9 @@ class MemberPersonalDataApiView(APIView):
                     "city": member.city,
                     "is_student": is_student,
                     "can_edit_student": self.user_can_edit_student_status(request.user),
+                    "label_student_checkbox": get_parameter_value(
+                        ParameterKeys.LABEL_STUDENT_CHECKBOX, cache=self.cache
+                    ),
                     "can_edit_name": self.user_can_edit_name(request.user),
                     "country": str(member.country),
                     "can_edit_country": self.user_can_edit_country(request.user),
@@ -504,6 +511,8 @@ class MemberPersonalDataApiView(APIView):
                     "phone_number_required": get_parameter_value(
                         ParameterKeys.MEMBER_PHONE_NUMBER_REQUIRED, cache=self.cache
                     ),
+                    "pseudonym": member.pseudonym,
+                    "pseudonym_enabled": self.is_pseudonym_enabled(),
                 }
             ).data
         )
@@ -519,6 +528,9 @@ class MemberPersonalDataApiView(APIView):
     @classmethod
     def user_can_edit_country(cls, user):
         return user.has_perm(Permission.Coop.MANAGE)
+
+    def is_pseudonym_enabled(self):
+        return settings.BAKERY_ENABLED
 
     def get_formatted_member_number(self, member: Member) -> str:
         if not MemberNumberService.should_display_member_number(
@@ -605,6 +617,9 @@ class MemberPersonalDataApiView(APIView):
         if student_status_enabled:
             member.is_student = serializer.validated_data["is_student"]
 
+        if self.is_pseudonym_enabled() and "pseudonym" in serializer.validated_data:
+            member.pseudonym = serializer.validated_data["pseudonym"]
+
         with transaction.atomic():
             UpdateTapirUserLogEntry().populate(
                 old_frozen=member_before,
@@ -623,7 +638,8 @@ class MemberPersonalDataApiView(APIView):
             StaticSegmentRecipient.objects.filter(email=member.email).update(
                 first_name=member.first_name, last_name=member.last_name
             )
-            KeycloakUserManager.update_keycloak_user_name(user=member, cache=self.cache)
+            if member.keycloak_id:
+                KeycloakUserManager.update_keycloak_user_name(user=member)
 
             member.save()
 
@@ -653,7 +669,7 @@ class MemberEmailApiView(APIView):
                 {
                     "email": member.email,
                     "verified": EmailVerificationService.is_user_email_verified(
-                        user=member, cache=self.cache
+                        user=member
                     ),
                     "contact_email": get_parameter_value(
                         ParameterKeys.SITE_EMAIL, cache=self.cache
@@ -686,7 +702,6 @@ class MemberEmailApiView(APIView):
             PersonalDataValidator.validate_email_address_not_in_use(
                 email=new_email,
                 check_waiting_list=True,
-                cache=self.cache,
             )
         except DjangoValidationError as error:
             return Response(
@@ -697,12 +712,10 @@ class MemberEmailApiView(APIView):
 
         with transaction.atomic():
             KeycloakUserManager.create_keycloak_user_if_necessary(
-                user=member, initial_password=None, cache=self.cache
+                user=member, initial_password=None
             )
 
-            if EmailVerificationService.is_user_email_verified(
-                user=member, cache=self.cache
-            ):
+            if EmailVerificationService.is_user_email_verified(user=member):
                 MailChangeService.start_email_change_process(
                     user=member, new_email=new_email, orig_email=member.email
                 )
@@ -733,11 +746,9 @@ class MemberEmailApiView(APIView):
         ).save()
 
         try:
-            EmailVerificationService.send_verification_email(
-                user=member, actor=actor, cache=self.cache
-            )
+            EmailVerificationService.send_verification_email(user=member, actor=actor)
         except KeycloakPutError:
-            kc = KeycloakUserManager.get_keycloak_client(cache=self.cache)
+            kc = KeycloakUserManager.get_keycloak_client()
             kc.update_user(
                 user_id=member.keycloak_id,
                 payload={

@@ -226,12 +226,14 @@ class MemberExtraEmailConfirmedView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context_data = super().get_context_data(**kwargs)
+        cache = {}
         member_extra_email = get_object_or_404(
             MemberExtraEmail, secret=kwargs["secret"]
         )
         context_data["extra_mail_address"] = member_extra_email.email
         context_data["main_mail_address"] = member_extra_email.member.email
         context_data["site_name"] = get_parameter_value(
-            ParameterKeys.SITE_NAME, cache={}
+            ParameterKeys.SITE_NAME, cache=cache
         )
+        context_data["cache"] = cache
         return context_data

@@ -16,13 +16,10 @@ class TestEmailVerificationService(TapirUnitTest):
         mock_user_data_from_keycloak = {"emailVerified": True}
         mock_client.get_user.return_value = mock_user_data_from_keycloak
         user = MemberFactory.build(keycloak_id="1234")
-        cache = MagicMock()
 
-        self.assertTrue(
-            EmailVerificationService.is_user_email_verified(user=user, cache=cache)
-        )
+        self.assertTrue(EmailVerificationService.is_user_email_verified(user=user))
 
-        mock_get_keycloak_client.assert_called_once_with(cache=cache)
+        mock_get_keycloak_client.assert_called_once_with()
         mock_client.get_user.assert_called_once_with("1234")
 
     @patch.object(KeycloakUserManager, "get_keycloak_client", autospec=True)
@@ -34,13 +31,10 @@ class TestEmailVerificationService(TapirUnitTest):
         mock_user_data_from_keycloak = {"emailVerified": False}
         mock_client.get_user.return_value = mock_user_data_from_keycloak
         user = MemberFactory.build(keycloak_id="1234")
-        cache = MagicMock()
 
-        self.assertFalse(
-            EmailVerificationService.is_user_email_verified(user=user, cache=cache)
-        )
+        self.assertFalse(EmailVerificationService.is_user_email_verified(user=user))
 
-        mock_get_keycloak_client.assert_called_once_with(cache=cache)
+        mock_get_keycloak_client.assert_called_once_with()
         mock_client.get_user.assert_called_once_with("1234")
 
     @patch.object(KeycloakUserManager, "get_keycloak_client", autospec=True)
@@ -51,11 +45,8 @@ class TestEmailVerificationService(TapirUnitTest):
         mock_get_keycloak_client.return_value = mock_client
         mock_client.get_user.side_effect = Exception()
         user = MemberFactory.build(keycloak_id="1234")
-        cache = MagicMock()
 
-        self.assertFalse(
-            EmailVerificationService.is_user_email_verified(user=user, cache=cache)
-        )
+        self.assertFalse(EmailVerificationService.is_user_email_verified(user=user))
 
-        mock_get_keycloak_client.assert_called_once_with(cache=cache)
+        mock_get_keycloak_client.assert_called_once_with()
         mock_client.get_user.assert_called_once_with("1234")

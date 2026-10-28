@@ -554,6 +554,7 @@ class Product(TapirModel):
     capacity = models.PositiveIntegerField(null=True, blank=False)
     min_coop_shares = models.IntegerField(default=0)
     hidden_in_bestell_wizard = models.BooleanField(default=False)
+    solidarity_choices = models.CharField(max_length=512, default="", blank=True)
 
     def clean(self):
         # Check if there is exactly one base product per ProductType
@@ -788,6 +789,15 @@ class Payment(TapirModel):
     pickup_location = models.ForeignKey(
         PickupLocation, on_delete=models.DO_NOTHING, null=True
     )
+    # Only set for coop share payments
+    coop_share_transaction = models.ForeignKey(
+        "CoopShareTransaction",
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="payments",
+    )
+    # Only set if the coop shares are paid in instalments
+    instalment_number = models.PositiveSmallIntegerField(null=True)
 
     class Meta:
         indexes = [
@@ -833,9 +843,6 @@ class CoopShareTransaction(TapirModel, Payable, AdminConfirmableMixin):
     )
     transfer_member = models.ForeignKey(
         Member, on_delete=models.DO_NOTHING, null=True, related_name="transfer_member"
-    )
-    payment = models.ForeignKey(
-        Payment, on_delete=models.DO_NOTHING, null=True, related_name="payment"
     )
 
     @property

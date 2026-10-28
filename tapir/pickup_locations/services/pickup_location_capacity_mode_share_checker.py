@@ -14,6 +14,8 @@ from tapir.subscriptions.services.automatic_subscription_renewal_service import 
 )
 from tapir.subscriptions.types import TapirOrder
 from tapir.utils.services.tapir_cache import TapirCache
+from tapir.utils.services.tapir_cache_manager import TapirCacheManager
+from tapir.utils.shortcuts import get_from_cache_or_compute
 from tapir.waiting_list.services.waiting_list_reserved_capacity_calculator import (
     WaitingListReservedCapacityCalculator,
 )
@@ -123,6 +125,36 @@ class PickupLocationCapacityModeShareChecker:
 
     @classmethod
     def get_capacity_usage_at_date(
+        cls,
+        pickup_location: PickupLocation,
+        product_type: ProductType,
+        reference_date: datetime.date,
+        cache: dict,
+    ):
+        key = "pickup_location_capacity_usage_at_date"
+        for category in [
+            TapirCacheManager.CATEGORY_SUBSCRIPTIONS,
+            TapirCacheManager.CATEGORY_MEMBER_PICKUP_LOCATIONS,
+        ]:
+            TapirCacheManager.register_key_in_category(
+                cache=cache, key=key, category=category
+            )
+        usage_by_location_product_type_and_date = get_from_cache_or_compute(
+            cache, key, lambda: {}
+        )
+        return get_from_cache_or_compute(
+            usage_by_location_product_type_and_date,
+            (pickup_location.id, product_type.id, reference_date),
+            lambda: cls.compute_capacity_usage_at_date(
+                pickup_location=pickup_location,
+                product_type=product_type,
+                reference_date=reference_date,
+                cache=cache,
+            ),
+        )
+
+    @classmethod
+    def compute_capacity_usage_at_date(
         cls,
         pickup_location: PickupLocation,
         product_type: ProductType,

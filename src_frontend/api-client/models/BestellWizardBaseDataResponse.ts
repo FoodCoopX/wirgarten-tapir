@@ -67,6 +67,18 @@ export interface BestellWizardBaseDataResponse {
   priceOfAShare: number;
   /**
    *
+   * @type {boolean}
+   * @memberof BestellWizardBaseDataResponse
+   */
+  coopShareInstalmentsEnabled: boolean;
+  /**
+   *
+   * @type {number}
+   * @memberof BestellWizardBaseDataResponse
+   */
+  coopShareInstalmentAmount: number;
+  /**
+   *
    * @type {string}
    * @memberof BestellWizardBaseDataResponse
    */
@@ -125,12 +137,6 @@ export interface BestellWizardBaseDataResponse {
    * @memberof BestellWizardBaseDataResponse
    */
   showCoopContent: boolean;
-  /**
-   *
-   * @type {string}
-   * @memberof BestellWizardBaseDataResponse
-   */
-  introStepText: string;
   /**
    *
    * @type {string}
@@ -197,6 +203,12 @@ export interface BestellWizardBaseDataResponse {
    * @memberof BestellWizardBaseDataResponse
    */
   contactMailAddress: string;
+  /**
+   *
+   * @type {string}
+   * @memberof BestellWizardBaseDataResponse
+   */
+  websiteUrl: string;
   /**
    *
    * @type {{ [key: string]: string; }}
@@ -279,6 +291,16 @@ export function instanceOfBestellWizardBaseDataResponse(
 ): value is BestellWizardBaseDataResponse {
   if (!("priceOfAShare" in value) || value["priceOfAShare"] === undefined)
     return false;
+  if (
+    !("coopShareInstalmentsEnabled" in value) ||
+    value["coopShareInstalmentsEnabled"] === undefined
+  )
+    return false;
+  if (
+    !("coopShareInstalmentAmount" in value) ||
+    value["coopShareInstalmentAmount"] === undefined
+  )
+    return false;
   if (!("theme" in value) || value["theme"] === undefined) return false;
   if (
     !("allowInvestingMembership" in value) ||
@@ -309,8 +331,6 @@ export function instanceOfBestellWizardBaseDataResponse(
   )
     return false;
   if (!("showCoopContent" in value) || value["showCoopContent"] === undefined)
-    return false;
-  if (!("introStepText" in value) || value["introStepText"] === undefined)
     return false;
   if (
     !("labelCheckboxSepaMandat" in value) ||
@@ -356,6 +376,8 @@ export function instanceOfBestellWizardBaseDataResponse(
     !("contactMailAddress" in value) ||
     value["contactMailAddress"] === undefined
   )
+    return false;
+  if (!("websiteUrl" in value) || value["websiteUrl"] === undefined)
     return false;
   if (
     !("distributionChannels" in value) ||
@@ -420,6 +442,8 @@ export function BestellWizardBaseDataResponseFromJSONTyped(
   }
   return {
     priceOfAShare: json["price_of_a_share"],
+    coopShareInstalmentsEnabled: json["coop_share_instalments_enabled"],
+    coopShareInstalmentAmount: json["coop_share_instalment_amount"],
     theme: json["theme"],
     allowInvestingMembership: json["allow_investing_membership"],
     productTypes: (json["product_types"] as Array<any>).map(
@@ -436,7 +460,6 @@ export function BestellWizardBaseDataResponseFromJSONTyped(
     studentStatusAllowed: json["student_status_allowed"],
     phoneNumberRequired: json["phone_number_required"],
     showCoopContent: json["show_coop_content"],
-    introStepText: json["intro_step_text"],
     labelCheckboxSepaMandat: json["label_checkbox_sepa_mandat"],
     labelCheckboxContractPolicy: json["label_checkbox_contract_policy"],
     trialPeriodLengthInWeeks: json["trial_period_length_in_weeks"],
@@ -450,6 +473,7 @@ export function BestellWizardBaseDataResponseFromJSONTyped(
     organizationName: json["organization_name"],
     logoUrl: json["logo_url"],
     contactMailAddress: json["contact_mail_address"],
+    websiteUrl: json["website_url"],
     distributionChannels: json["distribution_channels"],
     solidarityContributionChoices: json["solidarity_contribution_choices"],
     solidarityContributionMinimum: json["solidarity_contribution_minimum"],
@@ -486,6 +510,8 @@ export function BestellWizardBaseDataResponseToJSONTyped(
 
   return {
     price_of_a_share: value["priceOfAShare"],
+    coop_share_instalments_enabled: value["coopShareInstalmentsEnabled"],
+    coop_share_instalment_amount: value["coopShareInstalmentAmount"],
     theme: value["theme"],
     allow_investing_membership: value["allowInvestingMembership"],
     product_types: (value["productTypes"] as Array<any>).map(
@@ -502,7 +528,6 @@ export function BestellWizardBaseDataResponseToJSONTyped(
     student_status_allowed: value["studentStatusAllowed"],
     phone_number_required: value["phoneNumberRequired"],
     show_coop_content: value["showCoopContent"],
-    intro_step_text: value["introStepText"],
     label_checkbox_sepa_mandat: value["labelCheckboxSepaMandat"],
     label_checkbox_contract_policy: value["labelCheckboxContractPolicy"],
     trial_period_length_in_weeks: value["trialPeriodLengthInWeeks"],
@@ -516,6 +541,7 @@ export function BestellWizardBaseDataResponseToJSONTyped(
     organization_name: value["organizationName"],
     logo_url: value["logoUrl"],
     contact_mail_address: value["contactMailAddress"],
+    website_url: value["websiteUrl"],
     distribution_channels: value["distributionChannels"],
     solidarity_contribution_choices: value["solidarityContributionChoices"],
     solidarity_contribution_minimum: value["solidarityContributionMinimum"],

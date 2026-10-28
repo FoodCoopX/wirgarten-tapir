@@ -16,6 +16,16 @@ class TestBuildSimpleResponseFields(TapirUnitTest):
             cache=cache,
         )
         mock_parameter_value(
+            key=ParameterKeys.COOP_SHARES_INSTALMENTS_ENABLED,
+            value="test_coop_share_instalments_enabled",
+            cache=cache,
+        )
+        mock_parameter_value(
+            key=ParameterKeys.COOP_SHARES_INSTALMENT_AMOUNT,
+            value="test_coop_share_instalment_amount",
+            cache=cache,
+        )
+        mock_parameter_value(
             key=ParameterKeys.ORGANISATION_THEME,
             value="test_organisation_theme",
             cache=cache,
@@ -46,11 +56,6 @@ class TestBuildSimpleResponseFields(TapirUnitTest):
             cache=cache,
         )
         mock_parameter_value(
-            key=ParameterKeys.BESTELLWIZARD_INTRO_TEXT,
-            value="test_intro_text",
-            cache=cache,
-        )
-        mock_parameter_value(
             key=ParameterKeys.BESTELLWIZARD_SEPA_MANDAT_CHECKBOX_TEXT,
             value="test_sepa_mandat",
             cache=cache,
@@ -73,6 +78,11 @@ class TestBuildSimpleResponseFields(TapirUnitTest):
         )
         mock_parameter_value(
             key=ParameterKeys.SITE_EMAIL, value="test_site_email", cache=cache
+        )
+        mock_parameter_value(
+            key=ParameterKeys.SITE_WEBSITE_LINK,
+            value="test_website_link",
+            cache=cache,
         )
         mock_parameter_value(
             key=ParameterKeys.SOLIDARITY_DEFAULT,
@@ -105,19 +115,21 @@ class TestBuildSimpleResponseFields(TapirUnitTest):
         self.assertEqual(
             {
                 "price_of_a_share": "test_coop_share_price",
+                "coop_share_instalments_enabled": "test_coop_share_instalments_enabled",
+                "coop_share_instalment_amount": "test_coop_share_instalment_amount",
                 "theme": "test_organisation_theme",
                 "allow_investing_membership": "test_coop_shares_independent",
                 "force_waiting_list": "test_force_waiting_list",
                 "intro_enabled": "test_show_intro",
                 "student_status_allowed": "test_allow_student",
                 "phone_number_required": "test_phone_number_required",
-                "intro_step_text": "test_intro_text",
                 "label_checkbox_sepa_mandat": "test_sepa_mandat",
                 "label_checkbox_contract_policy": "test_contract_policy",
                 "default_payment_rhythm": "test_default_rhythm",
                 "coop_statute_link": "test_statute_link",
                 "organization_name": "test_site_name",
                 "contact_mail_address": "test_site_email",
+                "website_url": "test_website_link",
                 "solidarity_contribution_default": "test_solidarity_default",
                 "feedback_step_enabled": "test_step13",
                 "solidarity_step_position": "test_step_position",

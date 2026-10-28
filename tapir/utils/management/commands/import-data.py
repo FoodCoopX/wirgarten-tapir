@@ -99,11 +99,8 @@ class Command(BaseCommand):
             EmailChangeRequest.objects.all().delete()
             MemberCredit.objects.all().delete()
             Joker.objects.all().delete()
-            cache = {}
             for member in Member.objects.all():
-                KeycloakUserDeleteService.delete_user_if_exists(
-                    user=member, cache=cache
-                )
+                KeycloakUserDeleteService.delete_user_if_exists(user=member)
                 member.delete()
             return
 
@@ -166,10 +163,9 @@ class Command(BaseCommand):
                             EmailChangeRequest.objects.all().delete()
                             MemberCredit.objects.all().delete()
                             Joker.objects.all().delete()
-                            cache = {}
                             for member in Member.objects.all():
                                 KeycloakUserDeleteService.delete_user_if_exists(
-                                    user=member, cache=cache
+                                    user=member
                                 )
                                 member.delete()
 

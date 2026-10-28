@@ -1,3 +1,6 @@
+from tapir.associations.services.association_membership_price_type_getter import (
+    AssociationMembershipTypePriceGetter,
+)
 from tapir.configuration.parameter import get_parameter_value
 from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES
 from tapir.payments.services.intended_use_pattern_expander import (
@@ -50,18 +53,37 @@ class PaymentExportIntendedUseBuilder:
             )
         return IntendedUsePatternExpander.expand_pattern_coop_shares_bought(
             pattern=get_parameter_value(
-                key=ParameterKeys.PAYMENT_INTENDED_USE_COOP_SHARES, cache=cache
+                key=(
+                    ParameterKeys.PAYMENT_INTENDED_USE_COOP_SHARES
+                    if payment.instalment_number is None
+                    else ParameterKeys.PAYMENT_INTENDED_USE_COOP_SHARES_INSTALMENT
+                ),
+                cache=cache,
             ),
             member=payment.mandate_ref.member,
-            number_of_shares=round(
-                payment.amount
-                / get_parameter_value(key=ParameterKeys.COOP_SHARE_PRICE, cache=cache)
+            payment=payment,
+            number_of_shares=cls.get_number_of_coop_shares(
+                payment=payment, cache=cache
             ),
             cache=cache,
         )
 
     @classmethod
+    def get_number_of_coop_shares(cls, payment: Payment, cache: dict) -> int:
+        if payment.coop_share_transaction is not None:
+            return payment.coop_share_transaction.quantity
+
+        # Payments created before 27.10.26  were not linked to their transaction
+        return round(
+            payment.amount
+            / get_parameter_value(key=ParameterKeys.COOP_SHARE_PRICE, cache=cache)
+        )
+
+    @classmethod
     def _get_intended_use_case(cls, payment: Payment, cache: dict):
+        if cls._is_last_payment(payment=payment, cache=cache):
+            return ParameterKeys.PAYMENT_INTENDED_USE_LAST_INVOICE
+
         member_rhythm = MemberPaymentRhythmService.get_member_payment_rhythm(
             member=payment.mandate_ref.member,
             reference_date=payment.subscription_payment_range_start,
@@ -79,12 +101,13 @@ class PaymentExportIntendedUseBuilder:
         if range_start != start_if_normal or range_end != end_if_normal:
             return ParameterKeys.PAYMENT_INTENDED_USE_MULTIPLE_MONTH_INVOICE
 
-        all_contributions = TapirCache.get_all_solidarity_contributions(cache=cache)
+        member_contributions = TapirCache.get_all_solidarity_contributions_for_member(
+            member_id=payment.mandate_ref.member_id, cache=cache
+        )
         relevant_contributions = [
             contribution
-            for contribution in all_contributions
-            if contribution.member_id == payment.mandate_ref.member_id
-            and DateRangeOverlapChecker.do_ranges_overlap(
+            for contribution in member_contributions
+            if DateRangeOverlapChecker.do_ranges_overlap(
                 range_1_start=payment.subscription_payment_range_start,
                 range_1_end=payment.subscription_payment_range_end,
                 range_2_start=contribution.start_date,
@@ -107,6 +130,56 @@ class PaymentExportIntendedUseBuilder:
             )
 
         return ParameterKeys.PAYMENT_INTENDED_USE_MONTHLY_INVOICE
+
+    @classmethod
+    def _is_last_payment(cls, payment: Payment, cache: dict):
+        member_id = payment.mandate_ref.member_id
+        range_start = payment.subscription_payment_range_start
+        range_end = payment.subscription_payment_range_end
+
+        contracts = TapirCache.get_all_subscriptions_for_member(
+            member_id=member_id, cache=cache
+        ) + [
+            contribution
+            for contribution in TapirCache.get_all_solidarity_contributions_for_member(
+                member_id=member_id, cache=cache
+            )
+            if contribution.amount > 0
+        ]
+        contracts += [
+            membership
+            for membership in TapirCache.get_member_association_memberships(
+                cache=cache, member=payment.mandate_ref.member
+            )
+            if AssociationMembershipTypePriceGetter.get_price(
+                membership_type=membership.type,
+                reference_date=max(membership.start_date, range_start),
+                cache=cache,
+            )
+            > 0
+        ]
+
+        contracts_in_range = [
+            contract
+            for contract in contracts
+            if DateRangeOverlapChecker.do_ranges_overlap(
+                range_1_start=contract.start_date,
+                range_1_end=contract.end_date,
+                range_2_start=range_start,
+                range_2_end=range_end,
+            )
+        ]
+        if len(contracts_in_range) == 0:
+            return False
+
+        # Uncancelled contracts may still be renewed, automatically or by the member
+        if any(contract.cancellation_ts is None for contract in contracts_in_range):
+            return False
+
+        return not any(
+            contract.end_date is None or contract.end_date > range_end
+            for contract in contracts
+        )
 
     @classmethod
     def get_payment_type_display_legacy(cls, contract_payments: bool):

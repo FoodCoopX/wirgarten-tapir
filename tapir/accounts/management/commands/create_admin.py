@@ -17,7 +17,7 @@ class Command(BaseCommand):
             is_superuser=True,
         )
         KeycloakUserManager.create_keycloak_user_if_necessary(
-            user=admin, initial_password=options["password"], cache={}
+            user=admin, initial_password=options["password"]
         )
 
     def add_arguments(self, parser):

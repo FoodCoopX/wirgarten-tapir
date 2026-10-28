@@ -27,7 +27,8 @@ interface DeliveryListCardProps {
   areDonationsEnabled: boolean;
   canChangePickupLocation: boolean;
   membersCanChangePickupLocationThemselves: boolean;
-  adminContactEmail: string;
+  contactEmail: string;
+  pickupLocationLabel: string;
   csrfToken: string;
 }
 
@@ -37,7 +38,8 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
   areDonationsEnabled,
   canChangePickupLocation,
   membersCanChangePickupLocationThemselves,
-  adminContactEmail,
+  contactEmail,
+  pickupLocationLabel,
   csrfToken,
 }) => {
   const api = useApi(DeliveriesApi, csrfToken);
@@ -116,19 +118,20 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
         )}
         {canChangePickupLocation ? (
           <TapirButton
-            text={"Verteilstation ändern"}
+            text={`${pickupLocationLabel} ändern`}
             icon={"edit"}
             variant={"outline-primary"}
             onClick={() => setShowPickupLocationChangeModal(true)}
           />
         ) : (
           <TapirHelpButton
-            title={"Verteilstation ändern"}
+            title={`${pickupLocationLabel} ändern`}
             text={
               <>
-                Für eine Änderung deines Abholorts wende dich bitte an deinen
-                Betrieb unter{" "}
-                <a href={`mailto:${adminContactEmail}`}>{adminContactEmail}</a>.
+                Für eine Änderung deines Abholorts wende dich bitte an die
+                Verwaltung (
+                <a href={`mailto:${contactEmail}`}>{contactEmail}</a>
+                ).
               </>
             }
           />
@@ -139,7 +142,7 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
 
   return (
     <>
-      <Card style={{ marginBottom: "1rem" }}>
+      <Card>
         <Card.Header>
           <div
             className={"d-flex justify-content-between align-items-center mb-0"}
@@ -152,6 +155,7 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
           <DeliveriesTable
             deliveries={deliveries}
             deliveriesLoading={deliveriesLoading}
+            pickupLocationLabel={pickupLocationLabel}
             setSelectedPickupLocation={setSelectedPickupLocation}
             setSelectedPickupLocationOpeningTimes={
               setSelectedPickupLocationOpeningTimes
@@ -190,6 +194,7 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
         membersCanChangePickupLocationThemselves={
           membersCanChangePickupLocationThemselves
         }
+        pickupLocationLabel={pickupLocationLabel}
       />
       <TapirToastContainer
         toastDatas={toastDatas}

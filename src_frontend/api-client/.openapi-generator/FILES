@@ -53,6 +53,7 @@ models/BreadSpecificsPerDeliveryDayBulkUpdateItemRequest.ts
 models/BreadSpecificsPerDeliveryDayBulkUpdateRequest.ts
 models/BreadSpecificsPerDeliveryDayRequest.ts
 models/BreadsPerPickupLocationPerWeek.ts
+models/BreadsToBakePerWeek.ts
 models/BuildCsvExportResponse.ts
 models/BundledEmailConfiguration.ts
 models/BundledEmailConfigurationRequest.ts
@@ -125,7 +126,10 @@ models/LocationRouteRequest.ts
 models/MailCategory.ts
 models/MailCategoryRequest.ts
 models/MailingList.ts
+models/MailingListAdmin.ts
 models/MailingListCreateRequest.ts
+models/MailingListHeldMessage.ts
+models/MailingListModerateHeldMessageRequestRequest.ts
 models/MailingListRecipient.ts
 models/MailingListSubscribeExternalRecipientRequestRequest.ts
 models/MailingListSubscribeInternalRecipientRequestRequest.ts
@@ -157,6 +161,7 @@ models/MemberSubscriptionData.ts
 models/MinimumNumberOfSharesResponse.ts
 models/MissingTrigger.ts
 models/ModeEnum.ts
+models/ModerationActionEnum.ts
 models/Mpl.ts
 models/NoticePeriodUnitEnum.ts
 models/NumberOfAssociationMembersPerMonthResponse.ts

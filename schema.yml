@@ -1666,6 +1666,66 @@ paths:
               schema:
                 $ref: '#/components/schemas/BreadsPerPickupLocationPerWeek'
           description: ''
+  /bakery/breads-to-bake-per-week/:
+    get:
+      operationId: bakery_breads_to_bake_per_week_list
+      description: |-
+        The solver's total per bread, including breads with fixed_pieces that
+        occupy no stove layers.
+      parameters:
+      - in: query
+        name: delivery_day
+        schema:
+          type: integer
+      - in: query
+        name: delivery_week
+        schema:
+          type: integer
+      - in: query
+        name: year
+        schema:
+          type: integer
+      tags:
+      - bakery
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BreadsToBakePerWeek'
+          description: ''
+  /bakery/breads-to-bake-per-week/{id}/:
+    get:
+      operationId: bakery_breads_to_bake_per_week_retrieve
+      description: |-
+        The solver's total per bread, including breads with fixed_pieces that
+        occupy no stove layers.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der breads to bake per week identifiziert.
+        required: true
+      tags:
+      - bakery
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BreadsToBakePerWeek'
+          description: ''
   /bakery/ingredients/:
     get:
       operationId: bakery_ingredients_list
@@ -2744,7 +2804,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MailingList'
+                $ref: '#/components/schemas/MailingListAdmin'
           description: ''
   /core/api/mailing_list_delete:
     delete:
@@ -2794,7 +2854,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MailingList'
+                $ref: '#/components/schemas/MailingListAdmin'
+          description: ''
+  /core/api/mailing_list_held_messages:
+    get:
+      operationId: core_api_mailing_list_held_messages_list
+      parameters:
+      - in: query
+        name: list_name
+        schema:
+          type: string
+        required: true
+      tags:
+      - core
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MailingListHeldMessage'
           description: ''
   /core/api/mailing_list_list:
     get:
@@ -2812,7 +2896,35 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/MailingList'
+                  $ref: '#/components/schemas/MailingListAdmin'
+          description: ''
+  /core/api/mailing_list_moderate_held_message:
+    post:
+      operationId: core_api_mailing_list_moderate_held_message_create
+      tags:
+      - core
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MailingListModerateHeldMessageRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MailingListModerateHeldMessageRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MailingListModerateHeldMessageRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
           description: ''
   /core/api/mailing_list_recipient_list:
     get:
@@ -4126,6 +4238,10 @@ paths:
     get:
       operationId: payments_api_intended_use_preview_coop_shares_retrieve
       parameters:
+      - in: query
+        name: instalments
+        schema:
+          type: boolean
       - in: query
         name: pattern_new
         schema:
@@ -8694,6 +8810,11 @@ components:
         price_of_a_share:
           type: number
           format: double
+        coop_share_instalments_enabled:
+          type: boolean
+        coop_share_instalment_amount:
+          type: number
+          format: double
         theme:
           type: string
         allow_investing_membership:
@@ -8720,8 +8841,6 @@ components:
           type: boolean
         show_coop_content:
           type: boolean
-        intro_step_text:
-          type: string
         label_checkbox_sepa_mandat:
           type: string
         label_checkbox_contract_policy:
@@ -8752,6 +8871,8 @@ components:
         contact_mail_address:
           type: string
           format: email
+        website_url:
+          type: string
         distribution_channels:
           type: object
           additionalProperties:
@@ -8790,6 +8911,8 @@ components:
       - association_membership_types
       - associations_allow_investing_membership
       - contact_mail_address
+      - coop_share_instalment_amount
+      - coop_share_instalments_enabled
       - coop_statute_link
       - debug
       - default_payment_rhythm
@@ -8799,7 +8922,6 @@ components:
       - growing_period_choices
       - images
       - intro_enabled
-      - intro_step_text
       - label_checkbox_contract_policy
       - label_checkbox_sepa_mandat
       - legal_status
@@ -8821,6 +8943,7 @@ components:
       - student_status_allowed
       - theme
       - trial_period_length_in_weeks
+      - website_url
     BestellWizardCapacityCheckRequestRequest:
       type: object
       properties:
@@ -8869,6 +8992,9 @@ components:
           type: boolean
         number_of_coop_shares:
           type: integer
+        pay_coop_shares_in_instalments:
+          type: boolean
+          default: false
         pickup_location_ids:
           type: array
           items:
@@ -9106,6 +9232,8 @@ components:
           type: string
         step14b_text:
           type: string
+        step14_back_to_website_button_text:
+          type: string
         privacy_policy_url:
           type: string
           format: uri
@@ -9127,6 +9255,7 @@ components:
       - step12_title
       - step13_text
       - step13_title
+      - step14_back_to_website_button_text
       - step14_text
       - step14_title
       - step14b_text
@@ -9848,6 +9977,57 @@ components:
       - pickup_location_name
       - updated_at
       - year
+    BreadsToBakePerWeek:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        bread_name:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        year:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        delivery_week:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        delivery_day:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+        quantity:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          description: Total pieces to bake
+        remaining:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          description: Pieces beyond what the deliveries need
+        bread:
+          type: string
+      required:
+      - bread
+      - bread_name
+      - created_at
+      - delivery_week
+      - id
+      - quantity
+      - updated_at
+      - year
     BuildCsvExportResponse:
       type: object
       properties:
@@ -10103,9 +10283,6 @@ components:
           type: string
           nullable: true
         transfer_member:
-          type: string
-          nullable: true
-        payment:
           type: string
           nullable: true
       required:
@@ -11188,7 +11365,16 @@ components:
           type: string
           format: date-time
           nullable: true
+        not_before:
+          type: string
+          format: date-time
+          nullable: true
+        is_automatic_retry:
+          type: boolean
         next_retry:
+          type: string
+          nullable: true
+        email_configuration_version:
           type: string
           nullable: true
       required:
@@ -11245,7 +11431,17 @@ components:
           type: string
           format: date-time
           nullable: true
+        not_before:
+          type: string
+          format: date-time
+          nullable: true
+        is_automatic_retry:
+          type: boolean
         next_retry:
+          type: string
+          minLength: 1
+          nullable: true
+        email_configuration_version:
           type: string
           minLength: 1
           nullable: true
@@ -11312,7 +11508,16 @@ components:
           type: string
           format: date-time
           nullable: true
+        not_before:
+          type: string
+          format: date-time
+          nullable: true
+        is_automatic_retry:
+          type: boolean
         next_retry:
+          type: string
+          nullable: true
+        email_configuration_version:
           type: string
           nullable: true
       required:
@@ -11478,11 +11683,15 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AssociationMembership'
+        number_of_instalments:
+          type: integer
+          nullable: true
       required:
       - association_memberships
       - coop_share_transactions
       - delivery_charge_pickup_location
       - delivery_dates
+      - number_of_instalments
       - payment
       - solidarity_contributions
       - subscriptions
@@ -11530,6 +11739,8 @@ components:
           readOnly: true
         hidden_in_bestell_wizard:
           type: boolean
+        solidarity_choices:
+          type: string
       required:
       - base
       - basket_size_equivalences
@@ -11545,6 +11756,7 @@ components:
       - price_per_delivery
       - show_min_coop_shares
       - size
+      - solidarity_choices
       - url_of_image_in_bestellwizard
     ExtendedProductType:
       type: object
@@ -11734,7 +11946,11 @@ components:
         url_of_bestell_wizard:
           type: string
           format: uri
+        contact_email:
+          type: string
+          format: email
       required:
+      - contact_email
       - transactions
       - url_of_bestell_wizard
     GetDatesFromCustomCycleDeliveryWeeksResponse:
@@ -12197,12 +12413,37 @@ components:
           type: integer
         advertised:
           type: boolean
+        moderated:
+          type: boolean
         description:
           type: string
       required:
       - advertised
       - description
+      - moderated
       - name
+      - nb_recipients
+    MailingListAdmin:
+      type: object
+      properties:
+        name:
+          type: string
+        nb_recipients:
+          type: integer
+        advertised:
+          type: boolean
+        moderated:
+          type: boolean
+        description:
+          type: string
+        nb_held_messages:
+          type: integer
+      required:
+      - advertised
+      - description
+      - moderated
+      - name
+      - nb_held_messages
       - nb_recipients
     MailingListCreateRequest:
       type: object
@@ -12212,13 +12453,65 @@ components:
           minLength: 1
         advertised:
           type: boolean
+        moderated:
+          type: boolean
         description:
           type: string
           minLength: 1
       required:
       - advertised
       - description
+      - moderated
       - name
+    MailingListHeldMessage:
+      type: object
+      properties:
+        request_id:
+          type: integer
+        sender:
+          type: string
+        sender_name:
+          type: string
+          nullable: true
+        formatted_member_number:
+          type: string
+          nullable: true
+        link_to_member_profile:
+          type: string
+          nullable: true
+        subject:
+          type: string
+        reason:
+          type: string
+        hold_date:
+          type: string
+          format: date-time
+        body:
+          type: string
+      required:
+      - body
+      - formatted_member_number
+      - hold_date
+      - link_to_member_profile
+      - reason
+      - request_id
+      - sender
+      - sender_name
+      - subject
+    MailingListModerateHeldMessageRequestRequest:
+      type: object
+      properties:
+        list_name:
+          type: string
+          minLength: 1
+        request_id:
+          type: integer
+        moderation_action:
+          $ref: '#/components/schemas/ModerationActionEnum'
+      required:
+      - list_name
+      - moderation_action
+      - request_id
     MailingListRecipient:
       type: object
       properties:
@@ -12420,7 +12713,11 @@ components:
         order_wizard_url:
           type: string
           nullable: true
+        contact_email:
+          type: string
+          format: email
       required:
+      - contact_email
       - memberships
       - order_wizard_url
     MemberBankDataResponse:
@@ -12802,6 +13099,8 @@ components:
           type: boolean
         can_edit_student:
           type: boolean
+        label_student_checkbox:
+          type: string
         can_edit_name:
           type: boolean
         country:
@@ -12815,6 +13114,10 @@ components:
           type: string
         phone_number_required:
           type: boolean
+        pseudonym:
+          type: string
+        pseudonym_enabled:
+          type: boolean
       required:
       - can_edit_country
       - can_edit_name
@@ -12823,11 +13126,14 @@ components:
       - contact_email
       - country
       - first_name
+      - label_student_checkbox
       - last_name
       - member_number
       - phone_number
       - phone_number_required
       - postcode
+      - pseudonym
+      - pseudonym_enabled
       - street
       - street_2
     MemberSolidarityContributionsResponse:
@@ -12902,6 +13208,16 @@ components:
         * `optional_default_on` - Optional (Standard: ON)
         * `optional_default_off` - Optional (Standard: OFF)
         * `always_on` - Pflicht
+    ModerationActionEnum:
+      enum:
+      - accept
+      - reject
+      - discard
+      type: string
+      description: |-
+        * `accept` - accept
+        * `reject` - reject
+        * `discard` - discard
     NoticePeriodUnitEnum:
       enum:
       - months
@@ -13486,6 +13802,8 @@ components:
           type: integer
         hidden_in_bestell_wizard:
           type: boolean
+        solidarity_choices:
+          type: string
     PatchedGrowingPeriodRequest:
       type: object
       properties:
@@ -13629,6 +13947,9 @@ components:
           minLength: 1
         is_student:
           type: boolean
+        pseudonym:
+          type: string
+          maxLength: 150
     PatchedPdfExportModelRequest:
       type: object
       properties:
@@ -13901,12 +14222,20 @@ components:
           type: string
           format: date
           nullable: true
+        instalment_number:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
         mandate_ref:
           type: string
         transaction:
           type: string
           nullable: true
         pickup_location:
+          type: string
+          nullable: true
+        coop_share_transaction:
           type: string
           nullable: true
       required:
@@ -14694,6 +15023,9 @@ components:
           minimum: -2147483648
         hidden_in_bestell_wizard:
           type: boolean
+        solidarity_choices:
+          type: string
+          maxLength: 512
       required:
       - created_at
       - name
@@ -14897,6 +15229,9 @@ components:
           type: boolean
         number_of_coop_shares:
           type: integer
+        pay_coop_shares_in_instalments:
+          type: boolean
+          default: false
         payment_rhythm:
           type: string
           minLength: 1
@@ -15020,9 +15355,16 @@ components:
           type: string
         hidden_in_bestell_wizard:
           type: boolean
+        solidarity_choices:
+          type: array
+          items:
+            type: number
+            format: double
+          readOnly: true
       required:
       - name
       - price
+      - solidarity_choices
       - url_of_image_in_bestellwizard
     PublicProductPricesResponse:
       type: object
@@ -15402,6 +15744,8 @@ components:
           type: boolean
         is_in_trial:
           type: boolean
+        is_negative:
+          type: boolean
         cancellation_date:
           type: string
           format: date
@@ -15409,6 +15753,7 @@ components:
       - cancellation_date
       - exists
       - is_in_trial
+      - is_negative
     SolidarityStepPositionEnum:
       enum:
       - before_pickup_location

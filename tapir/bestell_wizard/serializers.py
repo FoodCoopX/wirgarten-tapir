@@ -35,6 +35,7 @@ class BestellWizardConfirmOrderRequestSerializer(serializers.Serializer):
     contract_accepted = serializers.BooleanField()
     statute_accepted = serializers.BooleanField()
     number_of_coop_shares = serializers.IntegerField()
+    pay_coop_shares_in_instalments = serializers.BooleanField(default=False)
     pickup_location_ids = serializers.ListField(child=serializers.CharField())
     student_status_enabled = serializers.BooleanField()
     payment_rhythm = serializers.CharField()
@@ -115,6 +116,7 @@ class BestellWizardStringsSerializer(serializers.Serializer):
     step14_text = serializers.CharField()
     step14b_title = serializers.CharField()
     step14b_text = serializers.CharField()
+    step14_back_to_website_button_text = serializers.CharField()
     privacy_policy_url = serializers.URLField()
     label_student_checkbox = serializers.CharField()
     student_checkbox_explanation_text = serializers.CharField()
@@ -138,6 +140,8 @@ class BestellWizardImagesSerializer(serializers.Serializer):
 
 class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
     price_of_a_share = serializers.FloatField()
+    coop_share_instalments_enabled = serializers.BooleanField()
+    coop_share_instalment_amount = serializers.FloatField()
     theme = serializers.CharField()
     allow_investing_membership = serializers.BooleanField()
     product_types = PublicProductTypeSerializer(many=True)
@@ -148,7 +152,6 @@ class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
     student_status_allowed = serializers.BooleanField()
     phone_number_required = serializers.BooleanField()
     show_coop_content = serializers.BooleanField()
-    intro_step_text = serializers.CharField()
     label_checkbox_sepa_mandat = serializers.CharField()
     label_checkbox_contract_policy = serializers.CharField()
     trial_period_length_in_weeks = serializers.IntegerField()
@@ -164,6 +167,7 @@ class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
     organization_name = serializers.CharField()
     logo_url = serializers.URLField()
     contact_mail_address = serializers.EmailField()
+    website_url = serializers.CharField(allow_blank=True)
     distribution_channels = serializers.DictField(child=serializers.CharField())
     solidarity_contribution_choices = serializers.ListField(
         child=serializers.CharField()

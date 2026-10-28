@@ -18,7 +18,6 @@ import {
 import { BestellWizardSettings } from "../bestell_wizard/types/BestellWizardSettings.ts";
 import { PersonalData } from "../bestell_wizard/types/PersonalData.ts";
 import { ShoppingCart } from "../bestell_wizard/types/ShoppingCart.ts";
-import { areAllOrderedProductsInWaitingList } from "../bestell_wizard/utils/areAllOrderedProductsInWaitingList.ts";
 import { buildEmptySettings } from "../bestell_wizard/utils/buildEmptySettings.ts";
 import { buildEmptyShoppingCart } from "../bestell_wizard/utils/buildEmptyShoppingCart.ts";
 import { buildFilteredShoppingCart } from "../bestell_wizard/utils/buildFilteredShoppingCart.ts";
@@ -67,8 +66,10 @@ import { getPhase } from "./utils/getPhase.ts";
 import { getProductTypeByProductId } from "./utils/getProductTypeByProductId.ts";
 import { getProductTypeFromStep } from "./utils/getProductTypeFromStep.ts";
 import { getPublicPickupLocationById } from "./utils/getPublicPickupLocationById.ts";
-import { updateWaitingList } from "./utils/updateWaitingList.ts";
 import { getVisibleAssociationMembershipTypes } from "./utils/getVisibleAssociationMembershipTypes.ts";
+import { isOrderWaitingListOnly } from "./utils/isOrderWaitingListOnly.ts";
+import { updateWaitingList } from "./utils/updateWaitingList.ts";
+import { willBecomeMemberNow } from "./utils/willBecomeMemberNow.ts";
 
 interface BestellWizardMobileProps {
   csrfToken: string;
@@ -114,6 +115,8 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
   const [statuteAccepted, setStatuteAccepted] = useState(false);
   const [minimumNumberOfShares, setMinimumNumberOfShares] = useState(0);
   const [studentStatusEnabled, setStudentStatusEnabled] = useState(false);
+  const [payCoopSharesInInstalments, setPayCoopSharesInInstalments] =
+    useState(false);
   const [sepaAllowed, setSepaAllowed] = useState(false);
   const [contractAccepted, setContractAccepted] = useState(false);
   const [contractStartDate, setContractStartDate] = useState(new Date());
@@ -182,9 +185,8 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
 
           const productTypesFromWishes = (
             waitingListEntryDetails.productWishes ?? []
-          ).map(
-            (productWish) =>
-              getProductTypeByProductId(productWish.product.id!, newSettings)!,
+          ).map((productWish) =>
+            getProductTypeByProductId(productWish.product.id!, newSettings)!,
           );
           setSelectedProductTypes(
             sortProductTypes([...new Set(productTypesFromWishes)]),
@@ -486,6 +488,15 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     setPrivacyPolicyRead(true);
   }
 
+  function isPayingCoopSharesInInstalments() {
+    // The minimum can change after the choice was made, for example if the shopping cart changes
+    return (
+      payCoopSharesInInstalments &&
+      !studentStatusEnabled &&
+      selectedNumberOfCoopShares === minimumNumberOfShares
+    );
+  }
+
   function onConfirmOrder() {
     setConfirmOrderLoading(true);
 
@@ -502,6 +513,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
               sepaAllowed || waitingListEntryDetails.memberAlreadyExists,
             linkKey: waitingListEntryDetails.linkKey,
             numberOfCoopShares: selectedNumberOfCoopShares,
+            payCoopSharesInInstalments: isPayingCoopSharesInInstalments(),
             paymentRhythm: personalData.paymentRhythm,
             solidarityContribution: solidarityContribution,
             associationMembershipTypeId:
@@ -540,6 +552,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
           contractAccepted: contractAccepted,
           statuteAccepted: statuteAccepted,
           numberOfCoopShares: selectedNumberOfCoopShares,
+          payCoopSharesInInstalments: isPayingCoopSharesInInstalments(),
           pickupLocationIds: selectedPickupLocations.map(
             (locations) => locations.id!,
           ),
@@ -555,8 +568,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
           ),
           studentStatusEnabled: studentStatusEnabled,
           paymentRhythm: personalData.paymentRhythm,
-          becomeMemberNow:
-            !settings.forceWaitingList && becomeMemberNow !== false,
+          becomeMemberNow: willBecomeMemberNow(settings, becomeMemberNow),
           privacyPolicyRead: privacyPolicyRead,
           cancellationPolicyRead: cancellationPolicyRead,
           growingPeriodId: selectedGrowingPeriod!.id!,
@@ -592,11 +604,12 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     }
 
     if (
-      areAllOrderedProductsInWaitingList(
+      isOrderWaitingListOnly(
+        settings,
         shoppingCart,
         productTypesInWaitingList,
-      ) &&
-      becomeMemberNow === false
+        becomeMemberNow,
+      )
     ) {
       setCurrentStep("14b_confirmation_waiting_list");
     } else {
@@ -737,6 +750,8 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
               !waitingListEntryDetails?.memberAlreadyExists
             }
             forceHideStudentCheckbox={!isAtLeastOneProductOrdered(shoppingCart)}
+            payInInstalments={payCoopSharesInInstalments}
+            setPayInInstalments={setPayCoopSharesInInstalments}
           />
         );
       case "6b_association_membership":
@@ -823,6 +838,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             settings={settings}
             studentStatusEnabled={studentStatusEnabled}
             numberOfCoopShares={selectedNumberOfCoopShares}
+            payCoopSharesInInstalments={isPayingCoopSharesInInstalments()}
             shoppingCart={shoppingCart}
             contractStartDate={contractStartDate}
             firstDeliveryDatesByPickupLocationAndProductType={

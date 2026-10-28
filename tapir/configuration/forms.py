@@ -113,17 +113,17 @@ class ParameterForm(forms.Form):
 
         self.cache = {}
 
-        categories = list({param.category for param in params})
-        categories.sort(
-            key=lambda category: tokenize_parameter(category, cache=self.cache)
-        )
-
-        self.categories = categories
-
+        categories = set()
         for param in params:
             field = create_field(param, cache=self.cache)
             if field is not None:
                 self.fields[param.key] = field
+                categories.add(param.category)
+
+        self.categories = sorted(
+            categories,
+            key=lambda category: tokenize_parameter(category, cache=self.cache),
+        )
 
         def get_category(name):
             for p in params:

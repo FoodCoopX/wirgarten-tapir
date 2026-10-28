@@ -1,4 +1,8 @@
+# Claude Code reads the shared AGENTS.md; a local CLAUDE.md would override it
 CLAUDE.md
+
+# Per-developer assistant settings (shared config belongs in .agents/)
+.claude/settings.local.json
 
 # Django #
 *.log
@@ -76,9 +80,6 @@ ENV/
 env.bak/
 venv.bak/
 .env.local
-
-# Poetry config that makes the venv local for development
-poetry.toml
 
 # mkdocs documentation
 /site

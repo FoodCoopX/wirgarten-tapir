@@ -1,6 +1,7 @@
 import logging
 from functools import partial
 
+from apps.accounts.choices import ThemeChoices
 from django.contrib.auth import user_logged_out
 from django.contrib.auth.models import AbstractUser
 from django.db import models
@@ -21,6 +22,7 @@ from tapir.log.models import TextLogEntry, UpdateModelLogEntry
 from tapir.utils.models import CountryField
 from tapir.utils.shortcuts import is_running_tests
 from tapir.utils.user_utils import UserUtils
+from tapir.wirgarten.constants import Permission
 
 LOG = logging.getLogger(__name__)
 
@@ -42,21 +44,26 @@ class KeycloakUser(AbstractUser):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.roles = None
+        self._roles = None
+
+    @property
+    def roles(self):
+        if self._roles is None:
+            roles = KeycloakUserManager.get_user_roles(self.keycloak_id)
+            if self.is_superuser or Permission.Coop.MANAGE in roles:
+                roles.append("admin")
+            self._roles = roles
+        return self._roles
+
+    @roles.setter
+    def roles(self, value):
+        self._roles = value
 
     def has_perm(self, perm, obj=None):
         if is_running_tests():
             return self.is_superuser
 
-        target = self
-        if obj is not None:
-            target = obj
-
-        if target.roles is None:
-            target.roles = KeycloakUserManager.get_user_roles(
-                keycloak_id=target.keycloak_id
-            )
-
+        target = obj or self
         return perm in target.roles
 
     def has_perms(self, perm_list, obj=None):
@@ -91,6 +98,11 @@ class TapirUser(KeycloakUser):
         max_length=16,
     )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user_language = self.preferred_language
+        self.theme = ThemeChoices.LIGHT.value
+
     def get_display_name(self):
         return UserUtils.build_display_name(self.first_name, self.last_name)
 
@@ -110,7 +122,7 @@ def terminate_session(sender, request, user, **kwargs):
 
     from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
 
-    keycloak_client = KeycloakUserManager.get_keycloak_client(cache={})
+    keycloak_client = KeycloakUserManager.get_keycloak_client()
     keycloak_client.user_logout(user.keycloak_id)
 
 

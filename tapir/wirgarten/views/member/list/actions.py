@@ -400,12 +400,11 @@ def resend_verify_email(request, **kwargs):
     member_id = kwargs["pk"]
     member = Member.objects.get(id=member_id)
     try:
-        cache = {}
         KeycloakUserManager.create_keycloak_user_if_necessary(
-            user=member, cache=cache, initial_password=None
+            user=member, initial_password=None
         )
         EmailVerificationService.send_verification_email(
-            user=member, actor=request.user, cache=cache
+            user=member, actor=request.user
         )
         result = "success"
     except Exception as e:

@@ -4,9 +4,10 @@ import os
 import celery.schedules
 import environ
 
-from tapir.settings.base import BASE_DIR
+from tapir.settings.base import BASE_DIR, DEBUG, ENABLE_JASMIN
 
 env = environ.Env()
+environ.Env.read_env(BASE_DIR / "../.env.local")
 
 TAPIR_VERSION = env.str("TAPIR_VERSION", default="dev")
 
@@ -15,23 +16,21 @@ SECRET_KEY = env.str(
     "SECRET_KEY", default="fl%20e9dbkh4mosi5$i$!5&+f^ic5=7^92hrchl89x+)k0ctsn"
 )
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env.bool("DEBUG", default=False)
+
 if not DEBUG:
-    print(
-        f"Tapir Version: {TAPIR_VERSION}"
-        if TAPIR_VERSION
-        else "\033[93m>>> WARNING: TAPIR_VERSION is not set, cache busting will not work!\033[0m"
-    )
+    print(f"Tapir Version: {TAPIR_VERSION}")
 
 
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 DATABASES = {
     "default": env.db(
-        "DATABASE_CONNECTION", default="postgresql://tapir:tapir@db:5432/tapir"
+        "DATABASE_CONNECTION",
+        default="postgresql://tapir:tapir@db:5432/tapir",
+        engine="tapir.jasmin_integration.db_backend" if ENABLE_JASMIN else None,
     ),
 }
+
 
 CELERY_BROKER_URL = env.str("CELERY_BROKER_URL", default="redis://redis:6379")
 CELERY_RESULT_BACKEND = env.str("CELERY_RESULT_BACKEND", default="redis://redis:6379")
@@ -220,6 +219,7 @@ TAPIRMAIL_REACT_APP_BASENAME = TAPIR_MAIL_PATH
 
 if DEBUG:
     CSRF_TRUSTED_ORIGINS = ["http://localhost:8000", SITE_URL]
+
 
 SOCIALACCOUNT_PROVIDERS = {
     "openid_connect": {

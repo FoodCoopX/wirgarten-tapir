@@ -122,15 +122,13 @@ class Command(BaseCommand):
             self.stdout.write("Dry run enabled, aborting")
             return
 
-        cache = {}
-
         for member in members:
             try:
                 KeycloakUserManager.create_keycloak_user_if_necessary(
-                    user=member, initial_password=None, cache=cache
+                    user=member, initial_password=None
                 )
                 EmailVerificationService.send_verification_email(
-                    user=member, actor=None, cache=cache
+                    user=member, actor=None
                 )
             except Exception as e:
                 self.stderr.write(f"Error when saving member {member}: {e}")

@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Card, Spinner } from "react-bootstrap";
 import { type AssociationMembership, AssociationsApi } from "../../api-client";
 import TapirButton from "../../components/TapirButton.tsx";
+import TapirHelpButton from "../../components/TapirHelpButton.tsx";
 import TapirToastContainer from "../../components/TapirToastContainer.tsx";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
@@ -25,6 +26,7 @@ const AssociationMembershipCard: React.FC<AssociationMembershipCardProps> = ({
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
   const [memberships, setMemberships] = useState<AssociationMembership[]>([]);
   const [orderWizardUrl, setOrderWizardUrl] = useState<string>();
+  const [contactEmail, setContactEmail] = useState("");
 
   useEffect(() => {
     loadData();
@@ -40,6 +42,7 @@ const AssociationMembershipCard: React.FC<AssociationMembershipCardProps> = ({
       .then((response) => {
         setMemberships(response.memberships);
         setOrderWizardUrl(response.orderWizardUrl ?? undefined);
+        setContactEmail(response.contactEmail);
       })
       .catch((error) =>
         handleRequestError(
@@ -53,10 +56,20 @@ const AssociationMembershipCard: React.FC<AssociationMembershipCardProps> = ({
 
   return (
     <>
-      <Card className={"mb-2"}>
+      <Card>
         <Card.Header>
           <div className={"d-flex justify-content-between align-items-center"}>
             <Card.Title className={"mb-0"}>Vereinsmitgliedschaft</Card.Title>
+            <TapirHelpButton
+              title={"Kündigung"}
+              text={
+                <>
+                  Deine Vereinsmitgliedschaft kannst du nicht selbst kündigen.
+                  Wenn du kündigen möchtest, wende dich bitte an die Verwaltung
+                  (<a href={`mailto:${contactEmail}`}>{contactEmail}</a>).
+                </>
+              }
+            />
           </div>
         </Card.Header>
         <Card.Body>

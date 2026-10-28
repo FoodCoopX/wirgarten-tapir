@@ -1,3 +1,18 @@
 .leaflet-container {
     height: 100%
 }
+.pickup-location-list {
+    max-height: 50dvh;
+    overflow-y: auto;
+}
+
+@media (max-width: 767.98px) {
+    .pickup-location-list {
+        max-height: none;
+        overflow-y: visible;
+    }
+
+    .pickup-location-map {
+        height: 200px;
+    }
+}

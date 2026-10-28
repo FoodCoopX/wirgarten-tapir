@@ -1,27 +1,61 @@
-FROM python:3.14
-ARG TAPIR_VERSION
-ENV TAPIR_VERSION=$TAPIR_VERSION
+FROM node:24-trixie-slim AS mjml
+RUN npm install -g mjml@4.14.1
+
+FROM python:3.14.9 AS python-base
 ENV PYTHONUNBUFFERED=1
+ENV POETRY_VIRTUALENVS_PATH=/opt/venvs
 
 WORKDIR /app
 
-RUN apt-get update -y && apt-get install -y gettext libldap2-dev libsasl2-dev  locales && apt-get clean
-RUN mkdir -p /etc/apt/keyrings && \
-    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \
-    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list && \
-    apt-get update -y && apt install -y nodejs && \
-    apt-get clean && \
-    npm install -g mjml@4.14.1
+RUN python -m venv /opt/poetry && \
+    /opt/poetry/bin/pip install --no-cache-dir poetry==2.5.1 && \
+    ln -s /opt/poetry/bin/poetry /usr/local/bin/poetry
 
-RUN sed -i '/de_DE.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
-RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
+COPY --from=mjml /usr/local/bin/node /usr/local/bin/node
+COPY --from=mjml /usr/local/lib/node_modules/mjml /usr/local/lib/node_modules/mjml
+RUN ln -s ../lib/node_modules/mjml/bin/mjml /usr/local/bin/mjml
+
+RUN apt-get update -y && apt-get install -y --no-install-recommends gettext locales && \
+    rm -rf /var/lib/apt/lists/* && \
+    sed -i -e '/de_DE.UTF-8/s/^# //g' -e '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
 
 COPY ./pyproject.toml /app/pyproject.toml
 COPY ./poetry.lock /app/poetry.lock
-RUN echo "Building Tapir Version: $TAPIR_VERSION" && pip install poetry && poetry install --extras bakery
+
+FROM python-base AS dev
+RUN poetry install --extras bakery && rm -rf /root/.cache
+
+FROM python-base AS builder
+ENV POETRY_VIRTUALENVS_IN_PROJECT=true
+RUN poetry install --extras bakery --only main && rm -rf /root/.cache
 
 COPY tapir /app/tapir
 COPY manage.py /app/manage.py
 COPY Makefile /app/Makefile
 COPY dist* /app/dist
 RUN poetry run python manage.py compilemessages
+
+FROM python:3.14.9-slim AS prod
+ENV PYTHONUNBUFFERED=1
+ENV POETRY_VIRTUALENVS_IN_PROJECT=true
+ENV PATH=/app/.venv/bin:$PATH
+
+WORKDIR /app
+
+# locales for the CSV export locales, pango/harfbuzz/fonts for weasyprint
+RUN apt-get update -y && apt-get install -y --no-install-recommends \
+    locales libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz-subset0 fonts-dejavu-core && \
+    rm -rf /var/lib/apt/lists/* && \
+    sed -i -e '/de_DE.UTF-8/s/^# //g' -e '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
+
+COPY --from=mjml /usr/local/bin/node /usr/local/bin/node
+COPY --from=mjml /usr/local/lib/node_modules/mjml /usr/local/lib/node_modules/mjml
+RUN ln -s ../lib/node_modules/mjml/bin/mjml /usr/local/bin/mjml
+
+COPY --from=builder /opt/poetry /opt/poetry
+RUN ln -s /opt/poetry/bin/poetry /usr/local/bin/poetry
+COPY --from=builder /app /app
+
+ARG TAPIR_VERSION
+ENV TAPIR_VERSION=$TAPIR_VERSION
+RUN echo "Building Tapir Version: $TAPIR_VERSION"

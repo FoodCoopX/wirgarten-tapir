@@ -19,6 +19,7 @@ from tapir.bakery.views_pdfs import (
     pickup_list_pdf,
     pickup_lists_all_pdf,
 )
+from tapir.bakery.views_pictures import bread_picture
 from tapir.bakery.views_templates import (
     ChooseBreadsView,
     IngredientsLabelsBreadsView,
@@ -31,6 +32,7 @@ from tapir.bakery.viewsets import (
     BreadLabelViewSet,
     BreadSpecificsPerDeliveryDayViewSet,
     BreadsPerPickupLocationPerWeekViewSet,
+    BreadsToBakePerWeekViewSet,
     BreadViewSet,
     IngredientViewSet,
     PreferredBreadViewSet,
@@ -58,6 +60,7 @@ urlpatterns = [
     ),
     path("choose-breads/", ChooseBreadsView.as_view(), name="choose-breads"),
     path("reports/", ReportsView.as_view(), name="reports"),
+    path("breads/<str:bread_id>/picture/", bread_picture, name="bread-picture"),
     path(
         "api/bakery/solver/preview/", SolverPreviewView.as_view(), name="solver-preview"
     ),
@@ -147,6 +150,11 @@ router.register(
     r"breads-per-pickup-location-per-week",
     BreadsPerPickupLocationPerWeekViewSet,
     basename="breads-per-pickup-location-per-week",
+)
+router.register(
+    r"breads-to-bake-per-week",
+    BreadsToBakePerWeekViewSet,
+    basename="breads-to-bake-per-week",
 )
 router.register(
     r"bread-specifics", BreadSpecificsPerDeliveryDayViewSet, basename="bread-specifics"
