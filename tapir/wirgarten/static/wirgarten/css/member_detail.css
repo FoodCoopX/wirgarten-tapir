@@ -1,8 +1,14 @@
 #member-detail-container{
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr);
     grid-gap: 1em;
     margin-top: 2em;
+}
+
+@media (min-width: 1200px) {
+    #member-detail-container{
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
 }
 
 #member-detail-left-column {
@@ -25,12 +31,12 @@
 }
 
 .contract-tile-number > .material-icons {
-     font-size: 0.7em;
+    font-size: 0.7em;
 }
 
 #contract-tiles {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     grid-gap:1em;
     text-align: center;
 }
