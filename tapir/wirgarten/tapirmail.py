@@ -27,7 +27,11 @@ from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import WaitingListEntry, Member
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.triggers.onboarding_trigger import OnboardingTrigger
-from tapir.wirgarten.utils import get_today, legal_status_is_cooperative
+from tapir.wirgarten.utils import (
+    get_today,
+    legal_status_is_cooperative,
+    legal_status_is_company,
+)
 
 TOKENS_COOP_ENTRY = {
     "Anzahl der gezeichneten Genossenschaftsanteile": "number_of_coop_shares",
@@ -46,6 +50,13 @@ TOKENS_ORDER_PAYMENT = {
 }
 
 TOKEN_FIRST_PICKUP_DATE = "Erste Abholung am"
+
+
+class SegmentGroups:
+    GENERAL = "Allgemein"
+    CONTRACTS = "Verträge"
+    DELIVERIES = "Lieferungen"
+    PICKUP_LOCATIONS = "Abholorte"
 
 
 class Segments:

@@ -3,7 +3,7 @@ import typing
 from functools import partial
 
 from django.apps import AppConfig
-from tapir_mail.registries import mail_segment_providers
+from tapir_mail.registries import mail_segment_providers, MailSegment
 
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
@@ -26,25 +26,50 @@ class SubscriptionsConfig(AppConfig):
             MemberSegmentProvider,
         )
         from tapir.configuration.parameter import get_parameter_value
-        from tapir.wirgarten.tapirmail import Segments
+        from tapir.wirgarten.tapirmail import Segments, SegmentGroups
 
         cache = {}
 
         segment_registry = {
-            Segments.WITH_ACTIVE_SUBSCRIPTION: Member.objects.with_active_subscription,
-            Segments.WITHOUT_ACTIVE_SUBSCRIPTION: Member.objects.without_active_subscription,
-            Segments.MEMBERS_WITH_CONTRACT_SINCE_MORE_THAN_ONE_YEAR_BUT_NO: MemberSegmentProvider.get_queryset_members_with_contract_since_more_than_one_year_but_no_coop_share,
-            Segments.WITH_DELIVERY_THIS_WEEK: partial(
-                cls._get_segment_members_with_delivery_for_product_type,
-                product_type=None,
-                weeks_from_now=0,
-                cache=cache,
+            Segments.WITH_ACTIVE_SUBSCRIPTION: MailSegment(
+                get_queryset=Member.objects.with_active_subscription,
+                label=Segments.WITH_ACTIVE_SUBSCRIPTION,
+                group=SegmentGroups.CONTRACTS,
+                description="Mitglieder mit einem heute laufenden Vertrag, egal für welches Produkt. Joker und Spenden spielen keine Rolle.",
             ),
-            Segments.WITH_DELIVERY_NEXT_WEEK: partial(
-                cls._get_segment_members_with_delivery_for_product_type,
-                product_type=None,
-                weeks_from_now=1,
-                cache=cache,
+            Segments.WITHOUT_ACTIVE_SUBSCRIPTION: MailSegment(
+                get_queryset=Member.objects.without_active_subscription,
+                label=Segments.WITHOUT_ACTIVE_SUBSCRIPTION,
+                group=SegmentGroups.CONTRACTS,
+                description="Mitglieder ohne heute laufenden Vertrag, auch wenn sie einen zukünftigen Vertrag haben.",
+            ),
+            Segments.MEMBERS_WITH_CONTRACT_SINCE_MORE_THAN_ONE_YEAR_BUT_NO: MailSegment(
+                get_queryset=MemberSegmentProvider.get_queryset_members_with_contract_since_more_than_one_year_but_no_coop_share,
+                label=Segments.MEMBERS_WITH_CONTRACT_SINCE_MORE_THAN_ONE_YEAR_BUT_NO,
+                group=SegmentGroups.GENERAL,
+                description="Mitglieder mit einem Vertrag, der vor über einem Jahr begonnen hat, und einer laufenden Zahlung, aber ohne Genossenschaftsanteil.",
+            ),
+            Segments.WITH_DELIVERY_THIS_WEEK: MailSegment(
+                get_queryset=partial(
+                    cls._get_segment_members_with_delivery_for_product_type,
+                    product_type=None,
+                    weeks_from_now=0,
+                    cache=cache,
+                ),
+                label=Segments.WITH_DELIVERY_THIS_WEEK,
+                group=SegmentGroups.DELIVERIES,
+                description="Mitglieder, die diese Woche mindestens eine Lieferung bekommen. Joker, Spenden und Wochen ohne Lieferung sind berücksichtigt.",
+            ),
+            Segments.WITH_DELIVERY_NEXT_WEEK: MailSegment(
+                get_queryset=partial(
+                    cls._get_segment_members_with_delivery_for_product_type,
+                    product_type=None,
+                    weeks_from_now=1,
+                    cache=cache,
+                ),
+                label=Segments.WITH_DELIVERY_NEXT_WEEK,
+                group=SegmentGroups.DELIVERIES,
+                description="Mitglieder, die nächste Woche mindestens eine Lieferung bekommen. Joker, Spenden und Wochen ohne Lieferung sind berücksichtigt.",
             ),
         }
 
@@ -52,8 +77,11 @@ class SubscriptionsConfig(AppConfig):
             key=ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache
         )
         if trial_period_enabled:
-            segment_registry["Mitglieder im Probezeit"] = (
-                lambda: cls.get_queryset_members_in_trial(cache)
+            segment_registry["Mitglieder im Probezeit"] = MailSegment(
+                get_queryset=lambda: cls.get_queryset_members_in_trial(cache),
+                label="Mitglieder im Probezeit",
+                group=SegmentGroups.CONTRACTS,
+                description="Mitglieder mit mindestens einem Vertrag, der gerade in der Probezeit ist.",
             )
 
         return segment_registry
@@ -83,6 +111,7 @@ class SubscriptionsConfig(AppConfig):
     @classmethod
     def provide_product_type_mail_segments(cls):
         from tapir.utils.services.tapir_cache import TapirCache
+        from tapir.wirgarten.tapirmail import SegmentGroups
 
         cache = {}
 
@@ -90,30 +119,45 @@ class SubscriptionsConfig(AppConfig):
         for product_type in TapirCache.get_all_product_types(cache=cache):
             segment_registry[
                 cls._build_segment_name_subscription_with_product_type(product_type)
-            ] = partial(
-                cls._get_segment_members_with_subscription_for_product_type,
-                product_type=product_type,
-                cache=cache,
+            ] = MailSegment(
+                get_queryset=partial(
+                    cls._get_segment_members_with_subscription_for_product_type,
+                    product_type=product_type,
+                    cache=cache,
+                ),
+                label=f"Mit Vertrag: {product_type.name}",
+                group=SegmentGroups.CONTRACTS,
+                description=f"Mitglieder mit einem laufenden oder zukünftigen Vertrag für {product_type.name}.",
             )
             segment_registry[
                 cls._build_segment_name_delivery_this_week_with_product_type(
                     product_type
                 )
-            ] = partial(
-                cls._get_segment_members_with_delivery_for_product_type,
-                product_type=product_type,
-                weeks_from_now=0,
-                cache=cache,
+            ] = MailSegment(
+                get_queryset=partial(
+                    cls._get_segment_members_with_delivery_for_product_type,
+                    product_type=product_type,
+                    weeks_from_now=0,
+                    cache=cache,
+                ),
+                label=f"Diese Woche: {product_type.name}",
+                group=SegmentGroups.DELIVERIES,
+                description=f"Mitglieder, die diese Woche {product_type.name} geliefert bekommen. Joker, Spenden und Wochen ohne Lieferung sind berücksichtigt.",
             )
             segment_registry[
                 cls._build_segment_name_delivery_next_week_with_product_type(
                     product_type
                 )
-            ] = partial(
-                cls._get_segment_members_with_delivery_for_product_type,
-                product_type=product_type,
-                weeks_from_now=1,
-                cache=cache,
+            ] = MailSegment(
+                get_queryset=partial(
+                    cls._get_segment_members_with_delivery_for_product_type,
+                    product_type=product_type,
+                    weeks_from_now=1,
+                    cache=cache,
+                ),
+                label=f"Nächste Woche: {product_type.name}",
+                group=SegmentGroups.DELIVERIES,
+                description=f"Mitglieder, die nächste Woche {product_type.name} geliefert bekommen. Joker, Spenden und Wochen ohne Lieferung sind berücksichtigt.",
             )
 
         return segment_registry
