@@ -84,11 +84,12 @@ const RebuildSubscriptionPaymentsModal: React.FC<
       .then((response) => {
         if (response.orderConfirmed) {
           setError("");
-          afterRebuild();
+          onHide();
         } else {
           setError(response.error!);
         }
         setShowConfirmationModal(false);
+        afterRebuild();
       })
       .catch((error) =>
         handleRequestError(error, "Fehler beim neu erzeugen", setToastDatas),
