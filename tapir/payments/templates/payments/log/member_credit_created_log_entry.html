@@ -6,7 +6,7 @@ Gutschrift erzeugt: <br />
             <li>Wert: {{ value|format_currency }} €</li>
         {% endif %}
         {% if key == "comment" %}
-            <li>Grund: {{ value }}</li>
+            <li>Grund: {{ value|linebreaksbr }}</li>
         {% endif %}
     {% endfor %}
 </ul>

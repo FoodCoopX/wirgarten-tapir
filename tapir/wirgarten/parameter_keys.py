@@ -105,6 +105,9 @@ class ParameterKeys:
     MEMBER_CANCELLATION_REASON_CHOICES = f"{PREFIX}.member.cancellation_reason.choices"
     JOKERS_ENABLED = f"{PREFIX}.jokers.enabled"
     JOKERS_CREATE_MEMBER_CREDITS = f"{PREFIX}.jokers.create_member_credits"
+    JOKERS_SOLIDARITY_CONTRIBUTION_PRODUCT_TYPE = (
+        f"{PREFIX}.jokers.solidarity_contribution_product_type"
+    )
     DELIVERY_DONATION_MODE = f"{PREFIX}.delivery_donation.mode"
     DELIVERY_DONATION_FORWARD_TO_PICKUP_LOCATION = (
         f"{PREFIX}.delivery_donation.forward_to_pickup_location"
