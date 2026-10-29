@@ -18,15 +18,36 @@
     <h4 class="mb-0">{{ number_of_contracts }} {% translate 'Verträge' %}, {{ quantity_sum }} Anteile</h4>
     <span style="display: flex; flex-direction:row;">
         {% if admin_contract_prototype_enabled %}
+            {% if admin_contract_prototype_split %}
+                <button type="button"
+                        class="btn btn-outline-success d-flex mx-1"
+                        title="Vertrag hinzufügen"
+                        aria-label="Vertrag hinzufügen"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="bottom"
+                        onclick="document.getElementById('admin-contract-modal').dataset.flow='new'; bootstrap.Modal.getOrCreateInstance(document.getElementById('admin-contract-modal')).show()">
+                    <span class="material-icons" aria-hidden="true">post_add</span>
+                </button>
+                <button type="button"
+                        class="btn btn-outline-primary d-flex mx-1"
+                        title="Anteilsgröße zu einem bestimmten Datum verändern"
+                        aria-label="Anteilsgröße zu einem bestimmten Datum verändern"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="bottom"
+                        onclick="document.getElementById('admin-contract-modal').dataset.flow='change'; bootstrap.Modal.getOrCreateInstance(document.getElementById('admin-contract-modal')).show()">
+                    <span class="material-icons" aria-hidden="true">edit_note</span>
+                </button>
+            {% else %}
             <button type="button"
                     class="btn btn-outline-success d-flex mx-1"
                     title="Vertrag hinzufügen oder bearbeiten"
                     aria-label="Vertrag hinzufügen oder bearbeiten"
                     data-bs-toggle="tooltip"
                     data-bs-placement="bottom"
-                    onclick="bootstrap.Modal.getOrCreateInstance(document.getElementById('admin-contract-modal')).show()">
+                    onclick="document.getElementById('admin-contract-modal').dataset.flow='combined'; bootstrap.Modal.getOrCreateInstance(document.getElementById('admin-contract-modal')).show()">
                 <span class="material-icons" aria-hidden="true">post_add</span>
             </button>
+            {% endif %}
         {% endif %}
         <span id="subscription_change_dates_button" class="mx-1 p-0"></span>
         {% if trial_period_enabled %}

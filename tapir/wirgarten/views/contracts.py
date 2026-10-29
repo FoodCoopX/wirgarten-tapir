@@ -243,6 +243,9 @@ class SubscriptionListView(PermissionRequiredMixin, FilterView):
         context["admin_contract_prototype_enabled"] = (
             settings.DEBUG and self.request.user.has_perm(Permission.Accounts.MANAGE)
         )
+        context["admin_contract_prototype_split"] = (
+            self.request.GET.get("prototype_variant") == "separate-actions"
+        )
         context["quantity_sum"] = self.filterset.qs.aggregate(
             quantity_sum=Sum("quantity")
         )["quantity_sum"]

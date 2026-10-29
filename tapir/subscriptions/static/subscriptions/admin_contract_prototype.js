@@ -19,6 +19,7 @@
         })[c],
     );
   const date = (value) => (value ? value.split("-").reverse().join(".") : "–");
+  let flow = "combined";
   let config,
     member,
     step = 0,
@@ -51,6 +52,24 @@
   function frame() {
     modal.dispatchEvent(new Event("tapir:prototype-before-render"));
     error.hidden = true;
+    document.getElementById("admin-contract-title").textContent =
+      flow === "new"
+        ? "Vertrag hinzufügen"
+        : flow === "change"
+          ? "Anteilsgröße zu einem bestimmten Datum verändern"
+          : "Vertrag hinzufügen oder ändern";
+    const steps = [
+      flow === "new"
+        ? "Mitglied"
+        : flow === "change"
+          ? "Mitglied & Anteil"
+          : "Mitglied & Vertrag",
+      flow === "change" ? "Anteilsgröße & Datum" : "Vertragsdaten",
+      "Zusammenfassung",
+    ];
+    modal.querySelectorAll("[data-step]").forEach((el, index) => {
+      el.textContent = `${index + 1} · ${steps[index]}`;
+    });
     modal.querySelector(".modal-body").scrollTop = 0;
     modal.querySelectorAll("[data-step]").forEach((el) => {
       el.classList.toggle("active", Number(el.dataset.step) === step);
@@ -60,7 +79,7 @@
       );
     });
     back.innerHTML = `<span class="material-icons" aria-hidden="true">${step === 0 ? "close" : "arrow_back"}</span><span>${step === 0 ? "Abbrechen" : "Zurück"}</span>`;
-    next.innerHTML = `<span class="material-icons" aria-hidden="true">${step === 2 ? "done" : "arrow_forward"}</span><span>${["Weiter zu den Vertragsdaten", "Änderung prüfen", "Vorschau abschließen"][step]}</span>`;
+    next.innerHTML = `<span class="material-icons" aria-hidden="true">${step === 2 ? "done" : "arrow_forward"}</span><span>${[flow === "change" ? "Weiter zu Anteilsgröße und Datum" : "Weiter zu den Vertragsdaten", flow === "new" ? "Vertrag prüfen" : "Änderung prüfen", "Vorschau abschließen"][step]}</span>`;
     hint.textContent = `Schritt ${step + 1} von 3`;
     next.disabled = true;
   }
@@ -100,7 +119,8 @@
               try {
                 button.disabled = true;
                 member = await api({ member: button.dataset.member });
-                showContracts();
+                if (flow === "new") details(true);
+                else showContracts();
               } catch (e) {
                 fail(e.message);
                 button.disabled = false;
@@ -149,6 +169,21 @@
             `<li class="d-flex align-items-center gap-2">${statusIcon(present)}<span>${label}: <strong>${esc(value)}</strong></span></li>`,
         )
         .join("")}</ul>`;
+    if (flow === "change") {
+      const columns = body.querySelector(".ac-decisions");
+      columns.firstElementChild.remove();
+      columns.firstElementChild.className = "col-12";
+      body.querySelector("h5").textContent =
+        "Welchen Anteil möchtest du ändern?";
+      body.querySelector("h5 + p").textContent =
+        "Wähle genau einen bestehenden Anteil aus. Im nächsten Schritt legst du die neue Größe und das Änderungsdatum fest.";
+      if (!member.contracts.some((c) => !c.cancelled && !c.ended)) {
+        columns.insertAdjacentHTML(
+          "beforeend",
+          '<p class="text-muted mt-3">Für dieses Mitglied ist kein änderbarer Anteil vorhanden.</p>',
+        );
+      }
+    }
     modal.dispatchEvent(new Event("tapir:prototype-rendered"));
     document.getElementById("ac-change-member").onclick = selectMember;
     body.querySelectorAll('[name="ac-action"]').forEach(
@@ -156,10 +191,11 @@
         (input.onchange = () => {
           contract =
             member.contracts.find((c) => c.selectionId === input.value) || null;
+          if (flow === "change") next.disabled = !contract;
         }),
     );
     contract = null;
-    next.disabled = false;
+    next.disabled = flow === "change";
   }
   function monday(week) {
     if (!/^\d{4}-W\d{2}$/.test(week)) return "";
@@ -354,6 +390,9 @@
     data.weekYear = data.weekYear || data.week?.slice(0, 4) || "";
     body.innerHTML =
       memberSummary() +
+      (flow === "new"
+        ? `<details class="mb-3 border rounded p-3"><summary>Vorhandene Anteile (${member.contracts.length}) ansehen</summary><ul class="small mt-2 mb-0">${member.contracts.map((c) => `<li>${esc(c.type)} · ${esc(c.product)} · ${date(c.start)} – ${date(c.end)}${c.cancelled ? " · Gekündigt" : c.ended ? " · Beendet" : ""}</li>`).join("") || "<li>Noch keine Produktverträge vorhanden.</li>"}</ul></details>`
+        : "") +
       `<div class="row g-4"><div class="col-md-8"><section class="ac-section"><h5>${contract ? "Bestehenden Vertrag ändern" : "Neuen Vertrag hinzufügen"}</h5>${contract ? `<div class="alert alert-light border small">Bisher: ${esc(contract.product)} · ${date(contract.start)} – ${date(contract.end)}. Du änderst diesen einzelnen Anteil. Wähle die neue Produktanteilsgröße.</div>` : ""}<div class="row g-3"><div class="col-12"><label class="form-label" for="ac-type">Vertragsart</label><select id="ac-type" class="form-select" ${contract ? "disabled" : ""}>${types.map(([id, name]) => `<option value="${esc(id)}" ${id === selected?.type_id ? "selected" : ""}>${esc(name)}</option>`).join("")}</select></div><div class="${contract ? "col-12" : "col-sm-8"}"><label class="form-label" for="ac-product">${contract ? "Produktanteilsgröße" : "Produkt / Variante"}</label><select id="ac-product" class="form-select">${config.products
         .filter((p) => p.type_id === selected?.type_id)
         .map(
@@ -466,10 +505,14 @@
     if (step === 0) bootstrap.Modal.getInstance(modal).hide();
     else if (step === 1) {
       step = 0;
-      showContracts();
+      if (flow === "new") selectMember();
+      else showContracts();
     } else details();
   };
   modal.addEventListener("shown.bs.modal", async () => {
+    flow = ["new", "change"].includes(modal.dataset.flow)
+      ? modal.dataset.flow
+      : "combined";
     frame();
     body.textContent = "Testdaten werden geladen …";
     try {

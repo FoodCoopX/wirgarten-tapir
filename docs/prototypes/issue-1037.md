@@ -3,8 +3,8 @@
 Dieser Entwurf wurde mit Marcus im bestehenden Django-Testsystem iteriert.
 Er dient als klickbare Vorlage für die Umsetzung, **nicht als fertige Vertragsverwaltung**.
 Version 1 hat ein gemeinsames Icon „Vertrag hinzufügen oder bearbeiten“ und anschließend
-zwei nebeneinanderliegende Optionen. Eine alternative Version mit zwei separaten Icons
-ist nicht Bestandteil dieses Branches.
+zwei nebeneinanderliegende Optionen. Die bevorzugte Variante 2 mit zwei separaten Icons ist auf diesem Branch zusätzlich enthalten;
+siehe [Version-2-Anleitung](issue-1037-v2.md). Diese Seite dokumentiert weiterhin Version 1 zum Vergleich.
 
 ## Screenshots
 
