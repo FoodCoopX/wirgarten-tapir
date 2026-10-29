@@ -168,8 +168,6 @@ div.option.selected {
 .table tr {
   padding: 0.3rem;
   font-size: 16px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .navbar.sticky-top {
@@ -233,116 +231,116 @@ main {
   font-family: "Helvetica Neue";
   font-style: normal;
   src: url("/static/core/themes/leistenmuehle/fonts/HelveticaNeueRoman.woff2")
-    format("woff2");
+       format("woff2");
 }
 @font-face {
   font-family: "Helvetica Neue";
   font-style: italic;
   font-weight: 400;
   src: url("/static/core/themes/leistenmuehle/fonts/HelveticaNeueItalic.woff2")
-    format("woff2");
+       format("woff2");
 }
 @font-face {
   font-family: "Helvetica Neue";
   font-style: normal;
   font-weight: 100;
   src: url("/static/core/themes/leistenmuehle/fonts/HelveticaNeueUltraLight.woff2")
-    format("woff2");
+       format("woff2");
 }
 @font-face {
   font-family: "Helvetica Neue";
   font-style: italic;
   font-weight: 100;
   src: url("/static/core/themes/leistenmuehle/fonts/HelveticaNeueUltraLightItalic.woff2")
-    format("woff2");
+       format("woff2");
 }
 @font-face {
   font-family: "Helvetica Neue";
   font-style: normal;
   font-weight: 200;
   src: url("/static/core/themes/leistenmuehle/fonts/HelveticaNeueThin.woff2")
-    format("woff2");
+       format("woff2");
 }
 @font-face {
   font-family: "Helvetica Neue";
   font-style: italic;
   font-weight: 200;
   src: url("/static/core/themes/leistenmuehle/fonts/HelveticaNeueThinItalic.woff2")
-    format("woff2");
+       format("woff2");
 }
 @font-face {
   font-family: "Helvetica Neue";
   font-style: normal;
   font-weight: 300;
   src: url("/static/core/themes/leistenmuehle/fonts/HelveticaNeueLight.woff2")
-    format("woff2");
+       format("woff2");
 }
 @font-face {
   font-family: "Helvetica Neue";
   font-style: italic;
   font-weight: 300;
   src: url("/static/core/themes/leistenmuehle/fonts/HelveticaNeueLightItalic.woff2")
-    format("woff2");
+       format("woff2");
 }
 @font-face {
   font-family: "Helvetica Neue";
   font-style: normal;
   font-weight: 500;
   src: url("/static/core/themes/leistenmuehle/fonts/HelveticaNeueMedium.woff2")
-    format("woff2");
+       format("woff2");
 }
 @font-face {
   font-family: "Helvetica Neue";
   font-style: italic;
   font-weight: 500;
   src: url("/static/core/themes/leistenmuehle/fonts/HelveticaNeueMediumItalic.woff2")
-    format("woff2");
+       format("woff2");
 }
 @font-face {
   font-family: "Helvetica Neue";
   font-style: normal;
   font-weight: 700;
   src: url("/static/core/themes/leistenmuehle/fonts/HelveticaNeueBold.woff2")
-    format("woff2");
+       format("woff2");
 }
 @font-face {
   font-family: "Helvetica Neue";
   font-style: italic;
   font-weight: 700;
   src: url("/static/core/themes/leistenmuehle/fonts/HelveticaNeueBoldItalic.woff2")
-    format("woff2");
+       format("woff2");
 }
 @font-face {
   font-family: "Helvetica Neue";
   font-style: normal;
   font-weight: 800;
   src: url("/static/core/themes/leistenmuehle/fonts/HelveticaNeueHeavy.woff2")
-    format("woff2");
+       format("woff2");
 }
 @font-face {
   font-family: "Helvetica Neue";
   font-style: italic;
   font-weight: 800;
   src: url("/static/core/themes/leistenmuehle/fonts/HelveticaNeueHeavyItalic.woff2")
-    format("woff2");
+       format("woff2");
 }
 @font-face {
   font-family: "Helvetica Neue";
   font-style: normal;
   font-weight: 900;
   src: url("/static/core/themes/leistenmuehle/fonts/HelveticaNeueBlack.woff2")
-    format("woff2");
+       format("woff2");
 }
 @font-face {
   font-family: "Helvetica Neue";
   font-style: italic;
   font-weight: 900;
   src: url("/static/core/themes/leistenmuehle/fonts/HelveticaNeueBlackItalic.woff2")
-    format("woff2");
+       format("woff2");
 }
 
 @font-face {
   font-family: "Oswald";
   src: url("/static/core/themes/leistenmuehle/fonts/Oswald-VariableFont_wght.woff2")
-    format("woff2");
+       format("woff2");
 }

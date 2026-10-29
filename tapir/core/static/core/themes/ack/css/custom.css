@@ -168,8 +168,6 @@ div.option.selected {
 .table tr {
   padding: 0.3rem;
   font-size: 16px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .navbar.sticky-top {
@@ -235,9 +233,9 @@ main {
   font-style: italic;
   font-display: swap;
   src: url("/static/core/themes/ack/fonts/Montserrat-Italic-VariableFont_wght.ttf")
-  format("ttf");
+       format("ttf");
   src: url("/static/core/themes/ack/fonts/Montserrat-Italic-VariableFont_wght.woff2")
-  format("woff2");
+       format("woff2");
 }
 
 @font-face {
@@ -245,9 +243,9 @@ main {
   font-style: normal;
   font-display: swap;
   src: url("/static/core/themes/ack/fonts/Montserrat-VariableFont_wght.ttf")
-  format("ttf");
+       format("ttf");
   src: url("/static/core/themes/ack/fonts/Montserrat-VariableFont_wght.woff2")
-  format("woff2");
+       format("woff2");
 }
 
 
@@ -256,9 +254,9 @@ main {
   font-style: italic;
   font-display: swap;
   src: url("/static/core/themes/ack/fonts/DMSans-Italic.ttf")
-  format("ttf");
+       format("ttf");
   src: url("/static/core/themes/ack/fonts/DMSans-Italic.woff2")
-  format("woff2");
+       format("woff2");
 }
 
 @font-face {
@@ -266,7 +264,7 @@ main {
   font-style: normal;
   font-display: swap;
   src: url("/static/core/themes/ack/fonts/DMSans.ttf")
-  format("ttf");
+       format("ttf");
   src: url("/static/core/themes/ack/fonts/DMSans.woff2")
-  format("woff2");
+       format("woff2");
 }

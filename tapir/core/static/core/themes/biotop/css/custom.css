@@ -4,7 +4,7 @@
   font-weight: 100 900;
   font-display: swap;
   src: url(https://fonts.gstatic.com/s/montserrat/v31/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2)
-    format("woff2");
+       format("woff2");
 }
 
 @font-face {
@@ -13,7 +13,7 @@
   font-weight: 100 900;
   font-display: swap;
   src: url(https://fonts.gstatic.com/s/montserrat/v31/JTUQjIg1_i6t8kCHKm459WxRyS7m.woff2)
-    format("woff2");
+       format("woff2");
 }
 
 :root {
@@ -186,8 +186,6 @@ div.option.selected {
 .table tr {
   padding: 0.3rem;
   font-size: 16px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .navbar.sticky-top {
@@ -241,9 +239,9 @@ main {
   font-weight: 100 900;
   font-display: swap;
   src: url("/static/core/themes/biotop/fonts/Poppins-VariableFont_wght.ttf")
-    format("ttf");
+       format("ttf");
   src: url("/static/core/themes/biotop/fonts/Poppins-VariableFont_wght.woff2")
-    format("woff2");
+       format("woff2");
 }
 
 @font-face {
@@ -252,7 +250,7 @@ main {
   font-weight: 100 900;
   font-display: swap;
   src: url("/static/core/themes/biotop/fonts/Poppins-Italic-VariableFont_wght.woff2")
-    format("woff2");
+       format("woff2");
 }
 
 .step.active .step-icon {

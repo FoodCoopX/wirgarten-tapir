@@ -167,8 +167,6 @@ div.option.selected {
 .table tr {
   padding: 0.3rem;
   font-size: 16px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .navbar.sticky-top {
@@ -226,7 +224,7 @@ main {
   font-weight: 200;
   font-display: swap;
   src: url("/static/core/themes/ernteunion_ost/fonts/BaiJamjuree-ExtraLightItalic.ttf")
-    format("ttf");
+       format("ttf");
 }
 @font-face {
   font-family: "BaiJamjuree";
@@ -234,7 +232,7 @@ main {
   font-weight: 300;
   font-display: swap;
   src: url("/static/core/themes/ernteunion_ost/fonts/BaiJamjuree-LightItalic.ttf")
-    format("ttf");
+       format("ttf");
 }
 @font-face {
   font-family: "BaiJamjuree";
@@ -242,7 +240,7 @@ main {
   font-weight: 400;
   font-display: swap;
   src: url("/static/core/themes/ernteunion_ost/fonts/BaiJamjuree-Italic.ttf")
-    format("ttf");
+       format("ttf");
 }
 @font-face {
   font-family: "BaiJamjuree";
@@ -250,7 +248,7 @@ main {
   font-weight: 500;
   font-display: swap;
   src: url("/static/core/themes/ernteunion_ost/fonts/BaiJamjuree-MediumItalic.ttf")
-    format("ttf");
+       format("ttf");
 }
 @font-face {
   font-family: "BaiJamjuree";
@@ -258,7 +256,7 @@ main {
   font-weight: 600;
   font-display: swap;
   src: url("/static/core/themes/ernteunion_ost/fonts/BaiJamjuree-SemiBoldItalic.ttf")
-    format("ttf");
+       format("ttf");
 }
 @font-face {
   font-family: "BaiJamjuree";
@@ -266,7 +264,7 @@ main {
   font-weight: 700;
   font-display: swap;
   src: url("/static/core/themes/ernteunion_ost/fonts/BaiJamjuree-BoldItalic.ttf")
-    format("ttf");
+       format("ttf");
 }
 
 @font-face {
@@ -275,7 +273,7 @@ main {
   font-weight: 200;
   font-display: swap;
   src: url("/static/core/themes/ernteunion_ost/fonts/BaiJamjuree-ExtraLight.ttf")
-    format("ttf");
+       format("ttf");
 }
 @font-face {
   font-family: "BaiJamjuree";
@@ -283,7 +281,7 @@ main {
   font-weight: 300;
   font-display: swap;
   src: url("/static/core/themes/ernteunion_ost/fonts/BaiJamjuree-Light.ttf")
-    format("ttf");
+       format("ttf");
 }
 @font-face {
   font-family: "BaiJamjuree";
@@ -291,7 +289,7 @@ main {
   font-weight: 400;
   font-display: swap;
   src: url("/static/core/themes/ernteunion_ost/fonts/BaiJamjuree-Regular.ttf")
-    format("ttf");
+       format("ttf");
 }
 @font-face {
   font-family: "BaiJamjuree";
@@ -299,7 +297,7 @@ main {
   font-weight: 500;
   font-display: swap;
   src: url("/static/core/themes/ernteunion_ost/fonts/BaiJamjuree-Medium.ttf")
-    format("ttf");
+       format("ttf");
 }
 @font-face {
   font-family: "BaiJamjuree";
@@ -307,7 +305,7 @@ main {
   font-weight: 600;
   font-display: swap;
   src: url("/static/core/themes/ernteunion_ost/fonts/BaiJamjuree-SemiBold.ttf")
-    format("ttf");
+       format("ttf");
 }
 @font-face {
   font-family: "BaiJamjuree";
@@ -315,11 +313,11 @@ main {
   font-weight: 700;
   font-display: swap;
   src: url("/static/core/themes/ernteunion_ost/fonts/BaiJamjuree-Bold.ttf")
-    format("ttf");
+       format("ttf");
 }
 
 @font-face {
   font-family: "BaiJamjuree";
   src: url("/static/core/themes/ernteunion_ost/fonts/BaiJamjuree-Regular.ttf")
-    format("ttf");
+       format("ttf");
 }

@@ -161,8 +161,6 @@ div.option.selected {
 .table tr {
   padding: 0.3rem;
   font-size: 16px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .navbar.sticky-top {
