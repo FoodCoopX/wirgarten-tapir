@@ -26,20 +26,20 @@ import {
 } from "./CountryEnum";
 
 /**
- * @type MemberCountry
+ * @type Land
  *
  * @export
  */
-export type MemberCountry = BlankEnum | CountryEnum;
+export type Land = BlankEnum | CountryEnum;
 
-export function MemberCountryFromJSON(json: any): MemberCountry {
-  return MemberCountryFromJSONTyped(json, false);
+export function LandFromJSON(json: any): Land {
+  return LandFromJSONTyped(json, false);
 }
 
-export function MemberCountryFromJSONTyped(
+export function LandFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
-): MemberCountry {
+): Land {
   if (json == null) {
     return json;
   }
@@ -53,7 +53,7 @@ export function MemberCountryFromJSONTyped(
   return {} as any;
 }
 
-export function MemberCountryToJSON(value?: MemberCountry | null): any {
+export function LandToJSON(value?: Land | null): any {
   if (value == null) {
     return value;
   }

@@ -10,7 +10,7 @@ from tapir.log.util import freeze_for_log
 
 class LogEntry(models.Model):
     created_date = models.DateTimeField(
-        auto_now_add=True, verbose_name=_("Creation Date")
+        auto_now_add=True, verbose_name=_("Erstellungsdatum")
     )
 
     actor = models.ForeignKey(

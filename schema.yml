@@ -8788,22 +8788,12 @@ components:
     AvailableSegmentsResponse:
       type: object
       properties:
-        dynamic_segments:
-          type: object
-          additionalProperties:
-            type: string
-        static_segments:
-          type: object
-          additionalProperties:
-            type: string
-        mail_categories:
-          type: object
-          additionalProperties:
-            type: string
+        segments:
+          type: array
+          items:
+            $ref: '#/components/schemas/SegmentOption'
       required:
-      - dynamic_segments
-      - mail_categories
-      - static_segments
+      - segments
     BestellWizardBaseDataResponse:
       type: object
       properties:
@@ -12633,21 +12623,25 @@ components:
           type: string
           format: date
           nullable: true
+          title: Geburtsdatum
         street:
           type: string
-          title: Street and house number
+          title: Straße und Hausnummer
           maxLength: 150
         street_2:
           type: string
-          title: Extra address line
+          title: Adresszusatz
           maxLength: 150
         postcode:
           type: string
+          title: Postleitzahl
           maxLength: 32
         city:
           type: string
+          title: Ort
           maxLength: 50
         country:
+          title: Land
           oneOf:
           - $ref: '#/components/schemas/CountryEnum'
           - $ref: '#/components/schemas/BlankEnum'
@@ -12657,7 +12651,9 @@ components:
           title: Liebe/Lieber
           maxLength: 20
         preferred_language:
-          $ref: '#/components/schemas/PreferredLanguageEnum'
+          allOf:
+          - $ref: '#/components/schemas/PreferredLanguageEnum'
+          title: Bevorzugte Sprache
         account_owner:
           type: string
           nullable: true
@@ -14141,19 +14137,22 @@ components:
           maxLength: 256
         street:
           type: string
-          title: Street and house number
+          title: Straße und Hausnummer
           maxLength: 150
         street_2:
           type: string
-          title: Extra address line
+          title: Adresszusatz
           maxLength: 150
         postcode:
           type: string
+          title: Postleitzahl
           maxLength: 32
         city:
           type: string
+          title: Ort
           maxLength: 50
         country:
+          title: Land
           oneOf:
           - $ref: '#/components/schemas/CountryEnum'
           - $ref: '#/components/schemas/BlankEnum'
@@ -14635,17 +14634,19 @@ components:
           title: Coordinates Latitude
         street:
           type: string
-          title: Street and house number
+          title: Straße und Hausnummer
           maxLength: 150
         street_2:
           type: string
-          title: Extra address line
+          title: Adresszusatz
           maxLength: 150
         postcode:
           type: string
+          title: Postleitzahl
           maxLength: 32
         city:
           type: string
+          title: Ort
           maxLength: 50
         info:
           type: string
@@ -15300,17 +15301,19 @@ components:
           title: Coordinates Latitude
         street:
           type: string
-          title: Street and house number
+          title: Straße und Hausnummer
           maxLength: 150
         street_2:
           type: string
-          title: Extra address line
+          title: Adresszusatz
           maxLength: 150
         postcode:
           type: string
+          title: Postleitzahl
           maxLength: 32
         city:
           type: string
+          title: Ort
           maxLength: 50
         opening_times:
           type: array
@@ -15682,6 +15685,25 @@ components:
       - mail_category_ids_additive
       - static_segment_ids_additive
       - static_segment_ids_subtractive
+    SegmentOption:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          $ref: '#/components/schemas/TypeEnum'
+        label:
+          type: string
+        group:
+          type: string
+        description:
+          type: string
+      required:
+      - description
+      - group
+      - id
+      - label
+      - type
     SetAssociationMembershipEndDateRequestRequest:
       type: object
       properties:
@@ -16285,7 +16307,7 @@ components:
           type: string
           format: date-time
           readOnly: true
-          title: Creation Date
+          title: Erstellungsdatum
         change_type:
           $ref: '#/components/schemas/ChangeTypeEnum'
         subscriptions:
@@ -16628,6 +16650,16 @@ components:
       - field_name
       - label
       - type
+    TypeEnum:
+      enum:
+      - dynamic
+      - static
+      - category
+      type: string
+      description: |-
+        * `dynamic` - dynamic
+        * `static` - static
+        * `category` - category
     UpdateMemberSolidarityContributionRequestRequest:
       type: object
       properties:
@@ -16757,19 +16789,22 @@ components:
           maxLength: 256
         street:
           type: string
-          title: Street and house number
+          title: Straße und Hausnummer
           maxLength: 150
         street_2:
           type: string
-          title: Extra address line
+          title: Adresszusatz
           maxLength: 150
         postcode:
           type: string
+          title: Postleitzahl
           maxLength: 32
         city:
           type: string
+          title: Ort
           maxLength: 50
         country:
+          title: Land
           oneOf:
           - $ref: '#/components/schemas/CountryEnum'
           - $ref: '#/components/schemas/BlankEnum'
@@ -16934,19 +16969,22 @@ components:
           maxLength: 256
         street:
           type: string
-          title: Street and house number
+          title: Straße und Hausnummer
           maxLength: 150
         street_2:
           type: string
-          title: Extra address line
+          title: Adresszusatz
           maxLength: 150
         postcode:
           type: string
+          title: Postleitzahl
           maxLength: 32
         city:
           type: string
+          title: Ort
           maxLength: 50
         country:
+          title: Land
           oneOf:
           - $ref: '#/components/schemas/CountryEnum'
           - $ref: '#/components/schemas/BlankEnum'

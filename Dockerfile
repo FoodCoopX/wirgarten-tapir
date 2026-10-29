@@ -15,7 +15,7 @@ COPY --from=mjml /usr/local/bin/node /usr/local/bin/node
 COPY --from=mjml /usr/local/lib/node_modules/mjml /usr/local/lib/node_modules/mjml
 RUN ln -s ../lib/node_modules/mjml/bin/mjml /usr/local/bin/mjml
 
-RUN apt-get update -y && apt-get install -y --no-install-recommends gettext locales && \
+RUN apt-get update -y && apt-get install -y --no-install-recommends locales && \
     rm -rf /var/lib/apt/lists/* && \
     sed -i -e '/de_DE.UTF-8/s/^# //g' -e '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
 
@@ -33,7 +33,6 @@ COPY tapir /app/tapir
 COPY manage.py /app/manage.py
 COPY Makefile /app/Makefile
 COPY dist* /app/dist
-RUN poetry run python manage.py compilemessages
 
 FROM python:3.14.9-slim AS prod
 ENV PYTHONUNBUFFERED=1
