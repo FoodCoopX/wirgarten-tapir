@@ -152,7 +152,7 @@ def _register_triggers():
         name="BestellWizard: Nur Geno-/Vereinsmitgliedschaft",
         key=Events.REGISTER_MEMBERSHIP_ONLY,
         tokens=TOKENS_ORDER_PAYMENT | TOKENS_COOP_ENTRY,
-        required=lambda: legal_status_is_cooperative(cache={}),
+        required=lambda: not legal_status_is_company(cache={}),
     )
     register_transactional_trigger(
         name="Vertragsänderungen im Mitgliederbereich",
