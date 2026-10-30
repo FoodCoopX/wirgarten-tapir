@@ -34,7 +34,7 @@ class Migration(migrations.Migration):
             model_name="waitinglistentry",
             name="phone_number",
             field=phonenumber_field.modelfields.PhoneNumberField(
-                default=0, max_length=128, region=None, verbose_name="Phone number"
+                default="", max_length=128, region=None, verbose_name="Phone number"
             ),
             preserve_default=False,
         ),
