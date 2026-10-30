@@ -68,13 +68,13 @@ class SubscriptionPriceChangedLogEntry(UpdateModelLogEntry):
         price_before = (
             "Standard"
             if self.price_before is None
-            else f"{format_currency(self.price_before)}€"
+            else f"{format_currency(self.price_before)} €"
         )
         context_data["price_before"] = price_before
         price_after = (
             "Standard"
             if self.price_after is None
-            else f"{format_currency(self.price_after)}€"
+            else f"{format_currency(self.price_after)} €"
         )
         context_data["price_after"] = price_after
         return context_data

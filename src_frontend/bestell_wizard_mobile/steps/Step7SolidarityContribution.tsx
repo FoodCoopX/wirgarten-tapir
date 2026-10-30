@@ -193,7 +193,7 @@ const Step7SolidarityContribution: React.FC<
       return;
     }
 
-    setCustomValue(formatCurrency(Number.parseFloat(cleanedValue)));
+    setCustomValue(floatValue.toFixed(2) + SUFFIX);
     const input = document.getElementById(
       "custom_solidarity_contribution",
     ) as HTMLInputElement;
@@ -237,8 +237,8 @@ const Step7SolidarityContribution: React.FC<
         {selectedValue === "custom" && (
           <Form.Group className={"d-flex flex-column gap-2 align-items-center"}>
             <Form.Text>
-              Bitte eine Zahl eingeben. Beispiel: '5' eingeben um 5€ extra
-              beizutragen, oder '-10' um 10€ weniger zu zahlen.
+              Bitte eine Zahl eingeben. Beispiel: '5' eingeben um 5 € extra
+              beizutragen, oder '-10' um 10 € weniger zu zahlen.
             </Form.Text>
             <span className={"d-flex gap-2"}>
               <Form.Control

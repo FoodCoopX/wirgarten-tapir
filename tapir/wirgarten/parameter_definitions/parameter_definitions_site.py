@@ -89,7 +89,7 @@ class ParameterDefinitionsSite:
             key=ParameterKeys.SITE_ADMIN_IMAGE,
             label="Admin/Ansprechpartner Foto",
             datatype=TapirParameterDatatype.STRING,
-            initial_value="https://placehold.net/avatar.svg",
+            initial_value="/static/wirgarten/images/site_admin_image_placeholder.svg",
             description="Ein Foto der Kontaktperson für Mitglieder",
             category=ParameterCategory.SITE,
         )

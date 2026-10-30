@@ -27,7 +27,11 @@ from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import WaitingListEntry, Member
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.triggers.onboarding_trigger import OnboardingTrigger
-from tapir.wirgarten.utils import get_today, legal_status_is_cooperative
+from tapir.wirgarten.utils import (
+    get_today,
+    legal_status_is_cooperative,
+    legal_status_is_company,
+)
 
 TOKENS_COOP_ENTRY = {
     "Anzahl der gezeichneten Genossenschaftsanteile": "number_of_coop_shares",
@@ -48,12 +52,21 @@ TOKENS_ORDER_PAYMENT = {
 TOKEN_FIRST_PICKUP_DATE = "Erste Abholung am"
 
 
+class SegmentGroups:
+    GENERAL = "Allgemein"
+    CONTRACTS = "Verträge"
+    DELIVERIES = "Lieferungen"
+    PICKUP_LOCATIONS = "Abholorte"
+
+
 class Segments:
     ALL_USERS = "Alle Benutzer"
     COOP_MEMBERS = "Geno-Mitglieder"
     NON_COOP_MEMBERS = "Nicht Geno-Mitglieder"
-    WITH_ACTIVE_SUBSCRIPTION = "Mit laufendem Ertevertrag"
-    WITHOUT_ACTIVE_SUBSCRIPTION = "Ohne laufenden Ertevertrag"
+    WITH_ACTIVE_SUBSCRIPTION = "Mit laufendem Vertrag (alle Produkte)"
+    WITHOUT_ACTIVE_SUBSCRIPTION = "Ohne laufenden Vertrag (alle Produkte)"
+    WITH_DELIVERY_THIS_WEEK = "Alle mit Lieferung diese Woche"
+    WITH_DELIVERY_NEXT_WEEK = "Alle mit Lieferung nächste Woche"
     MEMBERS_WITH_CONTRACT_SINCE_MORE_THAN_ONE_YEAR_BUT_NO = (
         "Mit Vertrag über einem Jahr aber kein Geno-Anteil"
     )
@@ -150,7 +163,7 @@ def _register_triggers():
         name="BestellWizard: Nur Geno-/Vereinsmitgliedschaft",
         key=Events.REGISTER_MEMBERSHIP_ONLY,
         tokens=TOKENS_ORDER_PAYMENT | TOKENS_COOP_ENTRY,
-        required=lambda: legal_status_is_cooperative(cache={}),
+        required=lambda: not legal_status_is_company(cache={}),
     )
     register_transactional_trigger(
         name="Vertragsänderungen im Mitgliederbereich",
