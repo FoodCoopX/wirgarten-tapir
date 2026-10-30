@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 import "dayjs/locale/de";
 import RelativeTime from "dayjs/plugin/relativeTime";
 import WeekOfYear from "dayjs/plugin/weekOfYear";
-import React from "react";
+import React, { useState } from "react";
 import { Table } from "react-bootstrap";
 import {
   Delivery,
@@ -70,6 +70,8 @@ function productCell(delivery: Delivery) {
   return <div className={"d-flex flex-column"}>{content}</div>;
 }
 
+const NB_DELIVERIES_SHOWN_BY_DEFAULT = 3;
+
 const DeliveriesTable: React.FC<DeliveriesTableProps> = ({
   deliveries,
   deliveriesLoading,
@@ -77,9 +79,15 @@ const DeliveriesTable: React.FC<DeliveriesTableProps> = ({
   setSelectedPickupLocation,
   setSelectedPickupLocationOpeningTimes,
 }) => {
+  const [showAll, setShowAll] = useState(false);
+
   dayjs.extend(RelativeTime);
   dayjs.extend(WeekOfYear);
   dayjs.locale("de");
+
+  const visibleDeliveries = showAll
+    ? deliveries
+    : deliveries.slice(0, NB_DELIVERIES_SHOWN_BY_DEFAULT);
 
   function pickupLocationCell(delivery: Delivery) {
     return (
@@ -103,34 +111,47 @@ const DeliveriesTable: React.FC<DeliveriesTableProps> = ({
   }
 
   return (
-    <div style={{ overflowY: "auto", maxHeight: "30em" }}>
-      {!deliveriesLoading && deliveries.length === 0 ? (
-        <p className={"text-center mb-0"}>Keine Abholungen</p>
-      ) : (
-        <Table striped hover responsive size={"sm"} className={"text-center"}>
-          <thead>
-            <tr>
-              <th>Datum</th>
-              <th>Produkte</th>
-              <th>{pickupLocationLabel}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {deliveriesLoading ? (
-              <PlaceholderTableRows nbColumns={3} nbRows={7} size={"lg"} />
-            ) : (
-              deliveries.map((delivery) => {
-                return (
-                  <tr key={formatDateNumeric(delivery.deliveryDate)}>
-                    <td>{dateCell(delivery)}</td>
-                    <td>{productCell(delivery)}</td>
-                    <td>{pickupLocationCell(delivery)}</td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </Table>
+    <div>
+      <div style={showAll ? { overflowY: "auto", maxHeight: "30em" } : {}}>
+        {!deliveriesLoading && deliveries.length === 0 ? (
+          <p className={"text-center mb-0"}>Keine Abholungen</p>
+        ) : (
+          <Table striped hover responsive size={"sm"} className={"text-center"}>
+            <thead>
+              <tr>
+                <th>Datum</th>
+                <th>Produkte</th>
+                <th>{pickupLocationLabel}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {deliveriesLoading ? (
+                <PlaceholderTableRows nbColumns={3} nbRows={7} size={"lg"} />
+              ) : (
+                visibleDeliveries.map((delivery) => {
+                  return (
+                    <tr key={formatDateNumeric(delivery.deliveryDate)}>
+                      <td>{dateCell(delivery)}</td>
+                      <td>{productCell(delivery)}</td>
+                      <td>{pickupLocationCell(delivery)}</td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </Table>
+        )}
+      </div>
+      {deliveries.length > NB_DELIVERIES_SHOWN_BY_DEFAULT && (
+        <div className={"text-center p-2"}>
+          <TapirButton
+            variant={"outline-secondary"}
+            size={"sm"}
+            icon={showAll ? "expand_less" : "expand_more"}
+            text={showAll ? "Weniger anzeigen" : `Alle anzeigen`}
+            onClick={() => setShowAll(!showAll)}
+          />
+        </div>
       )}
     </div>
   );
