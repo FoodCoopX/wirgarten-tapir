@@ -3,6 +3,7 @@ import os
 
 import celery.schedules
 import environ
+from django.core.exceptions import ImproperlyConfigured
 
 from tapir.settings.base import BASE_DIR, DEBUG, ENABLE_JASMIN
 
@@ -128,35 +129,36 @@ EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
 EMAIL_USE_SSL = env.bool("EMAIL_USE_SSL", default=False)
 if EMAIL_ENV == "dev":
     EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
-    EMAIL_HOST = "example.com"
-    EMAIL_HOST_USER = "email_host_user"
-    EMAIL_HOST_PASSWORD = "email_host_password"
-    EMAIL_HOST_SENDER = "test_host_sender@example.com"
-    EMAIL_BOUNCE_ADDRESS = "bounce@example.com"
-    EMAIL_HOST_SENDER_NAME = "Test host sender"
     EMAIL_FILE_PATH = BASE_DIR / "../emails_from_celery"
-elif EMAIL_ENV == "test":
-    # Local SMTP
-    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 elif EMAIL_ENV == "prod":
     EMAIL_BACKEND = "tapir_mail.service.smtp_backend_with_dsn.SmtpBackendWithDsn"
-    EMAIL_HOST = env.str("EMAIL_HOST")
-    EMAIL_HOST_SENDER = env.str(
-        "EMAIL_HOST_SENDER"
-    )  # The address that the client will see
-    EMAIL_HOST_SENDER_NAME = env.str("EMAIL_HOST_SENDER_NAME")
-    EMAIL_BOUNCE_ADDRESS = env.str(
-        "EMAIL_BOUNCE_ADDRESS"
-    )  # The address that the mail will be sent from
-    EMAIL_HOST_USER = env.str("EMAIL_HOST_USER")
-    EMAIL_HOST_PASSWORD = env.str("EMAIL_HOST_PASSWORD")
-    EMAIL_AUTO_BCC = env.str("EMAIL_AUTO_BCC", default=None)
-    EMAIL_BOUNCE_USER = env.str("EMAIL_BOUNCE_USER", default=None)
-    EMAIL_BOUNCE_PASSWORD = env.str("EMAIL_BOUNCE_PASSWORD", default=None)
-    # IMAP host of the bounce mailbox, only needed if it differs from EMAIL_HOST
-    EMAIL_BOUNCE_HOST = env.str("EMAIL_BOUNCE_HOST", default=None)
-    EMAIL_REPLY_TO = env.str("EMAIL_REPLY_TO", default=None)
+else:
+    raise ImproperlyConfigured(
+        f"Unknown EMAIL_ENV '{EMAIL_ENV}', expected 'dev' or 'prod'"
+    )
 
+
+def email_setting(name: str, dev_default: str) -> str:
+    # Use defaults only in dev mode, in prod make sure the corresponding env var is set.
+    if EMAIL_ENV == "dev":
+        return env.str(name, default=dev_default)
+    return env.str(name)
+
+
+EMAIL_HOST = email_setting("EMAIL_HOST", "example.com")
+# The address that the client will see
+EMAIL_HOST_SENDER = email_setting("EMAIL_HOST_SENDER", "test_host_sender@example.com")
+EMAIL_HOST_SENDER_NAME = email_setting("EMAIL_HOST_SENDER_NAME", "Test host sender")
+# The address that the mail will be sent from
+EMAIL_BOUNCE_ADDRESS = email_setting("EMAIL_BOUNCE_ADDRESS", "bounce@example.com")
+EMAIL_HOST_USER = email_setting("EMAIL_HOST_USER", "email_host_user")
+EMAIL_HOST_PASSWORD = email_setting("EMAIL_HOST_PASSWORD", "email_host_password")
+EMAIL_AUTO_BCC = env.str("EMAIL_AUTO_BCC", default=None)
+EMAIL_BOUNCE_USER = env.str("EMAIL_BOUNCE_USER", default=None)
+EMAIL_BOUNCE_PASSWORD = env.str("EMAIL_BOUNCE_PASSWORD", default=None)
+# IMAP host of the bounce mailbox, only needed if it differs from EMAIL_HOST
+EMAIL_BOUNCE_HOST = env.str("EMAIL_BOUNCE_HOST", default=None)
+EMAIL_REPLY_TO = env.str("EMAIL_REPLY_TO", default=None)
 
 # Crash emails will come from this address.
 SERVER_EMAIL = env("SERVER_EMAIL", default="tapir@foodcoopx.de")
