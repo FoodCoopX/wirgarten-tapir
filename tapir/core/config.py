@@ -50,6 +50,7 @@ THEME_HECKENGAEU = "hkg"
 THEME_ACKERNATIVE = "ack"
 THEME_ACKERVIELFALT = "akv"
 THEME_SUPERSCHMELZ = "sup"
+THEME_VIERLANDE = "vie"
 
 
 THEME_OPTIONS = [
@@ -75,6 +76,7 @@ THEME_OPTIONS = [
     (THEME_SOLAWI_ODERSCHWALBE, "Solawi Oderschwalbe"),
     (THEME_SOLAWI_HALL, "Solawi Hall"),
     (THEME_SUPERSCHMELZ, "Solawi Superschmelz"),
+    (THEME_VIERLANDE, "Solawi Vierlande"),
     (THEME_WIRGARTEN, "WirGarten Lüneburg"),
     (THEME_TEST, "Test"),
 ]
