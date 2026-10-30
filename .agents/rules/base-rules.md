@@ -81,6 +81,7 @@ prose. `make help` lists all.
 | `make schema`                            | regenerate `schema.yml` **and** TS client after a DRF change |
 | `make populate` / `make populate-bakery` | fresh test data                                              |
 | `make manage ARGS="migrate"`             | any other management command                                 |
+| `make keycloak ARGS="user list"`         | Keycloak users, groups, passwords (`scripts/tapir_kcadm.sh`) |
 
 **Never run `pytest` or `manage.py` directly on the host** — integration tests are not path-separated and fail without
 containers; `manage.py` has no DB/Redis/Keycloak.
