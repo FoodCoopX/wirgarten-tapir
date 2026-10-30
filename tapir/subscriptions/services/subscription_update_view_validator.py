@@ -1,5 +1,6 @@
 import datetime
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from localflavor.generic.validators import IBANValidator
 
@@ -30,9 +31,7 @@ class SubscriptionUpdateViewValidator:
         if logged_in_user_is_admin:
             return True
 
-        return get_parameter_value(
-            ParameterKeys.BAKERY_ENABLED, cache=cache
-        ) and get_parameter_value(
+        return settings.BAKERY_ENABLED and get_parameter_value(
             ParameterKeys.BAKERY_MEMBERS_CAN_REDUCE_BREAD_SHARES, cache=cache
         )
 

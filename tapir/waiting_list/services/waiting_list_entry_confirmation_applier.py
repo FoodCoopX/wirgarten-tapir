@@ -145,6 +145,7 @@ class WaitingListEntryConfirmationApplier:
                 subscriptions=new_subscriptions,
                 cache=cache,
                 actor=actor,
+                pay_in_instalments=validated_data["pay_coop_shares_in_instalments"],
             )
 
         if len(new_subscriptions) > 0:
@@ -213,14 +214,12 @@ class WaitingListEntryConfirmationApplier:
         )
 
         KeycloakUserManager.create_keycloak_user_if_necessary(
-            user=member, initial_password=None, cache=cache
+            user=member, initial_password=None
         )
         try:
-            EmailVerificationService.send_verification_email(
-                user=member, actor=member, cache=cache
-            )
+            EmailVerificationService.send_verification_email(user=member, actor=member)
         except KeycloakPutError:
-            KeycloakUserDeleteService.delete_user_if_exists(user=member, cache=cache)
+            KeycloakUserDeleteService.delete_user_if_exists(user=member)
             raise
 
         return member

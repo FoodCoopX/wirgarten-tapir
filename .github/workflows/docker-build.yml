@@ -34,7 +34,7 @@ jobs:
           GITHUB_REPO: ${{ github.repository }}
           NEW_TAG: ${{ github.event.inputs.release_tag == '' && '--bump' || format('--tag {0}', github.event.inputs.release_tag) }}
         with:
-          config: https://github.com/orhun/git-cliff/blob/main/examples/github.toml
+          config: cliff.toml
           args: --verbose --unreleased --strip header --tag-pattern '^v[0-9]+\.[0-9]+\.[0-9]+$' $NEW_TAG
 
       - name: Create release with changelog
@@ -89,16 +89,13 @@ jobs:
       - name: Build front-end
         run: pnpm install --frozen-lockfile && pnpm run build
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-
       - name: Build and push Docker image
         uses: docker/build-push-action@v7
         with:
           context: .
+          target: prod
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          no-cache: true
           build-args: TAPIR_VERSION=${{ needs.prepare-changelog.outputs.version || github.sha }}

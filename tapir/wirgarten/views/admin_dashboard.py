@@ -1,6 +1,7 @@
 import json
 
 from dateutil.relativedelta import relativedelta
+from django.conf import settings
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db.models import Count, Max, Sum
 from django.db.models.functions import ExtractYear
@@ -244,9 +245,10 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             cache=self.cache
         )
 
-        context["bakery_enabled"] = get_parameter_value(
-            ParameterKeys.BAKERY_ENABLED, cache=self.cache
-        ) and self.request.user.has_perm(Permission.Coop.MANAGE)
+        context["bakery_enabled"] = (
+            settings.BAKERY_ENABLED
+            and self.request.user.has_perm(Permission.Coop.MANAGE)
+        )
 
         return context
 

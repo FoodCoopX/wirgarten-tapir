@@ -121,6 +121,9 @@ class BestellWizardOrderFulfiller:
                 subscriptions=subscriptions,
                 cache=cache,
                 actor=actor,
+                pay_in_instalments=validated_serializer_data[
+                    "pay_coop_shares_in_instalments"
+                ],
             )
         if legal_status_is_association(cache=cache):
             association_membership = cls.create_association_membership(
@@ -210,15 +213,13 @@ class BestellWizardOrderFulfiller:
         )
 
         KeycloakUserManager.create_keycloak_user_if_necessary(
-            user=member, initial_password=None, cache=cache
+            user=member, initial_password=None
         )
 
         try:
-            EmailVerificationService.send_verification_email(
-                user=member, actor=member, cache=cache
-            )
+            EmailVerificationService.send_verification_email(user=member, actor=member)
         except KeycloakPutError:
-            KeycloakUserDeleteService.delete_user_if_exists(user=member, cache=cache)
+            KeycloakUserDeleteService.delete_user_if_exists(user=member)
             raise
 
         return member
@@ -231,6 +232,7 @@ class BestellWizardOrderFulfiller:
         subscriptions: list[Subscription],
         cache: dict,
         actor: TapirUser,
+        pay_in_instalments: bool,
     ):
         earliest_trial_period_end = cls.get_earliest_trial_period_end(
             subscriptions=subscriptions, cache=cache
@@ -249,6 +251,7 @@ class BestellWizardOrderFulfiller:
             shares_valid_at=shares_valid_at,
             cache=cache,
             actor=actor,
+            pay_in_instalments=pay_in_instalments,
         )
 
     @classmethod

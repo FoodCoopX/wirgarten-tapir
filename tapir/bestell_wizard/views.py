@@ -4,6 +4,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import transaction
 from django.shortcuts import get_object_or_404
+from django.contrib.staticfiles.storage import staticfiles_storage
 from django.templatetags.static import static
 from django.views.generic import TemplateView
 from drf_spectacular.types import OpenApiTypes
@@ -467,6 +468,15 @@ class BestellWizardBaseDataApiView(APIView):
         super().__init__(**kwargs)
         self.cache = {}
 
+    @staticmethod
+    def build_logo_url(cache: dict):
+        # The wizard may have a light background: themes can ship a dark logo for it
+        theme = get_parameter_value(key=ParameterKeys.ORGANISATION_THEME, cache=cache)
+        dark_logo = f"core/themes/{theme}/images/Logo_dark.webp"
+        if staticfiles_storage.exists(dark_logo):
+            return static(dark_logo)
+        return static(f"core/themes/{theme}/images/Logo_white.webp")
+
     @extend_schema(
         responses={200: BestellWizardBaseDataResponseSerializer},
     )
@@ -528,9 +538,7 @@ class BestellWizardBaseDataApiView(APIView):
                     contract_start_date=earliest_contract_start_date,
                 ),
                 "product_ids_that_are_already_at_capacity": product_ids_that_are_already_at_capacity,
-                "logo_url": static(
-                    f"core/themes/{get_parameter_value(key=ParameterKeys.ORGANISATION_THEME, cache=self.cache)}/images/Logo_white.webp"
-                ),
+                "logo_url": self.build_logo_url(cache=self.cache),
                 "distribution_channels": QuestionnaireSourceService.get_questionnaire_source_choices(
                     cache=self.cache
                 ),
@@ -565,13 +573,14 @@ class BestellWizardBaseDataApiView(APIView):
     def build_simple_response_fields(cls, cache: dict):
         serializer_key_to_parameter_key_map = {
             "price_of_a_share": ParameterKeys.COOP_SHARE_PRICE,
+            "coop_share_instalments_enabled": ParameterKeys.COOP_SHARES_INSTALMENTS_ENABLED,
+            "coop_share_instalment_amount": ParameterKeys.COOP_SHARES_INSTALMENT_AMOUNT,
             "theme": ParameterKeys.ORGANISATION_THEME,
             "allow_investing_membership": ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES,
             "force_waiting_list": ParameterKeys.BESTELLWIZARD_FORCE_WAITING_LIST,
             "intro_enabled": ParameterKeys.BESTELLWIZARD_SHOW_INTRO,
             "student_status_allowed": ParameterKeys.ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES,
             "phone_number_required": ParameterKeys.MEMBER_PHONE_NUMBER_REQUIRED,
-            "pseudonym_enabled": ParameterKeys.BAKERY_ENABLED,
             "label_checkbox_sepa_mandat": ParameterKeys.BESTELLWIZARD_SEPA_MANDAT_CHECKBOX_TEXT,
             "label_checkbox_contract_policy": ParameterKeys.BESTELLWIZARD_CONTRACT_POLICY_CHECKBOX_TEXT,
             "default_payment_rhythm": ParameterKeys.PAYMENT_DEFAULT_RHYTHM,
@@ -585,9 +594,12 @@ class BestellWizardBaseDataApiView(APIView):
             "legal_status": ParameterKeys.ORGANISATION_LEGAL_STATUS,
             "associations_allow_investing_membership": ParameterKeys.ASSOCIATIONS_ALLOW_SUPPORTING_MEMBERSHIP,
         }
-        return cls.build_dictionary_from_config_parameters(
-            serializer_key_to_parameter_key_map, cache
-        )
+        return {
+            **cls.build_dictionary_from_config_parameters(
+                serializer_key_to_parameter_key_map, cache
+            ),
+            "pseudonym_enabled": settings.BAKERY_ENABLED,
+        }
 
     @classmethod
     def build_strings_object(cls, cache: dict):
@@ -605,6 +617,7 @@ class BestellWizardBaseDataApiView(APIView):
             "step3b_text": ParameterKeys.BESTELLWIZARD_STEP3B_TEXT,
             "step4b_waiting_list_modal_title": ParameterKeys.BESTELL_WIZARD_STEP4B_WAITING_LIST_MODAL_HEADER,
             "step4b_waiting_list_modal_text": ParameterKeys.BESTELL_WIZARD_STEP4B_WAITING_LIST_MODAL_TEXT,
+            "step4b_base_price_label": ParameterKeys.BESTELLWIZARD_STEP4B_BASE_PRICE_LABEL,
             "step4d_title": ParameterKeys.BESTELLWIZARD_STEP4D_TITLE,
             "step4d_text": ParameterKeys.BESTELLWIZARD_STEP4D_TEXT,
             "step4d_text_supporting_member": ParameterKeys.BESTELLWIZARD_STEP4D_TEXT_SUPPORTING_MEMBER,
@@ -933,7 +946,7 @@ class PublicBestellWizardIsEmailAddressValidApiView(APIView):
 
         try:
             PersonalDataValidator.validate_email_address_not_in_use(
-                email=email, cache={}, check_waiting_list=True
+                email=email, check_waiting_list=True
             )
         except ValidationError:
             return Response(False)

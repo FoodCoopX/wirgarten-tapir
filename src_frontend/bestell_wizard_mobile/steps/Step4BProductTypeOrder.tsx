@@ -64,7 +64,8 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
     if (
       stepActive &&
       productType.products.length === 1 &&
-      productType.singleSubscriptionOnly
+      productType.singleSubscriptionOnly &&
+      !waitingListLinkConfirmationModeEnabled
     ) {
       shoppingCart[productType.products[0].id!] = 1;
       setShoppingCart({ ...shoppingCart });

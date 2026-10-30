@@ -1,5 +1,7 @@
 import typing
 
+from django.core.validators import MaxLengthValidator
+
 from tapir.configuration.models import TapirParameterDatatype, TapirParameter
 from tapir.configuration.parameter import ParameterMeta, get_parameter_value
 from tapir.core.config import (
@@ -17,6 +19,8 @@ from tapir.wirgarten.utils import (
     legal_status_is_cooperative,
     legal_status_is_association,
 )
+
+BESTELLWIZARD_STEP4B_BASE_PRICE_LABEL_MAX_LENGTH = 30
 
 if typing.TYPE_CHECKING:
     from tapir.wirgarten.parameters import (
@@ -290,6 +294,25 @@ class ParameterDefinitionsBestellwizard:
             description="",
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
+        )
+        bestellwizard_parameter_order -= 1
+
+        importer.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP4B_BASE_PRICE_LABEL,
+            label="Seite 4B: Produkt-Typ Bestellung - Bezeichnung für den Preis",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Basisbeitrag",
+            description="Steht unter jeder Produktvariante vor dem Preis, z.B. 'Basisbeitrag: 89,00 € pro Monat'. "
+            f"Maximal {BESTELLWIZARD_STEP4B_BASE_PRICE_LABEL_MAX_LENGTH} Zeichen.",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+            meta=ParameterMeta(
+                validators=[
+                    MaxLengthValidator(
+                        limit_value=BESTELLWIZARD_STEP4B_BASE_PRICE_LABEL_MAX_LENGTH
+                    )
+                ]
+            ),
         )
         bestellwizard_parameter_order -= 1
 

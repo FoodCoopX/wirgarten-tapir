@@ -2,7 +2,7 @@ import datetime
 import json
 from decimal import Decimal
 from typing import Any
-from unittest.mock import patch, Mock, ANY
+from unittest.mock import patch, Mock
 
 from django.urls import reverse
 from keycloak import KeycloakPutError
@@ -149,9 +149,7 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
             key=Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION,
         )
         self.assertEqual(2, mock_on_subscription_updated.call_count)
-        mock_send_verification_email.assert_called_once_with(
-            user=member, actor=member, cache=ANY
-        )
+        mock_send_verification_email.assert_called_once_with(user=member, actor=member)
 
     def test_post_requestDataIsInvalid_returns400(self):
         data = self.build_valid_post_data_for_an_order_without_waiting_list()
@@ -471,6 +469,57 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         )
 
         self.assertFalse(WaitingListEntry.objects.exists())
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_investingMemberPaysInInstalments_createsOnePaymentPerInstalment(
+        self, _: Mock
+    ):
+        self._set_parameter(
+            key=ParameterKeys.COOP_SHARES_INSTALMENTS_ENABLED, value=True
+        )
+        self._set_parameter(key=ParameterKeys.COOP_SHARES_INSTALMENT_AMOUNT, value=20)
+        data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        data["shopping_cart_order"] = {}
+        data["become_member_now"] = True
+        data["pickup_location_ids"] = []
+        data["pay_coop_shares_in_instalments"] = True
+
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        self.assert_order_confirmed(response.json())
+        coop_share_transaction = CoopShareTransaction.objects.get()
+        payments = list(coop_share_transaction.payments.order_by("instalment_number"))
+        self.assertEqual([1, 2, 3, 4, 5], [p.instalment_number for p in payments])
+        for payment in payments:
+            self.assertEqual(Decimal(20), payment.amount)
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_payInInstalmentsWithMoreThanTheMinimumOfShares_orderNotConfirmed(
+        self, _: Mock
+    ):
+        self._set_parameter(
+            key=ParameterKeys.COOP_SHARES_INSTALMENTS_ENABLED, value=True
+        )
+        data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        data["number_of_coop_shares"] = 3
+        data["pay_coop_shares_in_instalments"] = True
+
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assertFalse(response_content["order_confirmed"])
+        self.assertIn("Ratenzahlung", response_content["error"])
+        self.assertFalse(Member.objects.exists())
 
     @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_investingMemberWithoutCurrentGrowingPeriod_solidarityContributionStartsAtMembershipStart(

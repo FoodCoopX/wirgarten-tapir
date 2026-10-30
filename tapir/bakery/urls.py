@@ -32,6 +32,7 @@ from tapir.bakery.viewsets import (
     BreadLabelViewSet,
     BreadSpecificsPerDeliveryDayViewSet,
     BreadsPerPickupLocationPerWeekViewSet,
+    BreadsToBakePerWeekViewSet,
     BreadViewSet,
     IngredientViewSet,
     PreferredBreadViewSet,
@@ -149,6 +150,11 @@ router.register(
     r"breads-per-pickup-location-per-week",
     BreadsPerPickupLocationPerWeekViewSet,
     basename="breads-per-pickup-location-per-week",
+)
+router.register(
+    r"breads-to-bake-per-week",
+    BreadsToBakePerWeekViewSet,
+    basename="breads-to-bake-per-week",
 )
 router.register(
     r"bread-specifics", BreadSpecificsPerDeliveryDayViewSet, basename="bread-specifics"

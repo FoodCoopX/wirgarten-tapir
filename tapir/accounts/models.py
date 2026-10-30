@@ -48,10 +48,12 @@ class KeycloakUser(AbstractUser):
 
     @property
     def roles(self):
-        roles = KeycloakUserManager.get_user_roles(self.keycloak_id)
-        if self.is_superuser or Permission.Coop.MANAGE in roles:
-            roles.append("admin")
-        return roles
+        if self._roles is None:
+            roles = KeycloakUserManager.get_user_roles(self.keycloak_id)
+            if self.is_superuser or Permission.Coop.MANAGE in roles:
+                roles.append("admin")
+            self._roles = roles
+        return self._roles
 
     @roles.setter
     def roles(self, value):
@@ -62,12 +64,6 @@ class KeycloakUser(AbstractUser):
             return self.is_superuser
 
         target = obj or self
-
-        if target.roles is None:
-            target.roles = KeycloakUserManager.get_user_roles(
-                keycloak_id=target.keycloak_id
-            )
-
         return perm in target.roles
 
     def has_perms(self, perm_list, obj=None):
@@ -80,23 +76,23 @@ class KeycloakUser(AbstractUser):
 class TapirUser(KeycloakUser):
     first_name = models.CharField(_("First Name"), max_length=150, blank=False)
     last_name = models.CharField(_("Last Name"), max_length=150, blank=False)
-    email = models.CharField(_("Email"), max_length=150, blank=True)
-    phone_number = PhoneNumberField(_("Phone number"), blank=True, null=True)
+    email = models.CharField(_("E-Mail-Adresse"), max_length=150, blank=True)
+    phone_number = PhoneNumberField(_("Telefonnummer"), blank=True, null=True)
     phone_number_landline = PhoneNumberField(
         _("Phone number (landline)"), blank=True, null=True
     )
-    birthdate = models.DateField(_("Birthdate"), blank=True, null=True)
-    street = models.CharField(_("Street and house number"), max_length=150, blank=True)
-    street_2 = models.CharField(_("Extra address line"), max_length=150, blank=True)
-    postcode = models.CharField(_("Postcode"), max_length=32, blank=True)
-    city = models.CharField(_("City"), max_length=50, blank=True)
-    country = CountryField(_("Country"), blank=True, default="DE")
+    birthdate = models.DateField(_("Geburtsdatum"), blank=True, null=True)
+    street = models.CharField(_("Straße und Hausnummer"), max_length=150, blank=True)
+    street_2 = models.CharField(_("Adresszusatz"), max_length=150, blank=True)
+    postcode = models.CharField(_("Postleitzahl"), max_length=32, blank=True)
+    city = models.CharField(_("Ort"), max_length=50, blank=True)
+    country = CountryField(_("Land"), blank=True, default="DE")
     form_of_address = models.CharField(
         _("Liebe/Lieber"), max_length=20, blank=True, null=True
     )
 
     preferred_language = models.CharField(
-        _("Preferred Language"),
+        _("Bevorzugte Sprache"),
         choices=utils.models.PREFERRED_LANGUAGES,
         default="de",
         max_length=16,
@@ -126,7 +122,7 @@ def terminate_session(sender, request, user, **kwargs):
 
     from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
 
-    keycloak_client = KeycloakUserManager.get_keycloak_client(cache={})
+    keycloak_client = KeycloakUserManager.get_keycloak_client()
     keycloak_client.user_logout(user.keycloak_id)
 
 

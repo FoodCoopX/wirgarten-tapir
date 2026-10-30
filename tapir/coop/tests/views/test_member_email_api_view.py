@@ -227,7 +227,7 @@ class TestMemberEmailApiView(TapirIntegrationTest):
         self.assertIsNone(trigger_data.recipient_outside_of_base_queryset)
 
         mock_send_verification_email.assert_called_once_with(
-            user=user_after_changes, actor=ANY, cache={}
+            user=user_after_changes, actor=ANY
         )
 
     @patch.object(TransactionalTrigger, "fire_action", autospec=True)
@@ -265,7 +265,7 @@ class TestMemberEmailApiView(TapirIntegrationTest):
         )
 
         mock_send_verification_email.assert_called_once_with(
-            user=user_after_changes, actor=ANY, cache={}
+            user=user_after_changes, actor=ANY
         )
         self.assertEqual(2, self.mock_keycloak_client.update_user.call_count)
         main_call = self.mock_keycloak_client.update_user.call_args_list[0]

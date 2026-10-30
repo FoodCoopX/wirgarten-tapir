@@ -307,6 +307,7 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
                 "number_of_coop_shares": 2,
                 "price_of_a_coop_share": "50,00",
                 "total_cost": "100,00",
+                "coop_shares_payment_method": "einmalig",
                 "solidarity_contribution_amount": "12,00",
                 "solidarity_contribution_start_date": "11.05.2026",
                 "monthly_total": "22,00",

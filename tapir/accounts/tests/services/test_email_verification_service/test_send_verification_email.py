@@ -23,13 +23,10 @@ class TestSendVerificationEmail(TapirIntegrationTest):
         mock_get_keycloak_client.return_value = mock_client
         user = MemberFactory.create(keycloak_id="1234")
         actor = MemberFactory.create()
-        cache = MagicMock()
 
-        EmailVerificationService.send_verification_email(
-            user=user, actor=actor, cache=cache
-        )
+        EmailVerificationService.send_verification_email(user=user, actor=actor)
 
-        mock_get_keycloak_client.assert_called_once_with(cache=cache)
+        mock_get_keycloak_client.assert_called_once_with()
         mock_client.send_update_account.assert_called_once_with(
             user_id="1234",
             payload=["VERIFY_EMAIL"],
@@ -59,11 +56,8 @@ class TestSendVerificationEmail(TapirIntegrationTest):
         mock_get_keycloak_client.return_value = mock_client
         user = MemberFactory.create(keycloak_id="1234")
         actor = MemberFactory.create()
-        cache = MagicMock()
 
-        EmailVerificationService.send_verification_email(
-            user=user, actor=actor, cache=cache
-        )
+        EmailVerificationService.send_verification_email(user=user, actor=actor)
 
         mock_get_keycloak_client.assert_not_called()
         mock_client.send_verify_email.assert_not_called()

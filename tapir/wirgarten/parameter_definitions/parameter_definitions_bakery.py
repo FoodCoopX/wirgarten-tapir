@@ -1,5 +1,7 @@
 import typing
 
+from django.conf import settings
+
 from tapir.configuration.models import TapirParameterDatatype
 from tapir.configuration.parameter import ParameterMeta
 from tapir.wirgarten.constants import ParameterCategory
@@ -15,20 +17,8 @@ class ParameterDefinitionsBakery:
     @classmethod
     def define_all_parameters_bakery(cls, importer: "ParameterDefinitions"):
 
-        importer.parameter_definition(
-            key=ParameterKeys.BAKERY_ENABLED,
-            label="Bäckerei-Funktion aktivieren",
-            datatype=TapirParameterDatatype.BOOLEAN,
-            initial_value=False,
-            description="Aktiviert die Bäckerei-Funktionalität für Brotbestellungen",
-            category=ParameterCategory.BAKERY,
-            order_priority=10,
-        )
-
         def bakery_enabled(cache):
-            from tapir.configuration.parameter import get_parameter_value
-
-            return get_parameter_value(ParameterKeys.BAKERY_ENABLED, cache)
+            return settings.BAKERY_ENABLED
 
         importer.parameter_definition(
             key=ParameterKeys.BAKERY_STOVE_LAYERS,

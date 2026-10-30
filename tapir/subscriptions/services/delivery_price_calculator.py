@@ -14,31 +14,6 @@ from tapir.wirgarten.service.products import get_active_subscriptions, get_produ
 
 class DeliveryPriceCalculator:
     @classmethod
-    def get_price_of_subscriptions_delivered_in_week(
-        cls,
-        member: Member,
-        reference_date: datetime.date,
-        only_subscriptions_affected_by_jokers: bool,
-        cache: dict,
-    ):
-        subscriptions = cls.get_subscriptions_that_get_delivered_in_week(
-            member, reference_date, cache=cache
-        )
-        if only_subscriptions_affected_by_jokers:
-            subscriptions = subscriptions.filter(
-                product__type__is_affected_by_jokers=True
-            )
-        return sum(
-            [
-                cls.get_price_of_single_delivery_for_subscription(
-                    subscription, reference_date, cache=cache
-                )
-                for subscription in subscriptions
-            ],
-            start=Decimal(0),
-        )
-
-    @classmethod
     def get_subscriptions_that_get_delivered_in_week(
         cls, member: Member, reference_date: datetime.date, cache: dict
     ):
@@ -70,14 +45,33 @@ class DeliveryPriceCalculator:
         if delivery_cycle == CUSTOM_CYCLE[0]:
             return product_price
 
-        delivery_price = (
-            product_price * 12 / cls.get_number_of_weeks_in_year(at_date.year)
+        return (
+            cls.get_price_of_single_delivery_from_monthly_price(
+                monthly_price=product_price,
+                delivery_cycle=delivery_cycle,
+                at_date=at_date,
+            )
+            * subscription.quantity
         )
+
+    @classmethod
+    def get_price_of_single_delivery_from_monthly_price(
+        cls, monthly_price: Decimal, delivery_cycle: str, at_date: datetime.date
+    ) -> Decimal:
+        return (
+            monthly_price
+            * 12
+            / cls.get_number_of_weeks_in_year(at_date.year)
+            * cls.get_number_of_weeks_covered_by_single_delivery(delivery_cycle)
+        )
+
+    @classmethod
+    def get_number_of_weeks_covered_by_single_delivery(cls, delivery_cycle: str) -> int:
         if delivery_cycle in {EVEN_WEEKS[0], ODD_WEEKS[0]}:
-            delivery_price *= 2
-        elif delivery_cycle == EVERY_FOUR_WEEKS[0]:
-            delivery_price *= 4
-        return delivery_price * subscription.quantity
+            return 2
+        if delivery_cycle == EVERY_FOUR_WEEKS[0]:
+            return 4
+        return 1
 
     @classmethod
     def get_number_of_months_in_growing_period(

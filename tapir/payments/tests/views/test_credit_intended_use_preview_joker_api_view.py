@@ -51,21 +51,6 @@ class TestCreditIntendedUsePreviewJokerApiView(TapirIntegrationTest):
         self.assertEqual(["Maximilian", "John"], data["previews_old"])
         self.assertEqual(["Maximilian", "John"], data["previews_new"])
 
-    def test_get_patternIsTooLong_returnsError(self):
-        self._login_as_admin()
-        too_long = "X" * 50
-
-        response = self.client.get(
-            reverse(self.URL_NAME) + f"?pattern_old={too_long}&pattern_new={too_long}"
-        )
-
-        self.assertStatusCode(response, 200)
-        data = response.json()
-        self.assertEqual(
-            "Diese Zeile: 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX' ist zu lang wenn die Tokens expandiert sind.",
-            data["error"],
-        )
-
     def test_get_default_returnsTokenListWithCommonAndJokerTokens(self):
         self._login_as_admin()
 
@@ -113,9 +98,9 @@ class TestCreditIntendedUsePreviewJokerApiView(TapirIntegrationTest):
         )
         self.assertEqual(
             [
-                "3;50,42€ * 2;01.06.2026 - 1",
-                "3;50,42€ * 2;01.06.2026 - 1",
-                "3;22,64€ * 3;01.06.2026 - 0",
+                "3;50,42€ * 2;01.06.2026 - 14.06.2026",
+                "3;50,42€ * 2;01.06.2026 - 14.06.2026",
+                "3;22,64€ * 3;01.06.2026 - 01.07.2026 - 01.08.2026",
             ],
             response_content["previews_new"],
         )

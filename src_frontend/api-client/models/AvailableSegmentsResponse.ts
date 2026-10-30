@@ -12,6 +12,9 @@
  * Do not edit the class manually.
  */
 
+import type { SegmentOption } from "./SegmentOption";
+import { SegmentOptionFromJSON, SegmentOptionToJSON } from "./SegmentOption";
+
 /**
  *
  * @export
@@ -20,22 +23,10 @@
 export interface AvailableSegmentsResponse {
   /**
    *
-   * @type {{ [key: string]: string; }}
+   * @type {Array<SegmentOption>}
    * @memberof AvailableSegmentsResponse
    */
-  dynamicSegments: { [key: string]: string };
-  /**
-   *
-   * @type {{ [key: string]: string; }}
-   * @memberof AvailableSegmentsResponse
-   */
-  staticSegments: { [key: string]: string };
-  /**
-   *
-   * @type {{ [key: string]: string; }}
-   * @memberof AvailableSegmentsResponse
-   */
-  mailCategories: { [key: string]: string };
+  segments: Array<SegmentOption>;
 }
 
 /**
@@ -44,12 +35,7 @@ export interface AvailableSegmentsResponse {
 export function instanceOfAvailableSegmentsResponse(
   value: object,
 ): value is AvailableSegmentsResponse {
-  if (!("dynamicSegments" in value) || value["dynamicSegments"] === undefined)
-    return false;
-  if (!("staticSegments" in value) || value["staticSegments"] === undefined)
-    return false;
-  if (!("mailCategories" in value) || value["mailCategories"] === undefined)
-    return false;
+  if (!("segments" in value) || value["segments"] === undefined) return false;
   return true;
 }
 
@@ -67,9 +53,7 @@ export function AvailableSegmentsResponseFromJSONTyped(
     return json;
   }
   return {
-    dynamicSegments: json["dynamic_segments"],
-    staticSegments: json["static_segments"],
-    mailCategories: json["mail_categories"],
+    segments: (json["segments"] as Array<any>).map(SegmentOptionFromJSON),
   };
 }
 
@@ -88,8 +72,6 @@ export function AvailableSegmentsResponseToJSONTyped(
   }
 
   return {
-    dynamic_segments: value["dynamicSegments"],
-    static_segments: value["staticSegments"],
-    mail_categories: value["mailCategories"],
+    segments: (value["segments"] as Array<any>).map(SegmentOptionToJSON),
   };
 }

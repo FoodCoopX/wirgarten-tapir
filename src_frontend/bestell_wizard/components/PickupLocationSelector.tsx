@@ -82,8 +82,8 @@ const PickupLocationSelector: React.FC<PickupLocationSelectorProps> = ({
 
   return (
     <Row>
-      <Col>
-        <ListGroup style={{ maxHeight: "50dvh", overflow: "scroll" }}>
+      <Col xs={12} md>
+        <ListGroup className={"pickup-location-list"}>
           {pickupLocations.map((pickupLocation) => (
             <ListGroupItem
               key={pickupLocation.id}
@@ -112,8 +112,9 @@ const PickupLocationSelector: React.FC<PickupLocationSelectorProps> = ({
           ))}
         </ListGroup>
       </Col>
-      <Col>
+      <Col xs={12} md className={"mt-3 mt-md-0"}>
         <MapContainer
+          className={"pickup-location-map"}
           center={[
             Number.parseFloat(pickupLocations[0].coordsLon),
             Number.parseFloat(pickupLocations[0].coordsLat),

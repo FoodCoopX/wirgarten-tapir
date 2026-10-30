@@ -12,6 +12,7 @@ from tapir.bakery.models import (
     BreadLabel,
     BreadSpecificsPerDeliveryDay,
     BreadsPerPickupLocationPerWeek,
+    BreadsToBakePerWeek,
     Ingredient,
     PreferredBread,
     StoveSession,
@@ -477,6 +478,15 @@ class StoveSessionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = StoveSession
+        fields = "__all__"
+        read_only_fields = ["id"]
+
+
+class BreadsToBakePerWeekSerializer(serializers.ModelSerializer):
+    bread_name = serializers.CharField(source="bread.name", read_only=True)
+
+    class Meta:
+        model = BreadsToBakePerWeek
         fields = "__all__"
         read_only_fields = ["id"]
 

@@ -114,10 +114,7 @@ const PaymentTransactionsBase: React.FC<PaymentTransactionsBaseProps> = ({
         show={showRebuildModal}
         onHide={() => setShowRebuildModal(false)}
         setToastDatas={setToastDatas}
-        afterRebuild={() => {
-          setShowRebuildModal(false);
-          loadData();
-        }}
+        afterRebuild={loadData}
       />
       <TapirToastContainer
         toastDatas={toastDatas}

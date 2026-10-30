@@ -187,6 +187,29 @@ class ParameterDefinitionsPayments:
         order_priority -= 1
 
         importer.parameter_definition(
+            key=ParameterKeys.PAYMENT_INTENDED_USE_COOP_SHARES_INSTALMENT,
+            label="Verwendungszweck für Genoanteilsbuchungen in Raten",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="{anzahl_geno_anteile} {betriebsname} GenoAnteil Rate {ratennummer}/{anzahl_raten}\nBeitritt {beitrittsdatum}\n9{mitgliedsnummer_ohne_prefix}\n{mitgliedsnummer_lang}",
+            description=WARNING_USE_EDITOR,
+            category=ParameterCategory.PAYMENT,
+            order_priority=order_priority,
+            meta=ParameterMeta(
+                show_only_when=lambda cache: get_parameter_value(
+                    ParameterKeys.PAYMENT_INTENDED_USE_ENABLE_CUSTOM, cache=cache
+                )
+                and get_parameter_value(
+                    ParameterKeys.COOP_SHARES_INSTALMENTS_ENABLED, cache=cache
+                ),
+                textarea=True,
+                vars_hint=IntendedUseTokens.COMMON_TOKENS
+                + IntendedUseTokens.COOP_SHARE_TOKENS
+                + IntendedUseTokens.COOP_SHARE_INSTALMENT_TOKENS,
+            ),
+        )
+        order_priority -= 1
+
+        importer.parameter_definition(
             key=ParameterKeys.PAYMENT_INTENDED_USE_MONTHLY_INVOICE,
             label="Verwendungszweck für Beitragsabbuchungen regulär",
             datatype=TapirParameterDatatype.STRING,
@@ -249,6 +272,27 @@ class ParameterDefinitionsPayments:
             datatype=TapirParameterDatatype.STRING,
             initial_value="{betriebsname}\n{nachname} {mitgliedsnummer_lang}\n{vertragsliste}\nSonderbeitrag",
             description="Wird verwendet typischerweise in der Probezeit, wenn eine Buchung mehr Monate abdeckt als normal. "
+            + WARNING_USE_EDITOR,
+            category=ParameterCategory.PAYMENT,
+            order_priority=order_priority,
+            meta=ParameterMeta(
+                show_only_when=lambda cache: get_parameter_value(
+                    ParameterKeys.PAYMENT_INTENDED_USE_ENABLE_CUSTOM, cache=cache
+                ),
+                textarea=True,
+                vars_hint=IntendedUseTokens.COMMON_TOKENS
+                + IntendedUseTokens.CONTRACT_TOKENS,
+            ),
+        )
+        order_priority -= 1
+
+        importer.parameter_definition(
+            key=ParameterKeys.PAYMENT_INTENDED_USE_LAST_INVOICE,
+            label="Verwendungszweck für Beitragsabbuchungen letztmalig",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="{betriebsname}\n{nachname} {mitgliedsnummer_lang}\n{vertragsliste}\nLetzte Abbuchung",
+            description="Wird verwendet für die letzte Buchung, wenn alle Verträge, positiven Solidarbeiträge und kostenpflichtigen Vereinsmitgliedschaften des Mitglieds gekündigt sind und spätestens am Ende des abgebuchten Zeitraums enden. "
+            + "Nicht gekündigte Verträge gelten als verlängert, da sie automatisch oder vom Mitglied noch im letzten Monat der Anbauperiode verlängert werden können. "
             + WARNING_USE_EDITOR,
             category=ParameterCategory.PAYMENT,
             order_priority=order_priority,

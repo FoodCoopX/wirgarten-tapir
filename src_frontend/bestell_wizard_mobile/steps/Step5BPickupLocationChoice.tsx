@@ -230,7 +230,7 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
             />
           </div>
         </Carousel.Item>
-        <Carousel.Item>
+        <Carousel.Item style={{ position: "absolute", inset: 0 }}>
           <Step5BPickupLocationList
             pickupLocations={filteredPickupLocations}
             selectedPickupLocations={selectedPickupLocations}

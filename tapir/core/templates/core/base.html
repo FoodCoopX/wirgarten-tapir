@@ -51,7 +51,7 @@
                 </span>
                 {% if request.user.is_authenticated %}
                     <div style="width: 100%; display: flex; justify-content: space-between">
-                        <a class="text-light nav-link" style="white-space:nowrap" href="/">{{ request.user.first_name }} {{ request.user.last_name }}</a>
+                        <a class="text-light nav-link text-truncate" href="/">{{ request.user.first_name }} {{ request.user.last_name }}</a>
                         {% if debug %}
                             {% get_parameter_value_tag "wirgarten.tests.override_date_preset" cache as date_preset %}
                             {% if date_preset != "disabled" %}

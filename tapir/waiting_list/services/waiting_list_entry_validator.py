@@ -40,7 +40,7 @@ class WaitingListEntryValidator:
             )
 
         PersonalDataValidator.validate_email_address_not_in_use(
-            email=email, cache=cache, check_waiting_list=True
+            email=email, check_waiting_list=True
         )
 
     @classmethod

@@ -11,6 +11,7 @@ from tapir.subscriptions.config import (
 )
 from tapir.utils.tests_utils import mock_parameter_value
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.tests.factories import ProductFactory
 from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
@@ -34,14 +35,14 @@ class TestIsTheOrderedSolidarityAllowed(TapirUnitTest):
     def test_isTheOrderedSolidarityAllowed_positiveAmount_returnsTrue(self):
         self.assertTrue(
             SolidarityValidator.is_the_ordered_solidarity_allowed(
-                1, start_date=Mock(), cache={}
+                amount=1, start_date=Mock(), order={}, cache={}
             )
         )
 
     def test_isTheOrderedSolidarityAllowed_amountIsZero_returnsTrue(self):
         self.assertTrue(
             SolidarityValidator.is_the_ordered_solidarity_allowed(
-                0, start_date=Mock(), cache={}
+                amount=0, start_date=Mock(), order={}, cache={}
             )
         )
 
@@ -50,12 +51,14 @@ class TestIsTheOrderedSolidarityAllowed(TapirUnitTest):
     ):
         cache = {}
         self.set_solidarity_parameters(
-            cache, SOLIDARITY_MODE_NEGATIVE_ALWAYS_ALLOWED, "-15"
+            cache=cache,
+            solidarity_mode=SOLIDARITY_MODE_NEGATIVE_ALWAYS_ALLOWED,
+            configured_minimum="-15",
         )
 
         self.assertTrue(
             SolidarityValidator.is_the_ordered_solidarity_allowed(
-                -15, start_date=Mock(), cache=cache
+                amount=-15, start_date=Mock(), order={}, cache=cache
             )
         )
 
@@ -64,12 +67,14 @@ class TestIsTheOrderedSolidarityAllowed(TapirUnitTest):
     ):
         cache = {}
         self.set_solidarity_parameters(
-            cache, SOLIDARITY_MODE_NEGATIVE_ALWAYS_ALLOWED, "-15"
+            cache=cache,
+            solidarity_mode=SOLIDARITY_MODE_NEGATIVE_ALWAYS_ALLOWED,
+            configured_minimum="-15",
         )
 
         self.assertFalse(
             SolidarityValidator.is_the_ordered_solidarity_allowed(
-                -16, start_date=Mock(), cache=cache
+                amount=-16, start_date=Mock(), order={}, cache=cache
             )
         )
 
@@ -77,11 +82,13 @@ class TestIsTheOrderedSolidarityAllowed(TapirUnitTest):
         self,
     ):
         cache = {}
-        self.set_solidarity_parameters(cache, SOLIDARITY_MODE_ONLY_POSITIVE)
+        self.set_solidarity_parameters(
+            cache=cache, solidarity_mode=SOLIDARITY_MODE_ONLY_POSITIVE
+        )
 
         self.assertFalse(
             SolidarityValidator.is_the_ordered_solidarity_allowed(
-                -1, start_date=Mock(), cache=cache
+                amount=-1, start_date=Mock(), order={}, cache=cache
             )
         )
 
@@ -91,14 +98,16 @@ class TestIsTheOrderedSolidarityAllowed(TapirUnitTest):
     ):
         cache = {}
         self.set_solidarity_parameters(
-            cache, SOLIDARITY_MODE_NEGATIVE_ALLOWED_IF_ENOUGH_POSITIVE, "-15"
+            cache=cache,
+            solidarity_mode=SOLIDARITY_MODE_NEGATIVE_ALLOWED_IF_ENOUGH_POSITIVE,
+            configured_minimum="-15",
         )
         mock_get_solidarity_excess.return_value = Decimal(12)
         start_date = Mock()
 
         self.assertFalse(
             SolidarityValidator.is_the_ordered_solidarity_allowed(
-                -13, start_date=start_date, cache=cache
+                amount=-13, start_date=start_date, order={}, cache=cache
             )
         )
 
@@ -112,14 +121,16 @@ class TestIsTheOrderedSolidarityAllowed(TapirUnitTest):
     ):
         cache = {}
         self.set_solidarity_parameters(
-            cache, SOLIDARITY_MODE_NEGATIVE_ALLOWED_IF_ENOUGH_POSITIVE, "-15"
+            cache=cache,
+            solidarity_mode=SOLIDARITY_MODE_NEGATIVE_ALLOWED_IF_ENOUGH_POSITIVE,
+            configured_minimum="-15",
         )
         mock_get_solidarity_excess.return_value = Decimal(14)
         start_date = Mock()
 
         self.assertTrue(
             SolidarityValidator.is_the_ordered_solidarity_allowed(
-                -13, start_date=start_date, cache=cache
+                amount=-13, start_date=start_date, order={}, cache=cache
             )
         )
 
@@ -134,14 +145,16 @@ class TestIsTheOrderedSolidarityAllowed(TapirUnitTest):
     ):
         cache = {}
         self.set_solidarity_parameters(
-            cache, SOLIDARITY_MODE_NEGATIVE_ALLOWED_IF_ENOUGH_POSITIVE, "-15"
+            cache=cache,
+            solidarity_mode=SOLIDARITY_MODE_NEGATIVE_ALLOWED_IF_ENOUGH_POSITIVE,
+            configured_minimum="-15",
         )
         mock_get_solidarity_excess.return_value = Decimal(200)
         start_date = Mock()
 
         self.assertTrue(
             SolidarityValidator.is_the_ordered_solidarity_allowed(
-                -15, start_date=start_date, cache=cache
+                amount=-15, start_date=start_date, order={}, cache=cache
             )
         )
 
@@ -156,17 +169,64 @@ class TestIsTheOrderedSolidarityAllowed(TapirUnitTest):
     ):
         cache = {}
         self.set_solidarity_parameters(
-            cache, SOLIDARITY_MODE_NEGATIVE_ALLOWED_IF_ENOUGH_POSITIVE, "-15"
+            cache=cache,
+            solidarity_mode=SOLIDARITY_MODE_NEGATIVE_ALLOWED_IF_ENOUGH_POSITIVE,
+            configured_minimum="-15",
         )
         mock_get_solidarity_excess.return_value = Decimal(200)
         start_date = Mock()
 
         self.assertFalse(
             SolidarityValidator.is_the_ordered_solidarity_allowed(
-                -16, start_date=start_date, cache=cache
+                amount=-16, start_date=start_date, order={}, cache=cache
             )
         )
 
         mock_get_solidarity_excess.assert_called_once_with(
             reference_date=start_date, cache=cache
+        )
+
+    def test_isTheOrderedSolidarityAllowed_amountBelowProductMinimum_returnsFalse(
+        self,
+    ):
+        cache = {}
+        self.set_solidarity_parameters(
+            cache=cache,
+            solidarity_mode=SOLIDARITY_MODE_NEGATIVE_ALWAYS_ALLOWED,
+            configured_minimum="-15",
+        )
+        order = {ProductFactory.build(solidarity_choices="-5,10,20"): 1}
+
+        self.assertFalse(
+            SolidarityValidator.is_the_ordered_solidarity_allowed(
+                amount=-6, start_date=Mock(), order=order, cache=cache
+            )
+        )
+
+    def test_isTheOrderedSolidarityAllowed_amountEqualsProductMinimum_returnsTrue(
+        self,
+    ):
+        cache = {}
+        self.set_solidarity_parameters(
+            cache=cache,
+            solidarity_mode=SOLIDARITY_MODE_NEGATIVE_ALWAYS_ALLOWED,
+            configured_minimum="-15",
+        )
+        order = {ProductFactory.build(solidarity_choices="-5,10,20"): 1}
+
+        self.assertTrue(
+            SolidarityValidator.is_the_ordered_solidarity_allowed(
+                amount=-5, start_date=Mock(), order=order, cache=cache
+            )
+        )
+
+    def test_isTheOrderedSolidarityAllowed_positiveAmountBelowPositiveProductMinimum_returnsFalse(
+        self,
+    ):
+        order = {ProductFactory.build(solidarity_choices="5,10"): 1}
+
+        self.assertFalse(
+            SolidarityValidator.is_the_ordered_solidarity_allowed(
+                amount=0, start_date=Mock(), order=order, cache={}
+            )
         )

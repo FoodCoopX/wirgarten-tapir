@@ -64,6 +64,7 @@ export interface PaymentsApiIntendedUsePreviewContractsRetrieveRequest {
 }
 
 export interface PaymentsApiIntendedUsePreviewCoopSharesRetrieveRequest {
+  instalments?: boolean;
   patternNew: string;
   patternOld: string;
 }
@@ -345,6 +346,10 @@ export class PaymentsApi extends runtime.BaseAPI {
     }
 
     const queryParameters: any = {};
+
+    if (requestParameters["instalments"] != null) {
+      queryParameters["instalments"] = requestParameters["instalments"];
+    }
 
     if (requestParameters["patternNew"] != null) {
       queryParameters["pattern_new"] = requestParameters["patternNew"];

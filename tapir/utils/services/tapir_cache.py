@@ -18,6 +18,9 @@ from tapir.pickup_locations.models import PickupLocationDeliveryCharge
 from tapir.pickup_locations.models import ProductBasketSizeEquivalence
 from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.subscriptions.models import NoticePeriod
+from tapir.subscriptions.services.unconfirmed_changes_provider import (
+    UnconfirmedChangesProvider,
+)
 from tapir.utils.services.tapir_cache_manager import TapirCacheManager
 from tapir.utils.shortcuts import get_from_cache_or_compute
 from tapir.wirgarten.models import (
@@ -65,6 +68,39 @@ class TapirCache:
             "all_solidarity_contributions",
             lambda: set(SolidarityContribution.objects.select_related("member")),
         )
+
+    @classmethod
+    def get_all_subscriptions_for_member(
+        cls, member_id: str, cache: dict
+    ) -> list[Subscription]:
+        key = "all_subscriptions_by_member_id"
+        TapirCacheManager.register_key_in_category(
+            cache=cache, key=key, category=TapirCacheManager.CATEGORY_SUBSCRIPTIONS
+        )
+
+        def compute():
+            result = {}
+            for subscription in cls.get_all_subscriptions(cache=cache):
+                result.setdefault(subscription.member_id, []).append(subscription)
+            return result
+
+        subscriptions_by_member_id = get_from_cache_or_compute(cache, key, compute)
+        return subscriptions_by_member_id.get(member_id, [])
+
+    @classmethod
+    def get_all_solidarity_contributions_for_member(
+        cls, member_id: str, cache: dict
+    ) -> list[SolidarityContribution]:
+        def compute():
+            result = {}
+            for contribution in cls.get_all_solidarity_contributions(cache=cache):
+                result.setdefault(contribution.member_id, []).append(contribution)
+            return result
+
+        contributions_by_member_id = get_from_cache_or_compute(
+            cache, "all_solidarity_contributions_by_member_id", compute
+        )
+        return contributions_by_member_id.get(member_id, [])
 
     @classmethod
     def get_subscriptions_active_at_date(
@@ -380,7 +416,7 @@ class TapirCache:
         )
 
     @classmethod
-    def get_delivery_day_by_pickup_location_id(cls, cache: Dict) -> Dict:
+    def get_delivery_day_by_pickup_location_id(cls, cache: dict) -> dict:
         def compute():
             delivery_days = {}
             for (
@@ -418,12 +454,7 @@ class TapirCache:
         return get_from_cache_or_compute(
             cache,
             "unconfirmed_coop_share_purchases",
-            lambda: list(
-                CoopShareTransaction.objects.filter(
-                    admin_confirmed__isnull=True,
-                    transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,
-                )
-            ),
+            lambda: list(UnconfirmedChangesProvider.get_unconfirmed_share_purchases()),
         )
 
     @classmethod
@@ -616,14 +647,16 @@ class TapirCache:
         )
 
         def compute() -> Decimal:
-            contributions = cls.get_solidarity_contributions_active_at_date(
-                reference_date=reference_date, cache=cache
+            contributions = cls.get_all_solidarity_contributions_for_member(
+                member_id=member_id, cache=cache
             )
             return sum(
                 (
                     contribution.amount
                     for contribution in contributions
-                    if contribution.member_id == member_id
+                    if contribution.start_date
+                    <= reference_date
+                    <= contribution.end_date
                 ),
                 start=Decimal(0),
             )

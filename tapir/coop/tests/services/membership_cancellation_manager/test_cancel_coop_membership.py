@@ -1,5 +1,4 @@
 import datetime
-from decimal import Decimal
 
 from tapir.coop.models import (
     CoopSharesCancelledDuringTrialLogEntry,
@@ -66,42 +65,52 @@ class TestCancelCoopMembership(TapirIntegrationTest):
             transaction_3.valid_at, log_entry.shares_would_have_been_valid_at
         )
 
-    def test_cancelCoopMembership_default_paymentsGetUpdateCorrectly(
-        self,
-    ):
+    def test_cancelCoopMembership_paymentNotExportedYet_paymentDeleted(self):
         member = MemberFactory.create()
-
-        payment_1 = PaymentFactory.create(
-            mandate_ref__member=member, amount=Decimal(100)
-        )
-        CoopShareTransactionFactory.create(
+        cancelled_transaction = CoopShareTransactionFactory.create(
             member=member,
             transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,
             valid_at=datetime.datetime(year=2024, month=9, day=28),
-            payment=payment_1,
-            share_price=Decimal(100),
-            quantity=1,
         )
-
-        payment_2 = PaymentFactory.create(
-            mandate_ref__member=member, amount=Decimal(350)
+        unexported_payment = PaymentFactory.create(
+            mandate_ref__member=member,
+            coop_share_transaction=cancelled_transaction,
+            transaction=None,
+            status=Payment.PaymentStatus.DUE,
         )
-        CoopShareTransactionFactory.create(
-            member=member,
-            transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,
+        transaction_of_other_member = CoopShareTransactionFactory.create(
             valid_at=datetime.datetime(year=2024, month=9, day=28),
-            payment=payment_2,
-            share_price=Decimal(100),
-            quantity=2,
+        )
+        payment_of_other_member = PaymentFactory.create(
+            mandate_ref__member=transaction_of_other_member.member,
+            coop_share_transaction=transaction_of_other_member,
+            transaction=None,
+            status=Payment.PaymentStatus.DUE,
         )
 
         CoopMembershipCancellationManager.cancel_coop_membership(member)
 
-        self.assertFalse(CoopShareTransaction.objects.exists())
-        self.assertEqual(1, Payment.objects.count(), "payment_1 should be deleted")
-        payment_2.refresh_from_db()
-        self.assertEqual(
-            Decimal(150),
-            payment_2.amount,
-            "Payment 2 should have been reduced by the total cost of transaction_2",
+        self.assertFalse(Payment.objects.filter(id=unexported_payment.id).exists())
+        self.assertTrue(Payment.objects.filter(id=payment_of_other_member.id).exists())
+
+    def test_cancelCoopMembership_paymentAlreadyExported_paymentKeptAndUnlinked(self):
+        # The monthly export runs on the first day of the month and includes all payments due that month,
+        # so the payment can already be exported while the shares are not valid yet
+        # and the member can still cancel during the trial period.
+        member = MemberFactory.create()
+        cancelled_transaction = CoopShareTransactionFactory.create(
+            member=member,
+            transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,
+            valid_at=datetime.datetime(year=2024, month=9, day=28),
         )
+        exported_payment = PaymentFactory.create(
+            mandate_ref__member=member,
+            coop_share_transaction=cancelled_transaction,
+            status=Payment.PaymentStatus.PAID,
+        )
+
+        CoopMembershipCancellationManager.cancel_coop_membership(member)
+
+        exported_payment.refresh_from_db()
+        self.assertIsNone(exported_payment.coop_share_transaction)
+        self.assertEqual(Payment.PaymentStatus.PAID, exported_payment.status)

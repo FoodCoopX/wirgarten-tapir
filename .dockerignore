@@ -1,0 +1,9 @@
+.git
+.venv
+.idea
+node_modules
+media
+static
+error_logs
+emails_from_celery
+**/__pycache__

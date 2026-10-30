@@ -113,9 +113,8 @@ class DataGenerator:
             models.delete()
 
         members_to_delete = Member.objects.filter(email__endswith="@example.com")
-        cache = {}
         for member in members_to_delete:
-            KeycloakUserDeleteService.delete_user_if_exists(user=member, cache=cache)
+            KeycloakUserDeleteService.delete_user_if_exists(user=member)
         members_to_delete.delete()
 
         print("Done")

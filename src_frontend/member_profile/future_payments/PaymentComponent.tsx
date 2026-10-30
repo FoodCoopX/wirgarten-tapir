@@ -154,7 +154,9 @@ const PaymentComponent: React.FC<PaymentProps> = ({
     <div key={extendedPayment.payment.id}>
       <div className={"d-flex flex-column align-items-center"}>
         <strong>{formatCurrency(extendedPayment.payment.amount)}</strong>
-        <span>{extendedPayment.payment.mandateRef}</span>
+        <span className={"text-break"}>
+          {extendedPayment.payment.mandateRef}
+        </span>
         {extendedPayment.subscriptions.map((subscription) => (
           <span key={subscription.id}>
             {formatSubscription(subscription)}
@@ -166,6 +168,12 @@ const PaymentComponent: React.FC<PaymentProps> = ({
           <span key={transaction.id}>
             {transaction.quantity}
             {" × Genossenschaftsanteile"}
+            {extendedPayment.payment.instalmentNumber &&
+              extendedPayment.numberOfInstalments &&
+              ", Rate " +
+                extendedPayment.payment.instalmentNumber +
+                " von " +
+                extendedPayment.numberOfInstalments}
           </span>
         ))}
         {extendedPayment.solidarityContributions.length > 0 && (

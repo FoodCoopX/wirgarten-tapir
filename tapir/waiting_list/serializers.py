@@ -142,6 +142,7 @@ class PublicConfirmWaitingListEntryRequestSerializer(serializers.Serializer):
     sepa_allowed = serializers.BooleanField()
     contract_accepted = serializers.BooleanField()
     number_of_coop_shares = serializers.IntegerField()
+    pay_coop_shares_in_instalments = serializers.BooleanField(default=False)
     payment_rhythm = serializers.CharField()
     solidarity_contribution = serializers.FloatField()
     association_membership_type_id = serializers.CharField(allow_null=True)

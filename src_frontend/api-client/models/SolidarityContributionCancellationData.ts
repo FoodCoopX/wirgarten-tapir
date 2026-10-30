@@ -32,6 +32,12 @@ export interface SolidarityContributionCancellationData {
   isInTrial: boolean;
   /**
    *
+   * @type {boolean}
+   * @memberof SolidarityContributionCancellationData
+   */
+  isNegative: boolean;
+  /**
+   *
    * @type {Date}
    * @memberof SolidarityContributionCancellationData
    */
@@ -46,6 +52,8 @@ export function instanceOfSolidarityContributionCancellationData(
 ): value is SolidarityContributionCancellationData {
   if (!("_exists" in value) || value["_exists"] === undefined) return false;
   if (!("isInTrial" in value) || value["isInTrial"] === undefined) return false;
+  if (!("isNegative" in value) || value["isNegative"] === undefined)
+    return false;
   if (!("cancellationDate" in value) || value["cancellationDate"] === undefined)
     return false;
   return true;
@@ -67,6 +75,7 @@ export function SolidarityContributionCancellationDataFromJSONTyped(
   return {
     _exists: json["exists"],
     isInTrial: json["is_in_trial"],
+    isNegative: json["is_negative"],
     cancellationDate: new Date(json["cancellation_date"]),
   };
 }
@@ -88,6 +97,7 @@ export function SolidarityContributionCancellationDataToJSONTyped(
   return {
     exists: value["_exists"],
     is_in_trial: value["isInTrial"],
+    is_negative: value["isNegative"],
     cancellation_date: value["cancellationDate"].toISOString().substring(0, 10),
   };
 }

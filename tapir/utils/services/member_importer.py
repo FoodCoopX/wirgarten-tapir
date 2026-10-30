@@ -200,7 +200,7 @@ class MemberImporter:
 
         if email_before != member.email and member.keycloak_id:
             Member.objects.filter(id=member.id).update(email=member.email)
-            KeycloakUserManager.get_keycloak_client(cache={}).update_user(
+            KeycloakUserManager.get_keycloak_client().update_user(
                 user_id=member.keycloak_id, payload={"email": member.email}
             )
 

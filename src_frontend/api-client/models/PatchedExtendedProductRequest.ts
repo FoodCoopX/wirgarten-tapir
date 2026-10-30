@@ -102,6 +102,12 @@ export interface PatchedExtendedProductRequest {
    * @memberof PatchedExtendedProductRequest
    */
   hiddenInBestellWizard?: boolean;
+  /**
+   *
+   * @type {string}
+   * @memberof PatchedExtendedProductRequest
+   */
+  solidarityChoices?: string;
 }
 
 /**
@@ -156,6 +162,10 @@ export function PatchedExtendedProductRequestFromJSONTyped(
       json["hidden_in_bestell_wizard"] == null
         ? undefined
         : json["hidden_in_bestell_wizard"],
+    solidarityChoices:
+      json["solidarity_choices"] == null
+        ? undefined
+        : json["solidarity_choices"],
   };
 }
 
@@ -192,5 +202,6 @@ export function PatchedExtendedProductRequestToJSONTyped(
     capacity: value["capacity"],
     min_coop_shares: value["minCoopShares"],
     hidden_in_bestell_wizard: value["hiddenInBestellWizard"],
+    solidarity_choices: value["solidarityChoices"],
   };
 }

@@ -122,7 +122,7 @@ class PersonalDataForm(FormWithRequestMixin, ModelForm):
 
     def _validate_duplicate_email_keycloak(self):
         try:
-            kc = KeycloakUserManager.get_keycloak_client(cache={})
+            kc = KeycloakUserManager.get_keycloak_client()
             keycloak_id = kc.get_user_id(self.cleaned_data["email"])
             if keycloak_id is not None:
                 raise ValidationError(
@@ -405,7 +405,7 @@ class WaitingListForm(Form):
         self.fields["first_name"] = CharField(label=_("Vorname"))
         self.fields["last_name"] = CharField(label=_("Nachname"))
         self.fields["email"] = CharField(
-            label=_("Email"), validators=[EmailValidator()]
+            label=_("E-Mail-Adresse"), validators=[EmailValidator()]
         )
         self.fields["phone_number"] = TapirPhoneNumberField(label=_("Telefon-Nr"))
         self.fields["street"] = CharField(label=_("Adresse"))

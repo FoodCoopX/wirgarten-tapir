@@ -12,6 +12,8 @@ export function buildSettings(
     productTypes: sortProductTypes(baseData.productTypes),
     associationMembershipTypes: baseData.associationMembershipTypes,
     priceOfAShare: baseData.priceOfAShare,
+    coopShareInstalmentsEnabled: baseData.coopShareInstalmentsEnabled,
+    coopShareInstalmentAmount: baseData.coopShareInstalmentAmount,
     allowInvestingMembership: baseData.allowInvestingMembership,
     associationsAllowInvestingMembership:
       baseData.associationsAllowInvestingMembership,
