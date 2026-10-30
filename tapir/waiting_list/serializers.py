@@ -89,6 +89,7 @@ class PublicWaitingListEntryDetailsSerializer(serializers.Serializer):
     postcode = serializers.CharField()
     city = serializers.CharField()
     country = serializers.CharField()
+    pseudonym = serializers.CharField(allow_blank=True)
     birthdate = serializers.DateField(required=False)
     account_owner = serializers.CharField(required=False)
     iban = serializers.CharField(required=False)

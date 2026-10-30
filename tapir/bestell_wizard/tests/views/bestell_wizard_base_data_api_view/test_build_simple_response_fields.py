@@ -1,3 +1,5 @@
+from django.test import override_settings
+
 from tapir.bestell_wizard.views import BestellWizardBaseDataApiView
 from tapir.utils.tests_utils import mock_parameter_value
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -7,6 +9,7 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
 class TestBuildSimpleResponseFields(TapirUnitTest):
     maxDiff = 2000
 
+    @override_settings(BAKERY_ENABLED=True)
     def test_buildSimpleResponseFields_default_returnsCorrectDictionary(self):
         cache = {}
 
@@ -123,6 +126,7 @@ class TestBuildSimpleResponseFields(TapirUnitTest):
                 "intro_enabled": "test_show_intro",
                 "student_status_allowed": "test_allow_student",
                 "phone_number_required": "test_phone_number_required",
+                "pseudonym_enabled": True,
                 "label_checkbox_sepa_mandat": "test_sepa_mandat",
                 "label_checkbox_contract_policy": "test_contract_policy",
                 "default_payment_rhythm": "test_default_rhythm",

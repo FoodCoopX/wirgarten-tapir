@@ -8829,6 +8829,8 @@ components:
           type: boolean
         phone_number_required:
           type: boolean
+        pseudonym_enabled:
+          type: boolean
         show_coop_content:
           type: boolean
         label_checkbox_sepa_mandat:
@@ -8924,6 +8926,7 @@ components:
       - product_ids_that_are_already_at_capacity
       - product_type_ids_that_are_already_at_capacity
       - product_types
+      - pseudonym_enabled
       - show_coop_content
       - solidarity_contribution_choices
       - solidarity_contribution_default
@@ -14159,6 +14162,9 @@ components:
           oneOf:
           - $ref: '#/components/schemas/CountryEnum'
           - $ref: '#/components/schemas/BlankEnum'
+        pseudonym:
+          type: string
+          maxLength: 150
         privacy_consent:
           type: string
           format: date-time
@@ -14515,6 +14521,10 @@ components:
           type: string
         iban:
           type: string
+        pseudonym:
+          type: string
+          default: ''
+          maxLength: 150
       required:
       - account_owner
       - city
@@ -15519,6 +15529,8 @@ components:
           type: string
         country:
           type: string
+        pseudonym:
+          type: string
         birthdate:
           type: string
           format: date
@@ -15554,6 +15566,7 @@ components:
       - number_of_coop_shares
       - phone_number
       - postcode
+      - pseudonym
       - should_show_solidarity_step
       - street
       - street_2
@@ -16811,6 +16824,9 @@ components:
           oneOf:
           - $ref: '#/components/schemas/CountryEnum'
           - $ref: '#/components/schemas/BlankEnum'
+        pseudonym:
+          type: string
+          maxLength: 150
         privacy_consent:
           type: string
           format: date-time
@@ -16991,6 +17007,9 @@ components:
           oneOf:
           - $ref: '#/components/schemas/CountryEnum'
           - $ref: '#/components/schemas/BlankEnum'
+        pseudonym:
+          type: string
+          maxLength: 150
         privacy_consent:
           type: string
           format: date-time

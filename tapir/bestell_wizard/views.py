@@ -594,9 +594,12 @@ class BestellWizardBaseDataApiView(APIView):
             "legal_status": ParameterKeys.ORGANISATION_LEGAL_STATUS,
             "associations_allow_investing_membership": ParameterKeys.ASSOCIATIONS_ALLOW_SUPPORTING_MEMBERSHIP,
         }
-        return cls.build_dictionary_from_config_parameters(
-            serializer_key_to_parameter_key_map, cache
-        )
+        return {
+            **cls.build_dictionary_from_config_parameters(
+                serializer_key_to_parameter_key_map, cache
+            ),
+            "pseudonym_enabled": settings.BAKERY_ENABLED,
+        }
 
     @classmethod
     def build_strings_object(cls, cache: dict):

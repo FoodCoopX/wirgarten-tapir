@@ -83,6 +83,12 @@ export interface PatchedWaitingListEntryRequest {
   country?: Land;
   /**
    *
+   * @type {string}
+   * @memberof PatchedWaitingListEntryRequest
+   */
+  pseudonym?: string;
+  /**
+   *
    * @type {Date}
    * @memberof PatchedWaitingListEntryRequest
    */
@@ -166,6 +172,7 @@ export function PatchedWaitingListEntryRequestFromJSONTyped(
     city: json["city"] == null ? undefined : json["city"],
     country:
       json["country"] == null ? undefined : LandFromJSON(json["country"]),
+    pseudonym: json["pseudonym"] == null ? undefined : json["pseudonym"],
     privacyConsent:
       json["privacy_consent"] == null
         ? undefined
@@ -217,6 +224,7 @@ export function PatchedWaitingListEntryRequestToJSONTyped(
     postcode: value["postcode"],
     city: value["city"],
     country: LandToJSON(value["country"]),
+    pseudonym: value["pseudonym"],
     privacy_consent:
       value["privacyConsent"] == null
         ? undefined

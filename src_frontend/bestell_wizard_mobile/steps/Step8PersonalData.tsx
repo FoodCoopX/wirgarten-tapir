@@ -8,6 +8,7 @@ import {
 } from "../../bestell_wizard/utils/emailsMatch.ts";
 import { isEmailValid } from "../../bestell_wizard/utils/isEmailValid.ts";
 import { isPhoneNumberValid } from "../../bestell_wizard/utils/isPhoneNumberValid.ts";
+import TapirHelpButton from "../../components/TapirHelpButton.tsx";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
 import { getCsrfToken } from "../../utils/getCsrfToken.ts";
@@ -45,6 +46,14 @@ const FIELDS: (keyof PersonalData)[] = [
   "city",
   "phoneNumber",
 ];
+
+const PSEUDONYM_MAX_LENGTH = 150;
+
+const PSEUDONYM_HELP_TEXT =
+  "Wenn du ein Pseudonym angibst, steht es auf der Abholliste für die Brote " +
+  "an deiner Verteilstation anstelle deines Namens. Überall sonst wird " +
+  "weiterhin dein echter Name verwendet. Du kannst das Pseudonym auch später " +
+  "im Mitgliederbereich eintragen, ändern oder entfernen.";
 
 function getType(key: keyof PersonalData) {
   switch (key) {
@@ -158,6 +167,8 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
         return settings.phoneNumberRequired
           ? "Telefon-Nr"
           : "Telefon-Nr (optional)";
+      case "pseudonym":
+        return "Pseudonym (optional)";
       default:
         return key;
     }
@@ -182,6 +193,7 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
           emailsMatch(personalData.email, personalData.emailConfirm)
         );
       case "street2":
+      case "pseudonym":
         return true;
       default:
         return personalData[key].length > 0;
@@ -206,6 +218,10 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
           settings.phoneNumberRequired &&
           personalData.phoneNumber.length === 0
           ? "Bitte gib eine Telefonnummer an."
+          : "";
+      case "pseudonym":
+        return (personalData.pseudonym ?? "").length >= PSEUDONYM_MAX_LENGTH
+          ? `Maximal ${PSEUDONYM_MAX_LENGTH} Zeichen.`
           : "";
       default:
         return "";
@@ -245,6 +261,36 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
             disabled={changesDisabled}
           />
         ))}
+        {settings.pseudonymEnabled && (
+          <div
+            className={"d-flex flex-row gap-2 align-items-start"}
+            style={{ width: "264px" }}
+          >
+            <PersonalDataFormControl
+              personalData={personalData}
+              setPersonalData={setPersonalData}
+              field={"pseudonym"}
+              placeholder={getPlaceholder("pseudonym")}
+              type={getType("pseudonym")}
+              showValidation={showValidation}
+              isValid={isValid("pseudonym")}
+              extraText={getExtraText("pseudonym")}
+              style={{ flexGrow: 1 }}
+              disabled={changesDisabled}
+              maxLength={PSEUDONYM_MAX_LENGTH}
+            />
+            <div
+              className={"d-flex align-items-center"}
+              style={{ height: "calc(3.5rem + 2px)" }}
+            >
+              <TapirHelpButton
+                title={"Wofür ist das Pseudonym?"}
+                text={PSEUDONYM_HELP_TEXT}
+                width={"300px"}
+              />
+            </div>
+          </div>
+        )}
       </div>
       <TapirCheckbox
         onChange={setIsOver18}

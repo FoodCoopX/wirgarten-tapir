@@ -205,6 +205,7 @@ class WaitingListEntryConfirmationApplier:
             country=waiting_list_entry.country,
             account_owner=validated_data["account_owner"],
             iban=validated_data["iban"],
+            pseudonym=waiting_list_entry.pseudonym,
             **contracts_signed,
         )
 
