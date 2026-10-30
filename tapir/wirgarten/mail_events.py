@@ -53,3 +53,9 @@ class Events:
     CANCELLATION_OF_COOP_SHARES = "cancellation_of_coop_shares"
 
     EXISTING_MEMBER_BUYS_COOP_SHARES = "existing_member_buys_coop_shares"
+
+    # Bid placed in a bidding round
+    BIDDING_ROUND_BID_RECEIVED = "bidding_round_bid_received"
+
+    # Bid changed in a bidding round
+    BIDDING_ROUND_BID_UPDATED = "bidding_round_bid_updated"

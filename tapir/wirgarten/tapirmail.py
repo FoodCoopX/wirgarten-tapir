@@ -357,6 +357,27 @@ def _register_triggers():
         required=lambda: legal_status_is_cooperative(cache={}),
     )
 
+    bid_tokens = {
+        "Rundenname": "round_name",
+        "Gebotsliste": "bid_items_html",
+        "Gesamtbetrag pro Jahr": "bid_total_per_year",
+        "Abholort": "pickup_location",
+        "Link zur Beitragsrunde": "bid_link",
+        "Enddatum der Beitragsrunde": "bid_end_date",
+    }
+    register_transactional_trigger(
+        name="Beitragsrunde: Gebot erhalten",
+        key=Events.BIDDING_ROUND_BID_RECEIVED,
+        tokens=bid_tokens,
+        required=True,
+    )
+    register_transactional_trigger(
+        name="Beitragsrunde: Gebot geändert",
+        key=Events.BIDDING_ROUND_BID_UPDATED,
+        tokens=bid_tokens,
+        required=True,
+    )
+
 
 def register_transactional_trigger(
     name: str, key: str, tokens: dict = None, required: bool | Callable = False
