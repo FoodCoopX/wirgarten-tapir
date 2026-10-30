@@ -125,7 +125,7 @@ const Step5BPickupLocationList: React.FC<Step5BPickupLocationListProps> = ({
   }
 
   return (
-    <ListGroup style={{ maxHeight: "50dvh", overflow: "scroll" }}>
+    <ListGroup style={{ maxHeight: "100%", overflow: "scroll" }}>
       {pickupLocations.toSorted(sortPickupLocations).map((pickupLocation) => {
         const deliveryChargeBadge = buildDeliveryChargeBadge(pickupLocation);
         return (

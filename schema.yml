@@ -1666,6 +1666,66 @@ paths:
               schema:
                 $ref: '#/components/schemas/BreadsPerPickupLocationPerWeek'
           description: ''
+  /bakery/breads-to-bake-per-week/:
+    get:
+      operationId: bakery_breads_to_bake_per_week_list
+      description: |-
+        The solver's total per bread, including breads with fixed_pieces that
+        occupy no stove layers.
+      parameters:
+      - in: query
+        name: delivery_day
+        schema:
+          type: integer
+      - in: query
+        name: delivery_week
+        schema:
+          type: integer
+      - in: query
+        name: year
+        schema:
+          type: integer
+      tags:
+      - bakery
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BreadsToBakePerWeek'
+          description: ''
+  /bakery/breads-to-bake-per-week/{id}/:
+    get:
+      operationId: bakery_breads_to_bake_per_week_retrieve
+      description: |-
+        The solver's total per bread, including breads with fixed_pieces that
+        occupy no stove layers.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der breads to bake per week identifiziert.
+        required: true
+      tags:
+      - bakery
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BreadsToBakePerWeek'
+          description: ''
   /bakery/ingredients/:
     get:
       operationId: bakery_ingredients_list
@@ -4178,6 +4238,10 @@ paths:
     get:
       operationId: payments_api_intended_use_preview_coop_shares_retrieve
       parameters:
+      - in: query
+        name: instalments
+        schema:
+          type: boolean
       - in: query
         name: pattern_new
         schema:
@@ -8724,26 +8788,21 @@ components:
     AvailableSegmentsResponse:
       type: object
       properties:
-        dynamic_segments:
-          type: object
-          additionalProperties:
-            type: string
-        static_segments:
-          type: object
-          additionalProperties:
-            type: string
-        mail_categories:
-          type: object
-          additionalProperties:
-            type: string
+        segments:
+          type: array
+          items:
+            $ref: '#/components/schemas/SegmentOption'
       required:
-      - dynamic_segments
-      - mail_categories
-      - static_segments
+      - segments
     BestellWizardBaseDataResponse:
       type: object
       properties:
         price_of_a_share:
+          type: number
+          format: double
+        coop_share_instalments_enabled:
+          type: boolean
+        coop_share_instalment_amount:
           type: number
           format: double
         theme:
@@ -8842,6 +8901,8 @@ components:
       - association_membership_types
       - associations_allow_investing_membership
       - contact_mail_address
+      - coop_share_instalment_amount
+      - coop_share_instalments_enabled
       - coop_statute_link
       - debug
       - default_payment_rhythm
@@ -8921,6 +8982,9 @@ components:
           type: boolean
         number_of_coop_shares:
           type: integer
+        pay_coop_shares_in_instalments:
+          type: boolean
+          default: false
         pickup_location_ids:
           type: array
           items:
@@ -9903,6 +9967,57 @@ components:
       - pickup_location_name
       - updated_at
       - year
+    BreadsToBakePerWeek:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        bread_name:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        year:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        delivery_week:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        delivery_day:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+        quantity:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          description: Total pieces to bake
+        remaining:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          description: Pieces beyond what the deliveries need
+        bread:
+          type: string
+      required:
+      - bread
+      - bread_name
+      - created_at
+      - delivery_week
+      - id
+      - quantity
+      - updated_at
+      - year
     BuildCsvExportResponse:
       type: object
       properties:
@@ -10158,9 +10273,6 @@ components:
           type: string
           nullable: true
         transfer_member:
-          type: string
-          nullable: true
-        payment:
           type: string
           nullable: true
       required:
@@ -11243,7 +11355,16 @@ components:
           type: string
           format: date-time
           nullable: true
+        not_before:
+          type: string
+          format: date-time
+          nullable: true
+        is_automatic_retry:
+          type: boolean
         next_retry:
+          type: string
+          nullable: true
+        email_configuration_version:
           type: string
           nullable: true
       required:
@@ -11300,7 +11421,17 @@ components:
           type: string
           format: date-time
           nullable: true
+        not_before:
+          type: string
+          format: date-time
+          nullable: true
+        is_automatic_retry:
+          type: boolean
         next_retry:
+          type: string
+          minLength: 1
+          nullable: true
+        email_configuration_version:
           type: string
           minLength: 1
           nullable: true
@@ -11367,7 +11498,16 @@ components:
           type: string
           format: date-time
           nullable: true
+        not_before:
+          type: string
+          format: date-time
+          nullable: true
+        is_automatic_retry:
+          type: boolean
         next_retry:
+          type: string
+          nullable: true
+        email_configuration_version:
           type: string
           nullable: true
       required:
@@ -11533,11 +11673,15 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AssociationMembership'
+        number_of_instalments:
+          type: integer
+          nullable: true
       required:
       - association_memberships
       - coop_share_transactions
       - delivery_charge_pickup_location
       - delivery_dates
+      - number_of_instalments
       - payment
       - solidarity_contributions
       - subscriptions
@@ -11585,6 +11729,8 @@ components:
           readOnly: true
         hidden_in_bestell_wizard:
           type: boolean
+        solidarity_choices:
+          type: string
       required:
       - base
       - basket_size_equivalences
@@ -11600,6 +11746,7 @@ components:
       - price_per_delivery
       - show_min_coop_shares
       - size
+      - solidarity_choices
       - url_of_image_in_bestellwizard
     ExtendedProductType:
       type: object
@@ -12476,21 +12623,25 @@ components:
           type: string
           format: date
           nullable: true
+          title: Geburtsdatum
         street:
           type: string
-          title: Street and house number
+          title: Straße und Hausnummer
           maxLength: 150
         street_2:
           type: string
-          title: Extra address line
+          title: Adresszusatz
           maxLength: 150
         postcode:
           type: string
+          title: Postleitzahl
           maxLength: 32
         city:
           type: string
+          title: Ort
           maxLength: 50
         country:
+          title: Land
           oneOf:
           - $ref: '#/components/schemas/CountryEnum'
           - $ref: '#/components/schemas/BlankEnum'
@@ -12500,7 +12651,9 @@ components:
           title: Liebe/Lieber
           maxLength: 20
         preferred_language:
-          $ref: '#/components/schemas/PreferredLanguageEnum'
+          allOf:
+          - $ref: '#/components/schemas/PreferredLanguageEnum'
+          title: Bevorzugte Sprache
         account_owner:
           type: string
           nullable: true
@@ -13645,6 +13798,8 @@ components:
           type: integer
         hidden_in_bestell_wizard:
           type: boolean
+        solidarity_choices:
+          type: string
     PatchedGrowingPeriodRequest:
       type: object
       properties:
@@ -13982,19 +14137,22 @@ components:
           maxLength: 256
         street:
           type: string
-          title: Street and house number
+          title: Straße und Hausnummer
           maxLength: 150
         street_2:
           type: string
-          title: Extra address line
+          title: Adresszusatz
           maxLength: 150
         postcode:
           type: string
+          title: Postleitzahl
           maxLength: 32
         city:
           type: string
+          title: Ort
           maxLength: 50
         country:
+          title: Land
           oneOf:
           - $ref: '#/components/schemas/CountryEnum'
           - $ref: '#/components/schemas/BlankEnum'
@@ -14063,12 +14221,20 @@ components:
           type: string
           format: date
           nullable: true
+        instalment_number:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
         mandate_ref:
           type: string
         transaction:
           type: string
           nullable: true
         pickup_location:
+          type: string
+          nullable: true
+        coop_share_transaction:
           type: string
           nullable: true
       required:
@@ -14468,17 +14634,19 @@ components:
           title: Coordinates Latitude
         street:
           type: string
-          title: Street and house number
+          title: Straße und Hausnummer
           maxLength: 150
         street_2:
           type: string
-          title: Extra address line
+          title: Adresszusatz
           maxLength: 150
         postcode:
           type: string
+          title: Postleitzahl
           maxLength: 32
         city:
           type: string
+          title: Ort
           maxLength: 50
         info:
           type: string
@@ -14856,6 +15024,9 @@ components:
           minimum: -2147483648
         hidden_in_bestell_wizard:
           type: boolean
+        solidarity_choices:
+          type: string
+          maxLength: 512
       required:
       - created_at
       - name
@@ -15059,6 +15230,9 @@ components:
           type: boolean
         number_of_coop_shares:
           type: integer
+        pay_coop_shares_in_instalments:
+          type: boolean
+          default: false
         payment_rhythm:
           type: string
           minLength: 1
@@ -15127,17 +15301,19 @@ components:
           title: Coordinates Latitude
         street:
           type: string
-          title: Street and house number
+          title: Straße und Hausnummer
           maxLength: 150
         street_2:
           type: string
-          title: Extra address line
+          title: Adresszusatz
           maxLength: 150
         postcode:
           type: string
+          title: Postleitzahl
           maxLength: 32
         city:
           type: string
+          title: Ort
           maxLength: 50
         opening_times:
           type: array
@@ -15182,9 +15358,16 @@ components:
           type: string
         hidden_in_bestell_wizard:
           type: boolean
+        solidarity_choices:
+          type: array
+          items:
+            type: number
+            format: double
+          readOnly: true
       required:
       - name
       - price
+      - solidarity_choices
       - url_of_image_in_bestellwizard
     PublicProductPricesResponse:
       type: object
@@ -15502,6 +15685,25 @@ components:
       - mail_category_ids_additive
       - static_segment_ids_additive
       - static_segment_ids_subtractive
+    SegmentOption:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          $ref: '#/components/schemas/TypeEnum'
+        label:
+          type: string
+        group:
+          type: string
+        description:
+          type: string
+      required:
+      - description
+      - group
+      - id
+      - label
+      - type
     SetAssociationMembershipEndDateRequestRequest:
       type: object
       properties:
@@ -16105,7 +16307,7 @@ components:
           type: string
           format: date-time
           readOnly: true
-          title: Creation Date
+          title: Erstellungsdatum
         change_type:
           $ref: '#/components/schemas/ChangeTypeEnum'
         subscriptions:
@@ -16448,6 +16650,16 @@ components:
       - field_name
       - label
       - type
+    TypeEnum:
+      enum:
+      - dynamic
+      - static
+      - category
+      type: string
+      description: |-
+        * `dynamic` - dynamic
+        * `static` - static
+        * `category` - category
     UpdateMemberSolidarityContributionRequestRequest:
       type: object
       properties:
@@ -16577,19 +16789,22 @@ components:
           maxLength: 256
         street:
           type: string
-          title: Street and house number
+          title: Straße und Hausnummer
           maxLength: 150
         street_2:
           type: string
-          title: Extra address line
+          title: Adresszusatz
           maxLength: 150
         postcode:
           type: string
+          title: Postleitzahl
           maxLength: 32
         city:
           type: string
+          title: Ort
           maxLength: 50
         country:
+          title: Land
           oneOf:
           - $ref: '#/components/schemas/CountryEnum'
           - $ref: '#/components/schemas/BlankEnum'
@@ -16754,19 +16969,22 @@ components:
           maxLength: 256
         street:
           type: string
-          title: Street and house number
+          title: Straße und Hausnummer
           maxLength: 150
         street_2:
           type: string
-          title: Extra address line
+          title: Adresszusatz
           maxLength: 150
         postcode:
           type: string
+          title: Postleitzahl
           maxLength: 32
         city:
           type: string
+          title: Ort
           maxLength: 50
         country:
+          title: Land
           oneOf:
           - $ref: '#/components/schemas/CountryEnum'
           - $ref: '#/components/schemas/BlankEnum'

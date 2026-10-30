@@ -6,6 +6,12 @@ if (!soliElem) {
 }
 const origOptions = [...soliElem.options];
 
+const formatCurrency = (value) =>
+  Number(value).toLocaleString("de-DE", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
 const calculatePrice = (harvest_share) => {
   const [key, price] = harvest_share.split(":");
   let elem = document.getElementsByName("base_product-" + key)[0];
@@ -37,7 +43,8 @@ var initHarvestShareSummary = (
     if (elements.length === 0) {
       elements = document.getElementsByName("base_product-" + elementName);
     }
-    elements[0].nextSibling.innerText = price + " € inkl. MwSt / Monat";
+    elements[0].nextSibling.innerText =
+      formatCurrency(price) + " € inkl. MwSt / Monat";
   }
 
   const calculateTotalWithoutSoliPrice = () =>
@@ -62,7 +69,7 @@ var initHarvestShareSummary = (
 
   let totalWithoutSoli = calculateTotalWithoutSoliPrice();
   const initDependentFields = () => {
-    resultElem.innerText = calculateTotal().toFixed(2);
+    resultElem.innerText = formatCurrency(calculateTotal());
     totalWithoutSoli = calculateTotalWithoutSoliPrice();
     if (soliElem.value === "custom") {
       customSoliElem.disabled = false;
@@ -131,7 +138,7 @@ var initHarvestShareSummary = (
       ? selected
       : optArr.at(-1).value;
 
-    resultElem.innerText = calculateTotal().toFixed(2);
+    resultElem.innerText = formatCurrency(calculateTotal());
     soliElem.addEventListener("change", (e) => {
       // if the value is 'custom', we set the value of the custom input to the price without solidarity + at least 10€ + difference to get a round sum (10)
       if (e.target.value === "custom") {
@@ -165,7 +172,7 @@ var initHarvestShareSummary = (
     input.max = 10;
   });
 
-  resultElem.innerText = calculateTotal().toFixed(2);
+  resultElem.innerText = formatCurrency(calculateTotal());
 
   initDependentFields();
 };

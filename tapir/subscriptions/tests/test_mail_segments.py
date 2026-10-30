@@ -2,8 +2,12 @@ import datetime
 
 from tapir_mail.service.segment import resolve_segments
 
+from tapir.deliveries.tests.factories import JokerFactory
 from tapir.subscriptions.apps import SubscriptionsConfig
+from tapir.wirgarten.constants import WEEKLY
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
+from tapir.wirgarten.tapirmail import Segments
 from tapir.wirgarten.tests.factories import (
     ProductTypeFactory,
     MemberFactory,
@@ -17,6 +21,7 @@ class TestMailSegments(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
+        cls._set_parameter(key=ParameterKeys.JOKERS_ENABLED, value=True)
 
     def setUp(self) -> None:
         super().setUp()
@@ -119,3 +124,68 @@ class TestMailSegments(TapirIntegrationTest):
         )
 
         self.assertEqual([member], result)
+
+    def test_deliveryThisWeekMailSegment_memberHasJokerThisWeek_onlyOtherMemberIncluded(
+        self,
+    ):
+        product_type = ProductTypeFactory.create(delivery_cycle=WEEKLY[0])
+        member_with_delivery = MemberFactory.create()
+        member_with_joker = MemberFactory.create()
+        for member in [member_with_delivery, member_with_joker]:
+            SubscriptionFactory.create(
+                member=member, period=self.growing_period, product__type=product_type
+            )
+        JokerFactory.create(
+            member=member_with_joker, date=datetime.date(year=2031, month=4, day=17)
+        )
+
+        result = resolve_segments(
+            dynamic_segment_names_additive=[
+                SubscriptionsConfig._build_segment_name_delivery_this_week_with_product_type(
+                    product_type
+                )
+            ]
+        )
+
+        self.assertEqual([member_with_delivery], result)
+
+    def test_deliveryNextWeekMailSegment_memberHasJokerThisWeek_memberIncluded(self):
+        product_type = ProductTypeFactory.create(delivery_cycle=WEEKLY[0])
+        member = MemberFactory.create()
+        SubscriptionFactory.create(
+            member=member, period=self.growing_period, product__type=product_type
+        )
+        JokerFactory.create(
+            member=member, date=datetime.date(year=2031, month=4, day=17)
+        )
+
+        result = resolve_segments(
+            dynamic_segment_names_additive=[
+                SubscriptionsConfig._build_segment_name_delivery_next_week_with_product_type(
+                    product_type
+                )
+            ]
+        )
+
+        self.assertEqual([member], result)
+
+    def test_deliveryThisWeekForAllProductsMailSegment_membersWithSubscriptionsOfDifferentTypes_bothIncluded(
+        self,
+    ):
+        members = []
+        for _ in range(2):
+            member = MemberFactory.create()
+            SubscriptionFactory.create(
+                member=member,
+                period=self.growing_period,
+                product__type=ProductTypeFactory.create(delivery_cycle=WEEKLY[0]),
+            )
+            members.append(member)
+
+        result = resolve_segments(
+            dynamic_segment_names_additive=[Segments.WITH_DELIVERY_THIS_WEEK]
+        )
+
+        self.assertEqual(
+            {member.id for member in members}, {member.id for member in result}
+        )

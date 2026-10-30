@@ -32,8 +32,8 @@ def pickup_location_warning(member: Member, cache: dict):
 
 
 @register.simple_tag()
-def member_email_verified(member: Member, cache: dict):
-    return EmailVerificationService.is_user_email_verified(user=member, cache=cache)
+def member_email_verified(member: Member):
+    return EmailVerificationService.is_user_email_verified(user=member)
 
 
 @register.simple_tag()

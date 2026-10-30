@@ -173,7 +173,6 @@ LOGIN_REDIRECT_URL = "/"
 
 PHONENUMBER_DEFAULT_REGION = env.str("PHONENUMBER_DEFAULT_REGION", default="DE")
 
-LOCALE_PATHS = [os.path.join(BASE_DIR, "tapir/translations/locale")]
 
 if ENABLE_SILK_PROFILING:
     SILKY_PYTHON_PROFILER = True
@@ -241,6 +240,7 @@ MAILMAN_URL = env.str("MAILMAN_URL", default="http://localhost:8001/3.1/")
 MAILMAN_ADMIN_USER = env.str("MAILMAN_ADMIN_USER", default="restadmin")
 MAILMAN_ADMIN_PASSWORD = env.str("MAILMAN_ADMIN_PASSWORD", default="restpass")
 MAILING_LISTS_ENABLED = env.bool("MAILING_LISTS_ENABLED", default=False)
+BAKERY_ENABLED = env.bool("BAKERY_ENABLED", default=False)
 
 CSRF_COOKIE_SAMESITE = "None"
 CSRF_COOKIE_SECURE = True

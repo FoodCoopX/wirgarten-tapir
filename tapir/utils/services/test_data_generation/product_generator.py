@@ -29,6 +29,7 @@ class ProductGenerator:
         base: bool,
         min_coop_shares: int,
         description_in_bestellwizard: str = "",
+        solidarity_choices: str = "",
     ):
         product = Product.objects.create(
             type=product_type,
@@ -36,6 +37,7 @@ class ProductGenerator:
             base=base,
             min_coop_shares=min_coop_shares,
             description_in_bestellwizard=description_in_bestellwizard,
+            solidarity_choices=solidarity_choices,
             url_of_image_in_bestellwizard=f"https://placehold.co/700x1000?text=Produkt+{name}",
         )
 
@@ -317,6 +319,7 @@ class ProductGenerator:
             base=True,
             min_coop_shares=2,
             description_in_bestellwizard="für ca. 2 Personen",
+            solidarity_choices="-15,-10,10,15,20",
         )
         cls.generate_product(
             product_type=product_type_ernteanteile,
@@ -326,6 +329,7 @@ class ProductGenerator:
             base=False,
             min_coop_shares=1,
             description_in_bestellwizard="für ca. eine Person",
+            solidarity_choices="-10,-5,5,10",
         )
         cls.generate_product(
             product_type=product_type_ernteanteile,
@@ -335,6 +339,7 @@ class ProductGenerator:
             base=False,
             min_coop_shares=3,
             description_in_bestellwizard="für Familien mit großem Gemüsehunger",
+            solidarity_choices="-20,-10,10,20,30",
         )
 
         eggs = ProductType.objects.create(

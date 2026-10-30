@@ -174,7 +174,6 @@ class UserGenerator:
         KeycloakUserManager.create_keycloak_user_if_necessary(
             user=member,
             initial_password=member.email.split("@")[0],
-            cache=cache,
         )
 
         member_without_subscriptions = random.random() < 0.20
@@ -226,7 +225,7 @@ class UserGenerator:
                 upper_boundary=get_today(cache=cache),
             ),
             cache=cache,
-            actor=member,
+            actor=None,
         )
 
     @classmethod
@@ -417,6 +416,7 @@ class UserGenerator:
             shares_valid_at=member.date_joined.date(),
             cache=cache,
             actor=None,
+            pay_in_instalments=False,
         )
 
     @classmethod

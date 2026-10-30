@@ -255,7 +255,7 @@
                                             const value = context.parsed.y;
                                             const datasetLabel = context.dataset.label;
 
-                                            return [`${datasetLabel}: ${value.toFixed(2)} €`]
+                                            return [`${datasetLabel}: ${value.toLocaleString("de-DE", {minimumFractionDigits: 2, maximumFractionDigits: 2})} €`]
                                         }
                                     }
                                 }

@@ -62,10 +62,10 @@ class PickupLocation(TapirModel):
     coords_lat = models.DecimalField(
         _("Coordinates Latitude"), decimal_places=10, max_digits=12
     )
-    street = models.CharField(_("Street and house number"), max_length=150)
-    street_2 = models.CharField(_("Extra address line"), max_length=150, blank=True)
-    postcode = models.CharField(_("Postcode"), max_length=32)
-    city = models.CharField(_("City"), max_length=50)
+    street = models.CharField(_("Straße und Hausnummer"), max_length=150)
+    street_2 = models.CharField(_("Adresszusatz"), max_length=150, blank=True)
+    postcode = models.CharField(_("Postleitzahl"), max_length=32)
+    city = models.CharField(_("Ort"), max_length=50)
     info = models.CharField(_("Additional info"), max_length=3000, blank=True)
     access_code = models.CharField(_("Access Code"), max_length=20, blank=True)
     messenger_group_link = models.CharField(
@@ -554,6 +554,7 @@ class Product(TapirModel):
     capacity = models.PositiveIntegerField(null=True, blank=False)
     min_coop_shares = models.IntegerField(default=0)
     hidden_in_bestell_wizard = models.BooleanField(default=False)
+    solidarity_choices = models.CharField(max_length=512, default="", blank=True)
 
     def clean(self):
         # Check if there is exactly one base product per ProductType
@@ -788,6 +789,15 @@ class Payment(TapirModel):
     pickup_location = models.ForeignKey(
         PickupLocation, on_delete=models.DO_NOTHING, null=True
     )
+    # Only set for coop share payments
+    coop_share_transaction = models.ForeignKey(
+        "CoopShareTransaction",
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="payments",
+    )
+    # Only set if the coop shares are paid in instalments
+    instalment_number = models.PositiveSmallIntegerField(null=True)
 
     class Meta:
         indexes = [
@@ -833,9 +843,6 @@ class CoopShareTransaction(TapirModel, Payable, AdminConfirmableMixin):
     )
     transfer_member = models.ForeignKey(
         Member, on_delete=models.DO_NOTHING, null=True, related_name="transfer_member"
-    )
-    payment = models.ForeignKey(
-        Payment, on_delete=models.DO_NOTHING, null=True, related_name="payment"
     )
 
     @property
@@ -1049,13 +1056,13 @@ class WaitingListEntry(TapirModel):
     member = models.ForeignKey(Member, on_delete=models.PROTECT, null=True)
     first_name = models.CharField(max_length=256)
     last_name = models.CharField(max_length=256)
-    phone_number = PhoneNumberField(_("Phone number"))
+    phone_number = PhoneNumberField(_("Telefonnummer"))
     email = models.CharField(max_length=256)
-    street = models.CharField(_("Street and house number"), max_length=150, blank=True)
-    street_2 = models.CharField(_("Extra address line"), max_length=150, blank=True)
-    postcode = models.CharField(_("Postcode"), max_length=32, blank=True)
-    city = models.CharField(_("City"), max_length=50, blank=True)
-    country = CountryField(_("Country"), blank=True, default="DE")
+    street = models.CharField(_("Straße und Hausnummer"), max_length=150, blank=True)
+    street_2 = models.CharField(_("Adresszusatz"), max_length=150, blank=True)
+    postcode = models.CharField(_("Postleitzahl"), max_length=32, blank=True)
+    city = models.CharField(_("Ort"), max_length=50, blank=True)
+    country = CountryField(_("Land"), blank=True, default="DE")
     privacy_consent = models.DateTimeField()
     number_of_coop_shares = models.PositiveSmallIntegerField()
     # if desired_start_date is null, the wish is "as soon as possible"

@@ -67,6 +67,18 @@ export interface BestellWizardBaseDataResponse {
   priceOfAShare: number;
   /**
    *
+   * @type {boolean}
+   * @memberof BestellWizardBaseDataResponse
+   */
+  coopShareInstalmentsEnabled: boolean;
+  /**
+   *
+   * @type {number}
+   * @memberof BestellWizardBaseDataResponse
+   */
+  coopShareInstalmentAmount: number;
+  /**
+   *
    * @type {string}
    * @memberof BestellWizardBaseDataResponse
    */
@@ -279,6 +291,16 @@ export function instanceOfBestellWizardBaseDataResponse(
 ): value is BestellWizardBaseDataResponse {
   if (!("priceOfAShare" in value) || value["priceOfAShare"] === undefined)
     return false;
+  if (
+    !("coopShareInstalmentsEnabled" in value) ||
+    value["coopShareInstalmentsEnabled"] === undefined
+  )
+    return false;
+  if (
+    !("coopShareInstalmentAmount" in value) ||
+    value["coopShareInstalmentAmount"] === undefined
+  )
+    return false;
   if (!("theme" in value) || value["theme"] === undefined) return false;
   if (
     !("allowInvestingMembership" in value) ||
@@ -420,6 +442,8 @@ export function BestellWizardBaseDataResponseFromJSONTyped(
   }
   return {
     priceOfAShare: json["price_of_a_share"],
+    coopShareInstalmentsEnabled: json["coop_share_instalments_enabled"],
+    coopShareInstalmentAmount: json["coop_share_instalment_amount"],
     theme: json["theme"],
     allowInvestingMembership: json["allow_investing_membership"],
     productTypes: (json["product_types"] as Array<any>).map(
@@ -486,6 +510,8 @@ export function BestellWizardBaseDataResponseToJSONTyped(
 
   return {
     price_of_a_share: value["priceOfAShare"],
+    coop_share_instalments_enabled: value["coopShareInstalmentsEnabled"],
+    coop_share_instalment_amount: value["coopShareInstalmentAmount"],
     theme: value["theme"],
     allow_investing_membership: value["allowInvestingMembership"],
     product_types: (value["productTypes"] as Array<any>).map(

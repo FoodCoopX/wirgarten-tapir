@@ -72,7 +72,7 @@
         <th class="sort-header" data-sort="member_no">#</th>
         <th class="sort-header" data-sort="first_name_sort_key">{% translate "Vorname" %}</th>
         <th class="sort-header" data-sort="last_name_sort_key">{% translate "Nachname" %}</th>
-        <th class="sort-header" data-sort="email">{% translate "Email" %}</th>
+        <th class="sort-header" data-sort="email">{% translate "E-Mail-Adresse" %}</th>
         <th>{% translate "Telefon" %}</th>
         {% if show_cooperative_content %}
             <th class="sort-header" data-sort="coop_shares_total_value">{% translate "Geschäftsguthaben" %}</th>
@@ -93,7 +93,7 @@
             <td>{{ member.first_name }}</td>
             <td>{{ member.last_name }}</td>
             <td>
-                {% member_email_verified member cache as verified %}
+                {% member_email_verified member as verified %}
                 {% if not verified %}
                     <span title="Nicht verifiziert!"
                           style="color: var(--secondary);

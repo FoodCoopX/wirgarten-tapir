@@ -137,7 +137,7 @@ const PaymentTransactionsDetailsModal: React.FC<
   }
 
   return (
-    <Modal show={true} onHide={onHide} centered={true} size={"xl"}>
+    <Modal show={true} onHide={onHide} centered={true} size={"xl"} scrollable>
       <Modal.Header closeButton>
         <Modal.Title>
           Lastschrift Details: {transaction.type}{" "}
@@ -158,7 +158,7 @@ const PaymentTransactionsDetailsModal: React.FC<
           </thead>
           <tbody>
             {loading ? (
-              <PlaceholderTableRows nbRows={100} nbColumns={4} size={"lg"} />
+              <PlaceholderTableRows nbRows={100} nbColumns={5} size={"lg"} />
             ) : (
               getSortedMandateRefs().map(buildLine)
             )}

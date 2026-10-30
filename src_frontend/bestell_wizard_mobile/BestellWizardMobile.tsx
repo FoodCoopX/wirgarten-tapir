@@ -115,6 +115,8 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
   const [statuteAccepted, setStatuteAccepted] = useState(false);
   const [minimumNumberOfShares, setMinimumNumberOfShares] = useState(0);
   const [studentStatusEnabled, setStudentStatusEnabled] = useState(false);
+  const [payCoopSharesInInstalments, setPayCoopSharesInInstalments] =
+    useState(false);
   const [sepaAllowed, setSepaAllowed] = useState(false);
   const [contractAccepted, setContractAccepted] = useState(false);
   const [contractStartDate, setContractStartDate] = useState(new Date());
@@ -183,9 +185,8 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
 
           const productTypesFromWishes = (
             waitingListEntryDetails.productWishes ?? []
-          ).map(
-            (productWish) =>
-              getProductTypeByProductId(productWish.product.id!, newSettings)!,
+          ).map((productWish) =>
+            getProductTypeByProductId(productWish.product.id!, newSettings)!,
           );
           setSelectedProductTypes(
             sortProductTypes([...new Set(productTypesFromWishes)]),
@@ -487,6 +488,15 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     setPrivacyPolicyRead(true);
   }
 
+  function isPayingCoopSharesInInstalments() {
+    // The minimum can change after the choice was made, for example if the shopping cart changes
+    return (
+      payCoopSharesInInstalments &&
+      !studentStatusEnabled &&
+      selectedNumberOfCoopShares === minimumNumberOfShares
+    );
+  }
+
   function onConfirmOrder() {
     setConfirmOrderLoading(true);
 
@@ -503,6 +513,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
               sepaAllowed || waitingListEntryDetails.memberAlreadyExists,
             linkKey: waitingListEntryDetails.linkKey,
             numberOfCoopShares: selectedNumberOfCoopShares,
+            payCoopSharesInInstalments: isPayingCoopSharesInInstalments(),
             paymentRhythm: personalData.paymentRhythm,
             solidarityContribution: solidarityContribution,
             associationMembershipTypeId:
@@ -541,6 +552,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
           contractAccepted: contractAccepted,
           statuteAccepted: statuteAccepted,
           numberOfCoopShares: selectedNumberOfCoopShares,
+          payCoopSharesInInstalments: isPayingCoopSharesInInstalments(),
           pickupLocationIds: selectedPickupLocations.map(
             (locations) => locations.id!,
           ),
@@ -738,6 +750,8 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
               !waitingListEntryDetails?.memberAlreadyExists
             }
             forceHideStudentCheckbox={!isAtLeastOneProductOrdered(shoppingCart)}
+            payInInstalments={payCoopSharesInInstalments}
+            setPayInInstalments={setPayCoopSharesInInstalments}
           />
         );
       case "6b_association_membership":
@@ -824,6 +838,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             settings={settings}
             studentStatusEnabled={studentStatusEnabled}
             numberOfCoopShares={selectedNumberOfCoopShares}
+            payCoopSharesInInstalments={isPayingCoopSharesInInstalments()}
             shoppingCart={shoppingCart}
             contractStartDate={contractStartDate}
             firstDeliveryDatesByPickupLocationAndProductType={

@@ -21,6 +21,7 @@ from tapir.bakery.tests.factories import (
     BreadLabelFactory,
     BreadSpecificsPerDeliveryDayFactory,
     BreadsPerPickupLocationPerWeekFactory,
+    BreadsToBakePerWeekFactory,
     IngredientFactory,
     StoveSessionFactory,
 )
@@ -589,6 +590,51 @@ class TestStoveSessionViewSet(TapirIntegrationTest):
     def test_readOnly_postNotAllowed(self):
         response = self.client.post(
             reverse("bakery:stove-sessions-list"),
+            {},
+            format="json",
+        )
+
+        self.assertIn(
+            response.status_code,
+            [status.HTTP_405_METHOD_NOT_ALLOWED, status.HTTP_403_FORBIDDEN],
+        )
+
+
+class TestBreadsToBakePerWeekViewSet(TapirIntegrationTest):
+    @classmethod
+    def setUpTestData(cls):
+        ParameterDefinitions().import_definitions(bulk_create=True)
+
+    def setUp(self):
+        super().setUp()
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+
+    def test_list_filterByYearWeekDay(self):
+        bread = BreadFactory.create(name="Roggenbrot")
+        BreadsToBakePerWeekFactory.create(
+            year=YEAR, delivery_week=WEEK, delivery_day=DAY, bread=bread, quantity=24
+        )
+        BreadsToBakePerWeekFactory.create(
+            year=YEAR,
+            delivery_week=WEEK,
+            delivery_day=DAY + 1,
+            bread=bread,
+            quantity=10,
+        )
+
+        response = self.client.get(
+            reverse("bakery:breads-to-bake-per-week-list"),
+            {"year": YEAR, "delivery_week": WEEK, "delivery_day": DAY},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["bread_name"], "Roggenbrot")
+        self.assertEqual(response.data[0]["quantity"], 24)
+
+    def test_readOnly_postNotAllowed(self):
+        response = self.client.post(
+            reverse("bakery:breads-to-bake-per-week-list"),
             {},
             format="json",
         )

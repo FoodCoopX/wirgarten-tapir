@@ -30,6 +30,7 @@ class ProductUpdater:
             hidden_in_bestell_wizard=serializer.validated_data[
                 "hidden_in_bestell_wizard"
             ],
+            solidarity_choices=serializer.validated_data["solidarity_choices"],
         )
 
         ProductBasketSizeEquivalence.objects.filter(product=product).delete()

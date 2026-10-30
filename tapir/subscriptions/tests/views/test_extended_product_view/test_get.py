@@ -71,6 +71,7 @@ class TestExtendedProductViewGet(TapirIntegrationTest):
                 "show_min_coop_shares": True,
                 "price_per_delivery": False,
                 "hidden_in_bestell_wizard": False,
+                "solidarity_choices": "",
             },
             response_content,
         )
@@ -107,6 +108,7 @@ class TestExtendedProductViewGet(TapirIntegrationTest):
             min_coop_shares=7,
             type__delivery_cycle=CUSTOM_CYCLE[0],
             hidden_in_bestell_wizard=True,
+            solidarity_choices="-10,0,10",
         )
         ProductPriceFactory.create(product=product, price=15.2, size=1.3)
         ProductBasketSizeEquivalence.objects.create(
@@ -141,6 +143,7 @@ class TestExtendedProductViewGet(TapirIntegrationTest):
                 "show_min_coop_shares": True,
                 "price_per_delivery": True,
                 "hidden_in_bestell_wizard": True,
+                "solidarity_choices": "-10,0,10",
             },
             response_content,
         )

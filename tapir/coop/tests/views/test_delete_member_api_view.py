@@ -29,11 +29,11 @@ class TestDeleteMemberApiView(TapirIntegrationTest):
         to_delete = MemberFactory.create()
         user = MemberFactory.create(is_superuser=True)
         KeycloakUserManager.create_keycloak_user_if_necessary(
-            to_delete, initial_password=None, cache={}
+            to_delete, initial_password=None
         )
         self.client.force_login(user)
 
-        kc = KeycloakUserManager.get_keycloak_client(cache={})
+        kc = KeycloakUserManager.get_keycloak_client()
         keycloak_id = kc.get_user_id(to_delete.email)
         self.assertIsNotNone(keycloak_id)
 

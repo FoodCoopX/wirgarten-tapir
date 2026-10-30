@@ -28,8 +28,7 @@ from tapir.wirgarten.utils import format_date, format_currency
 
 
 class IntendedUsePatternExpander:
-    MAX_LENGTH_PER_LINE = 27
-    MIN_TOKEN_LENGTH = 5
+    MAX_LENGTH = 140
 
     @classmethod
     def expand_pattern_contracts(
@@ -113,9 +112,10 @@ class IntendedUsePatternExpander:
     def get_relevant_subscriptions(cls, member: Member, payment: Payment, cache: dict):
         return [
             subscription
-            for subscription in TapirCache.get_all_subscriptions(cache=cache)
-            if subscription.member_id == member.id
-            and DateRangeOverlapChecker.do_ranges_overlap(
+            for subscription in TapirCache.get_all_subscriptions_for_member(
+                member_id=member.id, cache=cache
+            )
+            if DateRangeOverlapChecker.do_ranges_overlap(
                 range_1_start=payment.subscription_payment_range_start,
                 range_1_end=payment.subscription_payment_range_end,
                 range_2_start=subscription.start_date,
@@ -139,6 +139,7 @@ class IntendedUsePatternExpander:
         cls,
         pattern: str,
         member: Member,
+        payment: Payment,
         number_of_shares: int,
         cache: dict,
         token_value_overrides: dict | None = None,
@@ -153,12 +154,37 @@ class IntendedUsePatternExpander:
                     member, cache=cache
                 )
             ),
+            IntendedUseTokens.COOP_SHARE_VALID_AT: lambda: cls._get_coop_share_validity_date(
+                payment=payment
+            ),
             IntendedUseTokens.PRICE_SINGLE_SHARE: lambda: format_currency(
                 get_parameter_value(key=ParameterKeys.COOP_SHARE_PRICE, cache=cache)
+            ),
+            IntendedUseTokens.MANDATE_REFERENCE: lambda: payment.mandate_ref.ref,
+            IntendedUseTokens.INSTALMENT_NUMBER: lambda: (
+                ""
+                if payment.instalment_number is None
+                else str(payment.instalment_number)
+            ),
+            IntendedUseTokens.NUMBER_OF_INSTALMENTS: lambda: cls._get_number_of_instalments(
+                payment=payment
             ),
         }
 
         return cls._apply_replacements(pattern, replacements, token_value_overrides)
+
+    @classmethod
+    def _get_number_of_instalments(cls, payment: Payment):
+        if payment.instalment_number is None or payment.coop_share_transaction is None:
+            return ""
+        # all() instead of count() to use the prefetched payments
+        return str(len(payment.coop_share_transaction.payments.all()))
+
+    @classmethod
+    def _get_coop_share_validity_date(cls, payment: Payment):
+        if payment.coop_share_transaction is None:
+            return ""
+        return format_date(payment.coop_share_transaction.valid_at)
 
     @classmethod
     def _get_common_token_replacers(cls, member: Member, cache: dict):
@@ -205,43 +231,29 @@ class IntendedUsePatternExpander:
                 )
             )
 
-        return "\n".join(expanded_lines)
+        result = "\n".join(expanded_lines)
+        cls._validate_length(result)
+        return result
+
+    @classmethod
+    def _validate_length(cls, intended_use: str):
+        from tapir.payments.services.pain_008_xml_string_generator import (
+            Pain008XmlStringGenerator,
+        )
+
+        as_in_export = Pain008XmlStringGenerator.replace_special_characters(
+            intended_use
+        )
+        if len(as_in_export) > cls.MAX_LENGTH:
+            raise ValidationError(
+                f"Der Verwendungszweck ist zu lang ({len(as_in_export)} Zeichen, maximal {cls.MAX_LENGTH}): '{as_in_export}'"
+            )
 
     @classmethod
     def _apply_replacements_for_line(
         cls,
         line: str,
         replacements: TokenReplacers,
-        token_value_overrides: dict[str, str],
-    ):
-        current_max_token_length = cls.MAX_LENGTH_PER_LINE
-        result = cls._apply_replacements_for_line_with_max_length(
-            line=line,
-            replacements=replacements,
-            max_length=current_max_token_length,
-            token_value_overrides=token_value_overrides,
-        )
-        while len(result) > cls.MAX_LENGTH_PER_LINE:
-            current_max_token_length -= 1
-            if current_max_token_length < cls.MIN_TOKEN_LENGTH:
-                raise ValidationError(
-                    f"Diese Zeile: '{line}' ist zu lang wenn die Tokens expandiert sind."
-                )
-
-            result = cls._apply_replacements_for_line_with_max_length(
-                line=line,
-                replacements=replacements,
-                max_length=current_max_token_length,
-                token_value_overrides=token_value_overrides,
-            )
-        return result
-
-    @classmethod
-    def _apply_replacements_for_line_with_max_length(
-        cls,
-        line: str,
-        replacements: TokenReplacers,
-        max_length: int,
         token_value_overrides: dict[str, str],
     ):
         result = line
@@ -255,7 +267,7 @@ class IntendedUsePatternExpander:
             else:
                 value = provider()
 
-            result = result.replace(token_with_braces, value[:max_length])
+            result = result.replace(token_with_braces, value)
         return result
 
     @classmethod

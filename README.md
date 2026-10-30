@@ -83,9 +83,9 @@ the GitHub issues as our todo-list. Hopefully the labels will be enough to let y
 
 ### Bäckerei (bakery)
 
-The bakery is off by default. For a local instance with it switched on and
-filled with test data — a bakery with one `Brotanteil` share, four pickup
-stations, breads and members:
+The bakery is off by default and is switched on by setting the environment variable `BAKERY_ENABLED` to True. For a
+local instance filled with test data — a bakery with one `Brotanteil` share, four pickup stations, breads and members —
+set it and run:
 
 ```sh
 make populate-bakery

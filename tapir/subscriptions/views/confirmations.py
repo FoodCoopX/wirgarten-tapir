@@ -28,6 +28,9 @@ from tapir.subscriptions.services.order_confirmation_mail_sender import (
     OrderConfirmationMailSender,
 )
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
+from tapir.subscriptions.services.unconfirmed_changes_provider import (
+    UnconfirmedChangesProvider,
+)
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
@@ -75,30 +78,34 @@ class MemberDataToConfirmApiView(APIView):
     def build_changes_by_member(cls, cache: dict):
         changes_by_member = {}
 
-        unconfirmed_cancellations = Subscription.objects.filter(
-            cancellation_ts__isnull=False,
-            cancellation_admin_confirmed__isnull=True,
-        ).select_related("member", "product__type")
+        unconfirmed_cancellations = (
+            UnconfirmedChangesProvider.get_unconfirmed_cancellations().select_related(
+                "member", "product__type"
+            )
+        )
         cls.group_changes_by_member_and_product_type(
             subscriptions=unconfirmed_cancellations,
             key="cancellations",
             changes_by_member=changes_by_member,
         )
 
-        unconfirmed_creations = Subscription.objects.filter(
-            admin_confirmed__isnull=True,
-            cancellation_ts__isnull=True,
-        ).select_related("member", "product__type")
+        unconfirmed_creations = (
+            UnconfirmedChangesProvider.get_unconfirmed_creations().select_related(
+                "member", "product__type"
+            )
+        )
         cls.group_changes_by_member_and_product_type(
             subscriptions=unconfirmed_creations,
             key="creations",
             changes_by_member=changes_by_member,
         )
 
-        for change in SubscriptionChangeLogEntry.objects.filter(
-            admin_confirmed__isnull=True,
-            change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.CANCELLED,
-        ).select_related("actor"):
+        unconfirmed_deletions = (
+            UnconfirmedChangesProvider.get_unconfirmed_deletions().select_related(
+                "user__member"
+            )
+        )
+        for change in unconfirmed_deletions:
             member = change.user.member
             if member not in changes_by_member:
                 changes_by_member[member] = {}
@@ -106,23 +113,35 @@ class MemberDataToConfirmApiView(APIView):
                 changes_by_member[member]["deleted"] = []
             changes_by_member[member]["deleted"].append(change)
 
-        for member in Member.objects.all():
-            if member in changes_by_member:
-                continue
-            unconfirmed_share_purchases = (
-                TapirCache.get_unconfirmed_coop_share_purchases_by_member_id(
-                    cache=cache
-                ).get(member.id, [])
-            )
-            if len(unconfirmed_share_purchases) == 0:
-                continue
-            changes_by_member[member] = {}
+        members_with_unconfirmed_share_purchases = Member.objects.filter(
+            id__in=TapirCache.get_unconfirmed_coop_share_purchases_by_member_id(
+                cache=cache
+            ).keys()
+        )
+        for member in members_with_unconfirmed_share_purchases:
+            if member not in changes_by_member:
+                changes_by_member[member] = {}
 
         return changes_by_member
 
     @classmethod
-    def get_number_of_unconfirmed_changes(cls, cache: dict):
-        return len(cls.build_changes_by_member(cache=cache).keys())
+    def get_number_of_unconfirmed_changes(cls) -> int:
+        return (
+            UnconfirmedChangesProvider.get_unconfirmed_cancellations()
+            .values("member_id")
+            .union(
+                UnconfirmedChangesProvider.get_unconfirmed_creations().values(
+                    "member_id"
+                ),
+                UnconfirmedChangesProvider.get_unconfirmed_deletions().values(
+                    "user_id"
+                ),
+                UnconfirmedChangesProvider.get_unconfirmed_share_purchases().values(
+                    "member_id"
+                ),
+            )
+            .count()
+        )
 
     @classmethod
     def group_changes_by_member_and_product_type(

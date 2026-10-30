@@ -53,6 +53,7 @@ models/BreadSpecificsPerDeliveryDayBulkUpdateItemRequest.ts
 models/BreadSpecificsPerDeliveryDayBulkUpdateRequest.ts
 models/BreadSpecificsPerDeliveryDayRequest.ts
 models/BreadsPerPickupLocationPerWeek.ts
+models/BreadsToBakePerWeek.ts
 models/BuildCsvExportResponse.ts
 models/BundledEmailConfiguration.ts
 models/BundledEmailConfigurationRequest.ts
@@ -116,6 +117,7 @@ models/Joker.ts
 models/JokerCreditIntendedUsePreviewResponse.ts
 models/JokerRestriction.ts
 models/JokerWithCancellationLimit.ts
+models/Land.ts
 models/LegalStatusEnum.ts
 models/LevelEnum.ts
 models/LocaleEnum.ts
@@ -136,7 +138,6 @@ models/MandateReferencePreviewResponse.ts
 models/Member.ts
 models/MemberAssociationMembershipDetails.ts
 models/MemberBankDataResponse.ts
-models/MemberCountry.ts
 models/MemberCredit.ts
 models/MemberCreditCreateRequest.ts
 models/MemberCreditSettleRequest.ts
@@ -263,6 +264,7 @@ models/RhythmEnum.ts
 models/SaveExtendedProductTypeRequest.ts
 models/SegmentData.ts
 models/SegmentDataRequest.ts
+models/SegmentOption.ts
 models/SendLinkSerializerRequest.ts
 models/SetAssociationMembershipEndDateRequestRequest.ts
 models/SolidarityContribution.ts
@@ -305,6 +307,7 @@ models/TriggerData.ts
 models/TriggerDataRequest.ts
 models/TriggerDefinition.ts
 models/TriggerFieldDefinition.ts
+models/TypeEnum.ts
 models/UpdateMemberSolidarityContributionRequestRequest.ts
 models/UpdateMemberSolidarityContributionResponse.ts
 models/UpdateSubscriptionsRequestRequest.ts

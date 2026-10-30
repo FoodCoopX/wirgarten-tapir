@@ -111,4 +111,4 @@ class ExportedFileFactory(factory.django.DjangoModelFactory[ExportedFile]):
         "random_element",
         elements=[x[0] for x in ExportedFile.FileType.choices],
     )
-    file = factory.Faker("binary")
+    file = factory.Faker("binary", length=64)

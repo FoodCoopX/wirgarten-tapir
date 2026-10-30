@@ -169,9 +169,7 @@ def add_admin_links(groups, request, cache: dict):
             display_name=_("Zeichn. und Künd."),
             material_icon="contract_edit",
             url=reverse_lazy("wirgarten:contract_updates"),
-            notification_count=MemberDataToConfirmApiView.get_number_of_unconfirmed_changes(
-                cache=cache
-            ),
+            notification_count=MemberDataToConfirmApiView.get_number_of_unconfirmed_changes(),
         )
 
         waitlist_entries = WaitingListEntry.objects.count()
@@ -184,9 +182,7 @@ def add_admin_links(groups, request, cache: dict):
 
         groups.append(members_group)
 
-    if request.user.has_perm(Permission.Coop.MANAGE) and get_parameter_value(
-        ParameterKeys.BAKERY_ENABLED, cache=cache
-    ):
+    if request.user.has_perm(Permission.Coop.MANAGE) and settings.BAKERY_ENABLED:
         bakery_group = SidebarLinkGroup(name=_("Bäckerei"))
 
         bakery_group.add_link(

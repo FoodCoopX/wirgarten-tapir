@@ -573,6 +573,8 @@ class BestellWizardBaseDataApiView(APIView):
     def build_simple_response_fields(cls, cache: dict):
         serializer_key_to_parameter_key_map = {
             "price_of_a_share": ParameterKeys.COOP_SHARE_PRICE,
+            "coop_share_instalments_enabled": ParameterKeys.COOP_SHARES_INSTALMENTS_ENABLED,
+            "coop_share_instalment_amount": ParameterKeys.COOP_SHARES_INSTALMENT_AMOUNT,
             "theme": ParameterKeys.ORGANISATION_THEME,
             "allow_investing_membership": ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES,
             "force_waiting_list": ParameterKeys.BESTELLWIZARD_FORCE_WAITING_LIST,
@@ -940,7 +942,7 @@ class PublicBestellWizardIsEmailAddressValidApiView(APIView):
 
         try:
             PersonalDataValidator.validate_email_address_not_in_use(
-                email=email, cache={}, check_waiting_list=True
+                email=email, check_waiting_list=True
             )
         except ValidationError:
             return Response(False)
