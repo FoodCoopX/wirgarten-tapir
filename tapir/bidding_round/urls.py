@@ -1,0 +1,116 @@
+from django.urls import path
+
+from tapir.bidding_round import views
+
+app_name = "bidding_rounds"
+
+urlpatterns = [
+    path("", views.BiddingRoundView.as_view(), name="bidding_rounds"),
+    path("admin", views.BiddingRoundConfigView.as_view(), name="bidding_rounds_config"),
+    path(
+        "admin/<uuid:round_id>/results",
+        views.BiddingRoundResultsView.as_view(),
+        name="bidding_rounds_results",
+    ),
+    path("api/public_data", views.PublicDataView.as_view(), name="public_data"),
+    path(
+        "api/<uuid:round_id>/public_results",
+        views.PublicResultsView.as_view(),
+        name="public_results",
+    ),
+    path(
+        "api",
+        views.RoundListCreateView.as_view(),
+        name="round_list_create",
+    ),
+    path(
+        "api/growing_periods",
+        views.GrowingPeriodsView.as_view(),
+        name="growing_periods",
+    ),
+    path(
+        "api/available_product_types",
+        views.AvailableProductTypesView.as_view(),
+        name="available_product_types",
+    ),
+    path(
+        "api/<uuid:round_id>",
+        views.RoundDetailView.as_view(),
+        name="round_detail",
+    ),
+    path(
+        "api/<uuid:round_id>/start",
+        views.RoundStartView.as_view(),
+        name="round_start",
+    ),
+    path(
+        "api/<uuid:round_id>/close",
+        views.RoundCloseView.as_view(),
+        name="round_close",
+    ),
+    path(
+        "api/<uuid:round_id>/reopen",
+        views.RoundReopenView.as_view(),
+        name="round_reopen",
+    ),
+    path(
+        "api/<uuid:round_id>/results",
+        views.RoundResultsView.as_view(),
+        name="round_results",
+    ),
+    path(
+        "api/<uuid:round_id>/bids",
+        views.BidCreateView.as_view(),
+        name="bid_create",
+    ),
+    path(
+        "api/<uuid:round_id>/bids/<uuid:bid_id>",
+        views.BidEditView.as_view(),
+        name="bid_edit",
+    ),
+    path(
+        "api/<uuid:round_id>/confirm_bids",
+        views.ConfirmBidsView.as_view(),
+        name="confirm_bids",
+    ),
+    path(
+        "api/<uuid:round_id>/create_contracts",
+        views.CreateContractsView.as_view(),
+        name="create_contracts",
+    ),
+    path(
+        "api/<uuid:round_id>/check_contracts",
+        views.RoundCheckContractsView.as_view(),
+        name="check_contracts",
+    ),
+    path(
+        "api/<uuid:round_id>/lock_average_bid",
+        views.RoundLockAverageBidView.as_view(),
+        name="lock_average_bid",
+    ),
+    path(
+        "api/<uuid:round_id>/unlock_average_bid",
+        views.RoundUnlockAverageBidView.as_view(),
+        name="unlock_average_bid",
+    ),
+    path(
+        "api/<uuid:round_id>/delete_contracts",
+        views.RoundDeleteContractsView.as_view(),
+        name="delete_contracts",
+    ),
+    path(
+        "api/<uuid:round_id>/export.csv",
+        views.ExportCsvView.as_view(),
+        name="export_csv",
+    ),
+    path(
+        "api/<uuid:round_id>/bid",
+        views.MemberBidView.as_view(),
+        name="member_bid",
+    ),
+    path(
+        "api/<uuid:round_id>/capacity_check",
+        views.BiddingRoundCapacityCheckView.as_view(),
+        name="capacity_check",
+    ),
+]
