@@ -78,6 +78,7 @@ class BestellWizardStringsSerializer(serializers.Serializer):
     step3b_text = serializers.CharField()
     step4b_waiting_list_modal_title = serializers.CharField()
     step4b_waiting_list_modal_text = serializers.CharField()
+    step4b_base_price_label = serializers.CharField()
     step4d_title = serializers.CharField()
     step4d_text = serializers.CharField()
     step4d_text_supporting_member = serializers.CharField()

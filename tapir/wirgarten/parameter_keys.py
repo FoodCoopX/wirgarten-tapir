@@ -203,6 +203,9 @@ class ParameterKeys:
     BESTELL_WIZARD_STEP4B_WAITING_LIST_MODAL_TEXT = (
         f"{PREFIX}.bestellwizard.step4b.waiting_list_modal.text"
     )
+    BESTELLWIZARD_STEP4B_BASE_PRICE_LABEL = (
+        f"{PREFIX}.bestellwizard.step4b.base_price_label"
+    )
     BESTELLWIZARD_STEP4D_TITLE = f"{PREFIX}.bestellwizard.step4d.title"
     BESTELLWIZARD_STEP4D_TEXT = f"{PREFIX}.bestellwizard.step4d.text"
     BESTELLWIZARD_STEP4D_TEXT_SUPPORTING_MEMBER = (

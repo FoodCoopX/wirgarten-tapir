@@ -9146,6 +9146,8 @@ components:
           type: string
         step4b_waiting_list_modal_text:
           type: string
+        step4b_base_price_label:
+          type: string
         step4d_title:
           type: string
         step4d_text:
@@ -9261,6 +9263,7 @@ components:
       - step3_title
       - step3b_text
       - step3b_title
+      - step4b_base_price_label
       - step4b_waiting_list_modal_text
       - step4b_waiting_list_modal_title
       - step4d_text
