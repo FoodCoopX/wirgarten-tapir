@@ -3,6 +3,7 @@ import { Form } from "react-bootstrap";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import TapirButton from "../../components/TapirButton.tsx";
 import TapirHelpButton from "../../components/TapirHelpButton.tsx";
+import { formatCoopShareLabel } from "../../utils/formatCoopShareLabel.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { getHtmlDescription } from "../../utils/getHtmlDescription.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
@@ -127,9 +128,9 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
     return (
       "Ich möchte den Pflichtanteil in " +
       getNumberOfCoopShareInstalments(minimumNumberOfShares, settings) +
-      " Raten à " +
+      " monatlichen Raten zu je " +
       formatCurrency(settings.coopShareInstalmentAmount) +
-      " zahlen"
+      " einzahlen"
     );
   }
 
@@ -140,7 +141,9 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
     return (
       "Die Ratenzahlung ist nur für den Pflichtanteil möglich, also für genau " +
       minimumNumberOfShares +
-      " Genossenschaftsanteile. Wenn du mehr Anteile zeichnest, wird der gesamte Betrag auf einmal gezahlt."
+      " " +
+      formatCoopShareLabel(minimumNumberOfShares) +
+      ". Wenn du mehr Anteile zeichnest, wird der gesamte Betrag auf einmal gezahlt."
     );
   }
 

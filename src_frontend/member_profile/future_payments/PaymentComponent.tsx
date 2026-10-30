@@ -2,6 +2,7 @@ import React from "react";
 import { Badge } from "react-bootstrap";
 import { ExtendedPayment, Payment } from "../../api-client";
 import TapirHelpButton from "../../components/TapirHelpButton.tsx";
+import { formatCoopShareLabel } from "../../utils/formatCoopShareLabel.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 import formatSubscription from "../../utils/formatSubscription.ts";
@@ -167,7 +168,7 @@ const PaymentComponent: React.FC<PaymentProps> = ({
         {extendedPayment.coopShareTransactions.map((transaction) => (
           <span key={transaction.id}>
             {transaction.quantity}
-            {" × Genossenschaftsanteile"}
+            {" × " + formatCoopShareLabel(transaction.quantity)}
             {extendedPayment.payment.instalmentNumber &&
               extendedPayment.numberOfInstalments &&
               ", Rate " +

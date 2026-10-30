@@ -17,6 +17,7 @@ import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeast
 import { isProductTypeOrdered } from "../../bestell_wizard/utils/isProductTypeOrdered.ts";
 import TapirButton from "../../components/TapirButton.tsx";
 import formatAddress from "../../utils/formatAddress.ts";
+import { formatCoopShareLabel } from "../../utils/formatCoopShareLabel.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
@@ -514,24 +515,35 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                 >
                   <Accordion.Header>{getCoopSharesTitle()}</Accordion.Header>
                   <AccordionBody>
-                    {studentStatusEnabled
-                      ? settings.strings.step10TextStudent
-                      : numberOfCoopShares +
-                        " Genossenschaftsanteile à " +
-                        formatCurrency(settings.priceOfAShare) +
-                        " = " +
-                        formatCurrency(
-                          numberOfCoopShares * settings.priceOfAShare,
-                        ) +
-                        (payCoopSharesInInstalments
-                          ? ", in " +
-                            getNumberOfCoopShareInstalments(
-                              numberOfCoopShares,
-                              settings,
-                            ) +
-                            " monatlichen Raten à " +
-                            formatCurrency(settings.coopShareInstalmentAmount)
-                          : "")}
+                    {studentStatusEnabled ? (
+                      settings.strings.step10TextStudent
+                    ) : (
+                      <>
+                        {numberOfCoopShares +
+                          " " +
+                          formatCoopShareLabel(numberOfCoopShares) +
+                          " à " +
+                          formatCurrency(settings.priceOfAShare) +
+                          " = " +
+                          formatCurrency(
+                            numberOfCoopShares * settings.priceOfAShare,
+                          )}
+                        {payCoopSharesInInstalments && (
+                          <>
+                            <br />
+                            {"in " +
+                              getNumberOfCoopShareInstalments(
+                                numberOfCoopShares,
+                                settings,
+                              ) +
+                              " monatlichen Raten à " +
+                              formatCurrency(
+                                settings.coopShareInstalmentAmount,
+                              )}
+                          </>
+                        )}
+                      </>
+                    )}
                     <TapirButton
                       variant={BUTTON_VARIANT}
                       size={"sm"}
