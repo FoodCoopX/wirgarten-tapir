@@ -6,7 +6,7 @@ authors = ["Michael Kleimann <dev@mkleimann.com>", "Théophile Madet <theo.madet
 package-mode = false
 
 [tool.poetry.dependencies]
-python = "3.14.9"
+python = "3.14.10"
 django = "~6.0.9"
 django-extensions = "^4.1"
 psycopg2-binary = "^2.9.13"

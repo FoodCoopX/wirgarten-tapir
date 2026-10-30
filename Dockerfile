@@ -1,7 +1,7 @@
 FROM node:24-trixie-slim AS mjml
 RUN npm install -g mjml@4.14.1
 
-FROM python:3.14.9 AS python-base
+FROM python:3.14.10 AS python-base
 ENV PYTHONUNBUFFERED=1
 ENV POETRY_VIRTUALENVS_PATH=/opt/venvs
 
@@ -34,7 +34,7 @@ COPY manage.py /app/manage.py
 COPY Makefile /app/Makefile
 COPY dist* /app/dist
 
-FROM python:3.14.9-slim AS prod
+FROM python:3.14.10-slim AS prod
 ENV PYTHONUNBUFFERED=1
 ENV POETRY_VIRTUALENVS_IN_PROJECT=true
 ENV PATH=/app/.venv/bin:$PATH
