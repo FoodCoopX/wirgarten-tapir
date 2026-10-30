@@ -1,6 +1,7 @@
 #!/bin/sh
 
 set -e
+[ -f .env.local ] || cp .env.local.disabled .env.local
 poetry lock
 poetry install
 docker compose down
