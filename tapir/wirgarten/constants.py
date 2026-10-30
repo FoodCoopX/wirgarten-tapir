@@ -32,6 +32,7 @@ OPTIONS_WEEKDAYS = [
 
 class ParameterCategory:
     BESTELLWIZARD = "BestellWizard"
+    BIDDING_ROUND = "Beitragsrunde"
     BUSINESS = "{{legal_status}}"
     DELIVERY = "Lieferung"
     JOKERS = "Joker"
