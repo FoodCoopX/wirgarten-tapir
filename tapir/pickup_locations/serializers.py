@@ -1,3 +1,4 @@
+from django.conf import settings
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
@@ -100,6 +101,9 @@ class PublicPickupLocationSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(serializers.IntegerField(allow_null=True))
     def get_delivery_day(self, pickup_location: PickupLocation) -> int | None:
+        if not settings.BAKERY_ENABLED:
+            return None
+
         return PickupLocationDeliveryDayService.get_delivery_day(
             pickup_location_id=pickup_location.id, cache=self.context["cache"]
         )
