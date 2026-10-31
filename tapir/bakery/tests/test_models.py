@@ -65,6 +65,44 @@ class TestStoveSessionConstraints(TapirIntegrationTest):
                 quantity=5,
             )
 
+    def test_twoBreadsOnOneLayer_areAllowed(self):
+        # Breads of one BreadGroup share a layer.
+        for bread in (BreadFactory.create(), BreadFactory.create()):
+            StoveSession.objects.create(
+                year=YEAR,
+                delivery_week=WEEK,
+                delivery_day=3,
+                session_number=1,
+                layer_number=1,
+                bread=bread,
+                quantity=6,
+            )
+
+        self.assertEqual(StoveSession.objects.count(), 2)
+
+    def test_wholeWeekPlan_sameBreadTwiceOnALayer_isRejected(self):
+        bread = BreadFactory.create()
+        StoveSession.objects.create(
+            year=YEAR,
+            delivery_week=WEEK,
+            delivery_day=None,
+            session_number=1,
+            layer_number=1,
+            bread=bread,
+            quantity=10,
+        )
+
+        with self.assertRaises(IntegrityError):
+            StoveSession.objects.create(
+                year=YEAR,
+                delivery_week=WEEK,
+                delivery_day=None,
+                session_number=1,
+                layer_number=1,
+                bread=bread,
+                quantity=5,
+            )
+
 
 class TestBreadDeliverySync(TapirIntegrationTest):
     @classmethod

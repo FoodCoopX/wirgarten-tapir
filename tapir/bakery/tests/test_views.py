@@ -17,6 +17,7 @@ from tapir.bakery.tests.factories import (
     BreadFactory,
     BreadsPerPickupLocationPerWeekFactory,
 )
+from tapir.bakery.views import _solver_cache_key
 from tapir.pickup_locations.tests.factories import (
     create_pickup_location_with_opening_times,
 )
@@ -446,7 +447,7 @@ class TestSolverPreviewView(TapirIntegrationTest):
                 {
                     "bread_quantities": {bread.id: 10},
                     "remaining_quantities": {bread.id: 2},
-                    "stove_sessions": [[(bread.id, 10)]],
+                    "stove_sessions": [[[(bread.id, 10)]]],
                     "distribution": {},
                 }
             ],
@@ -493,7 +494,7 @@ class TestSolverPreviewDetailView(TapirIntegrationTest):
 
     def test_get_noCache_returns404(self):
         self.client.force_login(MemberFactory.create(is_superuser=True))
-        cache.delete(f"solver_solutions_{YEAR}_{WEEK}_{DAY}")
+        cache.delete(_solver_cache_key(YEAR, WEEK, DAY))
 
         response = self.client.get(
             self.url,
@@ -513,14 +514,14 @@ class TestSolverPreviewDetailView(TapirIntegrationTest):
         bread = BreadFactory.create(name="Roggenbrot")
         pl = PickupLocationFactory.create(name="Hofladen")
 
-        cache_key = f"solver_solutions_{YEAR}_{WEEK}_{DAY}"
+        cache_key = _solver_cache_key(YEAR, WEEK, DAY)
         cache.set(
             cache_key,
             [
                 {
                     "bread_quantities": {bread.id: 10},
                     "remaining_quantities": {bread.id: 2},
-                    "stove_sessions": [[(bread.id, 10)]],
+                    "stove_sessions": [[[(bread.id, 10)]]],
                     "distribution": {(bread.id, pl.id): 8},
                 }
             ],
@@ -544,12 +545,45 @@ class TestSolverPreviewDetailView(TapirIntegrationTest):
         self.assertTrue(len(response.data["stove_sessions"]) > 0)
         self.assertTrue(len(response.data["distribution"]) > 0)
 
+    def test_get_sharedLayer_listsEveryBreadUnderTheLayersNumber(self):
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+
+        hell = BreadFactory.create(name="Dinkel hell")
+        saaten = BreadFactory.create(name="Dinkel Saaten")
+
+        cache.set(
+            _solver_cache_key(YEAR, WEEK, DAY),
+            [
+                {
+                    "bread_quantities": {hell.id: 6, saaten.id: 6},
+                    "remaining_quantities": {hell.id: 0, saaten.id: 0},
+                    "stove_sessions": [[[(hell.id, 6), (saaten.id, 6)], []]],
+                    "distribution": {},
+                }
+            ],
+            timeout=3600,
+        )
+
+        response = self.client.get(
+            self.url,
+            {"year": YEAR, "delivery_week": WEEK, "delivery_day": DAY},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            [
+                (layer["layer"], layer["bread_name"], layer["quantity"])
+                for layer in response.data["stove_sessions"][0]["layers"]
+            ],
+            [(1, "Dinkel hell", 6), (1, "Dinkel Saaten", 6), (2, None, 0)],
+        )
+
     def test_get_indexOutOfRange_clampedToLast(self):
         self.client.force_login(MemberFactory.create(is_superuser=True))
 
         bread = BreadFactory.create(name="Roggenbrot")
 
-        cache_key = f"solver_solutions_{YEAR}_{WEEK}_{DAY}"
+        cache_key = _solver_cache_key(YEAR, WEEK, DAY)
         cache.set(
             cache_key,
             [
@@ -589,7 +623,7 @@ class TestSolverApplyView(TapirIntegrationTest):
 
     def test_post_noCache_returns404(self):
         self.client.force_login(MemberFactory.create(is_superuser=True))
-        cache.delete(f"solver_solutions_{YEAR}_{WEEK}_{DAY}")
+        cache.delete(_solver_cache_key(YEAR, WEEK, DAY))
 
         response = self.client.post(
             self.url,
@@ -618,7 +652,7 @@ class TestSolverApplyView(TapirIntegrationTest):
                 "distribution": {},
             }
         ]
-        cache_key = f"solver_solutions_{YEAR}_{WEEK}_{DAY}"
+        cache_key = _solver_cache_key(YEAR, WEEK, DAY)
         cache.set(cache_key, cached_results, timeout=3600)
 
         response = self.client.post(

@@ -130,6 +130,36 @@ class TestPickupListTemplate(SimpleTestCase):
         self.assertEqual(html.count("erstellt am"), 1)
 
 
+class TestBakingListTemplate(SimpleTestCase):
+    def test_sharedLayer_isOneLineWithEveryBreadOnIt(self):
+        context = {
+            "report_title": "Backliste",
+            "week": WEEK,
+            "day_label": "Donnerstag",
+            "date_string": "12.03.2026",
+            "today": "10.03.2026",
+            "breads": [],
+            "stove_sessions": [
+                {
+                    "session": 1,
+                    "layers": [
+                        {"layer": 1, "bread_name": "Dinkel hell", "quantity": 6},
+                        {"layer": 1, "bread_name": "Dinkel Saaten", "quantity": 6},
+                        {"layer": 2, "bread_name": "Roggenbrot", "quantity": 12},
+                    ],
+                }
+            ],
+        }
+
+        html = render_to_string("bakery/pdfs/baking_list.html", context)
+
+        self.assertEqual(html.count("Etage 1:"), 1)
+        self.assertEqual(html.count("Etage 2:"), 1)
+        shared_layer = html.split("Etage 1:")[1].split("Etage 2:")[0]
+        self.assertIn("Dinkel hell", shared_layer)
+        self.assertIn("Dinkel Saaten", shared_layer)
+
+
 class TestPdfPermissionsAndValidation(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):

@@ -80,6 +80,12 @@ export interface BreadListRequest {
   isActive?: boolean;
   /**
    *
+   * @type {string}
+   * @memberof BreadListRequest
+   */
+  group?: string | null;
+  /**
+   *
    * @type {Array<string>}
    * @memberof BreadListRequest
    */
@@ -128,6 +134,7 @@ export function BreadListRequestFromJSONTyped(
         ? undefined
         : json["min_remaining_pieces"],
     isActive: json["is_active"] == null ? undefined : json["is_active"],
+    group: json["group"] == null ? undefined : json["group"],
     labels: json["labels"] == null ? undefined : json["labels"],
   };
 }
@@ -156,6 +163,7 @@ export function BreadListRequestToJSONTyped(
     max_pieces: value["maxPieces"],
     min_remaining_pieces: value["minRemainingPieces"],
     is_active: value["isActive"],
+    group: value["group"],
     labels: value["labels"],
   };
 }

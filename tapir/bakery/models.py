@@ -17,8 +17,28 @@ class BreadLabel(TapirModel):
         return self.name
 
 
+class BreadGroup(TapirModel):
+    """
+    Breads made from one dough. On a baking day the solver lets them share a
+    stove layer, and every grouped bread's min_pieces and max_pieces bound the
+    group's total instead of the bread alone.
+    """
+
+    name = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
 class Bread(TapirModel):
     name = models.CharField(max_length=200, unique=True)
+    group = models.ForeignKey(
+        "BreadGroup",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="breads",
+    )
     picture = models.ImageField(
         upload_to="breads/",
         blank=True,
@@ -245,6 +265,11 @@ class BreadsToBakePerWeek(TapirModel):
 
 
 class StoveSession(TapirModel):
+    """
+    One row per bread and layer: breads of one BreadGroup can share a layer,
+    which then has a row for each of them.
+    """
+
     year = models.PositiveIntegerField()
     delivery_week = models.PositiveIntegerField()
     # Null for a whole-week plan, set for a plan made day by day.
@@ -267,12 +292,21 @@ class StoveSession(TapirModel):
             "delivery_day",
             "session_number",
             "layer_number",
+            "bread",
         ]
         constraints = [
             # unique_together does not cover the whole-week rows: NULL never
             # equals NULL, so the constraint above admits any number of them.
+            # For the same reason neither constraint stops several empty
+            # (bread NULL) rows on one layer; save_solution_to_db writes none.
             models.UniqueConstraint(
-                fields=["year", "delivery_week", "session_number", "layer_number"],
+                fields=[
+                    "year",
+                    "delivery_week",
+                    "session_number",
+                    "layer_number",
+                    "bread",
+                ],
                 condition=models.Q(delivery_day__isnull=True),
                 name="unique_stove_session_per_whole_week",
             )

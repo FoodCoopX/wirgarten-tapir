@@ -353,6 +353,29 @@ class TestBakingListService(TapirIntegrationTest):
         self.assertEqual(layers[0]["layer"], 1)
         self.assertEqual(layers[1]["layer"], 3)
 
+    def test_getBakingList_sharedLayer_breadsSortedByName(self, mock_kc):
+        # Breads of one group share a layer. Insertion order and id order
+        # (the unique index ends in bread_id) both put Zwiebelbrot first.
+        zwiebel = BreadFactory.create(id="aaaaaaaaaa", name="Zwiebelbrot")
+        apfel = BreadFactory.create(id="zzzzzzzzzz", name="Apfelbrot")
+        self._plan_to_bake(zwiebel, 6, session_number=1, layer_number=1)
+        self._plan_to_bake(apfel, 6, session_number=1, layer_number=1)
+
+        with patch.object(
+            BakingListService, "get_pickup_location_ids_for_day", return_value=[]
+        ):
+            result = BakingListService.get_baking_list(
+                year=self.YEAR, week=self.WEEK, day=self.DAY
+            )
+
+        self.assertEqual(
+            [
+                (layer["layer"], layer["bread_name"])
+                for layer in result["stove_sessions"][0]["layers"]
+            ],
+            [(1, "Apfelbrot"), (1, "Zwiebelbrot")],
+        )
+
     def test_getBakingList_multipleSessions_bakeTotalsSumCorrectly(self, mock_kc):
         self._plan_to_bake(self.roggenbrot, 6, session_number=1, layer_number=1)
         self._plan_to_bake(self.roggenbrot, 4, session_number=2, layer_number=1)

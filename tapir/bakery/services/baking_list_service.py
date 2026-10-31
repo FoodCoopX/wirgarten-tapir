@@ -44,7 +44,7 @@ class BakingListService:
         stove_sessions = BakingListService._rows_for_day(
             StoveSession.objects.filter(year=year, delivery_week=week)
             .select_related("bread")
-            .order_by("session_number", "layer_number"),
+            .order_by("session_number", "layer_number", "bread__name"),
             day,
         )
 

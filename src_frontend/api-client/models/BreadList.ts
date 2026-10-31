@@ -53,6 +53,12 @@ export interface BreadList {
   readonly contents: Array<BreadContent>;
   /**
    *
+   * @type {string}
+   * @memberof BreadList
+   */
+  readonly groupName: string | null;
+  /**
+   *
    * @type {Date}
    * @memberof BreadList
    */
@@ -125,6 +131,12 @@ export interface BreadList {
   isActive?: boolean;
   /**
    *
+   * @type {string}
+   * @memberof BreadList
+   */
+  group?: string | null;
+  /**
+   *
    * @type {Array<string>}
    * @memberof BreadList
    */
@@ -145,6 +157,7 @@ export function instanceOfBreadList(value: object): value is BreadList {
   )
     return false;
   if (!("contents" in value) || value["contents"] === undefined) return false;
+  if (!("groupName" in value) || value["groupName"] === undefined) return false;
   if (!("createdAt" in value) || value["createdAt"] === undefined) return false;
   if (!("updatedAt" in value) || value["updatedAt"] === undefined) return false;
   if (!("name" in value) || value["name"] === undefined) return false;
@@ -169,6 +182,7 @@ export function BreadListFromJSONTyped(
     deliveryCount: json["delivery_count"],
     availableCapacity: json["available_capacity"],
     contents: (json["contents"] as Array<any>).map(BreadContentFromJSON),
+    groupName: json["group_name"],
     createdAt: new Date(json["created_at"]),
     updatedAt: new Date(json["updated_at"]),
     name: json["name"],
@@ -190,6 +204,7 @@ export function BreadListFromJSONTyped(
         ? undefined
         : json["min_remaining_pieces"],
     isActive: json["is_active"] == null ? undefined : json["is_active"],
+    group: json["group"] == null ? undefined : json["group"],
     labels: json["labels"] == null ? undefined : json["labels"],
   };
 }
@@ -206,6 +221,7 @@ export function BreadListToJSONTyped(
     | "delivery_count"
     | "available_capacity"
     | "contents"
+    | "group_name"
     | "created_at"
     | "updated_at"
   > | null,
@@ -227,6 +243,7 @@ export function BreadListToJSONTyped(
     max_pieces: value["maxPieces"],
     min_remaining_pieces: value["minRemainingPieces"],
     is_active: value["isActive"],
+    group: value["group"],
     labels: value["labels"],
   };
 }

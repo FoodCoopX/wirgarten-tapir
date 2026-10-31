@@ -9,6 +9,7 @@ from tapir.bakery.models import (
     Bread,
     BreadContent,
     BreadDelivery,
+    BreadGroup,
     BreadLabel,
     BreadSpecificsPerDeliveryDay,
     BreadsPerPickupLocationPerWeek,
@@ -57,6 +58,19 @@ class BreadLabelSerializer(serializers.ModelSerializer):
         # A TapirModel id is a plain CharField, which DRF would otherwise leave
         # writable under fields="__all__".
         read_only_fields = ["id"]
+
+
+class BreadGroupSerializer(serializers.ModelSerializer):
+    bread_names = serializers.SerializerMethodField()
+
+    class Meta:
+        model = BreadGroup
+        fields = "__all__"
+        # See BreadLabelSerializer.
+        read_only_fields = ["id"]
+
+    def get_bread_names(self, obj) -> list[str]:
+        return sorted(bread.name for bread in obj.breads.all())
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -115,6 +129,9 @@ class BreadListSerializer(serializers.ModelSerializer):
     delivery_count = serializers.IntegerField(read_only=True, required=False)
     available_capacity = serializers.IntegerField(read_only=True, required=False)
     contents = BreadContentSerializer(many=True, read_only=True)
+    group_name = serializers.CharField(
+        source="group.name", read_only=True, allow_null=True
+    )
 
     class Meta:
         model = Bread

@@ -5,6 +5,12 @@ from tapir.bakery.solver.dataclasses import (
     PickupLocationInfo,
     SolverDiagnostic,
 )
+from tapir.bakery.solver.groups import (
+    group_label,
+    group_max_pieces,
+    group_min_pieces,
+    stove_groups,
+)
 
 
 def diagnose_infeasibility(
@@ -77,6 +83,14 @@ def diagnose_infeasibility(
 
     bread_map = {b.bread_id: b for b in valid_breads}
 
+    # A grouped bread's own min_pieces does not apply to it alone, and what it
+    # can reach is capped by the group's max_pieces, see C15.
+    groups = stove_groups(valid_breads)
+    grouped_ids = {b.bread_id for members in groups.values() for b in members}
+    for members in groups.values():
+        for b in members:
+            bread_map[b.bread_id] = replace(b, max_pieces=group_max_pieces(members))
+
     for b in valid_breads:
         if b.min_pieces is not None and b.max_pieces is not None:
             if b.min_pieces > b.max_pieces:
@@ -105,6 +119,46 @@ def diagnose_infeasibility(
                         ),
                     )
                 )
+
+    for members in groups.values():
+        label = group_label(members)
+        group_min = group_min_pieces(members)
+        group_max = group_max_pieces(members)
+        if group_min is not None and group_max is not None and group_min > group_max:
+            diagnostics.append(
+                SolverDiagnostic(
+                    level="error",
+                    category="group_min_max_conflict",
+                    bread_name=None,
+                    location_name=None,
+                    message=(
+                        f"Gruppe '{label}': zusammen mindestens {group_min} Stück "
+                        f"(höchste Min.-Angabe), aber höchstens {group_max} Stück "
+                        f"(niedrigste Max.-Angabe). Das ist widersprüchlich."
+                    ),
+                )
+            )
+        elif (
+            len({b.min_pieces for b in members}) > 1
+            or len({b.max_pieces for b in members}) > 1
+        ):
+            limits = [
+                f"Min. {group_min}" if group_min is not None else None,
+                f"Max. {group_max}" if group_max is not None else None,
+            ]
+            diagnostics.append(
+                SolverDiagnostic(
+                    level="info",
+                    category="group_limits",
+                    bread_name=None,
+                    location_name=None,
+                    message=(
+                        f"Gruppe '{label}': die Brote haben unterschiedliche "
+                        f"Min./Max.-Angaben, für die Summe der Gruppe gilt "
+                        f"{' und '.join(limit for limit in limits if limit)} Stück."
+                    ),
+                )
+            )
 
     for b in valid_breads:
         if b.fixed_pieces is not None or b.max_pieces is None:
@@ -189,8 +243,58 @@ def diagnose_infeasibility(
                 )
             )
 
+    # The per-bread check above caps each bread at the group's max_pieces,
+    # but the group's breads have to fit under it together.
+    for members in groups.values():
+        group_max = group_max_pieces(members)
+        if group_max is None:
+            continue
+        chosen = [b for b in members if total_fixed_demand.get(b.bread_id)]
+        demand = sum(total_fixed_demand[b.bread_id] for b in chosen)
+        # A chosen bread is baked, so it also keeps its minimum behind.
+        remaining = sum(b.min_remaining_pieces or 0 for b in chosen)
+        if demand + remaining > group_max:
+            kept_back = f" plus mindestens {remaining} als Rest" if remaining else ""
+            diagnostics.append(
+                SolverDiagnostic(
+                    level="error",
+                    category="fixed_demand_exceeds_production",
+                    bread_name=None,
+                    location_name=None,
+                    message=(
+                        f"Direkte Brotwahl für Gruppe '{group_label(members)}' "
+                        f"ergibt zusammen {demand} Stück{kept_back}, aber die "
+                        f"Gruppe darf höchstens {group_max} Stück backen."
+                    ),
+                )
+            )
+
+    for members in groups.values():
+        group_min = group_min_pieces(members)
+        if not group_min:
+            continue
+        group_ceiling = sum(
+            max(_get_achievable_quantities(b, max_sessions, stove_layers), default=0)
+            for b in members
+        )
+        if group_min > group_ceiling:
+            diagnostics.append(
+                SolverDiagnostic(
+                    level="error",
+                    category="min_not_achievable",
+                    bread_name=None,
+                    location_name=None,
+                    message=(
+                        f"Gruppe '{group_label(members)}': zusammen mindestens "
+                        f"{group_min} Stück, aber max. erreichbar sind "
+                        f"{group_ceiling} Stück (bei {max_sessions} Ofengängen "
+                        f"à {stove_layers} Lagen)."
+                    ),
+                )
+            )
+
     for b in valid_breads:
-        if b.fixed_pieces is not None:
+        if b.fixed_pieces is not None or b.bread_id in grouped_ids:
             continue
         if b.min_pieces is None or b.min_pieces == 0:
             continue
@@ -251,9 +355,15 @@ def diagnose_infeasibility(
             default=0,
         )
     )
-    total_min_required = sum(
-        b.min_pieces or 0 for b in valid_breads if b.fixed_pieces is None
-    ) + sum(b.fixed_pieces or 0 for b in valid_breads if b.fixed_pieces is not None)
+    total_min_required = (
+        sum(
+            b.min_pieces or 0
+            for b in valid_breads
+            if b.fixed_pieces is None and b.bread_id not in grouped_ids
+        )
+        + sum(group_min_pieces(members) or 0 for members in groups.values())
+        + sum(b.fixed_pieces or 0 for b in valid_breads if b.fixed_pieces is not None)
+    )
 
     if total_min_required > 0 and max_stove_capacity > 0:
         if total_min_required > max_stove_capacity:
@@ -272,7 +382,7 @@ def diagnose_infeasibility(
             )
 
     for b in valid_breads:
-        if b.fixed_pieces is not None:
+        if b.fixed_pieces is not None or b.bread_id in grouped_ids:
             continue
         total_cap = sum(
             capacities.get((b.bread_id, loc.location_id), 0) for loc in pickup_locations
@@ -313,23 +423,39 @@ def diagnose_infeasibility(
     total_max_deliverable = 0
     bread_max_details = []
     splitting_would_help = False
-    for b in valid_breads:
-        max_baked = _max_baked(b, max_sessions, stove_layers)
-        if (
-            b.fixed_pieces is None
-            and not b.can_span_sessions
-            and _max_baked(
-                replace(b, can_span_sessions=True), max_sessions, stove_layers
-            )
-            > max_baked
-        ):
-            splitting_would_help = True
+    # A group counts once: together its breads stay within its max_pieces.
+    units = [[b] for b in valid_breads if b.bread_id not in grouped_ids]
+    units += groups.values()
+    for members in units:
+        max_baked = 0
+        for b in members:
+            b = bread_map[b.bread_id]
+            bread_max_baked = _max_baked(b, max_sessions, stove_layers)
+            max_baked += bread_max_baked
+            if (
+                b.fixed_pieces is None
+                and not b.can_span_sessions
+                and _max_baked(
+                    replace(b, can_span_sessions=True), max_sessions, stove_layers
+                )
+                > bread_max_baked
+            ):
+                splitting_would_help = True
 
-        remaining = b.min_remaining_pieces or 0
+        if len(members) > 1:
+            group_max = group_max_pieces(members)
+            if group_max is not None:
+                max_baked = min(max_baked, group_max)
+            # Something baked leaves at least the smallest minimum behind.
+            remaining = min(b.min_remaining_pieces or 0 for b in members)
+            name = f"Gruppe '{group_label(members)}'"
+        else:
+            remaining = members[0].min_remaining_pieces or 0
+            name = f"'{members[0].name}'"
         max_deliverable = max(0, max_baked - remaining)
         total_max_deliverable += max_deliverable
         bread_max_details.append(
-            f"'{b.name}': max gebacken={max_baked}, min Rest={remaining}, max lieferbar={max_deliverable}"
+            f"{name}: max gebacken={max_baked}, min Rest={remaining}, max lieferbar={max_deliverable}"
         )
 
     if total_deliveries > total_max_deliverable:
@@ -373,7 +499,7 @@ def diagnose_infeasibility(
     for b in valid_breads:
         if b.fixed_pieces is not None or b.can_span_sessions:
             continue
-        if not b.pieces_per_stove_layer:
+        if not b.pieces_per_stove_layer or b.bread_id in grouped_ids:
             continue
         max_per_session = stove_layers * max(b.pieces_per_stove_layer)
         if b.min_pieces is not None and b.min_pieces > max_per_session:

@@ -9,6 +9,7 @@ from tapir.bakery.models import (
     BreadCapacityPickupLocation,
     BreadContent,
     BreadDelivery,
+    BreadGroup,
     BreadLabel,
     BreadSpecificsPerDeliveryDay,
     BreadsPerPickupLocationPerWeek,
@@ -45,6 +46,13 @@ class BreadLabelFactory(factory.django.DjangoModelFactory):
 
     name = factory.Faker("word")
     is_active = True
+
+
+class BreadGroupFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = BreadGroup
+
+    name = factory.Sequence(lambda n: f"Teig {n}")
 
 
 BREAD_NAMES = [

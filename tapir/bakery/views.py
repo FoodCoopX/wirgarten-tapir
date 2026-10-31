@@ -234,7 +234,9 @@ def _bread_names(bread_ids) -> dict:
 
 
 def _solver_cache_key(year, delivery_week, delivery_day) -> str:
-    return f"solver_solutions_{year}_{delivery_week}_{delivery_day}"
+    # v2: a stove layer is a list of (bread_id, pieces) since breads of a
+    # group can share one, so solutions cached in the old shape are not read.
+    return f"solver_solutions_v2_{year}_{delivery_week}_{delivery_day}"
 
 
 class SolverPreviewView(APIView):
@@ -419,14 +421,15 @@ class SolverPreviewDetailView(APIView):
                     }
                 )
 
+        # One entry per bread on a layer, like the StoveSession rows: the
+        # breads of a group sharing a layer repeat its number.
         stove_sessions = []
         for i, session in enumerate(result["stove_sessions"]):
             layers = []
-            for j, layer_info in enumerate(session):
-                if layer_info is None:
+            for j, breads_on_layer in enumerate(session):
+                if not breads_on_layer:
                     layers.append({"layer": j + 1, "bread_name": None, "quantity": 0})
-                else:
-                    b_id, qty = layer_info
+                for b_id, qty in breads_on_layer:
                     layers.append(
                         {
                             "layer": j + 1,
