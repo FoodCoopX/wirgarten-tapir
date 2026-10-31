@@ -1,12 +1,21 @@
 import datetime
+from decimal import Decimal
 
 from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.pickup_locations.models import PickupLocationBasketCapacity
+from tapir.pickup_locations.tests.factories import PickupLocationDeliveryChargeFactory
 from tapir.utils.config import Organization
 from tapir.utils.services.test_data_generation.product_generator import (
     BREAD_PRODUCT_TYPE_NAME,
 )
-from tapir.wirgarten.models import ProductType, PickupLocationOpeningTime
+from tapir.utils.services.test_data_generation.vierlande_generator import (
+    VierlandeGenerator,
+)
+from tapir.wirgarten.models import (
+    PickupLocation,
+    ProductType,
+    PickupLocationOpeningTime,
+)
 from tapir.wirgarten.tests.factories import (
     PickupLocationFactory,
     PickupLocationCapabilityFactory,
@@ -24,6 +33,8 @@ class PickupLocationGenerator:
                 cls.generate_pickup_locations_for_biotop()
             case Organization.VEREIN:
                 cls.generate_pickup_locations_for_wirgarten()
+            case Organization.VIERLANDE:
+                VierlandeGenerator.generate_pickup_locations()
             case Organization.L2G:
                 cls.generate_pickup_locations_for_l2g()
             case Organization.MM:
@@ -614,6 +625,49 @@ class PickupLocationGenerator:
             close_time=datetime.time(hour=17, minute=30),
         )
 
+        # The bidding round evaluation shows capacity vs. demand per pickup location,
+        # which reads PickupLocationCapability (in M equivalent shares), not the
+        # basket capacities used by the picking mode.
+        ernteanteile = ProductType.objects.get(name="Ernteanteile")
+        capacity_by_pickup_location_name = {
+            "Biodelikat": 20,
+            "Reginriedstraße": 25,
+            "Schützenweg": 35,
+            "Ludwig-Thoma-Straße": 25,
+            "Biotop-Hofpunkt": 14,
+            "Grünes Warenhaus": 42,
+            "Hochalmstraße Lenggries": 17,
+            "Greiling": 20,
+            "Bad Heilbrunn": 15,
+            "Penzberg": 35,
+            "Tutzing": 20,
+        }
+        for name, max_capacity in capacity_by_pickup_location_name.items():
+            PickupLocationCapabilityFactory.create(
+                pickup_location=PickupLocation.objects.get(name=name),
+                max_capacity=max_capacity,
+                product_type=ernteanteile,
+            )
+
+        # Half of the depots carry a delivery surcharge so the bidding round can
+        # show and account for it.
+        today = datetime.date.today()
+        valid_from = today - datetime.timedelta(days=today.weekday())
+        pickup_location_names_with_delivery_charge = [
+            "Biodelikat",
+            "Schützenweg",
+            "Biotop-Hofpunkt",
+            "Hochalmstraße Lenggries",
+            "Bad Heilbrunn",
+            "Tutzing",
+        ]
+        for name in pickup_location_names_with_delivery_charge:
+            PickupLocationDeliveryChargeFactory.create(
+                pickup_location=PickupLocation.objects.get(name=name),
+                amount=Decimal("1.50"),
+                valid_from=valid_from,
+            )
+
     @classmethod
     def generate_pickup_locations_for_l2g(cls):
         ernteanteile = ProductType.objects.get(name="Ernteanteile")
@@ -627,7 +681,7 @@ class PickupLocationGenerator:
             city="Lüneburg-Ochtmissen",
         )
         PickupLocationCapabilityFactory.create(
-            pickup_location=hof, max_capacity=1000, product_type=ernteanteile
+            pickup_location=hof, max_capacity=230, product_type=ernteanteile
         )
         PickupLocationOpeningTime.objects.create(
             pickup_location=hof,
@@ -721,7 +775,7 @@ class PickupLocationGenerator:
             city="Lüneburg",
         )
         PickupLocationCapabilityFactory.create(
-            pickup_location=garage, max_capacity=None, product_type=ernteanteile
+            pickup_location=garage, max_capacity=50, product_type=ernteanteile
         )
         PickupLocationOpeningTime.objects.create(
             pickup_location=garage,
