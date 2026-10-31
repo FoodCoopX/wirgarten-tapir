@@ -5,6 +5,10 @@ from django.views import generic
 from tapir_mail.models import MailCategory
 
 from tapir.accounts.models import EmailChangeRequest
+from tapir.bidding_round.services.bidding_round_service import BiddingRoundService
+from tapir.bidding_round.services.bidding_round_view_service import (
+    BiddingRoundViewService,
+)
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.coop_membership_cancellation_manager import (
     CoopMembershipCancellationManager,
@@ -68,6 +72,20 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             self.object, today, include_future_subscriptions=True, cache=cache
         )
         context["bakery_enabled"] = settings.BAKERY_ENABLED
+        try:
+            bidding_round_enabled = get_parameter_value(
+                ParameterKeys.BIDDING_ROUND_ENABLED, cache=cache
+            )
+        except KeyError:
+            bidding_round_enabled = False
+        context["open_bidding_round"] = (
+            BiddingRoundService.get_current_open_round(cache=cache)
+            if bidding_round_enabled
+            else None
+        )
+        context["bidding_round_display_name"] = (
+            BiddingRoundViewService.get_display_name(cache)
+        )
         next_growing_period = get_next_growing_period()
         for subscriptions in context["subscriptions"].values():
             for subscription in subscriptions:
