@@ -1,3 +1,5 @@
+from dataclasses import replace
+
 from tapir.bakery.solver.dataclasses import (
     BreadInfo,
     PickupLocationInfo,
@@ -104,6 +106,25 @@ def diagnose_infeasibility(
                     )
                 )
 
+    for b in valid_breads:
+        if b.fixed_pieces is not None or b.max_pieces is None:
+            continue
+        smallest_layer = min(b.pieces_per_stove_layer)
+        if b.max_pieces < smallest_layer:
+            diagnostics.append(
+                SolverDiagnostic(
+                    level="warning",
+                    category="max_below_one_layer",
+                    bread_name=b.name,
+                    location_name=None,
+                    message=(
+                        f"Brot '{b.name}': max_pieces={b.max_pieces} ist kleiner als "
+                        f"eine Ofenlage ({smallest_layer} Stück), es kann nie "
+                        f"gebacken werden."
+                    ),
+                )
+            )
+
     for loc in pickup_locations:
         if not loc.fixed_demand:
             continue
@@ -149,14 +170,11 @@ def diagnose_infeasibility(
         b = bread_map.get(bread_id)
         if b is None:
             continue
-        if b.fixed_pieces is not None:
-            max_achievable = b.fixed_pieces
-        else:
-            achievable = _get_achievable_quantities(b, max_sessions, stove_layers)
-            if not achievable:
-                continue
-            max_achievable = max(achievable)
-        if demand > max_achievable:
+        max_baked = _max_baked(b, max_sessions, stove_layers)
+        remaining = b.min_remaining_pieces or 0
+        max_deliverable = max(0, max_baked - remaining)
+        if demand > max_deliverable:
+            kept_back = f", davon mindestens {remaining} als Rest" if remaining else ""
             diagnostics.append(
                 SolverDiagnostic(
                     level="error",
@@ -165,8 +183,8 @@ def diagnose_infeasibility(
                     location_name=None,
                     message=(
                         f"Direkte Brotwahl für '{b.name}' ergibt {demand} Stück, "
-                        f"aber maximal {max_achievable} können gebacken werden "
-                        f"(bei {max_sessions} Ofengängen à {stove_layers} Lagen)."
+                        f"aber maximal {max_deliverable} sind lieferbar "
+                        f"(max. {max_baked} gebacken{kept_back})."
                     ),
                 )
             )
@@ -294,14 +312,18 @@ def diagnose_infeasibility(
 
     total_max_deliverable = 0
     bread_max_details = []
+    splitting_would_help = False
     for b in valid_breads:
-        if b.fixed_pieces is not None:
-            max_baked = b.fixed_pieces
-        elif b.max_pieces is not None:
-            max_baked = b.max_pieces
-        else:
-            achievable = _get_achievable_quantities(b, max_sessions, stove_layers)
-            max_baked = max(achievable) if achievable else 0
+        max_baked = _max_baked(b, max_sessions, stove_layers)
+        if (
+            b.fixed_pieces is None
+            and not b.can_span_sessions
+            and _max_baked(
+                replace(b, can_span_sessions=True), max_sessions, stove_layers
+            )
+            > max_baked
+        ):
+            splitting_would_help = True
 
         remaining = b.min_remaining_pieces or 0
         max_deliverable = max(0, max_baked - remaining)
@@ -312,6 +334,9 @@ def diagnose_infeasibility(
 
     if total_deliveries > total_max_deliverable:
         detail_str = "\n  ".join(bread_max_details)
+        remedies = ["max_pieces erhöhen", "min_remaining_pieces senken"]
+        if splitting_would_help:
+            remedies.append("Backen über mehrere Ofengänge erlauben")
         diagnostics.append(
             SolverDiagnostic(
                 level="error",
@@ -322,8 +347,7 @@ def diagnose_infeasibility(
                     f"Nicht genug Brot für alle Lieferungen! "
                     f"{total_deliveries} Lieferungen, aber maximal {total_max_deliverable} Brote lieferbar.\n"
                     f"  {detail_str}\n"
-                    f"Lösungen: max_pieces erhöhen, min_remaining_pieces senken, "
-                    f"oder Lieferungen reduzieren."
+                    f"Lösungen: {', '.join(remedies)} oder Lieferungen reduzieren."
                 ),
             )
         )
@@ -368,6 +392,15 @@ def diagnose_infeasibility(
             )
 
     return diagnostics
+
+
+def _max_baked(bread: BreadInfo, max_sessions: int, stove_layers: int) -> int:
+    if bread.fixed_pieces is not None:
+        return bread.fixed_pieces
+    achievable = _get_achievable_quantities(bread, max_sessions, stove_layers)
+    if bread.max_pieces is not None:
+        achievable = {q for q in achievable if q <= bread.max_pieces}
+    return max(achievable, default=0)
 
 
 def _get_achievable_quantities(

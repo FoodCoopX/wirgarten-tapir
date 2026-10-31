@@ -12,6 +12,9 @@ from tapir.bakery.solver.dataclasses import (
 from tapir.bakery.solver.diagnostics import diagnose_infeasibility
 from tapir.bakery.solver.solver_model import build_model, extract_solution
 
+# The solver preview view waits for the result inside the request.
+PREVIEW_TIME_LIMIT_SECONDS = 60
+
 
 def _run_solver(
     available_breads: list[BreadInfo],
@@ -206,7 +209,7 @@ def solve_bread_planning_all(
     capacities: dict[tuple[int, int], int],
     max_sessions: int = 10,
     stove_layers: int = 4,
-    time_limit_seconds: int = 60,
+    time_limit_seconds: int = PREVIEW_TIME_LIMIT_SECONDS,
     max_solutions: int = 10,
     member_preferences: list[dict] | None = None,
 ) -> dict:

@@ -31,6 +31,12 @@ YEAR = 2026
 WEEK = 11
 DAY = 3
 
+# Solver results wait in the cache between two requests. Under xdist all workers
+# share one Redis, and every other worker's setUp runs cache.clear() on it.
+process_local_cache = override_settings(
+    CACHES={"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
+)
+
 
 class TestAvailableBreadsForDeliveryListViewGet(TapirIntegrationTest):
     @classmethod
@@ -380,6 +386,7 @@ class TestPickupListView(TapirIntegrationTest):
         )
 
 
+@process_local_cache
 class TestSolverPreviewView(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
@@ -474,6 +481,7 @@ class TestSolverPreviewView(TapirIntegrationTest):
         )
 
 
+@process_local_cache
 class TestSolverPreviewDetailView(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
@@ -569,6 +577,7 @@ class TestSolverPreviewDetailView(TapirIntegrationTest):
         self.assertEqual(response.data["solution_index"], 0)
 
 
+@process_local_cache
 class TestSolverApplyView(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):

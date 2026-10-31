@@ -1392,6 +1392,7 @@ class TestBreadChoiceDeadline(TapirIntegrationTest):
 
     def setUp(self):
         super().setUp()
+        self._set_parameter(ParameterKeys.BAKERY_MEMBERS_CAN_CHOOSE_BREAD_SORTS, True)
         self.member = MemberFactory.create()
         self.client.force_login(self.member)
         self.bread = BreadFactory.create(name="Roggenbrot")
@@ -1471,8 +1472,9 @@ class TestBreadChoiceDeadline(TapirIntegrationTest):
         self.assertEqual(delivery.bread_id, self.bread.id)
 
     def test_patch_withinTheDeadline_isAccepted(self):
-        year, week = datetime.date.today().isocalendar()[:2]
-        delivery = self._delivery(year, week + 4)
+        in_four_weeks = datetime.date.today() + datetime.timedelta(weeks=4)
+        year, week = in_four_weeks.isocalendar()[:2]
+        delivery = self._delivery(year, week)
 
         response = self._patch(delivery, {"bread": str(self.bread.id)})
 

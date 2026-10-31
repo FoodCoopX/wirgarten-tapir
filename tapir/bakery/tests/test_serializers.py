@@ -9,7 +9,7 @@ from tapir.bakery.tests.factories import (
     BreadFactory,
     BreadSubscriptionFactory,
 )
-from tapir.bakery.tests.tests_viewsets import (
+from tapir.bakery.tests.test_viewsets import (
     DAY,
     WEEK,
     YEAR,
@@ -45,7 +45,9 @@ class TestBreadDeliverySerializerDeliveryDay(TapirIntegrationTest):
     def test_deliveryDay_comesFromThePickupLocationOpeningTimes(self):
         deliveries = self._create_deliveries(1)
 
-        data = BreadDeliverySerializer(deliveries, many=True).data
+        data = BreadDeliverySerializer(
+            deliveries, many=True, context={"cache": {}}
+        ).data
 
         self.assertEqual([row["delivery_day"] for row in data], [DAY])
 
@@ -61,19 +63,21 @@ class TestBreadDeliverySerializerDeliveryDay(TapirIntegrationTest):
             BreadDelivery.objects.select_related("bread", "subscription__member").all()
         )
 
-        data = BreadDeliverySerializer(deliveries, many=True).data
+        data = BreadDeliverySerializer(
+            deliveries, many=True, context={"cache": {}}
+        ).data
 
         self.assertIsNone(data[0]["delivery_day"])
 
     def test_derivedFields_costDoesNotGrowWithTheNumberOfRows(self):
         five = self._create_deliveries(5)
         with CaptureQueriesContext(connection) as for_five:
-            data = BreadDeliverySerializer(five, many=True).data
+            data = BreadDeliverySerializer(five, many=True, context={"cache": {}}).data
 
         BreadDelivery.objects.all().delete()
         one = self._create_deliveries(1)
         with CaptureQueriesContext(connection) as for_one:
-            BreadDeliverySerializer(one, many=True).data
+            BreadDeliverySerializer(one, many=True, context={"cache": {}}).data
 
         self.assertEqual(len(for_five), len(for_one))
         self.assertEqual([row["delivery_day"] for row in data], [DAY] * 5)
@@ -107,7 +111,7 @@ class TestBreadDeliverySerializerBreadValidation(TapirIntegrationTest):
         )
 
         serializer = BreadDeliverySerializer(
-            delivery, data={"bread": str(bread.id)}, partial=True
+            delivery, data={"bread": str(bread.id)}, partial=True, context={"cache": {}}
         )
 
         self.assertTrue(serializer.is_valid(), serializer.errors)
@@ -117,7 +121,7 @@ class TestBreadDeliverySerializerBreadValidation(TapirIntegrationTest):
         bread = BreadFactory.create(name="Roggenbrot")
 
         serializer = BreadDeliverySerializer(
-            delivery, data={"bread": str(bread.id)}, partial=True
+            delivery, data={"bread": str(bread.id)}, partial=True, context={"cache": {}}
         )
 
         self.assertFalse(serializer.is_valid())
@@ -127,7 +131,7 @@ class TestBreadDeliverySerializerBreadValidation(TapirIntegrationTest):
         delivery = self._delivery(create_pickup_location_with_opening_times([DAY]))
 
         serializer = BreadDeliverySerializer(
-            delivery, data={"bread": None}, partial=True
+            delivery, data={"bread": None}, partial=True, context={"cache": {}}
         )
 
         self.assertTrue(serializer.is_valid(), serializer.errors)
@@ -143,7 +147,7 @@ class TestBreadDeliverySerializerBreadValidation(TapirIntegrationTest):
         bread = BreadFactory.create(name="Roggenbrot")
 
         serializer = BreadDeliverySerializer(
-            delivery, data={"bread": str(bread.id)}, partial=True
+            delivery, data={"bread": str(bread.id)}, partial=True, context={"cache": {}}
         )
 
         self.assertTrue(serializer.is_valid(), serializer.errors)

@@ -1,3 +1,5 @@
+import random
+from collections import defaultdict
 from decimal import Decimal
 from unittest.mock import patch
 
@@ -19,7 +21,11 @@ from tapir.bakery.solver.dataclasses import (
     PickupLocationInfo,
     SolverResult,
 )
-from tapir.bakery.solver.solve import solve_bread_planning, solve_bread_planning_all
+from tapir.bakery.solver.solve import (
+    PREVIEW_TIME_LIMIT_SECONDS,
+    solve_bread_planning,
+    solve_bread_planning_all,
+)
 from tapir.bakery.solver.solver_model import build_model
 from tapir.bakery.tests.factories import (
     AvailableBreadsForDeliveryDayFactory,
@@ -344,6 +350,26 @@ class TestStoveSessions:
                 sessions_with_bread += 1
         assert sessions_with_bread <= 2
 
+    def test_cannot_span_three_sessions(self):
+        # 20 pieces per session, so even a spanning bread tops out at 40.
+        breads = [
+            make_bread(
+                bread_id=1,
+                pieces_per_layer=[5],
+                can_span=True,
+                min_pieces=50,
+            )
+        ]
+        locations = [make_location(location_id=1, total_deliveries=20)]
+        caps = make_capacities(breads, locations, default_cap=50)
+
+        result = solve_bread_planning(
+            breads, locations, caps, max_sessions=10, stove_layers=4
+        )
+
+        assert_solver_failed(result)
+        assert result.status == "infeasible"
+
     def test_layer_packing_no_gaps(self):
         breads = [make_bread(bread_id=1, pieces_per_layer=[10])]
         locations = [make_location(location_id=1, total_deliveries=15)]
@@ -538,6 +564,26 @@ class TestFixedPieces:
 
         assert_solver_success(result)
         assert result.plan.remaining_quantities[1] == 0
+
+    def test_fixed_pieces_keeps_min_remaining(self):
+        # Delivering all ten fixed pieces would save the stove session, but
+        # three of them have to stay behind.
+        breads = [
+            make_bread(
+                bread_id=1, pieces_per_layer=[10], fixed_pieces=10, min_remaining=3
+            ),
+            make_bread(bread_id=2, name="Dinkel", pieces_per_layer=[10]),
+        ]
+        locations = [make_location(location_id=1, total_deliveries=10)]
+        caps = make_capacities(breads, locations)
+
+        result = solve_bread_planning(
+            breads, locations, caps, max_sessions=5, stove_layers=4
+        )
+
+        assert_solver_success(result)
+        assert result.plan.remaining_quantities[1] >= 3
+        assert result.plan.sessions_used == 1
 
     def test_fixed_pieces_does_not_use_stove(self):
         breads = [
@@ -948,8 +994,8 @@ class TestCollectSolverInput(TapirIntegrationTest):
             pieces_per_stove_layer=[10],
             is_active=True,
         )
-        loc_day2 = create_pickup_location_with_opening_times([2], name="Tuesday")
-        loc_day4 = create_pickup_location_with_opening_times([4], name="Thursday")
+        loc_day2 = create_pickup_location_with_opening_times([2], name="Wednesday")
+        loc_day4 = create_pickup_location_with_opening_times([4], name="Friday")
 
         AvailableBreadsForDeliveryDayFactory(
             year=year, delivery_week=week, delivery_day=2, bread=bread
@@ -984,6 +1030,87 @@ class TestCollectSolverInput(TapirIntegrationTest):
 
         self.assertIsNotNone(result)
         self.assertEqual(len(result["pickup_locations"]), 2)
+
+    def _bread_delivered_on_wednesday_and_friday(self, year, week):
+        bread = BreadFactory(
+            name="Roggen",
+            pieces_per_stove_layer=[10],
+            is_active=True,
+            min_pieces=5,
+            max_pieces=50,
+            min_remaining_pieces=2,
+        )
+        for day in (2, 4):
+            loc = create_pickup_location_with_opening_times([day], name=f"Day{day}")
+            AvailableBreadsForDeliveryDayFactory(
+                year=year, delivery_week=week, delivery_day=day, bread=bread
+            )
+            setup_bread_at_location(year, week, loc, bread)
+            create_bread_delivery_without_validation(
+                year=year, week=week, pickup_location=loc, bread=bread
+            )
+        return bread
+
+    def test_collectSolverInput_wholeWeek_overridesOnSeveralDays_fallBackToBreadDefaults(
+        self,
+    ):
+        from tapir.bakery.solver.django_integration import collect_solver_input
+
+        bread = self._bread_delivered_on_wednesday_and_friday(2026, 44)
+        for day, min_pieces in ((2, 10), (4, 30)):
+            BreadSpecificsPerDeliveryDayFactory(
+                year=2026,
+                delivery_week=44,
+                delivery_day=day,
+                bread=bread,
+                min_pieces=min_pieces,
+                max_pieces=40,
+                min_remaining_pieces=5,
+                fixed_pieces=None,
+            )
+
+        with self.assertLogs(
+            "tapir.bakery.solver.django_integration", level="WARNING"
+        ) as logs:
+            result = collect_solver_input(year=2026, delivery_week=44)
+
+        bread_info = result["available_breads"][0]
+        self.assertEqual(
+            (
+                bread_info.min_pieces,
+                bread_info.max_pieces,
+                bread_info.min_remaining_pieces,
+            ),
+            (5, 50, 2),
+        )
+        self.assertIn("several days", logs.output[0])
+
+    def test_collectSolverInput_wholeWeek_overrideOnOneDay_isApplied(self):
+        from tapir.bakery.solver.django_integration import collect_solver_input
+
+        bread = self._bread_delivered_on_wednesday_and_friday(2026, 45)
+        BreadSpecificsPerDeliveryDayFactory(
+            year=2026,
+            delivery_week=45,
+            delivery_day=4,
+            bread=bread,
+            min_pieces=30,
+            max_pieces=40,
+            min_remaining_pieces=5,
+            fixed_pieces=None,
+        )
+
+        result = collect_solver_input(year=2026, delivery_week=45)
+
+        bread_info = result["available_breads"][0]
+        self.assertEqual(
+            (
+                bread_info.min_pieces,
+                bread_info.max_pieces,
+                bread_info.min_remaining_pieces,
+            ),
+            (30, 40, 5),
+        )
 
     def test_collectSolverInput_multipleLocations_correctDeliveryCounts(self):
         from tapir.bakery.solver.django_integration import collect_solver_input
@@ -1274,6 +1401,62 @@ class TestMemberPreferences(TapirIntegrationTest):
         _distribution, satisfied = self._run(capacity_b=10)
 
         self.assertEqual(satisfied, 20)
+
+
+class TestSplittingVersusPreferences:
+    """
+    Splitting a bread over two stove sessions weighs as much as 100 members
+    getting their favourite. Both setups need two sessions either way, and A
+    only reaches the second half of the members if it is split.
+    """
+
+    @staticmethod
+    def _everyone_wants_a(pieces_per_layer):
+        members = 2 * 4 * pieces_per_layer
+        breads = [
+            make_bread(
+                bread_id=1,
+                name="A",
+                pieces_per_layer=[pieces_per_layer],
+                can_span=True,
+            ),
+            make_bread(bread_id=2, name="B", pieces_per_layer=[pieces_per_layer]),
+        ]
+        locations = [make_location(location_id=100, total_deliveries=members)]
+        preferences = [
+            {"member_id": m, "location_id": 100, "preferred_bread_ids": [1]}
+            for m in range(members)
+        ]
+
+        result = solve_bread_planning(
+            breads,
+            locations,
+            make_capacities(breads, locations),
+            max_sessions=4,
+            stove_layers=4,
+            member_preferences=preferences,
+        )
+
+        assert_solver_success(result)
+        sessions_with_a = sum(
+            any(layer is not None and layer[0] == 1 for layer in session)
+            for session in result.plan.stove_sessions
+        )
+        return result.plan, sessions_with_a
+
+    def test_96MoreSatisfiedMembers_doNotJustifySplittingABread(self):
+        plan, sessions_with_a = self._everyone_wants_a(pieces_per_layer=24)
+
+        assert plan.sessions_used == 2
+        assert sessions_with_a == 1
+        assert plan.distribution[1, 100] == 96
+
+    def test_104MoreSatisfiedMembers_justifySplittingABread(self):
+        plan, sessions_with_a = self._everyone_wants_a(pieces_per_layer=26)
+
+        assert plan.sessions_used == 2
+        assert sessions_with_a == 2
+        assert plan.distribution[1, 100] == 208
 
 
 class TestGetMemberPreferences(TapirIntegrationTest):
@@ -1643,3 +1826,201 @@ class TestAchievableQuantityDiagnostics(TapirIntegrationTest):
         self.assertIn(
             "fixed_demand_exceeds_production", [d.category for d in diagnostics]
         )
+
+    def test_maxPiecesAboveOneSession_nonSpanningBread_isCappedAtOneSession(self):
+        # max_pieces says 96, but a non-spanning bread gets one session of
+        # 4 layers à 12, so only 48 can go out.
+        bread = make_bread(
+            bread_id=1, name="Helles mit Saaten", pieces_per_layer=[12], max_pieces=96
+        )
+        location = make_location(location_id=1, total_deliveries=60)
+
+        diagnostics = self._diagnose(bread, location, {(1, 1): 60})
+
+        self.assertIn("deliveries_exceed_production", [d.category for d in diagnostics])
+
+    def test_maxPiecesAboveOneSession_spanningBread_isNotReported(self):
+        bread = make_bread(
+            bread_id=1,
+            name="Helles mit Saaten",
+            pieces_per_layer=[12],
+            can_span=True,
+            max_pieces=96,
+        )
+        location = make_location(location_id=1, total_deliveries=60)
+
+        diagnostics = self._diagnose(bread, location, {(1, 1): 60})
+
+        self.assertNotIn(
+            "deliveries_exceed_production", [d.category for d in diagnostics]
+        )
+
+    def test_fixedPiecesAllKeptAsRemaining_leavesNothingToDeliver(self):
+        bread = make_bread(bread_id=1, name="Helles", fixed_pieces=20, min_remaining=20)
+        location = make_location(location_id=1, total_deliveries=5)
+
+        diagnostics = self._diagnose(bread, location, {(1, 1): 5})
+
+        self.assertIn("deliveries_exceed_production", [d.category for d in diagnostics])
+
+    def test_directChoicesAboveMaxPieces_isReported(self):
+        # 12 per layer and max_pieces=20 leave a single layer of 12.
+        bread = make_bread(
+            bread_id=1, name="Saatenbrot", pieces_per_layer=[12], max_pieces=20
+        )
+        location = make_location(
+            location_id=1, total_deliveries=15, fixed_demand={1: 15}
+        )
+
+        diagnostics = self._diagnose(bread, location, {(1, 1): 15})
+
+        self.assertIn(
+            "fixed_demand_exceeds_production", [d.category for d in diagnostics]
+        )
+
+    def test_directChoicesThatNeedTheLeftovers_isReported(self):
+        # One session bakes at most 40, and 5 of them have to stay behind.
+        bread = make_bread(
+            bread_id=1, name="Saatenbrot", pieces_per_layer=[10], min_remaining=5
+        )
+        location = make_location(
+            location_id=1, total_deliveries=38, fixed_demand={1: 38}
+        )
+
+        diagnostics = self._diagnose(bread, location, {(1, 1): 38})
+
+        self.assertIn(
+            "fixed_demand_exceeds_production", [d.category for d in diagnostics]
+        )
+
+    def test_maxPiecesBelowOneLayer_isWarnedEvenWithoutChoices(self):
+        bread = make_bread(
+            bread_id=1, name="Saatenbrot", pieces_per_layer=[10], max_pieces=5
+        )
+        location = make_location(location_id=1, total_deliveries=5)
+
+        diagnostics = self._diagnose(bread, location, {(1, 1): 5})
+
+        self.assertIn("max_below_one_layer", [d.category for d in diagnostics])
+
+    def _shortfall_message(self, bread, location):
+        diagnostics = self._diagnose(
+            bread, location, {(1, 1): location.total_deliveries}
+        )
+        return next(
+            d.message
+            for d in diagnostics
+            if d.category == "deliveries_exceed_production"
+        )
+
+    def test_splittingHint_whenTheOneSessionLimitHoldsTheBreadBack(self):
+        bread = make_bread(
+            bread_id=1, name="Helles mit Saaten", pieces_per_layer=[12], max_pieces=96
+        )
+        location = make_location(location_id=1, total_deliveries=60)
+
+        self.assertIn("mehrere Ofengänge", self._shortfall_message(bread, location))
+
+    def test_splittingHint_notWhenMaxPiecesIsTheLimit(self):
+        # One session would hold 48, so splitting cannot lift the cap of 24.
+        bread = make_bread(
+            bread_id=1, name="Helles mit Saaten", pieces_per_layer=[12], max_pieces=24
+        )
+        location = make_location(location_id=1, total_deliveries=60)
+
+        self.assertNotIn("mehrere Ofengänge", self._shortfall_message(bread, location))
+
+
+class TestRealisticWeek:
+    """
+    A mid-sized week: 8 breads, 10 stations, 300 members with one to three
+    favourites each. It solves to optimality in a few seconds, well within the
+    time the solver preview view allows.
+    """
+
+    PIECES_PER_LAYER = [
+        [10, 11, 12],
+        [12, 14],
+        [10, 12],
+        [8, 9],
+        [12, 14, 16],
+        [16, 18],
+        [10, 12],
+        [12, 14],
+    ]
+
+    def _week(self):
+        rng = random.Random(0)
+        breads = [
+            make_bread(
+                bread_id=i + 1,
+                name=f"Brot{i + 1}",
+                pieces_per_layer=pieces_per_layer,
+                can_span=i % 3 == 0,
+                min_remaining=2,
+            )
+            for i, pieces_per_layer in enumerate(self.PIECES_PER_LAYER)
+        ]
+        locations = [
+            make_location(location_id=100 + j, name=f"Station{j}", total_deliveries=30)
+            for j in range(10)
+        ]
+        capacities = make_capacities(breads, locations, default_cap=15)
+        preferences = []
+        for loc in locations:
+            for _ in range(loc.total_deliveries):
+                preferences.append(
+                    {
+                        "member_id": len(preferences),
+                        "location_id": loc.location_id,
+                        "preferred_bread_ids": rng.sample(
+                            [b.bread_id for b in breads], k=rng.randint(1, 3)
+                        ),
+                    }
+                )
+        return breads, locations, capacities, preferences
+
+    def test_realisticWeek_isSolvedToOptimalityWithinTheViewsTimeLimit(self):
+        breads, locations, capacities, preferences = self._week()
+
+        result = solve_bread_planning(
+            breads,
+            locations,
+            capacities,
+            max_sessions=10,
+            stove_layers=4,
+            time_limit_seconds=PREVIEW_TIME_LIMIT_SECONDS,
+            member_preferences=preferences,
+        )
+
+        assert_solver_success(result)
+        plan = result.plan
+        for loc in locations:
+            delivered = sum(
+                plan.distribution.get((b.bread_id, loc.location_id), 0) for b in breads
+            )
+            assert delivered == loc.total_deliveries
+        for key, count in plan.distribution.items():
+            assert count <= capacities[key]
+
+        baked_in_oven = defaultdict(int)
+        sessions_per_bread = defaultdict(set)
+        for index, session in enumerate(plan.stove_sessions):
+            for layer in session:
+                if layer is not None:
+                    bread_id, pieces = layer
+                    baked_in_oven[bread_id] += pieces
+                    sessions_per_bread[bread_id].add(index)
+        for b in breads:
+            baked = plan.bread_quantities[b.bread_id]
+            remaining = plan.remaining_quantities[b.bread_id]
+            distributed = sum(
+                plan.distribution.get((b.bread_id, loc.location_id), 0)
+                for loc in locations
+            )
+            assert baked == baked_in_oven[b.bread_id] == distributed + remaining
+            if baked:
+                assert remaining >= b.min_remaining_pieces
+            assert len(sessions_per_bread[b.bread_id]) <= (
+                2 if b.can_span_sessions else 1
+            )

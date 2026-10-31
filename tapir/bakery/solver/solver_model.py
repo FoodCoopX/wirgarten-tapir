@@ -290,9 +290,13 @@ def build_model(
             if claims:
                 model.add(sum(claims) <= distribution_vars[b_id, loc.location_id])
 
-    # Objective priority, highest first: fewest stove sessions, least session
+    # Objective terms, by weight: fewest stove sessions, least session
     # spanning, most members getting a preferred bread, least waste, most
-    # variety at the stations. The weight gaps make the ordering strict.
+    # variety at the stations. The weights are exchange rates, not a strict
+    # priority: one session is worth 1000 satisfied members, one spanning
+    # bread 100 members, one member 100 loaves of waste, and one loaf of waste
+    # 10 points of variety. Splitting a bread is intended once it satisfies
+    # more than 100 additional members.
 
     SESSIONS_W = 10_000_000
     SPANNING_W = 1_000_000
