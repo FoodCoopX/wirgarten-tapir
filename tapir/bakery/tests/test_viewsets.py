@@ -103,9 +103,16 @@ class TestBreadGroupViewSet(TapirIntegrationTest):
         response = self.client.get(reverse("bakery:bread-groups-list"))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # The database's collation decides between "hell" and "Saaten", as it
+        # does for the oven plan and the baking list.
+        in_database_order = list(
+            Bread.objects.filter(group=dinkel)
+            .order_by("name")
+            .values_list("name", flat=True)
+        )
         self.assertEqual(
             [(g["name"], g["bread_names"]) for g in response.data],
-            [("Dinkelteig", ["Dinkel Saaten", "Dinkel hell"]), ("Roggenteig", [])],
+            [("Dinkelteig", in_database_order), ("Roggenteig", [])],
         )
 
     def test_create_createsGroup(self):

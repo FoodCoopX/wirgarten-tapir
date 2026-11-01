@@ -106,7 +106,8 @@ def diagnose_infeasibility(
                         ),
                     )
                 )
-            elif b.min_pieces == b.max_pieces:
+            # A fixed amount would take a grouped bread out of its group.
+            elif b.min_pieces == b.max_pieces and b.bread_id not in grouped_ids:
                 diagnostics.append(
                     SolverDiagnostic(
                         level="info",
@@ -160,11 +161,21 @@ def diagnose_infeasibility(
                 )
             )
 
+    group_of = {b.bread_id: members for members in groups.values() for b in members}
     for b in valid_breads:
-        if b.fixed_pieces is not None or b.max_pieces is None:
+        # A grouped bread is held to its group's max_pieces.
+        max_pieces = bread_map[b.bread_id].max_pieces
+        if b.fixed_pieces is not None or max_pieces is None:
             continue
         smallest_layer = min(b.pieces_per_stove_layer)
-        if b.max_pieces < smallest_layer:
+        if max_pieces < smallest_layer:
+            if b.bread_id in group_of:
+                limit = (
+                    f"die Gruppe '{group_label(group_of[b.bread_id])}' darf "
+                    f"höchstens {max_pieces} Stück backen, weniger"
+                )
+            else:
+                limit = f"max_pieces={max_pieces} ist kleiner"
             diagnostics.append(
                 SolverDiagnostic(
                     level="warning",
@@ -172,9 +183,8 @@ def diagnose_infeasibility(
                     bread_name=b.name,
                     location_name=None,
                     message=(
-                        f"Brot '{b.name}': max_pieces={b.max_pieces} ist kleiner als "
-                        f"eine Ofenlage ({smallest_layer} Stück), es kann nie "
-                        f"gebacken werden."
+                        f"Brot '{b.name}': {limit} als eine Ofenlage "
+                        f"({smallest_layer} Stück), es kann nie gebacken werden."
                     ),
                 )
             )
@@ -244,17 +254,23 @@ def diagnose_infeasibility(
             )
 
     # The per-bread check above caps each bread at the group's max_pieces,
-    # but the group's breads have to fit under it together.
+    # but the group's breads have to fit under it together, in whole layers.
     for members in groups.values():
-        group_max = group_max_pieces(members)
-        if group_max is None:
-            continue
         chosen = [b for b in members if total_fixed_demand.get(b.bread_id)]
+        if not chosen:
+            continue
         demand = sum(total_fixed_demand[b.bread_id] for b in chosen)
         # A chosen bread is baked, so it also keeps its minimum behind.
         remaining = sum(b.min_remaining_pieces or 0 for b in chosen)
-        if demand + remaining > group_max:
+        ceiling = _group_max_baked(members, max_sessions, stove_layers)
+        if demand + remaining > ceiling:
             kept_back = f" plus mindestens {remaining} als Rest" if remaining else ""
+            group_max = group_max_pieces(members)
+            limit = (
+                f" (Max. {group_max})"
+                if group_max is not None and ceiling < group_max
+                else ""
+            )
             diagnostics.append(
                 SolverDiagnostic(
                     level="error",
@@ -264,20 +280,21 @@ def diagnose_infeasibility(
                     message=(
                         f"Direkte Brotwahl für Gruppe '{group_label(members)}' "
                         f"ergibt zusammen {demand} Stück{kept_back}, aber die "
-                        f"Gruppe darf höchstens {group_max} Stück backen."
+                        f"Gruppe kann in ganzen Ofenlagen höchstens {ceiling} "
+                        f"Stück backen{limit}."
                     ),
                 )
             )
 
     for members in groups.values():
         group_min = group_min_pieces(members)
-        if not group_min:
+        group_max = group_max_pieces(members)
+        # A minimum above the maximum is reported as group_min_max_conflict.
+        if not group_min or (group_max is not None and group_min > group_max):
             continue
-        group_ceiling = sum(
-            max(_get_achievable_quantities(b, max_sessions, stove_layers), default=0)
-            for b in members
-        )
-        if group_min > group_ceiling:
+        ceiling = _group_max_baked(members, max_sessions, stove_layers)
+        if group_min > ceiling:
+            limit = f", Max. {group_max}" if group_max is not None else ""
             diagnostics.append(
                 SolverDiagnostic(
                     level="error",
@@ -286,9 +303,9 @@ def diagnose_infeasibility(
                     location_name=None,
                     message=(
                         f"Gruppe '{group_label(members)}': zusammen mindestens "
-                        f"{group_min} Stück, aber max. erreichbar sind "
-                        f"{group_ceiling} Stück (bei {max_sessions} Ofengängen "
-                        f"à {stove_layers} Lagen)."
+                        f"{group_min} Stück, aber in ganzen Ofenlagen sind "
+                        f"höchstens {ceiling} Stück erreichbar ({max_sessions} "
+                        f"Ofengänge à {stove_layers} Lagen{limit})."
                     ),
                 )
             )
@@ -443,9 +460,9 @@ def diagnose_infeasibility(
                 splitting_would_help = True
 
         if len(members) > 1:
-            group_max = group_max_pieces(members)
-            if group_max is not None:
-                max_baked = min(max_baked, group_max)
+            max_baked = min(
+                max_baked, _group_max_baked(members, max_sessions, stove_layers)
+            )
             # Something baked leaves at least the smallest minimum behind.
             remaining = min(b.min_remaining_pieces or 0 for b in members)
             name = f"Gruppe '{group_label(members)}'"
@@ -529,17 +546,42 @@ def _max_baked(bread: BreadInfo, max_sessions: int, stove_layers: int) -> int:
     return max(achievable, default=0)
 
 
+def _group_max_baked(
+    members: list[BreadInfo], max_sessions: int, stove_layers: int
+) -> int:
+    """
+    An upper bound on what a group bakes in whole layers within its
+    max_pieces. Every layer may take any count one of its breads allows, which
+    overestimates, so a total above this is unreachable for certain.
+    """
+    group_max = group_max_pieces(members)
+    # C10/C11 per bread: the group's breads together occupy at most this many.
+    sessions = min(max_sessions, sum(2 if b.can_span_sessions else 1 for b in members))
+    options = {qty for b in members for qty in b.pieces_per_stove_layer}
+    reachable = _layer_sums(options, sessions * stove_layers)
+    if group_max is not None:
+        reachable = {q for q in reachable if q <= group_max}
+    by_bread = sum(
+        _max_baked(replace(b, max_pieces=group_max), max_sessions, stove_layers)
+        for b in members
+    )
+    return min(max(reachable, default=0), by_bread)
+
+
 def _get_achievable_quantities(
     bread: BreadInfo, max_sessions: int, stove_layers: int
 ) -> set[int]:
     if not bread.pieces_per_stove_layer:
         return set()
 
-    options = [0] + list(bread.pieces_per_stove_layer)
     # C10 caps a non-spanning bread at one session, C11 a spanning one at two.
     sessions_for_bread = min(max_sessions, 2 if bread.can_span_sessions else 1)
-    total_layers = sessions_for_bread * stove_layers
+    return _layer_sums(bread.pieces_per_stove_layer, sessions_for_bread * stove_layers)
 
+
+def _layer_sums(options, total_layers: int) -> set[int]:
+    """The totals that up to total_layers layers, each holding one of options, add up to."""
+    options = [0] + list(options)
     achievable = {0}
     for _ in range(total_layers):
         new_achievable = set()

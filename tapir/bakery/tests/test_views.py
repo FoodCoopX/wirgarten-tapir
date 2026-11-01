@@ -1,7 +1,9 @@
 from unittest.mock import patch
 
 from django.core.cache import cache
+from django.db import connection
 from django.test import override_settings
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from rest_framework import status
 
@@ -15,6 +17,7 @@ from tapir.bakery.tests.factories import (
     BreadCapacityPickupLocationFactory,
     BreadDeliveryFactory,
     BreadFactory,
+    BreadGroupFactory,
     BreadsPerPickupLocationPerWeekFactory,
 )
 from tapir.bakery.views import _solver_cache_key
@@ -61,6 +64,35 @@ class TestAvailableBreadsForDeliveryListViewGet(TapirIntegrationTest):
         self.assertEqual(response.data["year"], YEAR)
         self.assertEqual(response.data["delivery_week"], WEEK)
         self.assertEqual(response.data["delivery_day"], DAY)
+
+    def test_get_groupedBreads_doNotCostAQueryEach(self):
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+        group = BreadGroupFactory.create()
+
+        def add_grouped_bread():
+            AvailableBreadsForDeliveryDayFactory.create(
+                year=YEAR,
+                delivery_week=WEEK,
+                delivery_day=DAY,
+                bread=BreadFactory.create(group=group),
+            )
+
+        def count_queries():
+            with CaptureQueriesContext(connection) as queries:
+                response = self.client.get(
+                    self.url,
+                    {"year": YEAR, "delivery_week": WEEK, "delivery_day": DAY},
+                )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            return len(queries)
+
+        add_grouped_bread()
+        count_queries()  # warms the per-process caches
+        with_one = count_queries()
+        add_grouped_bread()
+        add_grouped_bread()
+
+        self.assertEqual(count_queries(), with_one)
 
     def test_get_withBreads_returnsSortedByName(self):
         self.client.force_login(MemberFactory.create(is_superuser=True))

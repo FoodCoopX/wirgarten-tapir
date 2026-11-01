@@ -48,9 +48,12 @@ def collect_solver_input(
         available_qs = available_qs.filter(delivery_day=delivery_day)
 
     available_bread_ids = available_qs.values_list("bread_id", flat=True).distinct()
-    breads_qs = Bread.objects.filter(
-        id__in=available_bread_ids, is_active=True
-    ).select_related("group")
+    # By name, so the preview lists a shared layer's breads as the saved plan does.
+    breads_qs = (
+        Bread.objects.filter(id__in=available_bread_ids, is_active=True)
+        .select_related("group")
+        .order_by("name")
+    )
 
     specifics_qs = BreadSpecificsPerDeliveryDay.objects.filter(
         year=year, delivery_week=delivery_week

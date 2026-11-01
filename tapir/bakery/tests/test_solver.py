@@ -810,6 +810,24 @@ class TestBreadGroups:
             for layer in session
         )
 
+    def test_varietyAtExactlyFiveStations_isNoReasonToShareALayer(self):
+        # 10 deliveries but a minimum of 12: the 2 left over are waste either
+        # way, so only the variety at 5 stations speaks for sharing.
+        breads = self._dough()
+        locations = [
+            make_location(location_id=i, name=f"Station{i}", total_deliveries=2)
+            for i in range(5)
+        ]
+
+        result = self._solve(breads, locations)
+
+        assert_solver_success(result)
+        assert all(
+            len(layer) <= 1
+            for session in result.plan.stove_sessions
+            for layer in session
+        )
+
     def test_varietyAtMoreThanFiveStations_isAReasonToShareALayer(self):
         # Every one of the 6 stations gets both breads instead of one.
         breads = self._dough()
@@ -1516,6 +1534,34 @@ class TestCollectSolverInput(TapirIntegrationTest):
         self.assertEqual(bread_map["Dinkel hell"].group_name, "Dinkelteig")
         self.assertIsNone(bread_map["Roggen"].group_id)
         self.assertIsNone(bread_map["Roggen"].group_name)
+
+    def test_collectSolverInput_breadsComeSortedByName(self):
+        # The solver lists a shared layer's breads in this order. Ids and
+        # creation order both run against the names here.
+        from tapir.bakery.solver.django_integration import collect_solver_input
+
+        year = 2026
+        week = 42
+        loc = create_pickup_location_with_opening_times([2], name="Markt")
+        for bread_id, name in (
+            ("aaaaaaaaaa", "Zwiebelbrot"),
+            ("zzzzzzzzzz", "Apfelbrot"),
+        ):
+            AvailableBreadsForDeliveryDayFactory(
+                year=year,
+                delivery_week=week,
+                delivery_day=2,
+                bread=BreadFactory(id=bread_id, name=name, pieces_per_stove_layer=[12]),
+            )
+        BreadDeliveryFactory(
+            year=year, delivery_week=week, pickup_location=loc, bread=None
+        )
+
+        result = collect_solver_input(year=year, delivery_week=week, delivery_day=2)
+
+        self.assertEqual(
+            [b.name for b in result["available_breads"]], ["Apfelbrot", "Zwiebelbrot"]
+        )
 
 
 class TestSaveSolutionToDb(TapirIntegrationTest):
@@ -2371,6 +2417,60 @@ class TestGroupDiagnostics:
         assert "fixed_demand_exceeds_production" not in [
             d.category for d in diagnostics
         ]
+
+    def test_directChoicesAboveWhatWholeLayersReach_areReported(self):
+        # Max 50 each, but layers of 12 stop the group at 48.
+        diagnostics = self._diagnose(
+            self._dough([(None, 50), (None, 50)]),
+            total_deliveries=49,
+            fixed_demand={1: 25, 2: 24},
+        )
+
+        error = next(
+            d for d in diagnostics if d.category == "fixed_demand_exceeds_production"
+        )
+        assert "höchstens 48 Stück backen (Max. 50)" in error.message
+
+    def test_deliveriesAboveWhatWholeLayersReach_explainTheInfeasibleSolve(self):
+        breads = self._dough([(None, 50), (None, 50)])
+        locations = [make_location(total_deliveries=49)]
+
+        result = solve_bread_planning(
+            breads, locations, make_capacities(breads, locations), max_sessions=5
+        )
+
+        assert result.status == "infeasible"
+        shortfall = next(
+            d
+            for d in result.diagnostics
+            if d.category == "deliveries_exceed_production"
+        )
+        assert "Gruppe 'Teig': max gebacken=48" in shortfall.message
+
+    def test_minimumAboveWhatWholeLayersReachUnderTheMaximum_isReported(self):
+        # Layers of 12 under a maximum of 20 leave 12, below the minimum of 13.
+        diagnostics = self._diagnose(self._dough([(13, 20), (13, 20)]))
+
+        error = next(d for d in diagnostics if d.category == "min_not_achievable")
+        assert "höchstens 12 Stück erreichbar" in error.message
+        assert "group_min_max_conflict" not in [d.category for d in diagnostics]
+
+    def test_minimumAboveMaximum_isOnlyReportedAsTheConflict(self):
+        diagnostics = self._diagnose(self._dough([(24, 48), (12, 12)]))
+
+        assert "min_not_achievable" not in [d.category for d in diagnostics]
+
+    def test_equalMinAndMax_doesNotSuggestAFixedAmountForAGroupedBread(self):
+        diagnostics = self._diagnose(self._dough([(12, 12), (12, 12)]))
+
+        assert "min_max" not in [d.category for d in diagnostics]
+
+    def test_groupMaximumBelowOneLayer_isWarnedForEachOfItsBreads(self):
+        diagnostics = self._diagnose(self._dough([(None, 48), (None, 10)]))
+
+        warnings = [d for d in diagnostics if d.category == "max_below_one_layer"]
+        assert sorted(d.bread_name for d in warnings) == ["A", "B"]
+        assert all("Gruppe 'Teig' darf höchstens 10" in d.message for d in warnings)
 
     def test_directChoicesAboveTheGroupMaximum_explainTheInfeasibleSolve(self):
         breads = self._dough([(None, 48), (None, 48)]) + [

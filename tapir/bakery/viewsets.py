@@ -1,7 +1,7 @@
 from functools import cached_property
 
 from django.db import transaction
-from django.db.models import Exists, OuterRef, ProtectedError
+from django.db.models import Exists, OuterRef, Prefetch, ProtectedError
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
 from rest_framework import permissions, status, viewsets
@@ -105,7 +105,9 @@ class BreadLabelViewSet(viewsets.ModelViewSet):
 
 @extend_schema(tags=["bakery"])
 class BreadGroupViewSet(viewsets.ModelViewSet):
-    queryset = BreadGroup.objects.prefetch_related("breads").order_by("name")
+    queryset = BreadGroup.objects.prefetch_related(
+        Prefetch("breads", queryset=Bread.objects.order_by("name"))
+    ).order_by("name")
     serializer_class = BreadGroupSerializer
     permission_classes = [
         permissions.IsAuthenticated,

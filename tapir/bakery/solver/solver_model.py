@@ -368,18 +368,18 @@ def build_model(
     # shared layers, most variety at the stations. The weights are exchange
     # rates, not a strict priority: one session is worth 1000 satisfied
     # members, one spanning bread 100 members, one member 100 loaves of waste,
-    # one loaf of waste two breads sharing a layer, and one bread sharing a
-    # layer 5 points of variety. Splitting a bread is intended once it
-    # satisfies more than 100 additional members. A group's layer is shared to
-    # save waste or to give members their favourite, but variety alone only
-    # pays for it when the extra bread reaches more than 5 stations, so the
-    # bakers don't get single-loaf splits.
+    # and one loaf of waste 10 points of variety. Splitting a bread is intended
+    # once it satisfies more than 100 additional members. A bread sharing a
+    # layer costs less than a loaf of waste and more than variety at 5
+    # stations: a group's layer is shared to save waste or to give members
+    # their favourite, but variety alone only pays for it when the extra bread
+    # reaches more than 5 stations, so the bakers don't get single-loaf splits.
 
     SESSIONS_W = 10_000_000
     SPANNING_W = 1_000_000
     PREFERENCE_W = 10_000
     WASTE_W = 100
-    SHARING_W = 50
+    SHARING_W = 55
     VARIETY_W = 10
 
     total_sessions = sum(session_used[sess] for sess in range(max_sessions))

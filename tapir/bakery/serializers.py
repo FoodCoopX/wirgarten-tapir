@@ -70,7 +70,9 @@ class BreadGroupSerializer(serializers.ModelSerializer):
         read_only_fields = ["id"]
 
     def get_bread_names(self, obj) -> list[str]:
-        return sorted(bread.name for bread in obj.breads.all())
+        # BreadGroupViewSet prefetches them in the database's name order, the
+        # one the oven plan and the baking list use.
+        return [bread.name for bread in obj.breads.all()]
 
 
 class IngredientSerializer(serializers.ModelSerializer):

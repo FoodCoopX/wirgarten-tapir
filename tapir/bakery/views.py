@@ -88,7 +88,7 @@ class AvailableBreadsForDeliveryListView(APIView):
                 delivery_day=delivery_day,
                 bread__is_active=True,
             )
-            .select_related("bread")
+            .select_related("bread", "bread__group")
             .prefetch_related("bread__labels", "bread__contents__ingredient")
             .order_by("bread__name")
         )
