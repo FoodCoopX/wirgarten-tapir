@@ -794,6 +794,59 @@ class TestBreadGroups:
         ]
         assert sorted(used_layers) == [[(1, 12)], [(2, 12)]]
 
+    def test_varietyAtOneStation_isNoReasonToShareALayer(self):
+        # The story's limits without any choices: a second bread on the layer
+        # would reach one more station, which is not worth a split loaf.
+        breads = self._dough()
+        locations = [make_location(total_deliveries=12)]
+
+        result = self._solve(breads, locations)
+
+        assert_solver_success(result)
+        assert sum(result.plan.bread_quantities.values()) == 12
+        assert all(
+            len(layer) <= 1
+            for session in result.plan.stove_sessions
+            for layer in session
+        )
+
+    def test_varietyAtMoreThanFiveStations_isAReasonToShareALayer(self):
+        # Every one of the 6 stations gets both breads instead of one.
+        breads = self._dough()
+        locations = [
+            make_location(location_id=i, name=f"Station{i}", total_deliveries=2)
+            for i in range(6)
+        ]
+
+        result = self._solve(breads, locations)
+
+        assert_solver_success(result)
+        assert result.plan.stove_sessions == [[[(1, 6), (2, 6)], [], [], []]]
+
+    def test_aMemberPreferringTheOtherBread_isAReasonToShareALayer(self):
+        breads = self._dough()
+        locations = [make_location(location_id=1, total_deliveries=12)]
+        preferences = [
+            {
+                "member_id": m,
+                "location_id": 1,
+                "preferred_bread_ids": [2 if m == 0 else 1],
+            }
+            for m in range(12)
+        ]
+
+        result = solve_bread_planning(
+            breads,
+            locations,
+            make_capacities(breads, locations),
+            max_sessions=5,
+            stove_layers=4,
+            member_preferences=preferences,
+        )
+
+        assert_solver_success(result)
+        assert result.plan.stove_sessions == [[[(1, 11), (2, 1)], [], [], []]]
+
     def test_breadsOfDifferentGroups_neverShareALayer(self):
         # 6 A and 6 C would fill one layer exactly, but A and C are in
         # different groups, so each needs a layer of 12.

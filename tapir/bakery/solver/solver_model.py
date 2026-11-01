@@ -364,22 +364,23 @@ def build_model(
             model.add(group_total <= group_max)
 
     # Objective terms, by weight: fewest stove sessions, least session
-    # spanning, most members getting a preferred bread, least waste, most
-    # variety at the stations, fewest shared layers. The weights are exchange
+    # spanning, most members getting a preferred bread, least waste, fewest
+    # shared layers, most variety at the stations. The weights are exchange
     # rates, not a strict priority: one session is worth 1000 satisfied
     # members, one spanning bread 100 members, one member 100 loaves of waste,
-    # one loaf of waste 10 points of variety, and one point of variety 10
-    # breads sharing a layer. Splitting a bread is intended once it satisfies
-    # more than 100 additional members. Sharing a layer costs less than one
-    # point of variety, so a group's layer is also shared just to bring one
-    # more of its breads to a station, even as a single loaf.
+    # one loaf of waste two breads sharing a layer, and one bread sharing a
+    # layer 5 points of variety. Splitting a bread is intended once it
+    # satisfies more than 100 additional members. A group's layer is shared to
+    # save waste or to give members their favourite, but variety alone only
+    # pays for it when the extra bread reaches more than 5 stations, so the
+    # bakers don't get single-loaf splits.
 
     SESSIONS_W = 10_000_000
     SPANNING_W = 1_000_000
     PREFERENCE_W = 10_000
     WASTE_W = 100
+    SHARING_W = 50
     VARIETY_W = 10
-    SHARING_W = 1
 
     total_sessions = sum(session_used[sess] for sess in range(max_sessions))
     # Sessions beyond the first, which is what "spanning" means: the difference
