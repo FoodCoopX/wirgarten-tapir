@@ -101,10 +101,7 @@ class ProductCancellationDataBuilder:
         if all(day is None for day in last_days_of_trial):
             return None
 
-        end_of_trial_period = min(last_days_of_trial)
-        return DateLimitForDeliveryChangeCalculator.calculate_date_limit_for_delivery_changes_in_week(
-            end_of_trial_period, cache=cache
-        )
+        return min(last_days_of_trial)
 
     @classmethod
     def get_last_day_of_notice_period_for_product(
