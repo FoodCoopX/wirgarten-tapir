@@ -100,7 +100,7 @@ class TestBuildPaymentsForDeliveryCharges(TapirIntegrationTest):
         )
 
         mock_get_current_and_renewed_subscriptions.assert_called_once_with(
-            cache=cache, first_of_month=current_month, is_in_trial=False
+            cache=cache, first_of_month=current_month, is_in_trial=False, member_id=None
         )
         self.assertEqual(3, mock_get_member_payment_rhythm.call_count)
         self.assertEqual(3, mock_build_payments_for_member.call_count)
@@ -158,7 +158,7 @@ class TestBuildPaymentsForDeliveryCharges(TapirIntegrationTest):
         )
 
         mock_get_current_and_renewed_subscriptions.assert_called_once_with(
-            cache=cache, first_of_month=target_month, is_in_trial=True
+            cache=cache, first_of_month=target_month, is_in_trial=True, member_id=None
         )
         mock_get_member_payment_rhythm.assert_not_called()
         mock_build_payments_for_member.assert_called_once_with(

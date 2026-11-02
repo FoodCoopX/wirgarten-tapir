@@ -63,11 +63,13 @@ class MonthPaymentBuilderDeliveryCharges:
         if in_trial:
             target_month = (target_month - relativedelta(months=1)).replace(day=1)
 
-        subscriptions = MonthPaymentBuilderUtils.filter_contracts_by_member(
-            contracts=MonthPaymentBuilderSubscriptions.get_current_and_renewed_subscriptions(
-                cache=cache, first_of_month=target_month, is_in_trial=in_trial
-            ),
-            member_id=member_id,
+        subscriptions = (
+            MonthPaymentBuilderSubscriptions.get_current_and_renewed_subscriptions(
+                cache=cache,
+                first_of_month=target_month,
+                is_in_trial=in_trial,
+                member_id=member_id,
+            )
         )
         subscriptions_by_member = cls._group_subscriptions_by_member(subscriptions)
 
