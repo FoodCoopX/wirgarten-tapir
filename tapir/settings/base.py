@@ -31,7 +31,7 @@ DEBUG = env.bool("DEBUG", default=False)
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["*"])
 ERROR_LOG_DIR = env.str("ERROR_LOG_DIR", default="error_logs")
 
-ENABLE_SILK_PROFILING = False
+ENABLE_SILK_PROFILING = env.bool("ENABLE_SILK_PROFILING", default=False)
 
 # Application definition
 INSTALLED_APPS = [
