@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.http import Http404
 from django.views.generic import TemplateView
@@ -17,7 +18,7 @@ class BakeryAdminTemplateView(
 
     def get(self, request, *args, **kwargs):
         # In get(), not dispatch(): the login and permission checks run first.
-        if not get_parameter_value(ParameterKeys.BAKERY_ENABLED):
+        if not settings.BAKERY_ENABLED:
             raise Http404("Die Bäckerei-Funktion ist nicht aktiviert.")
         return super().get(request, *args, **kwargs)
 
@@ -45,7 +46,7 @@ class ChooseBreadsView(LoginRequiredMixin, TemplateView):
     template_name = "bakery/choose_breads.html"
 
     def get(self, request, *args, **kwargs):
-        if not get_parameter_value(ParameterKeys.BAKERY_ENABLED):
+        if not settings.BAKERY_ENABLED:
             raise Http404("Die Bäckerei-Funktion ist nicht aktiviert.")
         return super().get(request, *args, **kwargs)
 

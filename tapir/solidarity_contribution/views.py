@@ -22,6 +22,9 @@ from tapir.solidarity_contribution.serializers import (
 from tapir.solidarity_contribution.services.member_solidarity_contribution_service import (
     MemberSolidarityContributionService,
 )
+from tapir.solidarity_contribution.services.solidarity_validator import (
+    SolidarityValidator,
+)
 from tapir.subscriptions.services.contract_start_date_calculator import (
     ContractStartDateCalculator,
 )
@@ -29,7 +32,11 @@ from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.utils import check_permission_or_self, get_today
+from tapir.wirgarten.utils import (
+    check_permission_or_self,
+    format_currency,
+    get_today,
+)
 
 
 class MemberSolidarityContributionsApiView(APIView):
@@ -119,8 +126,22 @@ class UpdateMemberSolidarityContributionApiView(APIView):
         ):
             return self.build_response(
                 member_id=member_id,
-                error="Du kannst deinen Solidarbeitrag nur erhöhen, aber nicht selbstständig reduzieren. Kontaktiere dazu deine Solawi an "
-                + get_parameter_value(key=ParameterKeys.SITE_ADMIN_EMAIL, cache=cache),
+                error="Du kannst deinen Solidarbeitrag nur erhöhen, aber nicht selbstständig reduzieren. Bitte wende dich dazu an die Verwaltung ("
+                + get_parameter_value(key=ParameterKeys.SITE_EMAIL, cache=cache)
+                + ").",
+            )
+
+        violated_minimum = SolidarityValidator.get_violated_product_minimum(
+            logged_in_user=request.user,
+            target_member_id=member.id,
+            new_amount=amount,
+            change_date=change_date,
+            cache=cache,
+        )
+        if violated_minimum is not None:
+            return self.build_response(
+                member_id=member_id,
+                error=f"Der Solidarbeitrag muss mindestens {format_currency(violated_minimum)}€ betragen.",
             )
 
         MemberSolidarityContributionService.assign_contribution_to_member(

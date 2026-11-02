@@ -2,7 +2,7 @@ import typing
 from functools import partial
 
 from django.apps import AppConfig
-from tapir_mail.registries import mail_segment_providers
+from tapir_mail.registries import mail_segment_providers, MailSegment
 
 if typing.TYPE_CHECKING:
     from tapir.wirgarten.models import PickupLocation
@@ -18,13 +18,19 @@ class PickupLocationsConfig(AppConfig):
     @classmethod
     def provide_pickup_location_segments(cls):
         from tapir.wirgarten.models import PickupLocation
+        from tapir.wirgarten.tapirmail import SegmentGroups
 
         cache = {}
 
         return {
             "Abholort: "
-            + pickup_location.name: partial(
-                cls.get_queryset_for_pickup_location, pickup_location, cache
+            + pickup_location.name: MailSegment(
+                get_queryset=partial(
+                    cls.get_queryset_for_pickup_location, pickup_location, cache
+                ),
+                label=pickup_location.name,
+                group=SegmentGroups.PICKUP_LOCATIONS,
+                description=f"Mitglieder, deren aktueller Abholort {pickup_location.name} ist.",
             )
             for pickup_location in PickupLocation.objects.all()
         }

@@ -2,6 +2,7 @@ import React from "react";
 import { Badge } from "react-bootstrap";
 import { ExtendedPayment, Payment } from "../../api-client";
 import TapirHelpButton from "../../components/TapirHelpButton.tsx";
+import { formatCoopShareLabel } from "../../utils/formatCoopShareLabel.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 import formatSubscription from "../../utils/formatSubscription.ts";
@@ -154,7 +155,9 @@ const PaymentComponent: React.FC<PaymentProps> = ({
     <div key={extendedPayment.payment.id}>
       <div className={"d-flex flex-column align-items-center"}>
         <strong>{formatCurrency(extendedPayment.payment.amount)}</strong>
-        <span>{extendedPayment.payment.mandateRef}</span>
+        <span className={"text-break"}>
+          {extendedPayment.payment.mandateRef}
+        </span>
         {extendedPayment.subscriptions.map((subscription) => (
           <span key={subscription.id}>
             {formatSubscription(subscription)}
@@ -165,7 +168,13 @@ const PaymentComponent: React.FC<PaymentProps> = ({
         {extendedPayment.coopShareTransactions.map((transaction) => (
           <span key={transaction.id}>
             {transaction.quantity}
-            {" × Genossenschaftsanteile"}
+            {" × " + formatCoopShareLabel(transaction.quantity)}
+            {extendedPayment.payment.instalmentNumber &&
+              extendedPayment.numberOfInstalments &&
+              ", Rate " +
+                extendedPayment.payment.instalmentNumber +
+                " von " +
+                extendedPayment.numberOfInstalments}
           </span>
         ))}
         {extendedPayment.solidarityContributions.length > 0 && (

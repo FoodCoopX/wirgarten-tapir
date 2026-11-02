@@ -77,7 +77,9 @@ const CreditListTable: React.FC<CreditListTableProps> = ({
                 <td>{extendedMemberCredit.member.iban}</td>
                 <td>{extendedMemberCredit.credit.purpose}</td>
                 <td>{formatCurrency(extendedMemberCredit.credit.amount)}</td>
-                <td>{extendedMemberCredit.credit.comment}</td>
+                <td style={{ whiteSpace: "pre-line" }}>
+                  {extendedMemberCredit.credit.comment}
+                </td>
                 <td>
                   {formatDateNumeric(extendedMemberCredit.credit.dueDate)}
                 </td>

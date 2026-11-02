@@ -1,6 +1,4 @@
-from unittest.mock import Mock, patch, call
-
-from django.core.exceptions import ValidationError
+from unittest.mock import Mock
 
 from tapir.payments.services.intended_use_pattern_expander import (
     IntendedUsePatternExpander,
@@ -9,92 +7,41 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestApplyReplacementsForLine(TapirUnitTest):
-    @patch.object(
-        IntendedUsePatternExpander,
-        "_apply_replacements_for_line_with_max_length",
-        autospec=True,
-    )
-    def test_applyReplacementsForLine_firstAttemptFitsInMaxLength_returnsResultAndCallsInnerOnce(
-        self, mock_apply_replacements_for_line_with_max_length: Mock
-    ):
-        mock_apply_replacements_for_line_with_max_length.return_value = "short result"
-        replacements = Mock()
-        token_value_overrides = Mock()
+    def test_applyReplacementsForLine_tokenNotInLine_providerNotCalled(self):
+        provider = Mock()
+        replacements = {"vorname": provider}
 
         result = IntendedUsePatternExpander._apply_replacements_for_line(
-            line="Hi {vorname}",
+            line="static text without tokens",
             replacements=replacements,
-            token_value_overrides=token_value_overrides,
+            token_value_overrides={},
         )
 
-        self.assertEqual("short result", result)
-        mock_apply_replacements_for_line_with_max_length.assert_called_once_with(
-            line="Hi {vorname}",
-            replacements=replacements,
-            max_length=IntendedUsePatternExpander.MAX_LENGTH_PER_LINE,
-            token_value_overrides=token_value_overrides,
-        )
+        self.assertEqual("static text without tokens", result)
+        provider.assert_not_called()
 
-    @patch.object(
-        IntendedUsePatternExpander,
-        "_apply_replacements_for_line_with_max_length",
-        autospec=True,
-    )
-    def test_applyReplacementsForLine_secondAttemptFitsInMaxLength_returnsSecondResultAndCallsInnerTwice(
-        self, mock_apply_replacements_for_line_with_max_length: Mock
-    ):
-        too_long_1 = "x" * (IntendedUsePatternExpander.MAX_LENGTH_PER_LINE + 2)
-        too_long_2 = "x" * (IntendedUsePatternExpander.MAX_LENGTH_PER_LINE + 1)
-        fits = "x" * IntendedUsePatternExpander.MAX_LENGTH_PER_LINE
-        mock_apply_replacements_for_line_with_max_length.side_effect = [
-            too_long_1,
-            too_long_2,
-            fits,
-        ]
-        replacements = Mock()
-        token_value_overrides = Mock()
+    def test_applyReplacementsForLine_tokenPresent_replacedByValue(self):
+        replacements = {"vorname": lambda: "John"}
 
         result = IntendedUsePatternExpander._apply_replacements_for_line(
-            line="line",
+            line="hi {vorname}",
             replacements=replacements,
-            token_value_overrides=token_value_overrides,
+            token_value_overrides={},
         )
 
-        self.assertEqual(fits, result)
-        self.assertEqual(3, mock_apply_replacements_for_line_with_max_length.call_count)
-        mock_apply_replacements_for_line_with_max_length.assert_has_calls(
-            [
-                call(
-                    line="line",
-                    replacements=replacements,
-                    max_length=IntendedUsePatternExpander.MAX_LENGTH_PER_LINE - index,
-                    token_value_overrides=token_value_overrides,
-                )
-                for index in range(3)
-            ],
-            any_order=False,
-        )
+        self.assertEqual("hi John", result)
 
-    @patch.object(
-        IntendedUsePatternExpander,
-        "_apply_replacements_for_line_with_max_length",
-        autospec=True,
-    )
-    def test_applyReplacementsForLine_allAttemptsExceedMaxLength_raisesValidationErrorMentioningLine(
-        self, mock_apply_replacements_for_line_with_max_length: Mock
+    def test_applyReplacementsForLine_overridePresent_useOverrideInsteadOfProvider(
+        self,
     ):
-        too_long = "x" * (IntendedUsePatternExpander.MAX_LENGTH_PER_LINE + 1)
-        mock_apply_replacements_for_line_with_max_length.return_value = too_long
-        line = "line that never fits"
+        provider = Mock()
+        replacements = {"vorname": provider}
 
-        with self.assertRaises(ValidationError) as context:
-            IntendedUsePatternExpander._apply_replacements_for_line(
-                line=line,
-                replacements={},
-                token_value_overrides={},
-            )
-
-        self.assertEqual(
-            "Diese Zeile: 'line that never fits' ist zu lang wenn die Tokens expandiert sind.",
-            context.exception.message,
+        result = IntendedUsePatternExpander._apply_replacements_for_line(
+            line="hi {vorname}",
+            replacements=replacements,
+            token_value_overrides={"vorname": "FromOverride"},
         )
+
+        self.assertEqual("hi FromOverride", result)
+        provider.assert_not_called()

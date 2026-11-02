@@ -16,17 +16,19 @@ export type BestellWizardSettings = {
   productTypes: PublicProductType[];
   associationMembershipTypes: AssociationMembershipType[];
   priceOfAShare: number;
+  coopShareInstalmentsEnabled: boolean;
+  coopShareInstalmentAmount: number;
   allowInvestingMembership: boolean;
   associationsAllowInvestingMembership: boolean;
   forceWaitingList: boolean;
   showCoopContent: boolean;
-  introStepText: string;
   labelCheckboxSepaMandat: string;
   labelCheckboxContractPolicy: string;
   trialPeriodLengthInWeeks: number;
   paymentRhythmChoices: { [key: string]: string };
   studentStatusAllowed: boolean;
   phoneNumberRequired: boolean;
+  pseudonymEnabled: boolean;
   introEnabled: boolean;
   productTypeIdsThatAreAlreadyAtCapacity: string[];
   productIdsThatAreAlreadyAtCapacity: string[];
@@ -34,6 +36,7 @@ export type BestellWizardSettings = {
   organizationName: string;
   logoUrl: string;
   contactMailAddress: string;
+  websiteUrl: string;
   distributionChannels: { [key: string]: string };
   solidarityContributionChoices: string[];
   solidarityContributionMinimum: number | null;

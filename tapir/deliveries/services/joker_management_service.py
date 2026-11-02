@@ -13,6 +13,9 @@ from tapir.deliveries.services.date_limit_for_delivery_change_calculator import 
 from tapir.deliveries.services.weeks_without_delivery_service import (
     WeeksWithoutDeliveryService,
 )
+from tapir.subscriptions.services.delivery_price_calculator import (
+    DeliveryPriceCalculator,
+)
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import Member, Subscription, GrowingPeriod
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -100,6 +103,9 @@ class JokerManagementService:
             )
             and cls.can_joker_be_used_relative_to_weeks_without_delivery(
                 reference_date, cache=cache
+            )
+            and cls.does_member_have_a_delivery_affected_by_jokers_in_week(
+                member=member, reference_date=reference_date, cache=cache
             )
             and not DeliveryDonationManager.does_member_have_a_donation_in_week(
                 member=member, reference_date=reference_date, cache=cache
@@ -224,6 +230,18 @@ class JokerManagementService:
     ) -> bool:
         return not WeeksWithoutDeliveryService.is_delivery_cancelled_this_week(
             reference_date, cache=cache
+        )
+
+    @classmethod
+    def does_member_have_a_delivery_affected_by_jokers_in_week(
+        cls, member: Member, reference_date: datetime.date, cache: dict
+    ) -> bool:
+        return (
+            DeliveryPriceCalculator.get_subscriptions_that_get_delivered_in_week(
+                member=member, reference_date=reference_date, cache=cache
+            )
+            .filter(product__type__is_affected_by_jokers=True)
+            .exists()
         )
 
     @classmethod

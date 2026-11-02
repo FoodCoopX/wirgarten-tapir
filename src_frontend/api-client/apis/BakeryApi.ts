@@ -28,6 +28,7 @@ import type {
   BreadSpecificsPerDeliveryDayBulkUpdateRequest,
   BreadSpecificsPerDeliveryDayRequest,
   BreadsPerPickupLocationPerWeek,
+  BreadsToBakePerWeek,
   DeliveryDaysResponse,
   Ingredient,
   IngredientRequest,
@@ -69,6 +70,7 @@ import {
   BreadSpecificsPerDeliveryDayFromJSON,
   BreadSpecificsPerDeliveryDayRequestToJSON,
   BreadsPerPickupLocationPerWeekFromJSON,
+  BreadsToBakePerWeekFromJSON,
   DeliveryDaysResponseFromJSON,
   IngredientFromJSON,
   IngredientRequestToJSON,
@@ -266,6 +268,16 @@ export interface BakeryBreadsPerPickupLocationPerWeekListRequest {
 }
 
 export interface BakeryBreadsPerPickupLocationPerWeekRetrieveRequest {
+  id: string;
+}
+
+export interface BakeryBreadsToBakePerWeekListRequest {
+  deliveryDay?: number;
+  deliveryWeek?: number;
+  year?: number;
+}
+
+export interface BakeryBreadsToBakePerWeekRetrieveRequest {
   id: string;
 }
 
@@ -2877,6 +2889,136 @@ export class BakeryApi extends runtime.BaseAPI {
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<BreadsPerPickupLocationPerWeek> {
     const response = await this.bakeryBreadsPerPickupLocationPerWeekRetrieveRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   * The solver\'s total per bread, including breads with fixed_pieces that occupy no stove layers.
+   */
+  async bakeryBreadsToBakePerWeekListRaw(
+    requestParameters: BakeryBreadsToBakePerWeekListRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<Array<BreadsToBakePerWeek>>> {
+    const queryParameters: any = {};
+
+    if (requestParameters["deliveryDay"] != null) {
+      queryParameters["delivery_day"] = requestParameters["deliveryDay"];
+    }
+
+    if (requestParameters["deliveryWeek"] != null) {
+      queryParameters["delivery_week"] = requestParameters["deliveryWeek"];
+    }
+
+    if (requestParameters["year"] != null) {
+      queryParameters["year"] = requestParameters["year"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/bakery/breads-to-bake-per-week/`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      jsonValue.map(BreadsToBakePerWeekFromJSON),
+    );
+  }
+
+  /**
+   * The solver\'s total per bread, including breads with fixed_pieces that occupy no stove layers.
+   */
+  async bakeryBreadsToBakePerWeekList(
+    requestParameters: BakeryBreadsToBakePerWeekListRequest = {},
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<Array<BreadsToBakePerWeek>> {
+    const response = await this.bakeryBreadsToBakePerWeekListRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   * The solver\'s total per bread, including breads with fixed_pieces that occupy no stove layers.
+   */
+  async bakeryBreadsToBakePerWeekRetrieveRaw(
+    requestParameters: BakeryBreadsToBakePerWeekRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<BreadsToBakePerWeek>> {
+    if (requestParameters["id"] == null) {
+      throw new runtime.RequiredError(
+        "id",
+        'Required parameter "id" was null or undefined when calling bakeryBreadsToBakePerWeekRetrieve().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/bakery/breads-to-bake-per-week/{id}/`.replace(
+          `{${"id"}}`,
+          encodeURIComponent(String(requestParameters["id"])),
+        ),
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      BreadsToBakePerWeekFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   * The solver\'s total per bread, including breads with fixed_pieces that occupy no stove layers.
+   */
+  async bakeryBreadsToBakePerWeekRetrieve(
+    requestParameters: BakeryBreadsToBakePerWeekRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<BreadsToBakePerWeek> {
+    const response = await this.bakeryBreadsToBakePerWeekRetrieveRaw(
       requestParameters,
       initOverrides,
     );

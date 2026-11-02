@@ -93,7 +93,6 @@ class BakeryGenerator:
     @classmethod
     def enable_bakery_parameters(cls):
         for key in [
-            ParameterKeys.BAKERY_ENABLED,
             ParameterKeys.BAKERY_MEMBERS_CAN_CHOOSE_BREAD_SORTS,
             ParameterKeys.BAKERY_MEMBERS_CAN_REDUCE_BREAD_SHARES,
             ParameterKeys.BAKERY_PICKUP_LOCATIONS_CAN_BE_CHOSEN_PER_SHARE,

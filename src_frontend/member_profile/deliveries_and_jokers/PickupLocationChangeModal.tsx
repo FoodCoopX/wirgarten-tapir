@@ -30,6 +30,7 @@ interface PickupLocationChangeModalProps {
   reloadDeliveries: () => void;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
   membersCanChangePickupLocationThemselves: boolean;
+  pickupLocationLabel?: string;
 }
 
 const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
@@ -40,6 +41,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
   reloadDeliveries,
   setToastDatas,
   membersCanChangePickupLocationThemselves,
+  pickupLocationLabel = "Abholort",
 }) => {
   const pickupLocationsApi = useApi(PickupLocationsApi, csrfToken);
   const subscriptionsApi = useApi(SubscriptionsApi, csrfToken);
@@ -306,14 +308,14 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
         <Modal.Header closeButton>
           <div className={"d-flex gap-2 align-items-center"}>
             <Modal.Title>
-              <h4 className={"mb-0"}>Verteilstation ändern</h4>
+              <h4 className={"mb-0"}>{pickupLocationLabel} ändern</h4>
             </Modal.Title>
             {!membersCanChangePickupLocationThemselves && (
               <TapirHelpButton
                 text={
                   <>
                     Mitglieder können nicht selbstständig ihren Abholort ändern.
-                    Sie müssen dazu den Betrieb kontaktieren. Wenn Sie es
+                    Sie müssen sich dazu an die Verwaltung wenden. Wenn Sie es
                     selbstständig ändern können sollen, muss die Checkbox
                     "Mitglieder können deren Abholort selber ändern" in der
                     allgemeinen Konfiguration aktiviert werden.

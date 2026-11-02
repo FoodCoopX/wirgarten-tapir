@@ -6,10 +6,10 @@ from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
 
 class KeycloakUserDeleteService:
     @classmethod
-    def delete_user_if_exists(cls, user: KeycloakUser, cache: dict):
+    def delete_user_if_exists(cls, user: KeycloakUser):
         if not user.keycloak_id:
             return
-        client = KeycloakUserManager.get_keycloak_client(cache)
+        client = KeycloakUserManager.get_keycloak_client()
         try:
             client.delete_user(user.keycloak_id)
         except KeycloakDeleteError as error:

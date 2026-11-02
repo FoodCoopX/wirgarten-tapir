@@ -57,6 +57,7 @@ class MonthPaymentBuilderDeliveryCharges:
         cache: dict,
         generated_payments: set[Payment],
         in_trial: bool,
+        member_id: str | None = None,
     ) -> list[Payment]:
         target_month = current_month
         if in_trial:
@@ -64,7 +65,10 @@ class MonthPaymentBuilderDeliveryCharges:
 
         subscriptions = (
             MonthPaymentBuilderSubscriptions.get_current_and_renewed_subscriptions(
-                cache=cache, first_of_month=target_month, is_in_trial=in_trial
+                cache=cache,
+                first_of_month=target_month,
+                is_in_trial=in_trial,
+                member_id=member_id,
             )
         )
         subscriptions_by_member = cls._group_subscriptions_by_member(subscriptions)

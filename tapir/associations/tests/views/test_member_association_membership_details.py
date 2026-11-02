@@ -5,6 +5,8 @@ from tapir.associations.tests.factories import (
     AssociationMembershipFactory,
     AssociationMembershipTypeFactory,
 )
+from tapir.configuration.models import TapirParameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
@@ -94,3 +96,17 @@ class TestMemberAssociationMembershipDetails(TapirIntegrationTest):
             ),
             response_content["order_wizard_url"],
         )
+
+    def test_get_default_returnsContactEmail(self):
+        TapirParameter.objects.filter(key=ParameterKeys.SITE_EMAIL).update(
+            value="verwaltung@example.com"
+        )
+        member = MemberFactory.create(is_superuser=False)
+        self.client.force_login(member)
+
+        url = reverse("associations:member_association_memberships")
+        url = f"{url}?member_id={member.id}"
+        response = self.client.get(url)
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assertEqual("verwaltung@example.com", response.json()["contact_email"])

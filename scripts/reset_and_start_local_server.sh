@@ -1,10 +1,12 @@
 #!/bin/sh
 
 set -e
+[ -f .env.local ] || cp .env.local.disabled .env.local
 poetry lock
 poetry install
 docker compose down
 docker compose up -d --remove-orphans keycloak db redis
+sleep 1s
 poetry run python manage.py migrate
 poetry run python manage.py parameter_definitions
 poetry run python manage.py populate --reset_all

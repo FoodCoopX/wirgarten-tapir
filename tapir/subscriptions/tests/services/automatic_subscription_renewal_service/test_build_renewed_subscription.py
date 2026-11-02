@@ -46,6 +46,8 @@ class TestBuildRenewedSubscription(TapirUnitTest):
         admin_confirmed = Mock()
         original_subscription.admin_confirmed = admin_confirmed
         original_subscription.end_date = Mock()
+        price_override = Mock()
+        original_subscription.price_override = price_override
 
         next_growing_period = GrowingPeriodFactory.build()
         start_date = Mock()
@@ -92,3 +94,4 @@ class TestBuildRenewedSubscription(TapirUnitTest):
         self.assertEqual(4, future_subscription.notice_period_duration)
         self.assertEqual("weeks", future_subscription.notice_period_unit)
         self.assertEqual(admin_confirmed, future_subscription.admin_confirmed)
+        self.assertEqual(price_override, future_subscription.price_override)

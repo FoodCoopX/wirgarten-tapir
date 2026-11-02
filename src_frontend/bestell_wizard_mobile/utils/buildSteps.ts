@@ -9,8 +9,10 @@ import { areAllOrderedProductsInWaitingList } from "../../bestell_wizard/utils/a
 import { isAtLeastOneOrderedProductWithDelivery } from "../../bestell_wizard/utils/isAtLeastOneOrderedProductWithDelivery.ts";
 import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
 import { Step } from "../types/Step.ts";
+import { isOrderWaitingListOnly } from "./isOrderWaitingListOnly.ts";
 import { shouldConfirmMemberNow } from "./shouldConfirmMemberNow.ts";
 import { shouldIncludeStepGrowingPeriodChoice } from "./shouldIncludeStepGrowingPeriodChoice.ts";
+import { willBecomeMemberNow } from "./willBecomeMemberNow.ts";
 
 export function buildSteps(
   settings: BestellWizardSettings,
@@ -111,7 +113,7 @@ export function buildSteps(
   newSteps.push("8_personal_data");
 
   if (
-    becomeMemberNow !== false &&
+    willBecomeMemberNow(settings, becomeMemberNow) &&
     !waitingListEntryDetails?.memberAlreadyExists
   ) {
     newSteps.push("9_banking_data");
@@ -127,11 +129,12 @@ export function buildSteps(
   }
 
   if (
-    areAllOrderedProductsInWaitingList(
+    isOrderWaitingListOnly(
+      settings,
       shoppingCart,
       productTypesInWaitingList,
-    ) &&
-    becomeMemberNow === false
+      becomeMemberNow,
+    )
   ) {
     newSteps.push("14b_confirmation_waiting_list");
   } else {
@@ -237,6 +240,10 @@ function buildCoopSteps(
   productTypesInWaitingList: Set<PublicProductType>,
   becomeMemberNow: boolean | null,
 ) {
+  if (settings.forceWaitingList) {
+    return [];
+  }
+
   if (
     !shouldIncludeStepsCoopShares(
       waitingListEntryDetails,
@@ -264,7 +271,7 @@ function buildCoopSteps(
     coopSteps.push("6c_coop_member_now");
   }
 
-  if (becomeMemberNow !== false) {
+  if (willBecomeMemberNow(settings, becomeMemberNow)) {
     coopSteps.push("6b_coop_shares");
   }
 
@@ -278,6 +285,10 @@ function buildAssociationSteps(
   becomeMemberNow: boolean | null,
   waitingListEntryDetails: PublicWaitingListEntryDetails | undefined,
 ) {
+  if (settings.forceWaitingList) {
+    return [];
+  }
+
   if (settings.legalStatus !== "association") {
     return [];
   }
@@ -308,7 +319,7 @@ function buildAssociationSteps(
     associationSteps.push("6c_coop_member_now");
   }
 
-  if (becomeMemberNow !== false) {
+  if (willBecomeMemberNow(settings, becomeMemberNow)) {
     associationSteps.push("6b_association_membership");
   }
 

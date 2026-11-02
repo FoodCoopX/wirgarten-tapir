@@ -129,10 +129,28 @@ export interface EmailDispatch {
   dsnDeliveredTime?: Date | null;
   /**
    *
+   * @type {Date}
+   * @memberof EmailDispatch
+   */
+  notBefore?: Date | null;
+  /**
+   *
+   * @type {boolean}
+   * @memberof EmailDispatch
+   */
+  isAutomaticRetry?: boolean;
+  /**
+   *
    * @type {string}
    * @memberof EmailDispatch
    */
   nextRetry?: string | null;
+  /**
+   *
+   * @type {string}
+   * @memberof EmailDispatch
+   */
+  emailConfigurationVersion?: string | null;
 }
 
 /**
@@ -200,7 +218,17 @@ export function EmailDispatchFromJSONTyped(
       json["dsn_delivered_time"] == null
         ? undefined
         : new Date(json["dsn_delivered_time"]),
+    notBefore:
+      json["not_before"] == null ? undefined : new Date(json["not_before"]),
+    isAutomaticRetry:
+      json["is_automatic_retry"] == null
+        ? undefined
+        : json["is_automatic_retry"],
     nextRetry: json["next_retry"] == null ? undefined : json["next_retry"],
+    emailConfigurationVersion:
+      json["email_configuration_version"] == null
+        ? undefined
+        : json["email_configuration_version"],
   };
 }
 
@@ -242,6 +270,12 @@ export function EmailDispatchToJSONTyped(
       value["dsnDeliveredTime"] == null
         ? undefined
         : (value["dsnDeliveredTime"] as any).toISOString(),
+    not_before:
+      value["notBefore"] == null
+        ? undefined
+        : (value["notBefore"] as any).toISOString(),
+    is_automatic_retry: value["isAutomaticRetry"],
     next_retry: value["nextRetry"],
+    email_configuration_version: value["emailConfigurationVersion"],
   };
 }

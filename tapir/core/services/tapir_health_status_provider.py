@@ -62,7 +62,7 @@ class TapirHealthStatusProvider:
 
     @classmethod
     def _get_keycloak_status(cls):
-        client = KeycloakUserManager.get_keycloak_client(cache={})
+        client = KeycloakUserManager.get_keycloak_client()
         client.get_users()
 
     @classmethod

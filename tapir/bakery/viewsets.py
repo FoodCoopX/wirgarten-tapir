@@ -17,6 +17,7 @@ from tapir.bakery.models import (
     BreadLabel,
     BreadSpecificsPerDeliveryDay,
     BreadsPerPickupLocationPerWeek,
+    BreadsToBakePerWeek,
     Ingredient,
     PreferredBread,
     StoveSession,
@@ -31,6 +32,7 @@ from tapir.bakery.serializers import (
     BreadSpecificsPerDeliveryDayBulkUpdateSerializer,
     BreadSpecificsPerDeliveryDaySerializer,
     BreadsPerPickupLocationPerWeekSerializer,
+    BreadsToBakePerWeekSerializer,
     IngredientSerializer,
     PreferredBreadsBulkUpdateSerializer,
     PreferredBreadSerializer,
@@ -503,6 +505,55 @@ class StoveSessionViewSet(viewsets.ReadOnlyModelViewSet):
             queryset = queryset.filter(delivery_day=delivery_day)
 
         return queryset.order_by("session_number", "layer_number")
+
+
+@extend_schema(tags=["bakery"])
+class BreadsToBakePerWeekViewSet(viewsets.ReadOnlyModelViewSet):
+    """The solver's total per bread, including breads with fixed_pieces that
+    occupy no stove layers."""
+
+    queryset = BreadsToBakePerWeek.objects.select_related("bread").all()
+    serializer_class = BreadsToBakePerWeekSerializer
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="year",
+                type=int,
+                required=False,
+            ),
+            OpenApiParameter(
+                name="delivery_week",
+                type=int,
+                required=False,
+            ),
+            OpenApiParameter(
+                name="delivery_day",
+                type=int,
+                required=False,
+            ),
+        ],
+        responses={200: BreadsToBakePerWeekSerializer(many=True)},
+    )
+    def list(self, request: Request, *args, **kwargs) -> Response:
+        return super().list(request, *args, **kwargs)
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        year = int_query_param(self.request, "year")
+        delivery_week = int_query_param(self.request, "delivery_week")
+        delivery_day = int_query_param(self.request, "delivery_day")
+
+        if year is not None:
+            queryset = queryset.filter(year=year)
+        if delivery_week is not None:
+            queryset = queryset.filter(delivery_week=delivery_week)
+        if delivery_day is not None:
+            queryset = queryset.filter(delivery_day=delivery_day)
+
+        return queryset.order_by("bread__name")
 
 
 @extend_schema(tags=["bakery"])

@@ -14,6 +14,7 @@ from tapir.subscriptions.services.subscription_delivered_in_week_checked import 
 )
 from tapir.utils.tests_utils import mock_parameter_value
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.tests.factories import SubscriptionFactory
 
 
 class TestSubscriptionDeliveredInWeekChecker(TapirUnitTest):
@@ -75,6 +76,37 @@ class TestSubscriptionDeliveredInWeekChecker(TapirUnitTest):
         mock_does_member_have_a_joker_in_week.assert_called_once_with(
             member=subscription.member, reference_date=delivery_date, cache=cache
         )
+
+    @patch.object(
+        JokerManagementService, "does_member_have_a_joker_in_week", autospec=True
+    )
+    @patch.object(DeliveryDateCalculator, "is_week_delivered", autospec=True)
+    def test_isSubscriptionDeliveredInWeek_memberHasJokerButProductTypeNotAffectedByJokers_returnsTrue(
+        self, mock_is_week_delivered: Mock, mock_does_member_have_a_joker_in_week: Mock
+    ):
+        mock_is_week_delivered.return_value = True
+        mock_does_member_have_a_joker_in_week.return_value = True
+
+        subscription = SubscriptionFactory.build(
+            product__type__is_affected_by_jokers=False
+        )
+        cache = {}
+        mock_parameter_value(cache=cache, key=ParameterKeys.JOKERS_ENABLED, value=True)
+        mock_parameter_value(
+            cache=cache,
+            key=ParameterKeys.DELIVERY_DONATION_MODE,
+            value=DELIVERY_DONATION_MODE_DISABLED,
+        )
+
+        result = SubscriptionDeliveredInWeekChecker.is_subscription_delivered_in_week(
+            subscription=subscription,
+            delivery_date=Mock(),
+            cache=cache,
+            skip_donation_check=False,
+        )
+
+        self.assertTrue(result)
+        mock_does_member_have_a_joker_in_week.assert_not_called()
 
     @patch.object(
         DeliveryDonationManager, "does_member_have_a_donation_in_week", autospec=True

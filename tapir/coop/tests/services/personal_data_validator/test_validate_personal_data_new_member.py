@@ -41,7 +41,7 @@ class TestValidatePersonalDataNewMember(TapirUnitTest):
         )
 
         mock_validate_email_address_not_in_use.assert_called_once_with(
-            "test_mail", cache=cache, check_waiting_list=True
+            "test_mail", check_waiting_list=True
         )
         mock_validate_phone_number_is_valid.assert_called_once_with(
             "test_phone_number", cache=cache

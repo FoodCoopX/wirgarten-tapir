@@ -39,7 +39,7 @@ class PickupLocationCfgView(PermissionRequiredMixin, generic.TemplateView):
         context = super().get_context_data(*args, **kwargs)
         cache = {}
 
-        pickup_locations = self.get_filtered_pickup_locations()
+        pickup_locations = self.get_filtered_pickup_locations(cache=cache)
 
         capabilities = get_active_pickup_location_capabilities(cache=cache).values(
             "pickup_location_id",
@@ -78,9 +78,11 @@ class PickupLocationCfgView(PermissionRequiredMixin, generic.TemplateView):
         context["search"] = request.GET.get("search", "")
         context["show_ended"] = request.GET.get("show_ended") == "on"
 
+        context["cache"] = cache
+
         return context
 
-    def get_filtered_pickup_locations(self):
+    def get_filtered_pickup_locations(self, cache: dict):
         request = self.request
         queryset = PickupLocation.objects.all().order_by("location_route__name", "name")
 
@@ -95,7 +97,7 @@ class PickupLocationCfgView(PermissionRequiredMixin, generic.TemplateView):
 
         if request.GET.get("show_ended") != "on":
             queryset = PickupLocationActiveFilter.get_not_ended_at_date(
-                queryset, get_today(cache={})
+                queryset, get_today(cache=cache)
             )
 
         return list(queryset)

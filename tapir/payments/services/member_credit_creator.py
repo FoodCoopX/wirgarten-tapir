@@ -181,12 +181,9 @@ class MemberCreditCreator:
         first_day_of_rhythm_period: datetime.date,
         last_day_of_rhythm_period: datetime.date,
     ):
-        contributions = TapirCache.get_all_solidarity_contributions(cache=cache)
-        contributions = [
-            contribution
-            for contribution in contributions
-            if contribution.member_id == member_id
-        ]
+        contributions = TapirCache.get_all_solidarity_contributions_for_member(
+            member_id=member_id, cache=cache
+        )
         return MonthPaymentBuilderSolidarityContributions.get_total_to_pay(
             range_start=first_day_of_rhythm_period,
             range_end=last_day_of_rhythm_period,
@@ -206,13 +203,12 @@ class MemberCreditCreator:
         product_type = TapirCache.get_product_type_by_id(
             cache=cache, product_type_id=product_type_id
         )
-        subscriptions = TapirCache.get_subscriptions_by_product_type(cache=cache).get(
-            product_type, set()
-        )
         subscriptions = [
             subscription
-            for subscription in subscriptions
-            if subscription.member_id == member_id
+            for subscription in TapirCache.get_all_subscriptions_for_member(
+                member_id=member_id, cache=cache
+            )
+            if subscription.product.type == product_type
         ]
         return MonthPaymentBuilderSubscriptions.get_total_to_pay(
             range_start=first_day_of_rhythm_period,

@@ -1,13 +1,14 @@
 import datetime
 from unittest.mock import patch
 
+from django.test import override_settings
+
 from tapir.bakery.models import BreadDelivery
 from tapir.bakery.services.bread_delivery_context_service import (
     BreadDeliveryContextService,
 )
 from tapir.bakery.services.breaddelivery_service import BreadDeliveryService
 from tapir.bakery.tests.factories import (
-    enable_bakery,
     BreadCapacityPickupLocationFactory,
     BreadDeliveryFactory,
     BreadFactory,
@@ -99,6 +100,7 @@ class TestGetWeeksInRange(TapirIntegrationTest):
         self.assertEqual(weeks, [])
 
 
+@override_settings(BAKERY_ENABLED=True)
 @patch(
     "tapir.accounts.services.keycloak_user_manager.KeycloakUserManager.get_keycloak_client"
 )
@@ -110,7 +112,6 @@ class TestEnsureBreadDeliveries(TapirIntegrationTest):
 
     def setUp(self):
         super().setUp()
-        enable_bakery()
 
     def _freeze_date(self, mock_datetime, date=FROZEN_DATE):
         mock_datetime.now.return_value.date.return_value = date

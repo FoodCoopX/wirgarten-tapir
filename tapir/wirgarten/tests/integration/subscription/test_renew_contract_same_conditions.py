@@ -2,13 +2,11 @@ import datetime
 from unittest.mock import patch
 
 from dateutil.relativedelta import relativedelta
+from django.test import override_settings
 from django.urls import reverse
 
 from tapir.bakery.models import BreadDelivery
-from tapir.bakery.tests.factories import (
-    BreadProductTypeFactory,
-    enable_bakery,
-)
+from tapir.bakery.tests.factories import BreadProductTypeFactory
 from tapir.wirgarten.models import Subscription
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
@@ -24,6 +22,7 @@ from tapir.wirgarten.tests.factories import (
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
+@override_settings(BAKERY_ENABLED=True)
 @patch(
     "tapir.wirgarten.views.member.details.actions.send_product_order_confirmation",
     autospec=True,
@@ -35,7 +34,6 @@ class TestRenewContractSameConditionsCreatesBreadDeliveries(TapirIntegrationTest
 
     def setUp(self):
         super().setUp()
-        enable_bakery()
 
         today = datetime.date.today()
         self.current_period = GrowingPeriodFactory.create(

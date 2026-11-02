@@ -32,9 +32,11 @@ class ParameterDefinitionsSolidarity:
             label="Vordefinierte Solidarbeitrag-Werten",
             datatype=TapirParameterDatatype.STRING,
             initial_value="-15,-10,-5,0,5,10,15",
-            description="Komma-getrennte Liste der Werte die beim Solidarbeitrag zu auswahl stehen."
-            "Es gibt immer dazu für das Mitglied die Möglichkeit eine andere Wert anzugeben."
-            "Beispiel: '-15,-10,-5,0,5,10,15'",
+            description="Komma-getrennte Liste der Werte die beim Solidarbeitrag zu auswahl stehen. "
+            "Es gibt immer dazu für das Mitglied die Möglichkeit eine andere Wert anzugeben. "
+            "Beispiel: '-15,-10,-5,0,5,10,15'. "
+            "Wenn bei einem bestellten Produkt in der Produkt-Konfiguration eigene Solidarbeitrag-Stufen eingetragen sind, "
+            "werden stattdessen diese angezeigt.",
             category=ParameterCategory.SOLIDARITY,
             meta=ParameterMeta(
                 validators=[SolidarityValidator.validate_solidarity_dropdown_values]

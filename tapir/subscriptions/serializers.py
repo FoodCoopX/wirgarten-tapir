@@ -39,6 +39,7 @@ class ProductForCancellationSerializer(serializers.Serializer):
 class SolidarityContributionCancellationDataSerializer(serializers.Serializer):
     exists = serializers.BooleanField()
     is_in_trial = serializers.BooleanField()
+    is_negative = serializers.BooleanField()
     cancellation_date = serializers.DateField()
 
 

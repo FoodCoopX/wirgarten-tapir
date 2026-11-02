@@ -175,6 +175,8 @@ class ProductCfgView(PermissionRequiredMixin, generic.TemplateView):
             cache=self.cache
         )
 
+        context["cache"] = self.cache
+
         return context
 
 

@@ -1,6 +1,6 @@
 import "dayjs/locale/de";
 import React, { useEffect, useState } from "react";
-import { Form, ListGroup, Modal, Spinner, Table } from "react-bootstrap";
+import { Form, ListGroup, Modal, Spinner } from "react-bootstrap";
 import { CoreApi, MemberExtraEmail } from "../../api-client";
 import TapirButton from "../../components/TapirButton.tsx";
 import { useApi } from "../../hooks/useApi.ts";
@@ -136,88 +136,78 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
     }
 
     return (
-      <Table striped hover responsive>
-        <thead>
-          <tr>
-            <th>E-Mail</th>
-            <th>Vorname</th>
-            <th>Nachname</th>
-            <th>Bestätigt am</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {extraEmails.map((extraEmail) => (
-            <tr key={extraEmail.id}>
-              <td>{extraEmail.email}</td>
-              {selectedForEdit == extraEmail ? (
-                <>
-                  <td>
-                    <Form.Control
-                      placeholder={"Vorname"}
-                      value={editFirstName}
-                      onChange={(event) => {
-                        setEditFirstName(event.target.value);
-                      }}
-                    />
-                  </td>
-                  <td>
-                    <Form.Control
-                      placeholder={"Nachname"}
-                      value={editLastName}
-                      onChange={(event) => {
-                        setEditLastName(event.target.value);
-                      }}
-                    />
-                  </td>
-                </>
-              ) : (
-                <>
-                  <td>{extraEmail.firstName}</td>
-                  <td>{extraEmail.lastName}</td>
-                </>
-              )}
-              <td>
+      <ListGroup variant={"flush"}>
+        {extraEmails.map((extraEmail) => (
+          <ListGroup.Item key={extraEmail.id} className={"px-0"}>
+            <div className={"fw-bold text-break"}>{extraEmail.email}</div>
+            {selectedForEdit == extraEmail ? (
+              <div className={"d-flex flex-column gap-2 my-2"}>
+                <Form.Control
+                  placeholder={"Vorname"}
+                  aria-label={"Vorname"}
+                  value={editFirstName}
+                  onChange={(event) => {
+                    setEditFirstName(event.target.value);
+                  }}
+                />
+                <Form.Control
+                  placeholder={"Nachname"}
+                  aria-label={"Nachname"}
+                  value={editLastName}
+                  onChange={(event) => {
+                    setEditLastName(event.target.value);
+                  }}
+                />
+              </div>
+            ) : (
+              <div>
+                {extraEmail.firstName} {extraEmail.lastName}
+              </div>
+            )}
+            <div
+              className={
+                "d-flex flex-wrap justify-content-between align-items-center gap-2"
+              }
+            >
+              <small className={"text-muted"}>
                 {extraEmail.confirmedOn
-                  ? formatDateNumeric(extraEmail.confirmedOn)
+                  ? "Bestätigt am " + formatDateNumeric(extraEmail.confirmedOn)
                   : "Nicht bestätigt"}
-              </td>
-              <td>
-                <div className={"d-flex flex-row gap-2"}>
-                  {selectedForEdit == extraEmail ? (
-                    <TapirButton
-                      variant={"primary"}
-                      icon={"save"}
-                      size={"sm"}
-                      loading={saving}
-                      onClick={() => onUpdate(extraEmail)}
-                    />
-                  ) : (
-                    <TapirButton
-                      variant={"outline-primary"}
-                      icon={"edit"}
-                      size={"sm"}
-                      onClick={() => {
-                        setEditFirstName(extraEmail.firstName);
-                        setEditLastName(extraEmail.lastName);
-                        setSelectedForEdit(extraEmail);
-                      }}
-                      loading={saving}
-                    />
-                  )}
+              </small>
+              <div className={"d-flex gap-2"}>
+                {selectedForEdit == extraEmail ? (
                   <TapirButton
-                    variant={"outline-danger"}
-                    icon={"delete"}
+                    variant={"primary"}
+                    icon={"save"}
                     size={"sm"}
-                    onClick={() => onDelete(extraEmail.id!)}
-                    loading={deleting}
+                    loading={saving}
+                    onClick={() => onUpdate(extraEmail)}
                   />
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
+                ) : (
+                  <TapirButton
+                    variant={"outline-primary"}
+                    icon={"edit"}
+                    size={"sm"}
+                    onClick={() => {
+                      setEditFirstName(extraEmail.firstName);
+                      setEditLastName(extraEmail.lastName);
+                      setSelectedForEdit(extraEmail);
+                    }}
+                    loading={saving}
+                  />
+                )}
+                <TapirButton
+                  variant={"outline-danger"}
+                  icon={"delete"}
+                  size={"sm"}
+                  onClick={() => onDelete(extraEmail.id!)}
+                  loading={deleting}
+                />
+              </div>
+            </div>
+          </ListGroup.Item>
+        ))}
+      </ListGroup>
     );
   }
 
@@ -235,7 +225,7 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
           <ListGroup.Item>
             <Form>
               <h5>Zusätzliche Adresse hinzufügen</h5>
-              <div className={"d-flex flex-row gap-2"}>
+              <div className={"d-flex flex-column gap-2"}>
                 <Form.Group controlId={"new_extra_email"}>
                   <Form.Label>E-Mail</Form.Label>
                   <Form.Control
@@ -264,6 +254,8 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
                 <TapirButton
                   variant={"primary"}
                   icon={"add_circle"}
+                  text={"Hinzufügen"}
+                  className={"align-self-end"}
                   onClick={onSave}
                   loading={saving}
                 />

@@ -29,7 +29,6 @@ import { useApi } from "../../hooks/useApi.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 import { formatDateText } from "../../utils/formatDateText.ts";
 
-import "../../fixed_header.css";
 import { ToastData } from "../../types/ToastData.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 import UsedDonationsTable from "./UsedDonationsTable.tsx";
@@ -48,11 +47,13 @@ interface ManageJokersAndDonationsModalProps {
   areDonationsEnabled: boolean;
 }
 
+const NB_DELIVERIES_SHOWN_BY_DEFAULT = 8;
+
 function loadingPlaceholder() {
   return Array.from(new Array(7).keys()).map((index) => {
     return (
       <tr key={index}>
-        {Array.from(new Array(3).keys()).map((index) => {
+        {Array.from(new Array(2).keys()).map((index) => {
           return (
             <td key={index}>
               <Placeholder lg={10} />
@@ -98,6 +99,7 @@ const ManageJokersAndDonationsModal: React.FC<
     UsedJokerInGrowingPeriod[]
   >([]);
   const [explanationText, setExplanationText] = useState("");
+  const [showAllDeliveries, setShowAllDeliveries] = useState(false);
 
   dayjs.extend(Weekday);
   dayjs.extend(WeekOfYear);
@@ -175,7 +177,7 @@ const ManageJokersAndDonationsModal: React.FC<
 
     if (delivery.canJokerBeUsed || delivery.canDeliveryBeDonated) {
       return (
-        <span className={"d-flex flex-row gap-2"}>
+        <span className={"d-flex flex-wrap gap-2"}>
           {delivery.canJokerBeUsed && (
             <TapirButton
               text={"Joker einsetzen"}
@@ -405,7 +407,7 @@ const ManageJokersAndDonationsModal: React.FC<
           <ListGroup.Item>
             <Row>
               {areJokersEnabled && (
-                <Col>
+                <Col md>
                   <h5>Eingesetzte Joker</h5>
                   {jokers.length == 0 ? (
                     "Noch keine Joker eingesetzt"
@@ -424,7 +426,7 @@ const ManageJokersAndDonationsModal: React.FC<
                 </Col>
               )}
               {areDonationsEnabled && (
-                <Col>
+                <Col md>
                   <h5>Spenden</h5>
                   {donations.length == 0 ? (
                     "Keine Lieferung gespendet"
@@ -444,12 +446,11 @@ const ManageJokersAndDonationsModal: React.FC<
               )}
             </Row>
           </ListGroup.Item>
-          <ListGroup.Item style={{ overflowY: "scroll", maxHeight: "20em" }}>
+          <ListGroup.Item>
             <h5>Kommende Lieferungen</h5>
-            <Table striped hover responsive className={"fixed_header"}>
+            <Table striped hover responsive size={"sm"}>
               <thead>
                 <tr>
-                  <th>KW</th>
                   <th>Lieferdatum</th>
                   <th>Status</th>
                 </tr>
@@ -457,11 +458,19 @@ const ManageJokersAndDonationsModal: React.FC<
               <tbody>
                 {deliveriesLoading
                   ? loadingPlaceholder()
-                  : deliveries.map((delivery) => {
+                  : (showAllDeliveries
+                      ? deliveries
+                      : deliveries.slice(0, NB_DELIVERIES_SHOWN_BY_DEFAULT)
+                    ).map((delivery) => {
                       return (
                         <tr key={formatDateNumeric(delivery.deliveryDate)}>
-                          <td>KW{dayjs(delivery.deliveryDate).week()}</td>
-                          <td>{formatDateText(delivery.deliveryDate)}</td>
+                          <td>
+                            {formatDateText(delivery.deliveryDate)}
+                            <br />
+                            <small>
+                              KW{dayjs(delivery.deliveryDate).week()}
+                            </small>
+                          </td>
                           <td className={"text-wrap"}>
                             {getDeliveryStatus(delivery)}
                           </td>
@@ -470,6 +479,15 @@ const ManageJokersAndDonationsModal: React.FC<
                     })}
               </tbody>
             </Table>
+            {!showAllDeliveries &&
+              deliveries.length > NB_DELIVERIES_SHOWN_BY_DEFAULT && (
+                <TapirButton
+                  variant={"outline-secondary"}
+                  icon={"expand_more"}
+                  text={"Mehr anzeigen"}
+                  onClick={() => setShowAllDeliveries(true)}
+                />
+              )}
           </ListGroup.Item>
         </ListGroup>
       )}

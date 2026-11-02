@@ -87,7 +87,7 @@ class MailChangeService:
             )
         )
 
-        kc = KeycloakUserManager.get_keycloak_client(cache=cache)
+        kc = KeycloakUserManager.get_keycloak_client()
         kc.update_user(
             user_id=user.keycloak_id,
             payload={

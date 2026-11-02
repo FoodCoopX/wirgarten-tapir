@@ -103,6 +103,12 @@ export interface PublicWaitingListEntryDetails {
   country: string;
   /**
    *
+   * @type {string}
+   * @memberof PublicWaitingListEntryDetails
+   */
+  pseudonym: string;
+  /**
+   *
    * @type {Date}
    * @memberof PublicWaitingListEntryDetails
    */
@@ -180,6 +186,7 @@ export function instanceOfPublicWaitingListEntryDetails(
   if (!("postcode" in value) || value["postcode"] === undefined) return false;
   if (!("city" in value) || value["city"] === undefined) return false;
   if (!("country" in value) || value["country"] === undefined) return false;
+  if (!("pseudonym" in value) || value["pseudonym"] === undefined) return false;
   if (
     !("numberOfCoopShares" in value) ||
     value["numberOfCoopShares"] === undefined
@@ -219,6 +226,7 @@ export function PublicWaitingListEntryDetailsFromJSONTyped(
     postcode: json["postcode"],
     city: json["city"],
     country: json["country"],
+    pseudonym: json["pseudonym"],
     birthdate:
       json["birthdate"] == null ? undefined : new Date(json["birthdate"]),
     accountOwner:
@@ -274,6 +282,7 @@ export function PublicWaitingListEntryDetailsToJSONTyped(
     postcode: value["postcode"],
     city: value["city"],
     country: value["country"],
+    pseudonym: value["pseudonym"],
     birthdate:
       value["birthdate"] == null
         ? undefined

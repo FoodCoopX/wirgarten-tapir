@@ -3,6 +3,7 @@ import io
 import re
 
 from django.core.exceptions import ValidationError
+from django.core.validators import URLValidator
 from django.utils.translation import gettext_lazy as _
 from lxml import etree
 
@@ -113,3 +114,9 @@ def validate_date_is_first_of_month(date: datetime.date):
         raise ValidationError(
             f"Ungültiges Datum: {format_date(date)}, nur Monatserste sind erlaubt."
         )
+
+
+def validate_optional_url(value: str):
+    if value == "":
+        return
+    URLValidator()(value)

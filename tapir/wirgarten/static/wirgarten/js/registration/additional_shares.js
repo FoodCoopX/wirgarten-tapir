@@ -61,7 +61,10 @@ var initAdditionalShareSummary = (
       event.target.value--;
     }
 
-    resultElem.innerText = calculateTotalPrice().toFixed(2);
+    resultElem.innerText = calculateTotalPrice().toLocaleString("de-DE", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
   };
 
   additional_share_prices.forEach((share) => {

@@ -66,6 +66,9 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
   const [stoveSessionsByDay, setStoveSessionsByDay] = useState<
     Record<number, StoveSessionGrouped[]>
   >({});
+  const [breadsToBakeByDay, setBreadsToBakeByDay] = useState<
+    Record<number, Record<string, number>>
+  >({});
   const [previewByDay, setPreviewByDay] = useState<
     Record<number, SolverPreviewDetailResponse>
   >({});
@@ -98,8 +101,8 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
   };
 
   const handleApplied = () => {
-    setPreviewByDay({});
-    loadSolverResults();
+    // Keep the preview until the applied plan has loaded, otherwise the old plan flashes up.
+    loadSolverResults().then(() => setPreviewByDay({}));
     loadAllPickupLists();
   };
 
@@ -129,6 +132,7 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
     setPreviewByDay({});
     setBreadCountsByDay({});
     setStoveSessionsByDay({});
+    setBreadsToBakeByDay({});
     setPickupListByDayByLocation({});
     setSelectedPickupLocationByDay({});
     setCheckedByDay({});
@@ -156,9 +160,10 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
   };
 
   const loadSolverResults = () => {
-    if (deliveryDays.length === 0 || allPickupLocations.length === 0) return;
+    if (deliveryDays.length === 0 || allPickupLocations.length === 0)
+      return Promise.resolve();
     const requestedFor = `${year}/${week}`;
-    bakeryApi
+    const sessionsLoaded = bakeryApi
       .bakeryBreadsPerPickupLocationPerWeekList({ year, deliveryWeek: week })
       .then((allBreadCounts) => {
         if (isStale(requestedFor)) return;
@@ -226,6 +231,39 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
         if (isStale(requestedFor)) return;
         handleRequestError(error, "Fehler beim Laden der Backplanung");
       });
+
+    const breadsToBakeLoaded = Promise.all(
+      deliveryDays.map((day) =>
+        bakeryApi
+          .bakeryBreadsToBakePerWeekList({
+            year,
+            deliveryWeek: week,
+            deliveryDay: day,
+          })
+          .then((rows) => {
+            const quantities: Record<string, number> = {};
+            for (const row of rows) {
+              quantities[row.breadName] =
+                (quantities[row.breadName] || 0) + row.quantity;
+            }
+            return { day, quantities };
+          }),
+      ),
+    )
+      .then((results) => {
+        if (isStale(requestedFor)) return;
+        const byDay: Record<number, Record<string, number>> = {};
+        results.forEach(({ day, quantities }) => {
+          byDay[day] = quantities;
+        });
+        setBreadsToBakeByDay(byDay);
+      })
+      .catch((error) => {
+        if (isStale(requestedFor)) return;
+        handleRequestError(error, "Fehler beim Laden der Backplanung");
+      });
+
+    return Promise.all([sessionsLoaded, breadsToBakeLoaded]);
   };
 
   const loadAllPickupLists = () => {
@@ -266,6 +304,7 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
     const preview = previewByDay[day];
     const dayCounts = breadCountsByDay[day] || [];
     const daySessions = stoveSessionsByDay[day] || [];
+    const dayBreadsToBake = breadsToBakeByDay[day] || {};
 
     const breadDeliveries: Record<string, number> = {};
     const breadBaked: Record<string, number> = {};
@@ -281,13 +320,7 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
         breadDeliveries[c.breadName] =
           (breadDeliveries[c.breadName] || 0) + c.count;
       });
-      daySessions.forEach((s) =>
-        s.layers.forEach((l) => {
-          if (l.breadName)
-            breadBaked[l.breadName] =
-              (breadBaked[l.breadName] || 0) + l.quantity;
-        }),
-      );
+      Object.assign(breadBaked, dayBreadsToBake);
     }
 
     const allBreadNames = [

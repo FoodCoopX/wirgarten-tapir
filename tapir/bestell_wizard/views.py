@@ -4,6 +4,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import transaction
 from django.shortcuts import get_object_or_404
+from django.contrib.staticfiles.storage import staticfiles_storage
 from django.templatetags.static import static
 from django.views.generic import TemplateView
 from drf_spectacular.types import OpenApiTypes
@@ -172,20 +173,23 @@ class BestellWizardAssociationMembershipView(TemplateView):
 class BestellWizardProductTypeView(TemplateView):
     template_name = "bestell_wizard/bestell_wizard_product_type.html"
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.cache = {}
+
     def get(self, request, *args, **kwargs):
         check_permission_or_self(pk=kwargs["member_id"], request=request)
         if not request.user.has_perm(
             Permission.Coop.MANAGE
         ) and not get_parameter_value(
-            ParameterKeys.MEMBERS_CAN_UPDATE_THEIR_CONTRACTS, cache={}
+            ParameterKeys.MEMBERS_CAN_UPDATE_THEIR_CONTRACTS, cache=self.cache
         ):
             raise PermissionDenied()
         return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context_data = super().get_context_data(**kwargs)
-        cache = {}
-        BestellWizardMobileView.add_body_style_context(context_data, cache)
+        BestellWizardMobileView.add_body_style_context(context_data, self.cache)
         context_data["member_id"] = kwargs["member_id"]
         context_data["product_type_id"] = kwargs["product_type_id"]
 
@@ -252,13 +256,20 @@ class BestellWizardConfirmOrderApiView(APIView):
         order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
             validated_serializer_data["shopping_cart_order"], cache=cache
         )
+        force_waiting_list = get_parameter_value(
+            ParameterKeys.BESTELLWIZARD_FORCE_WAITING_LIST, cache=cache
+        )
+        if len(order) > 0 and force_waiting_list:
+            raise ValidationError("Nur Warteliste-Einträge sind erlaubt.")
+
         member = None
         waiting_list_entry = None
 
         become_member_now = validated_serializer_data["become_member_now"]
-        if not legal_status_is_cooperative(
-            cache=cache
-        ) and not legal_status_is_association(cache=cache):
+        if force_waiting_list or (
+            not legal_status_is_cooperative(cache=cache)
+            and not legal_status_is_association(cache=cache)
+        ):
             become_member_now = False
 
         if len(order) > 0 or become_member_now:
@@ -276,7 +287,8 @@ class BestellWizardConfirmOrderApiView(APIView):
         )
 
         if (
-            len(order_waiting_list) > 0
+            force_waiting_list
+            or len(order_waiting_list) > 0
             or len(validated_serializer_data["pickup_location_ids"]) > 1
         ):
             if member is None:
@@ -456,6 +468,15 @@ class BestellWizardBaseDataApiView(APIView):
         super().__init__(**kwargs)
         self.cache = {}
 
+    @staticmethod
+    def build_logo_url(cache: dict):
+        # The wizard may have a light background: themes can ship a dark logo for it
+        theme = get_parameter_value(key=ParameterKeys.ORGANISATION_THEME, cache=cache)
+        dark_logo = f"core/themes/{theme}/images/Logo_dark.webp"
+        if staticfiles_storage.exists(dark_logo):
+            return static(dark_logo)
+        return static(f"core/themes/{theme}/images/Logo_white.webp")
+
     @extend_schema(
         responses={200: BestellWizardBaseDataResponseSerializer},
     )
@@ -517,9 +538,7 @@ class BestellWizardBaseDataApiView(APIView):
                     contract_start_date=earliest_contract_start_date,
                 ),
                 "product_ids_that_are_already_at_capacity": product_ids_that_are_already_at_capacity,
-                "logo_url": static(
-                    f"core/themes/{get_parameter_value(key=ParameterKeys.ORGANISATION_THEME, cache=self.cache)}/images/Logo_white.webp"
-                ),
+                "logo_url": self.build_logo_url(cache=self.cache),
                 "distribution_channels": QuestionnaireSourceService.get_questionnaire_source_choices(
                     cache=self.cache
                 ),
@@ -554,28 +573,33 @@ class BestellWizardBaseDataApiView(APIView):
     def build_simple_response_fields(cls, cache: dict):
         serializer_key_to_parameter_key_map = {
             "price_of_a_share": ParameterKeys.COOP_SHARE_PRICE,
+            "coop_share_instalments_enabled": ParameterKeys.COOP_SHARES_INSTALMENTS_ENABLED,
+            "coop_share_instalment_amount": ParameterKeys.COOP_SHARES_INSTALMENT_AMOUNT,
             "theme": ParameterKeys.ORGANISATION_THEME,
             "allow_investing_membership": ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES,
             "force_waiting_list": ParameterKeys.BESTELLWIZARD_FORCE_WAITING_LIST,
             "intro_enabled": ParameterKeys.BESTELLWIZARD_SHOW_INTRO,
             "student_status_allowed": ParameterKeys.ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES,
             "phone_number_required": ParameterKeys.MEMBER_PHONE_NUMBER_REQUIRED,
-            "intro_step_text": ParameterKeys.BESTELLWIZARD_INTRO_TEXT,
             "label_checkbox_sepa_mandat": ParameterKeys.BESTELLWIZARD_SEPA_MANDAT_CHECKBOX_TEXT,
             "label_checkbox_contract_policy": ParameterKeys.BESTELLWIZARD_CONTRACT_POLICY_CHECKBOX_TEXT,
             "default_payment_rhythm": ParameterKeys.PAYMENT_DEFAULT_RHYTHM,
             "coop_statute_link": ParameterKeys.COOP_STATUTE_LINK,
             "organization_name": ParameterKeys.SITE_NAME,
             "contact_mail_address": ParameterKeys.SITE_EMAIL,
+            "website_url": ParameterKeys.SITE_WEBSITE_LINK,
             "solidarity_contribution_default": ParameterKeys.SOLIDARITY_DEFAULT,
             "feedback_step_enabled": ParameterKeys.BESTELLWIZARD_STEP13_ENABLED,
             "solidarity_step_position": ParameterKeys.BESTELL_WIZARD_SOLIDARITY_STEP_POSITION,
             "legal_status": ParameterKeys.ORGANISATION_LEGAL_STATUS,
             "associations_allow_investing_membership": ParameterKeys.ASSOCIATIONS_ALLOW_SUPPORTING_MEMBERSHIP,
         }
-        return cls.build_dictionary_from_config_parameters(
-            serializer_key_to_parameter_key_map, cache
-        )
+        return {
+            **cls.build_dictionary_from_config_parameters(
+                serializer_key_to_parameter_key_map, cache
+            ),
+            "pseudonym_enabled": settings.BAKERY_ENABLED,
+        }
 
     @classmethod
     def build_strings_object(cls, cache: dict):
@@ -593,6 +617,7 @@ class BestellWizardBaseDataApiView(APIView):
             "step3b_text": ParameterKeys.BESTELLWIZARD_STEP3B_TEXT,
             "step4b_waiting_list_modal_title": ParameterKeys.BESTELL_WIZARD_STEP4B_WAITING_LIST_MODAL_HEADER,
             "step4b_waiting_list_modal_text": ParameterKeys.BESTELL_WIZARD_STEP4B_WAITING_LIST_MODAL_TEXT,
+            "step4b_base_price_label": ParameterKeys.BESTELLWIZARD_STEP4B_BASE_PRICE_LABEL,
             "step4d_title": ParameterKeys.BESTELLWIZARD_STEP4D_TITLE,
             "step4d_text": ParameterKeys.BESTELLWIZARD_STEP4D_TEXT,
             "step4d_text_supporting_member": ParameterKeys.BESTELLWIZARD_STEP4D_TEXT_SUPPORTING_MEMBER,
@@ -629,6 +654,7 @@ class BestellWizardBaseDataApiView(APIView):
             "step14_text": ParameterKeys.BESTELLWIZARD_STEP14_TEXT,
             "step14b_title": ParameterKeys.BESTELLWIZARD_STEP14B_TITLE,
             "step14b_text": ParameterKeys.BESTELLWIZARD_STEP14B_TEXT,
+            "step14_back_to_website_button_text": ParameterKeys.BESTELLWIZARD_STEP14_BACK_TO_WEBSITE_BUTTON_TEXT,
             "privacy_policy_url": ParameterKeys.SITE_PRIVACY_LINK,
             "label_student_checkbox": ParameterKeys.LABEL_STUDENT_CHECKBOX,
             "student_checkbox_explanation_text": ParameterKeys.STUDENT_CHECKBOX_EXPLANATION_TEXT,
@@ -920,7 +946,7 @@ class PublicBestellWizardIsEmailAddressValidApiView(APIView):
 
         try:
             PersonalDataValidator.validate_email_address_not_in_use(
-                email=email, cache={}, check_waiting_list=True
+                email=email, check_waiting_list=True
             )
         except ValidationError:
             return Response(False)

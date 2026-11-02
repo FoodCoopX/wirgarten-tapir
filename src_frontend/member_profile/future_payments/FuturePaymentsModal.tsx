@@ -197,30 +197,23 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
   return (
     <Modal onHide={onHide} show={show} centered={true} size={"lg"}>
       <Modal.Header closeButton>
-        <span
-          className={
-            "d-flex flex-row justify-content-between align-items-center"
-          }
-          style={{ width: "100%" }}
-        >
+        <span className={"d-flex align-items-center gap-2"}>
           <Modal.Title>
-            <h4>Zahlungen</h4>
+            <h4 className={"mb-0"}>Zahlungen</h4>
           </Modal.Title>
-          <span className={"d-flex flex-row align-items-center gap-2"}>
-            <Form.Check
-              id={"statute"}
-              checked={showPastPayments}
-              onChange={(event) => setShowPastPayments(event.target.checked)}
-              label={"Vergangene Zahlungen anzeigen"}
-            />
-            <TapirHelpButton
-              text={getExplanationText(deliveryChargeEnabled)}
-              width={"700px"}
-            />
-          </span>
+          <TapirHelpButton
+            text={getExplanationText(deliveryChargeEnabled)}
+            width={"700px"}
+          />
         </span>
       </Modal.Header>
       <Modal.Body>
+        <Form.Check
+          id={"statute"}
+          checked={showPastPayments}
+          onChange={(event) => setShowPastPayments(event.target.checked)}
+          label={"Vergangene Zahlungen anzeigen"}
+        />
         <Form.Text>
           Es werden vorerst nur die vorgesehenen Zahlungen für die nächsten 12
           Monate angezeigt.

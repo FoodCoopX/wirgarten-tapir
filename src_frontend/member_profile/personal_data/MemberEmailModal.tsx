@@ -68,7 +68,7 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
     <>
       Die Änderung deiner E-Mail-Adresse muss durch dich selbst bestätigt
       werden. Folge den Anweisungen, die du an deine alte E-Mail-Adresse
-      erhältst. Wenn du keine Mail erhältst, dann wende dich an deinen Betrieb (
+      erhältst. Wenn du keine Mail erhältst, dann wende dich an die Verwaltung (
       <a href={`mailto:${contactEmail}`}>{contactEmail}</a>).
     </>
   );

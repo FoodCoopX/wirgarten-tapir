@@ -207,24 +207,3 @@ class BreadSpecificsPerDeliveryDayFactory(factory.django.DjangoModelFactory):
     delivery_week = factory.Faker("random_int", min=1, max=53)
     delivery_day = factory.Faker("random_int", min=0, max=6)
     bread = factory.SubFactory(BreadFactory)
-
-
-def enable_bakery():
-    """
-    The delivery sync is a no-op while BAKERY_ENABLED is False, so a test that
-    expects bread deliveries has to opt in.
-    """
-    from tapir.configuration.models import TapirParameter, TapirParameterDatatype
-    from tapir.configuration.parameter import parameter_definition
-    from tapir.wirgarten.parameter_keys import ParameterKeys
-
-    parameter_definition(
-        key=ParameterKeys.BAKERY_ENABLED,
-        label="Bäckerei aktiviert",
-        datatype=TapirParameterDatatype.BOOLEAN,
-        initial_value=True,
-        description="Test",
-        category="Test",
-    )
-    # initial_value only applies on creation, so force the value afterwards.
-    TapirParameter.objects.filter(key=ParameterKeys.BAKERY_ENABLED).update(value="True")

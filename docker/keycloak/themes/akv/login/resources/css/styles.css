@@ -1,0 +1,131 @@
+/* Solawi Ackervielfalt: login pages in the colours and fonts of www.solawi-ackervielfalt.de
+ * Fira Sans (SIL Open Font License, see fonts/OFL-FiraSans.txt) ships with the theme.
+ * Garden Grown (Cultivated Mind) is licensed to the Solawi and is not part of the repository:
+ * the server serves it from /theme-fonts/akv/. Without it the headings fall back to Fira Sans. */
+@font-face {
+    font-family: "Fira Sans";
+    font-style: normal;
+    font-weight: 300;
+    font-display: swap;
+    src: url(./fonts/fira-sans-v11-latin-300.woff2) format("woff2"),
+         url(./fonts/fira-sans-v11-latin-300.woff) format("woff");
+}
+
+@font-face {
+    font-family: "Garden Grown B Caps";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url(/theme-fonts/akv/gardengrown-bcaps-webfont.woff2) format("woff2"),
+         url(/theme-fonts/akv/gardengrown-bcaps-webfont.woff) format("woff");
+}
+
+:root {
+    --akv-blue: #28476e;
+    --akv-blue-hover: #3f6491;
+    --akv-red: #bd4a55;
+    --akv-cream: #f4f1e7;
+    --akv-heading-font: "Garden Grown B Caps", "Fira Sans", sans-serif;
+    --pf-global--primary-color--100: var(--akv-blue);
+    --pf-global--primary-color--200: var(--akv-blue-hover);
+    --pf-global--link--Color: var(--akv-blue);
+    --pf-global--link--Color--hover: var(--akv-blue-hover);
+}
+
+.login-pf body {
+    background: var(--akv-cream) none;
+    font-family: "Fira Sans", sans-serif;
+}
+
+.login-pf a {
+    color: var(--akv-blue);
+    font-weight: 700;
+}
+
+.login-pf a:hover {
+    color: var(--akv-blue-hover);
+    text-decoration: none;
+}
+
+/* Logo on a blue band like the Tapir navigation bar; the realm name stays for screen readers */
+#kc-header {
+    margin: 20px auto 0;
+    max-width: 32em;
+    padding: 0;
+}
+
+#kc-header-wrapper {
+    background: var(--akv-blue) url(../img/Logo_white.webp) no-repeat center;
+    background-size: contain;
+    background-origin: content-box;
+    min-height: 150px;
+    padding: 20px;
+    border-radius: 10px 10px 0 0;
+    font-size: 0;
+    color: transparent;
+}
+
+#kc-header-wrapper * {
+    display: none;
+}
+
+.card-pf {
+    font-family: "Fira Sans", sans-serif;
+    border-top: 4px solid var(--akv-red);
+    border-radius: 0 0 10px 10px;
+    box-shadow: 0 1.5rem 3rem rgba(0, 0, 0, 0.15);
+    max-width: 32em;
+    margin: 0 auto;
+    animation: fadeIn 0.8s;
+}
+
+#kc-page-title {
+    font-family: var(--akv-heading-font);
+    color: var(--akv-blue);
+    letter-spacing: 1px;
+    font-weight: 400;
+}
+
+input,
+.pf-c-form-control {
+    font-family: "Fira Sans", sans-serif !important;
+}
+
+.pf-c-form-control:focus {
+    border-bottom-color: var(--akv-blue);
+}
+
+.pf-c-button.pf-m-primary,
+.btn-primary {
+    background-color: var(--akv-blue);
+    border-color: var(--akv-blue);
+    font-weight: 700;
+}
+
+.pf-c-button.pf-m-primary:hover,
+.pf-c-button.pf-m-primary:focus,
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: var(--akv-blue-hover);
+    border-color: var(--akv-blue-hover);
+}
+
+.pf-c-button.pf-m-secondary,
+.btn-default {
+    color: var(--akv-red);
+    border-color: var(--akv-red);
+}
+
+.pf-c-alert.pf-m-danger,
+.alert-error {
+    border-top-color: var(--akv-red);
+}
+
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}

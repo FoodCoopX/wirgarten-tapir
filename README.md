@@ -21,21 +21,28 @@ The backend code is written with Python and Django, the frontend code is a mix o
 
 Don't hesitate to contact us if you are interested in using or contributing to Tapir.
 
+## User documentation
+
+The user documentation is maintained as Markdown files in [`docs/`](docs/) and published as a searchable website with
+MkDocs and GitHub Pages. See [Contributing to the documentation](CONTRIBUTING.md#contributing-to-the-documentation) to
+preview documentation changes locally.
+
 ## Getting started
 
 Use docker to quickly get a development server running on your machine. Run the following commands:
 
 ```sh
-docker compose up -d
-# Create tables
-docker compose exec web poetry run python manage.py migrate
-# Define the configuration parameters
-docker compose exec web poetry run python manage.py parameter_definitions    
-# Generate test data
-docker compose exec web poetry run python manage.py populate --reset_all
+make up
+# Create tables, define the configuration parameters, generate test data
+make migrate parameters populate
 ```
 
-Alternatively, run the reset script: `./scripts/reset_all_containers.sh`
+Alternatively, run the reset script: `./scripts/reset_all_containers.sh` (or `make reset`).
+
+Every repetitive task has a `make` target — run `make help` to see them. They wrap the commands in
+`docker compose exec web …` for you, which is where Django, `manage.py` and the tests have to run.
+If you prefer typing the commands yourself, look at the [Makefile](Makefile): it is short and
+deliberately readable.
 
 You should now have a local instance accessible at http://localhost:8000/. You can log in as admin with username
 `roberto.cortes@example.com` and password `roberto.cortes`.
@@ -76,12 +83,12 @@ the GitHub issues as our todo-list. Hopefully the labels will be enough to let y
 
 ### Bäckerei (bakery)
 
-The bakery is off by default. For a local instance with it switched on and
-filled with test data — a bakery with one `Brotanteil` share, four pickup
-stations, breads and members:
+The bakery is off by default and is switched on by setting the environment variable `BAKERY_ENABLED` to True. For a
+local instance filled with test data — a bakery with one `Brotanteil` share, four pickup stations, breads and members —
+set it and run:
 
 ```sh
-docker compose exec web poetry run python manage.py populate --reset_all --org=bakery
+make populate-bakery
 ```
 
 The baking-plan solver needs `ortools`, the optional `bakery` extra in
@@ -90,16 +97,21 @@ answer 503.
 
 ## Tests
 
-Tests are run with `pytest`:
+Tests are run with `pytest`, inside the `web` container:
 
 ```shell
-docker compose exec web poetry run pytest --reuse-db -n auto
+make test-fast                      # the whole suite
+make test-app APP=subscriptions     # just one app
+make test                           # what CI runs: format check + coverage
 ```
 
-If you run into troubles while running the tests, try running them without `--reuse-db -n auto`.
+If you run into troubles, run pytest without `--reuse-db -n auto`:
+`docker compose exec web poetry run pytest`.
 
-You can run unit tests outside the Docker container with just by simple running `pytest`, assuming you have the poetry
-environment installed and activated. That should be a bit faster. Integration tests must be run from inside Docker.
+Unit and integration tests are not separated by path, so **running `pytest` on your host collects
+the integration tests too and they fail**. Run them through the targets above, or — if you work
+with the [Django outside of Docker](#django-outside-of-docker) setup — against a local server with
+`db` and `redis` running.
 
 ### Keycloak during tests
 
@@ -125,15 +137,12 @@ API Requests made from the React frontend use API clients. Here are the steps to
 
 - Annotate your API view with [Spectacular](https://github.com/tfranzel/drf-spectacular) (search for `@extend_schema(`
   for examples)
-- Generate the API schema file with `python ./manage.py spectacular --file schema.yml`
-- Generate the TypeScript API clients using [OpenAPI Generator](https://openapi-generator.tech/) with
-  `./scripts/generate_api_clients.sh`
+- Run `make schema`
 
-There are help scripts in the `/scripts` folder. You can do a full update with the following command:
-
-```bash
-docker compose exec web ./scripts/generate_api_schema.sh && docker compose exec vite ./scripts/generate_api_clients.sh
-```
+That regenerates the schema file with `manage.py spectacular --file schema.yml` and then the
+TypeScript clients with [OpenAPI Generator](https://openapi-generator.tech/). The underlying help
+scripts live in the `/scripts` folder; the client step is a no-op when `schema.yml` did not change.
+Commit `schema.yml`, `.schema.hash` and the regenerated client together with your backend change.
 
 ## Style and conventions
 
@@ -175,123 +184,27 @@ Everything that is under tapir/wirgarten should be considered legacy code. It do
 you need to change anything in there, consider rewriting the part that you are changing and moving it to one of the
 other apps.
 
+## Testing mail integration
+
+To make testing mail integration convenient, all mail is forwarded to a [Mailpit](https://mailpit.axllent.org/) instance.
+This prevents leaking test emails to any real inboxes. The Mailpit instance is available at http://localhost:8025.
+
 ## Mailing lists
 
 An optional integration with Mailman can be activated by setting MAILING_LISTS_ENABLED to True. The URL, username and
 password parameters must be set (see `MAILMAN_*` in `settings/base.py`).
 
-If you want to test the integration locally, you can use the following docker-compose file, it creates the following
-services:
+You can use this separate docker compose file to set this up:
 
-- Mailman API at localhost:8001/3.1/
-- Mailman web UI at localhost:8002 (the user's email is admin@example.com, use the password reset function to set it.
-  The reset mail will be accessible in Mailpit)
-- Mailpit at localhost:8025
-
-<details>
-  <summary>Docker compose mailman</summary>
-
-```yaml
-services:
-  mailman-core:
-    image: maxking/mailman-core:0.5
-    container_name: mailman-core
-    hostname: mailman-core
-    restart: unless-stopped
-    volumes:
-      - /opt/mailman/core:/opt/mailman/
-    stop_grace_period: 30s
-    links:
-      - database:database
-    depends_on:
-      database:
-        condition: service_healthy
-      mailpit:
-        condition: service_started
-    environment:
-      - DATABASE_URL=postgresql://mailman:mailmanpass@database/mailmandb
-      - DATABASE_TYPE=postgres
-      - DATABASE_CLASS=mailman.database.postgresql.PostgreSQLDatabase
-      - HYPERKITTY_API_KEY=someapikey
-      # Route Mailman Core's outgoing mail through Mailpit instead of a real MTA
-      - SMTP_HOST=mailpit
-      - SMTP_PORT=1025
-    ports:
-      - "127.0.0.1:8001:8001"  # API
-      - "127.0.0.1:8024:8024"  # LMTP - incoming emails
-    networks:
-      mailman:
-
-  mailman-web:
-    image: maxking/mailman-web:0.5
-    container_name: mailman-web
-    hostname: mailman-web
-    restart: unless-stopped
-    depends_on:
-      database:
-        condition: service_healthy
-      mailpit:
-        condition: service_started
-    links:
-      - mailman-core:mailman-core
-      - database:database
-    volumes:
-      - /opt/mailman/web:/opt/mailman-web-data
-    environment:
-      - DATABASE_TYPE=postgres
-      - DATABASE_URL=postgresql://mailman:mailmanpass@database/mailmandb
-      - HYPERKITTY_API_KEY=someapikey
-      # Route Mailman Web's outgoing mail (password resets, notifications, etc.) through Mailpit
-      - SMTP_HOST=mailpit
-      - SMTP_PORT=1025
-      - SERVE_FROM_DOMAIN=localhost
-      - MAILMAN_ADMIN_USER=admin
-      - MAILMAN_ADMIN_EMAIL=admin@example.com
-      - SECRET_KEY=some_secret_key
-    ports:
-      - "127.0.0.1:8002:8000"  # HTTP
-      - "127.0.0.1:8082:8082"  # uwsgi
-    networks:
-      mailman:
-
-  database:
-    environment:
-      - POSTGRES_DB=mailmandb
-      - POSTGRES_USER=mailman
-      - POSTGRES_PASSWORD=mailmanpass
-    image: postgres:12-alpine
-    volumes:
-      - /opt/mailman/database:/var/lib/postgresql/data
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready --dbname mailmandb --username mailman" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      mailman:
-
-  # Local test mail server: captures all outgoing mail from Mailman
-  # instead of delivering it, so nothing escapes to real inboxes.
-  mailpit:
-    image: axllent/mailpit:latest
-    container_name: mailpit
-    restart: unless-stopped
-    ports:
-      - "127.0.0.1:8025:8025"  # Web UI - view captured messages at http://localhost:8025
-      - "127.0.0.1:1025:1025"  # SMTP server - Mailman delivers here
-    networks:
-      mailman:
-
-networks:
-  mailman:
-    driver: bridge
-    ipam:
-      driver: default
-      config:
-        - subnet: 172.19.199.0/24
+```sh
+docker compose -f docker-compose.mailman.yml up -d
 ```
 
-</details>
+In addition to the base services, this starts:
+
+- Mailman API at http://localhost:8001/3.1/
+- Mailman web UI at http://localhost:8002 (the user's email is admin@example.com, use the password reset
+  function to set it. The reset mail will be accessible in Mailpit)
 
 ## Class diagram
 

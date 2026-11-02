@@ -47,6 +47,7 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
   const [isStudent, setIsStudent] = useState<boolean>();
   const [studentStatusEnabled, setStudentStatusEnabled] = useState(false);
   const [canEditStudent, setCanEditStudent] = useState(false);
+  const [labelStudentCheckbox, setLabelStudentCheckbox] = useState("");
   const [canEditName, setCanEditName] = useState(false);
   const [contactEmail, setContactEmail] = useState("");
   const [memberNumber, setMemberNumber] = useState("");
@@ -59,14 +60,13 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
   const nameHelpText = canEditName ? (
     <>
       Nur du als Admin kannst den Namen des Mitgliedes ändern. Das Mitglied kann
-      dies nicht selbstständig. Ihm wird angezeigt, dass es den Betrieb
-      kontaktieren muss, um den Namen zu verändern.
+      dies nicht selbstständig. Ihm wird angezeigt, dass es sich an die
+      Verwaltung wenden muss, um den Namen zu verändern.
     </>
   ) : (
     <>
       Du kannst nicht selbstständig deinen Namen verändern. Bitte wende dich an
-      deinen Betrieb (<a href={`mailto:${contactEmail}`}>{contactEmail}</a>
-      ).
+      die Verwaltung (<a href={`mailto:${contactEmail}`}>{contactEmail}</a>).
     </>
   );
 
@@ -77,8 +77,8 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
     </>
   ) : (
     <>
-      Du kannst nicht selbstständig dein Land verändern. Bitte wende dich an
-      deinen Betrieb (<a href={`mailto:${contactEmail}`}>{contactEmail}</a>).
+      Du kannst nicht selbstständig dein Land verändern. Bitte wende dich an die
+      Verwaltung (<a href={`mailto:${contactEmail}`}>{contactEmail}</a>).
     </>
   );
 
@@ -125,6 +125,7 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
           setIsStudent(response.isStudent);
           setStudentStatusEnabled(true);
           setCanEditStudent(response.canEditStudent);
+          setLabelStudentCheckbox(response.labelStudentCheckbox);
         }
         setCanEditName(response.canEditName);
         setContactEmail(response.contactEmail);
@@ -405,9 +406,7 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
                   onChange={(e) => setIsStudent(e.target.checked)}
                   id={"is_student"}
                   isValid={showValidation}
-                  label={
-                    "Ich bin Student*in und kann keine Genossenschaftsanteile zeichnen"
-                  }
+                  label={labelStudentCheckbox}
                   disabled={!canEditStudent}
                 />
               </Form.Group>

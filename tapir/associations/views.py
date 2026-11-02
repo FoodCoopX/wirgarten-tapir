@@ -41,6 +41,7 @@ from tapir.associations.services.association_membership_change_handler import (
     AssociationMembershipChangeHandler,
 )
 from tapir.associations.services.dashboard_data_builder import DashboardDataBuilder
+from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.member_needs_banking_data_checker import (
     MemberNeedsBankingDataChecker,
 )
@@ -57,6 +58,7 @@ from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import Member
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import (
     check_permission_or_self,
     get_today,
@@ -162,10 +164,17 @@ class MemberAssociationMembershipDetails(APIView):
                 kwargs={"member_id": member_id},
             )
 
+        cache = {}
         return Response(
             MemberAssociationMembershipDetailsSerializer(
-                {"memberships": memberships, "order_wizard_url": order_wizard_url},
-                context={"cache": {}},
+                {
+                    "memberships": memberships,
+                    "order_wizard_url": order_wizard_url,
+                    "contact_email": get_parameter_value(
+                        ParameterKeys.SITE_EMAIL, cache=cache
+                    ),
+                },
+                context={"cache": cache},
             ).data
         )
 

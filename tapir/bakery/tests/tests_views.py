@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
 from django.core.cache import cache
+from django.test import override_settings
 from django.urls import reverse
 from rest_framework import status
 
@@ -15,7 +16,6 @@ from tapir.bakery.tests.factories import (
     BreadDeliveryFactory,
     BreadFactory,
     BreadsPerPickupLocationPerWeekFactory,
-    enable_bakery,
 )
 from tapir.pickup_locations.tests.factories import (
     create_pickup_location_with_opening_times,
@@ -1043,15 +1043,15 @@ class TestBakeryEndpointsRequireCoopManage(TapirIntegrationTest):
         response = self.client.get(reverse("bakery:ingredients-labels-breads"))
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    @override_settings(BAKERY_ENABLED=True)
     def test_chooseBreadsPage_ownMemberId_isAllowed(self):
-        enable_bakery()
 
         response = self.client.get(reverse("bakery:choose-breads"))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+    @override_settings(BAKERY_ENABLED=True)
     def test_chooseBreadsPage_foreignMemberId_isForbidden(self):
-        enable_bakery()
         victim = MemberFactory.create()
 
         response = self.client.get(
@@ -1060,6 +1060,7 @@ class TestBakeryEndpointsRequireCoopManage(TapirIntegrationTest):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    @override_settings(BAKERY_ENABLED=False)
     def test_adminPages_bakeryDisabled_areNotFound(self):
         self.client.force_login(MemberFactory.create(is_superuser=True))
 
@@ -1068,27 +1069,29 @@ class TestBakeryEndpointsRequireCoopManage(TapirIntegrationTest):
                 response = self.client.get(reverse(f"bakery:{name}"))
                 self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    @override_settings(BAKERY_ENABLED=False)
     def test_adminPages_bakeryDisabled_plainMemberStillGets403(self):
         for name in ("reports", "weekly-plan-breads", "ingredients-labels-breads"):
             with self.subTest(page=name):
                 response = self.client.get(reverse(f"bakery:{name}"))
                 self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    @override_settings(BAKERY_ENABLED=True)
     def test_chooseBreadsPage_anonymous_isRedirectedToLogin(self):
-        enable_bakery()
         self.client.logout()
 
         response = self.client.get(reverse("bakery:choose-breads"))
 
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
+    @override_settings(BAKERY_ENABLED=False)
     def test_chooseBreadsPage_bakeryDisabled_isNotFound(self):
         response = self.client.get(reverse("bakery:choose-breads"))
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    @override_settings(BAKERY_ENABLED=True)
     def test_adminPages_coopManager_isAllowed(self):
-        enable_bakery()
         self.client.force_login(MemberFactory.create(is_superuser=True))
         for name in ("reports", "weekly-plan-breads", "ingredients-labels-breads"):
             with self.subTest(page=name):

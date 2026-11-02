@@ -3,14 +3,14 @@
 {% load core %}
 {% load member_list %}
 {% load wirgarten %}
-{% load tapir_static %}
+{% load static %}
 {% load django_bootstrap5 %}
 {% load django_vite %}
 {% load configuration %}
 {% block head %}
     {{ block.super }}
     <title>
-        {% block title %}Verträge - {{ 'wirgarten.site.name' | parameter }}{% endblock %}
+        {% block title %}Verträge - {% get_parameter_value_tag 'wirgarten.site.name' cache %}{% endblock %}
     </title>
     {% vite_asset 'subscription_list/subscription_list_entry.tsx' %}
 {% endblock head %}
@@ -31,7 +31,7 @@
         <th></th>
         <th class="sort-header" data-sort="member__member_no">#</th>
         <th class="sort-header" data-sort="member__first_name">{% translate "Mitglied" %}</th>
-        <th class="sort-header" data-sort="member__email">{% translate "Email" %}</th>
+        <th class="sort-header" data-sort="member__email">{% translate "E-Mail-Adresse" %}</th>
         <th class="sort-header" data-sort="created_at" style="text-align:center">{% translate "Abgeschlossen am" %}</th>
         <th style="text-align:center">{% translate "Vertragslaufzeit" %}</th>
         <th style="text-align:center">{% translate "Vertrag" %}</th>

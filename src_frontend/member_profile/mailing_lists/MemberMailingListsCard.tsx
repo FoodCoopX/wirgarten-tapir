@@ -1,6 +1,6 @@
 import "dayjs/locale/de";
 import React, { useEffect, useState } from "react";
-import { Card, Spinner, Table } from "react-bootstrap";
+import { Badge, Card, ListGroup, Spinner } from "react-bootstrap";
 import { CoreApi, MailingList } from "../../api-client";
 import TapirButton from "../../components/TapirButton.tsx";
 import TapirHelpButton from "../../components/TapirHelpButton.tsx";
@@ -8,6 +8,8 @@ import TapirToastContainer from "../../components/TapirToastContainer.tsx";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
+
+const LONG_DESCRIPTION_LENGTH = 100;
 
 interface MemberMailCategoryModalProps {
   memberId: string;
@@ -142,21 +144,21 @@ const MemberMailingListsCard: React.FC<MemberMailCategoryModalProps> = ({
           Mitgliedern austauschen: Eine E-Mail an die Adresse der Liste wird an
           alle weitergeleitet, die an der Liste teilnehmen.
         </p>
-        <p>Was die Spalten bedeuten:</p>
+        <p>Was die Angaben bedeuten:</p>
         <ul>
           <li>
-            <strong>Liste</strong>: die E-Mail-Adresse der Liste. An diese
-            Adresse schreibst du, um alle Teilnehmenden zu erreichen.
+            Fett steht die E-Mail-Adresse der Liste. An diese Adresse schreibst
+            du, um alle Teilnehmenden zu erreichen.
           </li>
           <li>
-            <strong>Beschreibung</strong>: Mit einem Klick auf das Fragezeichen
-            siehst du, wofür die Liste gedacht ist.
+            Darunter steht, wofür die Liste gedacht ist. Längere Beschreibungen
+            klappst du mit einem Klick auf „Beschreibung“ auf.
           </li>
           <li>
-            <strong>Teilnahme</strong>: <em>Ja</em> – du nimmst teil und
-            bekommst die E-Mails der Liste. <em>Nein</em> – du nimmst nicht
-            teil. <em>Eingeladen</em> – du wurdest eingeladen und nimmst erst
-            teil, wenn du die Einladung annimmst.
+            <em>Angemeldet</em> – du nimmst teil und bekommst die E-Mails der
+            Liste. <em>Nicht angemeldet</em> – du nimmst nicht teil.{" "}
+            <em>Eingeladen</em> – du wurdest eingeladen und nimmst erst teil,
+            wenn du die Einladung annimmst.
           </li>
         </ul>
         <p>So funktioniert es:</p>
@@ -165,12 +167,18 @@ const MemberMailingListsCard: React.FC<MemberMailCategoryModalProps> = ({
             Mit „Anmelden“ nimmst du sofort an der Liste teil, und zwar mit der
             E-Mail-Adresse aus deinem Profil. Du musst nichts weiter bestätigen
             und bekommst auch keine Bestätigungs-E-Mail. Dass die Anmeldung
-            geklappt hat, erkennst du daran, dass bei Teilnahme „Ja“ steht.
+            geklappt hat, erkennst du daran, dass bei der Liste „Angemeldet“
+            steht.
           </li>
           <li>
             Um an alle zu schreiben, schickst du aus deinem E-Mail-Programm eine
             E-Mail an die Adresse der Liste. Nutze dafür die E-Mail-Adresse aus
             deinem Profil als Absender.
+          </li>
+          <li>
+            Bei manchen Listen werden E-Mails nicht sofort weitergeleitet,
+            sondern erst, nachdem Admins sie freigegeben haben. Das steht dann
+            in der Beschreibung der Liste.
           </li>
           <li>
             Mit „Abmelden“ beendest du deine Teilnahme. Du bekommst dann keine
@@ -181,15 +189,48 @@ const MemberMailingListsCard: React.FC<MemberMailCategoryModalProps> = ({
     );
   }
 
+  function buildDescription(list: MailingList) {
+    if (!list.description) {
+      return null;
+    }
+
+    if (list.description.length <= LONG_DESCRIPTION_LENGTH) {
+      return <p className={"mb-1"}>{list.description}</p>;
+    }
+
+    return (
+      <details className={"mb-1"}>
+        <summary>Beschreibung</summary>
+        {list.description}
+      </details>
+    );
+  }
+
+  function buildModerationWarning(list: MailingList) {
+    if (!list.moderated) {
+      return null;
+    }
+
+    return (
+      <p className={"mb-1 d-flex gap-1 align-items-center small"}>
+        <span className={"material-icons text-warning"}>warning</span>
+        E-Mails an diese Liste werden nicht sofort weitergeleitet, sondern erst
+        nach Freigabe durch Admins.
+      </p>
+    );
+  }
+
   function buildParticipation(list: MailingList) {
     if (subscribedLists.includes(list.name)) {
-      return "Ja";
+      return <Badge bg={"success"}>Angemeldet</Badge>;
     }
 
     if (waitingForConfirmationLists.includes(list.name)) {
       return (
-        <span className={"d-flex gap-2 align-items-start"}>
-          <span>Eingeladen</span>
+        <span className={"d-flex gap-2 align-items-center"}>
+          <Badge bg={"warning"} text={"dark"}>
+            Eingeladen
+          </Badge>
           <TapirHelpButton
             buttonSize={"sm"}
             text={buildInvitationHelpText(list)}
@@ -198,7 +239,7 @@ const MemberMailingListsCard: React.FC<MemberMailCategoryModalProps> = ({
       );
     }
 
-    return "Nein";
+    return <Badge bg={"secondary"}>Nicht angemeldet</Badge>;
   }
 
   function buildInvitationHelpText(list: MailingList) {
@@ -239,7 +280,7 @@ const MemberMailingListsCard: React.FC<MemberMailCategoryModalProps> = ({
 
     if (waitingForConfirmationLists.includes(list.name)) {
       return (
-        <span className={"d-flex gap-2"}>
+        <span className={"d-flex flex-wrap gap-2"}>
           <TapirButton
             size={"sm"}
             variant={"primary"}
@@ -283,38 +324,29 @@ const MemberMailingListsCard: React.FC<MemberMailCategoryModalProps> = ({
             <TapirHelpButton text={buildHelpText()} width={"600px"} />
           </span>
         </Card.Header>
-        <Card.Body>
-          {dataLoading ? (
+        {dataLoading ? (
+          <Card.Body>
             <Spinner />
-          ) : (
-            <Table responsive bordered striped>
-              <thead>
-                <tr>
-                  <th>Liste</th>
-                  <th>Beschreibung</th>
-                  <th>Teilnahme</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {allMailingLists.map((list) => (
-                  <tr key={list.name}>
-                    <td>{list.name}</td>
-                    <td>
-                      <TapirHelpButton
-                        text={list.description}
-                        buttonSize={"sm"}
-                        title={"Beschreibung"}
-                      />
-                    </td>
-                    <td>{buildParticipation(list)}</td>
-                    <td>{buildButtons(list)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
-          )}
-        </Card.Body>
+          </Card.Body>
+        ) : (
+          <ListGroup variant={"flush"}>
+            {allMailingLists.map((list) => (
+              <ListGroup.Item key={list.name}>
+                <div className={"fw-bold text-break"}>{list.name}</div>
+                {buildDescription(list)}
+                {buildModerationWarning(list)}
+                <div
+                  className={
+                    "d-flex flex-wrap justify-content-between align-items-center gap-2"
+                  }
+                >
+                  {buildParticipation(list)}
+                  {buildButtons(list)}
+                </div>
+              </ListGroup.Item>
+            ))}
+          </ListGroup>
+        )}
       </Card>
       <TapirToastContainer
         toastDatas={toastDatas}

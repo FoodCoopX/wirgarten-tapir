@@ -1,6 +1,7 @@
 import datetime
 
 from django.db import IntegrityError
+from django.test import override_settings
 
 from tapir.bakery.models import (
     BreadContent,
@@ -70,8 +71,8 @@ class TestBreadDeliverySync(TapirIntegrationTest):
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
+    @override_settings(BAKERY_ENABLED=False)
     def test_ensureBreadDeliveries_bakeryDisabled_createsNothing(self):
-        # BAKERY_ENABLED defaults to False, so nothing here has to switch it off.
         member = MemberFactory.create()
         product = ProductFactory.create(
             type=ProductTypeFactory.create(delivery_cycle="weekly")

@@ -12,7 +12,7 @@ from tapir.log.util import freeze_for_log
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.service.products import get_active_and_future_subscriptions
-from tapir.wirgarten.utils import get_now, get_today
+from tapir.wirgarten.utils import get_now, get_today, legal_status_is_association
 
 
 class AssociationMembershipCancellationManager:
@@ -27,6 +27,16 @@ class AssociationMembershipCancellationManager:
             for membership in TapirCache.get_member_association_memberships(
                 member=member, cache=cache
             )
+        )
+
+    @classmethod
+    def can_member_cancel_association_membership(cls, member: Member, cache: dict):
+        return legal_status_is_association(
+            cache=cache
+        ) and cls.does_member_have_a_cancellable_membership(
+            member=member,
+            reference_date=get_today(cache=cache),
+            cache=cache,
         )
 
     @classmethod

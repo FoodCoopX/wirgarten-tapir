@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Accordion, AccordionBody } from "react-bootstrap";
 import {
   AssociationMembershipType,
@@ -17,6 +17,7 @@ import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeast
 import { isProductTypeOrdered } from "../../bestell_wizard/utils/isProductTypeOrdered.ts";
 import TapirButton from "../../components/TapirButton.tsx";
 import formatAddress from "../../utils/formatAddress.ts";
+import { formatCoopShareLabel } from "../../utils/formatCoopShareLabel.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
@@ -26,6 +27,7 @@ import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import { doesWaitingListHaveProductType } from "../utils/doesWaitingListHaveProductType.ts";
 import { getAssociationMembershipTypeMonthlyPriceFormatted } from "../utils/getAssociationMembershipTypeMonthlyPriceFormatted.ts";
 import { getFirstPickupLocationWithCapacity } from "../utils/getFirstPickupLocationWithCapacity.ts";
+import { getNumberOfCoopShareInstalments } from "../utils/getNumberOfCoopShareInstalments.ts";
 import {
   getProductById,
   getProductByIdGlobal,
@@ -34,11 +36,13 @@ import { getProductTypeByProductId } from "../utils/getProductTypeByProductId.ts
 import { getTotalPriceForProductType } from "../utils/getTotalPriceForProductType.ts";
 import { getVisibleAssociationMembershipTypes } from "../utils/getVisibleAssociationMembershipTypes.ts";
 import { scrollIntoView } from "../utils/scrollIntoView.ts";
+import { willBecomeMemberNow } from "../utils/willBecomeMemberNow.ts";
 
 interface Step10OrderSummaryProps {
   settings: BestellWizardSettings;
   shoppingCart: ShoppingCart;
   numberOfCoopShares: number;
+  payCoopSharesInInstalments?: boolean;
   studentStatusEnabled: boolean;
   goToNextStep: () => void;
   contractStartDate: Date;
@@ -82,6 +86,7 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
   settings,
   shoppingCart,
   numberOfCoopShares,
+  payCoopSharesInInstalments,
   studentStatusEnabled,
   goToNextStep,
   contractStartDate,
@@ -104,13 +109,6 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
   stepActive,
   setCurrentStep,
 }) => {
-  const [activePickupLocation, setActivePickupLocation] =
-    useState<PublicPickupLocation>();
-
-  useEffect(() => {
-    setActivePickupLocation(getRelevantPickupLocation());
-  }, [selectedPickupLocations]);
-
   function getRelevantPickupLocation(): PublicPickupLocation | undefined {
     if (waitingListEntryDetails === undefined) {
       return getFirstPickupLocationWithCapacity(
@@ -125,6 +123,8 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
 
     return waitingListEntryDetails.currentPickupLocation;
   }
+
+  const activePickupLocation = getRelevantPickupLocation();
 
   function getProductTypeTitle(productType: PublicProductType) {
     if (isProductTypeOrdered(productType, shoppingCart)) {
@@ -230,6 +230,18 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
     );
   }
 
+  function getPickupLocationWishHeading() {
+    if (activePickupLocation) {
+      return "Weitere Verteilstation-Wünsche auf Warteliste:";
+    }
+
+    if (getLocationsNotActive().length === 1) {
+      return "Verteilstation auf der Warteliste:";
+    }
+
+    return "Verteilstationen auf der Warteliste:";
+  }
+
   function getEndOfTrialPeriod(productTypeId: string) {
     const firstDelivery = dayjs(getDateOfFirstDelivery(productTypeId));
     return firstDelivery
@@ -312,14 +324,35 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
   function getPaymentSegments() {
     const segments: React.ReactNode[] = [];
 
-    if (isOneTimePaymentShown()) {
+    if (isOneTimePaymentShown() && payCoopSharesInInstalments) {
+      segments.push(
+        <>
+          <strong>
+            {getNumberOfCoopShareInstalments(numberOfCoopShares, settings)}{" "}
+            monatliche Raten:
+          </strong>
+          <PaymentRow
+            label={
+              "Genossenschaftsanteile" +
+              (willBecomeMemberNow(settings, becomeMemberNow)
+                ? ""
+                : " (Start wenn Platz frei)")
+            }
+            amount={settings.coopShareInstalmentAmount}
+            perMonth={true}
+          />
+        </>,
+      );
+    } else if (isOneTimePaymentShown()) {
       segments.push(
         <>
           <strong>Einmalig:</strong>
           <PaymentRow
             label={
               "Genossenschaftsanteile" +
-              (becomeMemberNow === false ? " (Start wenn Platz frei)" : "")
+              (willBecomeMemberNow(settings, becomeMemberNow)
+                ? ""
+                : " (Start wenn Platz frei)")
             }
             amount={numberOfCoopShares * settings.priceOfAShare}
           />
@@ -448,9 +481,7 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                       {!productType.noDelivery &&
                         getLocationsNotActive().length > 0 && (
                           <li>
-                            <div>
-                              Weitere Verteilstation-Wünsche auf Warteliste:
-                            </div>
+                            <div>{getPickupLocationWishHeading()}</div>
                             <ul>
                               {getLocationsNotActive().map((pickupLocation) => (
                                 <li key={pickupLocation.id}>
@@ -475,7 +506,7 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
           ))}
           {!singleProductType &&
             settings.showCoopContent &&
-            becomeMemberNow !== false &&
+            willBecomeMemberNow(settings, becomeMemberNow) &&
             !waitingListEntryDetails?.memberAlreadyExists && (
               <Accordion>
                 <Accordion.Item
@@ -484,15 +515,35 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                 >
                   <Accordion.Header>{getCoopSharesTitle()}</Accordion.Header>
                   <AccordionBody>
-                    {studentStatusEnabled
-                      ? settings.strings.step10TextStudent
-                      : numberOfCoopShares +
-                        " Genossenschaftsanteile à " +
-                        formatCurrency(settings.priceOfAShare) +
-                        " = " +
-                        formatCurrency(
-                          numberOfCoopShares * settings.priceOfAShare,
+                    {studentStatusEnabled ? (
+                      settings.strings.step10TextStudent
+                    ) : (
+                      <>
+                        {numberOfCoopShares +
+                          " " +
+                          formatCoopShareLabel(numberOfCoopShares) +
+                          " à " +
+                          formatCurrency(settings.priceOfAShare) +
+                          " = " +
+                          formatCurrency(
+                            numberOfCoopShares * settings.priceOfAShare,
+                          )}
+                        {payCoopSharesInInstalments && (
+                          <>
+                            <br />
+                            {"in " +
+                              getNumberOfCoopShareInstalments(
+                                numberOfCoopShares,
+                                settings,
+                              ) +
+                              " monatlichen Raten à " +
+                              formatCurrency(
+                                settings.coopShareInstalmentAmount,
+                              )}
+                          </>
                         )}
+                      </>
+                    )}
                     <TapirButton
                       variant={BUTTON_VARIANT}
                       size={"sm"}

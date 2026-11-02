@@ -267,12 +267,7 @@ class MemberFilter(FilterSet):
     def filter_email_verified(self, queryset, name, value):
         new_queryset = queryset.all()
         for member in queryset:
-            if (
-                EmailVerificationService.is_user_email_verified(
-                    user=member, cache=self.cache
-                )
-                != value
-            ):
+            if EmailVerificationService.is_user_email_verified(user=member) != value:
                 new_queryset = new_queryset.exclude(id=member.id)
         return new_queryset
 

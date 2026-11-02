@@ -1,5 +1,7 @@
 import typing
 
+from django.core.validators import MaxLengthValidator
+
 from tapir.configuration.models import TapirParameterDatatype, TapirParameter
 from tapir.configuration.parameter import ParameterMeta, get_parameter_value
 from tapir.core.config import (
@@ -17,6 +19,8 @@ from tapir.wirgarten.utils import (
     legal_status_is_cooperative,
     legal_status_is_association,
 )
+
+BESTELLWIZARD_STEP4B_BASE_PRICE_LABEL_MAX_LENGTH = 30
 
 if typing.TYPE_CHECKING:
     from tapir.wirgarten.parameters import (
@@ -48,32 +52,6 @@ class ParameterDefinitionsBestellwizard:
             description="Wenn aktiviert, erscheint eine Intro-Seite, auf der der Benutzer auswählen kann, welche Produktanteile gezeichnet werden sollen. "
             "Wenn nicht aktiviert, werden alle Formularseiten zu allen Produktanteilen angezeigt.",
             category=ParameterCategory.BESTELLWIZARD,
-            order_priority=bestellwizard_parameter_order,
-        )
-        bestellwizard_parameter_order -= 1
-
-        importer.parameter_definition(
-            key=ParameterKeys.BESTELLWIZARD_INTRO_TEXT,
-            label="Text im BestellWizard in der Intro-Seite Oben",
-            datatype=TapirParameterDatatype.STRING,
-            initial_value="""<h3 class='card-title'>Dieser Standard-Text soll in der Allgemein-Konfig angepasst werden</h3>
-<p>
-    Du möchtest Teil des COOP_NAME werden? Dann gibt es jetzt verschiedene Möglichkeiten:
-</p>
-<p>
-    Das COOP_NAME ist eine Genossenschaft. Es gehört allen Mitgliedern, und nur Mitglieder können weitere Verträge abschließen und damit Gemüse beziehen.
-</p>
-<p>
-    Du bist bereits Mitglied? Dann schließe bitte weitere Verträge über deinen persönlichen <a href={"/"}>Mitglieder-Bereich</a> ab.
-</p>""",
-            category=ParameterCategory.BESTELLWIZARD,
-            description="Kann Text oder HTML sein",
-            meta=ParameterMeta(
-                show_only_when=lambda cache: get_parameter_value(
-                    ParameterKeys.BESTELLWIZARD_SHOW_INTRO, cache=cache
-                ),
-                textarea=True,
-            ),
             order_priority=bestellwizard_parameter_order,
         )
         bestellwizard_parameter_order -= 1
@@ -316,6 +294,25 @@ class ParameterDefinitionsBestellwizard:
             description="",
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
+        )
+        bestellwizard_parameter_order -= 1
+
+        importer.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP4B_BASE_PRICE_LABEL,
+            label="Seite 4B: Produkt-Typ Bestellung - Bezeichnung für den Preis",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Basisbeitrag",
+            description="Steht unter jeder Produktvariante vor dem Preis, z.B. 'Basisbeitrag: 89,00 € pro Monat'. "
+            f"Maximal {BESTELLWIZARD_STEP4B_BASE_PRICE_LABEL_MAX_LENGTH} Zeichen.",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+            meta=ParameterMeta(
+                validators=[
+                    MaxLengthValidator(
+                        limit_value=BESTELLWIZARD_STEP4B_BASE_PRICE_LABEL_MAX_LENGTH
+                    )
+                ]
+            ),
         )
         bestellwizard_parameter_order -= 1
 
@@ -928,6 +925,18 @@ class ParameterDefinitionsBestellwizard:
             meta=ParameterMeta(
                 vars_hint=["mitglieder_mail", "kontakt_mail"], textarea=True
             ),
+        )
+        bestellwizard_parameter_order -= 1
+
+        importer.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP14_BACK_TO_WEBSITE_BUTTON_TEXT,
+            label="Seite 14 und 14B: Abschluss - Beschriftung des Buttons zur Website",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Zurück zur Website",
+            description="Der Button führt zu der Website, die in der Kategorie Standort unter 'Link zur Website' eingetragen ist. "
+            "Ist dort keine Website eingetragen, wird der Button nicht angezeigt.",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
         )
         bestellwizard_parameter_order -= 1
 

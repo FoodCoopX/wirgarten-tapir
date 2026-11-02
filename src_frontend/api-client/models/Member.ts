@@ -12,8 +12,8 @@
  * Do not edit the class manually.
  */
 
-import type { MemberCountry } from "./MemberCountry";
-import { MemberCountryFromJSON, MemberCountryToJSON } from "./MemberCountry";
+import type { Land } from "./Land";
+import { LandFromJSON, LandToJSON } from "./Land";
 import type { PreferredLanguageEnum } from "./PreferredLanguageEnum";
 import {
   PreferredLanguageEnumFromJSON,
@@ -142,10 +142,10 @@ export interface Member {
   city?: string;
   /**
    *
-   * @type {MemberCountry}
+   * @type {Land}
    * @memberof Member
    */
-  country?: MemberCountry;
+  country?: Land;
   /**
    *
    * @type {string}
@@ -272,9 +272,7 @@ export function MemberFromJSONTyped(
     postcode: json["postcode"] == null ? undefined : json["postcode"],
     city: json["city"] == null ? undefined : json["city"],
     country:
-      json["country"] == null
-        ? undefined
-        : MemberCountryFromJSON(json["country"]),
+      json["country"] == null ? undefined : LandFromJSON(json["country"]),
     formOfAddress:
       json["form_of_address"] == null ? undefined : json["form_of_address"],
     preferredLanguage:
@@ -346,7 +344,7 @@ export function MemberToJSONTyped(
     street_2: value["street2"],
     postcode: value["postcode"],
     city: value["city"],
-    country: MemberCountryToJSON(value["country"]),
+    country: LandToJSON(value["country"]),
     form_of_address: value["formOfAddress"],
     preferred_language: PreferredLanguageEnumToJSON(value["preferredLanguage"]),
     account_owner: value["accountOwner"],

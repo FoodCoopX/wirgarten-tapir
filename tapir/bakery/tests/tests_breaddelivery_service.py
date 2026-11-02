@@ -1,14 +1,13 @@
 from datetime import date
 from unittest.mock import patch
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from tapir.bakery.models import BreadDelivery
 from tapir.bakery.services.bread_delivery_context_service import (
     BreadDeliveryContextService,
 )
 from tapir.bakery.services.breaddelivery_service import BreadDeliveryService
-from tapir.bakery.tests.factories import enable_bakery
 from tapir.deliveries.models import Joker
 from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.models import MemberPickupLocation
@@ -24,6 +23,7 @@ from tapir.wirgarten.tests.factories import (
 )
 
 
+@override_settings(BAKERY_ENABLED=True)
 class TestEnsureBreadDeliveriesForMember(TestCase):
     @classmethod
     def setUpTestData(cls):
@@ -31,7 +31,6 @@ class TestEnsureBreadDeliveriesForMember(TestCase):
 
     def setUp(self):
         super().setUp()
-        enable_bakery()
         self.product_type = ProductTypeFactory.create(
             name="Brot", delivery_cycle="weekly"
         )

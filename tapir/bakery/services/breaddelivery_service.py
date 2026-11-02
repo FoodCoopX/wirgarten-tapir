@@ -1,16 +1,14 @@
 from datetime import datetime, timedelta
 
+from django.conf import settings
 from django.db import models
-from django.db.utils import OperationalError, ProgrammingError
 
 from tapir.bakery.models import BreadCapacityPickupLocation, BreadDelivery
 from tapir.bakery.services.bread_delivery_context_service import (
     BreadDeliveryContextService,
 )
-from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
 from tapir.wirgarten.models import GrowingPeriod, Member, Subscription
-from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
 class BreadDeliveryService:
@@ -19,17 +17,6 @@ class BreadDeliveryService:
     row per delivered week per slot, and no row for a week they are not
     delivered in.
     """
-
-    @classmethod
-    def is_bakery_enabled(cls, cache: dict | None = None) -> bool:
-        """
-        Non-throwing: get_parameter_value raises when the parameter row has not
-        been seeded, and this runs from a post_save receiver.
-        """
-        try:
-            return bool(get_parameter_value(ParameterKeys.BAKERY_ENABLED, cache=cache))
-        except (KeyError, ProgrammingError, OperationalError):
-            return False
 
     @classmethod
     def get_weeks_in_range(cls, start_date, end_date):
@@ -53,7 +40,7 @@ class BreadDeliveryService:
         if cache is None:
             cache = {}
 
-        if not cls.is_bakery_enabled(cache=cache):
+        if not settings.BAKERY_ENABLED:
             return
 
         cls._sync_deliveries(member, cache=cache)
@@ -65,7 +52,7 @@ class BreadDeliveryService:
         existing growing period has to rewrite the rows already created.
         """
         cache = {}
-        if not cls.is_bakery_enabled(cache=cache):
+        if not settings.BAKERY_ENABLED:
             return
 
         member_ids = (
@@ -92,7 +79,7 @@ class BreadDeliveryService:
         """
         if cache is None:
             cache = {}
-        if not cls.is_bakery_enabled(cache=cache):
+        if not settings.BAKERY_ENABLED:
             return
 
         now = datetime.now().date()

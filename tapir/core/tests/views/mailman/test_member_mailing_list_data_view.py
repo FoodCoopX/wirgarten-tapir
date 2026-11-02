@@ -8,7 +8,7 @@ from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
-@override_settings(MAILING_LISTS_ENABLED=True)
+@override_settings(MAILING_LISTS_ENABLED=True, EMAIL_HOST="example.com")
 class TestMemberMailingListDataView(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls) -> None:
@@ -85,6 +85,7 @@ class TestMemberMailingListDataView(TapirIntegrationTest):
                 "available_lists": [
                     {
                         "advertised": True,
+                        "moderated": False,
                         "description": "",
                         "name": "test_name@example.com",
                         "nb_recipients": 0,
@@ -148,6 +149,7 @@ class TestMemberMailingListDataView(TapirIntegrationTest):
                 "available_lists": [
                     {
                         "advertised": True,
+                        "moderated": False,
                         "description": "",
                         "name": "test_name@example.com",
                         "nb_recipients": 1,
@@ -185,6 +187,7 @@ class TestMemberMailingListDataView(TapirIntegrationTest):
                 "available_lists": [
                     {
                         "advertised": True,
+                        "moderated": False,
                         "description": "",
                         "name": "test_name@example.com",
                         "nb_recipients": 1,
@@ -222,6 +225,7 @@ class TestMemberMailingListDataView(TapirIntegrationTest):
                 "available_lists": [
                     {
                         "advertised": False,
+                        "moderated": False,
                         "description": "",
                         "name": "test_name@example.com",
                         "nb_recipients": 1,
@@ -259,6 +263,7 @@ class TestMemberMailingListDataView(TapirIntegrationTest):
                 "available_lists": [
                     {
                         "advertised": False,
+                        "moderated": False,
                         "description": "",
                         "name": "test_name@example.com",
                         "nb_recipients": 1,

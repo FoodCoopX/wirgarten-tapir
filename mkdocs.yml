@@ -1,0 +1,22 @@
+site_name: Tapir User Documentation
+site_description: User documentation for Tapir
+
+docs_dir: docs
+site_dir: site
+
+theme:
+  name: readthedocs
+  locale: en
+  features:
+    - navigation.expand   # expands the navigation sidebar automatically
+    - search.suggest      # suggests search terms as you type
+    - search.highlight    # marks found words in the text
+
+plugins:
+  - search
+  - awesome-pages
+
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: true

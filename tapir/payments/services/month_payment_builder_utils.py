@@ -23,6 +23,14 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 
 class MonthPaymentBuilderUtils:
     @classmethod
+    def filter_contracts_by_member[T: TapirContract](
+        cls, contracts: list[T], member_id: str | None
+    ) -> list[T]:
+        if member_id is None:
+            return contracts
+        return [contract for contract in contracts if contract.member_id == member_id]
+
+    @classmethod
     def get_relevant_past_payments(
         cls,
         range_start: datetime.date,

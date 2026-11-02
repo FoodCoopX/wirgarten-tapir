@@ -1,7 +1,10 @@
 import "dayjs/locale/de";
 import React from "react";
 import { Modal } from "react-bootstrap";
-import { ProductForCancellation } from "../../../api-client";
+import {
+  ProductForCancellation,
+  SolidarityContributionCancellationData,
+} from "../../../api-client";
 import TapirButton from "../../../components/TapirButton.tsx";
 import { formatDateText } from "../../../utils/formatDateText.ts";
 
@@ -11,6 +14,8 @@ interface CancellationStepConfirmationProps {
   onConfirm: () => void;
   cancelCoopMembershipSelected: boolean;
   cancelAssociationMembershipSelected: boolean;
+  cancelSolidarityContribution: boolean;
+  solidarityContributionData?: SolidarityContributionCancellationData;
   customCancellationReasons: string | undefined;
   goToPreviousStep: () => void;
   confirmationLoading: boolean;
@@ -24,6 +29,8 @@ const CancellationStepConfirmation: React.FC<
   onConfirm,
   cancelCoopMembershipSelected,
   cancelAssociationMembershipSelected,
+  cancelSolidarityContribution,
+  solidarityContributionData,
   customCancellationReasons,
   goToPreviousStep,
   confirmationLoading,
@@ -52,6 +59,13 @@ const CancellationStepConfirmation: React.FC<
           {cancelAssociationMembershipSelected && (
             <li>Beitrittserklärung zum Verein</li>
           )}
+          {cancelSolidarityContribution &&
+            solidarityContributionData?._exists && (
+              <li>
+                {"Solidarbeitrag zum " +
+                  formatDateText(solidarityContributionData.cancellationDate)}
+              </li>
+            )}
         </ul>
         <p>Du hast folgende Gründe für die Kündigung genannt:</p>
         <ul>

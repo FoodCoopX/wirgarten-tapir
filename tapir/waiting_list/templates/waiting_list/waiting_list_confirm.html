@@ -1,21 +1,20 @@
 {% load django_vite %}
 {% load configuration %}
-{% load tapir_static %}
+{% load static %}
 {% load core %}
 <!DOCTYPE html>
 <html lang="{{ LANGUAGE_CODE }}">
     <head>
         <meta charset="utf-8">
         <title>
-            {% block title %}Warteliste-Bestätigung - {{ "wirgarten.site.name"|parameter }} - Tapir{% endblock %}
+            {% block title %}Warteliste-Bestätigung - {% get_parameter_value_tag "wirgarten.site.name" cache %} - Tapir{% endblock %}
         </title>
-        {% with "organisation.theme"|parameter as theme %}
-            <link rel="shortcut icon"
-                  type="image/png"
-                  href="{% static 'core/themes/'|add:theme|add:'/favicon.ico' %}" />
-            <link rel="stylesheet"
-                  href="{% static 'core/themes/'|add:theme|add:'/css/custom.css' %}" />
-        {% endwith %}
+        {% get_parameter_value_tag "organisation.theme" cache as theme %}
+        <link rel="shortcut icon"
+              type="image/png"
+              href="{% static 'core/themes/'|add:theme|add:'/favicon.ico' %}" />
+        <link rel="stylesheet"
+              href="{% static 'core/themes/'|add:theme|add:'/css/custom.css' %}" />
         {% javascript_environment_variables %}
         {% vite_hmr_client %}
         {% vite_react_refresh %}
@@ -28,6 +27,6 @@
         <span id="waiting_list_confirm"
               data-entry-id="{{ entry_id }}"
               data-link-key="{{ link_key }}"
-              data-admin-email="{{ "wirgarten.site.admin_email"|parameter }}"></span>
+              data-admin-email="{% get_parameter_value_tag "wirgarten.site.admin_email" cache %}"></span>
     </body>
 </html>

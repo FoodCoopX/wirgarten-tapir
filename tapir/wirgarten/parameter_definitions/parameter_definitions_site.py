@@ -6,6 +6,7 @@ from tapir.configuration.models import TapirParameterDatatype
 from tapir.configuration.parameter import ParameterMeta
 from tapir.wirgarten.constants import ParameterCategory
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.validators import validate_optional_url
 
 if typing.TYPE_CHECKING:
     from tapir.wirgarten.parameters import (
@@ -80,7 +81,7 @@ class ParameterDefinitionsSite:
             label="Admin/Ansprechpartner Telefonnummer",
             datatype=TapirParameterDatatype.STRING,
             initial_value="+49 176 34 45 81 48",
-            description="Die Kontakttelefonnummer für Mitglieder",
+            description="Die Kontakttelefonnummer für Mitglieder. Wenn das Feld leer bleibt, wird im Mitgliederbereich keine Telefonnummer angezeigt.",
             category=ParameterCategory.SITE,
         )
 
@@ -88,7 +89,7 @@ class ParameterDefinitionsSite:
             key=ParameterKeys.SITE_ADMIN_IMAGE,
             label="Admin/Ansprechpartner Foto",
             datatype=TapirParameterDatatype.STRING,
-            initial_value="https://placehold.net/avatar.svg",
+            initial_value="/static/wirgarten/images/site_admin_image_placeholder.svg",
             description="Ein Foto der Kontaktperson für Mitglieder",
             category=ParameterCategory.SITE,
         )
@@ -111,4 +112,17 @@ class ParameterDefinitionsSite:
             description="Der Link zum FAQ für Mitglieder",
             category=ParameterCategory.SITE,
             meta=ParameterMeta(validators=[URLValidator()]),
+        )
+
+        importer.parameter_definition(
+            key=ParameterKeys.SITE_WEBSITE_LINK,
+            label="Link zur Website",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="",
+            description="Der Link zur eigenen Website. Beispiel: 'https://lueneburg.wirgarten.com'. "
+            "Wird auf der letzten Seite des BestellWizards (nach einer Bestellung oder einer Eintragung auf die Warteliste) "
+            "als Button angezeigt, der zurück zur Website führt. Die Beschriftung des Buttons ist in der Kategorie BestellWizard einstellbar. "
+            "Wenn das Feld leer bleibt, wird kein Button angezeigt.",
+            category=ParameterCategory.SITE,
+            meta=ParameterMeta(validators=[validate_optional_url]),
         )

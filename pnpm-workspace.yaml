@@ -3,3 +3,4 @@ allowBuilds:
   '@openapitools/openapi-generator-cli': true
   '@swc/core': true
   esbuild: true
+minimumReleaseAge: 10080

@@ -1,5 +1,6 @@
 import logging
 from typing import Any
+from urllib.error import HTTPError
 
 from django.conf import settings
 from django.contrib.auth.mixins import PermissionRequiredMixin
@@ -10,18 +11,24 @@ from django.urls import reverse
 from django.views.generic import TemplateView
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from mailmanclient import MailmanConnectionError, MailingList
-from rest_framework import permissions
+from rest_framework import permissions, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from tapir.accounts.services.email_normaliser import EmailNormaliser
 from tapir.core.serializers import (
-    MailingListSerializer,
+    MailingListAdminSerializer,
+    MailingListHeldMessageSerializer,
+    MailingListModerateHeldMessageRequestSerializer,
     MailingListRecipientSerializer,
     MailingListCreateSerializer,
     MailingListSubscribeExternalRecipientRequestSerializer,
     MailingListSubscribeInternalRecipientRequestSerializer,
     MemberMailingListDataResponseSerializer,
+)
+from tapir.core.services.mailman.held_message_serializer_data_builder import (
+    HeldMessageSerializerDataBuilder,
 )
 from tapir.core.services.mailman.mailing_list_provider import MailingListProvider
 from tapir.core.services.mailman.mailing_list_self_request_preparer import (
@@ -29,6 +36,9 @@ from tapir.core.services.mailman.mailing_list_self_request_preparer import (
 )
 from tapir.core.services.mailman.mailing_list_serializer_data_builder import (
     MailingListSerializerDataBuilder,
+)
+from tapir.core.services.mailman.mailing_list_settings_updater import (
+    MailingListSettingsUpdater,
 )
 from tapir.core.services.mailman.mailing_list_subscription_checker import (
     MailingListSubscriptionChecker,
@@ -70,6 +80,7 @@ class MailingListsBaseView(PermissionRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context_data = super().get_context_data(**kwargs)
         context_data["show_connection_error"] = self.connection_with_mailman_failed
+        context_data["cache"] = self.cache
         return context_data
 
 
@@ -77,7 +88,7 @@ class MailingListsListView(APIView):
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
 
     @extend_schema(
-        responses={200: MailingListSerializer(many=True)},
+        responses={200: MailingListAdminSerializer(many=True)},
     )
     def get(self, request):
         MailingListsEnabledChecker.check_mailing_lists_enabled()
@@ -85,14 +96,14 @@ class MailingListsListView(APIView):
         cache = {}
         domain = TapirMailmanClient.get_domain(cache)
         mailing_lists = [
-            MailingListSerializerDataBuilder.build_serializer_data(mailing_list)
+            MailingListSerializerDataBuilder.build_admin_serializer_data(mailing_list)
             for mailing_list in domain.lists
         ]
         mailing_lists = sorted(
             mailing_lists, key=lambda mailing_list: mailing_list["name"]
         )
         return Response(
-            MailingListSerializer(
+            MailingListAdminSerializer(
                 mailing_lists,
                 many=True,
             ).data
@@ -104,7 +115,7 @@ class MailingListCreateView(APIView):
 
     @extend_schema(
         request=MailingListCreateSerializer(),
-        responses={200: MailingListSerializer()},
+        responses={200: MailingListAdminSerializer()},
     )
     def post(self, request):
         MailingListsEnabledChecker.check_mailing_lists_enabled()
@@ -120,17 +131,18 @@ class MailingListCreateView(APIView):
         if list_name.endswith(suffix):
             list_name = list_name.replace(suffix, "")
         created_list = domain.create_list(list_name=list_name)
-        created_list.settings["advertised"] = create_serializer.validated_data[
-            "advertised"
-        ]
-        created_list.settings["description"] = create_serializer.validated_data[
-            "description"
-        ]
-        created_list.settings.save()
+        MailingListSettingsUpdater.update_settings(
+            mailing_list=created_list,
+            advertised=create_serializer.validated_data["advertised"],
+            description=create_serializer.validated_data["description"],
+            moderated=create_serializer.validated_data["moderated"],
+        )
 
         return Response(
-            MailingListSerializer(
-                MailingListSerializerDataBuilder.build_serializer_data(created_list)
+            MailingListAdminSerializer(
+                MailingListSerializerDataBuilder.build_admin_serializer_data(
+                    created_list
+                )
             ).data
         )
 
@@ -140,7 +152,7 @@ class MailingListEditView(APIView):
 
     @extend_schema(
         request=MailingListCreateSerializer(),
-        responses={200: MailingListSerializer()},
+        responses={200: MailingListAdminSerializer()},
     )
     def put(self, request):
         MailingListsEnabledChecker.check_mailing_lists_enabled()
@@ -152,13 +164,21 @@ class MailingListEditView(APIView):
         mailing_list = MailingListProvider.get_list_by_name_or_404(
             list_name=serializer.validated_data["name"], cache=cache
         )
-        mailing_list.settings["advertised"] = serializer.validated_data["advertised"]
-        mailing_list.settings["description"] = serializer.validated_data["description"]
-        mailing_list.settings.save()
+        MailingListSettingsUpdater.update_settings(
+            mailing_list=mailing_list,
+            advertised=serializer.validated_data["advertised"],
+            description=serializer.validated_data["description"],
+            moderated=serializer.validated_data["moderated"],
+        )
+        updated_list = MailingListProvider.get_list_by_name_or_404(
+            list_name=serializer.validated_data["name"], cache=cache
+        )
 
         return Response(
-            MailingListSerializer(
-                MailingListSerializerDataBuilder.build_serializer_data(mailing_list)
+            MailingListAdminSerializer(
+                MailingListSerializerDataBuilder.build_admin_serializer_data(
+                    updated_list
+                )
             ).data
         )
 
@@ -321,6 +341,72 @@ class MailingListUnsubscribeRecipientView(APIView):
         raise Http404(
             f"Kein passender Empfänger gefunden, E-Mail:{address}, Liste:{serializer.validated_data["list_name"]}"
         )
+
+
+class MailingListHeldMessagesView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        parameters=[OpenApiParameter(name="list_name", type=str, required=True)],
+        responses={200: MailingListHeldMessageSerializer(many=True)},
+    )
+    def get(self, request):
+        MailingListsEnabledChecker.check_mailing_lists_enabled()
+
+        cache = {}
+        mailing_list = MailingListProvider.get_list_by_name_or_404(
+            list_name=request.query_params.get("list_name"), cache=cache
+        )
+        mailman_held_messages = mailing_list.held
+        senders = {
+            EmailNormaliser.normalise(held_message.sender)
+            for held_message in mailman_held_messages
+        }
+        members_by_email = {
+            member.email: member for member in Member.objects.filter(email__in=senders)
+        }
+        held_messages = [
+            HeldMessageSerializerDataBuilder.build_serializer_data(
+                held_message, members_by_email, cache=cache
+            )
+            for held_message in mailman_held_messages
+        ]
+        held_messages = sorted(
+            held_messages, key=lambda held_message: held_message["hold_date"]
+        )
+        return Response(MailingListHeldMessageSerializer(held_messages, many=True).data)
+
+
+class MailingListModerateHeldMessageView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        request=MailingListModerateHeldMessageRequestSerializer(),
+        responses={200: str},
+    )
+    def post(self, request):
+        MailingListsEnabledChecker.check_mailing_lists_enabled()
+
+        serializer = MailingListModerateHeldMessageRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        cache = {}
+        mailing_list = MailingListProvider.get_list_by_name_or_404(
+            list_name=serializer.validated_data["list_name"], cache=cache
+        )
+        request_id = serializer.validated_data["request_id"]
+        try:
+            mailing_list.moderate_message(
+                request_id, serializer.validated_data["moderation_action"]
+            )
+        except HTTPError as error:
+            if error.code != status.HTTP_404_NOT_FOUND:
+                raise
+            raise Http404(
+                f"Keine zurückgehaltene E-Mail mit ID {request_id} in Liste {mailing_list.fqdn_listname} gefunden"
+            )
+
+        return Response("OK")
 
 
 class MemberMailingListDataView(APIView):

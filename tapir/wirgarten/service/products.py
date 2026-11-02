@@ -328,6 +328,7 @@ def update_product(
     capacity: int | None,
     min_coop_shares: int,
     hidden_in_bestell_wizard: bool,
+    solidarity_choices: str,
 ):
     """
     Updates a product and product price with the provided attributes.
@@ -349,6 +350,7 @@ def update_product(
     product.capacity = capacity
     product.min_coop_shares = min_coop_shares
     product.hidden_in_bestell_wizard = hidden_in_bestell_wizard
+    product.solidarity_choices = solidarity_choices
     product.save()
 
     price_change_date = get_next_product_price_change_date(growing_period_id)

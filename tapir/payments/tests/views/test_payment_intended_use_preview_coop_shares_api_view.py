@@ -44,6 +44,32 @@ class TestPaymentIntendedUsePreviewCoopSharesApiView(TapirIntegrationTest):
         )
         self.assertEqual(expected_tokens, response.json()["tokens"])
 
+    def test_get_instalments_returnsTokenListWithInstalmentTokens(self):
+        self._login_as_admin()
+
+        response = self.client.get(reverse(self.URL_NAME) + "?instalments=true")
+
+        self.assertStatusCode(response, 200)
+        expected_tokens = (
+            sorted(IntendedUseTokens.COMMON_TOKENS)
+            + sorted(IntendedUseTokens.COOP_SHARE_TOKENS)
+            + sorted(IntendedUseTokens.COOP_SHARE_INSTALMENT_TOKENS)
+        )
+        self.assertEqual(expected_tokens, response.json()["tokens"])
+
+    def test_get_instalments_fakeMembersHaveInstalmentValues(self):
+        self._login_as_admin()
+
+        response = self.client.get(
+            reverse(self.URL_NAME)
+            + "?instalments=true&pattern_old={ratennummer}/{anzahl_raten}&pattern_new={mandatsreferenz}"
+        )
+
+        self.assertStatusCode(response, 200)
+        data = response.json()
+        self.assertEqual("2/5", data["previews_old"][0])
+        self.assertEqual("MUSTERMANNMAXIMILIAN/A1B2C3", data["previews_new"][0])
+
     def test_get_dbIsEmpty_responseContainsTwoFakeMembers(self):
         self._login_as_admin()
 
@@ -60,20 +86,6 @@ class TestPaymentIntendedUsePreviewCoopSharesApiView(TapirIntegrationTest):
         self.assertEqual("1", data["previews_old"][1])
         self.assertEqual("75,00", data["previews_new"][0])
         self.assertEqual("75,00", data["previews_new"][1])
-
-    def test_get_invalidPattern_returnsErrorFieldNotEmpty(self):
-        self._login_as_admin()
-        too_long = "X" * 50
-
-        response = self.client.get(
-            reverse(self.URL_NAME) + f"?pattern_old={too_long}&pattern_new={too_long}"
-        )
-
-        self.assertStatusCode(response, 200)
-        self.assertEqual(
-            "Diese Zeile: 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX' ist zu lang wenn die Tokens expandiert sind.",
-            response.json()["error"],
-        )
 
     def test_get_realPaymentsExist_realPaymentIncludedInResponse(self):
         self._login_as_admin()

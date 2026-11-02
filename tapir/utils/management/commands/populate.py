@@ -1,6 +1,8 @@
 import sys
 
+from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
+from django.db import transaction
 
 from tapir.utils.config import Organization
 from tapir.utils.services.test_data_generation.data_generator import DataGenerator
@@ -33,12 +35,14 @@ class Command(BaseCommand):
             help=f"Same as the positional argument, case-insensitive. One of: {valid_organization_names()}",
         )
 
+    @transaction.atomic
     def handle(self, *args, **options):
         if options["clear"]:
             DataGenerator.clear()
         elif options["reset_all"]:
+            organization = self.resolve_organization(options)
             DataGenerator.clear()
-            DataGenerator.generate_all(self.resolve_organization(options))
+            DataGenerator.generate_all(organization)
         else:
             self.print_help("manage.py", "populate")
             sys.exit(1)
@@ -50,9 +54,15 @@ class Command(BaseCommand):
             return Organization.BIOTOP
 
         try:
-            return Organization[str(name).upper()]
+            organization = Organization[str(name).upper()]
         except KeyError:
             raise CommandError(
                 f"Unknown organization '{name}'. "
                 f"Valid names: {valid_organization_names()}"
             )
+
+        if organization is Organization.BAKERY and not settings.BAKERY_ENABLED:
+            raise CommandError(
+                "The bakery test data needs the environment variable BAKERY_ENABLED=True."
+            )
+        return organization

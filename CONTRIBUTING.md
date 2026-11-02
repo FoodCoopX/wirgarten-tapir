@@ -30,6 +30,34 @@ before every commit:
 
     poetry install && pre-commit install
 
+### AI coding assistants
+Contributors use different assistants (GitHub Copilot, Claude Code, OpenCode, Codex, …). All of
+them are configured from one shared folder, [.agents/](.agents/README.md): repository rules in
+`.agents/rules/`, role profiles in `.agents/agents/`, task recipes in `.agents/skills/`. The
+tool-specific paths (`AGENTS.md`, `.github/`, `.claude/`, `.opencode/`) are symlinks into it, so an
+instruction written once applies to everyone — please improve the shared files rather than keeping
+private ones.
+
+On Linux and macOS the links work out of the box. On Windows, run
+`git config --global core.symlinks true` (needs Developer Mode) before cloning, and use
+`./scripts/setup_agent_links.sh` to verify or repair an existing checkout.
+
+### Contributing to the documentation
+
+User documentation lives in [`docs/`](docs/) and is built with [MkDocs](https://www.mkdocs.org/). To preview it locally:
+
+```shell
+python -m pip install --requirement requirements-docs.txt
+mkdocs serve
+```
+
+Open http://127.0.0.1:8000/ in a browser. Add new pages to the `nav` section in `mkdocs.yml` so they appear in the
+site navigation. Run `mkdocs build --strict` before submitting documentation changes.
+
+Changes on the `master` branch are deployed by `.github/workflows/docs.yml`. A repository administrator must enable
+the workflow once in GitHub under **Settings → Pages → Build and deployment → Source** by selecting **GitHub Actions**.
+The published URL is shown on that settings page and in the workflow's deployment summary.
+
 ## Getting started
 
     docker-compose up

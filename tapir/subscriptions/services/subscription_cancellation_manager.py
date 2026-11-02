@@ -1,7 +1,13 @@
+from tapir.associations.services.association_membership_cancellation_manager import (
+    AssociationMembershipCancellationManager,
+)
 from tapir.bakery.services.breaddelivery_service import BreadDeliveryService
 from tapir.configuration.parameter import get_parameter_value
 from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.solidarity_contribution.models import SolidarityContribution
+from tapir.subscriptions.services.subscribed_products_service import (
+    SubscribedProductsService,
+)
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.models import Product, Member
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -68,6 +74,43 @@ class SubscriptionCancellationManager:
             )
             .exclude(amount=0)
             .order_by("end_date")
+        )
+
+    @classmethod
+    def negative_solidarity_contribution_must_be_cancelled(
+        cls,
+        member: Member,
+        products_selected_for_cancellation: set[Product],
+        cancel_association_membership: bool,
+        cache: dict,
+    ) -> bool:
+        subscribed_products = SubscribedProductsService.get_subscribed_products(
+            member=member, cache=cache
+        )
+        if products_selected_for_cancellation != subscribed_products:
+            return False
+
+        if (
+            len(products_selected_for_cancellation) == 0
+            and not cancel_association_membership
+        ):
+            return False
+
+        member_can_cancel_association_membership = AssociationMembershipCancellationManager.can_member_cancel_association_membership(
+            member=member, cache=cache
+        )
+        if (
+            member_can_cancel_association_membership
+            and not cancel_association_membership
+        ):
+            return False
+
+        return (
+            cls.get_solidarity_contributions_that_could_be_cancelled(
+                member=member, cache=cache
+            )
+            .filter(amount__lt=0)
+            .exists()
         )
 
     @classmethod

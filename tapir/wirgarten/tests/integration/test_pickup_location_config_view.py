@@ -31,7 +31,7 @@ class TestPickupLocationCfgView(TapirIntegrationTest):
         )
         return {
             pickup_location.name
-            for pickup_location in view.get_filtered_pickup_locations()
+            for pickup_location in view.get_filtered_pickup_locations(cache={})
         }
 
     def test_getFilteredPickupLocations_default_returnsCurrentAndFutureButNotEnded(

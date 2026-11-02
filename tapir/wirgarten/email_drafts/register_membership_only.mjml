@@ -16,7 +16,7 @@ Wir freuen uns sehr über dein Interesse an einer Mitgliedschaft in unserer Geno
 
 Du hast {{BestellWizard: Nur Geno-/Vereinsmitgliedschaft.Anzahl der gezeichneten Genossenschaftsanteile}} Genossenschaftsanteile á jeweils {{BestellWizard: Nur Geno-/Vereinsmitgliedschaft.Wert Genossenschaftsanteil}} € gezeichnet. <br /><br />
 
-Der Gesamtwert deiner gezeichneten Genossenschaftsanteile beträgt damit: {{BestellWizard: Nur Geno-/Vereinsmitgliedschaft.Gesamtwert der gezeichneten Genossenschaftsanteile}} €. <br /> <br />
+Der Gesamtwert deiner gezeichneten Genossenschaftsanteile beträgt damit: {{BestellWizard: Nur Geno-/Vereinsmitgliedschaft.Gesamtwert der gezeichneten Genossenschaftsanteile}} €. Der Betrag wird {{BestellWizard: Nur Geno-/Vereinsmitgliedschaft.Zahlungsweise der Genossenschaftsanteile}} eingezogen. <br /> <br />
 
 Sobald du Mitglied geworden bist, erhältst du eine separate Mail mit der Bestätigung der Mitgliedschaft von uns. <br /><br />
 
@@ -35,6 +35,7 @@ dein {{Allgemein.Admin Name}} <br />
                 {{BestellWizard: Nur Geno-/Vereinsmitgliedschaft.Anzahl der gezeichneten Genossenschaftsanteile}} <br />
                 {{BestellWizard: Nur Geno-/Vereinsmitgliedschaft.Wert Genossenschaftsanteil}} <br />
                 {{BestellWizard: Nur Geno-/Vereinsmitgliedschaft.Gesamtwert der gezeichneten Genossenschaftsanteile}} <br />
+                {{BestellWizard: Nur Geno-/Vereinsmitgliedschaft.Zahlungsweise der Genossenschaftsanteile}} <br />
                 {{BestellWizard: Nur Geno-/Vereinsmitgliedschaft.Beitrittsdatum Geno/Verein}} <br />
                 {{BestellWizard: Nur Geno-/Vereinsmitgliedschaft.Gesamtbetrag monatlich}} <br />
                 {{BestellWizard: Nur Geno-/Vereinsmitgliedschaft.Abbuchungsrhythmus}} <br />

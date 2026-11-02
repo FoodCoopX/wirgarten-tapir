@@ -73,5 +73,5 @@ def save_member_and_assign_number(form: PersonalDataForm):
         form.instance, cache=cache, actor=form.request.user
     )
     KeycloakUserManager.create_keycloak_user_if_necessary(
-        user=form.instance, cache=cache, initial_password=None
+        user=form.instance, initial_password=None
     )
