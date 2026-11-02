@@ -54,13 +54,19 @@ class MonthPaymentBuilderSubscriptions:
         cache: dict,
         generated_payments: set[Payment],
         in_trial: bool,
+        member_id: str | None = None,
     ) -> list[Payment]:
         target_month = current_month
         if in_trial:
             target_month = (current_month - relativedelta(months=1)).replace(day=1)
 
-        current_and_renewed_subscriptions = cls.get_current_and_renewed_subscriptions(
-            cache=cache, first_of_month=target_month, is_in_trial=in_trial
+        current_and_renewed_subscriptions = (
+            MonthPaymentBuilderUtils.filter_contracts_by_member(
+                contracts=cls.get_current_and_renewed_subscriptions(
+                    cache=cache, first_of_month=target_month, is_in_trial=in_trial
+                ),
+                member_id=member_id,
+            )
         )
 
         subscriptions_by_member_and_product_type = (
