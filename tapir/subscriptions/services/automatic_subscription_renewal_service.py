@@ -109,6 +109,7 @@ class AutomaticSubscriptionRenewalService:
                 subscription.product.type, next_growing_period, cache=cache
             ),
             admin_confirmed=subscription.admin_confirmed,
+            price_override=subscription.price_override,
         )
 
         return subscription
