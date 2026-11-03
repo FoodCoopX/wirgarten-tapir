@@ -23,7 +23,7 @@ from tapir.utils.config import (
     MEMBER_IMPORT_STATUS_CREATED,
     MEMBER_IMPORT_STATUS_UPDATED,
 )
-from tapir.utils.exceptions import DryRunException
+from tapir.utils.exceptions import DryRunException, TapirDataImportException
 from tapir.utils.services.member_importer import MemberImporter
 from tapir.utils.services.share_importer import ShareImporter
 from tapir.utils.services.subscription_importer import SubscriptionImporter
@@ -82,8 +82,13 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         # Helper functions
+        dry_run = options.get("dry_run", False)
 
         if options["reset_all"]:
+            if dry_run:
+                raise TapirDataImportException(
+                    "Can't use reset_all and dry_run at the same time"
+                )
             SolidarityContribution.objects.all().delete()
             SubscriptionChangeLogEntry.objects.all().delete()
             TransferCoopSharesLogEntry.objects.all().delete()
@@ -119,7 +124,7 @@ class Command(BaseCommand):
         filepath = options["file"][0]
         import_type = options["type"][0]
         delete_all = options["delete_all"]
-        dry_run = options.get("dry_run", False)
+
         print_stacktrace = options.get("stacktrace", False)
         update_existing = options.get("update")[0] == "yes"
 
@@ -164,9 +169,13 @@ class Command(BaseCommand):
                             MemberCredit.objects.all().delete()
                             Joker.objects.all().delete()
                             for member in Member.objects.all():
-                                KeycloakUserDeleteService.delete_user_if_exists(
-                                    user=member
-                                )
+                                if not dry_run:
+                                    # The dry run relies on the atomic transaction being rolled back
+                                    # when DryRunException is thrown below, but that doesn't roll back
+                                    # keycloak account deletion
+                                    KeycloakUserDeleteService.delete_user_if_exists(
+                                        user=member
+                                    )
                                 member.delete()
 
                         if import_type == "shares":
@@ -188,6 +197,7 @@ class Command(BaseCommand):
                         update_existing=update_existing,
                         import_type=import_type,
                         print_stacktrace=print_stacktrace,
+                        dry_run=dry_run,
                     )
                     if dry_run:
                         raise DryRunException()
@@ -222,23 +232,33 @@ class Command(BaseCommand):
         update_existing: bool,
         import_type: Literal["members", "shares", "subscriptions"],
         print_stacktrace: bool,
+        dry_run: bool,
     ):
         skipped = 0
         created = 0
         updated = 0
 
+        if import_type not in ["members", "shares", "subscriptions"]:
+            raise TapirDataImportException(f"Unknown import type: {import_type}")
+
         for row_index, row in enumerate(reader):
             try:
-                match import_type:
-                    case "members":
-                        method = MemberImporter.import_member
-                    case "shares":
-                        method = ShareImporter.import_shares_single_member
-                    case "subscriptions":
-                        method = SubscriptionImporter.import_subscription
-
                 with transaction.atomic():
-                    import_status = method(row=row, update_existing=update_existing)
+                    match import_type:
+                        case "members":
+                            import_status = MemberImporter.import_member(
+                                row=row,
+                                update_existing=update_existing,
+                                dry_run=dry_run,
+                            )
+                        case "shares":
+                            import_status = ShareImporter.import_shares_single_member(
+                                row=row, update_existing=update_existing
+                            )
+                        case "subscriptions":
+                            import_status = SubscriptionImporter.import_subscription(
+                                row=row, update_existing=update_existing
+                            )
 
                 if import_status == MEMBER_IMPORT_STATUS_SKIPPED:
                     skipped += 1
