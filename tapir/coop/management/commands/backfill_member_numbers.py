@@ -2,7 +2,6 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 
 from tapir.coop.services.member_number_service import MemberNumberService
-from tapir.utils.exceptions import DryRunException
 from tapir.wirgarten.models import Member
 
 
@@ -28,25 +27,22 @@ class Command(BaseCommand):
         assigned = 0
         skipped = 0
 
-        try:
-            with transaction.atomic():
-                for member in members_without_number:
-                    if MemberNumberService.assign_member_number_if_eligible(
-                        member, cache=cache, actor=None
-                    ):
-                        self.stdout.write(
-                            self.style.SUCCESS(
-                                f"  {'[dry-run] ' if dry_run else ''}{member}"
-                            )
+        with transaction.atomic():
+            for member in members_without_number:
+                if MemberNumberService.assign_member_number_if_eligible(
+                    member, cache=cache, actor=None
+                ):
+                    self.stdout.write(
+                        self.style.SUCCESS(
+                            f"  {'[dry-run] ' if dry_run else ''}{member}"
                         )
-                        assigned += 1
-                    else:
-                        skipped += 1
+                    )
+                    assigned += 1
+                else:
+                    skipped += 1
 
-                if dry_run:
-                    raise DryRunException()
-        except DryRunException:
-            pass  # Intentional: rollback atomic transaction in dry-run mode
+            if dry_run:
+                transaction.set_rollback(True)
 
         verb = "would be assigned" if dry_run else "assigned"
         self.stdout.write(
