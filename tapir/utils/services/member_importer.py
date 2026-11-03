@@ -1,5 +1,8 @@
 import datetime
 
+from django.core.management.base import OutputWrapper
+
+from tapir.accounts.models import TapirUser
 from tapir.accounts.services.email_normaliser import EmailNormaliser
 from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
 from tapir.associations.models import (
@@ -10,6 +13,7 @@ from tapir.associations.models import (
 )
 from tapir.bakery.models import PreferredBread, Bread
 from tapir.configuration.parameter import get_parameter_value
+from tapir.log.models import TextLogEntry
 from tapir.log.util import freeze_for_log
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
@@ -30,11 +34,18 @@ from tapir.wirgarten.models import (
     MemberPickupLocation,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.utils import get_now
 
 
 class MemberImporter:
     @classmethod
-    def import_member(cls, row: dict[str, str], update_existing: bool, dry_run: bool):
+    def import_member(
+        cls,
+        row: dict[str, str],
+        update_existing: bool,
+        dry_run: bool,
+        stdout: OutputWrapper,
+    ):
         if DataImportUtils.is_row_empty(row):
             return None
 
@@ -55,7 +66,9 @@ class MemberImporter:
                 )
 
         try:
-            return cls.create_new_member(member_no=member_no, row=row, dry_run=dry_run)
+            return cls.create_new_member(
+                member_no=member_no, row=row, dry_run=dry_run, stdout=stdout
+            )
         except Exception as e:
             raise TapirDataImportException(f"Error creating member {member_no}: {e}")
 
@@ -328,10 +341,14 @@ class MemberImporter:
         return updated
 
     @classmethod
-    def create_new_member(cls, member_no: int, row: dict[str, str], dry_run: bool):
-        member = Member(
-            member_no=member_no,
-        )
+    def create_new_member(
+        cls,
+        member_no: int,
+        row: dict[str, str],
+        dry_run: bool,
+        stdout: OutputWrapper,
+    ):
+        member = cls.build_new_member(member_no=member_no, row=row, stdout=stdout)
         cls.update_member_attributes_and_save_member(
             member=member, row=row, dry_run=dry_run
         )
@@ -364,6 +381,39 @@ class MemberImporter:
         MemberImportedLogEntry().populate(model=member, actor=None, user=member).save()
 
         return MEMBER_IMPORT_STATUS_CREATED
+
+    @classmethod
+    def build_new_member(
+        cls, member_no: int, row: dict[str, str], stdout: OutputWrapper
+    ):
+        # The TapirUser could already exist, typically if an admin user has been created
+        # using the create_admin command. In that case we want to reuse that account.
+
+        tapir_user_without_member = TapirUser.objects.filter(
+            email__iexact=cls.build_mail(row=row, member_no=member_no),
+            member__isnull=True,
+        ).first()
+        if tapir_user_without_member is None:
+            return Member(member_no=member_no)
+
+        # raw=True inserts only the Member row, the TapirUser row already exists.
+        Member(
+            tapiruser_ptr=tapir_user_without_member,
+            member_no=member_no,
+            created_at=get_now(cache={}),
+        ).save_base(raw=True)
+        member = Member.objects.get(id=tapir_user_without_member.id)
+
+        TextLogEntry().populate(
+            text="Beim Import wurde das bestehende Benutzerkonto mit dieser E-Mail-Adresse für das Mitglied übernommen",
+            user=member,
+            actor=None,
+        ).save()
+        stdout.write(
+            f"Member {member_no}: existing account {member.email} (ID {member.id}) is kept for this member"
+        )
+
+        return member
 
     @classmethod
     def create_association_membership_if_necessary(

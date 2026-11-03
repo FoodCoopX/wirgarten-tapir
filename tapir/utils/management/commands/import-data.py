@@ -243,6 +243,7 @@ class Command(BaseCommand):
                                 row=row,
                                 update_existing=update_existing,
                                 dry_run=dry_run,
+                                stdout=self.stdout,
                             )
                         case "shares":
                             import_status = ShareImporter.import_shares_single_member(
