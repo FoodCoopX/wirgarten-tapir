@@ -7,6 +7,7 @@ from tapir.subscriptions.services.product_cancellation_data_builder import (
     ProductCancellationDataBuilder,
 )
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
+from tapir.wirgarten.tests.factories import SubscriptionFactory
 
 
 class ProductCancellationDataBuilderGetDateLimitForTrialCancellationFixedMode(
@@ -97,3 +98,22 @@ class ProductCancellationDataBuilderGetDateLimitForTrialCancellationFixedMode(
             ],
             any_order=True,
         )
+
+    @patch.object(
+        TrialPeriodManager,
+        "get_last_day_of_trial_period",
+        autospec=True,
+    )
+    def test_getDateLimitForTrialCancellationFixedMode_someSubscriptionsWithoutTrial_ignoresThem(
+        self,
+        mock_get_last_day_of_trial_period: Mock,
+    ):
+        mock_trial_end = datetime.date(2026, 5, 1)
+        mock_get_last_day_of_trial_period.side_effect = [None, mock_trial_end, None]
+
+        result = ProductCancellationDataBuilder.get_date_limit_for_trial_cancellation_fixed_mode(
+            product_subscriptions=SubscriptionFactory.build_batch(3),
+            cache={},
+        )
+
+        self.assertEqual(mock_trial_end, result)

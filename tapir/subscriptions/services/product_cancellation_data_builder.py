@@ -97,11 +97,9 @@ class ProductCancellationDataBuilder:
             )
             for subscription in product_subscriptions
         ]
+        last_days_of_trial = [day for day in last_days_of_trial if day is not None]
 
-        if all(day is None for day in last_days_of_trial):
-            return None
-
-        return min(last_days_of_trial)
+        return min(last_days_of_trial, default=None)
 
     @classmethod
     def get_last_day_of_notice_period_for_product(
