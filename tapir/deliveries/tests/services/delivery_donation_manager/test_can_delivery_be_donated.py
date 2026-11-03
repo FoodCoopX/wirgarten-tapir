@@ -127,7 +127,7 @@ class TestCanDeliveryBeDonated(TapirUnitTest):
             member=member, reference_date=delivery_date, cache=cache
         )
         mock_does_member_have_a_joker_in_week.assert_called_once_with(
-            member=member, reference_date=delivery_date, cache=cache
+            member_id=member.id, reference_date=delivery_date, cache=cache
         )
         mock_can_joker_be_used_relative_to_date_limit.assert_called_once_with(
             reference_date=delivery_date, cache=cache
@@ -181,7 +181,7 @@ class TestCanDeliveryBeDonated(TapirUnitTest):
 
         mock_can_joker_be_used_in_week.assert_not_called()
         mock_does_member_have_a_joker_in_week.assert_called_once_with(
-            member=member, reference_date=delivery_date, cache=cache
+            member_id=member.id, reference_date=delivery_date, cache=cache
         )
         mock_can_joker_be_used_relative_to_date_limit.assert_called_once_with(
             reference_date=delivery_date, cache=cache
@@ -239,7 +239,7 @@ class TestCanDeliveryBeDonated(TapirUnitTest):
             member=member, reference_date=delivery_date, cache=cache
         )
         mock_does_member_have_a_joker_in_week.assert_called_once_with(
-            member=member, reference_date=delivery_date, cache=cache
+            member_id=member.id, reference_date=delivery_date, cache=cache
         )
         mock_can_joker_be_used_relative_to_date_limit.assert_not_called()
         mock_does_member_have_at_least_one_subscription_delivered_at_date.assert_not_called()
@@ -291,7 +291,7 @@ class TestCanDeliveryBeDonated(TapirUnitTest):
 
         mock_can_joker_be_used_in_week.assert_not_called()
         mock_does_member_have_a_joker_in_week.assert_called_once_with(
-            member=member, reference_date=delivery_date, cache=cache
+            member_id=member.id, reference_date=delivery_date, cache=cache
         )
         mock_can_joker_be_used_relative_to_date_limit.assert_called_once_with(
             reference_date=delivery_date, cache=cache
@@ -347,7 +347,7 @@ class TestCanDeliveryBeDonated(TapirUnitTest):
 
         mock_can_joker_be_used_in_week.assert_not_called()
         mock_does_member_have_a_joker_in_week.assert_called_once_with(
-            member=member, reference_date=delivery_date, cache=cache
+            member_id=member.id, reference_date=delivery_date, cache=cache
         )
         mock_can_joker_be_used_relative_to_date_limit.assert_called_once_with(
             reference_date=delivery_date, cache=cache

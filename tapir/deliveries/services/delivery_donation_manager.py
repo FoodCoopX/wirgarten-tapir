@@ -36,7 +36,7 @@ class DeliveryDonationManager:
             return False
 
         if JokerManagementService.does_member_have_a_joker_in_week(
-            member=member, reference_date=delivery_date, cache=cache
+            member_id=member.id, reference_date=delivery_date, cache=cache
         ):
             return False
 
@@ -73,7 +73,7 @@ class DeliveryDonationManager:
 
     @classmethod
     def does_member_have_a_donation_in_week(
-        cls, member: Member, reference_date: datetime.date, cache: dict
+        cls, member_id: str, reference_date: datetime.date, cache: dict
     ):
         if (
             get_parameter_value(ParameterKeys.DELIVERY_DONATION_MODE, cache=cache)
@@ -82,7 +82,7 @@ class DeliveryDonationManager:
             return False
 
         donations = TapirCache.get_all_delivery_donations_for_member(
-            member_id=member.id, cache=cache
+            member_id=member_id, cache=cache
         )
         for donation in donations:
             if (

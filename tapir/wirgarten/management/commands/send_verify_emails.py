@@ -1,3 +1,5 @@
+import time
+
 from django.core.management import BaseCommand
 from django.db.models import QuerySet, Count, Q
 
@@ -11,6 +13,8 @@ from tapir.wirgarten.utils import get_today
 
 
 class Command(BaseCommand):
+    THROTTLE_MAILS_PER_MINUTE = 20
+
     help = (
         "Sends the keycloak verification mails to all members that don't have a keycloak account yet. "
         "Members that have neither coop shares nor subscriptions are ignored."
@@ -30,6 +34,11 @@ class Command(BaseCommand):
         parser.add_argument(
             "--dry-run",
             help="Don't apply any permanent change (mails won't be sent)",
+            action="store_true",
+        )
+        parser.add_argument(
+            "--throttle",
+            help=f"Send at most {self.THROTTLE_MAILS_PER_MINUTE} mails per minute",
             action="store_true",
         )
 
@@ -67,7 +76,9 @@ class Command(BaseCommand):
         members = list(members.distinct().order_by("member_no", "last_name"))
         self.stdout.write(f"Sending emails to {len(members)} members:")
 
-        self.send_emails(members, options["dry_run"])
+        self.send_emails(
+            members=members, dry_run=options["dry_run"], throttle=options["throttle"]
+        )
 
     def confirm_member_group(self, members):
         if len(members) == 0:
@@ -114,7 +125,7 @@ class Command(BaseCommand):
             Q(coop_shares_total_value__gt=0) | Q(num_subscriptions__gt=0)
         )
 
-    def send_emails(self, members, dry_run: bool):
+    def send_emails(self, members, dry_run: bool, throttle: bool):
         if not self.confirm_member_group(members):
             return
 
@@ -122,7 +133,9 @@ class Command(BaseCommand):
             self.stdout.write("Dry run enabled, aborting")
             return
 
-        for member in members:
+        for index, member in enumerate(members):
+            if throttle and index > 0:
+                time.sleep(60 / self.THROTTLE_MAILS_PER_MINUTE)
             try:
                 KeycloakUserManager.create_keycloak_user_if_necessary(
                     user=member, initial_password=None

@@ -25,7 +25,7 @@ class TestDoesMemberHaveADonationInWeek(TapirUnitTest):
         )
 
         result = DeliveryDonationManager.does_member_have_a_donation_in_week(
-            member=Mock(), reference_date=Mock(), cache=cache
+            member_id=Mock(), reference_date=Mock(), cache=cache
         )
 
         self.assertFalse(result)
@@ -53,7 +53,7 @@ class TestDoesMemberHaveADonationInWeek(TapirUnitTest):
         mock_get_all_delivery_donations_for_member.return_value = donations
 
         result = DeliveryDonationManager.does_member_have_a_donation_in_week(
-            member=member,
+            member_id=member.id,
             reference_date=datetime.date(year=2026, month=1, day=15),
             cache=cache,
         )
@@ -86,7 +86,7 @@ class TestDoesMemberHaveADonationInWeek(TapirUnitTest):
         mock_get_all_delivery_donations_for_member.return_value = donations
 
         result = DeliveryDonationManager.does_member_have_a_donation_in_week(
-            member=member,
+            member_id=member.id,
             reference_date=datetime.date(year=2026, month=1, day=13),
             cache=cache,
         )
