@@ -233,7 +233,7 @@ def send_membership_entry_mails():
                 and AssociationMembership.objects.filter(
                     member=member, start_date__lte=today
                 )
-                .filter(Q(end_date__isnull=True) | Q(end_date__lte=today))
+                .filter(Q(end_date__isnull=True) | Q(end_date__gte=today))
                 .exists()
             ):
                 should_send_mail = True
