@@ -43,7 +43,7 @@ class DataImportUtils:
         if not v:
             return None
         d = parse_date(v)
-        for format in ["%d.%m.%Y", "%d/%m/%Y"]:
+        for format in ["%d.%m.%Y", "%d/%m/%Y", "%d.%m.%y", "%d/%m/%y"]:
             try:
                 d = datetime.date.strptime(v, format)
             except ValueError:
