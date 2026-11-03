@@ -2,8 +2,10 @@ import os
 
 from celery import Celery
 from celery.signals import task_failure
-from django.conf import settings
-from django.core.mail import mail_admins
+
+from tapir.utils.services.celery_task_failure_mail_sender import (
+    CeleryTaskFailureMailSender,
+)
 
 # Set the default Django settings module for the 'celery' program.
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tapir.settings")
@@ -22,10 +24,9 @@ app.autodiscover_tasks()
 
 @task_failure.connect()
 def celery_task_failure_email(task_id, exception, sender, einfo, *args, **kwargs):
-    subject = f"[celery@{settings.SITE_URL}] Error: Task {sender.name} ({task_id})"
-    message = f"""Task {sender.name} with id {task_id} raised exception: {exception!r}
-                 Task was called with args: {args} kwargs: {kwargs}.
-                 The contents of the full traceback was:
-                 {einfo}.
-              """.format(**kwargs)
-    mail_admins(subject, message)
+    CeleryTaskFailureMailSender.on_task_failure(
+        task_name=sender.name,
+        task_id=task_id,
+        exception=exception,
+        traceback=str(einfo),
+    )
