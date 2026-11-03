@@ -1,6 +1,7 @@
 import datetime
 
 from django.core.management.base import OutputWrapper
+from django.utils import timezone
 
 from tapir.accounts.models import TapirUser
 from tapir.accounts.services.email_normaliser import EmailNormaliser
@@ -34,7 +35,7 @@ from tapir.wirgarten.models import (
     MemberPickupLocation,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.utils import get_now
+from tapir.wirgarten.utils import get_now, get_today
 
 
 class MemberImporter:
@@ -97,7 +98,7 @@ class MemberImporter:
 
         payment_rhythm_updated = cls.update_payment_rhythm_if_necessary(
             member=member,
-            reference_date=DataImportUtils.to_date(row["consent_sepa"]),
+            reference_date=cls.get_payment_rhythm_reference_date(member=member),
             rhythm_from_import=row.get("Zahlungsintervall", None),
         )
 
@@ -167,15 +168,11 @@ class MemberImporter:
             "Telefon 2": "phone_number_landline",
             "IBAN": "iban",
             "Kontoinhaber": "account_owner",
-            "consent_sepa": "sepa_consent",
-            "privacy_consent": "privacy_consent",
             "Pseudonym": "pseudonym",
         }
 
         map_from_row_header_to_converter = {
             "Geburtstag/Gründungsdatum": DataImportUtils.to_date,
-            "consent_sepa": DataImportUtils.to_datetime,
-            "privacy_consent": DataImportUtils.to_datetime,
             "IBAN": lambda value: DataImportUtils.normalize_cell(value).replace(
                 " ", ""
             ),
@@ -193,6 +190,28 @@ class MemberImporter:
                 member_attribute,
                 converter(row.get(row_header)),
             ):
+                member_updated = True
+
+        target_consents = {
+            "sepa_consent": DataImportUtils.get_value_or_default(
+                row=row,
+                column="consent_sepa",
+                converter=DataImportUtils.to_datetime,
+                current_value=member.sepa_consent,
+                default=get_now(cache={}),
+                use_default=DataImportUtils.is_cell_filled(row=row, column="IBAN"),
+            ),
+            "privacy_consent": DataImportUtils.get_value_or_default(
+                row=row,
+                column="privacy_consent",
+                converter=DataImportUtils.to_datetime,
+                current_value=member.privacy_consent,
+                default=get_now(cache={}),
+                use_default=True,
+            ),
+        }
+        for member_attribute, target_consent in target_consents.items():
+            if DataImportUtils.update_if_diff(member, member_attribute, target_consent):
                 member_updated = True
 
         new_street = " ".join(
@@ -271,22 +290,51 @@ class MemberImporter:
             MemberPickupLocation.objects.create(
                 member=member,
                 pickup_location=target_pickup_location,
-                valid_from=DataImportUtils.to_date(row.get("AO_gueltig_ab")),
+                valid_from=cls.get_pickup_location_valid_from(
+                    row=row, current_value=None
+                ),
             )
             return True
 
-        updated = DataImportUtils.update_if_diff(
-            member_pickup_location, "pickup_location", target_pickup_location
-        ) or DataImportUtils.update_if_diff(
-            member_pickup_location,
-            "valid_from",
-            DataImportUtils.to_date(row.get("AO_gueltig_ab")),
+        target_valid_from = cls.get_pickup_location_valid_from(
+            row=row,
+            current_value=(
+                member_pickup_location.valid_from
+                if member_pickup_location.pickup_location == target_pickup_location
+                else None
+            ),
         )
+        location_updated = DataImportUtils.update_if_diff(
+            member_pickup_location, "pickup_location", target_pickup_location
+        )
+        valid_from_updated = DataImportUtils.update_if_diff(
+            member_pickup_location, "valid_from", target_valid_from
+        )
+        updated = location_updated or valid_from_updated
 
         if updated:
             member_pickup_location.save()
 
         return updated
+
+    @classmethod
+    def get_pickup_location_valid_from(
+        cls, row: dict[str, str], current_value: datetime.date | None
+    ):
+        return DataImportUtils.get_value_or_default(
+            row=row,
+            column="AO_gueltig_ab",
+            converter=DataImportUtils.to_date,
+            current_value=current_value,
+            default=get_today(cache={}),
+            use_default=DataImportUtils.is_cell_filled(row=row, column="Abholort"),
+        )
+
+    @staticmethod
+    def get_payment_rhythm_reference_date(member: Member):
+        if member.sepa_consent is None:
+            return None
+        return timezone.localdate(member.sepa_consent)
 
     @classmethod
     def update_solidarity_contribution(cls, member: Member, row: dict[str, str]):
@@ -360,7 +408,9 @@ class MemberImporter:
             member_pickup_location = MemberPickupLocation(
                 member=member,
                 pickup_location=pickup_location,
-                valid_from=DataImportUtils.to_date(row.get("AO_gueltig_ab")),
+                valid_from=cls.get_pickup_location_valid_from(
+                    row=row, current_value=None
+                ),
             )
             member_pickup_location.save()
 
@@ -370,7 +420,7 @@ class MemberImporter:
 
         cls.update_payment_rhythm_if_necessary(
             member=member,
-            reference_date=DataImportUtils.to_date(row["consent_sepa"]),
+            reference_date=cls.get_payment_rhythm_reference_date(member=member),
             rhythm_from_import=row.get("Zahlungsintervall", None),
         )
 

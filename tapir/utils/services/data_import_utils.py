@@ -82,6 +82,26 @@ class DataImportUtils:
         setattr(obj, field, new_val)
         return True
 
+    @classmethod
+    def is_cell_filled(cls, row: dict, column: str):
+        return cls.normalize_cell(row.get(column)) != ""
+
+    @classmethod
+    def get_value_or_default(
+        cls,
+        row: dict,
+        column: str,
+        converter,
+        current_value,
+        default,
+        use_default: bool,
+    ):
+        if cls.is_cell_filled(row=row, column=column):
+            return converter(row.get(column))
+        if current_value is not None:
+            return current_value
+        return default if use_default else None
+
     @staticmethod
     def is_row_empty(row: dict):
         return not any(DataImportUtils.normalize_cell(v) for v in row.values())
