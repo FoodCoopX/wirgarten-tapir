@@ -254,6 +254,8 @@ if ENABLE_JASMIN:
     TWO_FACTOR_CHALLENGE_LIFETIME = datetime.timedelta(minutes=5)
     TWO_FACTOR_ENROLMENT_LIFETIME = datetime.timedelta(minutes=15)
 
+    JASMIN_HOST = "tapir"
+
     INSTALLED_APPS += [
         "tapir.jasmin_integration",
         "apps.commissioning",
