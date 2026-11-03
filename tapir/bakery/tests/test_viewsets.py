@@ -6,6 +6,7 @@ from tapir.bakery.models import (
     Bread,
     BreadCapacityPickupLocation,
     BreadContent,
+    BreadGroup,
     BreadLabel,
     BreadSpecificsPerDeliveryDay,
     Ingredient,
@@ -18,6 +19,7 @@ from tapir.bakery.tests.factories import (
     BreadContentFactory,
     BreadDeliveryFactory,
     BreadFactory,
+    BreadGroupFactory,
     BreadLabelFactory,
     BreadSpecificsPerDeliveryDayFactory,
     BreadsPerPickupLocationPerWeekFactory,
@@ -80,6 +82,67 @@ class TestBreadLabelViewSet(TapirIntegrationTest):
             response.status_code,
             [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN],
         )
+
+
+class TestBreadGroupViewSet(TapirIntegrationTest):
+    @classmethod
+    def setUpTestData(cls):
+        ParameterDefinitions().import_definitions(bulk_create=True)
+
+    def setUp(self):
+        super().setUp()
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+
+    def test_list_orderedByName_withTheBreadsOfEachGroup(self):
+        dinkel = BreadGroupFactory.create(name="Dinkelteig")
+        BreadGroupFactory.create(name="Roggenteig")
+        BreadFactory.create(name="Dinkel Saaten", group=dinkel)
+        BreadFactory.create(name="Dinkel hell", group=dinkel)
+        BreadFactory.create(name="Weizen")
+
+        response = self.client.get(reverse("bakery:bread-groups-list"))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # The database's collation decides between "hell" and "Saaten", as it
+        # does for the oven plan and the baking list.
+        in_database_order = list(
+            Bread.objects.filter(group=dinkel)
+            .order_by("name")
+            .values_list("name", flat=True)
+        )
+        self.assertEqual(
+            [(g["name"], g["bread_names"]) for g in response.data],
+            [("Dinkelteig", in_database_order), ("Roggenteig", [])],
+        )
+
+    def test_create_createsGroup(self):
+        response = self.client.post(
+            reverse("bakery:bread-groups-list"), {"name": "Dinkelteig"}, format="json"
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(BreadGroup.objects.filter(name="Dinkelteig").exists())
+
+    def test_delete_leavesItsBreadsUngrouped(self):
+        group = BreadGroupFactory.create()
+        bread = BreadFactory.create(group=group)
+
+        response = self.client.delete(
+            reverse("bakery:bread-groups-detail", args=[group.id])
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        bread.refresh_from_db()
+        self.assertIsNone(bread.group)
+
+    def test_create_withoutCoopManagePermission_isForbidden(self):
+        self.client.force_login(MemberFactory.create())
+
+        response = self.client.post(
+            reverse("bakery:bread-groups-list"), {"name": "Dinkelteig"}, format="json"
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
 class TestIngredientViewSet(TapirIntegrationTest):
@@ -159,6 +222,30 @@ class TestBreadViewSet(TapirIntegrationTest):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         names = [b["name"] for b in response.data]
         self.assertEqual(names, ["Anisbrot", "Zopf"])
+
+    def test_patch_setsAndClearsTheGroup(self):
+        bread = BreadFactory.create()
+        group = BreadGroupFactory.create()
+        url = reverse("bakery:breads-list-detail", args=[bread.id])
+
+        response = self.client.patch(
+            url, {"group": group.id}, content_type="application/json"
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["group"], group.id)
+        self.assertEqual(response.data["group_name"], group.name)
+        bread.refresh_from_db()
+        self.assertEqual(bread.group, group)
+
+        response = self.client.patch(
+            url, {"group": None}, content_type="application/json"
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsNone(response.data["group_name"])
+        bread.refresh_from_db()
+        self.assertIsNone(bread.group)
 
     def test_list_filterByActive(self):
         BreadFactory.create(name="Aktiv", is_active=True)
@@ -586,6 +673,32 @@ class TestStoveSessionViewSet(TapirIntegrationTest):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         sessions = [(s["session_number"], s["layer_number"]) for s in response.data]
         self.assertEqual(sessions, [(1, 1), (1, 2), (2, 1)])
+
+    def test_list_sharedLayer_breadsOrderedByName(self):
+        # Breads of one group share a layer. Insertion order and id order
+        # (the unique index ends in bread_id) both put Roggenbrot first.
+        for bread_id, name in (
+            ("aaaaaaaaaa", "Roggenbrot"),
+            ("zzzzzzzzzz", "Dinkelkruste"),
+        ):
+            StoveSessionFactory.create(
+                year=YEAR,
+                delivery_week=WEEK,
+                delivery_day=DAY,
+                bread=BreadFactory.create(id=bread_id, name=name),
+                session_number=1,
+                layer_number=1,
+            )
+
+        response = self.client.get(
+            reverse("bakery:stove-sessions-list"),
+            {"year": YEAR, "delivery_week": WEEK, "delivery_day": DAY},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            [s["bread_name"] for s in response.data], ["Dinkelkruste", "Roggenbrot"]
+        )
 
     def test_readOnly_postNotAllowed(self):
         response = self.client.post(
@@ -1392,6 +1505,7 @@ class TestBreadChoiceDeadline(TapirIntegrationTest):
 
     def setUp(self):
         super().setUp()
+        self._set_parameter(ParameterKeys.BAKERY_MEMBERS_CAN_CHOOSE_BREAD_SORTS, True)
         self.member = MemberFactory.create()
         self.client.force_login(self.member)
         self.bread = BreadFactory.create(name="Roggenbrot")
@@ -1471,8 +1585,9 @@ class TestBreadChoiceDeadline(TapirIntegrationTest):
         self.assertEqual(delivery.bread_id, self.bread.id)
 
     def test_patch_withinTheDeadline_isAccepted(self):
-        year, week = datetime.date.today().isocalendar()[:2]
-        delivery = self._delivery(year, week + 4)
+        in_four_weeks = datetime.date.today() + datetime.timedelta(weeks=4)
+        year, week = in_four_weeks.isocalendar()[:2]
+        delivery = self._delivery(year, week)
 
         response = self._patch(delivery, {"bread": str(self.bread.id)})
 

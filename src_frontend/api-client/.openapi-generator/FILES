@@ -44,6 +44,8 @@ models/BreadContent.ts
 models/BreadContentRequest.ts
 models/BreadDelivery.ts
 models/BreadDetail.ts
+models/BreadGroup.ts
+models/BreadGroupRequest.ts
 models/BreadLabel.ts
 models/BreadLabelRequest.ts
 models/BreadList.ts
@@ -180,6 +182,7 @@ models/PatchedAssociationMembershipTypePriceRequest.ts
 models/PatchedAssociationMembershipTypeRequest.ts
 models/PatchedBreadContentRequest.ts
 models/PatchedBreadDeliveryRequest.ts
+models/PatchedBreadGroupRequest.ts
 models/PatchedBreadLabelRequest.ts
 models/PatchedBreadListRequest.ts
 models/PatchedBreadSpecificsPerDeliveryDayRequest.ts

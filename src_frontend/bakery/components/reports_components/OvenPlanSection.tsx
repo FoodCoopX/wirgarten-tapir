@@ -2,10 +2,26 @@ import React from "react";
 import "../../styles/bakery_styles.css";
 import { SectionToggle } from "./SectionToggle";
 
+interface StoveLayer {
+  layer: number;
+  breadName: string | null;
+  quantity: number;
+}
+
 interface StoveSessionGrouped {
   session: number;
-  layers: { layer: number; breadName: string | null; quantity: number }[];
+  layers: StoveLayer[];
 }
+
+// Breads of a group can share a layer, which then has an entry per bread.
+const byLayerNumber = (layers: StoveLayer[]): [number, StoveLayer[]][] => {
+  const grouped = new Map<number, StoveLayer[]>();
+  for (const layer of layers) {
+    if (!grouped.has(layer.layer)) grouped.set(layer.layer, []);
+    grouped.get(layer.layer)!.push(layer);
+  }
+  return [...grouped.entries()];
+};
 
 interface OvenPlanSectionProps {
   isOpen: boolean;
@@ -37,19 +53,19 @@ export const OvenPlanSection: React.FC<OvenPlanSectionProps> = ({
                   <small className="fw-bold">Ofengang {session.session}</small>
                 </div>
                 <ul className="list-group list-group-flush">
-                  {session.layers.map((layer) => (
-                    <li
-                      key={layer.layer}
-                      className="list-group-item py-1 small"
-                    >
-                      <span className="text-muted">Etage {layer.layer}:</span>{" "}
-                      {layer.breadName ? (
-                        <span>
-                          {layer.breadName}{" "}
-                          <span className="badge bg-secondary">
-                            ×{layer.quantity}
+                  {byLayerNumber(session.layers).map(([number, breads]) => (
+                    <li key={number} className="list-group-item py-1 small">
+                      <span className="text-muted">Etage {number}:</span>{" "}
+                      {breads.some((layer) => layer.breadName) ? (
+                        breads.map((layer, index) => (
+                          <span key={index}>
+                            {index > 0 && " + "}
+                            {layer.breadName}{" "}
+                            <span className="badge bg-secondary">
+                              ×{layer.quantity}
+                            </span>
                           </span>
-                        </span>
+                        ))
                       ) : (
                         <span className="text-muted fst-italic">leer</span>
                       )}

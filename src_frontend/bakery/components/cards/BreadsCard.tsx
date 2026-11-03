@@ -20,9 +20,15 @@ import { LabelsModal } from "../modals/LabelsModal";
 
 interface BreadsCardProps {
   csrfToken: string;
+  groupsVersion: number;
+  onBreadsChanged: () => void;
 }
 
-export const BreadsCard: React.FC<BreadsCardProps> = ({ csrfToken }) => {
+export const BreadsCard: React.FC<BreadsCardProps> = ({
+  csrfToken,
+  groupsVersion,
+  onBreadsChanged,
+}) => {
   const bakeryApi = useApi(BakeryApi, csrfToken);
   const [breads, setBreads] = useState<BreadList[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,7 +42,7 @@ export const BreadsCard: React.FC<BreadsCardProps> = ({ csrfToken }) => {
 
   useEffect(() => {
     loadBreads();
-  }, []);
+  }, [groupsVersion]);
 
   const loadBreads = () => {
     setLoading(true);
@@ -123,6 +129,7 @@ export const BreadsCard: React.FC<BreadsCardProps> = ({ csrfToken }) => {
     promise
       .then(() => {
         loadBreads();
+        onBreadsChanged();
         setShowBreadModal(false);
         setEditingBread(null);
       })
@@ -307,6 +314,14 @@ export const BreadsCard: React.FC<BreadsCardProps> = ({ csrfToken }) => {
                         <h6 className="mb-0">{bread.name}</h6>
                         {!bread.isActive && (
                           <span className="badge bg-secondary">inaktiv</span>
+                        )}
+                        {bread.groupName && (
+                          <span
+                            className="badge badge-bakery-brown"
+                            title="Gruppe"
+                          >
+                            {bread.groupName}
+                          </span>
                         )}
                       </div>
                       <small className="text-muted d-block mb-1">

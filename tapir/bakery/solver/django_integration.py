@@ -48,7 +48,12 @@ def collect_solver_input(
         available_qs = available_qs.filter(delivery_day=delivery_day)
 
     available_bread_ids = available_qs.values_list("bread_id", flat=True).distinct()
-    breads_qs = Bread.objects.filter(id__in=available_bread_ids, is_active=True)
+    # By name, so the preview lists a shared layer's breads as the saved plan does.
+    breads_qs = (
+        Bread.objects.filter(id__in=available_bread_ids, is_active=True)
+        .select_related("group")
+        .order_by("name")
+    )
 
     specifics_qs = BreadSpecificsPerDeliveryDay.objects.filter(
         year=year, delivery_week=delivery_week
@@ -110,6 +115,8 @@ def collect_solver_input(
                 max_pieces=max_pieces,
                 min_remaining_pieces=min_remaining,
                 fixed_pieces=fixed_pieces,
+                group_id=b.group_id,
+                group_name=b.group.name if b.group else None,
             )
         )
 
@@ -272,21 +279,19 @@ def save_solution_to_db(
 
         session_objects = []
         for sess_num, session in enumerate(solution["stove_sessions"], start=1):
-            for layer_num, layer_info in enumerate(session, start=1):
-                if layer_info is None:
-                    continue
-                bread_id, quantity = layer_info
-                session_objects.append(
-                    StoveSession(
-                        year=year,
-                        delivery_week=delivery_week,
-                        delivery_day=delivery_day,
-                        session_number=sess_num,
-                        layer_number=layer_num,
-                        bread_id=bread_id,
-                        quantity=quantity,
+            for layer_num, breads_on_layer in enumerate(session, start=1):
+                for bread_id, quantity in breads_on_layer:
+                    session_objects.append(
+                        StoveSession(
+                            year=year,
+                            delivery_week=delivery_week,
+                            delivery_day=delivery_day,
+                            session_number=sess_num,
+                            layer_number=layer_num,
+                            bread_id=bread_id,
+                            quantity=quantity,
+                        )
                     )
-                )
         if session_objects:
             StoveSession.objects.bulk_create(session_objects)
 

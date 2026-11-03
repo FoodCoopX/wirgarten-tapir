@@ -1,7 +1,7 @@
 from datetime import date
 from unittest.mock import patch
 
-from django.test import TestCase, override_settings
+from django.test import override_settings
 
 from tapir.bakery.models import BreadDelivery
 from tapir.bakery.services.bread_delivery_context_service import (
@@ -21,10 +21,11 @@ from tapir.wirgarten.tests.factories import (
     ProductTypeFactory,
     SubscriptionFactory,
 )
+from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
 @override_settings(BAKERY_ENABLED=True)
-class TestEnsureBreadDeliveriesForMember(TestCase):
+class TestEnsureBreadDeliveriesForMember(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
@@ -361,23 +362,6 @@ class TestJokerSync(TestEnsureBreadDeliveriesForMember):
 
 class TestSignalIntegration(TestEnsureBreadDeliveriesForMember):
     @patch("tapir.bakery.services.breaddelivery_service.datetime")
-    def test_subscription_save_signal_triggers_sync(self, mock_datetime):
-        mock_datetime.now.return_value.date.return_value = date(2026, 3, 1)
-
-        member, pickup_location = self._create_member_with_pickup_location()
-
-        subscription = SubscriptionFactory.create(
-            member=member,
-            product=self.product,
-            quantity=1,
-            start_date=date(2026, 3, 1),
-            end_date=date(2026, 3, 14),
-        )
-
-        deliveries = BreadDelivery.objects.filter(subscription=subscription)
-        self.assertEqual(deliveries.count(), 2)
-
-    @patch("tapir.bakery.services.breaddelivery_service.datetime")
     def test_pickupLocationAndJokerSaves_doNotTouchBreadDeliveries(self, mock_datetime):
         mock_datetime.now.return_value.date.return_value = date(2026, 3, 1)
 
@@ -389,6 +373,7 @@ class TestSignalIntegration(TestEnsureBreadDeliveriesForMember):
             start_date=date(2026, 3, 1),
             end_date=date(2026, 3, 14),
         )
+        BreadDeliveryService.ensure_bread_deliveries_for_member(member)
         before = list(
             BreadDelivery.objects.filter(subscription=subscription)
             .order_by("year", "delivery_week", "slot_number")

@@ -955,6 +955,159 @@ paths:
         '400':
           description: Choosing is closed for this week, not released for members,
             or no capacity is left for the selected bread
+  /bakery/bread-groups/:
+    get:
+      operationId: bakery_bread_groups_list
+      tags:
+      - bakery
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BreadGroup'
+          description: ''
+    post:
+      operationId: bakery_bread_groups_create
+      tags:
+      - bakery
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BreadGroupRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BreadGroupRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BreadGroupRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BreadGroup'
+          description: ''
+  /bakery/bread-groups/{id}/:
+    get:
+      operationId: bakery_bread_groups_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der bread group identifiziert.
+        required: true
+      tags:
+      - bakery
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BreadGroup'
+          description: ''
+    put:
+      operationId: bakery_bread_groups_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der bread group identifiziert.
+        required: true
+      tags:
+      - bakery
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BreadGroupRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BreadGroupRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BreadGroupRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BreadGroup'
+          description: ''
+    patch:
+      operationId: bakery_bread_groups_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der bread group identifiziert.
+        required: true
+      tags:
+      - bakery
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBreadGroupRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBreadGroupRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBreadGroupRequest'
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BreadGroup'
+          description: ''
+    delete:
+      operationId: bakery_bread_groups_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der bread group identifiziert.
+        required: true
+      tags:
+      - bakery
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '204':
+          description: No response body
   /bakery/bread-specifics/:
     get:
       operationId: bakery_bread_specifics_list
@@ -9565,6 +9718,43 @@ components:
       - labels
       - name
       - weight
+    BreadGroup:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        bread_names:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+      required:
+      - bread_names
+      - created_at
+      - id
+      - name
+      - updated_at
+    BreadGroupRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+      required:
+      - name
     BreadLabel:
       type: object
       properties:
@@ -9620,6 +9810,10 @@ components:
           items:
             $ref: '#/components/schemas/BreadContent'
           readOnly: true
+        group_name:
+          type: string
+          readOnly: true
+          nullable: true
         created_at:
           type: string
           format: date-time
@@ -9675,6 +9869,9 @@ components:
             bread on a baking day (e.g., for walk-in customers)
         is_active:
           type: boolean
+        group:
+          type: string
+          nullable: true
         labels:
           type: array
           items:
@@ -9685,6 +9882,7 @@ components:
       - contents
       - created_at
       - delivery_count
+      - group_name
       - id
       - name
       - updated_at
@@ -9740,6 +9938,10 @@ components:
             bread on a baking day (e.g., for walk-in customers)
         is_active:
           type: boolean
+        group:
+          type: string
+          minLength: 1
+          nullable: true
         labels:
           type: array
           items:
@@ -13531,6 +13733,13 @@ components:
           type: string
           minLength: 1
           nullable: true
+    PatchedBreadGroupRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
     PatchedBreadLabelRequest:
       type: object
       properties:
@@ -13591,6 +13800,10 @@ components:
             bread on a baking day (e.g., for walk-in customers)
         is_active:
           type: boolean
+        group:
+          type: string
+          minLength: 1
+          nullable: true
         labels:
           type: array
           items:
