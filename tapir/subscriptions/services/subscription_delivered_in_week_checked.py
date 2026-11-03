@@ -29,7 +29,9 @@ class SubscriptionDeliveredInWeekChecker:
             subscription.product.type.is_affected_by_jokers
             and get_parameter_value(key=ParameterKeys.JOKERS_ENABLED, cache=cache)
             and JokerManagementService.does_member_have_a_joker_in_week(
-                member=subscription.member, reference_date=delivery_date, cache=cache
+                member_id=subscription.member_id,
+                reference_date=delivery_date,
+                cache=cache,
             )
         ):
             return False
@@ -44,7 +46,9 @@ class SubscriptionDeliveredInWeekChecker:
         if get_parameter_value(
             key=ParameterKeys.DELIVERY_DONATION_MODE, cache=cache
         ) != DELIVERY_DONATION_MODE_DISABLED and DeliveryDonationManager.does_member_have_a_donation_in_week(
-            member=subscription.member, reference_date=delivery_date, cache=cache
+            member_id=subscription.member_id,
+            reference_date=delivery_date,
+            cache=cache,
         ):
             return False
 

@@ -90,7 +90,7 @@ class JokerManagementService:
 
         return (
             not cls.does_member_have_a_joker_in_week(
-                member, reference_date, cache=cache
+                member_id=member.id, reference_date=reference_date, cache=cache
             )
             and cls.can_joker_be_used_relative_to_date_limit(
                 reference_date, cache=cache
@@ -108,18 +108,18 @@ class JokerManagementService:
                 member=member, reference_date=reference_date, cache=cache
             )
             and not DeliveryDonationManager.does_member_have_a_donation_in_week(
-                member=member, reference_date=reference_date, cache=cache
+                member_id=member.id, reference_date=reference_date, cache=cache
             )
         )
 
     @classmethod
     def does_member_have_a_joker_in_week(
-        cls, member: Member, reference_date: datetime.date, cache: dict
+        cls, member_id: str, reference_date: datetime.date, cache: dict
     ) -> bool:
         if not get_parameter_value(ParameterKeys.JOKERS_ENABLED, cache=cache):
             return False
 
-        jokers = TapirCache.get_all_jokers_for_member(member_id=member.id, cache=cache)
+        jokers = TapirCache.get_all_jokers_for_member(member_id=member_id, cache=cache)
         for joker in jokers:
             if (
                 joker.date.isocalendar().week == reference_date.isocalendar().week

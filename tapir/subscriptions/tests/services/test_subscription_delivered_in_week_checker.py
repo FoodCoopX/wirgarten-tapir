@@ -74,7 +74,9 @@ class TestSubscriptionDeliveredInWeekChecker(TapirUnitTest):
             cache=cache,
         )
         mock_does_member_have_a_joker_in_week.assert_called_once_with(
-            member=subscription.member, reference_date=delivery_date, cache=cache
+            member_id=subscription.member_id,
+            reference_date=delivery_date,
+            cache=cache,
         )
 
     @patch.object(
@@ -151,7 +153,9 @@ class TestSubscriptionDeliveredInWeekChecker(TapirUnitTest):
         )
         mock_does_member_have_a_joker_in_week.assert_not_called()
         mock_does_member_have_a_donation_in_week.assert_called_once_with(
-            member=subscription.member, reference_date=delivery_date, cache=cache
+            member_id=subscription.member_id,
+            reference_date=delivery_date,
+            cache=cache,
         )
 
     @patch.object(

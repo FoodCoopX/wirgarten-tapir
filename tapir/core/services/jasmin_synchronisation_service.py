@@ -440,6 +440,15 @@ class JasminSynchronisationService:
         tour_and_stop_order_by_pickup_location_id = (
             cls.get_tour_and_stop_order_by_pickup_location_id()
         )
+        first_opening_time_by_pickup_location_and_day = {}
+        for opening_time in PickupLocationOpeningTime.objects.order_by(
+            "open_time", "close_time", "id"
+        ):
+            first_opening_time_by_pickup_location_and_day.setdefault(
+                (opening_time.pickup_location_id, opening_time.day_of_week),
+                opening_time,
+            )
+        shares_delivery_day_id_by_day_number = {}
         wanted_fields_by_station_and_day_id = {}
         for pickup_location in PickupLocation.objects.all():
             day_number = PickupLocationDeliveryDayService.get_delivery_day(
@@ -448,15 +457,15 @@ class JasminSynchronisationService:
             if day_number is None:
                 continue
 
-            shares_delivery_day_id = cls.get_or_create_shares_delivery_day_id(
-                api, day_number=day_number, week_monday=week_monday
-            )
-            opening_time = (
-                PickupLocationOpeningTime.objects.filter(
-                    pickup_location_id=pickup_location.id, day_of_week=day_number
+            if day_number not in shares_delivery_day_id_by_day_number:
+                shares_delivery_day_id_by_day_number[day_number] = (
+                    cls.get_or_create_shares_delivery_day_id(
+                        api, day_number=day_number, week_monday=week_monday
+                    )
                 )
-                .order_by("open_time")
-                .first()
+            shares_delivery_day_id = shares_delivery_day_id_by_day_number[day_number]
+            opening_time = first_opening_time_by_pickup_location_and_day.get(
+                (pickup_location.id, day_number)
             )
             tour_number, stop_order = tour_and_stop_order_by_pickup_location_id[
                 pickup_location.id

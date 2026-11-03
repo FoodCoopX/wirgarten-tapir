@@ -79,7 +79,7 @@ class GetDeliveriesService:
         )
 
         joker_used = JokerManagementService.does_member_have_a_joker_in_week(
-            member=member, reference_date=delivery_date, cache=cache
+            member_id=member.id, reference_date=delivery_date, cache=cache
         )
 
         if joker_used:
@@ -116,7 +116,7 @@ class GetDeliveriesService:
                 member=member, delivery_date=delivery_date, cache=cache
             ),
             "donation_used": DeliveryDonationManager.does_member_have_a_donation_in_week(
-                member=member, reference_date=delivery_date, cache=cache
+                member_id=member.id, reference_date=delivery_date, cache=cache
             ),
         }
 
