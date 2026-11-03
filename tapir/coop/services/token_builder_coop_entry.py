@@ -13,7 +13,6 @@ class TokenBuilderCoopEntry:
         cls,
         coop_share_transaction: CoopShareTransaction | None,
         association_membership: AssociationMembership | None,
-        solidarity_contribution: SolidarityContribution | None,
         cache: dict,
     ):
         tokens = {
@@ -22,8 +21,6 @@ class TokenBuilderCoopEntry:
             "total_cost": format_currency(0),
             "coop_shares_payment_method": "",
             "membership_start_date": "Keine Datum",
-            "solidarity_contribution_amount": format_currency(0),
-            "solidarity_contribution_start_date": "Kein Datum",
             "membership_monthly_price": format_currency(0),
         }
         if coop_share_transaction is not None:
@@ -39,15 +36,6 @@ class TokenBuilderCoopEntry:
                 "membership_start_date": format_date(coop_share_transaction.valid_at),
             }
 
-        if solidarity_contribution is not None:
-            tokens |= {
-                "solidarity_contribution_amount": format_currency(
-                    solidarity_contribution.amount
-                ),
-                "solidarity_contribution_start_date": (
-                    format_date(solidarity_contribution.start_date)
-                ),
-            }
         if association_membership is not None:
             tokens |= {
                 "membership_start_date": format_date(association_membership.start_date),
@@ -61,6 +49,25 @@ class TokenBuilderCoopEntry:
             }
 
         return tokens
+
+    @classmethod
+    def build_mail_tokens_for_solidarity_contribution(
+        cls, solidarity_contribution: SolidarityContribution | None
+    ):
+        if solidarity_contribution is None:
+            return {
+                "solidarity_contribution_amount": format_currency(0),
+                "solidarity_contribution_start_date": "Kein Datum",
+            }
+
+        return {
+            "solidarity_contribution_amount": format_currency(
+                solidarity_contribution.amount
+            ),
+            "solidarity_contribution_start_date": format_date(
+                solidarity_contribution.start_date
+            ),
+        }
 
     @staticmethod
     def build_payment_method(coop_share_transaction: CoopShareTransaction):

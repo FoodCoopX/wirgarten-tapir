@@ -119,10 +119,10 @@ function buildHelpText(
   return (
     <>
       <p>
-        Du kannst deinen Vertrag bis zum{" "}
+        Du kannst deinen Vertrag bis zum Ende deiner Probezeit am{" "}
         {formatDateTextLong(subscribedProduct.dateLimitForTrialCancellation)} um
-        23:59 Uhr kündigen, damit dein Vertrag am{" "}
-        {formatDateTextLong(subscribedProduct.cancellationDate)} beendet wird.
+        23:59 Uhr kündigen. Dein Vertrag endet dann am{" "}
+        {formatDateTextLong(subscribedProduct.cancellationDate)}.
       </p>
 
       {buildNoticePeriodText(subscribedProduct)}

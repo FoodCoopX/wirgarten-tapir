@@ -26,6 +26,7 @@ class MonthPaymentBuilder:
         reference_date: datetime.date,
         cache: dict,
         generated_payments: set[Payment],
+        member_id: str | None = None,
     ) -> list[Payment]:
         first_of_month = reference_date.replace(day=1)
 
@@ -35,6 +36,7 @@ class MonthPaymentBuilder:
                 cache=cache,
                 generated_payments=generated_payments,
                 in_trial=True,
+                member_id=member_id,
             )
         )
 
@@ -46,6 +48,7 @@ class MonthPaymentBuilder:
                     payments_to_create_subscriptions_in_trial
                 ),
                 in_trial=False,
+                member_id=member_id,
             )
         )
 
@@ -54,6 +57,7 @@ class MonthPaymentBuilder:
             cache=cache,
             generated_payments=generated_payments,
             in_trial=True,
+            member_id=member_id,
         )
 
         payments_to_create_solidarity_contributions_not_in_trial = MonthPaymentBuilderSolidarityContributions.build_payments_for_solidarity_contributions(
@@ -63,12 +67,14 @@ class MonthPaymentBuilder:
                 payments_to_create_solidarity_contributions_in_trial
             ),
             in_trial=False,
+            member_id=member_id,
         )
 
         payments_to_create_association_membership = MonthPaymentBuilderAssociationMembership.build_payments_for_association_memberships(
             current_month=first_of_month,
             cache=cache,
             generated_payments=generated_payments,
+            member_id=member_id,
         )
 
         result = (
@@ -88,6 +94,7 @@ class MonthPaymentBuilder:
                     cache=cache,
                     generated_payments=generated_payments,
                     in_trial=True,
+                    member_id=member_id,
                 )
             )
 
@@ -99,6 +106,7 @@ class MonthPaymentBuilder:
                         payments_to_create_delivery_charges_in_trial
                     ),
                     in_trial=False,
+                    member_id=member_id,
                 )
             )
             result += (

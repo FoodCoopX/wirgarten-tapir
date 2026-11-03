@@ -34,7 +34,7 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 
 class MemberImporter:
     @classmethod
-    def import_member(cls, row: dict[str, str], update_existing: bool):
+    def import_member(cls, row: dict[str, str], update_existing: bool, dry_run: bool):
         if DataImportUtils.is_row_empty(row):
             return None
 
@@ -46,14 +46,16 @@ class MemberImporter:
                 return MEMBER_IMPORT_STATUS_SKIPPED
 
             try:
-                return cls.update_existing_member_if_necessary(member=member, row=row)
+                return cls.update_existing_member_if_necessary(
+                    member=member, row=row, dry_run=dry_run
+                )
             except Exception as e:
                 raise TapirDataImportException(
                     f"Error updating member {member_no}: {e}"
                 )
 
         try:
-            return cls.create_new_member(member_no=member_no, row=row)
+            return cls.create_new_member(member_no=member_no, row=row, dry_run=dry_run)
         except Exception as e:
             raise TapirDataImportException(f"Error creating member {member_no}: {e}")
 
@@ -69,9 +71,11 @@ class MemberImporter:
         return pickup_location
 
     @classmethod
-    def update_existing_member_if_necessary(cls, member: Member, row: dict[str, str]):
+    def update_existing_member_if_necessary(
+        cls, member: Member, row: dict[str, str], dry_run: bool
+    ):
         member_attributes_updated = cls.update_member_attributes_and_save_member(
-            member=member, row=row
+            member=member, row=row, dry_run=dry_run
         )
         pickup_location_updated = cls.update_member_pickup_location(
             member=member, row=row
@@ -134,7 +138,7 @@ class MemberImporter:
 
     @classmethod
     def update_member_attributes_and_save_member(
-        cls, member: Member, row: dict[str, str]
+        cls, member: Member, row: dict[str, str], dry_run: bool
     ):
         member_updated = False
         email_before = member.email
@@ -200,9 +204,10 @@ class MemberImporter:
 
         if email_before != member.email and member.keycloak_id:
             Member.objects.filter(id=member.id).update(email=member.email)
-            KeycloakUserManager.get_keycloak_client().update_user(
-                user_id=member.keycloak_id, payload={"email": member.email}
-            )
+            if not dry_run:
+                KeycloakUserManager.get_keycloak_client().update_user(
+                    user_id=member.keycloak_id, payload={"email": member.email}
+                )
 
         if member_updated:
             member.save()
@@ -323,11 +328,13 @@ class MemberImporter:
         return updated
 
     @classmethod
-    def create_new_member(cls, member_no: int, row: dict[str, str]):
+    def create_new_member(cls, member_no: int, row: dict[str, str], dry_run: bool):
         member = Member(
             member_no=member_no,
         )
-        cls.update_member_attributes_and_save_member(member=member, row=row)
+        cls.update_member_attributes_and_save_member(
+            member=member, row=row, dry_run=dry_run
+        )
 
         pickup_location = cls.get_pickup_location_by_name(
             name=DataImportUtils.normalize_cell(row.get("Abholort"))
@@ -450,7 +457,7 @@ class MemberImporter:
         membership.save()
         AssociationMembershipUpdatedLogEntry().populate(
             old_frozen=before_changes, new_model=membership, actor=None, user=member
-        )
+        ).save()
         return True
 
     @classmethod

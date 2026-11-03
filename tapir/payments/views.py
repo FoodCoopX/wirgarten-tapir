@@ -177,6 +177,7 @@ class GetFutureMemberPaymentsApiView(APIView):
                 reference_date=current_month,
                 cache=self.cache,
                 generated_payments=generated_payments,
+                member_id=member_id,
             )
             member_payments.update(
                 [

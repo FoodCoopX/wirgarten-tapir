@@ -282,3 +282,49 @@ class TestSendMembershipEntryMail(TapirIntegrationTest):
         send_membership_entry_mails()
 
         mock_fire_action.assert_not_called()
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_sendMembershipEntryMails_associationMembershipStartedAndEndsInTheFuture_sendMailAndUpdateMember(
+        self, mock_fire_action: Mock
+    ):
+        self._set_parameter(
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS, value=LEGAL_STATUS_ASSOCIATION
+        )
+        mock_timezone(test=self, now=datetime.datetime(year=2010, month=8, day=1))
+        member = MemberFactory.create(has_received_membership_started_mail=False)
+        AssociationMembershipFactory.create(
+            member=member,
+            start_date=datetime.date(year=2010, month=1, day=1),
+            end_date=datetime.date(year=2010, month=12, day=31),
+        )
+
+        send_membership_entry_mails()
+
+        mock_fire_action.assert_called_once()
+        self.assert_mail_event_has_been_triggered(
+            mock_fire_action=mock_fire_action,
+            key=Events.MEMBERSHIP_ENTRY,
+        )
+        member.refresh_from_db()
+        self.assertTrue(member.has_received_membership_started_mail)
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_sendMembershipEntryMails_mailNotSentYetButAssociationMembershipAlreadyEnded_dontSendMail(
+        self, mock_fire_action: Mock
+    ):
+        self._set_parameter(
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS, value=LEGAL_STATUS_ASSOCIATION
+        )
+        mock_timezone(test=self, now=datetime.datetime(year=2010, month=8, day=1))
+        member = MemberFactory.create(has_received_membership_started_mail=False)
+        AssociationMembershipFactory.create(
+            member=member,
+            start_date=datetime.date(year=2010, month=1, day=1),
+            end_date=datetime.date(year=2010, month=7, day=31),
+        )
+
+        send_membership_entry_mails()
+
+        mock_fire_action.assert_not_called()
+        member.refresh_from_db()
+        self.assertFalse(member.has_received_membership_started_mail)
