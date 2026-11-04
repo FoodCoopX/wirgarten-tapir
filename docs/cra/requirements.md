@@ -17,7 +17,7 @@ Required by Annex I, Part II, and for reporting by Art. 14. Reporting applies si
 | Report actively exploited vulnerabilities and severe incidents to the authorities: early warning within 24 hours, notification within 72 hours, final report later (Art. 14) | **open** | Needs a responsible person and access to the EU single reporting platform |
 | Inform users about vulnerabilities and fixes | **partly** | Releases with a changelog exist; no security advisories |
 | Security updates, separate from feature updates where possible | **partly** | Releases are built from `master`; no security-only releases |
-| Software bill of materials (SBOM) for top-level dependencies | **open** | `poetry.lock` and `pnpm-lock.yaml` are a good basis; an SBOM could be generated in CI |
+| Software bill of materials (SBOM) for top-level dependencies | **open** | `poetry.lock` and `pnpm-lock.yaml` are a good basis. Proposal: a CI job generates the SBOM (CycloneDX) and commits it back to the repository; [Dependency-Track](https://dependencytrack.org/) can read it to track known vulnerabilities per component |
 | Regular testing and review of the product's security | **partly** | Tests, Sonar and dependency review on pull requests exist; no security review process |
 
 ## Product requirements
