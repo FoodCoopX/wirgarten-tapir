@@ -65,7 +65,6 @@ export function buildEmptySettings(): BestellWizardSettings {
       step6bText: "",
       step6bCheckboxStatuteAssociations: "",
       step6cCheckboxStatute: "",
-      step6cTextStatute: "",
       step6cCheckboxCommitment: "",
       step6cTitle: "",
       step6cText: "",

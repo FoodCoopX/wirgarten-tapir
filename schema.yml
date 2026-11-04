@@ -9332,8 +9332,6 @@ components:
           type: string
         step6c_checkbox_statute:
           type: string
-        step6c_text_statute:
-          type: string
         step6c_checkbox_commitment:
           type: string
         step6c_title:
@@ -9438,7 +9436,6 @@ components:
       - step6c_checkbox_commitment
       - step6c_checkbox_statute
       - step6c_text
-      - step6c_text_statute
       - step6c_title
       - step8_text
       - step8_title
