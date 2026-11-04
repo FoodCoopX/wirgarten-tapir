@@ -5,9 +5,17 @@ from tapir.subscriptions.views import cancellations
 from tapir.subscriptions.views import confirmations
 from tapir.subscriptions.views import member_profile
 from tapir.subscriptions.views import other
+from tapir.subscriptions.views.admin_contract_prototype import (
+    AdminContractPrototypeDataView,
+)
 
 app_name = "subscriptions"
 urlpatterns = [
+    path(
+        "admin-contract-prototype-data",
+        AdminContractPrototypeDataView.as_view(),
+        name="admin_contract_prototype_data",
+    ),
     path(
         "cancellation_data",
         cancellations.GetCancellationDataView.as_view(),
