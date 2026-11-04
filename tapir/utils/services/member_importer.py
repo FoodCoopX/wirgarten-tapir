@@ -26,7 +26,7 @@ from tapir.utils.config import (
     MEMBER_IMPORT_STATUS_CREATED,
 )
 from tapir.utils.exceptions import TapirDataImportException
-from tapir.utils.models import MemberImportedLogEntry
+from tapir.utils.models import MemberImportedLogEntry, MemberImportUpdatedLogEntry
 from tapir.utils.services.data_import_utils import DataImportUtils
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import (
@@ -88,9 +88,14 @@ class MemberImporter:
     def update_existing_member_if_necessary(
         cls, member: Member, row: dict[str, str], dry_run: bool
     ):
+        member_before = freeze_for_log(member)
         member_attributes_updated = cls.update_member_attributes_and_save_member(
             member=member, row=row, dry_run=dry_run
         )
+        if member_attributes_updated:
+            MemberImportUpdatedLogEntry().populate(
+                old_frozen=member_before, new_model=member, actor=None, user=member
+            ).save()
         pickup_location_updated = cls.update_member_pickup_location(
             member=member, row=row
         )
