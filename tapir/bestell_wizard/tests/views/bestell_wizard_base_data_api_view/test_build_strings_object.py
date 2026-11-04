@@ -159,11 +159,6 @@ class TestBuildStringsObject(TapirUnitTest):
             cache=cache,
         )
         mock_parameter_value(
-            key=ParameterKeys.BESTELLWIZARD_STEP6C_TEXT_STATUTE,
-            value="test_step6c_text_statute",
-            cache=cache,
-        )
-        mock_parameter_value(
             key=ParameterKeys.BESTELLWIZARD_STEP6C_CHECKBOX_COMMITMENT,
             value="test_step6c_checkbox_commitment",
             cache=cache,
@@ -323,7 +318,6 @@ class TestBuildStringsObject(TapirUnitTest):
                 "step6c_title": "test_step6c_title",
                 "step6c_text": "test_step6c_text",
                 "step6c_checkbox_statute": "test_step6c_checkbox_statute",
-                "step6c_text_statute": "test_step6c_text_statute",
                 "step6c_checkbox_commitment": "test_step6c_checkbox_commitment",
                 "step8_title": "test_step8_title",
                 "step8_text": "test_step8_text",

@@ -549,18 +549,6 @@ class ParameterDefinitionsBestellwizard:
         bestellwizard_parameter_order -= 1
 
         importer.parameter_definition(
-            key=ParameterKeys.BESTELLWIZARD_STEP6C_TEXT_STATUTE,
-            label="Seite 6B: Genossenschaft - Rechtliches - Erklärtext Satzung",
-            datatype=TapirParameterDatatype.STRING,
-            initial_value="Bitte beachte, dass deine Genossenschaftsanteile erst bei Austritt aus der Genossenschaft und nach Verabschiedung des Jahresabschlusses im Folgejahr zurückgezahlt werden dürfen. Siehe dazu Satzung § 10 und § 37.",
-            description=HTML_ALLOWED_TEXT,
-            category=ParameterCategory.BESTELLWIZARD,
-            meta=ParameterMeta(show_only_when=legal_status_is_cooperative),
-            order_priority=bestellwizard_parameter_order,
-        )
-        bestellwizard_parameter_order -= 1
-
-        importer.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_STEP6C_CHECKBOX_COMMITMENT,
             label="Seite 6B: Genossenschaft - Rechtliches - Checkbox-Label Verpflichtung",
             datatype=TapirParameterDatatype.STRING,
