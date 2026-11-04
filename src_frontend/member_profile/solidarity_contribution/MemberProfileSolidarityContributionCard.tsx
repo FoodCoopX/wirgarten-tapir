@@ -218,10 +218,9 @@ const MemberProfileSolidarityContributionCard: React.FC<
         return (
           <p className={"mb-0"}>
             Beachte: Das Mitglied kann den Solidarbeitrag nur nach oben
-            verändern. Nur du als Admin kannst ihn reduzieren. Dem Mitglied
-            wird in dem Hilfetext, der ihm eingeblendet wird, kommuniziert,
-            dass es Kontakt zu dir aufnehmen muss, um den Solidarbeitrag zu
-            reduzieren.
+            verändern. Nur du als Admin kannst ihn reduzieren. Dem Mitglied wird
+            in dem Hilfetext, der ihm eingeblendet wird, kommuniziert, dass es
+            Kontakt zu dir aufnehmen muss, um den Solidarbeitrag zu reduzieren.
           </p>
         );
       }
@@ -377,7 +376,9 @@ const MemberProfileSolidarityContributionCard: React.FC<
           </Modal.Body>
           <Modal.Footer>
             <span
-              className={"d-flex justify-content-between align-items-center"}
+              className={
+                "d-flex flex-wrap justify-content-between align-items-center gap-2"
+              }
               style={{ width: "100%" }}
             >
               <TapirButton

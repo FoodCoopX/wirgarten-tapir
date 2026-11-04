@@ -12,6 +12,11 @@ from tapir.utils.config import (
     MEMBER_IMPORT_STATUS_UPDATED,
 )
 from tapir.utils.exceptions import TapirDataImportException
+from tapir.log.util import freeze_for_log
+from tapir.utils.models import (
+    CoopSharesImportedLogEntry,
+    CoopSharesImportUpdatedLogEntry,
+)
 from tapir.utils.services.data_import_utils import DataImportUtils
 from tapir.wirgarten.models import Member, CoopShareTransaction
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -94,6 +99,10 @@ class ShareImporter:
 
         cls.create_or_update_payment_if_necessary(transaction)
 
+        CoopSharesImportedLogEntry().populate(
+            model=transaction, actor=None, user=member
+        ).save()
+
         return MEMBER_IMPORT_STATUS_CREATED
 
     @classmethod
@@ -142,6 +151,7 @@ class ShareImporter:
         valid_date: datetime.date,
     ) -> str:
         is_updated = False
+        transaction_before = freeze_for_log(existing_transaction)
 
         if DataImportUtils.update_if_diff(
             existing_transaction, "quantity", number_of_shares
@@ -173,11 +183,18 @@ class ShareImporter:
 
         try:
             existing_transaction.save()
-            return MEMBER_IMPORT_STATUS_UPDATED
         except Exception as e:
             raise TapirDataImportException(
                 f"Error updating share transaction (member: {existing_transaction.member}): {e}"
             )
+
+        CoopSharesImportUpdatedLogEntry().populate(
+            old_frozen=transaction_before,
+            new_model=existing_transaction,
+            actor=None,
+            user=existing_transaction.member,
+        ).save()
+        return MEMBER_IMPORT_STATUS_UPDATED
 
     @classmethod
     def create_or_update_payment_if_necessary(cls, transaction: CoopShareTransaction):
@@ -189,25 +206,21 @@ class ShareImporter:
 
         should_have_a_payment = transaction.valid_at >= get_today()
 
+        payment = transaction.payments.first()
+
         if not should_have_a_payment:
-            if transaction.payment is None:
+            if payment is None:
                 return False
 
-            cls.delete_payment(transaction)
+            payment.delete()
             return True
 
-        if transaction.payment is None:
-            payment = CoopSharePurchaseHandler.create_or_update_payment(
-                shares_valid_at=transaction.valid_at,
-                mandate_ref=transaction.mandate_ref,
-                quantity=transaction.quantity,
-                cache={},
+        if payment is None:
+            CoopSharePurchaseHandler.create_payment(
+                coop_share_transaction=transaction, cache={}
             )
-            transaction.payment = payment
-            transaction.save()
             return True
 
-        payment = transaction.payment
         updated = False
 
         due_date = CoopSharePurchaseHandler.get_payment_due_date(
@@ -221,10 +234,3 @@ class ShareImporter:
             updated = True
 
         return updated
-
-    @classmethod
-    def delete_payment(cls, transaction: CoopShareTransaction):
-        payment = transaction.payment
-        transaction.payment = None
-        transaction.save()
-        payment.delete()

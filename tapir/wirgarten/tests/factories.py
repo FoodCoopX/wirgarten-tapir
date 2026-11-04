@@ -251,15 +251,6 @@ class CoopShareTransactionFactory(
     quantity = factory.Faker("random_int", min=1, max=10)
     share_price = 50
     valid_at = NOW.date() - datetime.timedelta(days=1)
-    payment = factory.SubFactory(
-        PaymentFactory,
-        amount=factory.LazyAttribute(
-            lambda payment: (
-                payment.factory_parent.quantity * payment.factory_parent.share_price
-            )
-        ),
-        mandate_ref__member=factory.SelfAttribute("...member"),
-    )
 
 
 class MemberExtraEmailFactory(factory.django.DjangoModelFactory[MemberExtraEmail]):

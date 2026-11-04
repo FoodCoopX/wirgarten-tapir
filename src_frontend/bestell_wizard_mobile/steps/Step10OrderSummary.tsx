@@ -17,6 +17,7 @@ import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeast
 import { isProductTypeOrdered } from "../../bestell_wizard/utils/isProductTypeOrdered.ts";
 import TapirButton from "../../components/TapirButton.tsx";
 import formatAddress from "../../utils/formatAddress.ts";
+import { formatCoopShareLabel } from "../../utils/formatCoopShareLabel.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
@@ -26,6 +27,7 @@ import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import { doesWaitingListHaveProductType } from "../utils/doesWaitingListHaveProductType.ts";
 import { getAssociationMembershipTypeMonthlyPriceFormatted } from "../utils/getAssociationMembershipTypeMonthlyPriceFormatted.ts";
 import { getFirstPickupLocationWithCapacity } from "../utils/getFirstPickupLocationWithCapacity.ts";
+import { getNumberOfCoopShareInstalments } from "../utils/getNumberOfCoopShareInstalments.ts";
 import {
   getProductById,
   getProductByIdGlobal,
@@ -40,6 +42,7 @@ interface Step10OrderSummaryProps {
   settings: BestellWizardSettings;
   shoppingCart: ShoppingCart;
   numberOfCoopShares: number;
+  payCoopSharesInInstalments?: boolean;
   studentStatusEnabled: boolean;
   goToNextStep: () => void;
   contractStartDate: Date;
@@ -83,6 +86,7 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
   settings,
   shoppingCart,
   numberOfCoopShares,
+  payCoopSharesInInstalments,
   studentStatusEnabled,
   goToNextStep,
   contractStartDate,
@@ -320,7 +324,26 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
   function getPaymentSegments() {
     const segments: React.ReactNode[] = [];
 
-    if (isOneTimePaymentShown()) {
+    if (isOneTimePaymentShown() && payCoopSharesInInstalments) {
+      segments.push(
+        <>
+          <strong>
+            {getNumberOfCoopShareInstalments(numberOfCoopShares, settings)}{" "}
+            monatliche Raten:
+          </strong>
+          <PaymentRow
+            label={
+              "Genossenschaftsanteile" +
+              (willBecomeMemberNow(settings, becomeMemberNow)
+                ? ""
+                : " (Start wenn Platz frei)")
+            }
+            amount={settings.coopShareInstalmentAmount}
+            perMonth={true}
+          />
+        </>,
+      );
+    } else if (isOneTimePaymentShown()) {
       segments.push(
         <>
           <strong>Einmalig:</strong>
@@ -492,15 +515,35 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                 >
                   <Accordion.Header>{getCoopSharesTitle()}</Accordion.Header>
                   <AccordionBody>
-                    {studentStatusEnabled
-                      ? settings.strings.step10TextStudent
-                      : numberOfCoopShares +
-                        " Genossenschaftsanteile à " +
-                        formatCurrency(settings.priceOfAShare) +
-                        " = " +
-                        formatCurrency(
-                          numberOfCoopShares * settings.priceOfAShare,
+                    {studentStatusEnabled ? (
+                      settings.strings.step10TextStudent
+                    ) : (
+                      <>
+                        {numberOfCoopShares +
+                          " " +
+                          formatCoopShareLabel(numberOfCoopShares) +
+                          " à " +
+                          formatCurrency(settings.priceOfAShare) +
+                          " = " +
+                          formatCurrency(
+                            numberOfCoopShares * settings.priceOfAShare,
+                          )}
+                        {payCoopSharesInInstalments && (
+                          <>
+                            <br />
+                            {"in " +
+                              getNumberOfCoopShareInstalments(
+                                numberOfCoopShares,
+                                settings,
+                              ) +
+                              " monatlichen Raten à " +
+                              formatCurrency(
+                                settings.coopShareInstalmentAmount,
+                              )}
+                          </>
                         )}
+                      </>
+                    )}
                     <TapirButton
                       variant={BUTTON_VARIANT}
                       size={"sm"}

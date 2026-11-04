@@ -32,15 +32,17 @@ class MonthPaymentBuilderSolidarityContributions:
         cache: dict,
         generated_payments: set[Payment],
         in_trial: bool,
+        member_id: str | None = None,
     ) -> list[Payment]:
         target_month = current_month
         if in_trial:
             target_month = (target_month - relativedelta(months=1)).replace(day=1)
 
-        solidarity_contributions = (
-            cls.get_solidarity_contributions_for_this_and_the_next_growing_period(
+        solidarity_contributions = MonthPaymentBuilderUtils.filter_contracts_by_member(
+            contracts=cls.get_solidarity_contributions_for_this_and_the_next_growing_period(
                 cache=cache, first_of_month=target_month, is_in_trial=in_trial
-            )
+            ),
+            member_id=member_id,
         )
 
         contributions_by_member = cls.group_contributions_by_member(

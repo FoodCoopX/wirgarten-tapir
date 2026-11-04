@@ -52,3 +52,5 @@ through the matrix channel or by tagging me in issues or PRs.
 - The code for the frontend bestell wizard can probably be improved on a lot. Also, it would need tests
 - In some complex views I pass the serializer's data as dict to the service. That should never be the case, we should
   pass deserialized parameters instead, in a data class if it's too many parameters
+- There are a few places where we let admins configure strings with tokens, typically in the bestell wizard, but some
+  use {} and some use {{}}, we should be consistent.

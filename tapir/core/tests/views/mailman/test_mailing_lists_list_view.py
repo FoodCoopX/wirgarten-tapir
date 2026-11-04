@@ -12,7 +12,7 @@ from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
-@override_settings(MAILING_LISTS_ENABLED=True)
+@override_settings(MAILING_LISTS_ENABLED=True, EMAIL_HOST="example.com")
 class TestMailingListListView(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls) -> None:
@@ -37,7 +37,6 @@ class TestMailingListListView(TapirIntegrationTest):
             response=response, expected_status_code=status.HTTP_403_FORBIDDEN
         )
 
-    @override_settings(EMAIL_HOST="example.com")
     def test_get_default_returnsCorrectList(self):
         self.client.force_login(MemberFactory.create(is_superuser=True))
         MailmanTestHelper.mock_domain(

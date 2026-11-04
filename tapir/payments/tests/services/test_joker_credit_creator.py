@@ -5,6 +5,7 @@ from tapir.deliveries.tests.factories import JokerFactory
 from tapir.payments.models import MemberCredit
 from tapir.payments.services.joker_credit_creator import JokerCreditCreator
 from tapir.payments.tests.factories import MemberCreditFactory
+from tapir.utils.tests_utils import mock_parameter_value
 from tapir.wirgarten.constants import WEEKLY
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
@@ -69,7 +70,11 @@ class TestJokerCreditCreator(TapirIntegrationTest):
         self.assertEqual(datetime.date(year=2020, month=3, day=31), credit.due_date)
         self.assertEqual("test_pattern", credit.purpose)
         self.assertEqual(
-            "Joker eingesetzt für die Abholung/Lieferung am 18.01.2020", credit.comment
+            "Joker eingesetzt für die Abholung/Lieferung am 18.01.2020\n"
+            "Berechnung der Gutschrift:\n"
+            f"- {self.product.type.name} {self.product.name}: 10,00 € monatlich × 12 ÷ 53 Wochen × 2 Anteile = 4,53 €\n"
+            "Summe: 4,53 €",
+            credit.comment,
         )
         self.assertEqual("Joker", credit.source)
 
@@ -96,6 +101,21 @@ class TestJokerCreditCreator(TapirIntegrationTest):
 
         JokerCreditCreator.create_credits_for_jokers(
             reference_date=datetime.date(year=2020, month=1, day=5), cache={}
+        )
+
+        self.assertFalse(MemberCredit.objects.exists())
+
+    def test_createCreditsForJokers_creatingCreditsDisabled_dontCreateCredit(self):
+        JokerFactory.create(
+            member=self.member, date=datetime.date(year=2020, month=1, day=15)
+        )
+        cache = {}
+        mock_parameter_value(
+            cache=cache, key=ParameterKeys.JOKERS_CREATE_MEMBER_CREDITS, value=False
+        )
+
+        JokerCreditCreator.create_credits_for_jokers(
+            reference_date=datetime.date(year=2020, month=3, day=1), cache=cache
         )
 
         self.assertFalse(MemberCredit.objects.exists())

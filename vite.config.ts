@@ -1,5 +1,5 @@
 import react from "@vitejs/plugin-react";
-import { join, resolve } from "node:path";
+import { resolve } from "node:path";
 import { defineConfig } from "vite";
 
 export default defineConfig(() => {
@@ -17,86 +17,89 @@ export default defineConfig(() => {
       outDir: resolve(OUTPUT_DIR),
       rollupOptions: {
         input: {
-          member_profile: join(
+          member_profile: resolve(
             INPUT_DIR,
-            "/member_profile/member_profile_entry.tsx",
+            "member_profile/member_profile_entry.tsx",
           ),
-          csv_export_editor: join(
+          csv_export_editor: resolve(
             INPUT_DIR,
-            "/csv_export_editor/csv_export_editor_entry.tsx",
+            "csv_export_editor/csv_export_editor_entry.tsx",
           ),
-          pdf_export_editor: join(
+          pdf_export_editor: resolve(
             INPUT_DIR,
-            "/pdf_export_editor/pdf_export_editor_entry.tsx",
+            "pdf_export_editor/pdf_export_editor_entry.tsx",
           ),
-          product_config: join(
+          product_config: resolve(
             INPUT_DIR,
-            "/product_config/product_config_entry.tsx",
+            "product_config/product_config_entry.tsx",
           ),
-          pickup_location_config: join(
+          pickup_location_config: resolve(
             INPUT_DIR,
-            "/pickup_location_config/pickup_location_config_entry.tsx",
+            "pickup_location_config/pickup_location_config_entry.tsx",
           ),
-          contract_updates: join(
+          contract_updates: resolve(
             INPUT_DIR,
-            "/contract_updates/contract_updates_entry.tsx",
+            "contract_updates/contract_updates_entry.tsx",
           ),
-          dashboard: join(INPUT_DIR, "/dashboard/dashboard_entry.tsx"),
-          waiting_list: join(INPUT_DIR, "/waiting_list/waiting_list_entry.tsx"),
-          member_list: join(INPUT_DIR, "/member_list/member_list_entry.tsx"),
-          bestell_wizard_mobile: join(
+          dashboard: resolve(INPUT_DIR, "dashboard/dashboard_entry.tsx"),
+          waiting_list: resolve(
             INPUT_DIR,
-            "/bestell_wizard_mobile/bestell_wizard_mobile_entry.tsx",
+            "waiting_list/waiting_list_entry.tsx",
           ),
-          bestell_wizard_coop_shares: join(
+          member_list: resolve(INPUT_DIR, "member_list/member_list_entry.tsx"),
+          bestell_wizard_mobile: resolve(
             INPUT_DIR,
-            "/member_profile/coop_shares/bestell_wizard_coop_shares.tsx",
+            "bestell_wizard_mobile/bestell_wizard_mobile_entry.tsx",
           ),
-          bestell_wizard_product_type: join(
+          bestell_wizard_coop_shares: resolve(
             INPUT_DIR,
-            "/member_profile/subscriptions/bestell_wizard_product_type.tsx",
+            "member_profile/coop_shares/bestell_wizard_coop_shares.tsx",
           ),
-          waiting_list_confirm: join(
+          bestell_wizard_product_type: resolve(
             INPUT_DIR,
-            "/waiting_list/waiting_list_confirm_entry.tsx",
+            "member_profile/subscriptions/bestell_wizard_product_type.tsx",
           ),
-          subscription_list: join(
+          waiting_list_confirm: resolve(
             INPUT_DIR,
-            "/subscription_list/subscription_list_entry.tsx",
+            "waiting_list/waiting_list_confirm_entry.tsx",
           ),
-          credit_list: join(INPUT_DIR, "/credit_list/credit_list_entry.tsx"),
-          configuration: join(
+          subscription_list: resolve(
             INPUT_DIR,
-            "/configuration/configuration_entry.tsx",
+            "subscription_list/subscription_list_entry.tsx",
           ),
-          payment_transactions: join(
+          credit_list: resolve(INPUT_DIR, "credit_list/credit_list_entry.tsx"),
+          configuration: resolve(
+            INPUT_DIR,
+            "configuration/configuration_entry.tsx",
+          ),
+          payment_transactions: resolve(
             INPUT_DIR,
             "payment_transactions/payment_transactions_list_view_entry.tsx",
           ),
-          association_memberships_config: join(
+          association_memberships_config: resolve(
             INPUT_DIR,
-            "/association_memberships_config/association_memberships_config_entry.tsx",
+            "association_memberships_config/association_memberships_config_entry.tsx",
           ),
-          bestell_wizard_association_membership: join(
+          bestell_wizard_association_membership: resolve(
             INPUT_DIR,
-            "/member_profile/association_membership/bestell_wizard_association_membership.tsx",
+            "member_profile/association_membership/bestell_wizard_association_membership.tsx",
           ),
-          mailing_lists: join(
+          mailing_lists: resolve(
             INPUT_DIR,
             "mailing_lists/mailing_lists_entry.tsx",
           ),
-          choose_breads: join(
+          choose_breads: resolve(
             INPUT_DIR,
-            "/bakery/entries/choose_breads_entry.tsx",
+            "bakery/entries/choose_breads_entry.tsx",
           ),
-          reports: join(INPUT_DIR, "/bakery/entries/reports_entry.tsx"),
-          ingredients_labels_breads: join(
+          reports: resolve(INPUT_DIR, "bakery/entries/reports_entry.tsx"),
+          ingredients_labels_breads: resolve(
             INPUT_DIR,
-            "/bakery/entries/ingredients_labels_breads_entry.tsx",
+            "bakery/entries/ingredients_labels_breads_entry.tsx",
           ),
-          weekly_plan_breads: join(
+          weekly_plan_breads: resolve(
             INPUT_DIR,
-            "/bakery/entries/weekly_plan_breads_entry.tsx",
+            "bakery/entries/weekly_plan_breads_entry.tsx",
           ),
         },
       },

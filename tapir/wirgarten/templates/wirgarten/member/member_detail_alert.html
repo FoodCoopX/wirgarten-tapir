@@ -79,7 +79,7 @@
             <h4 class="alert-heading">{{ renewal_alert.unknown.header|safe }}</h4>
             <p>{{ renewal_alert.unknown.content|safe }}</p>
             <hr>
-            <div style="display:flex; justify-content:space-between;">
+            <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:0.5em;">
                 <button type="button" class="btn btn-danger" onclick="handleCancellation()">Ernteanteil nicht verlängern</button>
                 <button type="button" class="btn btn-primary" onclick="handleRenewal()">Jetzt Ernteanteil verlängern</button>
             </div>
@@ -133,7 +133,7 @@
                             <small>
                                 <ul>
                                     {% for sub in subs %}
-                                        <li>{{ sub.quantity }} × {{ sub.product.name }} - {{ sub.price_at_renewal_date }}€</li>
+                                        <li>{{ sub.quantity }} × {{ sub.product.name }} - {{ sub.price_at_renewal_date|format_currency }} €</li>
                                     {% endfor %}
                                 </ul>
                             </small>

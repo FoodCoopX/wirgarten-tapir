@@ -11,5 +11,6 @@ export type PersonalData = {
   country: string;
   accountOwner: string;
   iban: string;
+  pseudonym?: string;
   paymentRhythm: string;
 };

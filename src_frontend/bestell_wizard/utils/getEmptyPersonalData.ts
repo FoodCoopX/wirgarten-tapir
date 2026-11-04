@@ -14,6 +14,7 @@ export function getEmptyPersonalData(): PersonalData {
     country: "DE",
     accountOwner: "",
     iban: "",
+    pseudonym: "",
     paymentRhythm: "monthly",
   };
 }

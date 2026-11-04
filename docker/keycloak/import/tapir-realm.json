@@ -1463,7 +1463,26 @@
     "xXSSProtection": "1; mode=block",
     "strictTransportSecurity": "max-age=31536000; includeSubDomains"
   },
-  "smtpServer": {},
+  "smtpServer": {
+    "allowutf8": "",
+    "replyToDisplayName": "",
+    "debug": "false",
+    "starttls": "false",
+    "auth": "true",
+    "writeTimeout": "10000",
+    "envelopeFrom": "",
+    "ssl": "false",
+    "timeout": "10000",
+    "password": "**********",
+    "port": "1025",
+    "replyTo": "",
+    "host": "list.example.com",
+    "from": "keycloak@example.com",
+    "fromDisplayName": "Test Keycloak",
+    "authType": "basic",
+    "connectionTimeout": "10000",
+    "user": "test"
+  },
   "loginTheme": "wirgarten",
   "accountTheme": "",
   "adminTheme": "",
@@ -1614,8 +1633,12 @@
       }
     ]
   },
-  "internationalizationEnabled": false,
-  "supportedLocales": [],
+  "internationalizationEnabled": true,
+  "supportedLocales": [
+    "de",
+    "en"
+  ],
+  "defaultLocale": "de",
   "authenticationFlows": [
     {
       "id": "7337ba20-33e4-47af-95f7-f58ff39d8680",

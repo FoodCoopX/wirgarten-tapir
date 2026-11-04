@@ -16,6 +16,7 @@ from tapir.wirgarten.constants import WEEKLY
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
+    CoopShareTransactionFactory,
     MemberFactory,
     MemberPickupLocationFactory,
     SubscriptionFactory,
@@ -695,6 +696,41 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
             self.assertEqual(
                 expected_due_dates[index],
                 extended_payment["payment"]["due_date"],
+            )
+
+    def test_get_coopShareInstalments_includesInstalmentNumberAndCount(self):
+        mock_timezone(self, now=datetime.datetime(year=2020, month=7, day=1))
+        member = MemberFactory.create()
+        self.client.force_login(member)
+        transaction = CoopShareTransactionFactory.create(member=member, quantity=2)
+        for instalment_number in [1, 2, 3]:
+            PaymentFactory.create(
+                mandate_ref__member=member,
+                status="DUE",
+                due_date=datetime.date(year=2020, month=7 + instalment_number, day=15),
+                amount=20,
+                type="Genossenschaftsanteile",
+                coop_share_transaction=transaction,
+                instalment_number=instalment_number,
+            )
+
+        url = reverse("payments:member_future_payments")
+        response = self.client.get(f"{url}?member_id={member.id}")
+
+        self.assertStatusCode(response, 200)
+        extended_payments = sorted(
+            response.json()["payments"],
+            key=lambda extended_payment: extended_payment["payment"]["due_date"],
+        )
+        self.assertEqual(
+            [1, 2, 3],
+            [p["payment"]["instalment_number"] for p in extended_payments],
+        )
+        for extended_payment in extended_payments:
+            self.assertEqual(3, extended_payment["number_of_instalments"])
+            self.assertEqual(
+                [transaction.id],
+                [t["id"] for t in extended_payment["coop_share_transactions"]],
             )
 
     def test_get_paymentStartDateIsInTheFuture_generatesPaymentsAfterStartDateOnly(

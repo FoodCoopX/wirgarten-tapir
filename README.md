@@ -184,123 +184,27 @@ Everything that is under tapir/wirgarten should be considered legacy code. It do
 you need to change anything in there, consider rewriting the part that you are changing and moving it to one of the
 other apps.
 
+## Testing mail integration
+
+To make testing mail integration convenient, all mail is forwarded to a [Mailpit](https://mailpit.axllent.org/) instance.
+This prevents leaking test emails to any real inboxes. The Mailpit instance is available at http://localhost:8025.
+
 ## Mailing lists
 
 An optional integration with Mailman can be activated by setting MAILING_LISTS_ENABLED to True. The URL, username and
 password parameters must be set (see `MAILMAN_*` in `settings/base.py`).
 
-If you want to test the integration locally, you can use the following docker-compose file, it creates the following
-services:
+You can use this separate docker compose file to set this up:
 
-- Mailman API at localhost:8001/3.1/
-- Mailman web UI at localhost:8002 (the user's email is admin@example.com, use the password reset function to set it.
-  The reset mail will be accessible in Mailpit)
-- Mailpit at localhost:8025
-
-<details>
-  <summary>Docker compose mailman</summary>
-
-```yaml
-services:
-  mailman-core:
-    image: maxking/mailman-core:0.5
-    container_name: mailman-core
-    hostname: mailman-core
-    restart: unless-stopped
-    volumes:
-      - /opt/mailman/core:/opt/mailman/
-    stop_grace_period: 30s
-    links:
-      - database:database
-    depends_on:
-      database:
-        condition: service_healthy
-      mailpit:
-        condition: service_started
-    environment:
-      - DATABASE_URL=postgresql://mailman:mailmanpass@database/mailmandb
-      - DATABASE_TYPE=postgres
-      - DATABASE_CLASS=mailman.database.postgresql.PostgreSQLDatabase
-      - HYPERKITTY_API_KEY=someapikey
-      # Route Mailman Core's outgoing mail through Mailpit instead of a real MTA
-      - SMTP_HOST=mailpit
-      - SMTP_PORT=1025
-    ports:
-      - "127.0.0.1:8001:8001"  # API
-      - "127.0.0.1:8024:8024"  # LMTP - incoming emails
-    networks:
-      mailman:
-
-  mailman-web:
-    image: maxking/mailman-web:0.5
-    container_name: mailman-web
-    hostname: mailman-web
-    restart: unless-stopped
-    depends_on:
-      database:
-        condition: service_healthy
-      mailpit:
-        condition: service_started
-    links:
-      - mailman-core:mailman-core
-      - database:database
-    volumes:
-      - /opt/mailman/web:/opt/mailman-web-data
-    environment:
-      - DATABASE_TYPE=postgres
-      - DATABASE_URL=postgresql://mailman:mailmanpass@database/mailmandb
-      - HYPERKITTY_API_KEY=someapikey
-      # Route Mailman Web's outgoing mail (password resets, notifications, etc.) through Mailpit
-      - SMTP_HOST=mailpit
-      - SMTP_PORT=1025
-      - SERVE_FROM_DOMAIN=localhost
-      - MAILMAN_ADMIN_USER=admin
-      - MAILMAN_ADMIN_EMAIL=admin@example.com
-      - SECRET_KEY=some_secret_key
-    ports:
-      - "127.0.0.1:8002:8000"  # HTTP
-      - "127.0.0.1:8082:8082"  # uwsgi
-    networks:
-      mailman:
-
-  database:
-    environment:
-      - POSTGRES_DB=mailmandb
-      - POSTGRES_USER=mailman
-      - POSTGRES_PASSWORD=mailmanpass
-    image: postgres:12-alpine
-    volumes:
-      - /opt/mailman/database:/var/lib/postgresql/data
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready --dbname mailmandb --username mailman" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      mailman:
-
-  # Local test mail server: captures all outgoing mail from Mailman
-  # instead of delivering it, so nothing escapes to real inboxes.
-  mailpit:
-    image: axllent/mailpit:latest
-    container_name: mailpit
-    restart: unless-stopped
-    ports:
-      - "127.0.0.1:8025:8025"  # Web UI - view captured messages at http://localhost:8025
-      - "127.0.0.1:1025:1025"  # SMTP server - Mailman delivers here
-    networks:
-      mailman:
-
-networks:
-  mailman:
-    driver: bridge
-    ipam:
-      driver: default
-      config:
-        - subnet: 172.19.199.0/24
+```sh
+docker compose -f docker-compose.mailman.yml up -d
 ```
 
-</details>
+In addition to the base services, this starts:
+
+- Mailman API at http://localhost:8001/3.1/
+- Mailman web UI at http://localhost:8002 (the user's email is admin@example.com, use the password reset
+  function to set it. The reset mail will be accessible in Mailpit)
 
 ## Class diagram
 

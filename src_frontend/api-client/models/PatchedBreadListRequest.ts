@@ -80,6 +80,12 @@ export interface PatchedBreadListRequest {
   isActive?: boolean;
   /**
    *
+   * @type {string}
+   * @memberof PatchedBreadListRequest
+   */
+  group?: string | null;
+  /**
+   *
    * @type {Array<string>}
    * @memberof PatchedBreadListRequest
    */
@@ -128,6 +134,7 @@ export function PatchedBreadListRequestFromJSONTyped(
         ? undefined
         : json["min_remaining_pieces"],
     isActive: json["is_active"] == null ? undefined : json["is_active"],
+    group: json["group"] == null ? undefined : json["group"],
     labels: json["labels"] == null ? undefined : json["labels"],
   };
 }
@@ -158,6 +165,7 @@ export function PatchedBreadListRequestToJSONTyped(
     max_pieces: value["maxPieces"],
     min_remaining_pieces: value["minRemainingPieces"],
     is_active: value["isActive"],
+    group: value["group"],
     labels: value["labels"],
   };
 }

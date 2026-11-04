@@ -72,7 +72,7 @@
         <th class="sort-header" data-sort="member_no">#</th>
         <th class="sort-header" data-sort="first_name_sort_key">{% translate "Vorname" %}</th>
         <th class="sort-header" data-sort="last_name_sort_key">{% translate "Nachname" %}</th>
-        <th class="sort-header" data-sort="email">{% translate "Email" %}</th>
+        <th class="sort-header" data-sort="email">{% translate "E-Mail-Adresse" %}</th>
         <th>{% translate "Telefon" %}</th>
         {% if show_cooperative_content %}
             <th class="sort-header" data-sort="coop_shares_total_value">{% translate "Geschäftsguthaben" %}</th>
@@ -122,8 +122,20 @@
                 {% endif %}
             </td>
             <td>{{ member.current_pickup_location_name }}{% pickup_location_warning member cache %}</td>
-            <td>{{ member.organisation_entry_date|format_date }}</td>
-            <td>{{ member.organisation_exit_date|format_date }}</td>
+            <td>
+                {% if member.organisation_entry_date %}
+                    {{ member.organisation_entry_date|format_date }}
+                {% else %}
+                    -
+                {% endif %}
+            </td>
+            <td>
+                {% if member.organisation_exit_date %}
+                    {{ member.organisation_exit_date|format_date }}
+                {% else %}
+                    -
+                {% endif %}
+            </td>
         </tr>
     {% endfor %}
 {% endblock %}

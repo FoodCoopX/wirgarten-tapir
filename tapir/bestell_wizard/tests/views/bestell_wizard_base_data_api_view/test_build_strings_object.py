@@ -74,6 +74,11 @@ class TestBuildStringsObject(TapirUnitTest):
             cache=cache,
         )
         mock_parameter_value(
+            key=ParameterKeys.BESTELLWIZARD_STEP4B_BASE_PRICE_LABEL,
+            value="test_step4b_base_price_label",
+            cache=cache,
+        )
+        mock_parameter_value(
             key=ParameterKeys.BESTELLWIZARD_STEP4D_TITLE,
             value="test_step4d_title",
             cache=cache,
@@ -151,11 +156,6 @@ class TestBuildStringsObject(TapirUnitTest):
         mock_parameter_value(
             key=ParameterKeys.BESTELLWIZARD_STEP6C_CHECKBOX_STATUTE,
             value="test_step6c_checkbox_statute",
-            cache=cache,
-        )
-        mock_parameter_value(
-            key=ParameterKeys.BESTELLWIZARD_STEP6C_TEXT_STATUTE,
-            value="test_step6c_text_statute",
             cache=cache,
         )
         mock_parameter_value(
@@ -301,6 +301,7 @@ class TestBuildStringsObject(TapirUnitTest):
                 "step3b_text": "test_step3b_text",
                 "step4b_waiting_list_modal_title": "test_step4b_waiting_list_modal_title",
                 "step4b_waiting_list_modal_text": "test_step4b_waiting_list_modal_text",
+                "step4b_base_price_label": "test_step4b_base_price_label",
                 "step4d_title": "test_step4d_title",
                 "step4d_text": "test_step4d_text",
                 "step4d_text_supporting_member": "test_step4d_text_supporting_member",
@@ -317,7 +318,6 @@ class TestBuildStringsObject(TapirUnitTest):
                 "step6c_title": "test_step6c_title",
                 "step6c_text": "test_step6c_text",
                 "step6c_checkbox_statute": "test_step6c_checkbox_statute",
-                "step6c_text_statute": "test_step6c_text_statute",
                 "step6c_checkbox_commitment": "test_step6c_checkbox_commitment",
                 "step8_title": "test_step8_title",
                 "step8_text": "test_step8_text",

@@ -10,7 +10,11 @@ class IntendedUseTokens:
     MEMBER_NUMBER_WITHOUT_PREFIX = "mitgliedsnummer_ohne_prefix"
     NUMBER_OF_COOP_SHARES = "anzahl_geno_anteile"
     COOP_ENTRY_DATE = "beitrittsdatum"
+    COOP_SHARE_VALID_AT = "geno_anteilte_gueltigkeitsdatum"
     PRICE_SINGLE_SHARE = "preis_einzelne_geno_anteil"
+    MANDATE_REFERENCE = "mandatsreferenz"
+    INSTALMENT_NUMBER = "ratennummer"
+    NUMBER_OF_INSTALMENTS = "anzahl_raten"
     MONTHLY_PRICE_CONTRACTS_WITHOUT_SOLI = "monatsbeitrag_ohne_soli"
     MONTHLY_PRICE_CONTRACTS_WITH_SOLI = "monatsbeitrag_mit_soli"
     MONTHLY_PRICE_JUST_SOLI = "monatsbeitrag_nur_soli"
@@ -23,26 +27,41 @@ class IntendedUseTokens:
     VALUES_OF_JOKERS = "wert_der_joker"
     DATES_OF_JOKERS = "daten_der_joker"
 
-    COMMON_TOKENS = [
-        SITE_NAME,
-        FIRST_NAME,
-        LAST_NAME,
-        MEMBER_NUMBER_SHORT,
-        MEMBER_NUMBER_LONG,
-        MEMBER_NUMBER_WITHOUT_PREFIX,
-    ]
+    # Sorted so that the tokens are displayed alphabetically in the intended use editor
+    COMMON_TOKENS = sorted(
+        [
+            SITE_NAME,
+            FIRST_NAME,
+            LAST_NAME,
+            MEMBER_NUMBER_SHORT,
+            MEMBER_NUMBER_LONG,
+            MEMBER_NUMBER_WITHOUT_PREFIX,
+        ]
+    )
 
-    COOP_SHARE_TOKENS = [NUMBER_OF_COOP_SHARES, COOP_ENTRY_DATE, PRICE_SINGLE_SHARE]
+    COOP_SHARE_TOKENS = sorted(
+        [
+            NUMBER_OF_COOP_SHARES,
+            COOP_ENTRY_DATE,
+            COOP_SHARE_VALID_AT,
+            PRICE_SINGLE_SHARE,
+            MANDATE_REFERENCE,
+        ]
+    )
 
-    CONTRACT_TOKENS = [
-        MONTHLY_PRICE_CONTRACTS_WITHOUT_SOLI,
-        MONTHLY_PRICE_CONTRACTS_WITH_SOLI,
-        MONTHLY_PRICE_JUST_SOLI,
-        TOTAL_PRICE_CONTRACTS_WITHOUT_SOLI,
-        TOTAL_PRICE_CONTRACTS_WITH_SOLI,
-        TOTAL_PRICE_JUST_SOLI,
-        CONTRACT_LIST,
-        PAYMENT_RHYTHM,
-    ]
+    COOP_SHARE_INSTALMENT_TOKENS = sorted([INSTALMENT_NUMBER, NUMBER_OF_INSTALMENTS])
 
-    JOKER_TOKENS = [NUMBER_OF_JOKERS, VALUES_OF_JOKERS, DATES_OF_JOKERS]
+    CONTRACT_TOKENS = sorted(
+        [
+            MONTHLY_PRICE_CONTRACTS_WITHOUT_SOLI,
+            MONTHLY_PRICE_CONTRACTS_WITH_SOLI,
+            MONTHLY_PRICE_JUST_SOLI,
+            TOTAL_PRICE_CONTRACTS_WITHOUT_SOLI,
+            TOTAL_PRICE_CONTRACTS_WITH_SOLI,
+            TOTAL_PRICE_JUST_SOLI,
+            CONTRACT_LIST,
+            PAYMENT_RHYTHM,
+        ]
+    )
+
+    JOKER_TOKENS = sorted([NUMBER_OF_JOKERS, VALUES_OF_JOKERS, DATES_OF_JOKERS])

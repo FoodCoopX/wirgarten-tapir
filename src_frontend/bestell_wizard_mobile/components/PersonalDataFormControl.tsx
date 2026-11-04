@@ -13,6 +13,7 @@ interface PersonalDataFormControlProps {
   extraText?: string;
   style?: CSSProperties;
   disabled?: boolean;
+  maxLength?: number;
 }
 
 const PersonalDataFormControl: React.FC<PersonalDataFormControlProps> = ({
@@ -26,6 +27,7 @@ const PersonalDataFormControl: React.FC<PersonalDataFormControlProps> = ({
   extraText,
   style,
   disabled,
+  maxLength,
 }) => {
   return (
     <div style={style} className={"d-flex flex-column"}>
@@ -42,6 +44,7 @@ const PersonalDataFormControl: React.FC<PersonalDataFormControlProps> = ({
           isValid={showValidation && isValid}
           isInvalid={showValidation && !isValid}
           disabled={disabled}
+          maxLength={maxLength}
         />
       </FloatingLabel>
       {extraText && (

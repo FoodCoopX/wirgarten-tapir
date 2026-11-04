@@ -955,6 +955,159 @@ paths:
         '400':
           description: Choosing is closed for this week, not released for members,
             or no capacity is left for the selected bread
+  /bakery/bread-groups/:
+    get:
+      operationId: bakery_bread_groups_list
+      tags:
+      - bakery
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BreadGroup'
+          description: ''
+    post:
+      operationId: bakery_bread_groups_create
+      tags:
+      - bakery
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BreadGroupRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BreadGroupRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BreadGroupRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BreadGroup'
+          description: ''
+  /bakery/bread-groups/{id}/:
+    get:
+      operationId: bakery_bread_groups_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der bread group identifiziert.
+        required: true
+      tags:
+      - bakery
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BreadGroup'
+          description: ''
+    put:
+      operationId: bakery_bread_groups_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der bread group identifiziert.
+        required: true
+      tags:
+      - bakery
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BreadGroupRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BreadGroupRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BreadGroupRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BreadGroup'
+          description: ''
+    patch:
+      operationId: bakery_bread_groups_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der bread group identifiziert.
+        required: true
+      tags:
+      - bakery
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBreadGroupRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBreadGroupRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBreadGroupRequest'
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BreadGroup'
+          description: ''
+    delete:
+      operationId: bakery_bread_groups_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der bread group identifiziert.
+        required: true
+      tags:
+      - bakery
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '204':
+          description: No response body
   /bakery/bread-specifics/:
     get:
       operationId: bakery_bread_specifics_list
@@ -4238,6 +4391,10 @@ paths:
     get:
       operationId: payments_api_intended_use_preview_coop_shares_retrieve
       parameters:
+      - in: query
+        name: instalments
+        schema:
+          type: boolean
       - in: query
         name: pattern_new
         schema:
@@ -8784,26 +8941,21 @@ components:
     AvailableSegmentsResponse:
       type: object
       properties:
-        dynamic_segments:
-          type: object
-          additionalProperties:
-            type: string
-        static_segments:
-          type: object
-          additionalProperties:
-            type: string
-        mail_categories:
-          type: object
-          additionalProperties:
-            type: string
+        segments:
+          type: array
+          items:
+            $ref: '#/components/schemas/SegmentOption'
       required:
-      - dynamic_segments
-      - mail_categories
-      - static_segments
+      - segments
     BestellWizardBaseDataResponse:
       type: object
       properties:
         price_of_a_share:
+          type: number
+          format: double
+        coop_share_instalments_enabled:
+          type: boolean
+        coop_share_instalment_amount:
           type: number
           format: double
         theme:
@@ -8829,6 +8981,8 @@ components:
         student_status_allowed:
           type: boolean
         phone_number_required:
+          type: boolean
+        pseudonym_enabled:
           type: boolean
         show_coop_content:
           type: boolean
@@ -8902,6 +9056,8 @@ components:
       - association_membership_types
       - associations_allow_investing_membership
       - contact_mail_address
+      - coop_share_instalment_amount
+      - coop_share_instalments_enabled
       - coop_statute_link
       - debug
       - default_payment_rhythm
@@ -8923,6 +9079,7 @@ components:
       - product_ids_that_are_already_at_capacity
       - product_type_ids_that_are_already_at_capacity
       - product_types
+      - pseudonym_enabled
       - show_coop_content
       - solidarity_contribution_choices
       - solidarity_contribution_default
@@ -8981,6 +9138,9 @@ components:
           type: boolean
         number_of_coop_shares:
           type: integer
+        pay_coop_shares_in_instalments:
+          type: boolean
+          default: false
         pickup_location_ids:
           type: array
           items:
@@ -9142,6 +9302,8 @@ components:
           type: string
         step4b_waiting_list_modal_text:
           type: string
+        step4b_base_price_label:
+          type: string
         step4d_title:
           type: string
         step4d_text:
@@ -9169,8 +9331,6 @@ components:
         step6b_checkbox_statute_associations:
           type: string
         step6c_checkbox_statute:
-          type: string
-        step6c_text_statute:
           type: string
         step6c_checkbox_commitment:
           type: string
@@ -9257,6 +9417,7 @@ components:
       - step3_title
       - step3b_text
       - step3b_title
+      - step4b_base_price_label
       - step4b_waiting_list_modal_text
       - step4b_waiting_list_modal_title
       - step4d_text
@@ -9275,7 +9436,6 @@ components:
       - step6c_checkbox_commitment
       - step6c_checkbox_statute
       - step6c_text
-      - step6c_text_statute
       - step6c_title
       - step8_text
       - step8_title
@@ -9555,6 +9715,43 @@ components:
       - labels
       - name
       - weight
+    BreadGroup:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        bread_names:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+      required:
+      - bread_names
+      - created_at
+      - id
+      - name
+      - updated_at
+    BreadGroupRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+      required:
+      - name
     BreadLabel:
       type: object
       properties:
@@ -9610,6 +9807,10 @@ components:
           items:
             $ref: '#/components/schemas/BreadContent'
           readOnly: true
+        group_name:
+          type: string
+          readOnly: true
+          nullable: true
         created_at:
           type: string
           format: date-time
@@ -9665,6 +9866,9 @@ components:
             bread on a baking day (e.g., for walk-in customers)
         is_active:
           type: boolean
+        group:
+          type: string
+          nullable: true
         labels:
           type: array
           items:
@@ -9675,6 +9879,7 @@ components:
       - contents
       - created_at
       - delivery_count
+      - group_name
       - id
       - name
       - updated_at
@@ -9730,6 +9935,10 @@ components:
             bread on a baking day (e.g., for walk-in customers)
         is_active:
           type: boolean
+        group:
+          type: string
+          minLength: 1
+          nullable: true
         labels:
           type: array
           items:
@@ -10269,9 +10478,6 @@ components:
           type: string
           nullable: true
         transfer_member:
-          type: string
-          nullable: true
-        payment:
           type: string
           nullable: true
       required:
@@ -11672,11 +11878,15 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AssociationMembership'
+        number_of_instalments:
+          type: integer
+          nullable: true
       required:
       - association_memberships
       - coop_share_transactions
       - delivery_charge_pickup_location
       - delivery_dates
+      - number_of_instalments
       - payment
       - solidarity_contributions
       - subscriptions
@@ -11724,6 +11934,8 @@ components:
           readOnly: true
         hidden_in_bestell_wizard:
           type: boolean
+        solidarity_choices:
+          type: string
       required:
       - base
       - basket_size_equivalences
@@ -11739,6 +11951,7 @@ components:
       - price_per_delivery
       - show_min_coop_shares
       - size
+      - solidarity_choices
       - url_of_image_in_bestellwizard
     ExtendedProductType:
       type: object
@@ -12615,21 +12828,25 @@ components:
           type: string
           format: date
           nullable: true
+          title: Geburtsdatum
         street:
           type: string
-          title: Street and house number
+          title: Straße und Hausnummer
           maxLength: 150
         street_2:
           type: string
-          title: Extra address line
+          title: Adresszusatz
           maxLength: 150
         postcode:
           type: string
+          title: Postleitzahl
           maxLength: 32
         city:
           type: string
+          title: Ort
           maxLength: 50
         country:
+          title: Land
           oneOf:
           - $ref: '#/components/schemas/CountryEnum'
           - $ref: '#/components/schemas/BlankEnum'
@@ -12639,7 +12856,9 @@ components:
           title: Liebe/Lieber
           maxLength: 20
         preferred_language:
-          $ref: '#/components/schemas/PreferredLanguageEnum'
+          allOf:
+          - $ref: '#/components/schemas/PreferredLanguageEnum'
+          title: Bevorzugte Sprache
         account_owner:
           type: string
           nullable: true
@@ -13511,6 +13730,13 @@ components:
           type: string
           minLength: 1
           nullable: true
+    PatchedBreadGroupRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
     PatchedBreadLabelRequest:
       type: object
       properties:
@@ -13571,6 +13797,10 @@ components:
             bread on a baking day (e.g., for walk-in customers)
         is_active:
           type: boolean
+        group:
+          type: string
+          minLength: 1
+          nullable: true
         labels:
           type: array
           items:
@@ -13784,6 +14014,8 @@ components:
           type: integer
         hidden_in_bestell_wizard:
           type: boolean
+        solidarity_choices:
+          type: string
     PatchedGrowingPeriodRequest:
       type: object
       properties:
@@ -14121,22 +14353,28 @@ components:
           maxLength: 256
         street:
           type: string
-          title: Street and house number
+          title: Straße und Hausnummer
           maxLength: 150
         street_2:
           type: string
-          title: Extra address line
+          title: Adresszusatz
           maxLength: 150
         postcode:
           type: string
+          title: Postleitzahl
           maxLength: 32
         city:
           type: string
+          title: Ort
           maxLength: 50
         country:
+          title: Land
           oneOf:
           - $ref: '#/components/schemas/CountryEnum'
           - $ref: '#/components/schemas/BlankEnum'
+        pseudonym:
+          type: string
+          maxLength: 150
         privacy_consent:
           type: string
           format: date-time
@@ -14202,12 +14440,20 @@ components:
           type: string
           format: date
           nullable: true
+        instalment_number:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
         mandate_ref:
           type: string
         transaction:
           type: string
           nullable: true
         pickup_location:
+          type: string
+          nullable: true
+        coop_share_transaction:
           type: string
           nullable: true
       required:
@@ -14485,6 +14731,10 @@ components:
           type: string
         iban:
           type: string
+        pseudonym:
+          type: string
+          default: ''
+          maxLength: 150
       required:
       - account_owner
       - city
@@ -14607,17 +14857,19 @@ components:
           title: Coordinates Latitude
         street:
           type: string
-          title: Street and house number
+          title: Straße und Hausnummer
           maxLength: 150
         street_2:
           type: string
-          title: Extra address line
+          title: Adresszusatz
           maxLength: 150
         postcode:
           type: string
+          title: Postleitzahl
           maxLength: 32
         city:
           type: string
+          title: Ort
           maxLength: 50
         info:
           type: string
@@ -14995,6 +15247,9 @@ components:
           minimum: -2147483648
         hidden_in_bestell_wizard:
           type: boolean
+        solidarity_choices:
+          type: string
+          maxLength: 512
       required:
       - created_at
       - name
@@ -15198,6 +15453,9 @@ components:
           type: boolean
         number_of_coop_shares:
           type: integer
+        pay_coop_shares_in_instalments:
+          type: boolean
+          default: false
         payment_rhythm:
           type: string
           minLength: 1
@@ -15266,17 +15524,19 @@ components:
           title: Coordinates Latitude
         street:
           type: string
-          title: Street and house number
+          title: Straße und Hausnummer
           maxLength: 150
         street_2:
           type: string
-          title: Extra address line
+          title: Adresszusatz
           maxLength: 150
         postcode:
           type: string
+          title: Postleitzahl
           maxLength: 32
         city:
           type: string
+          title: Ort
           maxLength: 50
         opening_times:
           type: array
@@ -15321,9 +15581,16 @@ components:
           type: string
         hidden_in_bestell_wizard:
           type: boolean
+        solidarity_choices:
+          type: array
+          items:
+            type: number
+            format: double
+          readOnly: true
       required:
       - name
       - price
+      - solidarity_choices
       - url_of_image_in_bestellwizard
     PublicProductPricesResponse:
       type: object
@@ -15472,6 +15739,8 @@ components:
           type: string
         country:
           type: string
+        pseudonym:
+          type: string
         birthdate:
           type: string
           format: date
@@ -15507,6 +15776,7 @@ components:
       - number_of_coop_shares
       - phone_number
       - postcode
+      - pseudonym
       - should_show_solidarity_step
       - street
       - street_2
@@ -15641,6 +15911,25 @@ components:
       - mail_category_ids_additive
       - static_segment_ids_additive
       - static_segment_ids_subtractive
+    SegmentOption:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          $ref: '#/components/schemas/TypeEnum'
+        label:
+          type: string
+        group:
+          type: string
+        description:
+          type: string
+      required:
+      - description
+      - group
+      - id
+      - label
+      - type
     SetAssociationMembershipEndDateRequestRequest:
       type: object
       properties:
@@ -16244,7 +16533,7 @@ components:
           type: string
           format: date-time
           readOnly: true
-          title: Creation Date
+          title: Erstellungsdatum
         change_type:
           $ref: '#/components/schemas/ChangeTypeEnum'
         subscriptions:
@@ -16587,6 +16876,16 @@ components:
       - field_name
       - label
       - type
+    TypeEnum:
+      enum:
+      - dynamic
+      - static
+      - category
+      type: string
+      description: |-
+        * `dynamic` - dynamic
+        * `static` - static
+        * `category` - category
     UpdateMemberSolidarityContributionRequestRequest:
       type: object
       properties:
@@ -16716,22 +17015,28 @@ components:
           maxLength: 256
         street:
           type: string
-          title: Street and house number
+          title: Straße und Hausnummer
           maxLength: 150
         street_2:
           type: string
-          title: Extra address line
+          title: Adresszusatz
           maxLength: 150
         postcode:
           type: string
+          title: Postleitzahl
           maxLength: 32
         city:
           type: string
+          title: Ort
           maxLength: 50
         country:
+          title: Land
           oneOf:
           - $ref: '#/components/schemas/CountryEnum'
           - $ref: '#/components/schemas/BlankEnum'
+        pseudonym:
+          type: string
+          maxLength: 150
         privacy_consent:
           type: string
           format: date-time
@@ -16893,22 +17198,28 @@ components:
           maxLength: 256
         street:
           type: string
-          title: Street and house number
+          title: Straße und Hausnummer
           maxLength: 150
         street_2:
           type: string
-          title: Extra address line
+          title: Adresszusatz
           maxLength: 150
         postcode:
           type: string
+          title: Postleitzahl
           maxLength: 32
         city:
           type: string
+          title: Ort
           maxLength: 50
         country:
+          title: Land
           oneOf:
           - $ref: '#/components/schemas/CountryEnum'
           - $ref: '#/components/schemas/BlankEnum'
+        pseudonym:
+          type: string
+          maxLength: 150
         privacy_consent:
           type: string
           format: date-time

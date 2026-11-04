@@ -1,0 +1,534 @@
+/* =========================================================================
+   SoLawi Vierlande theme
+   Colors: SoLawi_Farbpalette_Deutsch.md
+   Typography: Nunito (400 body, 600 nav, 700 headings), matching quarkSolawi
+   ========================================================================= */
+
+/* ----- Nunito (self-hosted) --------------------------------------------- */
+@font-face {
+  font-family: "Nunito";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src:
+  url("/static/core/themes/vie/fonts/nunito-regular.woff2")
+  format("woff2"),
+  url("/static/core/themes/vie/fonts/nunito-regular.woff")
+  format("woff"),
+  url("/static/core/themes/vie/fonts/nunito-regular.ttf")
+  format("truetype");
+}
+
+@font-face {
+  font-family: "Nunito";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src:
+  url("/static/core/themes/vie/fonts/nunito-semibold.woff2")
+  format("woff2"),
+  url("/static/core/themes/vie/fonts/nunito-semibold.woff")
+  format("woff"),
+  url("/static/core/themes/vie/fonts/nunito-semibold.ttf")
+  format("truetype");
+}
+
+@font-face {
+  font-family: "Nunito";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src:
+  url("/static/core/themes/vie/fonts/nunito-bold.woff2")
+  format("woff2"),
+  url("/static/core/themes/vie/fonts/nunito-bold.woff")
+  format("woff"),
+  url("/static/core/themes/vie/fonts/nunito-bold.ttf")
+  format("truetype");
+}
+
+/* ----- Brand tokens ----------------------------------------------------- */
+:root {
+  --solawi-primary: #f7502f; /* Main Brand Orange */
+  --solawi-secondary: #f78c3b; /* Carrot Orange */
+  --solawi-accent: #30a89f; /* Teal Green */
+  --solawi-dark: #2b3050; /* Dark Blue */
+
+  --solawi-white: #ffffff;
+  --solawi-black: #000000;
+
+  --solawi-light-orange: #ffb399;
+  --solawi-light-carrot: #fbc4a1;
+  --solawi-light-teal: #7bcbc4;
+  --solawi-light-blue: #6b7199;
+
+  --solawi-dark-orange: #c73f24;
+  --solawi-dark-carrot: #c66f2e;
+  --solawi-dark-teal: #26867f;
+  --solawi-dark-blue: #1e2238;
+
+  --solawi-dark-gray: #4a4a4a;
+  --solawi-medium-gray: #808080;
+  --solawi-light-gray: #e5e5e5;
+  --solawi-background-gray: #f8f8f8;
+
+  /* Tokens used by this theme's own rules below */
+  --primary: var(--solawi-primary);
+  --secondary: var(--solawi-secondary);
+  --platinum: var(--solawi-light-gray);
+  --white: var(--solawi-white);
+  --black: var(--solawi-black);
+  --active-color: var(--solawi-light-teal);
+}
+
+/* ----- Bootstrap overrides ---------------------------------------------
+   `html:root` / `html .class` have one more specificity point than
+   Bootstrap's `:root` / `.class`, so the brand wins even when Bootstrap is
+   loaded after this stylesheet (Vite injects imported CSS at runtime). */
+html:root {
+  --bs-primary: var(--solawi-primary);
+  --bs-primary-rgb: 247, 80, 47;
+  --bs-secondary: var(--solawi-secondary);
+  --bs-secondary-rgb: 247, 140, 59;
+  --bs-success: var(--solawi-accent);
+  --bs-success-rgb: 48, 168, 159;
+  --bs-dark: var(--solawi-dark);
+  --bs-dark-rgb: 43, 48, 80;
+
+  --bs-body-color: var(--solawi-black);
+  --bs-body-color-rgb: 0, 0, 0;
+  --bs-secondary-color: var(--solawi-dark-gray);
+  --bs-border-color: var(--solawi-light-gray);
+  --bs-tertiary-bg: var(--solawi-background-gray);
+
+  --bs-link-color: var(--solawi-accent);
+  --bs-link-color-rgb: 48, 168, 159;
+  --bs-link-hover-color: var(--solawi-dark-teal);
+  --bs-link-hover-color-rgb: 38, 134, 127;
+  --bs-focus-ring-color: rgba(247, 80, 47, 0.25);
+
+  --bs-nav-pills-link-active-bg: var(--solawi-primary);
+  --bs-pagination-color: var(--solawi-primary);
+  --bs-pagination-hover-color: var(--solawi-dark-orange);
+  --bs-pagination-active-bg: var(--solawi-primary);
+  --bs-pagination-active-border-color: var(--solawi-primary);
+}
+
+/* ----- Typography ------------------------------------------------------- */
+html h1 {
+  line-height: 1.4 !important;
+  font-size: 39px !important;
+  font-family: "Nunito", -apple-system, system-ui, BlinkMacSystemFont,
+               "Segoe UI", Roboto, "Helvetica Neue", sans-serif !important;
+  font-weight: 700;
+  color: var(--solawi-primary);
+}
+
+html h2 {
+  line-height: 1.4 !important;
+  font-size: 33px !important;
+  font-family: "Nunito", -apple-system, system-ui, BlinkMacSystemFont,
+               "Segoe UI", Roboto, "Helvetica Neue", sans-serif !important;
+  font-weight: 700;
+  color: var(--solawi-primary);
+}
+
+html h3 {
+  line-height: 1.4 !important;
+  font-size: 23px !important;
+  font-family: "Nunito", -apple-system, system-ui, BlinkMacSystemFont,
+               "Segoe UI", Roboto, "Helvetica Neue", sans-serif !important;
+  font-weight: 700;
+  color: var(--solawi-primary);
+}
+
+html h4 {
+  line-height: 1.4 !important;
+  font-size: 20px !important;
+  font-family: "Nunito", -apple-system, system-ui, BlinkMacSystemFont,
+               "Segoe UI", Roboto, "Helvetica Neue", sans-serif !important;
+  font-weight: 700;
+  color: var(--solawi-primary);
+}
+
+html h5 {
+  line-height: 1.4 !important;
+  font-size: 17px !important;
+  font-family: "Nunito", -apple-system, system-ui, BlinkMacSystemFont,
+               "Segoe UI", Roboto, "Helvetica Neue", sans-serif !important;
+  font-weight: 700;
+  color: var(--solawi-primary);
+}
+
+html h6 {
+  line-height: 1.4 !important;
+  font-size: 16px !important;
+  font-family: "Nunito", -apple-system, system-ui, BlinkMacSystemFont,
+               "Segoe UI", Roboto, "Helvetica Neue", sans-serif !important;
+  font-weight: 700;
+  color: var(--solawi-primary);
+}
+
+html body {
+  font-size: 16px !important;
+  line-height: 1.7 !important;
+  font-family: "Nunito", -apple-system, system-ui, BlinkMacSystemFont,
+               "Segoe UI", Roboto, "Helvetica Neue", sans-serif !important;
+  font-weight: 400;
+  color: var(--solawi-black);
+}
+
+/* ----- Buttons ---------------------------------------------------------- */
+html .btn-primary {
+  --bs-btn-bg: var(--solawi-primary);
+  --bs-btn-border-color: var(--solawi-primary);
+  --bs-btn-hover-bg: var(--solawi-dark-orange);
+  --bs-btn-hover-border-color: var(--solawi-dark-orange);
+  --bs-btn-active-bg: var(--solawi-dark-orange);
+  --bs-btn-active-border-color: var(--solawi-dark-orange);
+  --bs-btn-disabled-bg: var(--solawi-primary);
+  --bs-btn-disabled-border-color: var(--solawi-primary);
+}
+
+html .btn-secondary {
+  --bs-btn-color: var(--solawi-black);
+  --bs-btn-bg: var(--solawi-secondary);
+  --bs-btn-border-color: var(--solawi-secondary);
+  --bs-btn-hover-color: var(--solawi-black);
+  --bs-btn-hover-bg: var(--solawi-dark-carrot);
+  --bs-btn-hover-border-color: var(--solawi-dark-carrot);
+  --bs-btn-active-color: var(--solawi-black);
+  --bs-btn-active-bg: var(--solawi-dark-carrot);
+  --bs-btn-active-border-color: var(--solawi-dark-carrot);
+  --bs-btn-disabled-color: var(--solawi-black);
+  --bs-btn-disabled-bg: var(--solawi-secondary);
+  --bs-btn-disabled-border-color: var(--solawi-secondary);
+}
+
+html .btn-success {
+  --bs-btn-bg: var(--solawi-accent);
+  --bs-btn-border-color: var(--solawi-accent);
+  --bs-btn-hover-bg: var(--solawi-dark-teal);
+  --bs-btn-hover-border-color: var(--solawi-dark-teal);
+  --bs-btn-active-bg: var(--solawi-dark-teal);
+  --bs-btn-active-border-color: var(--solawi-dark-teal);
+  --bs-btn-disabled-bg: var(--solawi-accent);
+  --bs-btn-disabled-border-color: var(--solawi-accent);
+}
+
+html .btn-outline-primary {
+  --bs-btn-color: var(--solawi-primary);
+  --bs-btn-border-color: var(--solawi-primary);
+  --bs-btn-hover-bg: var(--solawi-primary);
+  --bs-btn-hover-border-color: var(--solawi-primary);
+  --bs-btn-active-bg: var(--solawi-primary);
+  --bs-btn-active-border-color: var(--solawi-primary);
+  --bs-btn-disabled-color: var(--solawi-primary);
+  --bs-btn-disabled-border-color: var(--solawi-primary);
+}
+
+html .btn-outline-secondary {
+  --bs-btn-color: var(--solawi-dark-carrot);
+  --bs-btn-border-color: var(--solawi-secondary);
+  --bs-btn-hover-color: var(--solawi-black);
+  --bs-btn-hover-bg: var(--solawi-secondary);
+  --bs-btn-hover-border-color: var(--solawi-secondary);
+  --bs-btn-active-color: var(--solawi-black);
+  --bs-btn-active-bg: var(--solawi-secondary);
+  --bs-btn-active-border-color: var(--solawi-secondary);
+}
+
+html .btn-outline-success {
+  --bs-btn-color: var(--solawi-dark-teal);
+  --bs-btn-border-color: var(--solawi-accent);
+  --bs-btn-hover-bg: var(--solawi-accent);
+  --bs-btn-hover-border-color: var(--solawi-accent);
+  --bs-btn-active-bg: var(--solawi-accent);
+  --bs-btn-active-border-color: var(--solawi-accent);
+}
+
+/* Headings inside buttons must follow the button color. TapirButton renders its
+   label as an <h5>, which would otherwise keep the global orange heading color and
+   become unreadable once the button is highlighted. */
+html .btn h1,
+html .btn h2,
+html .btn h3,
+html .btn h4,
+html .btn h5,
+html .btn h6,
+html .btn .h1,
+html .btn .h2,
+html .btn .h3,
+html .btn .h4,
+html .btn .h5,
+html .btn .h6 {
+  color: inherit;
+}
+
+/* Neutral buttons (dark/light): brand orange highlight on hover/active with white text */
+html .btn-dark {
+  --bs-btn-bg: var(--solawi-dark);
+  --bs-btn-border-color: var(--solawi-dark);
+}
+
+html .btn-outline-dark {
+  --bs-btn-color: var(--solawi-dark);
+  --bs-btn-border-color: var(--solawi-dark);
+}
+
+html .btn-dark,
+html .btn-outline-dark,
+html .btn-light,
+html .btn-outline-light {
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: var(--solawi-primary);
+  --bs-btn-hover-border-color: var(--solawi-primary);
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: var(--solawi-primary);
+  --bs-btn-active-border-color: var(--solawi-primary);
+}
+
+/* ----- Forms ------------------------------------------------------------ */
+html .form-control:focus,
+html .form-select:focus {
+  border-color: var(--solawi-primary);
+  box-shadow: 0 0 0 0.25rem rgba(247, 80, 47, 0.25);
+}
+
+html .form-check-input:checked {
+  background-color: var(--solawi-primary);
+  border-color: var(--solawi-primary);
+}
+
+html .form-check-input:focus {
+  border-color: var(--solawi-secondary);
+  box-shadow: 0 0 0 0.25rem rgba(247, 80, 47, 0.25);
+}
+
+/* ----- Navigation (navbar uses bg-dark -> --bs-dark-rgb above) ---------- */
+html .nav-pills .nav-link.active,
+html .nav-pills .show > .nav-link {
+  background-color: var(--solawi-primary);
+}
+
+/* Header bar (navbar): white bar, headings in the dark blue tone.
+   The base template renders `navbar-dark bg-dark`; for this theme it is a white bar
+   with a larger logo and dark text. */
+html .navbar.bg-dark {
+  background-color: var(--solawi-white) !important;
+  border-bottom: 1px solid var(--solawi-light-gray);
+}
+
+html .navbar .navbar-brand img {
+  height: 40px;
+}
+
+html .navbar .text-light {
+  color: var(--solawi-dark) !important;
+}
+
+html .navbar h1,
+html .navbar h2,
+html .navbar h3,
+html .navbar h4,
+html .navbar h5,
+html .navbar h6 {
+  color: var(--solawi-dark);
+}
+
+/* Sidebar (admin menu): white bar, group headings in the blue tone, links in the
+   brand teal (same tone as the category links on the preferences page) and the
+   current item highlighted with the teal accent. */
+html .custom-sidebar {
+  background-color: var(--solawi-white) !important;
+}
+
+html .custom-sidebar .sidebar-group {
+  color: var(--solawi-dark) !important;
+}
+
+html .custom-sidebar .nav-link {
+  color: var(--solawi-accent);
+  border-left: 3px solid transparent;
+}
+
+html .custom-sidebar .nav-link .material-icons {
+  color: var(--solawi-accent);
+}
+
+html .custom-sidebar .nav-link:hover {
+  color: var(--solawi-dark-teal);
+  background-color: rgba(48, 168, 159, 0.12);
+  border-left-color: var(--solawi-accent);
+}
+
+html .custom-sidebar .nav-link.active,
+html .custom-sidebar .nav-link.active:hover {
+  background-color: rgba(48, 168, 159, 0.18);
+  color: var(--solawi-dark-teal);
+  border-left-color: var(--solawi-accent);
+}
+
+html .custom-sidebar .nav-link.active .material-icons {
+  color: var(--solawi-dark-teal);
+}
+
+/* ----- BestellWizard / Beitragsrunde (mobile) --------------------------- */
+/* The mobile header logo is an inline-styled <img height="70%">; enlarge it a bit */
+#bw-header img {
+  height: 90% !important;
+}
+
+/* Selected pickup location: brand orange highlight instead of Bootstrap blue */
+html .list-group-item.active {
+  --bs-list-group-active-color: #fff;
+  --bs-list-group-active-bg: var(--solawi-primary);
+  --bs-list-group-active-border-color: var(--solawi-primary);
+}
+
+html .list-group-item.active .text-danger,
+html .list-group-item.active .text-success {
+  color: #fff !important;
+}
+
+/* ----- Tables ----------------------------------------------------------- */
+html .table-active,
+html tr.tr-href.active,
+html tr.tr-clickable.active {
+  background: var(--active-color);
+  color: var(--solawi-black);
+}
+
+html tr.tr-href:hover:not(.active),
+html tr.tr-clickable:hover:not(.active) {
+  background: var(--bs-gray-100);
+}
+
+/* ----- Steps / status --------------------------------------------------- */
+html .step.active .step-icon {
+  background: var(--solawi-accent);
+}
+
+.is-valid {
+  border-color: var(--primary) !important;
+}
+
+div.option.selected {
+  background-color: var(--primary);
+}
+
+/* ----- Theme structural rules (kept from the original theme) ------------ */
+.photo {
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+  box-shadow: 2px 2px 18px 2px rgb(2 0 1 / 7%);
+  animation: fadeIn 0.8s;
+}
+
+nav-item .hidden {
+  display: none;
+}
+
+tr.tr-href,
+tr.tr-clickable {
+  transition: background 0.2s;
+  cursor: pointer;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+.card {
+  animation: fadeIn 0.3s;
+}
+
+/* ===== Scrollbar CSS ===== */
+/* Chrome, Edge, and Safari */
+*::-webkit-scrollbar {
+  width: 16px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: gray;
+  border-radius: 10px;
+  border: 2px solid #ffffff;
+}
+
+.tapir-btn:disabled {
+  background-color: gray !important;
+  color: white !important;
+  border-color: grey;
+}
+
+.selectize-input {
+  background: #ffffff !important;
+  min-height: 2.375em !important;
+  font-size: 1em !important;
+  padding: 0.5rem 2.25rem 0.25rem 0.75rem;
+}
+
+.table td,
+.table tr {
+  padding: 0.3rem;
+  font-size: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.navbar.sticky-top {
+  z-index: 995;
+}
+
+.custom-sidebar {
+  width: 4em;
+  transition: width 0.3s ease;
+  position: absolute;
+  padding-top: 4.5em;
+  white-space: nowrap;
+  z-index: 990;
+  box-shadow: 3px 0 8px rgba(0, 0, 0, 0.2);
+}
+
+.sidebar-item-details {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar-group {
+  margin-top: 1em;
+}
+
+.custom-sidebar:hover {
+  width: 16em;
+}
+
+.custom-sidebar:hover > div > .sidebar-item-details,
+.custom-sidebar:hover > div > ul > li > a > span.sidebar-item-details {
+  opacity: 1;
+}
+
+.material-icons {
+  display: inline-block;
+  width: 1em; /* Set the width to be equivalent to 2 normal characters */
+  overflow: hidden;
+  text-align: center;
+  vertical-align: middle;
+}
+
+main {
+  padding-left: 1em;
+  padding-right: 1em;
+}

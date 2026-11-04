@@ -49,6 +49,8 @@ context.
 - Integration tests subclass `TapirIntegrationTest`, which mocks Keycloak in `setUp` — so users
   must not be created in `setUpTestData`.
 - Changed behaviour has a test that would fail without the change.
+- If `.env.local` exists in the repository root, run the tests locally with
+  `poetry run pytest --reuse-db` instead of through the docker containers.
 
 **Commits**
 

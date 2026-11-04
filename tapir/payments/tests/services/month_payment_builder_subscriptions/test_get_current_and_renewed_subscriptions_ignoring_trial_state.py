@@ -57,3 +57,50 @@ class TestGetCurrentAndRenewedSubscriptionsIgnoringTrialState(TapirUnitTest):
             subscription=subscription_to_renew, cache=cache
         )
         mock_is_contract_in_trial.assert_not_called()
+
+    @patch.object(
+        AutomaticSubscriptionRenewalService,
+        "build_renewed_subscription",
+        autospec=True,
+    )
+    @patch.object(
+        AutomaticSubscriptionRenewalService,
+        "get_subscriptions_that_will_be_renewed",
+        autospec=True,
+    )
+    @patch.object(TapirCache, "get_all_subscriptions_for_member", autospec=True)
+    @patch.object(TapirCache, "get_all_subscriptions", autospec=True)
+    def test_getCurrentAndRenewedSubscriptionsIgnoringTrialState_memberIdGiven_onlyBuildsAndReturnsSubscriptionsOfThatMember(
+        self,
+        mock_get_all_subscriptions: Mock,
+        mock_get_all_subscriptions_for_member: Mock,
+        mock_get_subscriptions_that_will_be_renewed: Mock,
+        mock_build_renewed_subscription: Mock,
+    ):
+        existing_subscription = SubscriptionFactory.build(member__pk="member_1")
+        subscription_to_renew = SubscriptionFactory.build(member__pk="member_1")
+        other_member_subscription_to_renew = SubscriptionFactory.build(
+            member__pk="member_2"
+        )
+        renewed_subscription = SubscriptionFactory.build(member__pk="member_1")
+        mock_get_all_subscriptions_for_member.return_value = [existing_subscription]
+        mock_get_subscriptions_that_will_be_renewed.return_value = {
+            subscription_to_renew,
+            other_member_subscription_to_renew,
+        }
+        mock_build_renewed_subscription.return_value = renewed_subscription
+        first_of_month = datetime.date(year=2025, month=9, day=1)
+        cache = Mock()
+
+        result = MonthPaymentBuilderSubscriptions.get_current_and_renewed_subscriptions_ignoring_trial_state(
+            first_of_month=first_of_month, cache=cache, member_id="member_1"
+        )
+
+        self.assertEqual({existing_subscription, renewed_subscription}, result)
+        mock_get_all_subscriptions.assert_not_called()
+        mock_get_all_subscriptions_for_member.assert_called_once_with(
+            member_id="member_1", cache=cache
+        )
+        mock_build_renewed_subscription.assert_called_once_with(
+            subscription=subscription_to_renew, cache=cache
+        )

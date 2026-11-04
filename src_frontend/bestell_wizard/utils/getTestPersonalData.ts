@@ -16,6 +16,7 @@ export function getTestPersonalData(): PersonalData {
     country: "DE",
     accountOwner: "Max Mustermann",
     iban: "DE89370400440532013000",
+    pseudonym: "",
     paymentRhythm: "monthly",
   };
 }

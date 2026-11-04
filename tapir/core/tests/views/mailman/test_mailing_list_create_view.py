@@ -10,7 +10,7 @@ from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
-@override_settings(MAILING_LISTS_ENABLED=True)
+@override_settings(MAILING_LISTS_ENABLED=True, EMAIL_HOST="example.com")
 class TestMailingListCreateView(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls) -> None:
@@ -79,7 +79,6 @@ class TestMailingListCreateView(TapirIntegrationTest):
             response_content,
         )
 
-    @override_settings(EMAIL_HOST="example.com")
     def test_post_inputListNameContainsDomain_callsCreateListWithoutDomain(self):
         self.client.force_login(MemberFactory.create(is_superuser=True))
 

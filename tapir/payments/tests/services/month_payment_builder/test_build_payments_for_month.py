@@ -67,11 +67,12 @@ class TestBuildPaymentForMonth(TapirUnitTest):
             value=True,
         )
         generated_payments = {payment_6}
+        member_id = "test_member_id"
 
         subscriptions_trial_payments = [payment_1, payment_3]
         subscriptions_not_trial_payments = [payment_2, payment_4, payment_5]
         mock_build_payments_for_subscriptions.side_effect = (
-            lambda current_month, cache, generated_payments, in_trial: (
+            lambda current_month, cache, generated_payments, in_trial, member_id: (
                 subscriptions_trial_payments
                 if in_trial
                 else subscriptions_not_trial_payments
@@ -81,7 +82,7 @@ class TestBuildPaymentForMonth(TapirUnitTest):
         contribution_trial_payments = [payment_7, payment_8]
         contribution_not_trial_payments = [payment_9]
         mock_build_payments_for_solidarity_contributions.side_effect = (
-            lambda current_month, cache, generated_payments, in_trial: (
+            lambda current_month, cache, generated_payments, in_trial, member_id: (
                 contribution_trial_payments
                 if in_trial
                 else contribution_not_trial_payments
@@ -96,7 +97,7 @@ class TestBuildPaymentForMonth(TapirUnitTest):
         delivery_charge_trial_payments = [payment_10]
         delivery_charge_not_trial_payments = [payment_11]
         mock_build_payments_for_delivery_charges.side_effect = (
-            lambda current_month, cache, generated_payments, in_trial: (
+            lambda current_month, cache, generated_payments, in_trial, member_id: (
                 delivery_charge_trial_payments
                 if in_trial
                 else delivery_charge_not_trial_payments
@@ -107,6 +108,7 @@ class TestBuildPaymentForMonth(TapirUnitTest):
             reference_date=datetime.date(year=2022, month=5, day=12),
             cache=cache,
             generated_payments=generated_payments,
+            member_id=member_id,
         )
 
         self.assertEqual(
@@ -134,12 +136,14 @@ class TestBuildPaymentForMonth(TapirUnitTest):
                     cache=cache,
                     generated_payments=generated_payments,
                     in_trial=True,
+                    member_id=member_id,
                 ),
                 call(
                     current_month=datetime.date(year=2022, month=5, day=1),
                     cache=cache,
                     generated_payments={payment_6, payment_1, payment_3},
                     in_trial=False,
+                    member_id=member_id,
                 ),
             ]
         )
@@ -152,12 +156,14 @@ class TestBuildPaymentForMonth(TapirUnitTest):
                     cache=cache,
                     generated_payments=generated_payments,
                     in_trial=True,
+                    member_id=member_id,
                 ),
                 call(
                     current_month=datetime.date(year=2022, month=5, day=1),
                     cache=cache,
                     generated_payments={payment_6, payment_7, payment_8},
                     in_trial=False,
+                    member_id=member_id,
                 ),
             ]
         )
@@ -166,6 +172,7 @@ class TestBuildPaymentForMonth(TapirUnitTest):
             current_month=datetime.date(year=2022, month=5, day=1),
             cache=cache,
             generated_payments=generated_payments,
+            member_id=member_id,
         )
 
         self.assertEqual(2, mock_build_payments_for_delivery_charges.call_count)
@@ -176,12 +183,14 @@ class TestBuildPaymentForMonth(TapirUnitTest):
                     cache=cache,
                     generated_payments=generated_payments,
                     in_trial=True,
+                    member_id=member_id,
                 ),
                 call(
                     current_month=datetime.date(year=2022, month=5, day=1),
                     cache=cache,
                     generated_payments={payment_6, payment_10},
                     in_trial=False,
+                    member_id=member_id,
                 ),
             ]
         )

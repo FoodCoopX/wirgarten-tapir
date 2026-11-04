@@ -111,7 +111,7 @@ const MemberMailCategoryCard: React.FC<MemberMailCategoryModalProps> = ({
           <span className={"d-flex flex-row justify-content-end"}>
             <TapirButton
               variant={"primary"}
-              text={"Abos anpassen"}
+              text={"Speichern"}
               icon={"save"}
               onClick={onSave}
               loading={saveLoading}

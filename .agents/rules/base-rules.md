@@ -67,8 +67,8 @@ Routing: [tapir/urls.py](tapir/urls.py) includes per-app `urls.py`; apps mix DRF
 
 ## Commands
 
-All tasks are `make` targets ([Makefile](Makefile)); they detect host vs. container, so Docker wrapping never belongs in
-prose. `make help` lists all.
+All tasks are `make` targets ([Makefile](Makefile)); on the host they always run inside the `web` container (see
+**Host vs. Docker** below). `make help` lists all.
 
 | Command                                  | Does                                                         |
 |------------------------------------------|--------------------------------------------------------------|
@@ -82,8 +82,12 @@ prose. `make help` lists all.
 | `make populate` / `make populate-bakery` | fresh test data                                              |
 | `make manage ARGS="migrate"`             | any other management command                                 |
 
-**Never run `pytest` or `manage.py` directly on the host** — integration tests are not path-separated and fail without
-containers; `manage.py` has no DB/Redis/Keycloak.
+**Host vs. Docker**: check whether `.env.local` exists in the repository root.
+
+- Exists (local setup): run directly on the host, e.g. `poetry run pytest --reuse-db`,
+  `poetry run python manage.py <cmd>`.
+- Missing (Docker setup): use the `make` targets above, or `docker compose exec -T web poetry run pytest --reuse-db`.
+  Running `pytest` or `manage.py` on the host fails here (host `db` does not resolve).
 
 Services: `web` (8000), `vite` (5173), `keycloak` (8080), `db` (5432), `redis` (6379), `celery`, `celery-beat`.
 

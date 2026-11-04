@@ -19,7 +19,7 @@ const SubscriptionCancellationCard: React.FC<
 
   return (
     <>
-      <Card style={{ marginBottom: "1rem" }}>
+      <Card>
         <Card.Header>
           <h5 className={"mb-0"}>Verträge kündigen</h5>
         </Card.Header>

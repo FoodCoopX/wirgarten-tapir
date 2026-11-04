@@ -10,6 +10,9 @@ from tapir.deliveries.services.subscription_price_type_decider import (
 from tapir.pickup_locations.config import OPTIONS_PICKING_MODE
 from tapir.pickup_locations.serializers import ProductBasketSizeEquivalenceSerializer
 from tapir.products.services.tax_rate_service import TaxRateService
+from tapir.solidarity_contribution.services.solidarity_validator import (
+    SolidarityValidator,
+)
 from tapir.subscriptions.config import NOTICE_PERIOD_UNIT_OPTIONS
 from tapir.wirgarten.constants import DeliveryCycle, NO_DELIVERY
 from tapir.wirgarten.models import Product, ProductType
@@ -111,6 +114,7 @@ class ExtendedProductSerializer(serializers.Serializer):
     show_min_coop_shares = serializers.BooleanField(read_only=True)
     price_per_delivery = serializers.BooleanField(read_only=True)
     hidden_in_bestell_wizard = serializers.BooleanField()
+    solidarity_choices = serializers.CharField(allow_blank=True)
 
 
 class PublicProductSerializer(serializers.ModelSerializer):
@@ -123,9 +127,11 @@ class PublicProductSerializer(serializers.ModelSerializer):
             "description_in_bestellwizard",
             "url_of_image_in_bestellwizard",
             "hidden_in_bestell_wizard",
+            "solidarity_choices",
         ]
 
     price = SerializerMethodField()
+    solidarity_choices = SerializerMethodField()
     url_of_image_in_bestellwizard = serializers.CharField()
 
     @extend_schema_field(OpenApiTypes.FLOAT)
@@ -134,6 +140,10 @@ class PublicProductSerializer(serializers.ModelSerializer):
         return get_product_price(
             product=product, reference_date=get_today(cache=cache), cache=cache
         ).price
+
+    @extend_schema_field(serializers.ListField(child=serializers.FloatField()))
+    def get_solidarity_choices(self, product: Product):
+        return SolidarityValidator.parse_solidarity_choices(product.solidarity_choices)
 
 
 class PublicProductTypeSerializer(serializers.ModelSerializer):

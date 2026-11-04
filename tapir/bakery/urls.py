@@ -29,6 +29,7 @@ from tapir.bakery.views_templates import (
 from tapir.bakery.viewsets import (
     BreadContentViewSet,
     BreadDeliveryViewSet,
+    BreadGroupViewSet,
     BreadLabelViewSet,
     BreadSpecificsPerDeliveryDayViewSet,
     BreadsPerPickupLocationPerWeekViewSet,
@@ -123,6 +124,11 @@ router.register(
     r"labels",
     BreadLabelViewSet,
     basename="labels",
+)
+router.register(
+    r"bread-groups",
+    BreadGroupViewSet,
+    basename="bread-groups",
 )
 router.register(
     r"ingredients",

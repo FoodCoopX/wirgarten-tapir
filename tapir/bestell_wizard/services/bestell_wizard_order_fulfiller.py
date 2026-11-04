@@ -121,6 +121,9 @@ class BestellWizardOrderFulfiller:
                 subscriptions=subscriptions,
                 cache=cache,
                 actor=actor,
+                pay_in_instalments=validated_serializer_data[
+                    "pay_coop_shares_in_instalments"
+                ],
             )
         if legal_status_is_association(cache=cache):
             association_membership = cls.create_association_membership(
@@ -167,6 +170,8 @@ class BestellWizardOrderFulfiller:
                 coop_share_transaction=coop_share_transaction,
                 association_membership=association_membership,
                 solidarity_contribution=solidarity_contribution,
+                without_coop_shares=legal_status_is_cooperative(cache=cache)
+                and is_student,
             )
 
         return member
@@ -229,6 +234,7 @@ class BestellWizardOrderFulfiller:
         subscriptions: list[Subscription],
         cache: dict,
         actor: TapirUser,
+        pay_in_instalments: bool,
     ):
         earliest_trial_period_end = cls.get_earliest_trial_period_end(
             subscriptions=subscriptions, cache=cache
@@ -247,6 +253,7 @@ class BestellWizardOrderFulfiller:
             shares_valid_at=shares_valid_at,
             cache=cache,
             actor=actor,
+            pay_in_instalments=pay_in_instalments,
         )
 
     @classmethod

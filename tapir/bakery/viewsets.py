@@ -1,7 +1,7 @@
 from functools import cached_property
 
 from django.db import transaction
-from django.db.models import Exists, OuterRef, ProtectedError
+from django.db.models import Exists, OuterRef, Prefetch, ProtectedError
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
 from rest_framework import permissions, status, viewsets
@@ -14,6 +14,7 @@ from tapir.bakery.models import (
     Bread,
     BreadContent,
     BreadDelivery,
+    BreadGroup,
     BreadLabel,
     BreadSpecificsPerDeliveryDay,
     BreadsPerPickupLocationPerWeek,
@@ -27,6 +28,7 @@ from tapir.bakery.serializers import (
     BreadContentSerializer,
     BreadDeliverySerializer,
     BreadDetailSerializer,
+    BreadGroupSerializer,
     BreadLabelSerializer,
     BreadListSerializer,
     BreadSpecificsPerDeliveryDayBulkUpdateSerializer,
@@ -102,6 +104,18 @@ class BreadLabelViewSet(viewsets.ModelViewSet):
 
 
 @extend_schema(tags=["bakery"])
+class BreadGroupViewSet(viewsets.ModelViewSet):
+    queryset = BreadGroup.objects.prefetch_related(
+        Prefetch("breads", queryset=Bread.objects.order_by("name"))
+    ).order_by("name")
+    serializer_class = BreadGroupSerializer
+    permission_classes = [
+        permissions.IsAuthenticated,
+        IsReadOnly | HasCoopManagePermission,
+    ]
+
+
+@extend_schema(tags=["bakery"])
 class IngredientViewSet(ProtectedDeleteMixin, viewsets.ModelViewSet):
     protected_delete_message = (
         "Diese Zutat wird noch in Rezepten verwendet und kann nicht gelöscht werden."
@@ -146,7 +160,11 @@ class BreadViewSet(RequestCacheMixin, ProtectedDeleteMixin, viewsets.ModelViewSe
         "werden. Setze es stattdessen auf inaktiv."
     )
 
-    queryset = Bread.objects.prefetch_related("labels", "contents__ingredient").all()
+    queryset = (
+        Bread.objects.select_related("group")
+        .prefetch_related("labels", "contents__ingredient")
+        .all()
+    )
     permission_classes = [
         permissions.IsAuthenticated,
         IsReadOnly | HasCoopManagePermission,
@@ -504,7 +522,8 @@ class StoveSessionViewSet(viewsets.ReadOnlyModelViewSet):
         if delivery_day is not None:
             queryset = queryset.filter(delivery_day=delivery_day)
 
-        return queryset.order_by("session_number", "layer_number")
+        # The bread name keeps a shared layer's breads in a stable order.
+        return queryset.order_by("session_number", "layer_number", "bread__name")
 
 
 @extend_schema(tags=["bakery"])

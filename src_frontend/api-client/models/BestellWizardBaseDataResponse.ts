@@ -67,6 +67,18 @@ export interface BestellWizardBaseDataResponse {
   priceOfAShare: number;
   /**
    *
+   * @type {boolean}
+   * @memberof BestellWizardBaseDataResponse
+   */
+  coopShareInstalmentsEnabled: boolean;
+  /**
+   *
+   * @type {number}
+   * @memberof BestellWizardBaseDataResponse
+   */
+  coopShareInstalmentAmount: number;
+  /**
+   *
    * @type {string}
    * @memberof BestellWizardBaseDataResponse
    */
@@ -119,6 +131,12 @@ export interface BestellWizardBaseDataResponse {
    * @memberof BestellWizardBaseDataResponse
    */
   phoneNumberRequired: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof BestellWizardBaseDataResponse
+   */
+  pseudonymEnabled: boolean;
   /**
    *
    * @type {boolean}
@@ -279,6 +297,16 @@ export function instanceOfBestellWizardBaseDataResponse(
 ): value is BestellWizardBaseDataResponse {
   if (!("priceOfAShare" in value) || value["priceOfAShare"] === undefined)
     return false;
+  if (
+    !("coopShareInstalmentsEnabled" in value) ||
+    value["coopShareInstalmentsEnabled"] === undefined
+  )
+    return false;
+  if (
+    !("coopShareInstalmentAmount" in value) ||
+    value["coopShareInstalmentAmount"] === undefined
+  )
+    return false;
   if (!("theme" in value) || value["theme"] === undefined) return false;
   if (
     !("allowInvestingMembership" in value) ||
@@ -307,6 +335,8 @@ export function instanceOfBestellWizardBaseDataResponse(
     !("phoneNumberRequired" in value) ||
     value["phoneNumberRequired"] === undefined
   )
+    return false;
+  if (!("pseudonymEnabled" in value) || value["pseudonymEnabled"] === undefined)
     return false;
   if (!("showCoopContent" in value) || value["showCoopContent"] === undefined)
     return false;
@@ -420,6 +450,8 @@ export function BestellWizardBaseDataResponseFromJSONTyped(
   }
   return {
     priceOfAShare: json["price_of_a_share"],
+    coopShareInstalmentsEnabled: json["coop_share_instalments_enabled"],
+    coopShareInstalmentAmount: json["coop_share_instalment_amount"],
     theme: json["theme"],
     allowInvestingMembership: json["allow_investing_membership"],
     productTypes: (json["product_types"] as Array<any>).map(
@@ -435,6 +467,7 @@ export function BestellWizardBaseDataResponseFromJSONTyped(
     introEnabled: json["intro_enabled"],
     studentStatusAllowed: json["student_status_allowed"],
     phoneNumberRequired: json["phone_number_required"],
+    pseudonymEnabled: json["pseudonym_enabled"],
     showCoopContent: json["show_coop_content"],
     labelCheckboxSepaMandat: json["label_checkbox_sepa_mandat"],
     labelCheckboxContractPolicy: json["label_checkbox_contract_policy"],
@@ -486,6 +519,8 @@ export function BestellWizardBaseDataResponseToJSONTyped(
 
   return {
     price_of_a_share: value["priceOfAShare"],
+    coop_share_instalments_enabled: value["coopShareInstalmentsEnabled"],
+    coop_share_instalment_amount: value["coopShareInstalmentAmount"],
     theme: value["theme"],
     allow_investing_membership: value["allowInvestingMembership"],
     product_types: (value["productTypes"] as Array<any>).map(
@@ -501,6 +536,7 @@ export function BestellWizardBaseDataResponseToJSONTyped(
     intro_enabled: value["introEnabled"],
     student_status_allowed: value["studentStatusAllowed"],
     phone_number_required: value["phoneNumberRequired"],
+    pseudonym_enabled: value["pseudonymEnabled"],
     show_coop_content: value["showCoopContent"],
     label_checkbox_sepa_mandat: value["labelCheckboxSepaMandat"],
     label_checkbox_contract_policy: value["labelCheckboxContractPolicy"],

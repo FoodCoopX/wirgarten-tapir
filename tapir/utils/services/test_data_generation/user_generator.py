@@ -416,6 +416,7 @@ class UserGenerator:
             shares_valid_at=member.date_joined.date(),
             cache=cache,
             actor=None,
+            pay_in_instalments=False,
         )
 
     @classmethod

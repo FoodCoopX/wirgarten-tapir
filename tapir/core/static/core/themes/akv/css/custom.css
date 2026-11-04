@@ -1,0 +1,287 @@
+/* Solawi Ackervielfalt: colours and fonts of www.solawi-ackervielfalt.de
+ * Fira Sans (SIL Open Font License, see ../fonts/OFL-FiraSans.txt) ships with the theme.
+ * Garden Grown (Cultivated Mind) is licensed to the Solawi and is not part of the repository:
+ * the server serves it from /theme-fonts/akv/ (see packaging/README.md, "Theme fonts").
+ * Without it the headings fall back to Fira Sans. */
+@font-face {
+  font-family: "Fira Sans";
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url("../fonts/fira-sans-v11-latin-300.woff2") format("woff2"),
+       url("../fonts/fira-sans-v11-latin-300.woff") format("woff");
+}
+@font-face {
+  font-family: "Garden Grown B Caps";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/theme-fonts/akv/gardengrown-bcaps-webfont.woff2") format("woff2"),
+       url("/theme-fonts/akv/gardengrown-bcaps-webfont.woff") format("woff");
+}
+:root {
+  --primary: #28476e;
+  --primary-hover: #3f6491;
+  --secondary: #bd4a55;
+  --secondary-hover: #a23e49;
+  --secondary-active: #8a343e;
+  --background: #f4f1e7;
+  --surface-muted: #edefed;
+  --platinum: #e9e7e5;
+  --white: #ffffff;
+  --black: #000000;
+  --active-color: #d6e0ec;
+  --heading-font: "Garden Grown B Caps", "Fira Sans", sans-serif;
+  --bs-primary: #28476e;
+  --bs-primary-rgb: 40, 71, 110;
+  --bs-secondary: #bd4a55;
+  --bs-secondary-rgb: 189, 74, 85;
+  --bs-link-color: #28476e;
+  --bs-link-hover-color: #3f6491;
+  --bs-body-font-family: "Fira Sans", sans-serif;
+}
+h1 {
+  line-height: 1.4 !important;
+  font-family: var(--heading-font);
+  letter-spacing: 0.5px;
+  color: var(--primary);
+  font-size: 39px !important;
+}
+h2 {
+  line-height: 1.4 !important;
+  font-family: var(--heading-font);
+  letter-spacing: 0.5px;
+  color: var(--primary);
+  font-size: 33px !important;
+}
+h3 {
+  line-height: 1.4 !important;
+  font-family: var(--heading-font);
+  letter-spacing: 0.5px;
+  color: var(--primary);
+  font-size: 23px !important;
+}
+h4 {
+  line-height: 1.4 !important;
+  font-family: var(--heading-font);
+  letter-spacing: 0.5px;
+  color: var(--primary);
+  font-size: 20px !important;
+}
+h5 {
+  line-height: 1.4 !important;
+  font-family: var(--heading-font);
+  letter-spacing: 0.5px;
+  color: var(--primary);
+  font-size: 17px !important;
+}
+h6 {
+  line-height: 1.4 !important;
+  font-family: var(--heading-font);
+  letter-spacing: 0.5px;
+  color: var(--primary);
+  font-size: 16px !important;
+}
+body {
+  font-size: 16px !important;
+  line-height: 1.7 !important;
+  font-family: "Fira Sans", sans-serif;
+  color: var(--black);
+  background-color: var(--background);
+}
+a {
+  color: var(--primary);
+}
+a:hover {
+  color: var(--primary-hover);
+}
+.navbar.bg-dark {
+  background-color: var(--primary) !important;
+}
+.sidebar.bg-light {
+  background-color: var(--surface-muted) !important;
+}
+.card {
+  border-color: var(--platinum);
+}
+.btn-primary {
+  background-color: var(--primary);
+  border-color: var(--primary);
+}
+.btn-primary:hover,
+.btn-primary:focus {
+  background-color: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+.btn-outline-primary {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+.btn-outline-primary:hover {
+  background-color: var(--primary);
+  border-color: var(--primary);
+}
+.text-primary {
+  color: var(--primary) !important;
+}
+.bg-primary {
+  background-color: var(--primary) !important;
+}
+.btn-secondary {
+  background-color: var(--secondary);
+  border-color: var(--secondary);
+}
+.btn-secondary {
+  color: var(--white);
+}
+.btn-secondary:hover,
+.btn-secondary:focus {
+  background-color: var(--secondary-hover);
+  border-color: var(--secondary-hover);
+  color: var(--white);
+}
+.btn-secondary:disabled,
+.btn-secondary.disabled {
+  background-color: var(--secondary);
+  border-color: var(--secondary);
+  opacity: 0.65;
+}
+.btn-secondary:not(:disabled):not(.disabled):active,
+.btn-secondary:not(:disabled):not(.disabled).active {
+  background-color: var(--secondary-active);
+  border-color: var(--secondary-active);
+  color: var(--white);
+}
+.btn-danger,
+.btn-danger:hover,
+.btn-danger:focus,
+.btn-danger:active {
+  color: var(--white);
+}
+.is-valid {
+  border-color: var(--primary) !important;
+}
+.photo {
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+  box-shadow: 2px 2px 18px 2px rgb(2 0 1 / 7%);
+  animation: fadeIn 0.8s;
+}
+nav-item .hidden {
+  display: none;
+}
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+tr.tr-href,
+tr.tr-clickable {
+  transition: background 0.2s;
+  cursor: pointer;
+}
+tr.tr-href.active,
+tr.tr-clickable.active {
+  background: var(--active-color);
+  color: black;
+}
+tr.tr-href:hover:not(.active),
+tr.tr-clickable:hover:not(.active) {
+  background: var(--bs-gray-100);
+}
+.card {
+  animation: fadeIn 0.3s;
+}
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+/* ===== Scrollbar CSS ===== */
+/* Chrome, Edge, and Safari */
+*::-webkit-scrollbar {
+  width: 16px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: gray;
+  border-radius: 10px;
+  border: 2px solid #ffffff;
+}
+.tapir-btn:disabled {
+  background-color: gray !important;
+  color: white !important;
+  border-color: grey;
+}
+.selectize-input {
+  background: #ffffff !important;
+  min-height: 2.375em !important;
+  font-size: 1em !important;
+  padding: 0.5rem 2.25rem 0.25rem 0.75rem;
+}
+div.option.selected {
+  background-color: var(--primary);
+}
+.table td,
+.table tr {
+  padding: 0.3rem;
+  font-size: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.navbar.sticky-top {
+  z-index: 995;
+}
+.custom-sidebar {
+  width: 4em;
+  transition: width 0.3s ease;
+  position: absolute;
+  padding-top: 4.5em;
+  white-space: nowrap;
+  z-index: 990;
+  box-shadow: 3px 0 8px rgba(0, 0, 0, 0.2);
+}
+.sidebar-item-details {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.sidebar-group {
+  margin-top: 1em;
+}
+.custom-sidebar:hover {
+  width: 16em;
+}
+.custom-sidebar:hover > div > .sidebar-item-details,
+.custom-sidebar:hover > div > ul > li > a > span.sidebar-item-details {
+  opacity: 1;
+}
+.material-icons {
+  display: inline-block;
+  width: 1em; /* Set the width to be equivalent to 2 normal characters */
+  overflow: hidden;
+  text-align: center;
+  vertical-align: middle;
+}
+main {
+  padding-left: 1em;
+  padding-right: 1em;
+}
+.step.active .step-icon {
+  background: var(--primary);
+}
+.step.active p {
+  color: var(--primary);
+}
+.indicator-line.active {
+  background: var(--primary);
+}

@@ -122,6 +122,12 @@ export interface ExtendedProduct {
    * @memberof ExtendedProduct
    */
   hiddenInBestellWizard: boolean;
+  /**
+   *
+   * @type {string}
+   * @memberof ExtendedProduct
+   */
+  solidarityChoices: string;
 }
 
 /**
@@ -168,6 +174,11 @@ export function instanceOfExtendedProduct(
     value["hiddenInBestellWizard"] === undefined
   )
     return false;
+  if (
+    !("solidarityChoices" in value) ||
+    value["solidarityChoices"] === undefined
+  )
+    return false;
   return true;
 }
 
@@ -202,6 +213,7 @@ export function ExtendedProductFromJSONTyped(
     showMinCoopShares: json["show_min_coop_shares"],
     pricePerDelivery: json["price_per_delivery"],
     hiddenInBestellWizard: json["hidden_in_bestell_wizard"],
+    solidarityChoices: json["solidarity_choices"],
   };
 }
 
@@ -236,5 +248,6 @@ export function ExtendedProductToJSONTyped(
     capacity: value["capacity"],
     min_coop_shares: value["minCoopShares"],
     hidden_in_bestell_wizard: value["hiddenInBestellWizard"],
+    solidarity_choices: value["solidarityChoices"],
   };
 }

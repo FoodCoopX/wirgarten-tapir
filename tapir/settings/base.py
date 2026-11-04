@@ -31,7 +31,7 @@ DEBUG = env.bool("DEBUG", default=False)
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["*"])
 ERROR_LOG_DIR = env.str("ERROR_LOG_DIR", default="error_logs")
 
-ENABLE_SILK_PROFILING = False
+ENABLE_SILK_PROFILING = env.bool("ENABLE_SILK_PROFILING", default=False)
 
 # Application definition
 INSTALLED_APPS = [
@@ -173,7 +173,6 @@ LOGIN_REDIRECT_URL = "/"
 
 PHONENUMBER_DEFAULT_REGION = env.str("PHONENUMBER_DEFAULT_REGION", default="DE")
 
-LOCALE_PATHS = [os.path.join(BASE_DIR, "tapir/translations/locale")]
 
 if ENABLE_SILK_PROFILING:
     SILKY_PYTHON_PROFILER = True
@@ -254,6 +253,8 @@ if ENABLE_JASMIN:
 
     TWO_FACTOR_CHALLENGE_LIFETIME = datetime.timedelta(minutes=5)
     TWO_FACTOR_ENROLMENT_LIFETIME = datetime.timedelta(minutes=15)
+
+    JASMIN_HOST = "tapir"
 
     INSTALLED_APPS += [
         "tapir.jasmin_integration",

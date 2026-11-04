@@ -405,7 +405,7 @@ class WaitingListForm(Form):
         self.fields["first_name"] = CharField(label=_("Vorname"))
         self.fields["last_name"] = CharField(label=_("Nachname"))
         self.fields["email"] = CharField(
-            label=_("Email"), validators=[EmailValidator()]
+            label=_("E-Mail-Adresse"), validators=[EmailValidator()]
         )
         self.fields["phone_number"] = TapirPhoneNumberField(label=_("Telefon-Nr"))
         self.fields["street"] = CharField(label=_("Adresse"))

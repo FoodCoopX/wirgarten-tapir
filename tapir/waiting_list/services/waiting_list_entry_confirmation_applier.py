@@ -145,6 +145,7 @@ class WaitingListEntryConfirmationApplier:
                 subscriptions=new_subscriptions,
                 cache=cache,
                 actor=actor,
+                pay_in_instalments=validated_data["pay_coop_shares_in_instalments"],
             )
 
         if len(new_subscriptions) > 0:
@@ -204,6 +205,7 @@ class WaitingListEntryConfirmationApplier:
             country=waiting_list_entry.country,
             account_owner=validated_data["account_owner"],
             iban=validated_data["iban"],
+            pseudonym=waiting_list_entry.pseudonym,
             **contracts_signed,
         )
 

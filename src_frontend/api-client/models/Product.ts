@@ -93,6 +93,12 @@ export interface Product {
    * @memberof Product
    */
   hiddenInBestellWizard?: boolean;
+  /**
+   *
+   * @type {string}
+   * @memberof Product
+   */
+  solidarityChoices?: string;
 }
 
 /**
@@ -142,6 +148,10 @@ export function ProductFromJSONTyped(
       json["hidden_in_bestell_wizard"] == null
         ? undefined
         : json["hidden_in_bestell_wizard"],
+    solidarityChoices:
+      json["solidarity_choices"] == null
+        ? undefined
+        : json["solidarity_choices"],
   };
 }
 
@@ -168,5 +178,6 @@ export function ProductToJSONTyped(
     capacity: value["capacity"],
     min_coop_shares: value["minCoopShares"],
     hidden_in_bestell_wizard: value["hiddenInBestellWizard"],
+    solidarity_choices: value["solidarityChoices"],
   };
 }

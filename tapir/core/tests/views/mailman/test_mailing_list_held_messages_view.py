@@ -13,7 +13,7 @@ from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
-@override_settings(MAILING_LISTS_ENABLED=True)
+@override_settings(MAILING_LISTS_ENABLED=True, EMAIL_HOST="example.com")
 class TestMailingListHeldMessagesView(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls) -> None:
@@ -60,7 +60,6 @@ class TestMailingListHeldMessagesView(TapirIntegrationTest):
             response=response, expected_status_code=status.HTTP_404_NOT_FOUND
         )
 
-    @override_settings(EMAIL_HOST="example.com")
     def test_get_default_returnsHeldMessagesSortedByHoldDate(self):
         self.client.force_login(MemberFactory.create(is_superuser=True))
         MailmanTestHelper.mock_domain(
@@ -136,7 +135,6 @@ class TestMailingListHeldMessagesView(TapirIntegrationTest):
             response.json(),
         )
 
-    @override_settings(EMAIL_HOST="example.com")
     def test_get_theMailWasSentByAMember_returnsMemberData(self):
         self._set_parameter(ParameterKeys.MEMBER_NUMBER_PREFIX, "BT")
         self._set_parameter(ParameterKeys.MEMBER_NUMBER_ZERO_PAD_LENGTH, 4)
@@ -177,7 +175,6 @@ class TestMailingListHeldMessagesView(TapirIntegrationTest):
             held_message["link_to_member_profile"],
         )
 
-    @override_settings(EMAIL_HOST="example.com")
     def test_get_theMailWasNotSentByAMember_returnsDisplayNameFromMailHeader(self):
         self.client.force_login(MemberFactory.create(is_superuser=True))
         MailmanTestHelper.mock_domain(
@@ -206,7 +203,6 @@ class TestMailingListHeldMessagesView(TapirIntegrationTest):
         self.assertIsNone(held_message["formatted_member_number"])
         self.assertIsNone(held_message["link_to_member_profile"])
 
-    @override_settings(EMAIL_HOST="example.com")
     def test_get_bodyHasUnknownCharset_returnsPlaceholderBody(self):
         self.client.force_login(MemberFactory.create(is_superuser=True))
         MailmanTestHelper.mock_domain(

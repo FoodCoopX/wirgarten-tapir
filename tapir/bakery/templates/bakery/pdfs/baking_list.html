@@ -49,14 +49,18 @@
     {% for session in stove_sessions %}
       <div class="stove-card">
         <div class="stove-header">Ofengang {{ session.session }}</div>
-        {% for layer in session.layers %}
+        {# Breads of a group can share a layer, one entry each. #}
+        {% regroup session.layers by layer as layers_by_number %}
+        {% for layer_group in layers_by_number %}
           <div class="stove-layer">
-            <span class="stove-label">Etage {{ layer.layer }}:</span>
-            {% if layer.bread_name %}
-              <span>{{ layer.bread_name }} <span class="stove-qty">&times;{{ layer.quantity }}</span></span>
-            {% else %}
-              <span class="stove-empty">leer</span>
-            {% endif %}
+            <span class="stove-label">Etage {{ layer_group.grouper }}:</span>
+            {% for layer in layer_group.list %}
+              {% if layer.bread_name %}
+                <span>{{ layer.bread_name }} <span class="stove-qty">&times;{{ layer.quantity }}</span></span>{% if not forloop.last %} + {% endif %}
+              {% else %}
+                <span class="stove-empty">leer</span>
+              {% endif %}
+            {% endfor %}
           </div>
         {% endfor %}
       </div>

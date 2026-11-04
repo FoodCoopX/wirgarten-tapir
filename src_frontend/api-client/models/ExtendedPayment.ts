@@ -85,6 +85,12 @@ export interface ExtendedPayment {
    * @memberof ExtendedPayment
    */
   associationMemberships: Array<AssociationMembership>;
+  /**
+   *
+   * @type {number}
+   * @memberof ExtendedPayment
+   */
+  numberOfInstalments: number | null;
 }
 
 /**
@@ -116,6 +122,11 @@ export function instanceOfExtendedPayment(
   if (
     !("associationMemberships" in value) ||
     value["associationMemberships"] === undefined
+  )
+    return false;
+  if (
+    !("numberOfInstalments" in value) ||
+    value["numberOfInstalments"] === undefined
   )
     return false;
   return true;
@@ -150,6 +161,7 @@ export function ExtendedPaymentFromJSONTyped(
     associationMemberships: (json["association_memberships"] as Array<any>).map(
       AssociationMembershipFromJSON,
     ),
+    numberOfInstalments: json["number_of_instalments"],
   };
 }
 
@@ -183,5 +195,6 @@ export function ExtendedPaymentToJSONTyped(
     association_memberships: (
       value["associationMemberships"] as Array<any>
     ).map(AssociationMembershipToJSON),
+    number_of_instalments: value["numberOfInstalments"],
   };
 }

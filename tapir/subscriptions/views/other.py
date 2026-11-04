@@ -20,6 +20,9 @@ from tapir.products.serializers import (
     PublicProductTypeSerializer,
     ProductSerializer,
 )
+from tapir.solidarity_contribution.services.solidarity_validator import (
+    SolidarityValidator,
+)
 from tapir.subscriptions.models import (
     SubscriptionPriceChangedLogEntry,
 )
@@ -74,6 +77,7 @@ class ExtendedProductView(APIView):
                 "capacity",
                 "min_coop_shares",
                 "hidden_in_bestell_wizard",
+                "solidarity_choices",
             ]
         }
 
@@ -120,6 +124,13 @@ class ExtendedProductView(APIView):
 
         request_serializer = ExtendedProductSerializer(data=request.data)
         request_serializer.is_valid(raise_exception=True)
+
+        try:
+            SolidarityValidator.validate_solidarity_dropdown_values(
+                request_serializer.validated_data["solidarity_choices"]
+            )
+        except ValidationError as error:
+            return Response(data=error.message, status=status.HTTP_400_BAD_REQUEST)
 
         product = get_object_or_404(Product, id=request_serializer.validated_data["id"])
 

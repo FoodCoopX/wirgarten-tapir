@@ -33,7 +33,7 @@ const TapirCheckbox: React.FC<TapirCheckboxProps> = ({
       />
       <label
         className={
-          "cbx d-flex flex-row align-items-center" +
+          "cbx d-flex flex-row align-items-start" +
           (showError ? " text-danger" : "")
         }
         htmlFor={controlId}

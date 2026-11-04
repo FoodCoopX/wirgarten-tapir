@@ -56,7 +56,7 @@ const AssociationMembershipCard: React.FC<AssociationMembershipCardProps> = ({
 
   return (
     <>
-      <Card className={"mb-2"}>
+      <Card>
         <Card.Header>
           <div className={"d-flex justify-content-between align-items-center"}>
             <Card.Title className={"mb-0"}>Vereinsmitgliedschaft</Card.Title>

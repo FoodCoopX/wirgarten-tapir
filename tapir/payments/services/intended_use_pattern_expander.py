@@ -1,6 +1,7 @@
 import datetime
 
 from django.core.exceptions import ValidationError
+
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.coop_membership_cancellation_manager import (
     CoopMembershipCancellationManager,
@@ -138,6 +139,7 @@ class IntendedUsePatternExpander:
         cls,
         pattern: str,
         member: Member,
+        payment: Payment,
         number_of_shares: int,
         cache: dict,
         token_value_overrides: dict | None = None,
@@ -152,12 +154,37 @@ class IntendedUsePatternExpander:
                     member, cache=cache
                 )
             ),
+            IntendedUseTokens.COOP_SHARE_VALID_AT: lambda: cls._get_coop_share_validity_date(
+                payment=payment
+            ),
             IntendedUseTokens.PRICE_SINGLE_SHARE: lambda: format_currency(
                 get_parameter_value(key=ParameterKeys.COOP_SHARE_PRICE, cache=cache)
+            ),
+            IntendedUseTokens.MANDATE_REFERENCE: lambda: payment.mandate_ref.ref,
+            IntendedUseTokens.INSTALMENT_NUMBER: lambda: (
+                ""
+                if payment.instalment_number is None
+                else str(payment.instalment_number)
+            ),
+            IntendedUseTokens.NUMBER_OF_INSTALMENTS: lambda: cls._get_number_of_instalments(
+                payment=payment
             ),
         }
 
         return cls._apply_replacements(pattern, replacements, token_value_overrides)
+
+    @classmethod
+    def _get_number_of_instalments(cls, payment: Payment):
+        if payment.instalment_number is None or payment.coop_share_transaction is None:
+            return ""
+        # all() instead of count() to use the prefetched payments
+        return str(len(payment.coop_share_transaction.payments.all()))
+
+    @classmethod
+    def _get_coop_share_validity_date(cls, payment: Payment):
+        if payment.coop_share_transaction is None:
+            return ""
+        return format_date(payment.coop_share_transaction.valid_at)
 
     @classmethod
     def _get_common_token_replacers(cls, member: Member, cache: dict):

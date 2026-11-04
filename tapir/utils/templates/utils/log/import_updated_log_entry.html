@@ -1,0 +1,6 @@
+<i><small>{{ title }}:</small></i>
+<br/>
+{% for change in changes %}
+    <strong>{{ change.0 }}</strong>: {{ change.1 }} → {{ change.2 }}
+    <br/>
+{% endfor %}

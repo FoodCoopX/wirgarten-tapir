@@ -3,6 +3,7 @@ export { ChooseBreadsCard } from "./ChooseBreadsCard";
 export { ChoosePreferredBreadsCard } from "./ChoosePreferredBreadsCard";
 export { CompactBreadCard } from "./CompactBreadCard";
 export { CompactPickupLocationCard } from "./CompactPickupLocationCard";
+export { GroupsCard } from "./GroupsCard";
 export { IngredientsCard } from "./IngredientsCard";
 export { LabelsCard } from "./LabelsCard";
 export { MetricsCard } from "./MetricsCard";

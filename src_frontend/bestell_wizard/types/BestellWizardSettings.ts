@@ -16,6 +16,8 @@ export type BestellWizardSettings = {
   productTypes: PublicProductType[];
   associationMembershipTypes: AssociationMembershipType[];
   priceOfAShare: number;
+  coopShareInstalmentsEnabled: boolean;
+  coopShareInstalmentAmount: number;
   allowInvestingMembership: boolean;
   associationsAllowInvestingMembership: boolean;
   forceWaitingList: boolean;
@@ -26,6 +28,7 @@ export type BestellWizardSettings = {
   paymentRhythmChoices: { [key: string]: string };
   studentStatusAllowed: boolean;
   phoneNumberRequired: boolean;
+  pseudonymEnabled: boolean;
   introEnabled: boolean;
   productTypeIdsThatAreAlreadyAtCapacity: string[];
   productIdsThatAreAlreadyAtCapacity: string[];

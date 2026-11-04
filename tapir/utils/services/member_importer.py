@@ -1,5 +1,9 @@
 import datetime
 
+from django.core.management.base import OutputWrapper
+from django.utils import timezone
+
+from tapir.accounts.models import TapirUser
 from tapir.accounts.services.email_normaliser import EmailNormaliser
 from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
 from tapir.associations.models import (
@@ -10,6 +14,7 @@ from tapir.associations.models import (
 )
 from tapir.bakery.models import PreferredBread, Bread
 from tapir.configuration.parameter import get_parameter_value
+from tapir.log.models import TextLogEntry
 from tapir.log.util import freeze_for_log
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
@@ -21,7 +26,7 @@ from tapir.utils.config import (
     MEMBER_IMPORT_STATUS_CREATED,
 )
 from tapir.utils.exceptions import TapirDataImportException
-from tapir.utils.models import MemberImportedLogEntry
+from tapir.utils.models import MemberImportedLogEntry, MemberImportUpdatedLogEntry
 from tapir.utils.services.data_import_utils import DataImportUtils
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import (
@@ -30,11 +35,18 @@ from tapir.wirgarten.models import (
     MemberPickupLocation,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.utils import get_now, get_today
 
 
 class MemberImporter:
     @classmethod
-    def import_member(cls, row: dict[str, str], update_existing: bool):
+    def import_member(
+        cls,
+        row: dict[str, str],
+        update_existing: bool,
+        dry_run: bool,
+        stdout: OutputWrapper,
+    ):
         if DataImportUtils.is_row_empty(row):
             return None
 
@@ -46,14 +58,18 @@ class MemberImporter:
                 return MEMBER_IMPORT_STATUS_SKIPPED
 
             try:
-                return cls.update_existing_member_if_necessary(member=member, row=row)
+                return cls.update_existing_member_if_necessary(
+                    member=member, row=row, dry_run=dry_run
+                )
             except Exception as e:
                 raise TapirDataImportException(
                     f"Error updating member {member_no}: {e}"
                 )
 
         try:
-            return cls.create_new_member(member_no=member_no, row=row)
+            return cls.create_new_member(
+                member_no=member_no, row=row, dry_run=dry_run, stdout=stdout
+            )
         except Exception as e:
             raise TapirDataImportException(f"Error creating member {member_no}: {e}")
 
@@ -69,10 +85,17 @@ class MemberImporter:
         return pickup_location
 
     @classmethod
-    def update_existing_member_if_necessary(cls, member: Member, row: dict[str, str]):
+    def update_existing_member_if_necessary(
+        cls, member: Member, row: dict[str, str], dry_run: bool
+    ):
+        member_before = freeze_for_log(member)
         member_attributes_updated = cls.update_member_attributes_and_save_member(
-            member=member, row=row
+            member=member, row=row, dry_run=dry_run
         )
+        if member_attributes_updated:
+            MemberImportUpdatedLogEntry().populate(
+                old_frozen=member_before, new_model=member, actor=None, user=member
+            ).save()
         pickup_location_updated = cls.update_member_pickup_location(
             member=member, row=row
         )
@@ -80,7 +103,7 @@ class MemberImporter:
 
         payment_rhythm_updated = cls.update_payment_rhythm_if_necessary(
             member=member,
-            reference_date=DataImportUtils.to_date(row["consent_sepa"]),
+            reference_date=cls.get_payment_rhythm_reference_date(member=member),
             rhythm_from_import=row.get("Zahlungsintervall", None),
         )
 
@@ -134,7 +157,7 @@ class MemberImporter:
 
     @classmethod
     def update_member_attributes_and_save_member(
-        cls, member: Member, row: dict[str, str]
+        cls, member: Member, row: dict[str, str], dry_run: bool
     ):
         member_updated = False
         email_before = member.email
@@ -150,15 +173,11 @@ class MemberImporter:
             "Telefon 2": "phone_number_landline",
             "IBAN": "iban",
             "Kontoinhaber": "account_owner",
-            "consent_sepa": "sepa_consent",
-            "privacy_consent": "privacy_consent",
             "Pseudonym": "pseudonym",
         }
 
         map_from_row_header_to_converter = {
             "Geburtstag/Gründungsdatum": DataImportUtils.to_date,
-            "consent_sepa": DataImportUtils.to_datetime,
-            "privacy_consent": DataImportUtils.to_datetime,
             "IBAN": lambda value: DataImportUtils.normalize_cell(value).replace(
                 " ", ""
             ),
@@ -176,6 +195,28 @@ class MemberImporter:
                 member_attribute,
                 converter(row.get(row_header)),
             ):
+                member_updated = True
+
+        target_consents = {
+            "sepa_consent": DataImportUtils.get_value_or_default(
+                row=row,
+                column="consent_sepa",
+                converter=DataImportUtils.to_datetime,
+                current_value=member.sepa_consent,
+                default=get_now(cache={}),
+                use_default=DataImportUtils.is_cell_filled(row=row, column="IBAN"),
+            ),
+            "privacy_consent": DataImportUtils.get_value_or_default(
+                row=row,
+                column="privacy_consent",
+                converter=DataImportUtils.to_datetime,
+                current_value=member.privacy_consent,
+                default=get_now(cache={}),
+                use_default=True,
+            ),
+        }
+        for member_attribute, target_consent in target_consents.items():
+            if DataImportUtils.update_if_diff(member, member_attribute, target_consent):
                 member_updated = True
 
         new_street = " ".join(
@@ -200,9 +241,10 @@ class MemberImporter:
 
         if email_before != member.email and member.keycloak_id:
             Member.objects.filter(id=member.id).update(email=member.email)
-            KeycloakUserManager.get_keycloak_client().update_user(
-                user_id=member.keycloak_id, payload={"email": member.email}
-            )
+            if not dry_run:
+                KeycloakUserManager.get_keycloak_client().update_user(
+                    user_id=member.keycloak_id, payload={"email": member.email}
+                )
 
         if member_updated:
             member.save()
@@ -253,22 +295,51 @@ class MemberImporter:
             MemberPickupLocation.objects.create(
                 member=member,
                 pickup_location=target_pickup_location,
-                valid_from=DataImportUtils.to_date(row.get("AO_gueltig_ab")),
+                valid_from=cls.get_pickup_location_valid_from(
+                    row=row, current_value=None
+                ),
             )
             return True
 
-        updated = DataImportUtils.update_if_diff(
-            member_pickup_location, "pickup_location", target_pickup_location
-        ) or DataImportUtils.update_if_diff(
-            member_pickup_location,
-            "valid_from",
-            DataImportUtils.to_date(row.get("AO_gueltig_ab")),
+        target_valid_from = cls.get_pickup_location_valid_from(
+            row=row,
+            current_value=(
+                member_pickup_location.valid_from
+                if member_pickup_location.pickup_location == target_pickup_location
+                else None
+            ),
         )
+        location_updated = DataImportUtils.update_if_diff(
+            member_pickup_location, "pickup_location", target_pickup_location
+        )
+        valid_from_updated = DataImportUtils.update_if_diff(
+            member_pickup_location, "valid_from", target_valid_from
+        )
+        updated = location_updated or valid_from_updated
 
         if updated:
             member_pickup_location.save()
 
         return updated
+
+    @classmethod
+    def get_pickup_location_valid_from(
+        cls, row: dict[str, str], current_value: datetime.date | None
+    ):
+        return DataImportUtils.get_value_or_default(
+            row=row,
+            column="AO_gueltig_ab",
+            converter=DataImportUtils.to_date,
+            current_value=current_value,
+            default=get_today(cache={}),
+            use_default=DataImportUtils.is_cell_filled(row=row, column="Abholort"),
+        )
+
+    @staticmethod
+    def get_payment_rhythm_reference_date(member: Member):
+        if member.sepa_consent is None:
+            return None
+        return timezone.localdate(member.sepa_consent)
 
     @classmethod
     def update_solidarity_contribution(cls, member: Member, row: dict[str, str]):
@@ -323,11 +394,17 @@ class MemberImporter:
         return updated
 
     @classmethod
-    def create_new_member(cls, member_no: int, row: dict[str, str]):
-        member = Member(
-            member_no=member_no,
+    def create_new_member(
+        cls,
+        member_no: int,
+        row: dict[str, str],
+        dry_run: bool,
+        stdout: OutputWrapper,
+    ):
+        member = cls.build_new_member(member_no=member_no, row=row, stdout=stdout)
+        cls.update_member_attributes_and_save_member(
+            member=member, row=row, dry_run=dry_run
         )
-        cls.update_member_attributes_and_save_member(member=member, row=row)
 
         pickup_location = cls.get_pickup_location_by_name(
             name=DataImportUtils.normalize_cell(row.get("Abholort"))
@@ -336,7 +413,9 @@ class MemberImporter:
             member_pickup_location = MemberPickupLocation(
                 member=member,
                 pickup_location=pickup_location,
-                valid_from=DataImportUtils.to_date(row.get("AO_gueltig_ab")),
+                valid_from=cls.get_pickup_location_valid_from(
+                    row=row, current_value=None
+                ),
             )
             member_pickup_location.save()
 
@@ -346,7 +425,7 @@ class MemberImporter:
 
         cls.update_payment_rhythm_if_necessary(
             member=member,
-            reference_date=DataImportUtils.to_date(row["consent_sepa"]),
+            reference_date=cls.get_payment_rhythm_reference_date(member=member),
             rhythm_from_import=row.get("Zahlungsintervall", None),
         )
 
@@ -357,6 +436,39 @@ class MemberImporter:
         MemberImportedLogEntry().populate(model=member, actor=None, user=member).save()
 
         return MEMBER_IMPORT_STATUS_CREATED
+
+    @classmethod
+    def build_new_member(
+        cls, member_no: int, row: dict[str, str], stdout: OutputWrapper
+    ):
+        # The TapirUser could already exist, typically if an admin user has been created
+        # using the create_admin command. In that case we want to reuse that account.
+
+        tapir_user_without_member = TapirUser.objects.filter(
+            email__iexact=cls.build_mail(row=row, member_no=member_no),
+            member__isnull=True,
+        ).first()
+        if tapir_user_without_member is None:
+            return Member(member_no=member_no)
+
+        # raw=True inserts only the Member row, the TapirUser row already exists.
+        Member(
+            tapiruser_ptr=tapir_user_without_member,
+            member_no=member_no,
+            created_at=get_now(cache={}),
+        ).save_base(raw=True)
+        member = Member.objects.get(id=tapir_user_without_member.id)
+
+        TextLogEntry().populate(
+            text="Beim Import wurde das bestehende Benutzerkonto mit dieser E-Mail-Adresse für das Mitglied übernommen",
+            user=member,
+            actor=None,
+        ).save()
+        stdout.write(
+            f"Member {member_no}: existing account {member.email} (ID {member.id}) is kept for this member"
+        )
+
+        return member
 
     @classmethod
     def create_association_membership_if_necessary(
@@ -450,7 +562,7 @@ class MemberImporter:
         membership.save()
         AssociationMembershipUpdatedLogEntry().populate(
             old_frozen=before_changes, new_model=membership, actor=None, user=member
-        )
+        ).save()
         return True
 
     @classmethod

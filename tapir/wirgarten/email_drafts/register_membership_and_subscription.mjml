@@ -47,6 +47,7 @@ Für Genossenschaften kommen dazu: <br />
 {{BestellWizard: Mitgliedschaft + Ernteanteile.Anzahl der gezeichneten Genossenschaftsanteile}} <br />
 {{BestellWizard: Mitgliedschaft + Ernteanteile.Wert Genossenschaftsanteil}} <br />
 {{BestellWizard: Mitgliedschaft + Ernteanteile.Gesamtwert der gezeichneten Genossenschaftsanteile}} <br />
+{{BestellWizard: Mitgliedschaft + Ernteanteile.Zahlungsweise der Genossenschaftsanteile}} <br />
 {{BestellWizard: Mitgliedschaft + Ernteanteile.Beitrittsdatum Geno/Verein}} <br />
 <br />
 Für Vereine kommen dazu: <br />

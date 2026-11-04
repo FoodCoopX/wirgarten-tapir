@@ -16,15 +16,11 @@ from tapir.wirgarten.models import (
     Product,
     ProductPrice,
     Subscription,
-    Member,
     PickupLocation,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.file_export import begin_csv_string
-from tapir.wirgarten.service.products import (
-    get_active_subscriptions,
-    get_product_price,
-)
+from tapir.wirgarten.service.products import get_product_price
 
 
 class PickListBuilder:
@@ -177,17 +173,13 @@ class PickListBuilder:
     def get_subscriptions_grouped_by_pickup_location_name(
         cls, delivery_date: datetime.date, cache: dict, product_type: ProductType
     ):
-        subscriptions = (
-            get_active_subscriptions(delivery_date, cache=cache)
-            .filter(product__type_id=product_type.id)
-            .select_related("member", "product__type")
-            .distinct()
-        )
         subscriptions_by_pickup_location_name = {}
 
-        for subscription in subscriptions:
+        for subscription in cls.get_active_subscriptions_of_product_type(
+            delivery_date=delivery_date, cache=cache, product_type=product_type
+        ):
             pickup_location = cls.get_member_pickup_location_for_pick_list(
-                member=subscription.member,
+                member_id=subscription.member_id,
                 reference_date=delivery_date,
                 cache=cache,
                 product_type_is_affected_by_jokers=product_type.is_affected_by_jokers,
@@ -205,16 +197,31 @@ class PickListBuilder:
         return subscriptions_by_pickup_location_name
 
     @classmethod
+    def get_active_subscriptions_of_product_type(
+        cls, delivery_date: datetime.date, cache: dict, product_type: ProductType
+    ) -> list[Subscription]:
+        return [
+            subscription
+            for subscription in TapirCache.get_subscriptions_by_product_type(
+                cache=cache
+            ).get(product_type, set())
+            if subscription.start_date <= delivery_date
+            and (
+                subscription.end_date is None or delivery_date <= subscription.end_date
+            )
+        ]
+
+    @classmethod
     def get_member_pickup_location_for_pick_list(
         cls,
-        member: Member,
+        member_id: str,
         reference_date: datetime.date,
         cache: dict,
         product_type_is_affected_by_jokers: bool,
     ) -> PickupLocation | None:
         if (
             DeliveryDonationManager.does_member_have_a_donation_in_week(
-                member=member, reference_date=reference_date, cache=cache
+                member_id=member_id, reference_date=reference_date, cache=cache
             )
             and product_type_is_affected_by_jokers
         ):
@@ -227,7 +234,7 @@ class PickListBuilder:
         else:
             pickup_location_id = (
                 MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
-                    member_id=member.id, reference_date=reference_date, cache=cache
+                    member_id=member_id, reference_date=reference_date, cache=cache
                 )
             )
         if pickup_location_id is None:

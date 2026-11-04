@@ -29,9 +29,13 @@ class MonthPaymentBuilderAssociationMembership:
         current_month: datetime.date,
         cache: dict,
         generated_payments: set[Payment],
+        member_id: str | None = None,
     ) -> list[Payment]:
-        active_memberships = cls.get_active_memberships(
-            cache=cache, first_of_month=current_month
+        active_memberships = MonthPaymentBuilderUtils.filter_contracts_by_member(
+            contracts=cls.get_active_memberships(
+                cache=cache, first_of_month=current_month
+            ),
+            member_id=member_id,
         )
 
         memberships_by_member = cls.group_memberships_by_member(active_memberships)

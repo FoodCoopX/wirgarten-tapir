@@ -12,6 +12,8 @@ export function buildSettings(
     productTypes: sortProductTypes(baseData.productTypes),
     associationMembershipTypes: baseData.associationMembershipTypes,
     priceOfAShare: baseData.priceOfAShare,
+    coopShareInstalmentsEnabled: baseData.coopShareInstalmentsEnabled,
+    coopShareInstalmentAmount: baseData.coopShareInstalmentAmount,
     allowInvestingMembership: baseData.allowInvestingMembership,
     associationsAllowInvestingMembership:
       baseData.associationsAllowInvestingMembership,
@@ -23,6 +25,7 @@ export function buildSettings(
     paymentRhythmChoices: baseData.paymentRhythmChoices,
     studentStatusAllowed: baseData.studentStatusAllowed,
     phoneNumberRequired: baseData.phoneNumberRequired,
+    pseudonymEnabled: baseData.pseudonymEnabled,
     introEnabled: baseData.introEnabled,
     productTypeIdsThatAreAlreadyAtCapacity:
       baseData.productTypeIdsThatAreAlreadyAtCapacity,

@@ -90,7 +90,6 @@ from tapir.utils.shortcuts import (
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
     Payment,
-    CoopShareTransaction,
     MandateReference,
     Member,
     PickupLocation,
@@ -160,12 +159,15 @@ class GetFutureMemberPaymentsApiView(APIView):
             member_id=member_id
         ).values_list("ref", flat=True)
         member_payments = set(
-            Payment.objects.filter(mandate_ref__ref__in=mandate_ref_ids).filter(
+            Payment.objects.filter(mandate_ref__ref__in=mandate_ref_ids)
+            .filter(
                 Q(
                     due_date__gte=get_today(cache=self.cache),
                 )
                 | Q(status=Payment.PaymentStatus.DUE)
             )
+            .select_related("coop_share_transaction")
+            .prefetch_related("coop_share_transaction__payments")
         )
         current_month = get_today(cache=self.cache)
         current_month = current_month.replace(day=1)
@@ -175,6 +177,7 @@ class GetFutureMemberPaymentsApiView(APIView):
                 reference_date=current_month,
                 cache=self.cache,
                 generated_payments=generated_payments,
+                member_id=member_id,
             )
             member_payments.update(
                 [
@@ -210,12 +213,17 @@ class GetFutureMemberPaymentsApiView(APIView):
             delivery_charge_pickup_location = None
             association_memberships = []
             delivery_dates = []
+            number_of_instalments = None
 
             match payment.type:
                 case payments_config.PAYMENT_TYPE_COOP_SHARES:
-                    coop_share_transactions = CoopShareTransaction.objects.filter(
-                        payment=payment
-                    )
+                    if payment.coop_share_transaction is not None:
+                        coop_share_transactions = [payment.coop_share_transaction]
+                        if payment.instalment_number is not None:
+                            # all() instead of count() to use the prefetched payments
+                            number_of_instalments = len(
+                                payment.coop_share_transaction.payments.all()
+                            )
                 case (
                     MonthPaymentBuilderSolidarityContributions.PAYMENT_TYPE_SOLIDARITY_CONTRIBUTION
                 ):
@@ -277,6 +285,7 @@ class GetFutureMemberPaymentsApiView(APIView):
                         key=lambda membership: membership.start_date,
                     ),
                     "delivery_dates": delivery_dates,
+                    "number_of_instalments": number_of_instalments,
                 }
             )
         return extended_payments
@@ -427,9 +436,10 @@ class GetPastMemberPaymentsApiView(APIView):
         ).values_list("ref", flat=True)
 
         member_payments = set(
-            Payment.objects.filter(mandate_ref__ref__in=mandate_ref_ids).filter(
-                due_date__lte=get_today(cache=self.cache)
-            )
+            Payment.objects.filter(mandate_ref__ref__in=mandate_ref_ids)
+            .filter(due_date__lte=get_today(cache=self.cache))
+            .select_related("coop_share_transaction")
+            .prefetch_related("coop_share_transaction__payments")
         )
 
         return member_payments
@@ -737,8 +747,8 @@ class PaymentIntendedUsePreviewContractsApiView(APIView):
             "previews_old": ["" for _ in payments],
             "previews_new": ["" for _ in payments],
             "error": "",
-            "tokens": sorted(IntendedUseTokens.COMMON_TOKENS)
-            + sorted(IntendedUseTokens.CONTRACT_TOKENS),
+            "tokens": IntendedUseTokens.COMMON_TOKENS
+            + IntendedUseTokens.CONTRACT_TOKENS,
             "payments": payments,
             "members": [payment.mandate_ref.member for payment in payments],
         }
@@ -950,8 +960,7 @@ class CreditIntendedUsePreviewJokerApiView(APIView):
             "previews_old": ["" for _ in members_with_joker],
             "previews_new": ["" for _ in members_with_joker],
             "error": "",
-            "tokens": sorted(IntendedUseTokens.COMMON_TOKENS)
-            + sorted(IntendedUseTokens.JOKER_TOKENS),
+            "tokens": IntendedUseTokens.COMMON_TOKENS + IntendedUseTokens.JOKER_TOKENS,
             "credits": member_credits,
             "members": list(members_with_joker),
         }
@@ -1065,21 +1074,26 @@ class PaymentIntendedUsePreviewCoopSharesApiView(APIView):
         parameters=[
             OpenApiParameter(name="pattern_old", type=str, required=True),
             OpenApiParameter(name="pattern_new", type=str, required=True),
+            OpenApiParameter(name="instalments", type=bool, required=False),
         ],
     )
     def get(self, request):
         pattern_old = request.query_params.get("pattern_old", "")
         pattern_new = request.query_params.get("pattern_new", "")
+        instalments = request.query_params.get("instalments") == "true"
         cache = {}
 
-        payments = self._get_random_payments(cache=cache)
+        payments = self._get_random_payments(instalments=instalments)
+
+        tokens = IntendedUseTokens.COMMON_TOKENS + IntendedUseTokens.COOP_SHARE_TOKENS
+        if instalments:
+            tokens = tokens + IntendedUseTokens.COOP_SHARE_INSTALMENT_TOKENS
 
         response_data = {
             "previews_old": ["" for _ in payments],
             "previews_new": ["" for _ in payments],
             "error": "",
-            "tokens": sorted(IntendedUseTokens.COMMON_TOKENS)
-            + sorted(IntendedUseTokens.COOP_SHARE_TOKENS),
+            "tokens": tokens,
             "payments": payments,
             "members": [payment.mandate_ref.member for payment in payments],
         }
@@ -1096,6 +1110,7 @@ class PaymentIntendedUsePreviewCoopSharesApiView(APIView):
                 response_data=response_data,
                 pattern_old=pattern_old,
                 pattern_new=pattern_new,
+                instalments=instalments,
                 cache=cache,
             )
         except Exception as error:
@@ -1108,24 +1123,33 @@ class PaymentIntendedUsePreviewCoopSharesApiView(APIView):
         return IntendedUsePatternExpander.expand_pattern_coop_shares_bought(
             pattern=pattern,
             member=payment.mandate_ref.member,
-            number_of_shares=round(
-                payment.amount
-                / get_parameter_value(ParameterKeys.COOP_SHARE_PRICE, cache=cache)
+            payment=payment,
+            number_of_shares=PaymentExportIntendedUseBuilder.get_number_of_coop_shares(
+                payment=payment, cache=cache
             ),
             cache=cache,
         )
 
     @classmethod
-    def _get_random_payments(cls, cache: dict):
+    def _get_random_payments(cls, instalments: bool):
         return list(
-            Payment.objects.filter(type=payments_config.PAYMENT_TYPE_COOP_SHARES)
-            .select_related("mandate_ref__member")
+            Payment.objects.filter(
+                type=payments_config.PAYMENT_TYPE_COOP_SHARES,
+                instalment_number__isnull=not instalments,
+            )
+            .select_related("mandate_ref__member", "coop_share_transaction")
+            .prefetch_related("coop_share_transaction__payments")
             .order_by("?")[:5]
         )
 
     @classmethod
     def _add_fake_data(
-        cls, response_data: dict, pattern_old: str, pattern_new: str, cache: dict
+        cls,
+        response_data: dict,
+        pattern_old: str,
+        pattern_new: str,
+        instalments: bool,
+        cache: dict,
     ):
         fake_members = [
             Member(first_name="John", last_name="Doe", member_no=14),
@@ -1134,14 +1158,21 @@ class PaymentIntendedUsePreviewCoopSharesApiView(APIView):
 
         token_value_overrides = {
             IntendedUseTokens.COOP_ENTRY_DATE: format_date(get_today(cache=cache)),
+            IntendedUseTokens.COOP_SHARE_VALID_AT: format_date(get_today(cache=cache)),
+            IntendedUseTokens.NUMBER_OF_INSTALMENTS: "5" if instalments else "",
         }
 
         for fake_member in fake_members:
             response_data["members"].insert(0, fake_member)
-            response_data["payments"].insert(
-                0,
-                Payment(mandate_ref=MandateReference(member=fake_member), amount=100),
+            fake_payment = Payment(
+                mandate_ref=MandateReference(
+                    ref=f"{fake_member.last_name}{fake_member.first_name}/A1B2C3".upper(),
+                    member=fake_member,
+                ),
+                amount=20 if instalments else 100,
+                instalment_number=2 if instalments else None,
             )
+            response_data["payments"].insert(0, fake_payment)
             number_of_shares = 1 if fake_member.first_name == "John" else 123
 
             response_data["previews_old"].insert(
@@ -1149,6 +1180,7 @@ class PaymentIntendedUsePreviewCoopSharesApiView(APIView):
                 IntendedUsePatternExpander.expand_pattern_coop_shares_bought(
                     pattern=pattern_old,
                     member=fake_member,
+                    payment=fake_payment,
                     number_of_shares=number_of_shares,
                     cache=cache,
                     token_value_overrides=token_value_overrides,
@@ -1159,6 +1191,7 @@ class PaymentIntendedUsePreviewCoopSharesApiView(APIView):
                 IntendedUsePatternExpander.expand_pattern_coop_shares_bought(
                     pattern=pattern_new,
                     member=fake_member,
+                    payment=fake_payment,
                     number_of_shares=number_of_shares,
                     cache=cache,
                     token_value_overrides=token_value_overrides,
@@ -1191,7 +1224,9 @@ class PaymentTransactionDetailsView(APIView):
         )
         cache = {}
 
-        payments = transaction.payment_set.select_related("mandate_ref__member")
+        payments = transaction.payment_set.select_related(
+            "mandate_ref__member", "coop_share_transaction"
+        ).prefetch_related("coop_share_transaction__payments")
 
         payments_by_mandate_ref = {}
         members_by_mandate_ref = {}

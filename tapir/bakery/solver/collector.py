@@ -62,12 +62,13 @@ def _solution_fingerprint(sol: dict) -> str:
     parts = []
     for sess in sol.get("stove_sessions", []):
         layer_parts = []
-        for layer_info in sess:
-            if layer_info is None:
+        for breads_on_layer in sess:
+            if not breads_on_layer:
                 layer_parts.append("_")
             else:
-                b_id, qty = layer_info
-                layer_parts.append(f"{b_id}:{qty}")
+                layer_parts.append(
+                    "+".join(f"{b_id}:{qty}" for b_id, qty in sorted(breads_on_layer))
+                )
         parts.append("|".join(layer_parts))
     stove_fp = "||".join(sorted(parts))
 

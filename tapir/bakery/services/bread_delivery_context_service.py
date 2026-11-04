@@ -63,9 +63,9 @@ class BreadDeliveryContextService:
 
     @classmethod
     def is_joker_taken(cls, delivery: BreadDelivery, cache: dict) -> bool:
-        """Requires the delivery to carry its subscription and member."""
+        """Requires the delivery to carry its subscription (select_related)."""
         return JokerManagementService.does_member_have_a_joker_in_week(
-            member=delivery.subscription.member,
+            member_id=delivery.subscription.member_id,
             reference_date=cls.get_reference_date(
                 delivery.year, delivery.delivery_week, cache=cache
             ),
