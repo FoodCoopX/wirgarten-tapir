@@ -122,8 +122,20 @@
                 {% endif %}
             </td>
             <td>{{ member.current_pickup_location_name }}{% pickup_location_warning member cache %}</td>
-            <td>{{ member.organisation_entry_date|format_date }}</td>
-            <td>{{ member.organisation_exit_date|format_date }}</td>
+            <td>
+                {% if member.organisation_entry_date %}
+                    {{ member.organisation_entry_date|format_date }}
+                {% else %}
+                    -
+                {% endif %}
+            </td>
+            <td>
+                {% if member.organisation_exit_date %}
+                    {{ member.organisation_exit_date|format_date }}
+                {% else %}
+                    -
+                {% endif %}
+            </td>
         </tr>
     {% endfor %}
 {% endblock %}
