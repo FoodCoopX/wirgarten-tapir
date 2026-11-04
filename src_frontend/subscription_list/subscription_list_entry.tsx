@@ -1,3 +1,4 @@
+import { installAdminContractPrototypeHelp } from "./admin_contract_prototype_help.tsx";
 import { createRoot } from "react-dom/client";
 import { getCsrfToken } from "../utils/getCsrfToken.ts";
 import SubscriptionChangeDatesButton from "./SubscriptionChangeDatesButton.tsx";
@@ -34,3 +35,5 @@ if (domNodeSubscriptionTrialPeriodButton) {
   const root = createRoot(domNodeSubscriptionTrialPeriodButton);
   root.render(<SubscriptionTrialPeriodButton csrfToken={getCsrfToken()} />);
 }
+
+installAdminContractPrototypeHelp();

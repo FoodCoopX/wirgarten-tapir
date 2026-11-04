@@ -1,0 +1,26 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'subscriptions/admin_contract_prototype.css' %}">
+<div class="modal fade" id="admin-contract-modal" tabindex="-1" aria-labelledby="admin-contract-title" aria-hidden="true" data-endpoint="{% url 'subscriptions:admin_contract_prototype_data' %}">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div><h4 class="modal-title" id="admin-contract-title">Vertrag hinzufügen oder ändern</h4><div class="text-muted small">Vertragsverwaltung für ein Mitglied</div></div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
+            </div>
+            <div class="ac-progress" aria-label="Fortschritt">
+                <span data-step="0">1 · Mitglied &amp; Vertrag</span><span data-step="1">2 · Vertragsdaten</span><span data-step="2">3 · Zusammenfassung</span>
+            </div>
+            <div class="modal-body p-4">
+                <div class="alert alert-light border small py-2">UI-Prototyp · Echte lokale Testdaten und Kapazitätsprüfung. Es werden keine Verträge gespeichert oder E-Mails versendet.</div>
+                <div id="ac-error" class="alert alert-danger" role="alert" hidden></div>
+                <div id="ac-content" aria-live="polite"></div>
+            </div>
+            <div class="modal-footer justify-content-between">
+                <button type="button" class="btn btn-outline-secondary" id="ac-back">Abbrechen</button>
+                <span class="text-muted small me-auto ms-3" id="ac-hint"></span>
+                <button type="button" class="btn btn-primary" id="ac-next" disabled>Weiter zu den Vertragsdaten</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="{% static 'subscriptions/admin_contract_prototype.js' %}" defer></script>
