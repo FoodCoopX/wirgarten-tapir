@@ -26,7 +26,9 @@ from tapir.utils.config import (
 from tapir.utils.exceptions import TapirDataImportException
 from tapir.utils.models import (
     CoopSharesImportedLogEntry,
+    CoopSharesImportUpdatedLogEntry,
     SubscriptionImportedLogEntry,
+    SubscriptionImportUpdatedLogEntry,
 )
 from tapir.utils.services.member_importer import MemberImporter
 from tapir.utils.services.share_importer import ShareImporter
@@ -182,11 +184,13 @@ class Command(BaseCommand):
                     if import_type == "shares":
                         TransferCoopSharesLogEntry.objects.all().delete()
                         CoopSharesImportedLogEntry.objects.all().delete()
+                        CoopSharesImportUpdatedLogEntry.objects.all().delete()
                         CoopShareTransaction.objects.all().delete()
 
                     if import_type == "subscriptions":
                         SubscriptionChangeLogEntry.objects.all().delete()
                         SubscriptionImportedLogEntry.objects.all().delete()
+                        SubscriptionImportUpdatedLogEntry.objects.all().delete()
                         Subscription.objects.all().delete()
                         PaymentTransaction.objects.exclude(
                             type=PAYMENT_TYPE_COOP_SHARES

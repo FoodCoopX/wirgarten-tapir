@@ -3,7 +3,7 @@ from __future__ import annotations
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from tapir.log.models import ModelLogEntry
+from tapir.log.models import ModelLogEntry, UpdateModelLogEntry
 
 # http://xml.coverpages.org/country3166.html
 COUNTRIES = (
@@ -315,3 +315,30 @@ class SubscriptionImportedLogEntry(ImportedLogEntry):
 
 class CoopSharesImportedLogEntry(ImportedLogEntry):
     title = "Genossenschaftsanteile importiert"
+
+
+class ImportUpdatedLogEntry(UpdateModelLogEntry):
+    template_name = "utils/log/import_updated_log_entry.html"
+    title = None
+    excluded_fields = ["updated_at"]
+
+    class Meta:
+        abstract = True
+
+    def get_context_data(self):
+        context = super().get_context_data()
+        context["title"] = self.title
+        return context
+
+
+class MemberImportUpdatedLogEntry(ImportUpdatedLogEntry):
+    title = "Mitglied durch Import aktualisiert"
+    excluded_fields = ["updated_at", "password"]
+
+
+class SubscriptionImportUpdatedLogEntry(ImportUpdatedLogEntry):
+    title = "Vertrag durch Import aktualisiert"
+
+
+class CoopSharesImportUpdatedLogEntry(ImportUpdatedLogEntry):
+    title = "Genossenschaftsanteile durch Import aktualisiert"

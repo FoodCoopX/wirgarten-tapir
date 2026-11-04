@@ -12,7 +12,11 @@ from tapir.utils.config import (
     MEMBER_IMPORT_STATUS_UPDATED,
 )
 from tapir.utils.exceptions import TapirDataImportException
-from tapir.utils.models import CoopSharesImportedLogEntry
+from tapir.log.util import freeze_for_log
+from tapir.utils.models import (
+    CoopSharesImportedLogEntry,
+    CoopSharesImportUpdatedLogEntry,
+)
 from tapir.utils.services.data_import_utils import DataImportUtils
 from tapir.wirgarten.models import Member, CoopShareTransaction
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -147,6 +151,7 @@ class ShareImporter:
         valid_date: datetime.date,
     ) -> str:
         is_updated = False
+        transaction_before = freeze_for_log(existing_transaction)
 
         if DataImportUtils.update_if_diff(
             existing_transaction, "quantity", number_of_shares
@@ -178,11 +183,18 @@ class ShareImporter:
 
         try:
             existing_transaction.save()
-            return MEMBER_IMPORT_STATUS_UPDATED
         except Exception as e:
             raise TapirDataImportException(
                 f"Error updating share transaction (member: {existing_transaction.member}): {e}"
             )
+
+        CoopSharesImportUpdatedLogEntry().populate(
+            old_frozen=transaction_before,
+            new_model=existing_transaction,
+            actor=None,
+            user=existing_transaction.member,
+        ).save()
+        return MEMBER_IMPORT_STATUS_UPDATED
 
     @classmethod
     def create_or_update_payment_if_necessary(cls, transaction: CoopShareTransaction):
