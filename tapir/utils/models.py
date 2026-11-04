@@ -292,5 +292,26 @@ def copy_payment_data(source, target):
         setattr(target, attribute, getattr(source, attribute))
 
 
-class MemberImportedLogEntry(ModelLogEntry):
-    template_name = "utils/log/member_imported_log_entry.html"
+class ImportedLogEntry(ModelLogEntry):
+    template_name = "utils/log/imported_log_entry.html"
+    title = None
+
+    class Meta:
+        abstract = True
+
+    def get_context_data(self):
+        context = super().get_context_data()
+        context["title"] = self.title
+        return context
+
+
+class MemberImportedLogEntry(ImportedLogEntry):
+    title = "Mitglied importiert"
+
+
+class SubscriptionImportedLogEntry(ImportedLogEntry):
+    title = "Vertrag importiert"
+
+
+class CoopSharesImportedLogEntry(ImportedLogEntry):
+    title = "Genossenschaftsanteile importiert"

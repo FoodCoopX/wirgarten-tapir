@@ -16,6 +16,7 @@ from tapir.utils.config import (
     MEMBER_IMPORT_STATUS_UPDATED,
 )
 from tapir.utils.exceptions import TapirDataImportException
+from tapir.utils.models import SubscriptionImportedLogEntry
 from tapir.utils.services.data_import_utils import DataImportUtils
 from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.models import Member, GrowingPeriod, Product, Subscription
@@ -139,6 +140,9 @@ class SubscriptionImporter:
             Subscription.objects.filter(id=subscription.id).update(
                 created_at=F("start_date")
             )
+            SubscriptionImportedLogEntry().populate(
+                model=subscription, actor=None, user=member
+            ).save()
             import_status = MEMBER_IMPORT_STATUS_CREATED
 
         cls.update_trial_period_for_solidarity_contributions(member, subscription)

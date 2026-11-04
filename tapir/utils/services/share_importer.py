@@ -12,6 +12,7 @@ from tapir.utils.config import (
     MEMBER_IMPORT_STATUS_UPDATED,
 )
 from tapir.utils.exceptions import TapirDataImportException
+from tapir.utils.models import CoopSharesImportedLogEntry
 from tapir.utils.services.data_import_utils import DataImportUtils
 from tapir.wirgarten.models import Member, CoopShareTransaction
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -93,6 +94,10 @@ class ShareImporter:
             member.save()
 
         cls.create_or_update_payment_if_necessary(transaction)
+
+        CoopSharesImportedLogEntry().populate(
+            model=transaction, actor=None, user=member
+        ).save()
 
         return MEMBER_IMPORT_STATUS_CREATED
 
