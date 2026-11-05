@@ -169,6 +169,9 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     ])
       .then(([baseData, minNumberOfShares]) => {
         const newSettings = buildSettings(baseData);
+        if (waitingListEntryDetails) {
+          newSettings.forceWaitingList = false;
+        }
         setSettings(newSettings);
         setSettingsLoaded(true);
         setSelectedProductTypes(
