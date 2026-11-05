@@ -9,6 +9,7 @@ from tapir.bakery.solver.groups import (
     group_label,
     group_max_pieces,
     group_min_pieces,
+    resolve_groups,
     stove_groups,
 )
 
@@ -21,6 +22,7 @@ def diagnose_infeasibility(
     stove_layers: int,
 ) -> list[SolverDiagnostic]:
     diagnostics: list[SolverDiagnostic] = []
+    available_breads = resolve_groups(available_breads)
 
     if not available_breads:
         diagnostics.append(
@@ -83,13 +85,19 @@ def diagnose_infeasibility(
 
     bread_map = {b.bread_id: b for b in valid_breads}
 
-    # A grouped bread's own min_pieces does not apply to it alone, and what it
-    # can reach is capped by the group's max_pieces, see C15.
+    # A grouped bread's min_pieces/max_pieces are its settings for the day;
+    # its group's limits come from group_min/max_pieces, see C15.
     groups = stove_groups(valid_breads)
     grouped_ids = {b.bread_id for members in groups.values() for b in members}
-    for members in groups.values():
-        for b in members:
-            bread_map[b.bread_id] = replace(b, max_pieces=group_max_pieces(members))
+    group_of = {b.bread_id: members for members in groups.values() for b in members}
+
+    def reach(bread: BreadInfo) -> int:
+        """An upper bound on how much of the bread can be baked."""
+        if bread.bread_id in group_of:
+            return _max_baked_in_group(
+                bread, group_of[bread.bread_id], max_sessions, stove_layers
+            )
+        return _max_baked(bread, max_sessions, stove_layers)
 
     for b in valid_breads:
         if b.min_pieces is not None and b.max_pieces is not None:
@@ -140,8 +148,8 @@ def diagnose_infeasibility(
                 )
             )
         elif (
-            len({b.min_pieces for b in members}) > 1
-            or len({b.max_pieces for b in members}) > 1
+            len({b.group_min_pieces for b in members}) > 1
+            or len({b.group_max_pieces for b in members}) > 1
         ):
             limits = [
                 f"Min. {group_min}" if group_min is not None else None,
@@ -161,10 +169,46 @@ def diagnose_infeasibility(
                 )
             )
 
-    group_of = {b.bread_id: members for members in groups.values() for b in members}
+        # The day's settings of the group's breads, against the group.
+        day_mins = sum(b.min_pieces or 0 for b in members)
+        if group_max is not None and day_mins > group_max:
+            diagnostics.append(
+                SolverDiagnostic(
+                    level="error",
+                    category="group_day_limits_conflict",
+                    bread_name=None,
+                    location_name=None,
+                    message=(
+                        f"Gruppe '{label}': die Tageseinstellungen verlangen "
+                        f"zusammen mindestens {day_mins} Stück, die Gruppe darf "
+                        f"aber höchstens {group_max} Stück backen."
+                    ),
+                )
+            )
+        if group_min and all(b.max_pieces is not None for b in members):
+            day_maxes = sum(b.max_pieces for b in members)
+            if day_maxes < group_min:
+                diagnostics.append(
+                    SolverDiagnostic(
+                        level="error",
+                        category="group_day_limits_conflict",
+                        bread_name=None,
+                        location_name=None,
+                        message=(
+                            f"Gruppe '{label}': die Tageseinstellungen erlauben "
+                            f"zusammen höchstens {day_maxes} Stück, die Gruppe "
+                            f"braucht aber mindestens {group_min} Stück."
+                        ),
+                    )
+                )
+
     for b in valid_breads:
-        # A grouped bread is held to its group's max_pieces.
-        max_pieces = bread_map[b.bread_id].max_pieces
+        # A grouped bread can take part of a shared layer, so only the group's
+        # maximum can keep it off every layer.
+        if b.bread_id in group_of:
+            max_pieces = group_max_pieces(group_of[b.bread_id])
+        else:
+            max_pieces = b.max_pieces
         if b.fixed_pieces is not None or max_pieces is None:
             continue
         smallest_layer = min(b.pieces_per_stove_layer)
@@ -234,7 +278,7 @@ def diagnose_infeasibility(
         b = bread_map.get(bread_id)
         if b is None:
             continue
-        max_baked = _max_baked(b, max_sessions, stove_layers)
+        max_baked = reach(b)
         remaining = b.min_remaining_pieces or 0
         max_deliverable = max(0, max_baked - remaining)
         if demand > max_deliverable:
@@ -311,9 +355,25 @@ def diagnose_infeasibility(
             )
 
     for b in valid_breads:
-        if b.fixed_pieces is not None or b.bread_id in grouped_ids:
+        if b.fixed_pieces is not None or not b.min_pieces:
             continue
-        if b.min_pieces is None or b.min_pieces == 0:
+        if b.bread_id in grouped_ids:
+            # A shared layer takes any count, so only the reach matters.
+            if b.min_pieces > reach(b):
+                diagnostics.append(
+                    SolverDiagnostic(
+                        level="error",
+                        category="min_not_achievable",
+                        bread_name=b.name,
+                        location_name=None,
+                        message=(
+                            f"Brot '{b.name}': Tageseinstellung Min. {b.min_pieces}, "
+                            f"aber in der Gruppe "
+                            f"'{group_label(group_of[b.bread_id])}' sind höchstens "
+                            f"{reach(b)} Stück erreichbar."
+                        ),
+                    )
+                )
             continue
         achievable = _get_achievable_quantities(b, max_sessions, stove_layers)
         if not achievable:
@@ -378,7 +438,13 @@ def diagnose_infeasibility(
             for b in valid_breads
             if b.fixed_pieces is None and b.bread_id not in grouped_ids
         )
-        + sum(group_min_pieces(members) or 0 for members in groups.values())
+        + sum(
+            max(
+                group_min_pieces(members) or 0,
+                sum(b.min_pieces or 0 for b in members),
+            )
+            for members in groups.values()
+        )
         + sum(b.fixed_pieces or 0 for b in valid_breads if b.fixed_pieces is not None)
     )
 
@@ -446,16 +512,12 @@ def diagnose_infeasibility(
     for members in units:
         max_baked = 0
         for b in members:
-            b = bread_map[b.bread_id]
-            bread_max_baked = _max_baked(b, max_sessions, stove_layers)
+            bread_max_baked = reach(b)
             max_baked += bread_max_baked
             if (
                 b.fixed_pieces is None
                 and not b.can_span_sessions
-                and _max_baked(
-                    replace(b, can_span_sessions=True), max_sessions, stove_layers
-                )
-                > bread_max_baked
+                and reach(replace(b, can_span_sessions=True)) > bread_max_baked
             ):
                 splitting_would_help = True
 
@@ -546,6 +608,27 @@ def _max_baked(bread: BreadInfo, max_sessions: int, stove_layers: int) -> int:
     return max(achievable, default=0)
 
 
+def _max_baked_in_group(
+    bread: BreadInfo,
+    members: list[BreadInfo],
+    max_sessions: int,
+    stove_layers: int,
+) -> int:
+    """
+    An upper bound for a grouped bread. On a shared layer it can take any part
+    of a count it allows, so its own layers, its setting for the day and the
+    group's maximum bound it, not the multiples of its counts.
+    """
+    reach = _max_baked(
+        replace(bread, max_pieces=group_max_pieces(members)),
+        max_sessions,
+        stove_layers,
+    )
+    if bread.max_pieces is not None:
+        reach = min(reach, bread.max_pieces)
+    return reach
+
+
 def _group_max_baked(
     members: list[BreadInfo], max_sessions: int, stove_layers: int
 ) -> int:
@@ -562,8 +645,7 @@ def _group_max_baked(
     if group_max is not None:
         reachable = {q for q in reachable if q <= group_max}
     by_bread = sum(
-        _max_baked(replace(b, max_pieces=group_max), max_sessions, stove_layers)
-        for b in members
+        _max_baked_in_group(b, members, max_sessions, stove_layers) for b in members
     )
     return min(max(reachable, default=0), by_bread)
 

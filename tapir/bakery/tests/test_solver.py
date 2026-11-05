@@ -56,6 +56,8 @@ def make_bread(
     min_remaining=0,
     fixed_pieces=None,
     group=None,
+    group_min=None,
+    group_max=None,
 ):
     if pieces_per_layer is _SENTINEL:
         pieces_per_layer = [10]
@@ -70,6 +72,8 @@ def make_bread(
         fixed_pieces=fixed_pieces,
         group_id=group,
         group_name=group,
+        group_min_pieces=group_min,
+        group_max_pieces=group_max,
     )
 
 
@@ -657,19 +661,22 @@ def layer_totals(plan):
 class TestBreadGroups:
     """
     Breads of one group come from one dough: they may share a stove layer, and
-    each one's min_pieces and max_pieces bound the group's total.
+    each one's own min/max ("Brot bearbeiten") bound the group's total, while
+    its settings for the day ("Tageseinstellungen") bound only itself.
     """
 
     @staticmethod
     def _dough(group="Teig", min_pieces=12, max_pieces=48, pieces=([12], [12])):
+        # min_pieces/max_pieces are the breads' own values, which bound the
+        # group; without a group they are each bread's own limits.
         return [
             make_bread(
                 bread_id=i + 1,
                 name=name,
                 pieces_per_layer=list(per_layer),
-                min_pieces=min_pieces,
-                max_pieces=max_pieces,
                 group=group,
+                group_min=min_pieces,
+                group_max=max_pieces,
             )
             for i, (name, per_layer) in enumerate(zip("AB", pieces))
         ]
@@ -745,7 +752,7 @@ class TestBreadGroups:
 
     def test_theLargestMinimumOfTheGroupCounts_andNotPerBread(self):
         breads = self._dough()
-        breads[0].min_pieces = 24
+        breads[0].group_min_pieces = 24
         locations = [make_location(total_deliveries=12)]
 
         result = self._solve(breads, locations)
@@ -755,7 +762,7 @@ class TestBreadGroups:
 
     def test_theSmallestMaximumOfTheGroupCounts(self):
         breads = self._dough(min_pieces=None)
-        breads[1].max_pieces = 24
+        breads[1].group_max_pieces = 24
         locations = [
             make_location(total_deliveries=30, fixed_demand={1: 20, 2: 10}),
         ]
@@ -907,12 +914,37 @@ class TestBreadGroups:
             self._dough(min_pieces=None) + [bread_c]
         ) == best_objective([bread_c])
 
+    def test_aDaySettingForOneBread_boundsOnlyThatBread(self):
+        # The product owner's example: the group keeps Min 24 / Max 48, and
+        # the day's settings ask for exactly 4 A. B fills up the group's
+        # minimum and shares a layer with A.
+        breads = self._dough(min_pieces=24)
+        breads[0].min_pieces = breads[0].max_pieces = 4
+        locations = [make_location(total_deliveries=24)]
+
+        result = self._solve(breads, locations)
+
+        assert_solver_success(result)
+        assert result.plan.bread_quantities == {1: 4, 2: 20}
+        assert sorted(layer_totals(result.plan)) == [12, 12]
+
+    def test_aBreadAloneInItsGroupThatDay_followsItsDaySetting(self):
+        # Without a second bread that day there is no group, so as for an
+        # ungrouped bread the day's setting replaces its own values.
+        bread = self._dough(min_pieces=24)[0]
+        bread.min_pieces = bread.max_pieces = 12
+        locations = [make_location(total_deliveries=12)]
+
+        result = self._solve([bread], locations)
+
+        assert_solver_success(result)
+        assert result.plan.bread_quantities == {1: 12}
+
     def test_aFixedPiecesBread_staysOutsideItsGroup(self):
         # B is baked in a fixed amount that day and uses no stove layer, so
         # A's maximum of 12 does not have to cover B's 20 as well.
         breads = self._dough(min_pieces=None, max_pieces=12)
         breads[1].fixed_pieces = 20
-        breads[1].max_pieces = None
         locations = [make_location(total_deliveries=32)]
 
         result = self._solve(breads, locations)
@@ -1534,6 +1566,52 @@ class TestCollectSolverInput(TapirIntegrationTest):
         self.assertEqual(bread_map["Dinkel hell"].group_name, "Dinkelteig")
         self.assertIsNone(bread_map["Roggen"].group_id)
         self.assertIsNone(bread_map["Roggen"].group_name)
+
+    def test_collectSolverInput_groupedBread_keepsItsDaySettingApartFromItsOwnValues(
+        self,
+    ):
+        from tapir.bakery.solver.django_integration import collect_solver_input
+
+        year = 2026
+        week = 42
+        group = BreadGroupFactory(name="Hell")
+        helles, saaten = (
+            BreadFactory(
+                name=name,
+                pieces_per_stove_layer=[12],
+                min_pieces=24,
+                max_pieces=48,
+                group=group,
+            )
+            for name in ("Helles", "Helles mit Saaten")
+        )
+        loc = create_pickup_location_with_opening_times([2], name="Markt")
+        for bread in (helles, saaten):
+            AvailableBreadsForDeliveryDayFactory(
+                year=year, delivery_week=week, delivery_day=2, bread=bread
+            )
+        BreadSpecificsPerDeliveryDayFactory(
+            year=year,
+            delivery_week=week,
+            delivery_day=2,
+            bread=helles,
+            min_pieces=4,
+            max_pieces=4,
+            min_remaining_pieces=None,
+            fixed_pieces=None,
+        )
+        BreadDeliveryFactory(
+            year=year, delivery_week=week, pickup_location=loc, bread=None
+        )
+
+        result = collect_solver_input(year=year, delivery_week=week, delivery_day=2)
+
+        limits = {
+            b.name: (b.min_pieces, b.max_pieces, b.group_min_pieces, b.group_max_pieces)
+            for b in result["available_breads"]
+        }
+        self.assertEqual(limits["Helles"], (4, 4, 24, 48))
+        self.assertEqual(limits["Helles mit Saaten"], (None, None, 24, 48))
 
     def test_collectSolverInput_breadsComeSortedByName(self):
         # The solver lists a shared layer's breads in this order. Ids and
@@ -2331,9 +2409,9 @@ class TestGroupDiagnostics:
                 bread_id=i + 1,
                 name=name,
                 pieces_per_layer=[12],
-                min_pieces=min_pieces,
-                max_pieces=max_pieces,
                 group=group,
+                group_min=min_pieces,
+                group_max=max_pieces,
             )
             for i, (name, (min_pieces, max_pieces)) in enumerate(zip("AB", limits))
         ]
@@ -2465,6 +2543,56 @@ class TestGroupDiagnostics:
 
         assert "min_max" not in [d.category for d in diagnostics]
 
+    def test_daySettingsAskingForMoreThanTheGroupMaximum_areReported(self):
+        breads = self._dough([(None, 48), (None, 48)])
+        breads[0].min_pieces = breads[1].min_pieces = 30
+
+        diagnostics = self._diagnose(breads, total_deliveries=48)
+
+        error = next(
+            d for d in diagnostics if d.category == "group_day_limits_conflict"
+        )
+        assert "mindestens 60 Stück" in error.message
+        assert "höchstens 48 Stück" in error.message
+
+    def test_daySettingsAllowingLessThanTheGroupMinimum_areReported(self):
+        breads = self._dough([(24, None), (24, None)])
+        breads[0].max_pieces = 4
+        breads[1].max_pieces = 10
+
+        diagnostics = self._diagnose(breads)
+
+        error = next(
+            d for d in diagnostics if d.category == "group_day_limits_conflict"
+        )
+        assert "höchstens 14 Stück" in error.message
+        assert "mindestens 24 Stück" in error.message
+
+    def test_aDayMinimumBeyondWhatTheBreadReachesInItsGroup_isReported(self):
+        # A does not span sessions: one session of 4 layers à 12 is its most.
+        breads = self._dough([(None, None), (None, None)])
+        breads[0].min_pieces = 60
+
+        diagnostics = self._diagnose(breads, total_deliveries=60)
+
+        error = next(
+            d
+            for d in diagnostics
+            if d.category == "min_not_achievable" and d.bread_name == "A"
+        )
+        assert "Tageseinstellung Min. 60" in error.message
+        assert "höchstens 48 Stück" in error.message
+
+    def test_exactlyFourOfOneBreadForTheDay_isNoProblemInItsGroup(self):
+        # The product owner's example: 4 is less than a layer of 12, but A can
+        # take part of a layer it shares with B.
+        breads = self._dough([(24, 48), (24, 48)])
+        breads[0].min_pieces = breads[0].max_pieces = 4
+
+        diagnostics = self._diagnose(breads, total_deliveries=24)
+
+        assert [d for d in diagnostics if d.level in ("error", "warning")] == []
+
     def test_groupMaximumBelowOneLayer_isWarnedForEachOfItsBreads(self):
         diagnostics = self._diagnose(self._dough([(None, 48), (None, 10)]))
 
@@ -2522,7 +2650,7 @@ class TestRealisticWeek:
                 can_span=i % 3 == 0,
                 min_remaining=2,
                 group=groups.get(i + 1),
-                max_pieces=self.GROUP_MAX_PIECES if i + 1 in groups else None,
+                group_max=self.GROUP_MAX_PIECES if i + 1 in groups else None,
             )
             for i, pieces_per_layer in enumerate(self.PIECES_PER_LAYER)
         ]

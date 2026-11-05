@@ -15,6 +15,11 @@ class BreadInfo:
     # tapir.bakery.models.BreadGroup. A fixed_pieces bread stays outside.
     group_id: str | None = None
     group_name: str | None = None
+    # For a grouped bread, min_pieces/max_pieces hold only its settings for
+    # the day and bound the bread alone; these hold its values from the bread
+    # itself, which bound the group's total. See resolve_groups.
+    group_min_pieces: int | None = None
+    group_max_pieces: int | None = None
 
 
 @dataclass

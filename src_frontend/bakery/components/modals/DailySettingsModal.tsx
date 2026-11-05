@@ -33,12 +33,12 @@ const FIELDS = [
   {
     key: "minPieces" as const,
     label: "Min. Stück",
-    help: "Mindestanzahl die gesamt gebacken werden soll",
+    help: "Mindestanzahl die gesamt gebacken werden soll (in einer Gruppe: nur dieses Brot)",
   },
   {
     key: "maxPieces" as const,
     label: "Max. Stück",
-    help: "Maximale Anzahl die gesamt gebacken werden kann",
+    help: "Maximale Anzahl die gesamt gebacken werden kann (in einer Gruppe: nur dieses Brot)",
   },
   {
     key: "minRemainingPieces" as const,
@@ -128,10 +128,49 @@ export const DailySettingsModal: React.FC<DailySettingsModalProps> = ({
       });
   };
 
+  // A group's limits on this day, from the own values of its breads that are
+  // available: the largest minimum and the smallest maximum, as the solver
+  // does. A bread alone in its group that day keeps its own values.
+  const getGroupLimits = (bread: BreadList) => {
+    if (!bread.group) return null;
+    const members = activeBreads.filter((b) => b.group === bread.group);
+    if (members.length < 2) return null;
+    const mins = members
+      .map((b) => b.minPieces)
+      .filter((v): v is number => v != null);
+    const maxes = members
+      .map((b) => b.maxPieces)
+      .filter((v): v is number => v != null);
+    return {
+      min: mins.length > 0 ? Math.max(...mins) : null,
+      max: maxes.length > 0 ? Math.min(...maxes) : null,
+    };
+  };
+
+  const describeGroupLimits = (limits: {
+    min: number | null;
+    max: number | null;
+  }): string => {
+    const parts = [
+      limits.min != null ? `Min. ${limits.min}` : null,
+      limits.max != null ? `Max. ${limits.max}` : null,
+    ].filter(Boolean);
+    return parts.length > 0
+      ? `zusammen ${parts.join(" · ")}`
+      : "ohne Min./Max.";
+  };
+
   const getPlaceholder = (
     bread: BreadList,
     field: keyof SpecificsData[string],
   ): string => {
+    // A grouped bread's own min/max bound its group, not the bread on this day.
+    if (
+      (field === "minPieces" || field === "maxPieces") &&
+      getGroupLimits(bread)
+    ) {
+      return "-";
+    }
     const fieldMap = {
       minPieces: bread.minPieces,
       maxPieces: bread.maxPieces,
@@ -330,7 +369,15 @@ export const DailySettingsModal: React.FC<DailySettingsModalProps> = ({
                                 }}
                               />
                             )}
-                            {bread.name}
+                            <div>
+                              {bread.name}
+                              {getGroupLimits(bread) && (
+                                <small className="text-muted d-block fw-normal">
+                                  Gruppe {bread.groupName}:{" "}
+                                  {describeGroupLimits(getGroupLimits(bread)!)}
+                                </small>
+                              )}
+                            </div>
                           </div>
                         </td>
                         {FIELDS.map((f) => (

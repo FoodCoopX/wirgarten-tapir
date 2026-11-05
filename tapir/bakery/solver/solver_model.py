@@ -4,6 +4,7 @@ from tapir.bakery.solver.dataclasses import BreadInfo, PickupLocationInfo
 from tapir.bakery.solver.groups import (
     group_max_pieces,
     group_min_pieces,
+    resolve_groups,
     stove_groups,
 )
 
@@ -22,6 +23,7 @@ def build_model(
     """
     model = cp_model.CpModel()
 
+    available_breads = resolve_groups(available_breads)
     bread_map = {b.bread_id: b for b in available_breads}
     bread_ids = list(bread_map.keys())
     total_deliveries = sum(loc.total_deliveries for loc in pickup_locations)
@@ -109,11 +111,9 @@ def build_model(
             lb = bread.fixed_pieces
             ub = bread.fixed_pieces
         else:
-            # C15 holds a grouped bread's minimum against its group's total.
-            if bread.min_pieces is None or b_id in grouped_bread_ids:
-                lb = 0
-            else:
-                lb = bread.min_pieces
+            # For a grouped bread these are its settings for the day; C15
+            # bounds the group's total.
+            lb = bread.min_pieces if bread.min_pieces is not None else 0
             ub = (
                 bread.max_pieces
                 if bread.max_pieces is not None
@@ -353,7 +353,8 @@ def build_model(
             if claims:
                 model.add(sum(claims) <= distribution_vars[b_id, loc.location_id])
 
-    # C15: Every grouped bread's min/max bounds its group's total
+    # C15: Every grouped bread's own min/max (not the day's) bounds its
+    #      group's total
     for members in groups.values():
         group_total = sum(total_baked[b.bread_id] for b in members)
         group_min = group_min_pieces(members)
