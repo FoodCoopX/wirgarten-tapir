@@ -56,6 +56,8 @@ def make_bread(
     min_remaining=0,
     fixed_pieces=None,
     group=None,
+    group_min=None,
+    group_max=None,
 ):
     if pieces_per_layer is _SENTINEL:
         pieces_per_layer = [10]
@@ -70,6 +72,8 @@ def make_bread(
         fixed_pieces=fixed_pieces,
         group_id=group,
         group_name=group,
+        group_min_pieces=group_min,
+        group_max_pieces=group_max,
     )
 
 
@@ -657,19 +661,22 @@ def layer_totals(plan):
 class TestBreadGroups:
     """
     Breads of one group come from one dough: they may share a stove layer, and
-    each one's min_pieces and max_pieces bound the group's total.
+    each one's own min/max ("Brot bearbeiten") bound the group's total, while
+    its settings for the day ("Tageseinstellungen") bound only itself.
     """
 
     @staticmethod
     def _dough(group="Teig", min_pieces=12, max_pieces=48, pieces=([12], [12])):
+        # min_pieces/max_pieces are the breads' own values, which bound the
+        # group; without a group they are each bread's own limits.
         return [
             make_bread(
                 bread_id=i + 1,
                 name=name,
                 pieces_per_layer=list(per_layer),
-                min_pieces=min_pieces,
-                max_pieces=max_pieces,
                 group=group,
+                group_min=min_pieces,
+                group_max=max_pieces,
             )
             for i, (name, per_layer) in enumerate(zip("AB", pieces))
         ]
@@ -745,7 +752,7 @@ class TestBreadGroups:
 
     def test_theLargestMinimumOfTheGroupCounts_andNotPerBread(self):
         breads = self._dough()
-        breads[0].min_pieces = 24
+        breads[0].group_min_pieces = 24
         locations = [make_location(total_deliveries=12)]
 
         result = self._solve(breads, locations)
@@ -755,7 +762,7 @@ class TestBreadGroups:
 
     def test_theSmallestMaximumOfTheGroupCounts(self):
         breads = self._dough(min_pieces=None)
-        breads[1].max_pieces = 24
+        breads[1].group_max_pieces = 24
         locations = [
             make_location(total_deliveries=30, fixed_demand={1: 20, 2: 10}),
         ]
@@ -900,25 +907,144 @@ class TestBreadGroups:
                 stove_layers=4,
                 max_solutions=1,
             )
-            # The model's objective is integral; CP-SAT reports it as a float.
+            # The plan's objective, as the first solve scores it.
             return round(output["solutions"][0]["objective"])
 
         assert best_objective(
             self._dough(min_pieces=None) + [bread_c]
         ) == best_objective([bread_c])
 
-    def test_aFixedPiecesBread_staysOutsideItsGroup(self):
-        # B is baked in a fixed amount that day and uses no stove layer, so
-        # A's maximum of 12 does not have to cover B's 20 as well.
-        breads = self._dough(min_pieces=None, max_pieces=12)
+    def test_aDaySettingForOneBread_boundsOnlyThatBread(self):
+        # The product owner's example: the group keeps Min 24 / Max 48, and
+        # the day's settings ask for exactly 4 A. B fills up the group's
+        # minimum and shares a layer with A.
+        breads = self._dough(min_pieces=24)
+        breads[0].min_pieces = breads[0].max_pieces = 4
+        locations = [make_location(total_deliveries=24)]
+
+        result = self._solve(breads, locations)
+
+        assert_solver_success(result)
+        assert result.plan.bread_quantities == {1: 4, 2: 20}
+        assert sorted(layer_totals(result.plan)) == [12, 12]
+
+    def test_aBreadAloneInItsGroupThatDay_followsItsDaySetting(self):
+        # Without a second bread that day there is no group, so as for an
+        # ungrouped bread the day's setting replaces its own values.
+        bread = self._dough(min_pieces=24)[0]
+        bread.min_pieces = bread.max_pieces = 12
+        locations = [make_location(total_deliveries=12)]
+
+        result = self._solve([bread], locations)
+
+        assert_solver_success(result)
+        assert result.plan.bread_quantities == {1: 12}
+
+    def test_aFixedAmount_countsTowardItsGroup_andSharesALayer(self):
+        # Exactly 4 A as "Fixe Stück": A goes into the oven with its group,
+        # and B fills up the group's minimum of 24.
+        breads = self._dough(min_pieces=24)
+        breads[0].fixed_pieces = 4
+        locations = [make_location(total_deliveries=24)]
+
+        result = self._solve(breads, locations)
+
+        assert_solver_success(result)
+        assert result.plan.bread_quantities == {1: 4, 2: 20}
+        assert sorted(layer_totals(result.plan)) == [12, 12]
+        assert any(
+            b_id == 1
+            for session in result.plan.stove_sessions
+            for layer in session
+            for b_id, _ in layer
+        )
+
+    @staticmethod
+    def _fixed_a_next_to_b(group_max):
+        # A fits 12 per layer and B only 10, so no layer can hold both.
+        return [
+            make_bread(
+                bread_id=1,
+                name="A",
+                pieces_per_layer=[12],
+                fixed_pieces=5,
+                group="Teig",
+                group_max=group_max,
+            ),
+            make_bread(
+                bread_id=2,
+                name="B",
+                pieces_per_layer=[10],
+                group="Teig",
+                group_max=group_max,
+            ),
+        ]
+
+    def test_aFixedAmountThatCannotShareALayer_staysOutsideTheOven_butCounts(self):
+        # A's 5 are baked outside the oven as before; with them, the group's
+        # maximum of 15 leaves room for exactly one layer of B.
+        breads = self._fixed_a_next_to_b(group_max=15)
+
+        result = self._solve(breads, [make_location(total_deliveries=15)])
+
+        assert_solver_success(result)
+        assert result.plan.bread_quantities == {1: 5, 2: 10}
+        assert result.plan.stove_sessions == [[[(2, 10)], [], [], []]]
+
+    def test_aFixedAmountOutsideTheOven_isPartOfTheGroupMaximum(self):
+        # With a maximum of 14, A's 5 leave no room for B's layer of 10.
+        breads = self._fixed_a_next_to_b(group_max=14)
+
+        result = self._solve(breads, [make_location(total_deliveries=15)])
+
+        assert_solver_failed(result)
+        assert "deliveries_exceed_production" in [
+            d.category for d in result.diagnostics
+        ]
+
+    def test_whenEveryBreadOfAGroupIsFixed_theGroupsLimitsStillApply(self):
+        # Fixed amounts count toward the group: 4 + 6 cannot reach its
+        # minimum of 24, which the diagnostics say once and plainly.
+        breads = self._dough(min_pieces=24)
+        breads[0].fixed_pieces = 4
+        breads[1].fixed_pieces = 6
+
+        result = self._solve(breads, [make_location(total_deliveries=10)])
+
+        assert_solver_failed(result)
+        errors = [d.category for d in result.diagnostics if d.level == "error"]
+        assert "group_day_limits_conflict" in errors
+        assert "min_not_achievable" not in errors
+
+    def test_aFixedAmountAloneInItsGroup_staysOutsideTheOven(self):
+        # Without a second bread of the group that day, the fixed amount is
+        # handled as for an ungrouped bread: it occupies no stove layer.
+        bread = self._dough(min_pieces=24)[0]
+        bread.fixed_pieces = 20
+        locations = [make_location(total_deliveries=20)]
+
+        result = self._solve([bread], locations)
+
+        assert_solver_success(result)
+        assert result.plan.bread_quantities == {1: 20}
+        assert result.plan.stove_sessions == []
+
+    def test_aFixedAmountWithoutCountsPerLayer_staysOutsideTheOven(self):
+        breads = self._dough(min_pieces=None)
         breads[1].fixed_pieces = 20
-        breads[1].max_pieces = None
+        breads[1].pieces_per_stove_layer = []
         locations = [make_location(total_deliveries=32)]
 
         result = self._solve(breads, locations)
 
         assert_solver_success(result)
-        assert result.plan.bread_quantities == {1: 12, 2: 20}
+        assert result.plan.bread_quantities[2] == 20
+        assert all(
+            b_id != 2
+            for session in result.plan.stove_sessions
+            for layer in session
+            for b_id, _ in layer
+        )
 
 
 class TestSolutionFingerprint:
@@ -1534,6 +1660,52 @@ class TestCollectSolverInput(TapirIntegrationTest):
         self.assertEqual(bread_map["Dinkel hell"].group_name, "Dinkelteig")
         self.assertIsNone(bread_map["Roggen"].group_id)
         self.assertIsNone(bread_map["Roggen"].group_name)
+
+    def test_collectSolverInput_groupedBread_keepsItsDaySettingApartFromItsOwnValues(
+        self,
+    ):
+        from tapir.bakery.solver.django_integration import collect_solver_input
+
+        year = 2026
+        week = 42
+        group = BreadGroupFactory(name="Hell")
+        helles, saaten = (
+            BreadFactory(
+                name=name,
+                pieces_per_stove_layer=[12],
+                min_pieces=24,
+                max_pieces=48,
+                group=group,
+            )
+            for name in ("Helles", "Helles mit Saaten")
+        )
+        loc = create_pickup_location_with_opening_times([2], name="Markt")
+        for bread in (helles, saaten):
+            AvailableBreadsForDeliveryDayFactory(
+                year=year, delivery_week=week, delivery_day=2, bread=bread
+            )
+        BreadSpecificsPerDeliveryDayFactory(
+            year=year,
+            delivery_week=week,
+            delivery_day=2,
+            bread=helles,
+            min_pieces=4,
+            max_pieces=4,
+            min_remaining_pieces=None,
+            fixed_pieces=None,
+        )
+        BreadDeliveryFactory(
+            year=year, delivery_week=week, pickup_location=loc, bread=None
+        )
+
+        result = collect_solver_input(year=year, delivery_week=week, delivery_day=2)
+
+        limits = {
+            b.name: (b.min_pieces, b.max_pieces, b.group_min_pieces, b.group_max_pieces)
+            for b in result["available_breads"]
+        }
+        self.assertEqual(limits["Helles"], (4, 4, 24, 48))
+        self.assertEqual(limits["Helles mit Saaten"], (None, None, 24, 48))
 
     def test_collectSolverInput_breadsComeSortedByName(self):
         # The solver lists a shared layer's breads in this order. Ids and
@@ -2331,9 +2503,9 @@ class TestGroupDiagnostics:
                 bread_id=i + 1,
                 name=name,
                 pieces_per_layer=[12],
-                min_pieces=min_pieces,
-                max_pieces=max_pieces,
                 group=group,
+                group_min=min_pieces,
+                group_max=max_pieces,
             )
             for i, (name, (min_pieces, max_pieces)) in enumerate(zip("AB", limits))
         ]
@@ -2465,12 +2637,118 @@ class TestGroupDiagnostics:
 
         assert "min_max" not in [d.category for d in diagnostics]
 
+    def test_daySettingsAskingForMoreThanTheGroupMaximum_areReported(self):
+        breads = self._dough([(None, 48), (None, 48)])
+        breads[0].min_pieces = breads[1].min_pieces = 30
+
+        diagnostics = self._diagnose(breads, total_deliveries=48)
+
+        error = next(
+            d for d in diagnostics if d.category == "group_day_limits_conflict"
+        )
+        assert "mindestens 60 Stück" in error.message
+        assert "höchstens 48 Stück" in error.message
+
+    def test_aFixedAmountAboveTheGroupMaximum_isReported(self):
+        breads = self._dough([(None, 48), (None, 48)])
+        breads[0].fixed_pieces = 60
+
+        diagnostics = self._diagnose(breads, total_deliveries=60)
+
+        error = next(
+            d for d in diagnostics if d.category == "group_day_limits_conflict"
+        )
+        assert "mindestens 60 Stück" in error.message
+
+    def test_daySettingsAllowingLessThanTheGroupMinimum_areReported(self):
+        breads = self._dough([(24, None), (24, None)])
+        breads[0].max_pieces = 4
+        breads[1].max_pieces = 10
+
+        diagnostics = self._diagnose(breads)
+
+        error = next(
+            d for d in diagnostics if d.category == "group_day_limits_conflict"
+        )
+        assert "höchstens 14 Stück" in error.message
+        assert "mindestens 24 Stück" in error.message
+
+    def test_aDayMinimumBeyondWhatTheBreadReachesInItsGroup_isReported(self):
+        # A does not span sessions: one session of 4 layers à 12 is its most.
+        breads = self._dough([(None, None), (None, None)])
+        breads[0].min_pieces = 60
+
+        diagnostics = self._diagnose(breads, total_deliveries=60)
+
+        error = next(
+            d
+            for d in diagnostics
+            if d.category == "min_not_achievable" and d.bread_name == "A"
+        )
+        assert "Tageseinstellung Min. 60" in error.message
+        assert "höchstens 48 Stück" in error.message
+
+    def test_aDayAmountBelowOneLayer_isReportedWhenTheBreadCannotShare(self):
+        # A fits 12 per layer and B only 10: no layer can hold both, so A's
+        # 4 for the day cannot be baked.
+        breads = [
+            make_bread(
+                bread_id=1,
+                name="A",
+                pieces_per_layer=[12],
+                min_pieces=4,
+                max_pieces=4,
+                group="Teig",
+            ),
+            make_bread(bread_id=2, name="B", pieces_per_layer=[10], group="Teig"),
+        ]
+
+        diagnostics = self._diagnose(breads, total_deliveries=14)
+
+        error = next(
+            d
+            for d in diagnostics
+            if d.category == "min_not_achievable" and d.bread_name == "A"
+        )
+        assert "teilt mit keinem anderen Brot der Gruppe" in error.message
+        assert "max_below_one_layer" in [
+            d.category for d in diagnostics if d.bread_name == "A"
+        ]
+
+    def test_dayAmountsThatCannotFillASharedLayer_areReported(self):
+        # 5 fixed A and at most 3 B never make a layer of 12.
+        breads = self._dough([(None, None), (None, None)])
+        breads[0].fixed_pieces = 5
+        breads[1].max_pieces = 3
+
+        diagnostics = self._diagnose(breads, total_deliveries=8)
+
+        error = next(
+            d
+            for d in diagnostics
+            if d.category == "min_not_achievable" and d.bread_name is None
+        )
+        assert "mindestens 5 Stück nach den Tageseinstellungen" in error.message
+        assert "höchstens 0 Stück erreichbar" in error.message
+
+    def test_exactlyFourOfOneBreadForTheDay_isNoProblemInItsGroup(self):
+        # The product owner's example: 4 is less than a layer of 12, but A can
+        # take part of a layer it shares with B.
+        breads = self._dough([(24, 48), (24, 48)])
+        breads[0].min_pieces = breads[0].max_pieces = 4
+
+        diagnostics = self._diagnose(breads, total_deliveries=24)
+
+        assert [d for d in diagnostics if d.level in ("error", "warning")] == []
+
     def test_groupMaximumBelowOneLayer_isWarnedForEachOfItsBreads(self):
         diagnostics = self._diagnose(self._dough([(None, 48), (None, 10)]))
 
         warnings = [d for d in diagnostics if d.category == "max_below_one_layer"]
         assert sorted(d.bread_name for d in warnings) == ["A", "B"]
-        assert all("Gruppe 'Teig' darf höchstens 10" in d.message for d in warnings)
+        assert all(
+            "Gruppe 'Teig' darf im Ofen höchstens 10" in d.message for d in warnings
+        )
 
     def test_directChoicesAboveTheGroupMaximum_explainTheInfeasibleSolve(self):
         breads = self._dough([(None, 48), (None, 48)]) + [
@@ -2488,6 +2766,85 @@ class TestGroupDiagnostics:
         assert "fixed_demand_exceeds_production" in [
             d.category for d in result.diagnostics
         ]
+
+
+class TestEvenSpread:
+    """
+    Among plans that are otherwise equally good, the second solve picks the
+    one that shares each station's loaves out most evenly.
+    """
+
+    @staticmethod
+    def _breads():
+        return [
+            make_bread(bread_id=1, name="A", pieces_per_layer=[12], min_pieces=12),
+            make_bread(bread_id=2, name="B", pieces_per_layer=[12], min_pieces=12),
+        ]
+
+    def _solve(self, locations, member_preferences=None):
+        breads = self._breads()
+        result = solve_bread_planning(
+            breads,
+            locations,
+            make_capacities(breads, locations),
+            max_sessions=5,
+            stove_layers=4,
+            member_preferences=member_preferences,
+        )
+        assert_solver_success(result)
+        return result.plan
+
+    @staticmethod
+    def _two_stations():
+        return [
+            make_location(location_id=i, name=f"S{i}", total_deliveries=12)
+            for i in (1, 2)
+        ]
+
+    def test_twoBreadsAtTwoStations_areSplitEvenly(self):
+        # Variety alone is just as happy with 11 + 1 at each station.
+        plan = self._solve(self._two_stations())
+
+        assert plan.distribution == {(1, 1): 6, (2, 1): 6, (1, 2): 6, (2, 2): 6}
+
+    def test_anEvenSpread_neverCostsAMemberTheirFavourite(self):
+        # 10 members at S1 want A: they all get it, and only the rest of the
+        # loaves are evened out.
+        preferences = [
+            {"member_id": m, "location_id": 1, "preferred_bread_ids": [1]}
+            for m in range(10)
+        ]
+
+        plan = self._solve(self._two_stations(), member_preferences=preferences)
+
+        assert plan.distribution == {(1, 1): 10, (2, 1): 2, (1, 2): 2, (2, 2): 10}
+
+    def test_withoutTimeLeftForTheSpread_theFirstPlanIsReturned(self):
+        with patch("tapir.bakery.solver.solve.SPREAD_TIME_LIMIT_SECONDS", 0):
+            plan = self._solve(self._two_stations())
+
+        assert plan.bread_quantities == {1: 12, 2: 12}
+        assert sum(plan.distribution.values()) == 24
+
+    def test_theSpreadKeepsThePlansObjective(self):
+        breads = self._breads()
+        locations = self._two_stations()
+
+        def best_objective(spread_seconds):
+            with patch(
+                "tapir.bakery.solver.solve.SPREAD_TIME_LIMIT_SECONDS", spread_seconds
+            ):
+                output = solve_bread_planning_all(
+                    breads,
+                    locations,
+                    make_capacities(breads, locations),
+                    max_sessions=5,
+                    stove_layers=4,
+                    max_solutions=1,
+                )
+            return output["solutions"][0]["objective"]
+
+        assert best_objective(5) == best_objective(0)
 
 
 class TestRealisticWeek:
@@ -2522,7 +2879,7 @@ class TestRealisticWeek:
                 can_span=i % 3 == 0,
                 min_remaining=2,
                 group=groups.get(i + 1),
-                max_pieces=self.GROUP_MAX_PIECES if i + 1 in groups else None,
+                group_max=self.GROUP_MAX_PIECES if i + 1 in groups else None,
             )
             for i, pieces_per_layer in enumerate(self.PIECES_PER_LAYER)
         ]
