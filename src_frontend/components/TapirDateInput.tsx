@@ -1,6 +1,6 @@
+import dayjs from "dayjs";
 import React, { useEffect, useState } from "react";
 import { Form } from "react-bootstrap";
-import dayjs from "dayjs";
 
 interface TapirDateInputProps {
   date: Date;
@@ -20,7 +20,9 @@ const TapirDateInput: React.FC<TapirDateInputProps> = ({
   useEffect(() => {
     const date = dayjs(intervalValue);
     if (date.isValid()) {
-      setDate(date.toDate());
+      // We must specify UTC otherwise the server will convert
+      // local time to UTC and create the share one day too early.
+      setDate(new Date(Date.UTC(date.year(), date.month(), date.date())));
     }
   }, [intervalValue]);
 

@@ -237,7 +237,6 @@ class ParameterKeys:
     BESTELLWIZARD_STEP6C_CHECKBOX_STATUTE = (
         f"{PREFIX}.bestellwizard.step6c.checkbox_statute"
     )
-    BESTELLWIZARD_STEP6C_TEXT_STATUTE = f"{PREFIX}.bestellwizard.step6c.text_statute"
     BESTELLWIZARD_STEP6C_CHECKBOX_COMMITMENT = (
         f"{PREFIX}.bestellwizard.step6c.checkbox_commitment"
     )

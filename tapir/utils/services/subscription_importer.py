@@ -16,6 +16,11 @@ from tapir.utils.config import (
     MEMBER_IMPORT_STATUS_UPDATED,
 )
 from tapir.utils.exceptions import TapirDataImportException
+from tapir.log.util import freeze_for_log
+from tapir.utils.models import (
+    SubscriptionImportedLogEntry,
+    SubscriptionImportUpdatedLogEntry,
+)
 from tapir.utils.services.data_import_utils import DataImportUtils
 from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.models import Member, GrowingPeriod, Product, Subscription
@@ -139,6 +144,9 @@ class SubscriptionImporter:
             Subscription.objects.filter(id=subscription.id).update(
                 created_at=F("start_date")
             )
+            SubscriptionImportedLogEntry().populate(
+                model=subscription, actor=None, user=member
+            ).save()
             import_status = MEMBER_IMPORT_STATUS_CREATED
 
         cls.update_trial_period_for_solidarity_contributions(member, subscription)
@@ -159,6 +167,7 @@ class SubscriptionImporter:
         price_override: float | None,
     ) -> str:
         is_updated = False
+        subscription_before = freeze_for_log(existing_subscription)
 
         map_from_attribute_to_value = {
             "quantity": quantity,
@@ -186,9 +195,16 @@ class SubscriptionImporter:
 
         try:
             existing_subscription.save()
-            return MEMBER_IMPORT_STATUS_UPDATED
         except Exception as e:
             raise TapirDataImportException(f"Error updating subscription: {e}")
+
+        SubscriptionImportUpdatedLogEntry().populate(
+            old_frozen=subscription_before,
+            new_model=existing_subscription,
+            actor=None,
+            user=existing_subscription.member,
+        ).save()
+        return MEMBER_IMPORT_STATUS_UPDATED
 
     @staticmethod
     def get_member_by_number_or_email(member_no: int, email: str):

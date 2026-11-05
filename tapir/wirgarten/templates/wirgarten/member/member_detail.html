@@ -187,8 +187,8 @@
                    target="_blank"><span class="material-icons" aria-hidden="true">phone</span>{{ admin_telephone }}</a>
               {% endif %}
               <a class="card-text text-reset text-decoration-none d-flex align-items-center gap-2 text-break"
-                 href="mailto:{% get_parameter_value_tag 'wirgarten.site.admin_email' cache %}"
-                 target="_blank"><span class="material-icons" aria-hidden="true">mail</span>{% get_parameter_value_tag 'wirgarten.site.admin_email' cache %}</a>
+                 href="mailto:{% get_parameter_value_tag 'wirgarten.site.email' cache %}"
+                 target="_blank"><span class="material-icons" aria-hidden="true">mail</span>{% get_parameter_value_tag 'wirgarten.site.email' cache %}</a>
             </div>
             <img src="{% get_parameter_value_tag 'wirgarten.site.admin_image' cache %}"
                  alt="{% get_parameter_value_tag 'wirgarten.site.admin_name' cache %}"

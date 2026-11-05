@@ -237,7 +237,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
                 id: uuidv4(),
                 variant: "danger",
                 message:
-                  "Es gibt schon einen Wartelisteneintrag für dich. Wenn du ihn ändern willst, wende dich bitte an den Kontakt oben rechts.",
+                  "Es gibt schon einen Wartelisteneintrag für dich. Wenn du ihn ändern willst, wende dich bitte an die Verwaltung.",
                 title: "Wartelisteneintrag nicht erzeugt",
               },
               setToastDatas,
