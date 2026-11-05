@@ -940,17 +940,54 @@ class TestBreadGroups:
         assert_solver_success(result)
         assert result.plan.bread_quantities == {1: 12}
 
-    def test_aFixedPiecesBread_staysOutsideItsGroup(self):
-        # B is baked in a fixed amount that day and uses no stove layer, so
-        # A's maximum of 12 does not have to cover B's 20 as well.
-        breads = self._dough(min_pieces=None, max_pieces=12)
+    def test_aFixedAmount_countsTowardItsGroup_andSharesALayer(self):
+        # Exactly 4 A as "Fixe Stück": A goes into the oven with its group,
+        # and B fills up the group's minimum of 24.
+        breads = self._dough(min_pieces=24)
+        breads[0].fixed_pieces = 4
+        locations = [make_location(total_deliveries=24)]
+
+        result = self._solve(breads, locations)
+
+        assert_solver_success(result)
+        assert result.plan.bread_quantities == {1: 4, 2: 20}
+        assert sorted(layer_totals(result.plan)) == [12, 12]
+        assert any(
+            b_id == 1
+            for session in result.plan.stove_sessions
+            for layer in session
+            for b_id, _ in layer
+        )
+
+    def test_aFixedAmountAloneInItsGroup_staysOutsideTheOven(self):
+        # Without a second bread of the group that day, the fixed amount is
+        # handled as for an ungrouped bread: it occupies no stove layer.
+        bread = self._dough(min_pieces=24)[0]
+        bread.fixed_pieces = 20
+        locations = [make_location(total_deliveries=20)]
+
+        result = self._solve([bread], locations)
+
+        assert_solver_success(result)
+        assert result.plan.bread_quantities == {1: 20}
+        assert result.plan.stove_sessions == []
+
+    def test_aFixedAmountWithoutCountsPerLayer_staysOutsideTheOven(self):
+        breads = self._dough(min_pieces=None)
         breads[1].fixed_pieces = 20
+        breads[1].pieces_per_stove_layer = []
         locations = [make_location(total_deliveries=32)]
 
         result = self._solve(breads, locations)
 
         assert_solver_success(result)
-        assert result.plan.bread_quantities == {1: 12, 2: 20}
+        assert result.plan.bread_quantities[2] == 20
+        assert all(
+            b_id != 2
+            for session in result.plan.stove_sessions
+            for layer in session
+            for b_id, _ in layer
+        )
 
 
 class TestSolutionFingerprint:
@@ -2554,6 +2591,17 @@ class TestGroupDiagnostics:
         )
         assert "mindestens 60 Stück" in error.message
         assert "höchstens 48 Stück" in error.message
+
+    def test_aFixedAmountAboveTheGroupMaximum_isReported(self):
+        breads = self._dough([(None, 48), (None, 48)])
+        breads[0].fixed_pieces = 60
+
+        diagnostics = self._diagnose(breads, total_deliveries=60)
+
+        error = next(
+            d for d in diagnostics if d.category == "group_day_limits_conflict"
+        )
+        assert "mindestens 60 Stück" in error.message
 
     def test_daySettingsAllowingLessThanTheGroupMinimum_areReported(self):
         breads = self._dough([(24, None), (24, None)])

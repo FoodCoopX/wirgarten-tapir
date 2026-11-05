@@ -48,7 +48,7 @@ const FIELDS = [
   {
     key: "fixedPieces" as const,
     label: "Fixe Stück",
-    help: "exakte Anzahl für diesen Tag (wird im Backplan direkt so übernommen)",
+    help: "exakte Anzahl für diesen Tag (wird im Backplan direkt so übernommen; in einer Gruppe zählt sie zur Gruppe und wird mit ihr im Ofen geplant)",
   },
 ];
 

@@ -1,3 +1,4 @@
+from collections import Counter
 from dataclasses import replace
 
 from tapir.bakery.solver.dataclasses import BreadInfo
@@ -22,11 +23,38 @@ def stove_groups(breads: list[BreadInfo]) -> dict[str, list[BreadInfo]]:
 
 def resolve_groups(breads: list[BreadInfo]) -> list[BreadInfo]:
     """
-    Turns every bread that is not in a stove group on this day into an
+    A grouped bread with a fixed amount for the day counts toward its group
+    when another bread of the group is there: it goes into the oven with
+    exactly that amount, so it can share a layer.
+
+    Then every bread that is not in a stove group on this day becomes an
     ungrouped one. Its group would only contain itself, so as for any ungrouped
     bread its settings for the day replace its own values. A fixed_pieces
     bread keeps no min/max: the fixed amount overrides them.
     """
+    # Breads that can go into the oven, fixed amount or not.
+    group_sizes = Counter(
+        b.group_id
+        for b in breads
+        if b.group_id is not None and b.pieces_per_stove_layer
+    )
+    breads = [
+        (
+            replace(
+                bread,
+                fixed_pieces=None,
+                min_pieces=bread.fixed_pieces,
+                max_pieces=bread.fixed_pieces,
+            )
+            if bread.fixed_pieces is not None
+            and bread.group_id is not None
+            and group_sizes[bread.group_id] > 1
+            # Without a count per layer it cannot go into the oven.
+            and bread.pieces_per_stove_layer
+            else bread
+        )
+        for bread in breads
+    ]
     grouped_ids = {
         b.bread_id for members in stove_groups(breads).values() for b in members
     }
