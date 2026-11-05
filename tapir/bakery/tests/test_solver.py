@@ -2666,6 +2666,55 @@ class TestGroupDiagnostics:
         ]
 
 
+class TestEvenSpread:
+    """
+    Among plans that are otherwise equally good, the second solve picks the
+    one that shares each station's loaves out most evenly.
+    """
+
+    @staticmethod
+    def _solve(locations, member_preferences=None):
+        breads = [
+            make_bread(bread_id=1, name="A", pieces_per_layer=[12], min_pieces=12),
+            make_bread(bread_id=2, name="B", pieces_per_layer=[12], min_pieces=12),
+        ]
+        result = solve_bread_planning(
+            breads,
+            locations,
+            make_capacities(breads, locations),
+            max_sessions=5,
+            stove_layers=4,
+            member_preferences=member_preferences,
+        )
+        assert_solver_success(result)
+        return result.plan
+
+    @staticmethod
+    def _two_stations():
+        return [
+            make_location(location_id=i, name=f"S{i}", total_deliveries=12)
+            for i in (1, 2)
+        ]
+
+    def test_twoBreadsAtTwoStations_areSplitEvenly(self):
+        # Variety alone is just as happy with 11 + 1 at each station.
+        plan = self._solve(self._two_stations())
+
+        assert plan.distribution == {(1, 1): 6, (2, 1): 6, (1, 2): 6, (2, 2): 6}
+
+    def test_anEvenSpread_neverCostsAMemberTheirFavourite(self):
+        # 10 members at S1 want A: they all get it, and only the rest of the
+        # loaves are evened out.
+        preferences = [
+            {"member_id": m, "location_id": 1, "preferred_bread_ids": [1]}
+            for m in range(10)
+        ]
+
+        plan = self._solve(self._two_stations(), member_preferences=preferences)
+
+        assert plan.distribution == {(1, 1): 10, (2, 1): 2, (1, 2): 2, (2, 2): 10}
+
+
 class TestRealisticWeek:
     """
     A mid-sized week: 8 breads, 10 stations, 300 members with one to three

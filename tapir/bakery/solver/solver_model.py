@@ -375,6 +375,10 @@ def build_model(
     # stations: a group's layer is shared to save waste or to give members
     # their favourite, but variety alone only pays for it when the extra bread
     # reaches more than 5 stations, so the bakers don't get single-loaf splits.
+    #
+    # The spread is not part of it: _run_solver minimises it in a second solve
+    # that keeps this objective at its best value, so it only chooses among
+    # otherwise equal plans.
 
     SESSIONS_W = 10_000_000
     SPANNING_W = 1_000_000
@@ -405,8 +409,22 @@ def build_model(
         for sess in range(max_sessions)
         for lay in range(stove_layers)
     )
+    # The spread: every station's count of every bread, squared. With a
+    # station's total fixed it is smallest when its loaves are shared out
+    # evenly, so middle counts win over 15 of one bread and 1 of the rest.
+    # count² is the line through (k, k²) and (k + 1, (k + 1)²) for every k:
+    # minimised, the square sits on the highest of them, which is count²
+    # exactly at whole counts, and the LP relaxation stays tight.
+    squares = []
+    for (b_id, loc_id), count in distribution_vars.items():
+        max_count = capacities.get((b_id, loc_id), 0)
+        square = model.new_int_var(0, max_count * max_count, f"sq_{b_id}_{loc_id}")
+        for k in range(max_count):
+            model.add(square >= (2 * k + 1) * count - k * (k + 1))
+        squares.append(square)
+    total_spread = sum(squares)
 
-    model.maximize(
+    main_objective = (
         -SESSIONS_W * total_sessions
         - SPANNING_W * total_spanning
         + PREFERENCE_W * total_members_satisfied
@@ -414,6 +432,7 @@ def build_model(
         + VARIETY_W * total_variety
         - SHARING_W * total_sharing
     )
+    model.maximize(main_objective)
 
     vars_dict = {
         "bread_map": bread_map,
@@ -433,6 +452,8 @@ def build_model(
         "member_satisfied": member_satisfied,
         "valid_member_prefs": valid_member_prefs,
         "total_member_prefs": len(valid_member_prefs),
+        "main_objective": main_objective,
+        "spread": total_spread,
     }
     return model, vars_dict
 
