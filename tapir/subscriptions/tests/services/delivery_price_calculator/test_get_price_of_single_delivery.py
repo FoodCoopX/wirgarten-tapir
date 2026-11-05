@@ -5,6 +5,8 @@ from unittest.mock import patch, Mock
 from tapir.subscriptions.services.delivery_price_calculator import (
     DeliveryPriceCalculator,
 )
+from tapir.wirgarten.constants import WEEKLY
+from tapir.wirgarten.tests.factories import SubscriptionFactory
 from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
@@ -92,6 +94,53 @@ class TestGetPriceOfSingleDelivery(TapirUnitTest):
         # 10 * 3 * 12 / 52 = 6.92...
         self.assertEqual(Decimal("6.92"), result.quantize(Decimal("0.01")))
 
+    @patch(
+        "tapir.subscriptions.services.delivery_price_calculator.get_product_price",
+        autospec=True,
+    )
+    def test_getPriceOfSingleDelivery_subscriptionHasPriceOverrideOfZero_returnsZero(
+        self, mock_get_product_price: Mock
+    ):
+        # Regression test for support ticket GBK#238
+        # https://support.foodcoopx.de/conversation/238
+        subscription = SubscriptionFactory.build(
+            price_override=Decimal(0),
+            quantity=1,
+            product__type__delivery_cycle=WEEKLY[0],
+        )
+
+        result = DeliveryPriceCalculator.get_price_of_single_delivery_for_subscription(
+            subscription=subscription,
+            at_date=datetime.date(year=2021, month=5, day=7),
+            cache={},
+        )
+
+        self.assertEqual(Decimal(0), result)
+        mock_get_product_price.assert_not_called()
+
+    @patch(
+        "tapir.subscriptions.services.delivery_price_calculator.get_product_price",
+        autospec=True,
+    )
+    def test_getPriceOfSingleDelivery_subscriptionHasPriceOverride_returnsPriceBasedOnOverrideWithoutQuantity(
+        self, mock_get_product_price: Mock
+    ):
+        subscription = SubscriptionFactory.build(
+            price_override=Decimal(30),
+            quantity=3,
+            product__type__delivery_cycle=WEEKLY[0],
+        )
+
+        result = DeliveryPriceCalculator.get_price_of_single_delivery_for_subscription(
+            subscription=subscription,
+            at_date=datetime.date(year=2021, month=5, day=7),  # 2021 has 52 weeks
+            cache={},
+        )
+
+        # 30 * 12 / 52 = 6.92...
+        self.assertEqual(Decimal("6.92"), result.quantize(Decimal("0.01")))
+        mock_get_product_price.assert_not_called()
+
     @classmethod
     def setup_mocks(cls, mock_get_product_price: Mock):
         price_object = Mock()
@@ -105,6 +154,7 @@ class TestGetPriceOfSingleDelivery(TapirUnitTest):
         subscription.period = growing_period
         subscription.product.type.delivery_cycle = "weekly"
         subscription.quantity = 1
+        subscription.price_override = None
 
         return subscription, product
 
