@@ -723,3 +723,255 @@ class TestAssociationDepositService(TapirIntegrationTest):
         self.assertEqual(exit_date, deposit.cancellation_date)
         self.assertEqual(Decimal("200"), deposit.agreed_amount)
         self.assertEqual(2, deposit.revision)
+
+    def test_increase_cannot_be_collected_before_future_deposit_start(self):
+        start = self.today + datetime.timedelta(days=90)
+        deposit = self.apply(start_date=start)
+        initial = deposit.payments.get()
+        self.apply("increase", "250")
+        increase = deposit.payments.exclude(pk=initial.pk).get()
+        self.assertEqual(Decimal("50"), increase.amount)
+        self.assertGreaterEqual(increase.due_date, start)
+        self.assertEqual(initial.due_date, increase.due_date)
+        self.assertEqual([], DepositPaymentExporter.export(self.today, False, {}))
+        self.assertFalse(deposit.payments.exclude(transaction=None).exists())
+
+    def mock_valid_export_xml(self):
+        for name, kwargs in [
+            ("validate_single_payment", {}),
+            ("build_xml_string", {"return_value": b"<xml/>"}),
+        ]:
+            mock = patch(
+                "tapir.payments.services.pain_008_xml_string_generator.Pain008XmlStringGenerator."
+                + name,
+                **kwargs,
+            )
+            mock.start()
+            self.addCleanup(mock.stop)
+
+    def test_imported_due_date_is_not_collected_early(self):
+        from tapir.utils.services.association_deposit_importer import (
+            AssociationDepositImporter,
+        )
+        from tapir.wirgarten.parameter_keys import ParameterKeys
+
+        self._set_parameter(ParameterKeys.PAYMENT_DUE_DAY, 5)
+        month = self.today.replace(day=1)
+        due = month.replace(day=20)
+        AssociationDepositImporter.import_opening_balance(
+            {
+                "Buchungs-ID": "unpaid-plan",
+                "Mitgliedsnummer": str(self.member.member_no),
+                "Status": "vereinbart",
+                "Betrag": "0",
+                "Datum": "",
+                "Gesamtbetrag": "200",
+                "Offene Raten": f"{due}:200",
+                "Vereinbarung": "Einzug frühestens am 20. vereinbart",
+            },
+            {},
+        )
+        deposit = AssociationDeposit.objects.get(member=self.member)
+        self.mock_valid_export_xml()
+        with patch(
+            "tapir.associations.services.deposit_payment_exporter.get_today",
+            return_value=month,
+        ):
+            self.assertEqual([], DepositPaymentExporter.export(month, False, {}))
+            payment = deposit.payments.get()
+            self.assertIsNone(payment.transaction_id)
+            self.assertEqual(due, payment.due_date)
+            self.assertEqual([], DepositPaymentExporter.export(due, False, {}))
+        payment.refresh_from_db()
+        self.assertIsNotNone(payment.transaction_id)
+        self.assertGreaterEqual(payment.due_date, due)
+        payment_state = list(deposit.payments.values())
+        DepositPaymentExporter.export(due, False, {})
+        self.assertEqual(payment_state, list(deposit.payments.values()))
+
+    def test_export_invalidates_stale_external_receipt_and_bumps_revision_once(self):
+        deposit = self.apply(instalments=4)
+        deposit.payments.update(due_date=self.today)
+        self.mock_valid_export_xml()
+        self.client.force_login(self.admin)
+        url = reverse(
+            "associations:member_deposit", kwargs={"member_id": self.member.pk}
+        )
+        old_revision = self.client.get(url).json()["revision"]
+        DepositPaymentExporter.export(self.today, False, {})
+        deposit.refresh_from_db()
+        self.assertEqual(old_revision + 1, deposit.revision)
+        response = self.client.post(
+            url,
+            {
+                "action": "receipt",
+                "request_id": str(uuid4()),
+                "amount": "50",
+                "date": str(self.today),
+                "note": "Extern bezahlt",
+                "expected_revision": old_revision,
+            },
+            content_type="application/json",
+        )
+        self.assertEqual(400, response.status_code)
+        self.assertIn("inzwischen geändert", str(response.json()))
+        self.assertFalse(deposit.bookings.exists())
+        DepositPaymentExporter.export(self.today, False, {})
+        deposit.refresh_from_db()
+        self.assertEqual(old_revision + 1, deposit.revision)
+
+    def test_receipt_retry_after_refresh_keeps_original_operation(self):
+        deposit = self.apply()
+        self.client.force_login(self.admin)
+        url = reverse(
+            "associations:member_deposit", kwargs={"member_id": self.member.pk}
+        )
+        data = {
+            "action": "receipt",
+            "request_id": str(uuid4()),
+            "amount": "50",
+            "date": str(self.today),
+            "note": "Beleg 123",
+            "expected_revision": deposit.revision,
+        }
+        self.assertEqual(
+            200,
+            self.client.post(url, data, content_type="application/json").status_code,
+        )
+        data["expected_revision"] = self.client.get(url).json()["revision"]
+        self.assertEqual(
+            200,
+            self.client.post(url, data, content_type="application/json").status_code,
+        )
+        self.assertEqual(1, deposit.bookings.count())
+        self.assertEqual(Decimal("50"), Deposits.balances(deposit, {})["balance"])
+        self.assertEqual(Decimal("150"), deposit.payments.get().amount)
+
+    def test_deposit_export_details_do_not_aggregate_contract_dates(self):
+        deposit = self.apply(instalments=2)
+        deposit.payments.update(due_date=self.today)
+        self.mock_valid_export_xml()
+        DepositPaymentExporter.export(self.today, False, {})
+        exported = deposit.payments.first().transaction
+        self.client.force_login(self.admin)
+        response = self.client.get(
+            reverse("payments:payment_transaction_details"),
+            {"transaction_id": exported.pk},
+        )
+        self.assertEqual(200, response.status_code, response.content)
+        details = response.json()
+        mandate = deposit.payments.first().mandate_ref.ref
+        self.assertEqual(
+            2, len(details["payments_by_mandate_ref"][mandate]["payments"])
+        )
+        self.assertIn("Vereinseinlage", details["intended_use_by_mandate_ref"][mandate])
+        self.assertIn("Rate 1", details["intended_use_by_mandate_ref"][mandate])
+        self.assertIn("Rate 2", details["intended_use_by_mandate_ref"][mandate])
+
+    def assert_rebuild_preserves_deposit(self, command=False):
+        from django.core.management import call_command
+        from tapir.payments.services.subscription_payments_rebuilder import (
+            SubscriptionPaymentsRebuilder,
+        )
+        from tapir.wirgarten.parameter_keys import ParameterKeys
+
+        deposit = self.apply(instalments=4)
+        deposit.payments.update(due_date=self.today - datetime.timedelta(days=60))
+        self.mock_valid_export_xml()
+        # Keep an exported instalment alongside outstanding instalments.
+        self.mark_paid(deposit.payments.first())
+        exported = deposit.payments.exclude(transaction=None).get().transaction
+        from tapir.payments.config import PAYMENT_TYPE_ASSOCIATION_DEPOSIT
+
+        exported.type = PAYMENT_TYPE_ASSOCIATION_DEPOSIT
+        exported.save()
+        before = list(deposit.payments.order_by("pk").values())
+        start = (self.today - datetime.timedelta(days=65)).replace(day=1)
+        self._set_parameter(ParameterKeys.PAYMENT_START_DATE, start)
+        with patch(
+            "tapir.associations.services.deposit_payment_exporter.DepositPaymentExporter.export",
+            wraps=DepositPaymentExporter.export,
+        ) as export:
+            if command:
+                call_command("rebuild_payment_history", no_confirm=True)
+            else:
+                SubscriptionPaymentsRebuilder.rebuild_subscription_payments(start, {})
+            export.assert_not_called()
+        self.assertEqual(before, list(deposit.payments.order_by("pk").values()))
+        deposit.refresh_from_db()
+        self.assertEqual(1, deposit.revision)
+
+    def test_subscription_rebuild_preserves_paid_and_open_deposits(self):
+        self.assert_rebuild_preserves_deposit()
+
+    def test_history_rebuild_preserves_paid_and_open_deposits(self):
+        self.assert_rebuild_preserves_deposit(command=True)
+
+    def test_deposit_failure_rolls_back_contract_exports_without_sending_files(self):
+        from django.core import mail
+        from tapir.payments.services.payment_export_builder import PaymentExportBuilder
+        from tapir.wirgarten.models import ExportedFile, PaymentTransaction
+        from tapir.wirgarten.tests.factories import PaymentFactory
+
+        deposit = self.apply()
+        deposit.payments.update(due_date=self.today)
+        contract_payment = PaymentFactory(
+            due_date=self.today,
+            transaction=None,
+            subscription_payment_range_start=self.today.replace(day=1),
+            subscription_payment_range_end=self.today,
+        )
+        self.mock_valid_export_xml()
+        with self.captureOnCommitCallbacks(execute=True), patch(
+            "tapir.associations.services.deposit_payment_exporter.export_file",
+            side_effect=RuntimeError("Einlagendatei konnte nicht gespeichert werden"),
+        ), self.assertRaises(RuntimeError):
+            PaymentExportBuilder.export_all_unexported_payments(self.today, True, {})
+        self.assertFalse(mail.outbox)
+        self.assertFalse(ExportedFile.objects.exists())
+        self.assertFalse(PaymentTransaction.objects.exists())
+        contract_payment.refresh_from_db()
+        self.assertIsNone(contract_payment.transaction_id)
+        self.assertIsNone(deposit.payments.get().transaction_id)
+        with self.captureOnCommitCallbacks(execute=True):
+            PaymentExportBuilder.export_all_unexported_payments(self.today, True, {})
+        self.assertEqual(2, len(mail.outbox))
+        self.assertTrue(all(message.attachments for message in mail.outbox))
+
+    def assert_failed_export_notifies(self, global_error=False):
+        from django.core import mail
+        from tapir.wirgarten.models import ExportedFile, PaymentTransaction
+
+        deposit = self.apply()
+        deposit.payments.update(due_date=self.today)
+        self.mock_valid_export_xml()
+        target = "build_xml_string" if global_error else "validate_single_payment"
+        error = (
+            Pain008XmlGlobalException("Gläubigerkonfiguration ungültig")
+            if global_error
+            else Pain008XmlSinglePaymentException("IBAN ungültig")
+        )
+        with patch(
+            "tapir.payments.services.pain_008_xml_string_generator.Pain008XmlStringGenerator."
+            + target,
+            side_effect=error,
+        ):
+            with self.captureOnCommitCallbacks(execute=True):
+                errors = DepositPaymentExporter.export(self.today, True, {})
+                self.assertFalse(mail.outbox)
+            self.assertEqual([error.message], errors)
+        self.assertEqual(1, len(mail.outbox))
+        self.assertIn("Fehler", mail.outbox[0].subject)
+        self.assertIn(error.message, mail.outbox[0].body)
+        self.assertFalse(mail.outbox[0].attachments)
+        self.assertFalse(ExportedFile.objects.exists())
+        self.assertFalse(PaymentTransaction.objects.exists())
+        self.assertIsNone(deposit.payments.get().transaction_id)
+        deposit.refresh_from_db()
+        self.assertEqual(1, deposit.revision)
+
+    def test_all_invalid_deposits_notify_without_marking_paid(self):
+        self.assert_failed_export_notifies()
+
+    def test_global_export_error_notifies_without_marking_paid(self):
+        self.assert_failed_export_notifies(global_error=True)

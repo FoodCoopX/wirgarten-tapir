@@ -1,14 +1,16 @@
 from django.db import transaction
+from django.db.models import F
+from django.utils.html import format_html_join
 
 from tapir.associations.models import AssociationDeposit
 from tapir.coop.services.coop_share_purchase_handler import CoopSharePurchaseHandler
 from tapir.payments.config import PAYMENT_TYPE_ASSOCIATION_DEPOSIT
+from tapir.payments.services.pain_008_xml_file_creator import Pain008XmlFileCreator
 from tapir.payments.services.pain_008_xml_string_generator import (
     Pain008XmlStringGenerator,
     Pain008XmlSinglePaymentException,
     Pain008XmlGlobalException,
 )
-from tapir.utils.shortcuts import get_last_day_of_month
 from tapir.wirgarten.models import Payment, PaymentTransaction, ExportedFile
 from tapir.wirgarten.service.file_export import export_file, send_exported_file
 from tapir.wirgarten.utils import get_today
@@ -22,11 +24,14 @@ class DepositPaymentExporter:
     def export(cls, reference_date, send_mail, cache):
         from tapir.payments.services.payment_export_builder import PaymentExportBuilder
 
+        collection_date = CoopSharePurchaseHandler.get_payment_due_date(
+            max(reference_date, get_today(cache)), cache
+        )
         pending = Payment.objects.filter(
             type=PAYMENT_TYPE_ASSOCIATION_DEPOSIT,
             transaction=None,
             status=Payment.PaymentStatus.DUE,
-            due_date__lte=get_last_day_of_month(reference_date),
+            due_date__lte=collection_date,
         )
         locked_deposits = list(
             AssociationDeposit.objects.select_for_update()
@@ -40,9 +45,7 @@ class DepositPaymentExporter:
         )
         if not payments:
             return []
-        collection_date = CoopSharePurchaseHandler.get_payment_due_date(
-            max(reference_date, get_today(cache)), cache
-        )
+        name = f"Vereinseinlagen-Einzahlungen {reference_date:%Y-%m}"
         valid = []
         errors = []
         try:
@@ -55,14 +58,16 @@ class DepositPaymentExporter:
                 except Pain008XmlSinglePaymentException as error:
                     errors.append(error.message)
             if not valid:
+                cls.notify_errors(errors, name, send_mail, cache)
                 return errors
             xml = Pain008XmlStringGenerator.build_xml_string(
                 valid, cache, collection_date
             )
         except Pain008XmlGlobalException as error:
-            return errors + [error.message]
+            errors.append(error.message)
+            cls.notify_errors(errors, name, send_mail, cache)
+            return errors
 
-        name = f"Vereinseinlagen-Einzahlungen {reference_date:%Y-%m}"
         csv = PaymentExportBuilder.build_csv_string(valid, False, cache)
         csv_file = export_file(
             filename=name,
@@ -89,6 +94,9 @@ class DepositPaymentExporter:
             status=Payment.PaymentStatus.PAID,
             due_date=collection_date,
         )
+        AssociationDeposit.objects.filter(
+            pk__in={p.association_deposit_id for p in valid}
+        ).update(revision=F("revision") + 1)
         if send_mail:
             for file, key in [
                 (csv_file, ParameterKeys.PAYMENT_SEND_CSV_FILE_PER_MAIL),
@@ -100,3 +108,15 @@ class DepositPaymentExporter:
                         robust=True,
                     )
         return errors
+
+    @staticmethod
+    def notify_errors(errors, name, send_mail, cache: dict):
+        if not send_mail:
+            return
+        reason = format_html_join("", "<p>{}</p>", ((error,) for error in errors))
+        transaction.on_commit(
+            lambda: Pain008XmlFileCreator.send_error_mail_or_raise_exception(
+                reason=reason, file_name=name, cache=cache, send_mail=True
+            ),
+            robust=True,
+        )

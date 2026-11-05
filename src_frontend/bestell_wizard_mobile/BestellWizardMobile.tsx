@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Spinner } from "react-bootstrap";
 import { v4 as uuidv4 } from "uuid";
 import "../../tapir/core/static/core/bootstrap/5.3.8/css/bootstrap.min.css";
@@ -462,9 +462,18 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
   const [depositAmount, setDepositAmount] = useState<string | undefined>();
   const [depositHardship, setDepositHardship] = useState(false);
   const [depositInstalments, setDepositInstalments] = useState(false);
-  const actualDepositAmount = depositHardship
-    ? "0"
-    : (depositAmount ?? settings.associationDeposit.minimum);
+  const optionalDeposit =
+    !settings.associationDeposit.supportersRequired &&
+    !isAtLeastOneProductOrdered(shoppingCart);
+  const wasDepositOptional = useRef(optionalDeposit);
+  useEffect(() => {
+    if (wasDepositOptional.current && !optionalDeposit && depositAmount === "0")
+      setDepositAmount(settings.associationDeposit.minimum);
+    wasDepositOptional.current = optionalDeposit;
+  }, [optionalDeposit, depositAmount, settings.associationDeposit.minimum]);
+  const selectedDepositAmount =
+    depositAmount ?? settings.associationDeposit.minimum;
+  const actualDepositAmount = depositHardship ? "0" : selectedDepositAmount;
   const includesDeposit =
     settings.associationDeposit.enabled &&
     steps.includes("6d_association_deposit");
@@ -783,14 +792,11 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             instalments={depositInstalments}
             setInstalments={setDepositInstalments}
             configuration={settings.associationDeposit}
-            amount={depositAmount ?? settings.associationDeposit.minimum}
+            amount={selectedDepositAmount}
             setAmount={setDepositAmount}
             hardship={depositHardship}
             setHardship={setDepositHardship}
-            optional={
-              !settings.associationDeposit.supportersRequired &&
-              !isAtLeastOneProductOrdered(shoppingCart)
-            }
+            optional={optionalDeposit}
             goToNextStep={goToNextStep}
             stepActive={currentStep === step}
           />

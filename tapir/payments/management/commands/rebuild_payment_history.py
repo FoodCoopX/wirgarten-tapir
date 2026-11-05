@@ -60,7 +60,7 @@ class Command(BaseCommand):
         while current_date < today:
             create_payments_for_this_month(reference_date=current_date)
             errors = export_payments_for_this_month(
-                reference_date=current_date, send_mail=False
+                reference_date=current_date, send_mail=False, include_deposits=False
             )
             for error in errors:
                 print(error)

@@ -43,7 +43,11 @@ class PaymentExportBuilder:
     @classmethod
     @transaction.atomic
     def export_all_unexported_payments(
-        cls, reference_date: datetime.date, send_mail: bool, cache: dict
+        cls,
+        reference_date: datetime.date,
+        send_mail: bool,
+        cache: dict,
+        include_deposits: bool = True,
     ):
         payments = cls.get_unexported_payments(reference_date=reference_date)
         contract_payments, coop_share_payments = (
@@ -77,7 +81,11 @@ class PaymentExportBuilder:
             DepositPaymentExporter,
         )
 
-        deposit_errors = DepositPaymentExporter.export(reference_date, send_mail, cache)
+        deposit_errors = (
+            DepositPaymentExporter.export(reference_date, send_mail, cache)
+            if include_deposits
+            else []
+        )
         return (
             errors_failed_payments_contracts
             + errors_failed_payments_shares

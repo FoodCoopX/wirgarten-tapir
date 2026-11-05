@@ -37,7 +37,7 @@ class SubscriptionPaymentsRebuilder:
             create_payments_for_this_month(reference_date=current_date)
             errors.extend(
                 export_payments_for_this_month(
-                    reference_date=current_date, send_mail=False
+                    reference_date=current_date, send_mail=False, include_deposits=False
                 )
             )
             current_date = get_first_of_next_month(current_date)

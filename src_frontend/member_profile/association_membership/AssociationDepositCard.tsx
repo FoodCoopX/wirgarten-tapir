@@ -103,7 +103,6 @@ export default function AssociationDepositCard({
       action,
       amount,
       instalments: action === "agreement" ? Number(count) : 1,
-      expectedRevision: data.revision,
       note,
       ...(action === "agreement"
         ? { startDate: calendarDate }
@@ -124,6 +123,7 @@ export default function AssociationDepositCard({
         memberId,
         depositChangeRequest: {
           ...body,
+          expectedRevision: data.revision,
           requestId: pendingRequest.current.requestId,
         },
       });

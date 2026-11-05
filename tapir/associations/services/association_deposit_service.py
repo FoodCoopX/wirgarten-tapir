@@ -324,6 +324,8 @@ class AssociationDepositService:
             first_date = data.get("start_date") or get_today(cache)
             if isinstance(first_date, str):
                 first_date = datetime.date.fromisoformat(first_date)
+            if action == "increase" and deposit.effective_from:
+                first_date = max(first_date, deposit.effective_from)
             if first_date < get_today(cache):
                 raise ValidationError(
                     "Neue Lastschriften dürfen nicht rückdatiert werden."

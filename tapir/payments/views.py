@@ -797,7 +797,12 @@ class PaymentIntendedUsePreviewContractsApiView(APIView):
             days=random.randint(0, (max_date - min_date).days)
         )
         payments = (
-            Payment.objects.exclude(type=payments_config.PAYMENT_TYPE_COOP_SHARES)
+            Payment.objects.exclude(
+                type__in=[
+                    payments_config.PAYMENT_TYPE_COOP_SHARES,
+                    payments_config.PAYMENT_TYPE_ASSOCIATION_DEPOSIT,
+                ]
+            )
             .filter(due_date__year=random_date.year, due_date__month=random_date.month)
             .select_related("mandate_ref")
         )
@@ -1244,7 +1249,16 @@ class PaymentTransactionDetailsView(APIView):
 
         for mandate_ref in list(payments_by_mandate_ref.keys()):
             payments = payments_by_mandate_ref[mandate_ref]
-            if transaction.type == payments_config.PAYMENT_TYPE_COOP_SHARES:
+            if transaction.type == payments_config.PAYMENT_TYPE_ASSOCIATION_DEPOSIT:
+                intended_use_by_mandate_ref[mandate_ref] = "; ".join(
+                    dict.fromkeys(
+                        PaymentExportIntendedUseBuilder.build_intended_use(
+                            payment=payment, is_contracts=False, cache=cache
+                        )
+                        for payment in payments
+                    )
+                )
+            elif transaction.type == payments_config.PAYMENT_TYPE_COOP_SHARES:
                 intended_use_by_mandate_ref[mandate_ref] = (
                     PaymentExportIntendedUseBuilder.build_intended_use(
                         payment=payments[0], is_contracts=False, cache=cache
