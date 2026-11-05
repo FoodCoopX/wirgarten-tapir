@@ -8,7 +8,7 @@ Role profiles: `.agents/agents/`. Task recipes: `.agents/skills/`. See [.agents/
 
 ## Stack
 
-- Backend: Python 3.14, Django 6, DRF, drf-spectacular; Celery + Beat, Redis; PostgreSQL 14
+- Backend: Python 3.14, Django 6, DRF, drf-spectacular; Celery + Beat, Redis; PostgreSQL 18
 - Auth: Keycloak via `django-allauth` (socialaccount)
 - Frontend: React 19, TypeScript, Vite, `django_vite`, react-bootstrap / Bootstrap 5
 - Tooling: Poetry, pnpm, pytest + pytest-django + factory-boy (no frontend tests), Black / Prettier / DjHTML
