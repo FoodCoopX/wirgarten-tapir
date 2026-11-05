@@ -2,6 +2,7 @@ import json
 
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
+from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db.models import Count, Max, Sum
 from django.db.models.functions import ExtractYear
@@ -61,6 +62,7 @@ from tapir.wirgarten.utils import (
 
 
 @require_GET
+@permission_required(Permission.Coop.VIEW, raise_exception=True)
 def get_cashflow_chart_data(request):
     cache = {}
     last_contract_end = Subscription.objects.aggregate(max_date=Max("end_date"))[
@@ -68,7 +70,7 @@ def get_cashflow_chart_data(request):
     ]
 
     payment_dates = [get_next_payment_date(cache=cache)]
-    while payment_dates[-1] < last_contract_end:
+    while last_contract_end is not None and payment_dates[-1] < last_contract_end:
         payment_dates.append(payment_dates[-1] + relativedelta(months=1))
 
     generated_payments = set()
@@ -94,7 +96,7 @@ def get_cashflow_chart_data(request):
                 and payment.due_date.month == payment_date.month
             ]
         )
-        monthly_sums.append(sum_for_this_month)
+        monthly_sums.append(float(sum_for_this_month))
 
     return JsonResponse(
         {
