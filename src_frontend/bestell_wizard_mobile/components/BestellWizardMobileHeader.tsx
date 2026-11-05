@@ -33,6 +33,7 @@ interface BestellWizardMobileHeaderProps {
   selectedNumberOfCoopShares: number;
   goToProductTypeStep: (productType: PublicProductType) => void;
   associationMembershipType?: AssociationMembershipType;
+  associationDepositSummary?: string;
   contractStartDate: Date;
   selectedGrowingPeriod: PublicGrowingPeriod | undefined;
   setCurrentStep: (step: Step) => void;
@@ -52,6 +53,7 @@ const BestellWizardMobileHeader: React.FC<BestellWizardMobileHeaderProps> = ({
   selectedNumberOfCoopShares,
   goToProductTypeStep,
   associationMembershipType,
+  associationDepositSummary,
   contractStartDate,
   selectedGrowingPeriod,
   setCurrentStep,
@@ -124,6 +126,7 @@ const BestellWizardMobileHeader: React.FC<BestellWizardMobileHeaderProps> = ({
         solidarityContribution={solidarityContribution}
         goToProductTypeStep={goToProductTypeStep}
         associationMembershipType={associationMembershipType}
+        associationDepositSummary={associationDepositSummary}
         contractStartDate={contractStartDate}
         selectedGrowingPeriod={selectedGrowingPeriod}
         setCurrentStep={setCurrentStep}

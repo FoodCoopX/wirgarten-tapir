@@ -1468,3 +1468,159 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
             mock_send_verification_email.call_args.kwargs["user"],
             mock_delete_user_if_exists.call_args.kwargs["user"],
         )
+
+    def _deposit_signup_data(self, hardship=False, instalments=False):
+        self._set_parameter(
+            ParameterKeys.ORGANISATION_LEGAL_STATUS, LEGAL_STATUS_ASSOCIATION
+        )
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_ENABLED, True)
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_ALLOW_HARDSHIP, True)
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_INSTALMENTS_ENABLED, True)
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_INSTALMENT_COUNT, 4)
+        self._set_parameter(ParameterKeys.SITE_ADMIN_EMAIL, "verwaltung@example.com")
+        data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        data.update(
+            association_membership_type_id=AssociationMembershipTypeFactory().pk,
+            association_deposit_amount="0" if hardship else "200.00",
+            association_deposit_hardship=hardship,
+            pay_association_deposit_in_instalments=instalments,
+        )
+        return data
+
+    def _check_hardship_resolution(self, amount, instalments):
+        from uuid import uuid4
+        from tapir.associations.models import (
+            AssociationDeposit,
+            AssociationDepositLogEntry,
+        )
+        from tapir.associations.services.deposit_reporting import DepositReporting
+        from tapir.associations.services.deposit_mail_service import DepositMailService
+        from tapir.wirgarten.tests.factories import MemberFactory
+
+        data = self._deposit_signup_data(hardship=True)
+        with patch.object(OnboardingTrigger, "on_subscription_updated"), patch.object(
+            EmailVerificationService, "send_verification_email"
+        ), patch.object(
+            TransactionalTrigger, "fire_action"
+        ) as mails, self.captureOnCommitCallbacks(
+            execute=True
+        ):
+            response = self.client.post(
+                reverse("bestell_wizard:bestell_wizard_confirm_order"),
+                data,
+                content_type="application/json",
+            )
+            self.assert_order_confirmed(response.json())
+        member = Member.objects.get(email=data["personal_data"]["email"])
+        deposit = AssociationDeposit.objects.get(member=member)
+        self.assertTrue(deposit.hardship_pending)
+        self.assertIsNone(deposit.agreed_amount)
+        self.assertFalse(deposit.payments.exists())
+        pending = DepositReporting.filter_members(Member.objects.all(), "pending", {})
+        self.assertEqual([member.pk], list(pending.values_list("pk", flat=True)))
+        self.assertEqual(
+            1,
+            sum(
+                (call.kwargs.get("trigger_data") or call.args[0]).key
+                == DepositMailService.PENDING_AGREEMENT_TRIGGER
+                for call in mails.call_args_list
+            ),
+        )
+        self.assertTrue(AssociationMembership.objects.filter(member=member).exists())
+        self.assertTrue(Subscription.objects.filter(member=member).exists())
+        self.assertTrue(SolidarityContribution.objects.filter(member=member).exists())
+
+        url = reverse("associations:member_deposit", kwargs={"member_id": member.pk})
+        self.client.force_login(member)
+        details = self.client.get(url).json()
+        self.assertTrue(details["hardship_pending"])
+        self.assertIsNone(details["agreed_amount"])
+        agreement = {
+            "request_id": str(uuid4()),
+            "expected_revision": details["revision"],
+            "action": "agreement",
+            "amount": amount,
+            "instalments": instalments,
+            "start_date": "2027-07-01",
+            "note": "Mitglied hat am 27.06.2027 der Vereinbarung zugestimmt; Beleg 42.",
+        }
+        self.assertEqual(
+            403,
+            self.client.post(
+                url, agreement, content_type="application/json"
+            ).status_code,
+        )
+        admin = MemberFactory(is_superuser=True)
+        self.client.force_login(admin)
+        response = self.client.post(url, agreement, content_type="application/json")
+        self.assertEqual(200, response.status_code, response.content)
+        self.assertEqual(
+            200,
+            self.client.post(
+                url, agreement, content_type="application/json"
+            ).status_code,
+        )
+        self.assertFalse(
+            DepositReporting.filter_members(
+                Member.objects.filter(pk=member.pk), "pending", {}
+            ).exists()
+        )
+        deposit.refresh_from_db()
+        self.assertEqual(Decimal(amount), deposit.agreed_amount)
+        self.assertEqual(
+            instalments if Decimal(amount) else 0, deposit.payments.count()
+        )
+        self.assertEqual(
+            Decimal(amount),
+            sum(deposit.payments.values_list("amount", flat=True), Decimal(0)),
+        )
+        self.assertEqual(
+            2, AssociationDepositLogEntry.objects.filter(user=member).count()
+        )
+        self.client.force_login(member)
+        details = self.client.get(url).json()
+        self.assertFalse(details["hardship_pending"])
+        self.assertTrue(details["exception_authorized"])
+        self.assertEqual(Decimal(amount), Decimal(details["agreed_amount"]))
+        self.assertEqual(Decimal(amount), Decimal(details["pending"]))
+
+    def test_deposit_hardship_registration_to_documented_exemption(self):
+        self._check_hardship_resolution("0.00", 1)
+
+    def test_deposit_hardship_registration_to_reduced_total(self):
+        self._check_hardship_resolution("100.00", 1)
+
+    def test_deposit_hardship_registration_to_individual_rates(self):
+        self._check_hardship_resolution("200.00", 4)
+
+    def test_deposit_standard_rates_signup_without_individual_approval(self):
+        from tapir.associations.models import AssociationDeposit
+
+        data = self._deposit_signup_data(instalments=True)
+        with patch.object(OnboardingTrigger, "on_subscription_updated"), patch.object(
+            EmailVerificationService, "send_verification_email"
+        ), patch.object(TransactionalTrigger, "fire_action"):
+            response = self.client.post(
+                reverse("bestell_wizard:bestell_wizard_confirm_order"),
+                data,
+                content_type="application/json",
+            )
+            self.assert_order_confirmed(response.json())
+            retry = self.client.post(
+                reverse("bestell_wizard:bestell_wizard_confirm_order"),
+                data,
+                content_type="application/json",
+            )
+        self.assertFalse(retry.json()["order_confirmed"])
+        deposit = AssociationDeposit.objects.get()
+        self.assertFalse(deposit.exception_authorized)
+        self.assertFalse(deposit.hardship_pending)
+        self.assertEqual(
+            [Decimal("50.00")] * 4,
+            list(deposit.payments.values_list("amount", flat=True)),
+        )
+        membership = AssociationMembership.objects.get(member=deposit.member)
+        self.assertGreaterEqual(
+            deposit.payments.order_by("due_date").first().due_date,
+            membership.start_date,
+        )

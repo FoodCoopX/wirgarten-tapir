@@ -11,6 +11,8 @@ from django.views import generic
 from django.views.decorators.http import require_GET
 
 from tapir.associations.models import AssociationMembership
+from tapir.associations.services.deposit_configuration import DepositConfiguration
+from tapir.associations.services.deposit_reporting import DepositReporting
 from tapir.configuration.parameter import get_parameter_value
 from tapir.payments.services.month_payment_builder import MonthPaymentBuilder
 from tapir.solidarity_contribution.services.solidarity_validator import (
@@ -133,6 +135,9 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context["deposit_configuration"] = DepositConfiguration.get(self.cache)
+        if context["deposit_configuration"]["enabled"]:
+            context["deposit_overview"] = DepositReporting.dashboard(self.cache)
         context["cache"] = self.cache
         today = get_today(cache=self.cache)
 

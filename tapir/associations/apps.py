@@ -12,8 +12,20 @@ class AssociationsConfig(AppConfig):
     )
 
     def ready(self):
+        from tapir.associations.services.deposit_mail_service import DepositMailService
         from tapir.wirgarten.tapirmail import register_transactional_trigger
         from tapir.wirgarten.utils import legal_status_is_association
+
+        register_transactional_trigger(
+            name="Vereinseinlage: Individuelle Vereinbarung offen (an Verwaltung)",
+            key=DepositMailService.PENDING_AGREEMENT_TRIGGER,
+            tokens={
+                "Mitglied - Name": "deposit_member_name",
+                "Mitglied - Nummer": "deposit_member_number",
+                "Mitglied - E-Mail": "deposit_member_email",
+                "Einlage - Status": "deposit_status",
+            },
+        )
 
         register_transactional_trigger(
             name="Verein: End-Datum eine Vereinsmitgliedschaft festgelegt",

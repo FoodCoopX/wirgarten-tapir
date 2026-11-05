@@ -1,4 +1,5 @@
 import datetime
+from tapir.associations.services.deposit_reporting import DepositReporting
 
 from django.db.models import QuerySet, Q
 
@@ -27,6 +28,13 @@ class MemberSegmentProvider:
     @classmethod
     def get_member_segments(cls):
         return [
+            ExportSegment(
+                id="members.association_deposit_refunds",
+                display_name="Vereinseinlagen: ausgeschieden, Rückzahlung offen",
+                description="Gebuchtes Guthaben; Rückzahlung nach individueller Prüfung, kein festes Fälligkeitsdatum.",
+                get_queryset=DepositReporting.refundable_members,
+                get_available_columns=MemberColumnProvider.get_member_columns,
+            ),
             ExportSegment(
                 id=cls.SEGMENT_ID_ALL_MEMBERS,
                 display_name="Alle Mitglieder",

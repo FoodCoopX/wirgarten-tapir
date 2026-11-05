@@ -2,6 +2,26 @@ PREFIX = "wirgarten"
 
 
 class ParameterKeys:
+    ASSOCIATION_DEPOSIT_INSTALMENTS_ENABLED = (
+        "tapir.associations.deposit.instalments_enabled"
+    )
+    ASSOCIATION_DEPOSIT_INSTALMENT_COUNT = "tapir.associations.deposit.instalment_count"
+    ASSOCIATION_DEPOSIT_ENABLED = "tapir.associations.deposit.enabled"
+    ASSOCIATION_DEPOSIT_NAME = "tapir.associations.deposit.name"
+    ASSOCIATION_DEPOSIT_MINIMUM = "tapir.associations.deposit.minimum"
+    ASSOCIATION_DEPOSIT_INCREMENT = "tapir.associations.deposit.increment"
+    ASSOCIATION_DEPOSIT_SUPPORTERS_REQUIRED = (
+        "tapir.associations.deposit.supporters_required"
+    )
+    ASSOCIATION_DEPOSIT_ALLOW_EXTRA_SIGNUP = (
+        "tapir.associations.deposit.allow_extra_signup"
+    )
+    ASSOCIATION_DEPOSIT_ALLOW_EXTRA_MEMBER = (
+        "tapir.associations.deposit.allow_extra_member"
+    )
+    ASSOCIATION_DEPOSIT_ALLOW_HARDSHIP = "tapir.associations.deposit.allow_hardship"
+    ASSOCIATION_DEPOSIT_HARDSHIP_LABEL = "tapir.associations.deposit.hardship_label"
+    ASSOCIATION_DEPOSIT_HARDSHIP_TEXT = "tapir.associations.deposit.hardship_text"
     MEMBER_PICKUP_LOCATION_CHANGE_UNTIL = (
         f"{PREFIX}.member.pickup_location_change_until"
     )

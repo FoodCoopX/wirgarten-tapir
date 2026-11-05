@@ -71,6 +71,24 @@ export interface PublicConfirmWaitingListEntryRequestRequest {
    * @type {string}
    * @memberof PublicConfirmWaitingListEntryRequestRequest
    */
+  associationDepositAmount?: string;
+  /**
+   *
+   * @type {boolean}
+   * @memberof PublicConfirmWaitingListEntryRequestRequest
+   */
+  associationDepositHardship?: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof PublicConfirmWaitingListEntryRequestRequest
+   */
+  payAssociationDepositInInstalments?: boolean;
+  /**
+   *
+   * @type {string}
+   * @memberof PublicConfirmWaitingListEntryRequestRequest
+   */
   paymentRhythm: string;
   /**
    *
@@ -146,6 +164,18 @@ export function PublicConfirmWaitingListEntryRequestRequestFromJSONTyped(
       json["pay_coop_shares_in_instalments"] == null
         ? undefined
         : json["pay_coop_shares_in_instalments"],
+    associationDepositAmount:
+      json["association_deposit_amount"] == null
+        ? undefined
+        : json["association_deposit_amount"],
+    associationDepositHardship:
+      json["association_deposit_hardship"] == null
+        ? undefined
+        : json["association_deposit_hardship"],
+    payAssociationDepositInInstalments:
+      json["pay_association_deposit_in_instalments"] == null
+        ? undefined
+        : json["pay_association_deposit_in_instalments"],
     paymentRhythm: json["payment_rhythm"],
     solidarityContribution: json["solidarity_contribution"],
     associationMembershipTypeId: json["association_membership_type_id"],
@@ -175,6 +205,10 @@ export function PublicConfirmWaitingListEntryRequestRequestToJSONTyped(
     contract_accepted: value["contractAccepted"],
     number_of_coop_shares: value["numberOfCoopShares"],
     pay_coop_shares_in_instalments: value["payCoopSharesInInstalments"],
+    association_deposit_amount: value["associationDepositAmount"],
+    association_deposit_hardship: value["associationDepositHardship"],
+    pay_association_deposit_in_instalments:
+      value["payAssociationDepositInInstalments"],
     payment_rhythm: value["paymentRhythm"],
     solidarity_contribution: value["solidarityContribution"],
     association_membership_type_id: value["associationMembershipTypeId"],

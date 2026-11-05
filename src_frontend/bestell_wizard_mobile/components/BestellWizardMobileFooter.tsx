@@ -101,6 +101,8 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
         return "5C: Verteilstation (Bestätigung Warteliste)";
       case "6a_coop_intro":
         return "6A: Genossenschaft (Intro)";
+      case "6d_association_deposit":
+        return "6D: Vereinseinlage";
       case "6b_association_membership":
         return "6B: Vereinsmitgliedschaft (Auswahl)";
       case "6b_coop_shares":

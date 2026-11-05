@@ -216,6 +216,8 @@ class GetFutureMemberPaymentsApiView(APIView):
             number_of_instalments = None
 
             match payment.type:
+                case payments_config.PAYMENT_TYPE_ASSOCIATION_DEPOSIT:
+                    pass
                 case payments_config.PAYMENT_TYPE_COOP_SHARES:
                     if payment.coop_share_transaction is not None:
                         coop_share_transactions = [payment.coop_share_transaction]

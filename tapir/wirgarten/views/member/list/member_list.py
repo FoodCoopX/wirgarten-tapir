@@ -22,6 +22,8 @@ from tapir.accounts.services.email_verification_service import (
     EmailVerificationService,
 )
 from tapir.associations.models import AssociationMembershipType
+from tapir.associations.services.deposit_reporting import DepositReporting
+from tapir.associations.services.deposit_configuration import DepositConfiguration
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.german_name_sort_service import GermanNameSortService
 from tapir.coop.services.member_search_service import MemberSearchService
@@ -129,6 +131,24 @@ class ContractStatusFilter(ChoiceFilter):
 
 
 class MemberFilter(FilterSet):
+    deposit_status = ChoiceFilter(
+        label="Vereinseinlage",
+        method="filter_deposit_status",
+        choices=[
+            ("pending", "Individuelle Vereinbarung offen"),
+            (
+                "below_minimum",
+                "Guthaben unter aktueller Mindesteinlage (keine Nachforderung)",
+            ),
+            ("instalments", "Vereinbarte Einzüge offen"),
+            ("reduced", "Reduzierter Gesamtbetrag vereinbart"),
+            ("exempt", "Befreiung vereinbart"),
+        ],
+    )
+
+    def filter_deposit_status(self, queryset, name, value):
+        return DepositReporting.filter_members(queryset, value, self.cache)
+
     search = CharFilter(method="filter_search", label="Suche")
     pickup_location = ModelChoiceFilter(
         label="Abholort",
@@ -330,6 +350,7 @@ class MemberListView(PermissionRequiredMixin, FilterView):
             )
             == LEGAL_STATUS_ASSOCIATION
         )
+        context["deposit_configuration"] = DepositConfiguration.get(self.cache)
         context["cache"] = self.cache
         context["delivery_charge_enabled"] = get_parameter_value(
             key=ParameterKeys.DELIVERY_CHARGE_PER_PICKUP_LOCATION_ENABLED,
@@ -372,4 +393,4 @@ class MemberListView(PermissionRequiredMixin, FilterView):
                 queryset, cache=self.cache
             )
 
-        return queryset
+        return DepositReporting.annotate_members(queryset, self.cache)

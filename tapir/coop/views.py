@@ -359,6 +359,14 @@ class DeleteMemberApiView(APIView):
         member_id = request.query_params.get("member_id")
         member = get_object_or_404(Member, id=member_id)
 
+        from tapir.associations.models import AssociationDeposit
+
+        if AssociationDeposit.objects.filter(member=member).exists():
+            return Response(
+                "Mitglieder mit Einlagenhistorie dürfen nicht gelöscht werden.",
+                status=400,
+            )
+
         with transaction.atomic():
             EmailChangeRequest.objects.filter(user=member).delete()
             LogEntry.objects.filter(actor=member).delete()

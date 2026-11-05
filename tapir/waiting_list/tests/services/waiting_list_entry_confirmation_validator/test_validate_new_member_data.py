@@ -1,3 +1,7 @@
+from tapir.associations.services.association_deposit_service import (
+    AssociationDepositService,
+)
+
 from unittest.mock import patch, Mock
 
 from django.core.exceptions import ValidationError
@@ -24,6 +28,14 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestValidateNewMemberData(TapirUnitTest):
+    def setUp(self):
+        super().setUp()
+        deposit_validation = patch.object(
+            AssociationDepositService, "validate_signup", autospec=True
+        )
+        deposit_validation.start()
+        self.addCleanup(deposit_validation.stop)
+
     @patch.object(
         SolidarityValidator, "is_the_ordered_solidarity_allowed", autospec=True
     )

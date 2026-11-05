@@ -84,6 +84,8 @@ def configure_mail_module():
 
 
 def _register_tokens():
+    from tapir.associations.services.deposit_mail_service import DepositMailService
+
     cache = {}
     register_tokens(
         user_tokens={
@@ -132,6 +134,8 @@ def _register_tokens():
             "Jahr (übernächstes)": lambda: get_today(cache=cache).year + 2,
         },
         dynamic_tokens={
+            "Vereinseinlage - vereinbarter Gesamtbetrag": DepositMailService.amount_token,
+            "Vereinseinlage - gebuchtes Guthaben": DepositMailService.balance_token,
             "Mitglied - Beitrittsdatum": OrganisationEntryDateAnnotator.get_organisation_entry_date,
             "Mitglied - Post-Adresse": MemberMailTokenService.get_post_address,
             "Verteilstation - Name": PickupLocationMailTokenService.pickup_location_name,

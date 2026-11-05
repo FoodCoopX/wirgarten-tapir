@@ -41,7 +41,9 @@ const Step6CCoopMemberNow: React.FC<Step6CCoopMemberNowProps> = ({
               () =>
                 setCurrentStep(
                   settings.legalStatus === "association"
-                    ? "6b_association_membership"
+                    ? settings.associationDeposit.enabled
+                      ? "6d_association_deposit"
+                      : "6b_association_membership"
                     : "6b_coop_shares",
                 ),
               50,

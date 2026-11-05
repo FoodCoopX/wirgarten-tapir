@@ -84,3 +84,9 @@ def export_file(
         __send_email(file, cache=cache, errors=errors)
 
     return file
+
+
+def send_exported_file(
+    file: ExportedFile, cache: dict, errors: list[str] | None = None
+):
+    __send_email(file, cache=cache, errors=errors)

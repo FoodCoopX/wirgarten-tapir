@@ -15,6 +15,7 @@ apis/TapirmailApi.ts
 apis/WaitingListApi.ts
 apis/index.ts
 index.ts
+models/ActionEnum.ts
 models/AdminSetAssociationMembershipRequestRequest.ts
 models/AssignmentLogEntry.ts
 models/AssignmentLogEntryStatusEnum.ts
@@ -81,6 +82,11 @@ models/DeliveryDayAdjustmentRequest.ts
 models/DeliveryDaysResponse.ts
 models/DeliveryDonation.ts
 models/DeliveryDonationWithCancellationLimit.ts
+models/DepositBooking.ts
+models/DepositChangeRequest.ts
+models/DepositConfiguration.ts
+models/DepositDetails.ts
+models/DepositPayment.ts
 models/DisableLinkSerializerRequest.ts
 models/DispatchStatusEnum.ts
 models/EmailConfiguration.ts

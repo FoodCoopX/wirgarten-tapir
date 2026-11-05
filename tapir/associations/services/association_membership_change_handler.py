@@ -1,5 +1,6 @@
 import datetime
 
+from django.db import transaction
 from django.db.models import Q
 
 from tapir.accounts.models import TapirUser
@@ -11,12 +12,16 @@ from tapir.associations.models import (
     AssociationMembershipCreatedLogEntry,
 )
 from tapir.log.util import freeze_for_log
+from tapir.associations.services.association_deposit_service import (
+    AssociationDepositService,
+)
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.utils import get_now
 
 
 class AssociationMembershipChangeHandler:
     @classmethod
+    @transaction.atomic
     def start_membership(
         cls,
         member: Member,
@@ -25,6 +30,7 @@ class AssociationMembershipChangeHandler:
         actor: TapirUser,
         cache: dict,
     ):
+        Member.objects.select_for_update().get(pk=member.pk)
         member_memberships = AssociationMembership.objects.filter(member=member)
 
         memberships_to_delete = member_memberships.filter(start_date__gte=start_date)
@@ -56,4 +62,5 @@ class AssociationMembershipChangeHandler:
             membership=membership,
             actor=actor,
         ).save()
+        AssociationDepositService.rejoin_membership(membership, actor, cache)
         return membership

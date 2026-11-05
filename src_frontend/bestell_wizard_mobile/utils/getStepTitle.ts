@@ -24,6 +24,8 @@ export function getStepTitle(
       return settings.strings.step5cTitle;
     case "6a_coop_intro":
       return settings.strings.step6aTitle;
+    case "6d_association_deposit":
+      return settings.associationDeposit.name;
     case "6b_coop_shares":
     case "6b_association_membership":
       return settings.strings.step6bTitle;

@@ -57,6 +57,7 @@ import Step6CCoopMemberNow from "./steps/Step6CCoopMemberNow.tsx";
 import Step7SolidarityContribution from "./steps/Step7SolidarityContribution.tsx";
 import Step8PersonalData from "./steps/Step8PersonalData.tsx";
 import Step9BankingData from "./steps/Step9BankingData.tsx";
+import StepAssociationDeposit from "./steps/StepAssociationDeposit.tsx";
 import StepGenericIntro from "./steps/StepGenericIntro.tsx";
 import { Phase } from "./types/Phase.ts";
 import { PickupLocationTab } from "./types/PickupLocationTab.ts";
@@ -458,6 +459,16 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     setCurrentStep(steps[steps.indexOf(currentStep) + 1]);
   }
 
+  const [depositAmount, setDepositAmount] = useState<string | undefined>();
+  const [depositHardship, setDepositHardship] = useState(false);
+  const [depositInstalments, setDepositInstalments] = useState(false);
+  const actualDepositAmount = depositHardship
+    ? "0"
+    : (depositAmount ?? settings.associationDeposit.minimum);
+  const includesDeposit =
+    settings.associationDeposit.enabled &&
+    steps.includes("6d_association_deposit");
+
   function setTestData() {
     setPersonalData(getTestPersonalData());
     setSelectedProductTypes(selectedGrowingPeriod?.productTypes ?? []);
@@ -515,6 +526,12 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             linkKey: waitingListEntryDetails.linkKey,
             numberOfCoopShares: selectedNumberOfCoopShares,
             payCoopSharesInInstalments: isPayingCoopSharesInInstalments(),
+            associationDepositAmount: includesDeposit
+              ? actualDepositAmount
+              : "0",
+            associationDepositHardship: includesDeposit && depositHardship,
+            payAssociationDepositInInstalments:
+              includesDeposit && !depositHardship && depositInstalments,
             paymentRhythm: personalData.paymentRhythm,
             solidarityContribution: solidarityContribution,
             associationMembershipTypeId:
@@ -578,6 +595,10 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
           distributionChannels: [...selectedDistributionChannels],
           feedback: feedback,
           associationMembershipTypeId: selectedAssociationMembershipType?.id,
+          associationDepositAmount: includesDeposit ? actualDepositAmount : "0",
+          associationDepositHardship: includesDeposit && depositHardship,
+          payAssociationDepositInInstalments:
+            includesDeposit && !depositHardship && depositInstalments,
         },
       })
       .then(handleOrderResponse)
@@ -756,6 +777,24 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             setPayInInstalments={setPayCoopSharesInInstalments}
           />
         );
+      case "6d_association_deposit":
+        return (
+          <StepAssociationDeposit
+            instalments={depositInstalments}
+            setInstalments={setDepositInstalments}
+            configuration={settings.associationDeposit}
+            amount={depositAmount ?? settings.associationDeposit.minimum}
+            setAmount={setDepositAmount}
+            hardship={depositHardship}
+            setHardship={setDepositHardship}
+            optional={
+              !settings.associationDeposit.supportersRequired &&
+              !isAtLeastOneProductOrdered(shoppingCart)
+            }
+            goToNextStep={goToNextStep}
+            stepActive={currentStep === step}
+          />
+        );
       case "6b_association_membership":
         return (
           <Step6BAssociationMembership
@@ -836,6 +875,15 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
       case "10_summary":
         return (
           <Step10OrderSummary
+            associationDepositAmount={
+              includesDeposit ? actualDepositAmount : undefined
+            }
+            associationDepositHardship={depositHardship}
+            associationDepositInstalments={
+              depositInstalments
+                ? settings.associationDeposit.instalmentCount
+                : undefined
+            }
             goToNextStep={goToNextStep}
             settings={settings}
             studentStatusEnabled={studentStatusEnabled}
@@ -996,6 +1044,11 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
       selectedNumberOfCoopShares={selectedNumberOfCoopShares}
       goToProductTypeStep={goToProductTypeStep}
       associationMembershipType={selectedAssociationMembershipType}
+      associationDepositSummary={
+        includesDeposit
+          ? `${settings.associationDeposit.name}: ${depositHardship ? "Individuelle Vereinbarung offen" : actualDepositAmount + " €" + (depositInstalments ? ` in ${settings.associationDeposit.instalmentCount} monatlichen Raten` : " einmalig")}`
+          : undefined
+      }
       contractStartDate={contractStartDate}
       selectedGrowingPeriod={selectedGrowingPeriod}
     />

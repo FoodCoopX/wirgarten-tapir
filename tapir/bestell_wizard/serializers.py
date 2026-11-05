@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from tapir.associations.serializers import AssociationMembershipTypeSerializer
+from tapir.associations.deposit_serializers import DepositConfigurationSerializer
 from tapir.core.config import LEGAL_STATUS_OPTIONS
 from tapir.deliveries.serializers import (
     PublicGrowingPeriodSerializer,
@@ -37,6 +38,11 @@ class BestellWizardConfirmOrderRequestSerializer(serializers.Serializer):
     statute_accepted = serializers.BooleanField()
     number_of_coop_shares = serializers.IntegerField()
     pay_coop_shares_in_instalments = serializers.BooleanField(default=False)
+    association_deposit_amount = serializers.DecimalField(
+        max_digits=8, decimal_places=2, min_value=0, default=0
+    )
+    association_deposit_hardship = serializers.BooleanField(default=False)
+    pay_association_deposit_in_instalments = serializers.BooleanField(default=False)
     pickup_location_ids = serializers.ListField(child=serializers.CharField())
     student_status_enabled = serializers.BooleanField()
     payment_rhythm = serializers.CharField()
@@ -140,6 +146,7 @@ class BestellWizardImagesSerializer(serializers.Serializer):
 
 
 class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
+    association_deposit = DepositConfigurationSerializer()
     price_of_a_share = serializers.FloatField()
     coop_share_instalments_enabled = serializers.BooleanField()
     coop_share_instalment_amount = serializers.FloatField()

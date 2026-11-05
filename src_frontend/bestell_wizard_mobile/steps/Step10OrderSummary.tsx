@@ -62,6 +62,9 @@ interface Step10OrderSummaryProps {
   waitingListEntryDetails: PublicWaitingListEntryDetails | undefined;
   singleProductType?: PublicProductType;
   associationMembershipType?: AssociationMembershipType;
+  associationDepositAmount?: string;
+  associationDepositHardship?: boolean;
+  associationDepositInstalments?: number;
   selectedGrowingPeriod: PublicGrowingPeriod | undefined;
   hideTrialPeriod: boolean;
   stepActive: boolean;
@@ -104,6 +107,9 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
   waitingListEntryDetails,
   singleProductType,
   associationMembershipType,
+  associationDepositAmount,
+  associationDepositHardship,
+  associationDepositInstalments,
   selectedGrowingPeriod,
   hideTrialPeriod,
   stepActive,
@@ -323,6 +329,27 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
 
   function getPaymentSegments() {
     const segments: React.ReactNode[] = [];
+    if (associationDepositAmount !== undefined) {
+      segments.push(
+        <div key="association_deposit">
+          <strong>
+            {settings.associationDeposit.name}{" "}
+            {associationDepositInstalments
+              ? `in ${associationDepositInstalments} monatlichen Raten`
+              : "einmalig"}
+            :
+          </strong>
+          {associationDepositHardship ? (
+            <p>Individuelle Vereinbarung offen; noch kein Einzug.</p>
+          ) : (
+            <PaymentRow
+              label={settings.associationDeposit.name}
+              amount={Number(associationDepositAmount)}
+            />
+          )}
+        </div>,
+      );
+    }
 
     if (isOneTimePaymentShown() && payCoopSharesInInstalments) {
       segments.push(
@@ -568,6 +595,24 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                 </Accordion.Header>
                 <AccordionBody>
                   <li>{associationMembershipType.name}</li>
+                  {associationDepositAmount !== undefined && (
+                    <li>
+                      {settings.associationDeposit.name}:{" "}
+                      {associationDepositHardship
+                        ? "Vereinbarung offen, kein Einzug"
+                        : formatCurrency(Number(associationDepositAmount)) +
+                          (associationDepositInstalments
+                            ? ` insgesamt, ${associationDepositInstalments} monatliche Raten`
+                            : " einmalig")}{" "}
+                      <TapirButton
+                        variant={BUTTON_VARIANT}
+                        size="sm"
+                        text="Einlage anpassen"
+                        icon="edit"
+                        onClick={() => setCurrentStep("6d_association_deposit")}
+                      />
+                    </li>
+                  )}
                   {getAssociationMembershipTypeCurrentPrice(
                     associationMembershipType,
                     contractStartDate,

@@ -15,6 +15,7 @@ from tapir_mail.triggers.transactional_trigger import TransactionalTriggerData
 
 from tapir.accounts.services.email_normaliser import EmailNormaliser
 from tapir.associations.models import AssociationMembershipType
+from tapir.associations.services.deposit_configuration import DepositConfiguration
 from tapir.bestell_wizard.serializers import (
     BestellWizardConfirmOrderRequestSerializer,
     BestellWizardCapacityCheckResponseSerializer,
@@ -513,6 +514,7 @@ class BestellWizardBaseDataApiView(APIView):
         response_data.update(
             {
                 "product_types": ProductType.objects.all(),
+                "association_deposit": DepositConfiguration.get(self.cache),
                 "association_membership_types": AssociationMembershipType.objects.order_by(
                     "order_in_bestell_wizard"
                 ).filter(

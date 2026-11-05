@@ -114,6 +114,12 @@ export interface Payment {
    * @memberof Payment
    */
   coopShareTransaction?: string | null;
+  /**
+   *
+   * @type {string}
+   * @memberof Payment
+   */
+  associationDeposit?: string | null;
 }
 
 /**
@@ -171,6 +177,10 @@ export function PaymentFromJSONTyped(
       json["coop_share_transaction"] == null
         ? undefined
         : json["coop_share_transaction"],
+    associationDeposit:
+      json["association_deposit"] == null
+        ? undefined
+        : json["association_deposit"],
   };
 }
 
@@ -210,5 +220,6 @@ export function PaymentToJSONTyped(
     transaction: value["transaction"],
     pickup_location: value["pickupLocation"],
     coop_share_transaction: value["coopShareTransaction"],
+    association_deposit: value["associationDeposit"],
   };
 }

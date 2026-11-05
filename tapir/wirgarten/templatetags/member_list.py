@@ -48,3 +48,10 @@ def formatted_member_number(member: Member, cache=None):
             or "-"
         )
     return "-"
+
+
+@register.simple_tag()
+def deposit_status(member):
+    from tapir.associations.services.deposit_reporting import DepositReporting
+
+    return DepositReporting.status(member)

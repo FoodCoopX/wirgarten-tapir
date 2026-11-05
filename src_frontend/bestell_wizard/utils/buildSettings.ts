@@ -11,6 +11,7 @@ export function buildSettings(
     pickupLocations: baseData.pickupLocations,
     productTypes: sortProductTypes(baseData.productTypes),
     associationMembershipTypes: baseData.associationMembershipTypes,
+    associationDeposit: baseData.associationDeposit,
     priceOfAShare: baseData.priceOfAShare,
     coopShareInstalmentsEnabled: baseData.coopShareInstalmentsEnabled,
     coopShareInstalmentAmount: baseData.coopShareInstalmentAmount,

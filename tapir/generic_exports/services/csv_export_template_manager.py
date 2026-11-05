@@ -1,4 +1,7 @@
 from django.http import Http404
+from tapir.generic_exports.services.csv_templates.template_association_deposit_refunds import (
+    TemplateAssociationDepositRefunds,
+)
 
 from tapir.generic_exports.services.csv_templates.template_joker_overview import (
     TemplateJokerOverview,
@@ -17,6 +20,7 @@ class CsvExportTemplateManager:
     def get_templates(cls) -> dict[str, TemplateData]:
         template_list = [
             TemplateMemberListGeng,
+            TemplateAssociationDepositRefunds,
             TemplateJokerOverview,
             TemplatePaymentsByIncomeSource,
         ]

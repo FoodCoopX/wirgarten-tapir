@@ -6,7 +6,7 @@ import unicodedata
 from csv import DictReader
 from typing import Literal
 
-from django.core.management import BaseCommand
+from django.core.management import BaseCommand, CommandError
 from django.db import transaction
 from icecream import ic
 
@@ -15,7 +15,12 @@ from tapir.accounts.services.keycloak_user_delete_service import (
     KeycloakUserDeleteService,
 )
 from tapir.deliveries.models import Joker
-from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES
+from tapir.payments.config import (
+    PAYMENT_TYPE_COOP_SHARES,
+    PAYMENT_TYPE_ASSOCIATION_DEPOSIT,
+)
+from tapir.associations.models import AssociationDeposit
+from tapir.utils.services.association_deposit_importer import AssociationDepositImporter
 from tapir.payments.models import MemberCredit
 from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.utils.config import (
@@ -55,7 +60,9 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "--type", nargs=1, choices=["members", "shares", "subscriptions"]
+            "--type",
+            nargs=1,
+            choices=["members", "shares", "subscriptions", "deposits"],
         )
         parser.add_argument("--file", nargs=1)
         parser.add_argument("--delete-all", action="store_true")
@@ -103,6 +110,18 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         # Helper functions
         dry_run = options.get("dry_run", False)
+
+        if (
+            options["reset_all"]
+            or (options["delete_all"] and options.get("type") == ["members"])
+        ) and AssociationDeposit.objects.exists():
+            raise CommandError(
+                "Reset und Mitgliederlöschung sind bei vorhandener Einlagenhistorie gesperrt."
+            )
+        if options["delete_all"] and options.get("type") == ["deposits"]:
+            raise CommandError(
+                "Einlagenhistorie darf nicht gelöscht werden. Korrekturbuchungen verwenden."
+            )
 
         if options["reset_all"]:
             if dry_run:
@@ -210,9 +229,17 @@ class Command(BaseCommand):
                         SubscriptionImportUpdatedLogEntry.objects.all().delete()
                         Subscription.objects.all().delete()
                         PaymentTransaction.objects.exclude(
-                            type=PAYMENT_TYPE_COOP_SHARES
+                            type__in=[
+                                PAYMENT_TYPE_COOP_SHARES,
+                                PAYMENT_TYPE_ASSOCIATION_DEPOSIT,
+                            ]
                         ).delete()
-                        Payment.objects.exclude(type=PAYMENT_TYPE_COOP_SHARES).delete()
+                        Payment.objects.exclude(
+                            type__in=[
+                                PAYMENT_TYPE_COOP_SHARES,
+                                PAYMENT_TYPE_ASSOCIATION_DEPOSIT,
+                            ]
+                        ).delete()
 
                 self.import_generic(
                     reader=reader,
@@ -250,7 +277,7 @@ class Command(BaseCommand):
         self,
         reader: DictReader[str],
         update_existing: bool,
-        import_type: Literal["members", "shares", "subscriptions"],
+        import_type: Literal["members", "shares", "subscriptions", "deposits"],
         print_stacktrace: bool,
         dry_run: bool,
     ):
@@ -258,7 +285,7 @@ class Command(BaseCommand):
         created = 0
         updated = 0
 
-        if import_type not in ["members", "shares", "subscriptions"]:
+        if import_type not in ["members", "shares", "subscriptions", "deposits"]:
             raise TapirDataImportException(f"Unknown import type: {import_type}")
 
         for row_index, row in enumerate(reader):
@@ -275,6 +302,12 @@ class Command(BaseCommand):
                         case "shares":
                             import_status = ShareImporter.import_shares_single_member(
                                 row=row, update_existing=update_existing
+                            )
+                        case "deposits":
+                            import_status = (
+                                AssociationDepositImporter.import_opening_balance(
+                                    row=row, cache={}
+                                )
                             )
                         case "subscriptions":
                             import_status = SubscriptionImporter.import_subscription(

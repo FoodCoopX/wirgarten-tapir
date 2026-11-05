@@ -8,7 +8,10 @@ from typing import Iterable
 from django.db import transaction
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES
+from tapir.payments.config import (
+    PAYMENT_TYPE_COOP_SHARES,
+    PAYMENT_TYPE_ASSOCIATION_DEPOSIT,
+)
 from tapir.payments.services.pain_008_xml_file_creator import Pain008XmlFileCreator
 from tapir.payments.services.payment_export_intended_use_builder import (
     PaymentExportIntendedUseBuilder,
@@ -70,7 +73,16 @@ class PaymentExportBuilder:
                 cache=cache,
             )
 
-        return errors_failed_payments_contracts + errors_failed_payments_shares
+        from tapir.associations.services.deposit_payment_exporter import (
+            DepositPaymentExporter,
+        )
+
+        deposit_errors = DepositPaymentExporter.export(reference_date, send_mail, cache)
+        return (
+            errors_failed_payments_contracts
+            + errors_failed_payments_shares
+            + deposit_errors
+        )
 
     @classmethod
     def export_payments_if_necessary(
@@ -193,6 +205,7 @@ class PaymentExportBuilder:
         max_due_date = get_last_day_of_month(reference_date)
         return (
             Payment.objects.filter(transaction__isnull=True, due_date__lte=max_due_date)
+            .exclude(type=PAYMENT_TYPE_ASSOCIATION_DEPOSIT)
             .select_related("mandate_ref__member", "coop_share_transaction")
             .prefetch_related("coop_share_transaction__payments")
         )

@@ -2,6 +2,7 @@ import {
   AssociationMembershipType,
   BestellWizardImages,
   BestellWizardStrings,
+  DepositConfiguration,
   LegalStatusEnum,
   PublicGrowingPeriod,
   PublicPickupLocation,
@@ -15,6 +16,7 @@ export type BestellWizardSettings = {
   pickupLocations: PublicPickupLocation[];
   productTypes: PublicProductType[];
   associationMembershipTypes: AssociationMembershipType[];
+  associationDeposit: DepositConfiguration;
   priceOfAShare: number;
   coopShareInstalmentsEnabled: boolean;
   coopShareInstalmentAmount: number;

@@ -5,6 +5,9 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404
 
 from tapir.associations.models import AssociationMembershipType
+from tapir.associations.services.association_deposit_service import (
+    AssociationDepositService,
+)
 from tapir.coop.services.coop_share_instalment_order_validator import (
     CoopShareInstalmentOrderValidator,
 )
@@ -78,6 +81,15 @@ class WaitingListEntryConfirmationValidator:
             )
 
         if legal_status_is_association(cache=cache):
+            AssociationDepositService.validate_signup(
+                validated_data.get("association_deposit_amount", 0),
+                validated_data.get("association_deposit_hardship", False),
+                has_products=bool(order),
+                cache=cache,
+                instalments=validated_data.get(
+                    "pay_association_deposit_in_instalments", False
+                ),
+            )
             cls.validate_association_content(
                 association_membership_type_id=validated_data.get(
                     "association_membership_type_id", None

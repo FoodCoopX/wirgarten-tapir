@@ -798,6 +798,12 @@ class Payment(TapirModel):
     )
     # Only set if the coop shares are paid in instalments
     instalment_number = models.PositiveSmallIntegerField(null=True)
+    association_deposit = models.ForeignKey(
+        "associations.AssociationDeposit",
+        on_delete=models.PROTECT,
+        null=True,
+        related_name="payments",
+    )
 
     class Meta:
         indexes = [

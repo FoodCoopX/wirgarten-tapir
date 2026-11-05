@@ -1,7 +1,10 @@
 import datetime
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES
+from tapir.payments.config import (
+    PAYMENT_TYPE_COOP_SHARES,
+    PAYMENT_TYPE_ASSOCIATION_DEPOSIT,
+)
 from tapir.payments.tasks import (
     create_payments_for_this_month,
     export_payments_for_this_month,
@@ -16,7 +19,7 @@ class SubscriptionPaymentsRebuilder:
     @classmethod
     def rebuild_subscription_payments(cls, from_date: datetime.date, cache: dict):
         transactions = PaymentTransaction.objects.exclude(
-            type=PAYMENT_TYPE_COOP_SHARES
+            type__in=[PAYMENT_TYPE_COOP_SHARES, PAYMENT_TYPE_ASSOCIATION_DEPOSIT]
         ).filter(
             month__gte=from_date.replace(day=1),
         )

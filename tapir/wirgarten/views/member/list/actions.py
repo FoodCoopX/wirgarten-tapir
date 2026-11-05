@@ -1,4 +1,6 @@
 import csv
+from tapir.associations.services.deposit_reporting import DepositReporting
+from tapir.associations.services.deposit_configuration import DepositConfiguration
 import mimetypes
 
 from django.contrib.auth.decorators import permission_required
@@ -143,6 +145,14 @@ def export_coop_member_list(request, **kwargs):
         columns.append(KEY_ASSOCIATION_MEMBERSHIP_START)
         columns.append(KEY_ASSOCIATION_MEMBERSHIP_END)
         columns.append(KEY_ASSOCIATION_MEMBERSHIP_CANCELLATION_DATE)
+        columns.extend(
+            [
+                "Einlage vereinbart (€)",
+                "Einlage Guthaben (€)",
+                "Einlage offene Einzüge (€)",
+                "Einlage Status",
+            ]
+        )
 
     output, writer = begin_csv_string(columns)
 
@@ -151,6 +161,7 @@ def export_coop_member_list(request, **kwargs):
         members, cache=cache
     )
 
+    members = DepositReporting.annotate_members(members, cache)
     for entry in members:
         coop_shares = entry.coopsharetransaction_set.filter(
             transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE
@@ -278,6 +289,18 @@ def export_coop_member_list(request, **kwargs):
                 else ""
             )
 
+        data.update(
+            {
+                "Einlage vereinbart (€)": (
+                    format_currency(entry.deposit_agreed)
+                    if entry.deposit_agreed is not None
+                    else ""
+                ),
+                "Einlage Guthaben (€)": format_currency(entry.deposit_balance),
+                "Einlage offene Einzüge (€)": format_currency(entry.deposit_pending),
+                "Einlage Status": DepositReporting.status(entry),
+            }
+        )
         data = {column: value for column, value in data.items() if column in columns}
 
         writer.writerow(data)
@@ -308,6 +331,8 @@ class ExportMembersView(View):
         )
         writer = csv.writer(response, delimiter=";")
 
+        include_deposits = DepositConfiguration.get(self.cache)["enabled"]
+        queryset = DepositReporting.annotate_members(queryset, self.cache)
         # Write header row
         writer.writerow(
             [
@@ -327,6 +352,16 @@ class ExportMembersView(View):
                 "Abholort",
                 "Solidarbeitrag",
             ]
+            + (
+                [
+                    "Einlage vereinbart (€)",
+                    "Einlage Guthaben (€)",
+                    "Einlage offene Einzüge (€)",
+                    "Einlage Status",
+                ]
+                if include_deposits
+                else []
+            )
         )
 
         for member in queryset:
@@ -364,6 +399,20 @@ class ExportMembersView(View):
                         or 0
                     ),
                 ]
+                + (
+                    [
+                        (
+                            format_currency(member.deposit_agreed)
+                            if member.deposit_agreed is not None
+                            else ""
+                        ),
+                        format_currency(member.deposit_balance),
+                        format_currency(member.deposit_pending),
+                        DepositReporting.status(member),
+                    ]
+                    if include_deposits
+                    else []
+                )
             )
 
         return response

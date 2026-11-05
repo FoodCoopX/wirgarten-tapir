@@ -1,15 +1,25 @@
 import datetime
 from unittest.mock import patch, Mock, ANY
 
+from tapir.associations.services.association_deposit_service import (
+    AssociationDepositService,
+)
 from tapir.associations.models import AssociationMembershipDeletedLogEntry
 from tapir.associations.services.association_membership_cancellation_manager import (
     AssociationMembershipCancellationManager,
 )
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
+from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
-class TestCancelAssociationMembership(TapirUnitTest):
+class TestCancelAssociationMembership(TapirIntegrationTest):
+    def setUp(self):
+        super().setUp()
+        deposit_cancellation = patch.object(
+            AssociationDepositService, "cancel_membership", autospec=True
+        )
+        deposit_cancellation.start()
+        self.addCleanup(deposit_cancellation.stop)
 
     @patch.object(
         TapirCache,

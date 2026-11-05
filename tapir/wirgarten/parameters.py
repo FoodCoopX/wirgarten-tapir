@@ -71,6 +71,11 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             TapirParameter.objects.bulk_create(self.parameters_to_create)
 
     def define_all_parameters(self):
+        from tapir.associations.services.deposit_configuration import (
+            DepositConfiguration,
+        )
+
+        DepositConfiguration.define(self)
         ParameterDefinitionsBestellwizard.define_all_member_bestellwizard(importer=self)
         ParameterDefinitionsBusiness.define_all_member_business(importer=self)
         ParameterDefinitionsDelivery.define_all_parameters_delivery(importer=self)

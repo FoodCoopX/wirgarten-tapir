@@ -27,6 +27,11 @@ import {
   BestellWizardStringsFromJSON,
   BestellWizardStringsToJSON,
 } from "./BestellWizardStrings";
+import type { DepositConfiguration } from "./DepositConfiguration";
+import {
+  DepositConfigurationFromJSON,
+  DepositConfigurationToJSON,
+} from "./DepositConfiguration";
 import type { LegalStatusEnum } from "./LegalStatusEnum";
 import {
   LegalStatusEnumFromJSON,
@@ -59,6 +64,12 @@ import {
  * @interface BestellWizardBaseDataResponse
  */
 export interface BestellWizardBaseDataResponse {
+  /**
+   *
+   * @type {DepositConfiguration}
+   * @memberof BestellWizardBaseDataResponse
+   */
+  associationDeposit: DepositConfiguration;
   /**
    *
    * @type {number}
@@ -295,6 +306,11 @@ export interface BestellWizardBaseDataResponse {
 export function instanceOfBestellWizardBaseDataResponse(
   value: object,
 ): value is BestellWizardBaseDataResponse {
+  if (
+    !("associationDeposit" in value) ||
+    value["associationDeposit"] === undefined
+  )
+    return false;
   if (!("priceOfAShare" in value) || value["priceOfAShare"] === undefined)
     return false;
   if (
@@ -449,6 +465,9 @@ export function BestellWizardBaseDataResponseFromJSONTyped(
     return json;
   }
   return {
+    associationDeposit: DepositConfigurationFromJSON(
+      json["association_deposit"],
+    ),
     priceOfAShare: json["price_of_a_share"],
     coopShareInstalmentsEnabled: json["coop_share_instalments_enabled"],
     coopShareInstalmentAmount: json["coop_share_instalment_amount"],
@@ -518,6 +537,9 @@ export function BestellWizardBaseDataResponseToJSONTyped(
   }
 
   return {
+    association_deposit: DepositConfigurationToJSON(
+      value["associationDeposit"],
+    ),
     price_of_a_share: value["priceOfAShare"],
     coop_share_instalments_enabled: value["coopShareInstalmentsEnabled"],
     coop_share_instalment_amount: value["coopShareInstalmentAmount"],

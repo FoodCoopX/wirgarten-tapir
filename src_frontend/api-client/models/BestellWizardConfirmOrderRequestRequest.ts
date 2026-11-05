@@ -74,6 +74,24 @@ export interface BestellWizardConfirmOrderRequestRequest {
   payCoopSharesInInstalments?: boolean;
   /**
    *
+   * @type {string}
+   * @memberof BestellWizardConfirmOrderRequestRequest
+   */
+  associationDepositAmount?: string;
+  /**
+   *
+   * @type {boolean}
+   * @memberof BestellWizardConfirmOrderRequestRequest
+   */
+  associationDepositHardship?: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof BestellWizardConfirmOrderRequestRequest
+   */
+  payAssociationDepositInInstalments?: boolean;
+  /**
+   *
    * @type {Array<string>}
    * @memberof BestellWizardConfirmOrderRequestRequest
    */
@@ -233,6 +251,18 @@ export function BestellWizardConfirmOrderRequestRequestFromJSONTyped(
       json["pay_coop_shares_in_instalments"] == null
         ? undefined
         : json["pay_coop_shares_in_instalments"],
+    associationDepositAmount:
+      json["association_deposit_amount"] == null
+        ? undefined
+        : json["association_deposit_amount"],
+    associationDepositHardship:
+      json["association_deposit_hardship"] == null
+        ? undefined
+        : json["association_deposit_hardship"],
+    payAssociationDepositInInstalments:
+      json["pay_association_deposit_in_instalments"] == null
+        ? undefined
+        : json["pay_association_deposit_in_instalments"],
     pickupLocationIds: json["pickup_location_ids"],
     studentStatusEnabled: json["student_status_enabled"],
     paymentRhythm: json["payment_rhythm"],
@@ -273,6 +303,10 @@ export function BestellWizardConfirmOrderRequestRequestToJSONTyped(
     statute_accepted: value["statuteAccepted"],
     number_of_coop_shares: value["numberOfCoopShares"],
     pay_coop_shares_in_instalments: value["payCoopSharesInInstalments"],
+    association_deposit_amount: value["associationDepositAmount"],
+    association_deposit_hardship: value["associationDepositHardship"],
+    pay_association_deposit_in_instalments:
+      value["payAssociationDepositInInstalments"],
     pickup_location_ids: value["pickupLocationIds"],
     student_status_enabled: value["studentStatusEnabled"],
     payment_rhythm: value["paymentRhythm"],

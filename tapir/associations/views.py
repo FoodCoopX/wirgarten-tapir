@@ -398,6 +398,19 @@ class SetAssociationMembershipEndDateApiView(APIView):
             membership.end_date = end_date
             membership.cancellation_ts = get_now(cache=cache)
             membership.save()
+            from tapir.associations.services.association_deposit_service import (
+                AssociationDepositService,
+            )
+
+            if (
+                not AssociationMembership.objects.filter(member=membership.member)
+                .exclude(pk=membership.pk)
+                .filter(Q(end_date__isnull=True) | Q(end_date__gt=end_date))
+                .exists()
+            ):
+                AssociationDepositService.cancel_membership(
+                    membership.member, end_date, request.user, cache
+                )
             AssociationMembershipUpdatedLogEntry().populate(
                 old_frozen=before_changes,
                 new_model=membership,

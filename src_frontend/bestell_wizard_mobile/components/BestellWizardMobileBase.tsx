@@ -43,6 +43,7 @@ interface BestellWizardMobileBaseProps {
   selectedNumberOfCoopShares: number;
   goToProductTypeStep: (productType: PublicProductType) => void;
   associationMembershipType?: AssociationMembershipType;
+  associationDepositSummary?: string;
   contractStartDate: Date;
   selectedGrowingPeriod: PublicGrowingPeriod | undefined;
 }
@@ -67,6 +68,7 @@ const BestellWizardMobileBase: React.FC<BestellWizardMobileBaseProps> = ({
   selectedNumberOfCoopShares,
   goToProductTypeStep,
   associationMembershipType,
+  associationDepositSummary,
   contractStartDate,
   selectedGrowingPeriod,
 }) => {
@@ -106,6 +108,7 @@ const BestellWizardMobileBase: React.FC<BestellWizardMobileBaseProps> = ({
           selectedNumberOfCoopShares={selectedNumberOfCoopShares}
           goToProductTypeStep={goToProductTypeStep}
           associationMembershipType={associationMembershipType}
+          associationDepositSummary={associationDepositSummary}
           contractStartDate={contractStartDate}
           selectedGrowingPeriod={selectedGrowingPeriod}
           setCurrentStep={setCurrentStep}

@@ -168,6 +168,14 @@
                 </div>
             </div>
         {% endif %}
+        {% if deposit_configuration.enabled %}
+            <div class="card mb-3"><div class="card-header">{{ deposit_configuration.name }}</div><div class="card-body">
+                <p>Gebuchtes Guthaben insgesamt: <strong>{{ deposit_overview.total|format_currency }} €</strong></p>
+                <p><a href="{% url 'wirgarten:member_list' %}?deposit_status=pending">Individuelle Vereinbarung offen: {{ deposit_overview.pending_cases }}</a></p>
+                <p>Rückzahlungen nach Austrittsjahr zur Prüfung; kein festgelegter Auszahlungstermin. Vereinbarungen und Liquidität prüfen.</p>
+                <ul>{% for year, amount in deposit_overview.cohorts %}<li>{{ year }}: {{ amount|format_currency }} €</li>{% empty %}<li>Keine offenen Guthaben bei gekündigten Einlagen.</li>{% endfor %}</ul>
+            </div></div>
+        {% endif %}
         {% if show_association_content %}
             <div class="dashboard-section-heading">
                 <hr/>

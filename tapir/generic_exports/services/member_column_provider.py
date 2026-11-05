@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import datetime
 import locale
+from functools import partial
+from tapir.associations.services.deposit_reporting import DepositReporting
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
@@ -43,6 +45,45 @@ class MemberColumnProvider:
     @classmethod
     def get_member_columns(cls) -> list[ExportSegmentColumn]:
         return [
+            *[
+                ExportSegmentColumn(
+                    id=key,
+                    display_name=label,
+                    description="Vereinseinlage; getrennt von Vereins- und Erntebeiträgen",
+                    get_value=partial(
+                        DepositReporting.export_value, attribute=attribute
+                    ),
+                )
+                for key, label, attribute in [
+                    (
+                        "deposit_agreed",
+                        "Einlage: vereinbarter Gesamtbetrag (€)",
+                        "deposit_agreed",
+                    ),
+                    (
+                        "deposit_balance",
+                        "Einlage: gebuchtes Guthaben (€)",
+                        "deposit_balance",
+                    ),
+                    (
+                        "deposit_pending",
+                        "Einlage: offene vereinbarte Einzüge (€)",
+                        "deposit_pending",
+                    ),
+                    (
+                        "deposit_refunded",
+                        "Einlage: extern zurückgezahlt (€)",
+                        "deposit_refunded",
+                    ),
+                    (
+                        "deposit_refundable",
+                        "Einlage: Rückzahlung zu prüfen (€)",
+                        "deposit_refundable",
+                    ),
+                    ("deposit_end", "Einlage: Austrittsdatum", "deposit_end"),
+                    ("deposit_status", "Einlage: Status", "status"),
+                ]
+            ],
             ExportSegmentColumn(
                 id=cls.COLUMN_ID_FIRST_NAME,
                 display_name="Vorname",

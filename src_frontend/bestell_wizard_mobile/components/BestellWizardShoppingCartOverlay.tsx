@@ -34,6 +34,7 @@ interface BestellWizardShoppingCartOverlayProps {
   solidarityContribution: number;
   goToProductTypeStep: (productType: PublicProductType) => void;
   associationMembershipType?: AssociationMembershipType;
+  associationDepositSummary?: string;
   contractStartDate: Date;
   selectedGrowingPeriod: PublicGrowingPeriod | undefined;
   setCurrentStep: (step: Step) => void;
@@ -55,6 +56,7 @@ const BestellWizardShoppingCartOverlay: React.FC<
   solidarityContribution,
   goToProductTypeStep,
   associationMembershipType,
+  associationDepositSummary,
   contractStartDate,
   selectedGrowingPeriod,
   setCurrentStep,
@@ -203,6 +205,9 @@ const BestellWizardShoppingCartOverlay: React.FC<
               Vereinsmitgliedschaft:
               <ul>
                 <li>{associationMembershipType.name}</li>
+                {associationDepositSummary && (
+                  <li>{associationDepositSummary}</li>
+                )}
                 {getAssociationMembershipTypeCurrentPrice(
                   associationMembershipType,
                   contractStartDate,

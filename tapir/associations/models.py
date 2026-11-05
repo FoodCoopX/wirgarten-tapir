@@ -84,3 +84,85 @@ class AssociationMembershipCreatedLogEntry(ModelLogEntry):
         self.type_name = membership.type.name
 
         return self
+
+
+class AssociationDeposit(TapirModel):
+    member = models.OneToOneField(Member, on_delete=models.PROTECT)
+    agreed_amount = models.DecimalField(max_digits=8, decimal_places=2, null=True)
+    minimum_at_agreement = models.DecimalField(
+        max_digits=8, decimal_places=2, null=True
+    )
+    hardship_pending = models.BooleanField(default=False)
+    exception_authorized = models.BooleanField(default=False)
+    effective_from = models.DateField(null=True)
+    cancellation_date = models.DateField(null=True)
+    revision = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(agreed_amount__gte=0) | models.Q(agreed_amount=None),
+                name="deposit_nonnegative_agreement",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(hardship_pending=False)
+                | models.Q(agreed_amount=None),
+                name="deposit_pending_without_debt",
+            ),
+        ]
+
+
+class AssociationDepositOperation(TapirModel):
+    deposit = models.ForeignKey(
+        AssociationDeposit, on_delete=models.PROTECT, related_name="operations"
+    )
+    request_id = models.CharField(max_length=100)
+    payload = models.JSONField()
+    changes = models.JSONField(default=dict)
+    actor = models.ForeignKey(TapirUser, on_delete=models.SET_NULL, null=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["deposit", "request_id"], name="unique_deposit_request"
+            ),
+            models.UniqueConstraint(
+                fields=["request_id"],
+                condition=models.Q(request_id__startswith="import:"),
+                name="unique_deposit_import_reference",
+            ),
+        ]
+
+
+class AssociationDepositBooking(TapirModel):
+    class Kind(models.TextChoices):
+        RECEIPT = "receipt", "Extern eingegangen"
+        IMPORT = "import", "Historische Einzahlung"
+        REFUND = "refund", "Extern zurückgezahlt"
+        REVERSAL = "reversal", "Rücklastschrift / Korrektur"
+
+    deposit = models.ForeignKey(
+        AssociationDeposit, on_delete=models.PROTECT, related_name="bookings"
+    )
+    operation = models.OneToOneField(
+        AssociationDepositOperation, on_delete=models.PROTECT
+    )
+    kind = models.CharField(max_length=20, choices=Kind)
+    amount = models.DecimalField(max_digits=8, decimal_places=2)
+    date = models.DateField()
+    note = models.TextField()
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(amount__gt=0), name="deposit_booking_positive"
+            )
+        ]
+
+
+class AssociationDepositLogEntry(LogEntry):
+    template_name = "associations/log/deposit_changed.html"
+    operation = models.OneToOneField(
+        AssociationDepositOperation, on_delete=models.PROTECT
+    )
+    description = models.TextField()

@@ -5,6 +5,9 @@ from django.shortcuts import get_object_or_404
 
 from tapir.accounts.services.email_normaliser import EmailNormaliser
 from tapir.associations.models import AssociationMembershipType
+from tapir.associations.services.association_deposit_service import (
+    AssociationDepositService,
+)
 from tapir.bestell_wizard.services.questionnaire_source_service import (
     QuestionnaireSourceService,
 )
@@ -119,6 +122,16 @@ class BestellWizardOrderValidator:
                 ),
                 order=order,
                 cache=cache,
+            )
+
+            AssociationDepositService.validate_signup(
+                validated_serializer_data.get("association_deposit_amount", 0),
+                validated_serializer_data.get("association_deposit_hardship", False),
+                has_products=bool(order),
+                cache=cache,
+                instalments=validated_serializer_data.get(
+                    "pay_association_deposit_in_instalments", False
+                ),
             )
 
         cls.validate_distribution_channels(
