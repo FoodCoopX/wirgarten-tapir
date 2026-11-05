@@ -48,7 +48,7 @@ const FIELDS = [
   {
     key: "fixedPieces" as const,
     label: "Fixe Stück",
-    help: "exakte Anzahl für diesen Tag (wird im Backplan direkt so übernommen; in einer Gruppe zählt sie zur Gruppe und wird mit ihr im Ofen geplant)",
+    help: "exakte Anzahl für diesen Tag (wird im Backplan direkt so übernommen; in einer Gruppe zählt sie zur Gruppe)",
   },
 ];
 
@@ -352,57 +352,60 @@ export const DailySettingsModal: React.FC<DailySettingsModalProps> = ({
                     </tr>
                   </thead>
                   <tbody>
-                    {activeBreads.map((bread) => (
-                      <tr key={bread.id}>
-                        <td className="fw-bold align-middle">
-                          <div className="d-flex align-items-center">
-                            {bread.picture && (
-                              <img
-                                src={bread.picture}
-                                alt={bread.name}
-                                className="me-2"
+                    {activeBreads.map((bread) => {
+                      const groupLimits = getGroupLimits(bread);
+                      return (
+                        <tr key={bread.id}>
+                          <td className="fw-bold align-middle">
+                            <div className="d-flex align-items-center">
+                              {bread.picture && (
+                                <img
+                                  src={bread.picture}
+                                  alt={bread.name}
+                                  className="me-2"
+                                  style={{
+                                    width: "32px",
+                                    height: "32px",
+                                    objectFit: "cover",
+                                    borderRadius: "6px",
+                                  }}
+                                />
+                              )}
+                              <div>
+                                {bread.name}
+                                {groupLimits && (
+                                  <small className="text-muted d-block fw-normal">
+                                    Gruppe {bread.groupName}:{" "}
+                                    {describeGroupLimits(groupLimits)}
+                                  </small>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+                          {FIELDS.map((f) => (
+                            <td key={f.key} className="p-1">
+                              <input
+                                type="text"
+                                className={`form-control form-control-sm text-center ${specifics[bread.id!]?.[f.key] ? "text-bakery-highlight fw-bold" : "text-bakery-muted"}`}
+                                value={specifics[bread.id!]?.[f.key] || ""}
+                                onChange={(e) =>
+                                  handleCellChange(
+                                    bread.id!,
+                                    f.key,
+                                    e.target.value,
+                                  )
+                                }
+                                placeholder={getPlaceholder(bread, f.key)}
                                 style={{
-                                  width: "32px",
-                                  height: "32px",
-                                  objectFit: "cover",
-                                  borderRadius: "6px",
+                                  minWidth: "60px",
+                                  fontSize: "14px",
                                 }}
                               />
-                            )}
-                            <div>
-                              {bread.name}
-                              {getGroupLimits(bread) && (
-                                <small className="text-muted d-block fw-normal">
-                                  Gruppe {bread.groupName}:{" "}
-                                  {describeGroupLimits(getGroupLimits(bread)!)}
-                                </small>
-                              )}
-                            </div>
-                          </div>
-                        </td>
-                        {FIELDS.map((f) => (
-                          <td key={f.key} className="p-1">
-                            <input
-                              type="text"
-                              className={`form-control form-control-sm text-center ${specifics[bread.id!]?.[f.key] ? "text-bakery-highlight fw-bold" : "text-bakery-muted"}`}
-                              value={specifics[bread.id!]?.[f.key] || ""}
-                              onChange={(e) =>
-                                handleCellChange(
-                                  bread.id!,
-                                  f.key,
-                                  e.target.value,
-                                )
-                              }
-                              placeholder={getPlaceholder(bread, f.key)}
-                              style={{
-                                minWidth: "60px",
-                                fontSize: "14px",
-                              }}
-                            />
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
+                            </td>
+                          ))}
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </Table>
               </div>

@@ -31,7 +31,8 @@ def _run_solver(
 ) -> tuple[list[dict], list[SolverDiagnostic], str]:
     """
     status_str is one of 'optimal', 'feasible', 'infeasible', 'error',
-    'no_data', 'no_solutions'.
+    'no_data', 'no_solutions'. 'optimal' refers to the plan itself; the even
+    spread of _spread_evenly afterwards is best effort within its time limit.
     """
     diagnostics: list[SolverDiagnostic] = []
 
@@ -188,6 +189,10 @@ def _spread_evenly(
     stations. Together the two cannot be proven optimal in the time the
     preview has, while the first alone is quick. Returns nothing when no plan
     is found in time.
+
+    It keeps the first objective's weighted sum, not each of its terms: an
+    equally good plan can trade one term against another. It changes the
+    model in place (hints, a constraint, the objective).
     """
     for index in range(len(model.proto.variables)):
         var = model.get_int_var_from_proto_index(index)

@@ -4,6 +4,7 @@ from tapir.bakery.solver.dataclasses import BreadInfo, PickupLocationInfo
 from tapir.bakery.solver.groups import (
     group_max_pieces,
     group_min_pieces,
+    limit_groups,
     resolve_groups,
     stove_groups,
 )
@@ -354,8 +355,8 @@ def build_model(
                 model.add(sum(claims) <= distribution_vars[b_id, loc.location_id])
 
     # C15: Every grouped bread's own min/max (not the day's) bounds its
-    #      group's total
-    for members in groups.values():
+    #      group's total, a fixed amount outside the oven included
+    for members in limit_groups(available_breads).values():
         group_total = sum(total_baked[b.bread_id] for b in members)
         group_min = group_min_pieces(members)
         group_max = group_max_pieces(members)
@@ -415,9 +416,12 @@ def build_model(
     # count² is the line through (k, k²) and (k + 1, (k + 1)²) for every k:
     # minimised, the square sits on the highest of them, which is count²
     # exactly at whole counts, and the LP relaxation stays tight.
+    deliveries = {loc.location_id: loc.total_deliveries for loc in pickup_locations}
     squares = []
     for (b_id, loc_id), count in distribution_vars.items():
-        max_count = capacities.get((b_id, loc_id), 0)
+        # C7 caps a count at the station's deliveries, and a capacity can be
+        # far larger.
+        max_count = min(capacities.get((b_id, loc_id), 0), deliveries[loc_id])
         square = model.new_int_var(0, max_count * max_count, f"sq_{b_id}_{loc_id}")
         for k in range(max_count):
             model.add(square >= (2 * k + 1) * count - k * (k + 1))
