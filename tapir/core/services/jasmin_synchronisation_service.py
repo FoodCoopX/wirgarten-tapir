@@ -7,6 +7,7 @@ from apps.commissioning.models import (
     DeliveryStation,
     DeliveryStationDay,
     ExternalCodeMapping,
+    Share,
     ShareImportBatch,
     SharesDeliveryDay,
     ShareType,
@@ -104,7 +105,13 @@ class JasminSynchronisationService:
         cls.synchronise_pickup_locations(api)
         cls.synchronise_product_types(api, changes_monday=changes_monday)
         cls.synchronise_products(api, changes_monday=changes_monday)
-        return cls.synchronize_deliveries(api, cache=cache)
+        warnings = cls.synchronize_deliveries(api, cache=cache)
+        # After the deliveries: Jasmin only lets a delivery day end once its
+        # station days have ended.
+        cls.end_unused_shares_delivery_days(
+            api, changes_monday=changes_monday, cache=cache
+        )
+        return warnings
 
     @staticmethod
     def get_first_changeable_monday(week_monday: datetime.date) -> datetime.date:
@@ -579,6 +586,63 @@ class JasminSynchronisationService:
         )
 
     @classmethod
+    def end_unused_shares_delivery_days(
+        cls, api: JasminApiClient, changes_monday: datetime.date, cache: dict
+    ):
+        used_day_numbers = {
+            PickupLocationDeliveryDayService.get_delivery_day(
+                pickup_location_id=pickup_location_id, cache=cache
+            )
+            for pickup_location_id in PickupLocation.objects.values_list(
+                "id", flat=True
+            )
+        }
+        for shares_delivery_day in SharesDeliveryDay.objects.filter(
+            valid_until__isnull=True
+        ).exclude(day_number__in=used_day_numbers - {None}):
+            end_monday = cls.get_first_monday_without_references(
+                shares_delivery_day, changes_monday=changes_monday
+            )
+            if end_monday is None:
+                continue
+            cls.end_validity(
+                api, SharesDeliveryDayViewSet, shares_delivery_day, end_monday
+            )
+
+    @staticmethod
+    def get_first_monday_without_references(
+        shares_delivery_day: SharesDeliveryDay, changes_monday: datetime.date
+    ) -> datetime.date | None:
+        """Jasmin refuses to end a delivery day before the end of its station days
+        and shares. Returns None if one of its station days is still open."""
+        station_days = DeliveryStationDay.objects.filter(
+            delivery_day=shares_delivery_day
+        )
+        if station_days.filter(valid_until__isnull=True).exists():
+            return None
+
+        end_monday = changes_monday
+        last_station_day = station_days.order_by("-valid_until").first()
+        if last_station_day is not None:
+            end_monday = max(
+                end_monday, last_station_day.valid_until + datetime.timedelta(days=1)
+            )
+        last_share = (
+            Share.objects.filter(delivery_day=shares_delivery_day)
+            .order_by("-year", "-delivery_week")
+            .first()
+        )
+        if last_share is not None:
+            end_monday = max(
+                end_monday,
+                datetime.date.fromisocalendar(
+                    last_share.year, last_share.delivery_week, 1
+                )
+                + datetime.timedelta(days=7),
+            )
+        return end_monday
+
+    @classmethod
     def get_tour_and_stop_order_by_pickup_location_id(cls) -> dict:
         # Tapir doesn't store an order: like the location route exports, routes and
         # the pickup locations within them are sorted by name. Pickup locations
@@ -617,6 +681,14 @@ class JasminSynchronisationService:
             active_on_date_q(week_monday), day_number=day_number
         ).first()
         if shares_delivery_day is not None:
+            if shares_delivery_day.valid_until is not None:
+                # Ended while no pickup location used it. Reopening instead of
+                # creating a new one: Jasmin refuses overlapping validity periods.
+                api.update(
+                    SharesDeliveryDayViewSet,
+                    shares_delivery_day.id,
+                    {"valid_until": None},
+                )
             return shares_delivery_day.id
 
         later_shares_delivery_day = (
