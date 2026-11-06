@@ -283,6 +283,28 @@ class TestAssociationDepositIncreasePreview(TapirIntegrationTest):
             list(self.account.payments.values_list("amount", flat=True)),
         )
 
+    def test_preview_and_confirm_endpoints_have_matching_permissions_and_confirmation(
+        self,
+    ):
+        self.client.force_login(self.member)
+        url = reverse("associations:deposit_increase_preview")
+        body = {"member_id": self.member.pk, "total_amount": "250"}
+        response = self.client.post(url, body)
+        self.assertEqual(200, response.status_code, response.content)
+        self.assertEqual(4, len(response.json()["payments"]))
+        self.assertEqual(
+            400,
+            self.client.post(reverse("associations:member_deposit"), body).status_code,
+        )
+        response = self.client.post(
+            reverse("associations:member_deposit"),
+            {**body, "confirmation": response.json()["confirmation"]},
+        )
+        self.assertEqual(200, response.status_code, response.content)
+        other = MemberFactory()
+        self.client.force_login(other)
+        self.assertEqual(403, self.client.post(url, body).status_code)
+
     def test_preview_does_not_create_mandate_for_fully_received_historical_balance(
         self,
     ):

@@ -451,6 +451,47 @@ class TestAssociationDepositRefunds(TapirIntegrationTest):
                 self.assertFalse(account.payments.exists())
                 self.assertEqual(0, details["retained_amount"])
 
+    def test_admin_form_records_external_refund_and_member_can_read_only(self):
+        self.cash()
+        url = reverse("associations:deposit_case", kwargs={"member_id": self.member.pk})
+        self.client.force_login(self.admin)
+        data = {
+            "action": "refund",
+            "refund-amount": "50",
+            "refund-refunded_on": self.today.isoformat(),
+            "refund-reference": "ui-refund",
+            "refund-note": "Ausgeführte Rückzahlung",
+            "refund-bank_settlement_confirmed": "on",
+            "refund-expected_revision": self.account.agreement_revision,
+            "refund-expected_committed_amount": "0",
+        }
+        for _ in range(2):
+            response = self.client.post(url, data)
+            self.assertEqual(302, response.status_code)
+        self.assertEqual(1, AssociationDepositRefund.objects.count())
+        response = self.client.get(url)
+        self.assertContains(response, "ui-refund")
+        self.assertContains(
+            response, "Ein Bankexport bestätigt keinen tatsächlichen Zahlungseingang"
+        )
+        self.client.force_login(self.member)
+        self.assertEqual(403, self.client.post(url, data).status_code)
+        response = self.client.get(
+            reverse("associations:member_deposit"), {"member_id": self.member.pk}
+        )
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(
+            (50, 150, True),
+            tuple(
+                response.json()[key]
+                for key in [
+                    "refunded_amount",
+                    "retained_amount",
+                    "refund_requires_agreement",
+                ]
+            ),
+        )
+
     def test_stale_form_requires_reconfirmation_but_identical_refund_replay_is_safe(
         self,
     ):

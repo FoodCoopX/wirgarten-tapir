@@ -303,6 +303,36 @@ class TestAssociationDepositMembershipLifecycle(TapirIntegrationTest):
         )
         self.assertEqual(200, self.details()["stopped_amount"])
 
+    def test_api_preserves_exported_rows_files_and_shows_stopped_history_when_disabled(
+        self,
+    ):
+        PaymentExportBuilder.export_association_deposit_payments(self.today, False, {})
+        committed = list(
+            self.account.payments.filter(transaction__isnull=False).values()
+        )
+        files = list(ExportedFile.objects.order_by("pk").values())
+        self.client.force_login(self.admin)
+        response = self.client.post(
+            reverse("associations:set_membership_end_date"),
+            {"membership_id": self.membership().pk, "end_date": "2026-12-31"},
+        )
+        self.assertTrue(response.json()["order_confirmed"])
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_ENABLED, False)
+        details = self.client.get(
+            reverse("associations:member_deposit"), {"member_id": self.member.pk}
+        ).json()
+        self.assertEqual(100, details["stopped_amount"])
+        self.assertTrue(details["visible"])
+        self.assertEqual(
+            committed,
+            list(self.account.payments.filter(transaction__isnull=False).values()),
+        )
+        self.assertEqual(files, list(ExportedFile.objects.order_by("pk").values()))
+        case = self.client.get(
+            reverse("associations:deposit_case", kwargs={"member_id": self.member.pk})
+        )
+        self.assertContains(case, "Gestoppte Raten")
+
     def test_cancel_manager_deletes_future_membership_without_losing_cutoff(self):
         self.rejoin(datetime.date(2027, 1, 1))
         self.cancel()

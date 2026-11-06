@@ -106,19 +106,25 @@ if (domNodeSolidarityCard) {
 const domNodeFuturePaymentsCard = document.getElementById(
   "future_payments_card",
 );
-if (domNodeFuturePaymentsCard) {
-  const deliveryChargeEnabled =
-    domNodeFuturePaymentsCard.dataset.deliveryChargeEnabled === "True";
-  const root = createRoot(domNodeFuturePaymentsCard);
+const futurePaymentsRoot = domNodeFuturePaymentsCard
+  ? createRoot(domNodeFuturePaymentsCard)
+  : undefined;
+let futurePaymentsRefreshVersion = 0;
 
-  root.render(
+function refreshFuturePayments() {
+  if (!domNodeFuturePaymentsCard || !futurePaymentsRoot) return;
+  futurePaymentsRoot.render(
     <FuturePaymentsCard
       memberId={domNodeFuturePaymentsCard.dataset.memberId!}
       csrfToken={getCsrfToken()}
-      deliveryChargeEnabled={deliveryChargeEnabled}
+      deliveryChargeEnabled={
+        domNodeFuturePaymentsCard.dataset.deliveryChargeEnabled === "True"
+      }
+      refreshVersion={futurePaymentsRefreshVersion++}
     />,
   );
 }
+refreshFuturePayments();
 
 const domNodePaymentRhythmButton = document.getElementById(
   "payment_rhythm_button",
@@ -200,6 +206,7 @@ if (domNodeAssociationMembershipCard) {
 
   root.render(
     <AssociationMembershipCard
+      onDepositChanged={refreshFuturePayments}
       memberId={domNodeAssociationMembershipCard.dataset.memberId!}
       csrfToken={getCsrfToken()}
     />,

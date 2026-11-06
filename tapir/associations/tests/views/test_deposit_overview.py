@@ -145,6 +145,18 @@ class TestDepositOverview(TapirIntegrationTest):
                     },
                 )
                 self.assertEqual(details["state"], rows[account.member_id]["state"])
+                response = self.client.get(
+                    reverse("associations:member_deposit"),
+                    {"member_id": account.member_id},
+                )
+                self.assertEqual(200, response.status_code)
+                for key in keys:
+                    if key != "state_label":
+                        actual = response.json()[key]
+                        self.assertEqual(
+                            details[key],
+                            Decimal(str(actual)) if actual is not None else None,
+                        )
         self.assertEqual(100, rows[self.account.member_id]["pending_amount"])
         self.assertEqual(100, rows[self.account.member_id]["stopped_amount"])
         self.assertEqual("waived", rows[waived.member_id]["state"])
