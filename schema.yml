@@ -14456,6 +14456,9 @@ components:
         coop_share_transaction:
           type: string
           nullable: true
+        association_deposit_account:
+          type: string
+          nullable: true
       required:
       - amount
       - created_at

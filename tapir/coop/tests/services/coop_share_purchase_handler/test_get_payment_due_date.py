@@ -8,7 +8,7 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 class TestGetPaymentDueDate(TapirUnitTest):
     @patch(
-        "tapir.coop.services.coop_share_purchase_handler.get_parameter_value",
+        "tapir.payments.services.payment_due_date_calculator.get_parameter_value",
         autospec=True,
     )
     def test_getPaymentDueDate_sharesValidBeforePaymentDueDayOfMonth_returnsDateInSameMonth(
@@ -28,7 +28,7 @@ class TestGetPaymentDueDate(TapirUnitTest):
         )
 
     @patch(
-        "tapir.coop.services.coop_share_purchase_handler.get_parameter_value",
+        "tapir.payments.services.payment_due_date_calculator.get_parameter_value",
         autospec=True,
     )
     def test_getPaymentDueDate_sharesValidAfterPaymentDueDayOfMonth_returnsDateInFollowingMonth(
@@ -48,7 +48,7 @@ class TestGetPaymentDueDate(TapirUnitTest):
         )
 
     @patch(
-        "tapir.coop.services.coop_share_purchase_handler.get_parameter_value",
+        "tapir.payments.services.payment_due_date_calculator.get_parameter_value",
         autospec=True,
     )
     def test_getPaymentDueDate_sharesValidOnPaymentDueDayOfMonth_returnsDateInSameMonth(

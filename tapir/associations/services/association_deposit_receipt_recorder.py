@@ -14,6 +14,9 @@ from tapir.associations.models import (
 from tapir.associations.services.association_deposit_amount_validator import (
     AssociationDepositAmountValidator,
 )
+from tapir.associations.services.association_deposit_payment_synchronizer import (
+    AssociationDepositPaymentSynchronizer,
+)
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.utils import get_today, legal_status_is_association
 
@@ -81,6 +84,9 @@ class AssociationDepositReceiptRecorder:
         AssociationDepositReceiptCreatedLogEntry().populate(
             model=receipt, actor=actor, user=member
         ).save()
+        AssociationDepositPaymentSynchronizer.update_existing_deposit_payment(
+            member=member, cache=cache
+        )
         return receipt
 
     @staticmethod

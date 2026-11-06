@@ -131,3 +131,7 @@ class AssociationDepositReceiptCreatedLogEntry(ModelLogEntry):
 
 class AssociationDepositAgreementCreatedLogEntry(ModelLogEntry):
     template_name = "associations/log/deposit_agreement_created.html"
+
+
+class AssociationDepositPaymentCreatedLogEntry(ModelLogEntry):
+    template_name = "associations/log/deposit_payment_created.html"

@@ -226,8 +226,12 @@ class Command(BaseCommand):
                         Subscription.objects.all().delete()
                         PaymentTransaction.objects.exclude(
                             type=PAYMENT_TYPE_COOP_SHARES
+                        ).exclude(
+                            payment__association_deposit_account__isnull=False
                         ).delete()
-                        Payment.objects.exclude(type=PAYMENT_TYPE_COOP_SHARES).delete()
+                        Payment.objects.filter(
+                            association_deposit_account__isnull=True
+                        ).exclude(type=PAYMENT_TYPE_COOP_SHARES).delete()
 
                 self.import_generic(
                     reader=reader,

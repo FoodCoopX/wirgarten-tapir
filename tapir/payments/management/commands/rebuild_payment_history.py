@@ -38,9 +38,16 @@ class Command(BaseCommand):
                 print("Aborting")
                 return
 
-        Payment.objects.exclude(type=PAYMENT_TYPE_COOP_SHARES).delete()
-        Payment.objects.update(transaction=None)
-        PaymentTransaction.objects.all().delete()
+        deposit_transactions = Payment.objects.filter(
+            association_deposit_account__isnull=False, transaction__isnull=False
+        ).values("transaction_id")
+        Payment.objects.filter(association_deposit_account__isnull=True).exclude(
+            type=PAYMENT_TYPE_COOP_SHARES
+        ).delete()
+        Payment.objects.filter(association_deposit_account__isnull=True).update(
+            transaction=None
+        )
+        PaymentTransaction.objects.exclude(pk__in=deposit_transactions).delete()
 
         current_date = get_parameter_value(
             key=ParameterKeys.PAYMENT_START_DATE
@@ -51,7 +58,7 @@ class Command(BaseCommand):
         while current_date < today:
             create_payments_for_this_month(reference_date=current_date)
             errors = export_payments_for_this_month(
-                reference_date=current_date, send_mail=False
+                reference_date=current_date, send_mail=False, include_deposits=False
             )
             for error in errors:
                 print(error)
