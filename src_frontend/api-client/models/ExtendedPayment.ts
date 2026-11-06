@@ -45,6 +45,12 @@ import { SubscriptionFromJSON, SubscriptionToJSON } from "./Subscription";
 export interface ExtendedPayment {
   /**
    *
+   * @type {string}
+   * @memberof ExtendedPayment
+   */
+  associationDepositName: string | null;
+  /**
+   *
    * @type {Payment}
    * @memberof ExtendedPayment
    */
@@ -99,6 +105,11 @@ export interface ExtendedPayment {
 export function instanceOfExtendedPayment(
   value: object,
 ): value is ExtendedPayment {
+  if (
+    !("associationDepositName" in value) ||
+    value["associationDepositName"] === undefined
+  )
+    return false;
   if (!("payment" in value) || value["payment"] === undefined) return false;
   if (!("subscriptions" in value) || value["subscriptions"] === undefined)
     return false;
@@ -144,6 +155,7 @@ export function ExtendedPaymentFromJSONTyped(
     return json;
   }
   return {
+    associationDepositName: json["association_deposit_name"],
     payment: PaymentFromJSON(json["payment"]),
     subscriptions: (json["subscriptions"] as Array<any>).map(
       SubscriptionFromJSON,
@@ -178,6 +190,7 @@ export function ExtendedPaymentToJSONTyped(
   }
 
   return {
+    association_deposit_name: value["associationDepositName"],
     payment: PaymentToJSON(value["payment"]),
     subscriptions: (value["subscriptions"] as Array<any>).map(
       SubscriptionToJSON,

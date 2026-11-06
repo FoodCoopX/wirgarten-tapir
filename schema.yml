@@ -11851,6 +11851,9 @@ components:
     ExtendedPayment:
       type: object
       properties:
+        association_deposit_name:
+          type: string
+          nullable: true
         payment:
           $ref: '#/components/schemas/Payment'
         subscriptions:
@@ -11882,6 +11885,7 @@ components:
           type: integer
           nullable: true
       required:
+      - association_deposit_name
       - association_memberships
       - coop_share_transactions
       - delivery_charge_pickup_location
@@ -14454,6 +14458,9 @@ components:
           type: string
           nullable: true
         coop_share_transaction:
+          type: string
+          nullable: true
+        association_deposit_account:
           type: string
           nullable: true
       required:

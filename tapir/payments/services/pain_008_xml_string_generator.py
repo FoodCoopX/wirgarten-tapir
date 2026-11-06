@@ -12,7 +12,10 @@ from unidecode import unidecode
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.core.models import ID_LENGTH
-from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES
+from tapir.payments.config import (
+    PAYMENT_TYPE_COOP_SHARES,
+    PAYMENT_TYPE_ASSOCIATION_DEPOSIT,
+)
 from tapir.payments.services.month_payment_builder_utils import MonthPaymentBuilderUtils
 from tapir.payments.services.payment_export_intended_use_builder import (
     PaymentExportIntendedUseBuilder,
@@ -143,6 +146,18 @@ class Pain008XmlStringGenerator:
         if not member.sepa_consent:
             raise Pain008XmlSinglePaymentException(
                 f"Mitglied {member_display_name} hat das SEPA-Verfahren nicht zugestimmt"
+            )
+
+        if (
+            payment.type == PAYMENT_TYPE_ASSOCIATION_DEPOSIT
+            and payment.association_deposit_account_id is not None
+            and (
+                payment.due_date > collection_date
+                or payment.mandate_ref.start_ts.date() > collection_date
+            )
+        ):
+            raise Pain008XmlSinglePaymentException(
+                f"Die Zahlung für {member_display_name} darf nicht vor Fälligkeit oder Mandatsbeginn eingezogen werden."
             )
 
         if payment.amount < Decimal(0):

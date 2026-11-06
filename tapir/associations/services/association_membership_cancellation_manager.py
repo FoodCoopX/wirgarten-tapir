@@ -1,18 +1,23 @@
 import datetime
 
 from django.core.exceptions import ValidationError
+from django.db import transaction
 
 from tapir.accounts.models import TapirUser
 from tapir.associations.models import (
     AssociationMembership,
-    AssociationMembershipUpdatedLogEntry,
     AssociationMembershipDeletedLogEntry,
 )
-from tapir.log.util import freeze_for_log
+from tapir.associations.services.association_membership_change_handler import (
+    AssociationMembershipChangeHandler,
+)
+from tapir.associations.services.association_deposit_membership_lifecycle import (
+    AssociationDepositMembershipLifecycle,
+)
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.service.products import get_active_and_future_subscriptions
-from tapir.wirgarten.utils import get_now, get_today, legal_status_is_association
+from tapir.wirgarten.utils import get_today, legal_status_is_association
 
 
 class AssociationMembershipCancellationManager:
@@ -53,6 +58,7 @@ class AssociationMembershipCancellationManager:
         return True
 
     @classmethod
+    @transaction.atomic
     def cancel_association_membership(
         cls,
         member: Member,
@@ -60,6 +66,7 @@ class AssociationMembershipCancellationManager:
         actor: TapirUser,
         cache: dict,
     ):
+        Member.objects.select_for_update(no_key=True).get(pk=member.pk)
         current_membership = TapirCache.get_member_association_membership_at_date(
             cache=cache, member=member, reference_date=end_date
         )
@@ -71,6 +78,9 @@ class AssociationMembershipCancellationManager:
                 cache=cache,
             )
 
+        previous = AssociationDepositMembershipLifecycle.get_membership_snapshot(
+            member, cache
+        )
         for membership in TapirCache.get_member_association_memberships(
             member=member, cache=cache
         ):
@@ -79,6 +89,9 @@ class AssociationMembershipCancellationManager:
                     membership=membership, actor=actor
                 ).save()
                 membership.delete()
+        AssociationDepositMembershipLifecycle.record_membership_change(
+            member, previous, actor, cache
+        )
 
     @classmethod
     def _set_membership_end_date(
@@ -88,17 +101,9 @@ class AssociationMembershipCancellationManager:
         actor: TapirUser,
         cache: dict,
     ):
-        before_changes = freeze_for_log(membership)
-        membership.end_date = end_date
-        membership.cancellation_ts = get_now(cache=cache)
-        membership.save()
-
-        AssociationMembershipUpdatedLogEntry().populate(
-            old_frozen=before_changes,
-            new_model=membership,
-            actor=actor,
-            user=membership.member,
-        ).save()
+        AssociationMembershipChangeHandler.set_end_date(
+            membership, end_date, actor, cache
+        )
 
     @classmethod
     def get_earliest_possible_membership_cancellation_date(

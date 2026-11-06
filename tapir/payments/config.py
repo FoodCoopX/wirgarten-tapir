@@ -1,4 +1,5 @@
 PAYMENT_TYPE_COOP_SHARES = "Genossenschaftsanteile"
+PAYMENT_TYPE_ASSOCIATION_DEPOSIT = "Vereinseinlagen"
 
 
 class IntendedUseTokens:

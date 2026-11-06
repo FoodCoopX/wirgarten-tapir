@@ -158,6 +158,9 @@ const PaymentComponent: React.FC<PaymentProps> = ({
         <span className={"text-break"}>
           {extendedPayment.payment.mandateRef}
         </span>
+        {extendedPayment.associationDepositName && (
+          <span>{extendedPayment.associationDepositName}</span>
+        )}
         {extendedPayment.subscriptions.map((subscription) => (
           <span key={subscription.id}>
             {formatSubscription(subscription)}

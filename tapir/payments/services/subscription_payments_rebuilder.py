@@ -15,10 +15,12 @@ from tapir.wirgarten.utils import get_today
 class SubscriptionPaymentsRebuilder:
     @classmethod
     def rebuild_subscription_payments(cls, from_date: datetime.date, cache: dict):
-        transactions = PaymentTransaction.objects.exclude(
-            type=PAYMENT_TYPE_COOP_SHARES
-        ).filter(
-            month__gte=from_date.replace(day=1),
+        transactions = (
+            PaymentTransaction.objects.exclude(type=PAYMENT_TYPE_COOP_SHARES)
+            .exclude(payment__association_deposit_account__isnull=False)
+            .filter(
+                month__gte=from_date.replace(day=1),
+            )
         )
 
         Payment.objects.filter(transaction__in=transactions).delete()
@@ -34,7 +36,7 @@ class SubscriptionPaymentsRebuilder:
             create_payments_for_this_month(reference_date=current_date)
             errors.extend(
                 export_payments_for_this_month(
-                    reference_date=current_date, send_mail=False
+                    reference_date=current_date, send_mail=False, include_deposits=False
                 )
             )
             current_date = get_first_of_next_month(current_date)

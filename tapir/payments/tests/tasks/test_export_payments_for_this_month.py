@@ -57,7 +57,8 @@ class TestExportPaymentsForThisMonth(TapirIntegrationTest):
 
     def test_exportPaymentsForThisMonth_somePaymentsFail_sendMailWithErrorDetails(self):
         mock_timezone(test=self, now=datetime.datetime(year=2019, month=6, day=15))
-        export_payments_for_this_month()
+        with self.captureOnCommitCallbacks(execute=True):
+            export_payments_for_this_month()
 
         self.assertEqual(1, len(mail.outbox))
         sent_mail = mail.outbox[0]
@@ -77,7 +78,8 @@ class TestExportPaymentsForThisMonth(TapirIntegrationTest):
         self.invalid_subscription.member.iban = "NL88ABNA2011060885"
         self.invalid_subscription.member.save()
 
-        export_payments_for_this_month()
+        with self.captureOnCommitCallbacks(execute=True):
+            export_payments_for_this_month()
 
         self.assertEqual(1, len(mail.outbox))
         sent_mail = mail.outbox[0]
@@ -101,7 +103,8 @@ class TestExportPaymentsForThisMonth(TapirIntegrationTest):
             key=ParameterKeys.PAYMENT_ORGANISATION_IBAN, value="INVALID"
         )
 
-        export_payments_for_this_month()
+        with self.captureOnCommitCallbacks(execute=True):
+            export_payments_for_this_month()
 
         self.assertEqual(1, len(mail.outbox))
         sent_mail = mail.outbox[0]

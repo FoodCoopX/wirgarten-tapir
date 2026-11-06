@@ -4,6 +4,8 @@ from tapir.associations.models import (
     AssociationMembershipType,
     AssociationMembership,
     AssociationMembershipTypePrice,
+    AssociationDepositAccount,
+    AssociationDepositReceipt,
 )
 from tapir.wirgarten.tests.factories import MemberFactory
 
@@ -41,3 +43,25 @@ class AssociationMembershipFactory(
     type = factory.SubFactory(AssociationMembershipTypeFactory)
     start_date = factory.Faker("date_object")
     end_date = None
+
+
+class AssociationDepositAccountFactory(
+    factory.django.DjangoModelFactory[AssociationDepositAccount]
+):
+    member = factory.SubFactory(MemberFactory)
+
+    class Meta:
+        model = AssociationDepositAccount
+
+
+class AssociationDepositReceiptFactory(
+    factory.django.DjangoModelFactory[AssociationDepositReceipt]
+):
+    account = factory.SubFactory(AssociationDepositAccountFactory)
+    reference = factory.Sequence(lambda number: f"receipt-{number}")
+    amount = 200
+    received_on = factory.Faker("past_date")
+    note = "Historischer Zahlungseingang"
+
+    class Meta:
+        model = AssociationDepositReceipt

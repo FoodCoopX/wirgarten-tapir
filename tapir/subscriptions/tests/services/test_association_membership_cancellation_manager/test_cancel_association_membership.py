@@ -1,121 +1,53 @@
 import datetime
-from unittest.mock import patch, Mock, ANY
 
-from tapir.associations.models import AssociationMembershipDeletedLogEntry
+from tapir.associations.models import (
+    AssociationMembership,
+    AssociationMembershipDeletedLogEntry,
+    AssociationMembershipUpdatedLogEntry,
+)
 from tapir.associations.services.association_membership_cancellation_manager import (
     AssociationMembershipCancellationManager,
 )
-from tapir.utils.services.tapir_cache import TapirCache
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
+from tapir.associations.tests.factories import AssociationMembershipFactory
+from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
-class TestCancelAssociationMembership(TapirUnitTest):
-
-    @patch.object(
-        TapirCache,
-        "get_member_association_memberships",
-        autospec=True,
-    )
-    @patch.object(
-        TapirCache,
-        "get_member_association_membership_at_date",
-        autospec=True,
-    )
-    @patch.object(
-        AssociationMembershipCancellationManager,
-        "_set_membership_end_date",
-        autospec=True,
-    )
+class TestCancelAssociationMembership(TapirIntegrationTest):
     def test_cancelAssociationMembership_currentMembershipExists_membershipEndDateSet(
         self,
-        mock_set_membership_end_date: Mock,
-        mock_get_member_association_membership_at_date: Mock,
-        mock_get_member_association_memberships: Mock,
     ):
-        current_membership = Mock()
-        member = Mock()
-        end_date = Mock()
-        actor = Mock()
-        cache = Mock()
-
-        mock_get_member_association_membership_at_date.return_value = current_membership
-        mock_get_member_association_memberships.return_value = []
-
+        membership = AssociationMembershipFactory(
+            start_date=datetime.date(2010, 1, 1), end_date=None
+        )
+        end_date = datetime.date(2010, 12, 31)
         AssociationMembershipCancellationManager.cancel_association_membership(
-            member=member,
-            end_date=end_date,
-            actor=actor,
-            cache=cache,
+            membership.member, end_date, membership.member, {}
         )
+        membership.refresh_from_db()
+        self.assertEqual(end_date, membership.end_date)
+        self.assertIsNotNone(membership.cancellation_ts)
+        self.assertEqual(1, AssociationMembershipUpdatedLogEntry.objects.count())
+        self.assertTrue(AssociationMembership.objects.filter(pk=membership.pk).exists())
 
-        mock_get_member_association_membership_at_date.assert_called_once_with(
-            cache=cache, member=member, reference_date=end_date
-        )
-        mock_set_membership_end_date.assert_called_once_with(
-            membership=current_membership, end_date=end_date, actor=actor, cache=cache
-        )
-        mock_get_member_association_memberships.assert_called_once_with(
-            member=member, cache=cache
-        )
-        current_membership.delete.assert_not_called()
-
-    @patch.object(
-        AssociationMembershipDeletedLogEntry, "populate_membership", autospec=True
-    )
-    @patch.object(
-        TapirCache,
-        "get_member_association_memberships",
-        autospec=True,
-    )
-    @patch.object(
-        TapirCache,
-        "get_member_association_membership_at_date",
-        autospec=True,
-    )
-    @patch.object(
-        AssociationMembershipCancellationManager,
-        "_set_membership_end_date",
-        autospec=True,
-    )
     def test_cancelAssociationMembership_futureMembershipExists_futureMembershipsDeleted(
         self,
-        mock_set_membership_end_date: Mock,
-        mock_get_member_association_membership_at_date: Mock,
-        mock_get_member_association_memberships: Mock,
-        mock_populate_membership: Mock,
     ):
-        current_membership = None
-        member = Mock()
-        end_date = datetime.date(year=2010, month=12, day=31)
-        actor = Mock()
-        cache = Mock()
-
-        mock_get_member_association_membership_at_date.return_value = current_membership
-        future_membership = Mock(start_date=datetime.date(year=2011, month=1, day=1))
-        past_membership = Mock(start_date=datetime.date(year=2010, month=1, day=1))
-        mock_get_member_association_memberships.return_value = [
-            future_membership,
-            past_membership,
-        ]
-
+        past = AssociationMembershipFactory(
+            start_date=datetime.date(2010, 1, 1), end_date=datetime.date(2010, 12, 1)
+        )
+        future = AssociationMembershipFactory(
+            member=past.member, start_date=datetime.date(2011, 1, 1)
+        )
+        before = dict(AssociationMembership.objects.filter(pk=past.pk).values().get())
         AssociationMembershipCancellationManager.cancel_association_membership(
-            member=member,
-            end_date=end_date,
-            actor=actor,
-            cache=cache,
+            past.member, datetime.date(2010, 12, 31), past.member, {}
         )
-
-        mock_get_member_association_membership_at_date.assert_called_once_with(
-            cache=cache, member=member, reference_date=end_date
+        self.assertFalse(AssociationMembership.objects.filter(pk=future.pk).exists())
+        self.assertEqual(
+            before,
+            dict(AssociationMembership.objects.filter(pk=past.pk).values().get()),
         )
-        mock_set_membership_end_date.assert_not_called()
-        mock_get_member_association_memberships.assert_called_once_with(
-            member=member, cache=cache
-        )
-        past_membership.delete.assert_not_called()
-        future_membership.delete.assert_called_once_with()
-
-        mock_populate_membership.assert_called_once_with(
-            ANY, membership=future_membership, actor=actor
-        )
-        mock_populate_membership.return_value.save.assert_called_once_with()
+        entry = AssociationMembershipDeletedLogEntry.objects.get()
+        self.assertEqual(past.member_id, entry.user_id)
+        self.assertEqual(past.member_id, entry.actor_id)
+        self.assertFalse(AssociationMembershipUpdatedLogEntry.objects.exists())
