@@ -242,14 +242,7 @@ class BiddingRoundReplacedSubscription(BiddingRoundTapirModel):
                     serializers.serialize("json", subscriptions)
                 ),
                 "deliveries": json.loads(serializers.serialize("json", deliveries)),
-                "created_links": [
-                    {
-                        "subscription_id": link.subscription_id,
-                        "round_id": link.round_id,
-                        "is_bidder_contract": link.is_bidder_contract,
-                    }
-                    for link in links
-                ],
+                "created_links": json.loads(serializers.serialize("json", links)),
                 "price_logs": [
                     {"log_entry_id": log_entry_id, "subscription_id": subscription_id}
                     for log_entry_id, subscription_id in price_logs
@@ -271,11 +264,15 @@ class BiddingRoundReplacedSubscription(BiddingRoundTapirModel):
         ):
             deserialized.save()
         for link in self.data.get("created_links", []):
-            BiddingRoundCreatedSubscription.objects.get_or_create(
-                subscription_id=link["subscription_id"],
-                round_id=link["round_id"],
-                defaults={"is_bidder_contract": link["is_bidder_contract"]},
-            )
+            if "model" in link:
+                for deserialized in serializers.deserialize("json", json.dumps([link])):
+                    deserialized.save()
+            else:
+                BiddingRoundCreatedSubscription.objects.get_or_create(
+                    subscription_id=link["subscription_id"],
+                    round_id=link["round_id"],
+                    defaults={"is_bidder_contract": link["is_bidder_contract"]},
+                )
         for price_log in self.data.get("price_logs", []):
             SubscriptionPriceChangedLogEntry.objects.filter(
                 id=price_log["log_entry_id"], subscription__isnull=True
