@@ -5,6 +5,7 @@
     <h1>
         {% if member %}{{ details.settings.name }} – {{ member.get_display_name }}{% else %}Einlagenverwaltung{% endif %}
     </h1>
+    <a href="{% url 'associations:deposit_departure_report' %}">Jahresübersicht ausgeschiedener Mitglieder</a>
     <form method="get" action="{% url 'associations:deposit_administration' %}" class="mb-3">
         {% bootstrap_form member_form wrapper_class="searchable-select mb-3" %}
         <button class="btn btn-secondary" type="submit">Einlagenfall öffnen</button>

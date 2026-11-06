@@ -3,6 +3,7 @@ from rest_framework.routers import DefaultRouter
 
 from tapir.associations import views, deposit_views
 from tapir.associations.deposit_admin_views import DepositAdministrationView
+from tapir.associations.deposit_report_views import DepositDepartureReportView
 
 app_name = "associations"
 urlpatterns = [
@@ -13,6 +14,11 @@ urlpatterns = [
     ),
     path(
         "deposits", DepositAdministrationView.as_view(), name="deposit_administration"
+    ),
+    path(
+        "deposits/report",
+        DepositDepartureReportView.as_view(),
+        name="deposit_departure_report",
     ),
     path(
         "deposits/<str:member_id>",

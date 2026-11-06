@@ -2,6 +2,7 @@ import uuid
 from decimal import Decimal
 
 from django import forms
+from django.core.validators import MaxValueValidator
 
 from tapir.associations.services.association_deposit_instalment_calculator import (
     AssociationDepositInstalmentCalculator,
@@ -87,3 +88,15 @@ class DepositRefundForm(forms.Form):
     expected_committed_amount = forms.DecimalField(
         max_digits=12, decimal_places=2, min_value=0, widget=forms.HiddenInput()
     )
+
+
+class DepositDepartureReportForm(forms.Form):
+    year = forms.IntegerField(
+        label="Jahr des letzten wirksamen Austritts", min_value=1900
+    )
+
+    def __init__(self, *args, reference_date, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["year"].max_value = reference_date.year
+        self.fields["year"].validators.append(MaxValueValidator(reference_date.year))
+        self.fields["year"].widget.attrs["max"] = reference_date.year

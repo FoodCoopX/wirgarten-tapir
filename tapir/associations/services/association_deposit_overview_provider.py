@@ -34,7 +34,7 @@ class AssociationDepositOverviewProvider:
         "waived": "Vollständiger Verzicht vereinbart",
         "individual": "Individuelle Vereinbarung",
         "regular": "Reguläre Vereinbarung",
-        "agreement_required": "Neue Vereinbarung erforderlich",
+        "agreement_required": "Einzug bis zu neuer Vereinbarung gesperrt",
         "collection_stopped": "Einzug gestoppt",
     }
     COLUMNS = {

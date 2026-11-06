@@ -12,6 +12,9 @@ from django.views import generic
 from django.views.decorators.http import require_GET
 
 from tapir.associations.models import AssociationMembership
+from tapir.associations.services.association_deposit_departure_report_provider import (
+    AssociationDepositDepartureReportProvider,
+)
 from tapir.configuration.parameter import get_parameter_value
 from tapir.payments.services.month_payment_builder import MonthPaymentBuilder
 from tapir.solidarity_contribution.services.solidarity_validator import (
@@ -137,6 +140,12 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         context = super().get_context_data(**kwargs)
         context["cache"] = self.cache
         today = get_today(cache=self.cache)
+        if legal_status_is_association(cache=self.cache) and self.request.user.has_perm(
+            Permission.Coop.MANAGE
+        ):
+            context["deposit_departure_data"] = (
+                AssociationDepositDepartureReportProvider.get_dashboard_data(self.cache)
+            )
 
         current_growing_period = TapirCache.get_growing_period_at_date(
             reference_date=today, cache=self.cache
