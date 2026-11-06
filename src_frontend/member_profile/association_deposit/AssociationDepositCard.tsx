@@ -26,6 +26,16 @@ function getDepositPaymentStatus(status: string): string {
   return "Offen";
 }
 
+function getDepositCollectionNotice(
+  details: AssociationDepositDetails,
+): string {
+  if (details.refundRequiresAgreement)
+    return "Rückzahlung erfasst. Neue Einzüge benötigen eine neue dokumentierte Verwaltungsvereinbarung.";
+  if (details.state === "agreement_required")
+    return "Neue Einlagenvereinbarung erforderlich.";
+  return "Einzug außerhalb der Mitgliedschaft gestoppt.";
+}
+
 export default function AssociationDepositCard({
   memberId,
   csrfToken,
@@ -141,15 +151,14 @@ export default function AssociationDepositCard({
             <Card.Title className="mb-0">{details.settings.name}</Card.Title>
           </Card.Header>
           <Card.Body>
-            {["agreement_required", "collection_stopped"].includes(
-              details.state,
-            ) && (
+            {(details.refundRequiresAgreement ||
+              ["agreement_required", "collection_stopped"].includes(
+                details.state,
+              )) && (
               <Alert variant="info">
-                {details.state === "agreement_required"
-                  ? "Neue Vereinbarung nach Mitgliedschaftsunterbrechung erforderlich."
-                  : "Einzug außerhalb der Mitgliedschaft gestoppt."}{" "}
-                Bisherige Vereinbarung und Zahlungen bleiben erhalten. Es
-                entsteht weder ein automatischer Erlass noch eine Rückzahlung.
+                {getDepositCollectionNotice(details)} Bisherige Vereinbarung und
+                Zahlungen bleiben erhalten. Es entsteht weder ein automatischer
+                Erlass noch eine Rückzahlung.
               </Alert>
             )}
             {details.state === "pending" && (
@@ -188,11 +197,20 @@ export default function AssociationDepositCard({
               <dd>{formatCurrency(details.receivedAmount)}</dd>
               <dt>Für SEPA verbucht</dt>
               <dd>{formatCurrency(details.committedAmount)}</dd>
+              <dt>Extern zurückgezahlt</dt>
+              <dd>{formatCurrency(details.refundedAmount)}</dd>
+              <dt>Rechnerisch verbleibender Betrag</dt>
+              <dd>{formatCurrency(details.retainedAmount)}</dd>
               <dt>Gestoppte Raten</dt>
               <dd>{formatCurrency(details.stoppedAmount)}</dd>
               <dt>Offener Einzug</dt>
               <dd>{formatCurrency(details.pendingAmount)}</dd>
             </dl>
+            <small>
+              Ein Bankexport bestätigt keinen tatsächlichen Zahlungseingang. Der
+              rechnerische Betrag berücksichtigt externe Eingänge, verbuchte
+              SEPA-Beträge und erfasste Rückzahlungen.
+            </small>
             {(details.overpaymentCredit ?? 0) > 0 && (
               <Alert variant="info">
                 Guthaben über dem vereinbarten Betrag:{" "}

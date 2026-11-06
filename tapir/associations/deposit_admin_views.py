@@ -10,6 +10,7 @@ from tapir.associations.deposit_forms import (
     DepositAgreementForm,
     DepositMemberChoiceForm,
     DepositReceiptForm,
+    DepositRefundForm,
 )
 from tapir.associations.services.association_deposit_administration_provider import (
     AssociationDepositAdministrationProvider,
@@ -19,6 +20,9 @@ from tapir.associations.services.association_deposit_agreement_authorizer import
 )
 from tapir.associations.services.association_deposit_receipt_recorder import (
     AssociationDepositReceiptRecorder,
+)
+from tapir.associations.services.association_deposit_refund_recorder import (
+    AssociationDepositRefundRecorder,
 )
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import Member
@@ -79,6 +83,17 @@ class DepositAdministrationView(PermissionRequiredMixin, TemplateView):
                 },
             ),
         )
+        context.setdefault(
+            "refund_form",
+            DepositRefundForm(
+                prefix="refund",
+                initial={
+                    "refunded_on": today,
+                    "expected_revision": account.agreement_revision if account else 0,
+                    "expected_committed_amount": context["details"]["committed_amount"],
+                },
+            ),
+        )
         return context
 
     def get(self, request, *args, **kwargs):
@@ -98,38 +113,35 @@ class DepositAdministrationView(PermissionRequiredMixin, TemplateView):
         if "member" not in context:
             raise Http404
         action = request.POST.get("action")
-        if action not in ("agreement", "receipt"):
+        if action not in ("agreement", "receipt", "refund"):
             raise Http404
-        form = (DepositAgreementForm if action == "agreement" else DepositReceiptForm)(
-            request.POST, prefix=action
-        )
+        form = {
+            "agreement": DepositAgreementForm,
+            "receipt": DepositReceiptForm,
+            "refund": DepositRefundForm,
+        }[action](request.POST, prefix=action)
         if form.is_valid():
+            save = {
+                "agreement": AssociationDepositAgreementAuthorizer.authorize_agreement,
+                "receipt": AssociationDepositReceiptRecorder.record_received_deposit,
+                "refund": AssociationDepositRefundRecorder.record_external_refund,
+            }[action]
             try:
-                if action == "agreement":
-                    AssociationDepositAgreementAuthorizer.authorize_agreement(
-                        member=context["member"],
-                        actor=request.user,
-                        cache=self.cache,
-                        **form.cleaned_data
-                    )
-                else:
-                    AssociationDepositReceiptRecorder.record_received_deposit(
-                        member=context["member"],
-                        actor=request.user,
-                        cache=self.cache,
-                        **form.cleaned_data
-                    )
+                save(
+                    member=context["member"],
+                    actor=request.user,
+                    cache=self.cache,
+                    **form.cleaned_data
+                )
             except ValidationError as error:
                 form.add_error(None, error)
             else:
-                messages.success(
-                    request,
-                    (
-                        "Vereinbarung gespeichert."
-                        if action == "agreement"
-                        else "Zahlungseingang erfasst; eine identische Wiederholung wird nicht erneut gebucht."
-                    ),
-                )
+                success_message = {
+                    "agreement": "Vereinbarung gespeichert.",
+                    "refund": "Externe Rückzahlung erfasst; neue Einzüge benötigen eine neue Vereinbarung.",
+                    "receipt": "Zahlungseingang erfasst; eine identische Wiederholung wird nicht erneut gebucht.",
+                }[action]
+                messages.success(request, success_message)
                 return redirect(
                     "associations:deposit_case", member_id=context["member"].pk
                 )

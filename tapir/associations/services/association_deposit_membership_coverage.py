@@ -76,6 +76,7 @@ class AssociationDepositMembershipCoverage:
         cutoff = cls.get_collection_cutoff(account, cache)
         return bool(
             period
+            and not account.refund_requires_agreement
             and period[0] <= due_date <= period[1]
             and period[0] <= collection_date <= period[1]
             and (cutoff is None or max(due_date, collection_date) < cutoff)

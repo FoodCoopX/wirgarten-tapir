@@ -95,6 +95,7 @@ class AssociationDepositAccount(TapirModel):
     agreed_amount = models.DecimalField(max_digits=8, decimal_places=2, null=True)
     effective_from = models.DateField(null=True)
     collection_stopped_from = models.DateField(null=True)
+    refund_requires_agreement = models.BooleanField(default=False)
 
     class Meta:
         constraints = [
@@ -136,6 +137,28 @@ class AssociationDepositReceipt(TapirModel):
 
 class AssociationDepositReceiptCreatedLogEntry(ModelLogEntry):
     template_name = "associations/log/deposit_receipt_created.html"
+
+
+class AssociationDepositRefund(TapirModel):
+    account = models.ForeignKey(
+        AssociationDepositAccount, on_delete=models.PROTECT, related_name="refunds"
+    )
+    reference = models.CharField(max_length=100, unique=True)
+    amount = models.DecimalField(max_digits=8, decimal_places=2)
+    refunded_on = models.DateField()
+    note = models.TextField()
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(amount__gt=0),
+                name="association_deposit_refund_positive",
+            )
+        ]
+
+
+class AssociationDepositRefundCreatedLogEntry(ModelLogEntry):
+    template_name = "associations/log/deposit_refund_created.html"
 
 
 class AssociationDepositAgreementCreatedLogEntry(ModelLogEntry):

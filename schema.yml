@@ -8854,6 +8854,22 @@ components:
           minimum: -10000000000
           exclusiveMaximum: true
           exclusiveMinimum: true
+        refunded_amount:
+          type: number
+          format: double
+          maximum: 10000000000
+          minimum: -10000000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+        retained_amount:
+          type: number
+          format: double
+          maximum: 10000000000
+          minimum: -10000000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+        refund_requires_agreement:
+          type: boolean
         stopped_amount:
           type: number
           format: double
@@ -8885,6 +8901,9 @@ components:
       - payments
       - pending_amount
       - received_amount
+      - refund_requires_agreement
+      - refunded_amount
+      - retained_amount
       - settings
       - state
       - stopped_amount

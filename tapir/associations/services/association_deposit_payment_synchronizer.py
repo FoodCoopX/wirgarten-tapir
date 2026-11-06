@@ -191,6 +191,8 @@ class AssociationDepositPaymentSynchronizer:
         account = AssociationDepositAccount.objects.filter(member=member).first()
         if account is None or account.agreed_amount is None:
             raise ValidationError("Zuerst muss eine Einlagenvereinbarung vorliegen.")
+        if account.refund_requires_agreement:
+            return None
         cutoff = AssociationDepositMembershipCoverage.get_collection_cutoff(
             account, cache
         )

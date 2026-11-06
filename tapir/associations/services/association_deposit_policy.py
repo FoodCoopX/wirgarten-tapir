@@ -35,6 +35,7 @@ class AssociationDepositPolicy:
                 account, cache
             )
             is None
+            and not account.refund_requires_agreement
             and not account.is_individual_agreement
             and (account.instalment_count == 1 or settings["instalments_enabled"])
         )

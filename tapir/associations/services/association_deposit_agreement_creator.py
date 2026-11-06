@@ -40,6 +40,10 @@ class AssociationDepositAgreementCreator:
         )
         Member.objects.select_for_update(no_key=True).get(pk=member.pk)
         account, _ = AssociationDepositAccount.objects.get_or_create(member=member)
+        if account.refund_requires_agreement:
+            raise ValidationError(
+                "Nach einer Rückzahlung ist eine neue dokumentierte Verwaltungsvereinbarung erforderlich."
+            )
         if account.hardship_requested_at is not None and account.agreed_amount is None:
             raise ValidationError(
                 "Zuerst muss eine dokumentierte individuelle Vereinbarung vorliegen."

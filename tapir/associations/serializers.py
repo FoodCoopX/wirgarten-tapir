@@ -153,6 +153,13 @@ class AssociationDepositDetailsSerializer(Serializer):
     pending_amount = serializers.DecimalField(
         max_digits=12, decimal_places=2, coerce_to_string=False
     )
+    refunded_amount = serializers.DecimalField(
+        max_digits=12, decimal_places=2, coerce_to_string=False
+    )
+    retained_amount = serializers.DecimalField(
+        max_digits=12, decimal_places=2, coerce_to_string=False
+    )
+    refund_requires_agreement = serializers.BooleanField()
     stopped_amount = serializers.DecimalField(
         max_digits=12, decimal_places=2, coerce_to_string=False
     )

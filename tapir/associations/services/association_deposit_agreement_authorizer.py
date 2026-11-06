@@ -105,6 +105,7 @@ class AssociationDepositAgreementAuthorizer:
                 transaction=None, status=Payment.PaymentStatus.DUE
             ).order_by("due_date", "pk")
         ]
+        account.refund_requires_agreement = False
         account.collection_stopped_from = None
         account.agreed_amount = amount
         account.effective_from = effective_from
@@ -113,6 +114,7 @@ class AssociationDepositAgreementAuthorizer:
         account.agreement_revision += 1
         account.save(
             update_fields=[
+                "refund_requires_agreement",
                 "collection_stopped_from",
                 "agreed_amount",
                 "effective_from",

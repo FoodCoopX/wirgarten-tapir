@@ -70,6 +70,24 @@ export interface AssociationDepositDetails {
    * @type {number}
    * @memberof AssociationDepositDetails
    */
+  refundedAmount: number;
+  /**
+   *
+   * @type {number}
+   * @memberof AssociationDepositDetails
+   */
+  retainedAmount: number;
+  /**
+   *
+   * @type {boolean}
+   * @memberof AssociationDepositDetails
+   */
+  refundRequiresAgreement: boolean;
+  /**
+   *
+   * @type {number}
+   * @memberof AssociationDepositDetails
+   */
   stoppedAmount: number;
   /**
    *
@@ -113,6 +131,15 @@ export function instanceOfAssociationDepositDetails(
     return false;
   if (!("pendingAmount" in value) || value["pendingAmount"] === undefined)
     return false;
+  if (!("refundedAmount" in value) || value["refundedAmount"] === undefined)
+    return false;
+  if (!("retainedAmount" in value) || value["retainedAmount"] === undefined)
+    return false;
+  if (
+    !("refundRequiresAgreement" in value) ||
+    value["refundRequiresAgreement"] === undefined
+  )
+    return false;
   if (!("stoppedAmount" in value) || value["stoppedAmount"] === undefined)
     return false;
   if (!("canIncrease" in value) || value["canIncrease"] === undefined)
@@ -147,6 +174,9 @@ export function AssociationDepositDetailsFromJSONTyped(
     receivedAmount: json["received_amount"],
     committedAmount: json["committed_amount"],
     pendingAmount: json["pending_amount"],
+    refundedAmount: json["refunded_amount"],
+    retainedAmount: json["retained_amount"],
+    refundRequiresAgreement: json["refund_requires_agreement"],
     stoppedAmount: json["stopped_amount"],
     canIncrease: json["can_increase"],
     state: json["state"],
@@ -178,6 +208,9 @@ export function AssociationDepositDetailsToJSONTyped(
     received_amount: value["receivedAmount"],
     committed_amount: value["committedAmount"],
     pending_amount: value["pendingAmount"],
+    refunded_amount: value["refundedAmount"],
+    retained_amount: value["retainedAmount"],
+    refund_requires_agreement: value["refundRequiresAgreement"],
     stopped_amount: value["stoppedAmount"],
     can_increase: value["canIncrease"],
     state: value["state"],

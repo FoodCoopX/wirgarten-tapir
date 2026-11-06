@@ -29,7 +29,7 @@ class DepositAgreementForm(forms.Form):
         label="Anzahl monatlicher Raten",
         min_value=1,
         max_value=AssociationDepositInstalmentCalculator.MAX_INSTALMENTS,
-        help_text="Bei 0 € bitte 1 wählen; es wird keine Zahlung angelegt. Bereits erhaltene oder verbuchte Beträge werden angerechnet.",
+        help_text="Bei 0 € bitte 1 wählen; es wird keine Zahlung angelegt. Der rechnerisch verbleibende Betrag nach erfassten Rückzahlungen wird angerechnet.",
     )
     consented_on = forms.DateField(label="Zustimmung vom", widget=DateInput())
     consent_note = forms.CharField(
@@ -61,4 +61,29 @@ class DepositReceiptForm(forms.Form):
         label="Beleg / Anmerkung",
         widget=forms.Textarea(attrs={"rows": 2}),
         max_length=3000,
+    )
+
+
+class DepositRefundForm(forms.Form):
+    amount = forms.DecimalField(
+        label="Bereits zurückgezahlter Betrag (€)",
+        max_digits=8,
+        decimal_places=2,
+        min_value=Decimal("0.01"),
+    )
+    refunded_on = forms.DateField(label="Rückzahlungsdatum", widget=DateInput())
+    reference = forms.CharField(
+        label="Eindeutige Bank-Buchungsreferenz", max_length=100
+    )
+    note = forms.CharField(
+        label="Beleg / Anmerkung",
+        widget=forms.Textarea(attrs={"rows": 2}),
+        max_length=3000,
+    )
+    bank_settlement_confirmed = forms.BooleanField(
+        label="Die Rückzahlung ist ausgeführt. Die zugrundeliegenden Einzahlungen einschließlich SEPA-Eingängen sind bankseitig geprüft."
+    )
+    expected_revision = forms.IntegerField(min_value=0, widget=forms.HiddenInput())
+    expected_committed_amount = forms.DecimalField(
+        max_digits=12, decimal_places=2, min_value=0, widget=forms.HiddenInput()
     )

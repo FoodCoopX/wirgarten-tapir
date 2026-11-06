@@ -15,7 +15,7 @@
             <div class="card-body">
                 <h2>Aktueller Stand</h2>
                 <p>
-                    {% if details.state == "agreement_required" %}Neue Vereinbarung nach Mitgliedschaftsunterbrechung erforderlich{% elif details.state == "collection_stopped" %}Einzug außerhalb der Mitgliedschaft gestoppt{% elif details.state == "pending" %}Individuelle Vereinbarung offen{% elif details.state == "waived" %}Vollständiger Verzicht vereinbart{% elif details.state == "individual" %}Individuelle Vereinbarung{% elif details.state == "regular" %}Reguläre Vereinbarung{% else %}Noch kein Einlagenbetrag vereinbart{% endif %}
+                    {% if details.state == "agreement_required" %}Neue Einlagenvereinbarung erforderlich{% elif details.state == "collection_stopped" %}Einzug außerhalb der Mitgliedschaft gestoppt{% elif details.state == "pending" %}Individuelle Vereinbarung offen{% elif details.state == "waived" %}Vollständiger Verzicht vereinbart{% elif details.state == "individual" %}Individuelle Vereinbarung{% elif details.state == "regular" %}Reguläre Vereinbarung{% else %}Noch kein Einlagenbetrag vereinbart{% endif %}
                 </p>
                 <dl class="row">
                     <dt class="col-sm-4">Vereinbarter Gesamtbetrag</dt>
@@ -26,6 +26,10 @@
                     <dd class="col-sm-8">{{ details.received_amount|floatformat:2 }} €</dd>
                     <dt class="col-sm-4">Bereits verbucht / exportiert</dt>
                     <dd class="col-sm-8">{{ details.committed_amount|floatformat:2 }} €</dd>
+                    <dt class="col-sm-4">Extern zurückgezahlt</dt>
+                    <dd class="col-sm-8">{{ details.refunded_amount|floatformat:2 }} €</dd>
+                    <dt class="col-sm-4">Rechnerisch verbleibender Betrag</dt>
+                    <dd class="col-sm-8">{{ details.retained_amount|floatformat:2 }} €</dd>
                     <dt class="col-sm-4">Offene Raten</dt>
                     <dd class="col-sm-8">{{ details.pending_amount|floatformat:2 }} €</dd>
                     <dt class="col-sm-4">Gestoppte Raten</dt>
@@ -35,6 +39,8 @@
                         <dd class="col-sm-8">{{ details.overpayment_credit|floatformat:2 }} € – keine automatische Rückzahlung</dd>
                     {% endif %}
                 </dl>
+                <p>Ein Bankexport bestätigt keinen tatsächlichen Zahlungseingang. Der rechnerische Betrag berücksichtigt externe Eingänge, verbuchte SEPA-Beträge und erfasste Rückzahlungen.</p>
+                {% if details.refund_requires_agreement %}<p>Nach der Rückzahlung sind neue Einzüge bis zu einer neuen dokumentierten Vereinbarung gesperrt.</p>{% endif %}
                 {% if payments %}
                     <table class="table">
                         <caption>Zahlungen: {{ details.settings.name }}</caption>
@@ -102,6 +108,23 @@
                         </tbody>
                     </table>
                 {% endif %}
+            </div>
+        </section>
+        <section class="card my-3">
+            <div class="card-body">
+                <h2>Extern ausgeführte Rückzahlung erfassen</h2>
+                <p>Nur eine bereits ausgeführte Rückzahlung mit Bankbeleg erfassen. Tapir löst keine Überweisung oder automatische Nachbelastung aus.</p>
+                {% if account and details.retained_amount > 0 %}
+                    <form method="post">
+                        {% csrf_token %}{% bootstrap_form refund_form %}
+                        <button class="btn btn-primary" name="action" value="refund" type="submit">Externe Rückzahlung erfassen</button>
+                    </form>
+                {% endif %}
+                {% for refund in refunds %}
+                    <p>{{ refund.refunded_on|date:"d.m.Y" }}: {{ refund.amount|floatformat:2 }} €, Bankreferenz {{ refund.reference }} – {{ refund.note }}</p>
+                {% empty %}
+                    <p>Noch keine externe Rückzahlung erfasst.</p>
+                {% endfor %}
             </div>
         </section>
         <section class="card my-3">

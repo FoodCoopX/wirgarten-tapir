@@ -38,7 +38,7 @@ class AssociationDepositIncreasePreview:
         details = AssociationDepositDetailsProvider.get_deposit_details(member, cache)
         remaining = max(
             Decimal("0"),
-            total_amount - details["received_amount"] - details["committed_amount"],
+            total_amount - details["retained_amount"],
         )
         pending = list(
             account.payments.filter(
