@@ -2,6 +2,7 @@ import dayjs from "dayjs";
 import React from "react";
 import { Accordion, AccordionBody } from "react-bootstrap";
 import {
+  AssociationDepositPaymentOptionEnum,
   AssociationMembershipType,
   PublicGrowingPeriod,
   PublicPickupLocation,
@@ -39,6 +40,8 @@ import { scrollIntoView } from "../utils/scrollIntoView.ts";
 import { willBecomeMemberNow } from "../utils/willBecomeMemberNow.ts";
 
 interface Step10OrderSummaryProps {
+  associationDepositAmount?: number | null;
+  associationDepositPaymentOption?: AssociationDepositPaymentOptionEnum;
   settings: BestellWizardSettings;
   shoppingCart: ShoppingCart;
   numberOfCoopShares: number;
@@ -83,6 +86,8 @@ const PaymentRow: React.FC<{
 );
 
 const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
+  associationDepositAmount,
+  associationDepositPaymentOption,
   settings,
   shoppingCart,
   numberOfCoopShares,
@@ -109,6 +114,23 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
   stepActive,
   setCurrentStep,
 }) => {
+  const depositInInstalments =
+    associationDepositPaymentOption ===
+    AssociationDepositPaymentOptionEnum.StandardInstalments;
+  const depositPaymentMode = depositInInstalments
+    ? `gesamt, ${settings.associationDeposit.instalmentCount} monatliche Raten`
+    : "einmalig";
+  let depositSummary = "Individuelle Vereinbarung offen – noch kein Einzug";
+  if (
+    associationDepositPaymentOption !==
+    AssociationDepositPaymentOptionEnum.Hardship
+  ) {
+    depositSummary = `${formatCurrency(associationDepositAmount ?? 0)} gesamt`;
+    depositSummary += depositInInstalments
+      ? `, ${settings.associationDeposit.instalmentCount} monatliche Raten`
+      : " als Einmalzahlung";
+  }
+
   function getRelevantPickupLocation(): PublicPickupLocation | undefined {
     if (waitingListEntryDetails === undefined) {
       return getFirstPickupLocationWithCapacity(
@@ -360,6 +382,26 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
       );
     }
 
+    if (associationDepositAmount != null) {
+      segments.push(
+        <PaymentRow
+          key="deposit"
+          label={`${settings.associationDeposit.name} (${depositPaymentMode})`}
+          amount={associationDepositAmount}
+        />,
+      );
+    }
+    if (
+      associationDepositPaymentOption ===
+      AssociationDepositPaymentOptionEnum.Hardship
+    ) {
+      segments.push(
+        <p key="deposit-pending">
+          {settings.associationDeposit.name}: Individuelle Vereinbarung offen.
+          Noch kein Gesamtbetrag und kein Einzug vereinbart.
+        </p>,
+      );
+    }
     if (monthlyPayments.length > 0) {
       segments.push(
         <>
@@ -557,6 +599,31 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                 </Accordion.Item>
               </Accordion>
             )}
+          {(associationDepositAmount != null ||
+            associationDepositPaymentOption ===
+              AssociationDepositPaymentOptionEnum.Hardship) && (
+            <Accordion>
+              <Accordion.Item
+                eventKey="association_deposit"
+                onClick={scrollIntoView}
+              >
+                <Accordion.Header>
+                  {settings.associationDeposit.name}: {depositSummary}
+                </Accordion.Header>
+                <AccordionBody>
+                  Rückzahlbare Einlage pro Mitglied, zusätzlich zu Vereins- und
+                  Erntebeiträgen.
+                  <TapirButton
+                    variant={BUTTON_VARIANT}
+                    size="sm"
+                    text="Einlage anpassen"
+                    icon="edit"
+                    onClick={() => setCurrentStep("6d_association_deposit")}
+                  />
+                </AccordionBody>
+              </Accordion.Item>
+            </Accordion>
+          )}
           {associationMembershipType && (
             <Accordion>
               <Accordion.Item

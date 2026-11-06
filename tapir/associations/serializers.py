@@ -103,3 +103,21 @@ class GraphDatasetSerializer(Serializer):
 class NumberOfAssociationMembersPerMonthResponseSerializer(Serializer):
     labels = ListField(child=CharField())
     datasets = GraphDatasetSerializer(many=True)
+
+
+class AssociationDepositSettingsSerializer(Serializer):
+    enabled = serializers.BooleanField()
+    name = CharField()
+    minimum = serializers.DecimalField(
+        max_digits=8, decimal_places=2, coerce_to_string=False
+    )
+    increment = serializers.DecimalField(
+        max_digits=8, decimal_places=2, coerce_to_string=False
+    )
+    supporting_members_required = serializers.BooleanField()
+    allow_larger_signup = serializers.BooleanField()
+    allow_member_increase = serializers.BooleanField()
+    instalments_enabled = serializers.BooleanField()
+    instalment_count = serializers.IntegerField()
+    hardship_enabled = serializers.BooleanField()
+    hardship_label = CharField()

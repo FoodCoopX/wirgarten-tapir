@@ -14,13 +14,14 @@ from tapir.accounts.services.email_verification_service import EmailVerification
 from tapir.accounts.services.keycloak_user_delete_service import (
     KeycloakUserDeleteService,
 )
-from tapir.associations.models import AssociationMembership
+from tapir.associations.models import AssociationMembership, AssociationDepositAccount
 from tapir.associations.tests.factories import AssociationMembershipTypeFactory
 from tapir.bestell_wizard.services.questionnaire_source_service import (
     QuestionnaireSourceService,
 )
 from tapir.configuration.models import TapirParameter
 from tapir.core.config import LEGAL_STATUS_COMPANY, LEGAL_STATUS_ASSOCIATION
+from tapir.payments.services.payment_export_builder import PaymentExportBuilder
 from tapir.payments.models import MemberPaymentRhythm
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
@@ -37,6 +38,7 @@ from tapir.wirgarten.constants import WEEKLY
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
     Member,
+    Payment,
     Subscription,
     CoopShareTransaction,
     WaitingListEntry,
@@ -1468,3 +1470,260 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
             mock_send_verification_email.call_args.kwargs["user"],
             mock_delete_user_if_exists.call_args.kwargs["user"],
         )
+
+    @patch.object(OnboardingTrigger, "on_subscription_updated", autospec=True)
+    @patch.object(TransactionalTrigger, "fire_all_released_configs", autospec=True)
+    def test_association_signup_keeps_harvest_membership_solidarity_and_deposit_separate(
+        self, mock_dispatch, mock_onboarding
+    ):
+        self._set_parameter(
+            ParameterKeys.ORGANISATION_LEGAL_STATUS, LEGAL_STATUS_ASSOCIATION
+        )
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_ENABLED, True)
+        self._set_parameter(ParameterKeys.TRIAL_PERIOD_ENABLED, True)
+        self._set_parameter(ParameterKeys.TRIAL_PERIOD_DURATION, 4)
+        membership_type = AssociationMembershipTypeFactory()
+        data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        data.update(
+            association_membership_type_id=membership_type.pk,
+            association_deposit_amount="200.00",
+        )
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+        self.assertEqual(200, response.status_code, response.content)
+        self.assert_order_confirmed(response.json())
+        member = Member.objects.get()
+        self.assertEqual(2, member.subscription_set.count())
+        self.assertEqual(
+            membership_type.pk, AssociationMembership.objects.get(member=member).type_id
+        )
+        self.assertEqual(
+            Decimal("12.70"),
+            SolidarityContribution.objects.get(member=member).amount,
+        )
+        account = AssociationDepositAccount.objects.get(member=member)
+        self.assertEqual(Decimal("200"), account.agreed_amount)
+        payment = Payment.objects.get(association_deposit_account=account)
+        self.assertEqual(Decimal("200"), payment.amount)
+        self.assertGreaterEqual(
+            payment.due_date,
+            AssociationMembership.objects.get(member=member).start_date,
+        )
+        membership = AssociationMembership.objects.get(member=member)
+        trial_end = min(
+            TrialPeriodManager.get_last_day_of_trial_period(contract=contract, cache={})
+            for contract in member.subscription_set.all()
+        )
+        self.assertEqual(trial_end + datetime.timedelta(days=1), membership.start_date)
+        self.assertEqual(membership.start_date, account.effective_from)
+        earliest_contract = member.subscription_set.order_by("start_date").first()
+        self.assertGreater(membership.start_date, earliest_contract.start_date)
+        PaymentExportBuilder.export_association_deposit_payments(
+            earliest_contract.start_date, False, {}
+        )
+        payment.refresh_from_db()
+        self.assertIsNone(payment.transaction_id)
+        self.assertFalse(CoopShareTransaction.objects.exists())
+
+        event = next(
+            call.args[0]
+            for call in mock_dispatch.call_args_list
+            if call.args[0].key == Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION
+        )
+
+    @patch.object(OnboardingTrigger, "on_subscription_updated", autospec=True)
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_association_signup_missing_required_deposit_creates_nothing(
+        self, mock_fire_action, mock_onboarding
+    ):
+        self._set_parameter(
+            ParameterKeys.ORGANISATION_LEGAL_STATUS, LEGAL_STATUS_ASSOCIATION
+        )
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_ENABLED, True)
+        data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        data["association_membership_type_id"] = AssociationMembershipTypeFactory().pk
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+        self.assertFalse(response.json()["order_confirmed"])
+        self.assertIn("Vereinseinlage", response.json()["error"])
+        self.assertFalse(Member.objects.exists())
+        self.assertFalse(Payment.objects.exists())
+
+    @patch.object(OnboardingTrigger, "on_subscription_updated", autospec=True)
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_association_signup_disabled_deposit_still_creates_regular_membership(
+        self, mock_fire_action, mock_onboarding
+    ):
+        self._set_parameter(
+            ParameterKeys.ORGANISATION_LEGAL_STATUS, LEGAL_STATUS_ASSOCIATION
+        )
+        data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        data["association_membership_type_id"] = AssociationMembershipTypeFactory().pk
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+        self.assert_order_confirmed(response.json())
+        self.assertEqual(1, AssociationMembership.objects.count())
+        self.assertFalse(AssociationDepositAccount.objects.exists())
+        self.assertFalse(
+            Payment.objects.filter(association_deposit_account__isnull=False).exists()
+        )
+
+    @patch.object(OnboardingTrigger, "on_subscription_updated", autospec=True)
+    @patch.object(TransactionalTrigger, "fire_all_released_configs", autospec=True)
+    def test_association_signup_standard_rates_require_no_individual_authorization(
+        self, mock_dispatch, mock_onboarding
+    ):
+        self._set_parameter(
+            ParameterKeys.ORGANISATION_LEGAL_STATUS, LEGAL_STATUS_ASSOCIATION
+        )
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_ENABLED, True)
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_INSTALMENTS_ENABLED, True)
+        data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        data.update(
+            association_membership_type_id=AssociationMembershipTypeFactory().pk,
+            association_deposit_amount="200",
+            association_deposit_payment_option="standard_instalments",
+            association_deposit_expected_instalments=4,
+        )
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+        self.assert_order_confirmed(response.json())
+        account = AssociationDepositAccount.objects.get()
+        self.assertFalse(account.is_individual_agreement)
+        self.assertEqual(
+            [Decimal("50")] * 4, list(account.payments.values_list("amount", flat=True))
+        )
+        self.assertEqual(2, Subscription.objects.count())
+        self.assertEqual(Decimal("12.70"), SolidarityContribution.objects.get().amount)
+
+        event = next(
+            call.args[0]
+            for call in mock_dispatch.call_args_list
+            if call.args[0].key == Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION
+        )
+
+    @patch.object(OnboardingTrigger, "on_subscription_updated", autospec=True)
+    @patch.object(TransactionalTrigger, "fire_all_released_configs", autospec=True)
+    def test_association_signup_hardship_keeps_other_components_without_deposit_debt(
+        self, mock_dispatch, mock_onboarding
+    ):
+        self._set_parameter(
+            ParameterKeys.ORGANISATION_LEGAL_STATUS, LEGAL_STATUS_ASSOCIATION
+        )
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_ENABLED, True)
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_HARDSHIP_ENABLED, True)
+        data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        data.update(
+            association_membership_type_id=AssociationMembershipTypeFactory().pk,
+            association_deposit_payment_option="hardship",
+        )
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+        self.assert_order_confirmed(response.json())
+        account = AssociationDepositAccount.objects.get()
+        self.assertIsNone(account.agreed_amount)
+        self.assertIsNone(account.effective_from)
+        self.assertIsNotNone(account.hardship_requested_at)
+        self.assertFalse(account.payments.exists())
+        self.assertEqual(1, AssociationMembership.objects.count())
+        self.assertEqual(2, Subscription.objects.count())
+        self.assertEqual(Decimal("12.70"), SolidarityContribution.objects.get().amount)
+
+        event = next(
+            call.args[0]
+            for call in mock_dispatch.call_args_list
+            if call.args[0].key == Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION
+        )
+
+    def test_invalid_deposit_choices_rejected_before_external_user_creation(self):
+        self._set_parameter(
+            ParameterKeys.ORGANISATION_LEGAL_STATUS, LEGAL_STATUS_ASSOCIATION
+        )
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_ENABLED, True)
+        membership_type = AssociationMembershipTypeFactory()
+        cases = [
+            ("hardship", None, False, False, 4),
+            ("hardship", "0", True, False, 4),
+            ("hardship", "200", True, False, 4),
+            ("standard_instalments", "200", False, False, 4),
+            ("standard_instalments", "200", False, True, 0),
+            ("standard_instalments", "200", False, True, 121),
+            ("standard_instalments", "200", False, True, 6),
+            ("standard_instalments", "200", False, True, 10**9),
+            ("standard_instalments", "100", False, True, 4),
+        ]
+        for option, amount, hardship, rates, count in cases:
+            with self.subTest(
+                option=option, amount=amount, count=count, enabled=(hardship, rates)
+            ):
+                self._set_parameter(
+                    ParameterKeys.ASSOCIATION_DEPOSIT_HARDSHIP_ENABLED, hardship
+                )
+                self._set_parameter(
+                    ParameterKeys.ASSOCIATION_DEPOSIT_INSTALMENTS_ENABLED, rates
+                )
+                self._set_parameter(
+                    ParameterKeys.ASSOCIATION_DEPOSIT_INSTALMENT_COUNT, str(count)
+                )
+                data = self.build_valid_post_data_for_an_order_without_waiting_list()
+                data.update(
+                    association_membership_type_id=membership_type.pk,
+                    association_deposit_amount=amount,
+                    association_deposit_payment_option=option,
+                    association_deposit_expected_instalments=(
+                        4 if option == "standard_instalments" else None
+                    ),
+                )
+                response = self.client.post(
+                    reverse("bestell_wizard:bestell_wizard_confirm_order"),
+                    data=json.dumps(data),
+                    content_type="application/json",
+                )
+                self.assertEqual(200, response.status_code, response.content)
+                self.assertFalse(response.json()["order_confirmed"])
+                self.assertTrue(response.json()["error"])
+                self.mock_keycloak_client.create_user.assert_not_called()
+                self.assertFalse(Member.objects.exists())
+                self.assertFalse(AssociationDepositAccount.objects.exists())
+                self.assertFalse(Payment.objects.exists())
+
+    def test_subcent_standard_rates_rejected_before_external_user_creation(self):
+        self._set_parameter(
+            ParameterKeys.ORGANISATION_LEGAL_STATUS, LEGAL_STATUS_ASSOCIATION
+        )
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_ENABLED, True)
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_INSTALMENTS_ENABLED, True)
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_MINIMUM, "0.01")
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_INCREMENT, "0.01")
+        data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        data.update(
+            association_membership_type_id=AssociationMembershipTypeFactory().pk,
+            association_deposit_amount="0.01",
+            association_deposit_payment_option="standard_instalments",
+            association_deposit_expected_instalments=4,
+        )
+        self.client.raise_request_exception = False
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+        self.mock_keycloak_client.create_user.assert_not_called()
+        self.assertEqual(200, response.status_code, response.content)
+        self.assertFalse(response.json()["order_confirmed"])
+        self.assertFalse(Member.objects.exists())
