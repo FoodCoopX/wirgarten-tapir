@@ -2,6 +2,7 @@ from django.urls import path
 
 from tapir.core.views import general
 from tapir.core.views import mailing_lists
+from tapir.core.views import member_data
 from tapir.core.views import member_extra_emails
 
 app_name = "core"
@@ -110,5 +111,15 @@ urlpatterns = [
         "api/member_self_reject",
         mailing_lists.MailingListMemberSelfRejectView.as_view(),
         name="member_self_reject",
+    ),
+    path(
+        "api/member_data_disclosure",
+        member_data.MemberDataDisclosureApiView.as_view(),
+        name="member_data_disclosure",
+    ),
+    path(
+        "api/member_data_disclosure_download",
+        member_data.MemberDataDisclosureDownloadApiView.as_view(),
+        name="member_data_disclosure_download",
     ),
 ]
