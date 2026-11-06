@@ -8854,6 +8854,13 @@ components:
           minimum: -10000000000
           exclusiveMaximum: true
           exclusiveMinimum: true
+        stopped_amount:
+          type: number
+          format: double
+          maximum: 10000000000
+          minimum: -10000000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
         can_increase:
           type: boolean
         state:
@@ -8880,6 +8887,7 @@ components:
       - received_amount
       - settings
       - state
+      - stopped_amount
       - visible
     AssociationDepositIncreasePreview:
       type: object
@@ -9440,7 +9448,7 @@ components:
           default: once
         association_deposit_expected_instalments:
           type: integer
-          maximum: 120
+          maximum: 12
           minimum: 1
           nullable: true
         number_of_coop_shares:
@@ -15801,7 +15809,7 @@ components:
           default: once
         association_deposit_expected_instalments:
           type: integer
-          maximum: 120
+          maximum: 12
           minimum: 1
           nullable: true
         entry_id:

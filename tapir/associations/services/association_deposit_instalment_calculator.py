@@ -12,7 +12,7 @@ from tapir.wirgarten.models import Payment
 
 
 class AssociationDepositInstalmentCalculator:
-    MAX_INSTALMENTS = 120
+    MAX_INSTALMENTS = 12
 
     @classmethod
     def validate_instalment_count(cls, count: int):

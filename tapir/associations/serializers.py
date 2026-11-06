@@ -153,6 +153,9 @@ class AssociationDepositDetailsSerializer(Serializer):
     pending_amount = serializers.DecimalField(
         max_digits=12, decimal_places=2, coerce_to_string=False
     )
+    stopped_amount = serializers.DecimalField(
+        max_digits=12, decimal_places=2, coerce_to_string=False
+    )
     can_increase = serializers.BooleanField()
     state = CharField()
     overpayment_credit = serializers.DecimalField(

@@ -4,6 +4,9 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Q
 
+from tapir.associations.services.association_deposit_membership_coverage import (
+    AssociationDepositMembershipCoverage,
+)
 from tapir.accounts.models import TapirUser
 from tapir.associations.models import (
     AssociationDepositAccount,
@@ -22,7 +25,7 @@ from tapir.associations.services.association_deposit_due_date_provider import (
 from tapir.payments.config import PAYMENT_TYPE_ASSOCIATION_DEPOSIT
 from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.wirgarten.models import Member, Payment
-from tapir.wirgarten.utils import legal_status_is_association
+from tapir.wirgarten.utils import legal_status_is_association, get_today
 
 
 class AssociationDepositPaymentSynchronizer:
@@ -52,15 +55,28 @@ class AssociationDepositPaymentSynchronizer:
         members = [member for member in members if member.pk in eligible_members]
         for member in members:
             cls.update_existing_deposit_payment(member=member, cache=cache)
-        return list(
+        candidates = list(
             due.filter(
                 association_deposit_account__member_id__in=[
                     member.pk for member in members
                 ]
             )
-            .select_related("mandate_ref__member", "association_deposit_account")
+            .select_related(
+                "mandate_ref__member", "association_deposit_account__member"
+            )
             .order_by("pk")
         )
+
+        return [
+            payment
+            for payment in candidates
+            if AssociationDepositMembershipCoverage.can_collect_on(
+                payment.association_deposit_account,
+                payment.due_date,
+                collection_date,
+                cache,
+            )
+        ]
 
     @classmethod
     def create_regular_deposit_payment(
@@ -90,6 +106,7 @@ class AssociationDepositPaymentSynchronizer:
         cls, member: Member, actor: TapirUser, cache: dict
     ):
         Member.objects.select_for_update(no_key=True).get(pk=member.pk)
+        AssociationDepositMembershipCoverage.invalidate_member(member, cache)
         Payment.objects.filter(
             association_deposit_account__member=member,
             transaction=None,
@@ -107,6 +124,7 @@ class AssociationDepositPaymentSynchronizer:
         allow_standard_increase: bool = False,
     ) -> Payment | None:
         member = Member.objects.select_for_update(no_key=True).get(pk=member.pk)
+        AssociationDepositMembershipCoverage.invalidate_member(member, cache)
         pending_payments = list(
             Payment.objects.filter(
                 association_deposit_account__member=member,
@@ -118,8 +136,10 @@ class AssociationDepositPaymentSynchronizer:
         if not create and pending is None:
             return None
         account = AssociationDepositPaymentSynchronizer._get_payment_account(
-            member, pending_payments, cache
+            member, pending_payments, create, cache
         )
+        if account is None:
+            return None
         remaining = (
             AssociationDepositRemainingAmountCalculator.get_remaining_deposit_amount(
                 member=member, cache=cache
@@ -164,13 +184,27 @@ class AssociationDepositPaymentSynchronizer:
 
     @staticmethod
     def _get_payment_account(
-        member: Member, pending_payments: list[Payment], cache: dict
+        member: Member, pending_payments: list[Payment], create: bool, cache: dict
     ):
         if not legal_status_is_association(cache=cache):
             raise ValidationError("Vereinseinlagen sind nur für Vereine vorgesehen.")
         account = AssociationDepositAccount.objects.filter(member=member).first()
         if account is None or account.agreed_amount is None:
             raise ValidationError("Zuerst muss eine Einlagenvereinbarung vorliegen.")
+        cutoff = AssociationDepositMembershipCoverage.get_collection_cutoff(
+            account, cache
+        )
+        if (
+            create
+            and cutoff
+            and (
+                cutoff <= get_today(cache)
+                or AssociationDepositMembershipCoverage.requires_new_agreement(
+                    account, cache
+                )
+            )
+        ):
+            return None
         if account.instalment_count == 1 and len(pending_payments) > 1:
             raise ValidationError(
                 "Es bestehen mehrere offene Zahlungen ohne Ratenvereinbarung."

@@ -1,5 +1,6 @@
 import datetime
 
+from django.db import transaction
 from django.db.models import Q
 
 from tapir.accounts.models import TapirUser
@@ -10,6 +11,9 @@ from tapir.associations.models import (
     AssociationMembershipUpdatedLogEntry,
     AssociationMembershipCreatedLogEntry,
 )
+from tapir.associations.services.association_deposit_membership_lifecycle import (
+    AssociationDepositMembershipLifecycle,
+)
 from tapir.log.util import freeze_for_log
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.utils import get_now
@@ -17,6 +21,7 @@ from tapir.wirgarten.utils import get_now
 
 class AssociationMembershipChangeHandler:
     @classmethod
+    @transaction.atomic
     def start_membership(
         cls,
         member: Member,
@@ -25,6 +30,10 @@ class AssociationMembershipChangeHandler:
         actor: TapirUser,
         cache: dict,
     ):
+        Member.objects.select_for_update(no_key=True).get(pk=member.pk)
+        previous = AssociationDepositMembershipLifecycle.get_membership_snapshot(
+            member, cache
+        )
         member_memberships = AssociationMembership.objects.filter(member=member)
 
         memberships_to_delete = member_memberships.filter(start_date__gte=start_date)
@@ -56,4 +65,28 @@ class AssociationMembershipChangeHandler:
             membership=membership,
             actor=actor,
         ).save()
+        AssociationDepositMembershipLifecycle.record_membership_change(
+            member, previous, actor, cache
+        )
         return membership
+
+    @staticmethod
+    @transaction.atomic
+    def set_end_date(membership, end_date, actor, cache: dict):
+        Member.objects.select_for_update(no_key=True).get(pk=membership.member_id)
+        membership = AssociationMembership.objects.get(pk=membership.pk)
+        previous = AssociationDepositMembershipLifecycle.get_membership_snapshot(
+            membership.member, cache
+        )
+        old = freeze_for_log(membership)
+        end_date_before = membership.end_date
+        membership.end_date = end_date
+        membership.cancellation_ts = get_now(cache=cache)
+        membership.save()
+        AssociationMembershipUpdatedLogEntry().populate(
+            old_frozen=old, new_model=membership, actor=actor, user=membership.member
+        ).save()
+        AssociationDepositMembershipLifecycle.record_membership_change(
+            membership.member, previous, actor, cache
+        )
+        return membership, end_date_before

@@ -3,6 +3,9 @@ from decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.db import transaction
 
+from tapir.associations.services.association_deposit_membership_coverage import (
+    AssociationDepositMembershipCoverage,
+)
 from tapir.accounts.models import TapirUser
 from tapir.associations.models import (
     AssociationDepositIncreasedLogEntry,
@@ -31,6 +34,7 @@ class AssociationDepositIncreaseRecorder:
         confirmation: str | None = None,
     ):
         Member.objects.select_for_update(no_key=True).get(pk=member.pk)
+        AssociationDepositMembershipCoverage.invalidate_member(member, cache)
         account = AssociationDepositPolicy.get_increasable_account(member, cache)
         AssociationDepositPolicy.validate_increase_amount(account, total_amount, cache)
         if total_amount == account.agreed_amount:

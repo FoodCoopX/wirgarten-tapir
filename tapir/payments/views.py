@@ -19,6 +19,9 @@ from rest_framework.serializers import ListField
 from rest_framework.views import APIView
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
+from tapir.associations.services.association_deposit_membership_coverage import (
+    AssociationDepositMembershipCoverage,
+)
 from tapir.associations.models import AssociationMembership
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.models import Joker
@@ -166,7 +169,9 @@ class GetFutureMemberPaymentsApiView(APIView):
                 )
                 | Q(status=Payment.PaymentStatus.DUE)
             )
-            .select_related("coop_share_transaction")
+            .select_related(
+                "coop_share_transaction", "association_deposit_account__member"
+            )
             .prefetch_related("coop_share_transaction__payments")
         )
         current_month = get_today(cache=self.cache)
@@ -188,7 +193,9 @@ class GetFutureMemberPaymentsApiView(APIView):
             )
             generated_payments.update(member_payments)
             current_month = get_first_of_next_month(current_month)
-        return member_payments
+        return AssociationDepositMembershipCoverage.filter_upcoming_payments(
+            member_payments, self.cache
+        )
 
     @classmethod
     def build_extended_payments(

@@ -111,10 +111,10 @@ class TestDepositParameterDefinitions(TapirIntegrationTest):
         field = ParameterForm().fields[
             ParameterKeys.ASSOCIATION_DEPOSIT_INSTALMENT_COUNT
         ]
-        for value in ["0", "-1", "1.5", "121", "1000000000"]:
+        for value in ["0", "-1", "1.5", "13", "1000000000"]:
             with self.subTest(value=value), self.assertRaises(ValidationError):
                 field.clean(value)
-        self.assertEqual(120, field.clean("120"))
+        self.assertEqual(12, field.clean("12"))
 
     def test_workflow_options_are_opt_in_with_four_standard_months(self):
         self.assertFalse(

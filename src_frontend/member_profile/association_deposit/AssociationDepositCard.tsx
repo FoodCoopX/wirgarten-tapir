@@ -20,6 +20,12 @@ interface Props {
   csrfToken: string;
 }
 
+function getDepositPaymentStatus(status: string): string {
+  if (status === "STOPPED") return "Gestoppt";
+  if (status === "PAID") return "Verbucht / exportiert";
+  return "Offen";
+}
+
 export default function AssociationDepositCard({
   memberId,
   csrfToken,
@@ -135,6 +141,17 @@ export default function AssociationDepositCard({
             <Card.Title className="mb-0">{details.settings.name}</Card.Title>
           </Card.Header>
           <Card.Body>
+            {["agreement_required", "collection_stopped"].includes(
+              details.state,
+            ) && (
+              <Alert variant="info">
+                {details.state === "agreement_required"
+                  ? "Neue Vereinbarung nach Mitgliedschaftsunterbrechung erforderlich."
+                  : "Einzug außerhalb der Mitgliedschaft gestoppt."}{" "}
+                Bisherige Vereinbarung und Zahlungen bleiben erhalten. Es
+                entsteht weder ein automatischer Erlass noch eine Rückzahlung.
+              </Alert>
+            )}
             {details.state === "pending" && (
               <Alert variant="info">
                 <strong>Individuelle Vereinbarung offen</strong>
@@ -171,6 +188,8 @@ export default function AssociationDepositCard({
               <dd>{formatCurrency(details.receivedAmount)}</dd>
               <dt>Für SEPA verbucht</dt>
               <dd>{formatCurrency(details.committedAmount)}</dd>
+              <dt>Gestoppte Raten</dt>
+              <dd>{formatCurrency(details.stoppedAmount)}</dd>
               <dt>Offener Einzug</dt>
               <dd>{formatCurrency(details.pendingAmount)}</dd>
             </dl>
@@ -196,11 +215,7 @@ export default function AssociationDepositCard({
                     <tr key={payment.id}>
                       <td>{formatDateNumeric(payment.dueDate)}</td>
                       <td>{formatCurrency(payment.amount)}</td>
-                      <td>
-                        {payment.status === "PAID"
-                          ? "Verbucht / exportiert"
-                          : "Offen"}
-                      </td>
+                      <td>{getDepositPaymentStatus(payment.status)}</td>
                     </tr>
                   ))}
                 </tbody>

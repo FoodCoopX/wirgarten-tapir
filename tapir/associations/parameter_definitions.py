@@ -38,7 +38,7 @@ class ParameterDefinitionsAssociationDeposit:
             label="Anzahl monatlicher Standardraten der Einlage",
             datatype=TapirParameterDatatype.INTEGER,
             initial_value=4,
-            description="Ratenzahl für neue Standardvereinbarungen (1 bis 120 Monate). Bestehende Vereinbarungen werden nicht verändert.",
+            description="Ratenzahl für neue Standardvereinbarungen (1 bis 12 Monate). Bestehende Vereinbarungen werden nicht verändert.",
             category=ParameterCategory.BUSINESS,
             order_priority=-107,
             meta=ParameterMeta(

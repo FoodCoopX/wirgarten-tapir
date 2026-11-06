@@ -8,6 +8,9 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.validators import DecimalValidator, MinValueValidator
 from django.db import IntegrityError, transaction
 
+from tapir.associations.services.association_deposit_membership_coverage import (
+    AssociationDepositMembershipCoverage,
+)
 from tapir.accounts.models import TapirUser
 from tapir.associations.models import (
     AssociationDepositAccount,
@@ -62,6 +65,7 @@ class AssociationDepositAgreementAuthorizer:
             ).encode()
         ).hexdigest()
         Member.objects.select_for_update(no_key=True).get(pk=member.pk)
+        AssociationDepositMembershipCoverage.invalidate_member(member, cache)
         previous = AssociationDepositAgreementAuthorizedLogEntry.objects.filter(
             request_key=request_key
         ).first()
@@ -81,6 +85,19 @@ class AssociationDepositAgreementAuthorizer:
             raise ValidationError(
                 "Die Vereinbarung wurde inzwischen geändert. Bitte den aktuellen Stand laden."
             )
+        cutoff = AssociationDepositMembershipCoverage.get_collection_cutoff(
+            account, cache
+        )
+        if (
+            cutoff
+            and AssociationDepositMembershipCoverage.requires_new_agreement(
+                account, cache
+            )
+            and effective_from < cutoff
+        ):
+            raise ValidationError(
+                "Die neue Vereinbarung muss nach der bisherigen Mitgliedschaftsphase beginnen."
+            )
         old = freeze_for_log(account)
         old_payments = [
             freeze_for_log(payment)
@@ -88,6 +105,7 @@ class AssociationDepositAgreementAuthorizer:
                 transaction=None, status=Payment.PaymentStatus.DUE
             ).order_by("due_date", "pk")
         ]
+        account.collection_stopped_from = None
         account.agreed_amount = amount
         account.effective_from = effective_from
         account.instalment_count = instalment_count
@@ -95,6 +113,7 @@ class AssociationDepositAgreementAuthorizer:
         account.agreement_revision += 1
         account.save(
             update_fields=[
+                "collection_stopped_from",
                 "agreed_amount",
                 "effective_from",
                 "instalment_count",

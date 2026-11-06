@@ -6,6 +6,9 @@ from django.core import signing
 from django.core.exceptions import ValidationError
 from django.db import transaction
 
+from tapir.associations.services.association_deposit_membership_coverage import (
+    AssociationDepositMembershipCoverage,
+)
 from tapir.associations.models import AssociationMembership
 from tapir.associations.services.association_deposit_details_provider import (
     AssociationDepositDetailsProvider,
@@ -29,6 +32,7 @@ class AssociationDepositIncreasePreview:
     @transaction.atomic
     def build_preview(cls, member: Member, total_amount: Decimal, cache: dict) -> dict:
         member = Member.objects.select_for_update(no_key=True).get(pk=member.pk)
+        AssociationDepositMembershipCoverage.invalidate_member(member, cache)
         account = AssociationDepositPolicy.get_increasable_account(member, cache)
         AssociationDepositPolicy.validate_increase_amount(account, total_amount, cache)
         details = AssociationDepositDetailsProvider.get_deposit_details(member, cache)
@@ -80,7 +84,7 @@ class AssociationDepositIncreasePreview:
             "memberships": list(
                 AssociationMembership.objects.filter(member=member)
                 .order_by("pk")
-                .values("pk", "start_date", "end_date")
+                .values("pk", "type_id", "start_date", "end_date", "cancellation_ts")
             ),
             "mandates": list(
                 MandateReference.objects.filter(member=member)

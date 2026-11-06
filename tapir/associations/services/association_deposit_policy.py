@@ -3,6 +3,9 @@ from decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 
+from tapir.associations.services.association_deposit_membership_coverage import (
+    AssociationDepositMembershipCoverage,
+)
 from tapir.associations.models import AssociationDepositAccount, AssociationMembership
 from tapir.associations.services.association_deposit_amount_validator import (
     AssociationDepositAmountValidator,
@@ -28,6 +31,10 @@ class AssociationDepositPolicy:
             and account is not None
             and account.agreed_amount is not None
             and account.agreed_amount > 0
+            and AssociationDepositMembershipCoverage.get_collection_cutoff(
+                account, cache
+            )
+            is None
             and not account.is_individual_agreement
             and (account.instalment_count == 1 or settings["instalments_enabled"])
         )

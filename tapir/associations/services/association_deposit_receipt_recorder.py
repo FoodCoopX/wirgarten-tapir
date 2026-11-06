@@ -6,6 +6,9 @@ from django.core.validators import MaxLengthValidator
 from django.db import IntegrityError, transaction
 from django.db.models import Q, Sum
 
+from tapir.associations.services.association_deposit_membership_coverage import (
+    AssociationDepositMembershipCoverage,
+)
 from tapir.accounts.models import TapirUser
 from tapir.associations.models import (
     AssociationDepositAccount,
@@ -51,6 +54,7 @@ class AssociationDepositReceiptRecorder:
         MaxLengthValidator(100)(reference)
 
         Member.objects.select_for_update(no_key=True).get(pk=member.pk)
+        AssociationDepositMembershipCoverage.invalidate_member(member, cache)
         existing = (
             AssociationDepositReceipt.objects.select_related("account")
             .filter(reference=reference)

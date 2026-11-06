@@ -1,5 +1,8 @@
 from rest_framework import serializers
 
+from tapir.associations.services.association_deposit_instalment_calculator import (
+    AssociationDepositInstalmentCalculator,
+)
 from tapir.associations.serializers import (
     AssociationMembershipTypeSerializer,
     AssociationDepositSettingsSerializer,
@@ -50,7 +53,11 @@ class BestellWizardConfirmOrderRequestSerializer(serializers.Serializer):
         choices=["once", "standard_instalments", "hardship"], default="once"
     )
     association_deposit_expected_instalments = serializers.IntegerField(
-        required=False, allow_null=True, default=None, min_value=1, max_value=120
+        required=False,
+        allow_null=True,
+        default=None,
+        min_value=1,
+        max_value=AssociationDepositInstalmentCalculator.MAX_INSTALMENTS,
     )
     number_of_coop_shares = serializers.IntegerField()
     pay_coop_shares_in_instalments = serializers.BooleanField(default=False)

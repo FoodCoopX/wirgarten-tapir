@@ -94,6 +94,7 @@ class AssociationDepositAccount(TapirModel):
     is_individual_agreement = models.BooleanField(default=False)
     agreed_amount = models.DecimalField(max_digits=8, decimal_places=2, null=True)
     effective_from = models.DateField(null=True)
+    collection_stopped_from = models.DateField(null=True)
 
     class Meta:
         constraints = [
@@ -148,6 +149,10 @@ class AssociationDepositPaymentCreatedLogEntry(ModelLogEntry):
 class AssociationDepositIncreasedLogEntry(UpdateModelLogEntry):
     template_name = "associations/log/deposit_increased.html"
     excluded_fields = ["updated_at"]
+
+
+class AssociationDepositMembershipChangedLogEntry(ModelLogEntry):
+    template_name = "associations/log/deposit_membership_changed.html"
 
 
 class AssociationDepositHardshipRequestedLogEntry(ModelLogEntry):

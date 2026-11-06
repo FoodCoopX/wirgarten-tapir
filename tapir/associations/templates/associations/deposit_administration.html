@@ -15,7 +15,7 @@
             <div class="card-body">
                 <h2>Aktueller Stand</h2>
                 <p>
-                    {% if details.state == "pending" %}Individuelle Vereinbarung offen{% elif details.state == "waived" %}Vollständiger Verzicht vereinbart{% elif details.state == "individual" %}Individuelle Vereinbarung{% elif details.state == "regular" %}Reguläre Vereinbarung{% else %}Noch kein Einlagenbetrag vereinbart{% endif %}
+                    {% if details.state == "agreement_required" %}Neue Vereinbarung nach Mitgliedschaftsunterbrechung erforderlich{% elif details.state == "collection_stopped" %}Einzug außerhalb der Mitgliedschaft gestoppt{% elif details.state == "pending" %}Individuelle Vereinbarung offen{% elif details.state == "waived" %}Vollständiger Verzicht vereinbart{% elif details.state == "individual" %}Individuelle Vereinbarung{% elif details.state == "regular" %}Reguläre Vereinbarung{% else %}Noch kein Einlagenbetrag vereinbart{% endif %}
                 </p>
                 <dl class="row">
                     <dt class="col-sm-4">Vereinbarter Gesamtbetrag</dt>
@@ -28,6 +28,8 @@
                     <dd class="col-sm-8">{{ details.committed_amount|floatformat:2 }} €</dd>
                     <dt class="col-sm-4">Offene Raten</dt>
                     <dd class="col-sm-8">{{ details.pending_amount|floatformat:2 }} €</dd>
+                    <dt class="col-sm-4">Gestoppte Raten</dt>
+                    <dd class="col-sm-8">{{ details.stopped_amount|floatformat:2 }} € – kein automatischer Erlass oder Rückzahlungsanspruch</dd>
                     {% if details.overpayment_credit %}
                         <dt class="col-sm-4">Guthaben über dem vereinbarten Betrag</dt>
                         <dd class="col-sm-8">{{ details.overpayment_credit|floatformat:2 }} € – keine automatische Rückzahlung</dd>
@@ -48,7 +50,7 @@
                                 <tr>
                                     <td>{{ payment.due_date|date:"d.m.Y" }}</td>
                                     <td>{{ payment.amount|floatformat:2 }} €</td>
-                                    <td>{{ payment.get_status_display }}</td>
+                                    <td>{% if payment.status == "STOPPED" %}Gestoppt{% elif payment.status == "PAID" %}Verbucht / exportiert{% else %}Offen{% endif %}</td>
                                 </tr>
                             {% endfor %}
                         </tbody>

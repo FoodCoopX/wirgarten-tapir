@@ -67,6 +67,12 @@ export interface AssociationDepositDetails {
   pendingAmount: number;
   /**
    *
+   * @type {number}
+   * @memberof AssociationDepositDetails
+   */
+  stoppedAmount: number;
+  /**
+   *
    * @type {boolean}
    * @memberof AssociationDepositDetails
    */
@@ -107,6 +113,8 @@ export function instanceOfAssociationDepositDetails(
     return false;
   if (!("pendingAmount" in value) || value["pendingAmount"] === undefined)
     return false;
+  if (!("stoppedAmount" in value) || value["stoppedAmount"] === undefined)
+    return false;
   if (!("canIncrease" in value) || value["canIncrease"] === undefined)
     return false;
   if (!("state" in value) || value["state"] === undefined) return false;
@@ -139,6 +147,7 @@ export function AssociationDepositDetailsFromJSONTyped(
     receivedAmount: json["received_amount"],
     committedAmount: json["committed_amount"],
     pendingAmount: json["pending_amount"],
+    stoppedAmount: json["stopped_amount"],
     canIncrease: json["can_increase"],
     state: json["state"],
     overpaymentCredit: json["overpayment_credit"],
@@ -169,6 +178,7 @@ export function AssociationDepositDetailsToJSONTyped(
     received_amount: value["receivedAmount"],
     committed_amount: value["committedAmount"],
     pending_amount: value["pendingAmount"],
+    stopped_amount: value["stoppedAmount"],
     can_increase: value["canIncrease"],
     state: value["state"],
     overpayment_credit: value["overpaymentCredit"],
