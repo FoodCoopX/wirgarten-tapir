@@ -34,6 +34,15 @@ export function getPhase(step: Step): Phase {
     case "14b_confirmation_waiting_list":
       return "confirmation";
 
+    case "bidding_round_intro":
+      return "intro";
+    case "bidding_round_pickup_location":
+      return "pickup_location";
+    case "bidding_round_summary":
+      return "gebot";
+    case "bidding_round_confirmation":
+      return "bestätigung";
+
     default: {
       const separatorIndex = step.lastIndexOf("_");
       if (separatorIndex == -1) {

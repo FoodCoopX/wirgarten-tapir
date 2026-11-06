@@ -66,6 +66,10 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
         return "Feedback";
       case "confirmation":
         return "Bestätigung";
+      case "gebot":
+        return "Gebot";
+      case "bestätigung":
+        return "Bestätigung";
     }
 
     for (const productType of settings.productTypes) {
@@ -125,6 +129,14 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
         return "14: Bestätigung";
       case "14b_confirmation_waiting_list":
         return "14: Bestätigung (Warteliste)";
+      case "bidding_round_intro":
+        return "Intro";
+      case "bidding_round_pickup_location":
+        return "Verteilstation";
+      case "bidding_round_summary":
+        return "Gebot";
+      case "bidding_round_confirmation":
+        return "Bestätigung";
     }
     for (const productType of settings.productTypes) {
       if (!step.includes(productType.id!)) {
@@ -135,6 +147,9 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
       }
       if (step.includes("order")) {
         return "4B: " + productType.name + " (Bestellung)";
+      }
+      if (step.includes("bid")) {
+        return "Gebot: " + productType.name;
       }
       step = step.replace(productType.id!, productType.name);
     }
