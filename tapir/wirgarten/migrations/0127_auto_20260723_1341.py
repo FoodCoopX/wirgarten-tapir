@@ -35,6 +35,7 @@ def migrate_additional_product_restriction(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
+        ("configuration", "0001_initial"),
         ("wirgarten", "0126_pickuplocation_route_info"),
     ]
 

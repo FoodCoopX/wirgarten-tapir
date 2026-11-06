@@ -84,3 +84,29 @@ class AssociationMembershipCreatedLogEntry(ModelLogEntry):
         self.type_name = membership.type.name
 
         return self
+
+
+class AssociationDepositAccount(TapirModel):
+    member = models.OneToOneField(Member, on_delete=models.PROTECT)
+
+
+class AssociationDepositReceipt(TapirModel):
+    account = models.ForeignKey(
+        AssociationDepositAccount, on_delete=models.PROTECT, related_name="receipts"
+    )
+    reference = models.CharField(max_length=100, unique=True)
+    amount = models.DecimalField(max_digits=8, decimal_places=2)
+    received_on = models.DateField()
+    note = models.TextField()
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(amount__gt=0),
+                name="association_deposit_receipt_positive",
+            )
+        ]
+
+
+class AssociationDepositReceiptCreatedLogEntry(ModelLogEntry):
+    template_name = "associations/log/deposit_receipt_created.html"

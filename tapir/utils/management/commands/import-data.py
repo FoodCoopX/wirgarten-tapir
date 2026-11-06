@@ -6,13 +6,17 @@ import unicodedata
 from csv import DictReader
 from typing import Literal
 
-from django.core.management import BaseCommand
+from django.core.exceptions import ValidationError
+from django.core.management import BaseCommand, CommandError
 from django.db import transaction
 from icecream import ic
 
 from tapir.accounts.models import EmailChangeRequest
 from tapir.accounts.services.keycloak_user_delete_service import (
     KeycloakUserDeleteService,
+)
+from tapir.associations.services.association_deposit_import_deletion_validator import (
+    AssociationDepositImportDeletionValidator,
 )
 from tapir.deliveries.models import Joker
 from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES
@@ -101,6 +105,17 @@ class Command(BaseCommand):
         return answer in ["y", "yes"]
 
     def handle(self, *args, **options):
+        cache = {}
+        if options["reset_all"] or (
+            options["delete_all"] and options.get("type") == ["members"]
+        ):
+            try:
+                AssociationDepositImportDeletionValidator.validate_member_reset_is_safe(
+                    cache
+                )
+            except ValidationError as error:
+                raise CommandError(" ".join(error.messages)) from error
+
         # Helper functions
         dry_run = options.get("dry_run", False)
 
