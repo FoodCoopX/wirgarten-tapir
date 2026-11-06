@@ -144,7 +144,6 @@ services:
   # instead of delivering it, so nothing escapes to real inboxes.
   mailpit:
     image: axllent/mailpit:latest
-    restart: unless-stopped
     environment:
       # - MP_DATABASE=/db/mailpit.db
       - MP_SMTP_AUTH_ALLOW_INSECURE=true
