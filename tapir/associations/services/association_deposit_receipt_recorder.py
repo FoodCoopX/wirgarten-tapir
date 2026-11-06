@@ -4,6 +4,7 @@ from decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxLengthValidator
 from django.db import IntegrityError, transaction
+from django.db.models import Q, Sum
 
 from tapir.accounts.models import TapirUser
 from tapir.associations.models import (
@@ -17,7 +18,7 @@ from tapir.associations.services.association_deposit_amount_validator import (
 from tapir.associations.services.association_deposit_payment_synchronizer import (
     AssociationDepositPaymentSynchronizer,
 )
-from tapir.wirgarten.models import Member
+from tapir.wirgarten.models import Member, Payment
 from tapir.wirgarten.utils import get_today, legal_status_is_association
 
 
@@ -33,6 +34,7 @@ class AssociationDepositReceiptRecorder:
         note: str,
         actor: TapirUser | None,
         cache: dict,
+        expected_committed_amount: Decimal | None = None,
     ) -> AssociationDepositReceipt:
         if not legal_status_is_association(cache=cache):
             raise ValidationError("Vereinseinlagen sind nur für Vereine vorgesehen.")
@@ -58,6 +60,20 @@ class AssociationDepositReceiptRecorder:
             return cls._validate_repeated_receipt(
                 existing, member, amount, received_on, note
             )
+
+        if expected_committed_amount is not None:
+            totals = (
+                Payment.objects.filter(association_deposit_account__member=member)
+                .filter(
+                    Q(transaction__isnull=False) | Q(status=Payment.PaymentStatus.PAID)
+                )
+                .aggregate(total=Sum("amount"))
+            )
+            committed = totals["total"] or Decimal("0")
+            if committed != expected_committed_amount:
+                raise ValidationError(
+                    "Seit dem Öffnen wurden weitere Zahlungen verbucht oder exportiert. Bitte den Fall neu laden und den Zahlungseingang erneut bestätigen."
+                )
 
         account, _ = AssociationDepositAccount.objects.get_or_create(member=member)
         try:

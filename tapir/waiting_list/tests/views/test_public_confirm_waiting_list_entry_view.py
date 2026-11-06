@@ -661,3 +661,112 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
         self.assertIn("Vereinseinlage", response.json()["error"])
         self.assertFalse(AssociationDepositAccount.objects.exists())
         self.assertFalse(Member.objects.exists())
+
+    def test_new_waiting_list_member_can_select_standard_rates(self):
+        entry, data = self.prepare_deposit_confirmation()
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_INSTALMENTS_ENABLED, True)
+        data.update(
+            association_deposit_amount="200",
+            association_deposit_payment_option="standard_instalments",
+            association_deposit_expected_instalments=4,
+        )
+        response = self.client.post(
+            reverse("waiting_list:public_confirm_waiting_list_entry"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+        self.assert_order_confirmed(response.json())
+        account = AssociationDepositAccount.objects.get()
+        self.assertFalse(account.is_individual_agreement)
+        self.assertEqual(
+            [Decimal("50")] * 4, list(account.payments.values_list("amount", flat=True))
+        )
+        self.assertFalse(type(entry).objects.filter(pk=entry.pk).exists())
+
+    def test_new_waiting_list_member_hardship_keeps_unknown_agreement_without_payment(
+        self,
+    ):
+        entry, data = self.prepare_deposit_confirmation()
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_HARDSHIP_ENABLED, True)
+        data["association_deposit_payment_option"] = "hardship"
+        response = self.client.post(
+            reverse("waiting_list:public_confirm_waiting_list_entry"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+        self.assert_order_confirmed(response.json())
+        account = AssociationDepositAccount.objects.get()
+        self.assertIsNone(account.agreed_amount)
+        self.assertIsNone(account.effective_from)
+        self.assertIsNotNone(account.hardship_requested_at)
+        self.assertFalse(account.payments.exists())
+        self.assertFalse(type(entry).objects.filter(pk=entry.pk).exists())
+        self.assertEqual(1, AssociationMembership.objects.count())
+
+    def test_invalid_deposit_choices_rejected_before_external_user_creation(self):
+        entry, data = self.prepare_deposit_confirmation()
+        cases = [
+            ("hardship", None, False, False, 4),
+            ("hardship", "0", True, False, 4),
+            ("hardship", "200", True, False, 4),
+            ("standard_instalments", "200", False, False, 4),
+            ("standard_instalments", "200", False, True, 0),
+            ("standard_instalments", "200", False, True, 121),
+            ("standard_instalments", "200", False, True, 6),
+            ("standard_instalments", "200", False, True, 10**9),
+            ("standard_instalments", "100", False, True, 4),
+        ]
+        for option, amount, hardship, rates, count in cases:
+            with self.subTest(
+                option=option, amount=amount, count=count, enabled=(hardship, rates)
+            ):
+                self._set_parameter(
+                    ParameterKeys.ASSOCIATION_DEPOSIT_HARDSHIP_ENABLED, hardship
+                )
+                self._set_parameter(
+                    ParameterKeys.ASSOCIATION_DEPOSIT_INSTALMENTS_ENABLED, rates
+                )
+                self._set_parameter(
+                    ParameterKeys.ASSOCIATION_DEPOSIT_INSTALMENT_COUNT, str(count)
+                )
+                data.update(
+                    association_deposit_amount=amount,
+                    association_deposit_payment_option=option,
+                    association_deposit_expected_instalments=(
+                        4 if option == "standard_instalments" else None
+                    ),
+                )
+                response = self.client.post(
+                    reverse("waiting_list:public_confirm_waiting_list_entry"),
+                    data=json.dumps(data),
+                    content_type="application/json",
+                )
+                self.assertEqual(200, response.status_code, response.content)
+                self.assertFalse(response.json()["order_confirmed"])
+                self.assertTrue(response.json()["error"])
+                self.mock_keycloak_client.create_user.assert_not_called()
+                self.assertFalse(Member.objects.exists())
+                self.assertFalse(AssociationDepositAccount.objects.exists())
+                self.assertTrue(type(entry).objects.filter(pk=entry.pk).exists())
+
+    def test_subcent_standard_rates_rejected_before_external_user_creation(self):
+        entry, data = self.prepare_deposit_confirmation()
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_INSTALMENTS_ENABLED, True)
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_MINIMUM, "0.01")
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_INCREMENT, "0.01")
+        data.update(
+            association_deposit_amount="0.01",
+            association_deposit_payment_option="standard_instalments",
+            association_deposit_expected_instalments=4,
+        )
+        self.client.raise_request_exception = False
+        response = self.client.post(
+            reverse("waiting_list:public_confirm_waiting_list_entry"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+        self.mock_keycloak_client.create_user.assert_not_called()
+        self.assertEqual(200, response.status_code, response.content)
+        self.assertFalse(response.json()["order_confirmed"])
+        self.assertFalse(Member.objects.exists())
+        self.assertTrue(type(entry).objects.filter(pk=entry.pk).exists())

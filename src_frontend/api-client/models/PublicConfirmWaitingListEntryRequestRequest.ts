@@ -12,6 +12,12 @@
  * Do not edit the class manually.
  */
 
+import type { AssociationDepositPaymentOptionEnum } from "./AssociationDepositPaymentOptionEnum";
+import {
+  AssociationDepositPaymentOptionEnumFromJSON,
+  AssociationDepositPaymentOptionEnumToJSON,
+} from "./AssociationDepositPaymentOptionEnum";
+
 /**
  *
  * @export
@@ -24,6 +30,18 @@ export interface PublicConfirmWaitingListEntryRequestRequest {
    * @memberof PublicConfirmWaitingListEntryRequestRequest
    */
   associationDepositAmount?: number | null;
+  /**
+   *
+   * @type {AssociationDepositPaymentOptionEnum}
+   * @memberof PublicConfirmWaitingListEntryRequestRequest
+   */
+  associationDepositPaymentOption?: AssociationDepositPaymentOptionEnum;
+  /**
+   *
+   * @type {number}
+   * @memberof PublicConfirmWaitingListEntryRequestRequest
+   */
+  associationDepositExpectedInstalments?: number | null;
   /**
    *
    * @type {string}
@@ -145,6 +163,16 @@ export function PublicConfirmWaitingListEntryRequestRequestFromJSONTyped(
       json["association_deposit_amount"] == null
         ? undefined
         : json["association_deposit_amount"],
+    associationDepositPaymentOption:
+      json["association_deposit_payment_option"] == null
+        ? undefined
+        : AssociationDepositPaymentOptionEnumFromJSON(
+            json["association_deposit_payment_option"],
+          ),
+    associationDepositExpectedInstalments:
+      json["association_deposit_expected_instalments"] == null
+        ? undefined
+        : json["association_deposit_expected_instalments"],
     entryId: json["entry_id"],
     linkKey: json["link_key"],
     accountOwner: json["account_owner"],
@@ -178,6 +206,12 @@ export function PublicConfirmWaitingListEntryRequestRequestToJSONTyped(
 
   return {
     association_deposit_amount: value["associationDepositAmount"],
+    association_deposit_payment_option:
+      AssociationDepositPaymentOptionEnumToJSON(
+        value["associationDepositPaymentOption"],
+      ),
+    association_deposit_expected_instalments:
+      value["associationDepositExpectedInstalments"],
     entry_id: value["entryId"],
     link_key: value["linkKey"],
     account_owner: value["accountOwner"],

@@ -4,6 +4,7 @@ export * from "./AdminSetAssociationMembershipRequestRequest";
 export * from "./AssignmentLogEntry";
 export * from "./AssignmentLogEntryStatusEnum";
 export * from "./AssociationDepositDetails";
+export * from "./AssociationDepositPaymentOptionEnum";
 export * from "./AssociationDepositSettings";
 export * from "./AssociationMembership";
 export * from "./AssociationMembershipType";

@@ -16,6 +16,9 @@ from tapir.associations.models import (
 from tapir.associations.services.association_deposit_payment_synchronizer import (
     AssociationDepositPaymentSynchronizer,
 )
+from tapir.associations.services.association_deposit_instalment_calculator import (
+    AssociationDepositInstalmentCalculator,
+)
 from tapir.associations.services.association_deposit_policy import (
     AssociationDepositPolicy,
 )
@@ -139,8 +142,9 @@ class AssociationDepositAgreementAuthorizer:
         DecimalValidator(max_digits=8, decimal_places=2)(amount)
         MinValueValidator(Decimal("0"))(amount)
         amount = amount.quantize(Decimal("0.01"))
-        if type(instalment_count) is not int or instalment_count < 1:
-            raise ValidationError("Bitte eine positive Ratenzahl angeben.")
+        AssociationDepositInstalmentCalculator.validate_instalment_count(
+            instalment_count
+        )
         if type(expected_revision) is not int or expected_revision < 0:
             raise ValidationError("Bitte eine gültige Vereinbarungsrevision angeben.")
         consent_note = consent_note.strip()

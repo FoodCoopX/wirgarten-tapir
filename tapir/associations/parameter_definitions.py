@@ -1,8 +1,13 @@
 import typing
 from decimal import Decimal
 
+from django.core.validators import MinValueValidator, MaxValueValidator
+
 from tapir.associations.services.association_deposit_amount_validator import (
     AssociationDepositAmountValidator,
+)
+from tapir.associations.services.association_deposit_instalment_calculator import (
+    AssociationDepositInstalmentCalculator,
 )
 from tapir.configuration.models import TapirParameterDatatype
 from tapir.configuration.parameter import ParameterMeta
@@ -17,6 +22,58 @@ if typing.TYPE_CHECKING:
 class ParameterDefinitionsAssociationDeposit:
     @classmethod
     def define_all_parameters_association_deposit(cls, importer: ParameterDefinitions):
+        importer.parameter_definition(
+            key=ParameterKeys.ASSOCIATION_DEPOSIT_INSTALMENTS_ENABLED,
+            label="Standard-Ratenzahlung der Einlage erlauben",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=False,
+            description="Neue reguläre Einlagen können in monatlichen Raten vereinbart werden. Bestehende Zahlungspläne bleiben erhalten.",
+            category=ParameterCategory.BUSINESS,
+            order_priority=-106,
+            meta=ParameterMeta(show_only_when=legal_status_is_association),
+        )
+
+        importer.parameter_definition(
+            key=ParameterKeys.ASSOCIATION_DEPOSIT_INSTALMENT_COUNT,
+            label="Anzahl monatlicher Standardraten der Einlage",
+            datatype=TapirParameterDatatype.INTEGER,
+            initial_value=4,
+            description="Ratenzahl für neue Standardvereinbarungen (1 bis 120 Monate). Bestehende Vereinbarungen werden nicht verändert.",
+            category=ParameterCategory.BUSINESS,
+            order_priority=-107,
+            meta=ParameterMeta(
+                show_only_when=legal_status_is_association,
+                validators=[
+                    MinValueValidator(1),
+                    MaxValueValidator(
+                        AssociationDepositInstalmentCalculator.MAX_INSTALMENTS
+                    ),
+                ],
+            ),
+        )
+
+        importer.parameter_definition(
+            key=ParameterKeys.ASSOCIATION_DEPOSIT_HARDSHIP_ENABLED,
+            label="Anfrage einer individuellen Einlagenvereinbarung erlauben",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=False,
+            description="Die Anmeldung bleibt ohne vereinbarten Einlagenbetrag und ohne Einzug möglich. Die Anfrage bleibt zur persönlichen Abstimmung sichtbar.",
+            category=ParameterCategory.BUSINESS,
+            order_priority=-108,
+            meta=ParameterMeta(show_only_when=legal_status_is_association),
+        )
+
+        importer.parameter_definition(
+            key=ParameterKeys.ASSOCIATION_DEPOSIT_HARDSHIP_LABEL,
+            label="Text der Checkbox für eine individuelle Einlagenvereinbarung",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Ich kann den Einlagenbetrag auch in Raten nicht aufbringen und möchte eine individuelle Vereinbarung.",
+            description="Text der optionalen Anfrage im Einlagenschritt der Anmeldung.",
+            category=ParameterCategory.BUSINESS,
+            order_priority=-109,
+            meta=ParameterMeta(show_only_when=legal_status_is_association),
+        )
+
         importer.parameter_definition(
             key=ParameterKeys.ASSOCIATION_DEPOSIT_ENABLED,
             label="Vereinseinlagen aktivieren",

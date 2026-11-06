@@ -101,6 +101,7 @@ def add_admin_links(groups, request, cache: dict):
             material_icon="id_card",
             url=reverse_lazy("associations:association_memberships_config"),
         )
+    add_deposit_admin_link(admin_group, request, cache)
     if request.user.has_perm(Permission.Products.VIEW):
         admin_group.add_link(
             display_name=_("Vertragsperiode & Produkte"),
@@ -205,6 +206,17 @@ def add_admin_links(groups, request, cache: dict):
 
     groups.append(admin_group)
     groups.append(debug_group)
+
+
+def add_deposit_admin_link(admin_group, request, cache: dict):
+    if request.user.has_perm(Permission.Coop.MANAGE) and legal_status_is_association(
+        cache=cache
+    ):
+        admin_group.add_link(
+            display_name=_("Einlagenverwaltung"),
+            material_icon="account_balance",
+            url=reverse_lazy("associations:deposit_administration"),
+        )
 
 
 @register.inclusion_tag(

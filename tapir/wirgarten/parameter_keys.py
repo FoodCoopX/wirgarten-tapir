@@ -3,6 +3,14 @@ PREFIX = "wirgarten"
 
 class ParameterKeys:
     ASSOCIATION_DEPOSIT_ENABLED = "tapir.associations.deposit.enabled"
+    ASSOCIATION_DEPOSIT_INSTALMENTS_ENABLED = (
+        "tapir.associations.deposit.instalments.enabled"
+    )
+    ASSOCIATION_DEPOSIT_INSTALMENT_COUNT = (
+        "tapir.associations.deposit.instalments.count"
+    )
+    ASSOCIATION_DEPOSIT_HARDSHIP_ENABLED = "tapir.associations.deposit.hardship.enabled"
+    ASSOCIATION_DEPOSIT_HARDSHIP_LABEL = "tapir.associations.deposit.hardship.label"
     ASSOCIATION_DEPOSIT_SUPPORTING_MEMBERS_REQUIRED = (
         "tapir.associations.deposit.supporting_members_required"
     )

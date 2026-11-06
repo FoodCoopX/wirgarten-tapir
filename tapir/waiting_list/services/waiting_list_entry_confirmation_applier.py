@@ -138,7 +138,11 @@ class WaitingListEntryConfirmationApplier:
                 subscriptions=new_subscriptions,
             )
 
-            if validated_data.get("association_deposit_amount") is not None:
+            if (
+                validated_data.get("association_deposit_amount") is not None
+                or validated_data.get("association_deposit_payment_option", "once")
+                != "once"
+            ):
                 AssociationDepositSignupHandler.create_signup_deposit(
                     member,
                     validated_data["association_deposit_amount"],
@@ -146,6 +150,12 @@ class WaitingListEntryConfirmationApplier:
                     bool(new_subscriptions),
                     actor,
                     cache,
+                    payment_option=validated_data.get(
+                        "association_deposit_payment_option", "once"
+                    ),
+                    expected_instalments=validated_data.get(
+                        "association_deposit_expected_instalments"
+                    ),
                 )
 
         waiting_list_entry.delete()

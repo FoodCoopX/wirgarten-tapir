@@ -139,15 +139,24 @@ class BestellWizardOrderFulfiller:
                 actor=actor,
             )
 
-        if (
-            association_membership is not None
-            and validated_serializer_data.get("association_deposit_amount") is not None
+        if association_membership is not None and (
+            validated_serializer_data.get("association_deposit_amount") is not None
+            or validated_serializer_data.get(
+                "association_deposit_payment_option", "once"
+            )
+            != "once"
         ):
             AssociationDepositSignupHandler.create_signup_deposit(
                 member=member,
                 amount=validated_serializer_data.get("association_deposit_amount"),
                 effective_from=association_membership.start_date,
                 has_products=bool(order),
+                payment_option=validated_serializer_data.get(
+                    "association_deposit_payment_option", "once"
+                ),
+                expected_instalments=validated_serializer_data.get(
+                    "association_deposit_expected_instalments"
+                ),
                 actor=actor,
                 cache=cache,
             )

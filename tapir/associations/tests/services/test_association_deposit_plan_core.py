@@ -137,6 +137,7 @@ class TestAssociationDepositPlanCore(TapirIntegrationTest):
     def test_hardship_request_stays_unknown_without_payment_and_retry_is_idempotent(
         self,
     ):
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_HARDSHIP_ENABLED, True)
         first = AssociationDepositHardshipRequestRecorder.record_request(
             self.member, self.member, {}
         )
@@ -169,6 +170,7 @@ class TestAssociationDepositPlanCore(TapirIntegrationTest):
             self.authorize(request_key=key, expected_revision=0, amount=Decimal("250"))
 
     def test_hardship_waiver_is_explicit_zero_without_payment(self):
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_HARDSHIP_ENABLED, True)
         AssociationDepositHardshipRequestRecorder.record_request(
             self.member, self.member, {}
         )
@@ -437,6 +439,7 @@ class TestAssociationDepositPlanCore(TapirIntegrationTest):
         )
 
     def test_pending_hardship_cannot_become_regular_debt_without_authorization(self):
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_HARDSHIP_ENABLED, True)
         AssociationDepositHardshipRequestRecorder.record_request(
             self.member, self.member, {}
         )

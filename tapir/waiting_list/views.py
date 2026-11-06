@@ -853,10 +853,16 @@ class PublicConfirmWaitingListEntryView(APIView):
                 serializer.validated_data, cache=self.cache
             )
             if waiting_list_entry.member_id is None:
-                AssociationDepositPolicy.validate_signup_amount(
+                AssociationDepositPolicy.validate_signup_selection(
                     serializer.validated_data.get("association_deposit_amount"),
                     waiting_list_entry.product_wishes.filter(quantity__gt=0).exists(),
                     self.cache,
+                    payment_option=serializer.validated_data[
+                        "association_deposit_payment_option"
+                    ],
+                    expected_instalments=serializer.validated_data[
+                        "association_deposit_expected_instalments"
+                    ],
                 )
         except ValidationError as error:
             return Response(

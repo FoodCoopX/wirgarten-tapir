@@ -32,15 +32,39 @@ class AssociationDepositDetailsProvider:
             .filter(Q(end_date=None) | Q(end_date__gte=get_today(cache)))
             .exists()
         )
+        received = AssociationDepositReceiptTotalCalculator.get_received_deposit_total(
+            member, cache
+        )
+        state = AssociationDepositDetailsProvider._get_account_state(
+            account, agreed, cache
+        )
         return {
             "settings": settings,
             "visible": settings["enabled"] or account is not None,
             "agreed_amount": agreed,
-            "received_amount": AssociationDepositReceiptTotalCalculator.get_received_deposit_total(
-                member, cache
+            "received_amount": received,
+            "state": state,
+            "overpayment_credit": (
+                max(Decimal("0"), received + committed - agreed)
+                if agreed is not None
+                else None
             ),
             "committed_amount": committed,
             "pending_amount": pending,
             "can_increase": AssociationDepositPolicy.can_member_increase(account, cache)
             and has_membership,
         }
+
+    @staticmethod
+    def _get_account_state(account, agreed, cache: dict):
+        state = "not_agreed"
+        if agreed is not None:
+            if agreed == 0:
+                state = "waived"
+            elif account.is_individual_agreement:
+                state = "individual"
+            else:
+                state = "regular"
+        elif account and account.hardship_requested_at is not None:
+            state = "pending"
+        return state

@@ -1570,3 +1570,142 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         self.assertFalse(
             Payment.objects.filter(association_deposit_account__isnull=False).exists()
         )
+
+    @patch.object(OnboardingTrigger, "on_subscription_updated", autospec=True)
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_association_signup_standard_rates_require_no_individual_authorization(
+        self, mock_fire_action, mock_onboarding
+    ):
+        self._set_parameter(
+            ParameterKeys.ORGANISATION_LEGAL_STATUS, LEGAL_STATUS_ASSOCIATION
+        )
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_ENABLED, True)
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_INSTALMENTS_ENABLED, True)
+        data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        data.update(
+            association_membership_type_id=AssociationMembershipTypeFactory().pk,
+            association_deposit_amount="200",
+            association_deposit_payment_option="standard_instalments",
+            association_deposit_expected_instalments=4,
+        )
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+        self.assert_order_confirmed(response.json())
+        account = AssociationDepositAccount.objects.get()
+        self.assertFalse(account.is_individual_agreement)
+        self.assertEqual(
+            [Decimal("50")] * 4, list(account.payments.values_list("amount", flat=True))
+        )
+        self.assertEqual(2, Subscription.objects.count())
+        self.assertEqual(Decimal("12.70"), SolidarityContribution.objects.get().amount)
+
+    @patch.object(OnboardingTrigger, "on_subscription_updated", autospec=True)
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_association_signup_hardship_keeps_other_components_without_deposit_debt(
+        self, mock_fire_action, mock_onboarding
+    ):
+        self._set_parameter(
+            ParameterKeys.ORGANISATION_LEGAL_STATUS, LEGAL_STATUS_ASSOCIATION
+        )
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_ENABLED, True)
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_HARDSHIP_ENABLED, True)
+        data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        data.update(
+            association_membership_type_id=AssociationMembershipTypeFactory().pk,
+            association_deposit_payment_option="hardship",
+        )
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+        self.assert_order_confirmed(response.json())
+        account = AssociationDepositAccount.objects.get()
+        self.assertIsNone(account.agreed_amount)
+        self.assertIsNone(account.effective_from)
+        self.assertIsNotNone(account.hardship_requested_at)
+        self.assertFalse(account.payments.exists())
+        self.assertEqual(1, AssociationMembership.objects.count())
+        self.assertEqual(2, Subscription.objects.count())
+        self.assertEqual(Decimal("12.70"), SolidarityContribution.objects.get().amount)
+
+    def test_invalid_deposit_choices_rejected_before_external_user_creation(self):
+        self._set_parameter(
+            ParameterKeys.ORGANISATION_LEGAL_STATUS, LEGAL_STATUS_ASSOCIATION
+        )
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_ENABLED, True)
+        membership_type = AssociationMembershipTypeFactory()
+        cases = [
+            ("hardship", None, False, False, 4),
+            ("hardship", "0", True, False, 4),
+            ("hardship", "200", True, False, 4),
+            ("standard_instalments", "200", False, False, 4),
+            ("standard_instalments", "200", False, True, 0),
+            ("standard_instalments", "200", False, True, 121),
+            ("standard_instalments", "200", False, True, 6),
+            ("standard_instalments", "200", False, True, 10**9),
+            ("standard_instalments", "100", False, True, 4),
+        ]
+        for option, amount, hardship, rates, count in cases:
+            with self.subTest(
+                option=option, amount=amount, count=count, enabled=(hardship, rates)
+            ):
+                self._set_parameter(
+                    ParameterKeys.ASSOCIATION_DEPOSIT_HARDSHIP_ENABLED, hardship
+                )
+                self._set_parameter(
+                    ParameterKeys.ASSOCIATION_DEPOSIT_INSTALMENTS_ENABLED, rates
+                )
+                self._set_parameter(
+                    ParameterKeys.ASSOCIATION_DEPOSIT_INSTALMENT_COUNT, str(count)
+                )
+                data = self.build_valid_post_data_for_an_order_without_waiting_list()
+                data.update(
+                    association_membership_type_id=membership_type.pk,
+                    association_deposit_amount=amount,
+                    association_deposit_payment_option=option,
+                    association_deposit_expected_instalments=(
+                        4 if option == "standard_instalments" else None
+                    ),
+                )
+                response = self.client.post(
+                    reverse("bestell_wizard:bestell_wizard_confirm_order"),
+                    data=json.dumps(data),
+                    content_type="application/json",
+                )
+                self.assertEqual(200, response.status_code, response.content)
+                self.assertFalse(response.json()["order_confirmed"])
+                self.assertTrue(response.json()["error"])
+                self.mock_keycloak_client.create_user.assert_not_called()
+                self.assertFalse(Member.objects.exists())
+                self.assertFalse(AssociationDepositAccount.objects.exists())
+                self.assertFalse(Payment.objects.exists())
+
+    def test_subcent_standard_rates_rejected_before_external_user_creation(self):
+        self._set_parameter(
+            ParameterKeys.ORGANISATION_LEGAL_STATUS, LEGAL_STATUS_ASSOCIATION
+        )
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_ENABLED, True)
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_INSTALMENTS_ENABLED, True)
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_MINIMUM, "0.01")
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_INCREMENT, "0.01")
+        data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        data.update(
+            association_membership_type_id=AssociationMembershipTypeFactory().pk,
+            association_deposit_amount="0.01",
+            association_deposit_payment_option="standard_instalments",
+            association_deposit_expected_instalments=4,
+        )
+        self.client.raise_request_exception = False
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+        self.mock_keycloak_client.create_user.assert_not_called()
+        self.assertEqual(200, response.status_code, response.content)
+        self.assertFalse(response.json()["order_confirmed"])
+        self.assertFalse(Member.objects.exists())

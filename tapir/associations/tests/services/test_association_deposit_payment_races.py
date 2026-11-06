@@ -132,15 +132,25 @@ class TestAssociationDepositPaymentRaces(TapirFactoryMixin, TransactionTestCase)
                     return PaymentExportBuilder.export_all_unexported_payments(
                         datetime.date(2026, 11, 5), False, {}
                     )
-                return AssociationDepositReceiptRecorder.record_received_deposit(
-                    member,
-                    Decimal("25"),
-                    datetime.date(2026, 11, 5),
-                    "concurrent-receipt",
-                    "Kontoauszug",
-                    member,
-                    {},
-                ).pk
+                try:
+                    return AssociationDepositReceiptRecorder.record_received_deposit(
+                        member,
+                        Decimal("25"),
+                        datetime.date(2026, 11, 5),
+                        "concurrent-receipt",
+                        "Kontoauszug",
+                        member,
+                        {},
+                        expected_committed_amount=(
+                            Decimal("0") if action == "confirmed_receipt" else None
+                        ),
+                    ).pk
+                except ValidationError as error:
+                    if action == "confirmed_receipt" and "Seit dem Öffnen" in str(
+                        error
+                    ):
+                        return "stale"
+                    raise
             finally:
                 close_old_connections()
 
@@ -385,3 +395,19 @@ class TestAssociationDepositPaymentRaces(TapirFactoryMixin, TransactionTestCase)
         self.assertEqual(4, self.account.payments.count())
         self.account.refresh_from_db()
         self.assertEqual(1, self.account.agreement_revision)
+
+    def test_confirmed_receipt_racing_export_requires_reconfirmation_if_export_wins(
+        self,
+    ):
+        AssociationDepositPaymentSynchronizer.create_regular_deposit_payment(
+            self.member, self.member, {}
+        )
+        results = self.run_requests(["export", "confirmed_receipt"])
+        payment = self.account.payments.get()
+        self.assertIsNotNone(payment.transaction_id)
+        if results[1] == "stale":
+            self.assertFalse(self.account.receipts.exists())
+            self.assertEqual(Decimal("200"), payment.amount)
+        else:
+            self.assertEqual(1, self.account.receipts.count())
+            self.assertEqual(Decimal("175"), payment.amount)

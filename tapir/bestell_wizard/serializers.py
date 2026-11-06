@@ -46,6 +46,12 @@ class BestellWizardConfirmOrderRequestSerializer(serializers.Serializer):
         default=None,
         coerce_to_string=False,
     )
+    association_deposit_payment_option = serializers.ChoiceField(
+        choices=["once", "standard_instalments", "hardship"], default="once"
+    )
+    association_deposit_expected_instalments = serializers.IntegerField(
+        required=False, allow_null=True, default=None, min_value=1, max_value=120
+    )
     number_of_coop_shares = serializers.IntegerField()
     pay_coop_shares_in_instalments = serializers.BooleanField(default=False)
     pickup_location_ids = serializers.ListField(child=serializers.CharField())

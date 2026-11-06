@@ -326,7 +326,7 @@ class BestellWizardConfirmOrderApiView(APIView):
             cache=cache,
         )
 
-        AssociationDepositPolicy.validate_signup_amount(
+        AssociationDepositPolicy.validate_signup_selection(
             validated_serializer_data.get("association_deposit_amount"),
             any(
                 quantity > 0
@@ -335,6 +335,12 @@ class BestellWizardConfirmOrderApiView(APIView):
                 ].values()
             ),
             cache,
+            payment_option=validated_serializer_data.get(
+                "association_deposit_payment_option", "once"
+            ),
+            expected_instalments=validated_serializer_data.get(
+                "association_deposit_expected_instalments"
+            ),
         )
         return BestellWizardOrderFulfiller.create_member_and_fulfill_order(
             validated_serializer_data=validated_serializer_data,

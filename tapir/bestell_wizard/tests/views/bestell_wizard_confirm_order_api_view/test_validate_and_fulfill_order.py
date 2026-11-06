@@ -19,7 +19,7 @@ class TestValidateAndFulfillOrder(TapirUnitTest):
         super().setUp()
         self.deposit_validation = self.enterContext(
             patch.object(
-                AssociationDepositPolicy, "validate_signup_amount", autospec=True
+                AssociationDepositPolicy, "validate_signup_selection", autospec=True
             )
         )
 
@@ -72,7 +72,9 @@ class TestValidateAndFulfillOrder(TapirUnitTest):
         )
 
         self.assertEqual(member, result)
-        self.deposit_validation.assert_called_once_with(None, True, cache)
+        self.deposit_validation.assert_called_once_with(
+            None, True, cache, payment_option="once", expected_instalments=None
+        )
 
         mock_validated_growing_period_and_get_contract_start_date.assert_called_once_with(
             "test_id", cache=cache

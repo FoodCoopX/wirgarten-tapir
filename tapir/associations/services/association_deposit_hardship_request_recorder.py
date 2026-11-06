@@ -9,7 +9,12 @@ from tapir.associations.models import (
 from tapir.associations.services.association_deposit_policy import (
     AssociationDepositPolicy,
 )
+from tapir.associations.services.association_deposit_hardship_notifier import (
+    AssociationDepositHardshipNotifier,
+)
+from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.models import Member, Payment
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import get_now
 
 
@@ -21,6 +26,12 @@ class AssociationDepositHardshipRequestRecorder:
     ) -> AssociationDepositAccount:
         if not AssociationDepositPolicy.is_enabled(cache):
             raise ValidationError("Vereinseinlagen sind nicht aktiviert.")
+        if not get_parameter_value(
+            ParameterKeys.ASSOCIATION_DEPOSIT_HARDSHIP_ENABLED, cache=cache
+        ):
+            raise ValidationError(
+                "Anfragen für individuelle Einlagenvereinbarungen sind nicht aktiviert."
+            )
         Member.objects.select_for_update(no_key=True).get(pk=member.pk)
         account, _ = AssociationDepositAccount.objects.get_or_create(member=member)
         if account.agreed_amount is not None:
@@ -39,4 +50,5 @@ class AssociationDepositHardshipRequestRecorder:
         AssociationDepositHardshipRequestedLogEntry().populate(
             model=account, actor=actor, user=member
         ).save()
+        AssociationDepositHardshipNotifier.notify_administration(member, cache)
         return account

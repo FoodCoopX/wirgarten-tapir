@@ -6,6 +6,9 @@ from tapir.associations.models import AssociationDepositAccount
 from tapir.associations.services.association_deposit_amount_validator import (
     AssociationDepositAmountValidator,
 )
+from tapir.associations.services.association_deposit_instalment_calculator import (
+    AssociationDepositInstalmentCalculator,
+)
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import legal_status_is_association
@@ -56,7 +59,65 @@ class AssociationDepositPolicy:
             "allow_member_increase": get_parameter_value(
                 ParameterKeys.ASSOCIATION_DEPOSIT_ALLOW_MEMBER_INCREASE, cache=cache
             ),
+            "instalments_enabled": get_parameter_value(
+                ParameterKeys.ASSOCIATION_DEPOSIT_INSTALMENTS_ENABLED, cache=cache
+            ),
+            "instalment_count": get_parameter_value(
+                ParameterKeys.ASSOCIATION_DEPOSIT_INSTALMENT_COUNT, cache=cache
+            ),
+            "hardship_enabled": get_parameter_value(
+                ParameterKeys.ASSOCIATION_DEPOSIT_HARDSHIP_ENABLED, cache=cache
+            ),
+            "hardship_label": get_parameter_value(
+                ParameterKeys.ASSOCIATION_DEPOSIT_HARDSHIP_LABEL, cache=cache
+            ),
         }
+
+    @classmethod
+    def validate_signup_selection(
+        cls,
+        amount: Decimal | None,
+        has_products: bool,
+        cache: dict,
+        payment_option: str = "once",
+        expected_instalments: int | None = None,
+    ) -> int | None:
+        if payment_option not in ("once", "standard_instalments", "hardship"):
+            raise ValidationError("Bitte eine gültige Einlagenauswahl angeben.")
+        if payment_option == "hardship":
+            if not cls.is_enabled(cache) or not get_parameter_value(
+                ParameterKeys.ASSOCIATION_DEPOSIT_HARDSHIP_ENABLED, cache=cache
+            ):
+                raise ValidationError(
+                    "Anfragen für individuelle Einlagenvereinbarungen sind nicht aktiviert."
+                )
+            if amount is not None:
+                raise ValidationError(
+                    "Bei einer offenen Vereinbarung darf kein Einlagenbetrag angenommen werden."
+                )
+            return None
+        cls.validate_signup_amount(amount, has_products, cache)
+        if payment_option == "once":
+            return 1
+        if (
+            not cls.is_enabled(cache)
+            or not amount
+            or not get_parameter_value(
+                ParameterKeys.ASSOCIATION_DEPOSIT_INSTALMENTS_ENABLED, cache=cache
+            )
+        ):
+            raise ValidationError("Standardraten sind nicht freigegeben.")
+        count = get_parameter_value(
+            ParameterKeys.ASSOCIATION_DEPOSIT_INSTALMENT_COUNT, cache=cache
+        )
+        AssociationDepositInstalmentCalculator.validate_payment_schedule_amount(
+            amount, count
+        )
+        if expected_instalments != count:
+            raise ValidationError(
+                "Die Standard-Ratenzahl wurde geändert oder noch nicht bestätigt. Bitte die aktuellen Einstellungen neu laden."
+            )
+        return count
 
     @classmethod
     def validate_signup_amount(

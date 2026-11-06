@@ -6,6 +6,9 @@ from tapir.wirgarten.constants import Permission
 
 from django.urls import reverse
 
+from tapir.associations.services.association_deposit_receipt_recorder import (
+    AssociationDepositReceiptRecorder,
+)
 from tapir.associations.models import AssociationDepositAccount
 from tapir.associations.services.association_deposit_signup_handler import (
     AssociationDepositSignupHandler,
@@ -122,3 +125,24 @@ class TestMemberAssociationDeposit(TapirIntegrationTest):
                 self.url, {"member_id": self.member.pk, "total_amount": "250"}
             )
             self.assertEqual(403, response.status_code)
+
+    def test_multiple_valid_receipts_keep_large_total_readable(self):
+        for reference in ["large-receipt-1", "large-receipt-2"]:
+            AssociationDepositReceiptRecorder.record_received_deposit(
+                self.member,
+                Decimal("500000"),
+                datetime.date(2026, 11, 5),
+                reference,
+                "Kontoauszug",
+                self.member,
+                {},
+            )
+        self.client.force_login(self.member)
+        self.client.raise_request_exception = False
+        response = self.client.get(self.url, {"member_id": self.member.pk})
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(1000000, response.json()["received_amount"])
+        self.assertEqual(200, response.json()["agreed_amount"])
+        self.assertEqual(0, response.json()["committed_amount"])
+        self.assertEqual(0, response.json()["pending_amount"])
+        self.assertFalse(Payment.objects.exists())

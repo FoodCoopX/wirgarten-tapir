@@ -60,6 +60,30 @@ export interface AssociationDepositSettings {
    * @memberof AssociationDepositSettings
    */
   allowMemberIncrease: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof AssociationDepositSettings
+   */
+  instalmentsEnabled: boolean;
+  /**
+   *
+   * @type {number}
+   * @memberof AssociationDepositSettings
+   */
+  instalmentCount: number;
+  /**
+   *
+   * @type {boolean}
+   * @memberof AssociationDepositSettings
+   */
+  hardshipEnabled: boolean;
+  /**
+   *
+   * @type {string}
+   * @memberof AssociationDepositSettings
+   */
+  hardshipLabel: string;
 }
 
 /**
@@ -87,6 +111,17 @@ export function instanceOfAssociationDepositSettings(
     value["allowMemberIncrease"] === undefined
   )
     return false;
+  if (
+    !("instalmentsEnabled" in value) ||
+    value["instalmentsEnabled"] === undefined
+  )
+    return false;
+  if (!("instalmentCount" in value) || value["instalmentCount"] === undefined)
+    return false;
+  if (!("hardshipEnabled" in value) || value["hardshipEnabled"] === undefined)
+    return false;
+  if (!("hardshipLabel" in value) || value["hardshipLabel"] === undefined)
+    return false;
   return true;
 }
 
@@ -111,6 +146,10 @@ export function AssociationDepositSettingsFromJSONTyped(
     supportingMembersRequired: json["supporting_members_required"],
     allowLargerSignup: json["allow_larger_signup"],
     allowMemberIncrease: json["allow_member_increase"],
+    instalmentsEnabled: json["instalments_enabled"],
+    instalmentCount: json["instalment_count"],
+    hardshipEnabled: json["hardship_enabled"],
+    hardshipLabel: json["hardship_label"],
   };
 }
 
@@ -136,5 +175,9 @@ export function AssociationDepositSettingsToJSONTyped(
     supporting_members_required: value["supportingMembersRequired"],
     allow_larger_signup: value["allowLargerSignup"],
     allow_member_increase: value["allowMemberIncrease"],
+    instalments_enabled: value["instalmentsEnabled"],
+    instalment_count: value["instalmentCount"],
+    hardship_enabled: value["hardshipEnabled"],
+    hardship_label: value["hardshipLabel"],
   };
 }

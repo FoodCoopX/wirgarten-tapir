@@ -30,6 +30,10 @@ class TestDepositParameterDefinitions(TapirIntegrationTest):
         ParameterKeys.ASSOCIATION_DEPOSIT_SUPPORTING_MEMBERS_REQUIRED,
         ParameterKeys.ASSOCIATION_DEPOSIT_ALLOW_LARGER_SIGNUP,
         ParameterKeys.ASSOCIATION_DEPOSIT_ALLOW_MEMBER_INCREASE,
+        ParameterKeys.ASSOCIATION_DEPOSIT_INSTALMENTS_ENABLED,
+        ParameterKeys.ASSOCIATION_DEPOSIT_INSTALMENT_COUNT,
+        ParameterKeys.ASSOCIATION_DEPOSIT_HARDSHIP_ENABLED,
+        ParameterKeys.ASSOCIATION_DEPOSIT_HARDSHIP_LABEL,
     ]
 
     @classmethod
@@ -61,6 +65,10 @@ class TestDepositParameterDefinitions(TapirIntegrationTest):
             ParameterKeys.ASSOCIATION_DEPOSIT_NAME: "Investitionsbeitrag",
             ParameterKeys.ASSOCIATION_DEPOSIT_MINIMUM: "125.00",
             ParameterKeys.ASSOCIATION_DEPOSIT_INCREMENT: "12.50",
+            ParameterKeys.ASSOCIATION_DEPOSIT_INSTALMENTS_ENABLED: "True",
+            ParameterKeys.ASSOCIATION_DEPOSIT_INSTALMENT_COUNT: "6",
+            ParameterKeys.ASSOCIATION_DEPOSIT_HARDSHIP_ENABLED: "True",
+            ParameterKeys.ASSOCIATION_DEPOSIT_HARDSHIP_LABEL: "Bitte individuell vereinbaren",
         }
         for key, value in custom_values.items():
             self._set_parameter(key, value)
@@ -95,6 +103,36 @@ class TestDepositParameterDefinitions(TapirIntegrationTest):
             for value in ["0.01", "200.00", "999999.99"]:
                 with self.subTest(key=key, value=value):
                     self.assertEqual(Decimal(value), field.clean(value))
+
+    def test_standard_instalment_count_has_safe_form_bounds(self):
+        self._set_parameter(
+            ParameterKeys.ORGANISATION_LEGAL_STATUS, LEGAL_STATUS_ASSOCIATION
+        )
+        field = ParameterForm().fields[
+            ParameterKeys.ASSOCIATION_DEPOSIT_INSTALMENT_COUNT
+        ]
+        for value in ["0", "-1", "1.5", "121", "1000000000"]:
+            with self.subTest(value=value), self.assertRaises(ValidationError):
+                field.clean(value)
+        self.assertEqual(120, field.clean("120"))
+
+    def test_workflow_options_are_opt_in_with_four_standard_months(self):
+        self.assertFalse(
+            get_parameter_value(
+                ParameterKeys.ASSOCIATION_DEPOSIT_INSTALMENTS_ENABLED, cache={}
+            )
+        )
+        self.assertFalse(
+            get_parameter_value(
+                ParameterKeys.ASSOCIATION_DEPOSIT_HARDSHIP_ENABLED, cache={}
+            )
+        )
+        self.assertEqual(
+            4,
+            get_parameter_value(
+                ParameterKeys.ASSOCIATION_DEPOSIT_INSTALMENT_COUNT, cache={}
+            ),
+        )
 
     def test_validation_reuses_request_cache(self):
         cache = {}

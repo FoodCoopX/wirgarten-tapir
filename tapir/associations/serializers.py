@@ -117,6 +117,10 @@ class AssociationDepositSettingsSerializer(Serializer):
     supporting_members_required = serializers.BooleanField()
     allow_larger_signup = serializers.BooleanField()
     allow_member_increase = serializers.BooleanField()
+    instalments_enabled = serializers.BooleanField()
+    instalment_count = serializers.IntegerField()
+    hardship_enabled = serializers.BooleanField()
+    hardship_label = CharField()
 
 
 class AssociationDepositDetailsSerializer(Serializer):
@@ -126,13 +130,13 @@ class AssociationDepositDetailsSerializer(Serializer):
         max_digits=8, decimal_places=2, coerce_to_string=False, allow_null=True
     )
     received_amount = serializers.DecimalField(
-        max_digits=8, decimal_places=2, coerce_to_string=False
+        max_digits=12, decimal_places=2, coerce_to_string=False
     )
     committed_amount = serializers.DecimalField(
-        max_digits=8, decimal_places=2, coerce_to_string=False
+        max_digits=12, decimal_places=2, coerce_to_string=False
     )
     pending_amount = serializers.DecimalField(
-        max_digits=8, decimal_places=2, coerce_to_string=False
+        max_digits=12, decimal_places=2, coerce_to_string=False
     )
     can_increase = serializers.BooleanField()
 
