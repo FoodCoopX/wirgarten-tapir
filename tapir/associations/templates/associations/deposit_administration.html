@@ -1,0 +1,184 @@
+{% extends "core/base.html" %}
+{% load django_bootstrap5 %}
+{% block title %}Einlagenverwaltung{% endblock %}
+{% block content %}
+    <h1>
+        {% if member %}{{ details.settings.name }} – {{ member.get_display_name }}{% else %}Einlagenverwaltung{% endif %}
+    </h1>
+    <a href="{% url 'associations:deposit_departure_report' %}">Jahresübersicht ausgeschiedener Mitglieder</a>
+    <form method="get" action="{% url 'associations:deposit_administration' %}" class="mb-3">
+        {% bootstrap_form member_form wrapper_class="searchable-select mb-3" %}
+        <button class="btn btn-secondary" type="submit">Einlagenfall öffnen</button>
+    </form>
+    {% if member %}
+        <a href="{% url 'associations:deposit_administration' %}">Zur Übersicht offener Vereinbarungen</a>
+        <section class="card my-3">
+            <div class="card-body">
+                <h2>Aktueller Stand</h2>
+                <p>
+                    {% if details.state == "agreement_required" %}Neue Einlagenvereinbarung erforderlich{% elif details.state == "collection_stopped" %}Einzug außerhalb der Mitgliedschaft gestoppt{% elif details.state == "pending" %}Individuelle Vereinbarung offen{% elif details.state == "waived" %}Vollständiger Verzicht vereinbart{% elif details.state == "individual" %}Individuelle Vereinbarung{% elif details.state == "regular" %}Reguläre Vereinbarung{% else %}Noch kein Einlagenbetrag vereinbart{% endif %}
+                </p>
+                <dl class="row">
+                    <dt class="col-sm-4">Vereinbarter Gesamtbetrag</dt>
+                    <dd class="col-sm-8">
+                        {% if details.agreed_amount is not None %}{{ details.agreed_amount|floatformat:2 }} €{% else %}Noch offen{% endif %}
+                    </dd>
+                    <dt class="col-sm-4">Externe Zahlungseingänge</dt>
+                    <dd class="col-sm-8">{{ details.received_amount|floatformat:2 }} €</dd>
+                    <dt class="col-sm-4">Bereits verbucht / exportiert</dt>
+                    <dd class="col-sm-8">{{ details.committed_amount|floatformat:2 }} €</dd>
+                    <dt class="col-sm-4">Extern zurückgezahlt</dt>
+                    <dd class="col-sm-8">{{ details.refunded_amount|floatformat:2 }} €</dd>
+                    <dt class="col-sm-4">Rechnerisch verbleibender Betrag</dt>
+                    <dd class="col-sm-8">{{ details.retained_amount|floatformat:2 }} €</dd>
+                    <dt class="col-sm-4">Offene Raten</dt>
+                    <dd class="col-sm-8">{{ details.pending_amount|floatformat:2 }} €</dd>
+                    <dt class="col-sm-4">Gestoppte Raten</dt>
+                    <dd class="col-sm-8">{{ details.stopped_amount|floatformat:2 }} € – kein automatischer Erlass oder Rückzahlungsanspruch</dd>
+                    {% if details.overpayment_credit %}
+                        <dt class="col-sm-4">Guthaben über dem vereinbarten Betrag</dt>
+                        <dd class="col-sm-8">{{ details.overpayment_credit|floatformat:2 }} € – keine automatische Rückzahlung</dd>
+                    {% endif %}
+                </dl>
+                <p>Ein Bankexport bestätigt keinen tatsächlichen Zahlungseingang. Der rechnerische Betrag berücksichtigt externe Eingänge, verbuchte SEPA-Beträge und erfasste Rückzahlungen.</p>
+                {% if details.refund_requires_agreement %}<p>Nach der Rückzahlung sind neue Einzüge bis zu einer neuen dokumentierten Vereinbarung gesperrt.</p>{% endif %}
+                {% if payments %}
+                    <table class="table">
+                        <caption>Zahlungen: {{ details.settings.name }}</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Termin</th>
+                                <th scope="col">Betrag</th>
+                                <th scope="col">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in payments %}
+                                <tr>
+                                    <td>{{ payment.due_date|date:"d.m.Y" }}</td>
+                                    <td>{{ payment.amount|floatformat:2 }} €</td>
+                                    <td>{% if payment.status == "STOPPED" %}Gestoppt{% elif payment.status == "PAID" %}Verbucht / exportiert{% else %}Offen{% endif %}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% endif %}
+            </div>
+        </section>
+        {% if details.settings.enabled %}
+            <section class="card my-3">
+                <div class="card-body">
+                    <h2>Persönlich abgestimmte Vereinbarung</h2>
+                    <p>0 € bedeutet vollständigen Verzicht. Ein reduzierter Gesamtbetrag erzeugt keine zusätzliche Forderung bis zur Mindesteinlage. Neue Raten betreffen nur den verbleibenden Betrag; bereits verbuchte Zahlungen bleiben erhalten.</p>
+                    <form method="post">
+                        {% csrf_token %}{% bootstrap_form agreement_form %}
+                        <button class="btn btn-primary" name="action" value="agreement" type="submit">Dokumentierte Vereinbarung speichern</button>
+                    </form>
+                </div>
+            </section>
+        {% endif %}
+        <section class="card my-3">
+            <div class="card-body">
+                <h2>Extern erhaltene Einzahlung erfassen</h2>
+                <p>Bereits verbucht / exportiert: <strong>{{ details.committed_amount|floatformat:2 }} €</strong>. Dieser Betrag kann durch den Zahlungseingang nicht mehr reduziert werden. Offene Raten: {{ details.pending_amount|floatformat:2 }} €.</p>
+                <p>Nur einen bereits eingegangenen Betrag erfassen. Ohne Vereinbarung entsteht dadurch weder eine Forderung noch eine neue Lastschrift.</p>
+                <form method="post">
+                    {% csrf_token %}{% bootstrap_form receipt_form %}
+                    <button class="btn btn-primary" name="action" value="receipt" type="submit">Zahlungseingang erfassen</button>
+                </form>
+                {% if receipts %}
+                    <table class="table">
+                        <caption>Erfasste Zahlungseingänge</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Datum</th>
+                                <th scope="col">Betrag</th>
+                                <th scope="col">Bankreferenz</th>
+                                <th scope="col">Beleg</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for receipt in receipts %}
+                                <tr>
+                                    <td>{{ receipt.received_on|date:"d.m.Y" }}</td>
+                                    <td>{{ receipt.amount|floatformat:2 }} €</td>
+                                    <td>{{ receipt.reference }}</td>
+                                    <td>{{ receipt.note }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% endif %}
+            </div>
+        </section>
+        <section class="card my-3">
+            <div class="card-body">
+                <h2>Extern ausgeführte Rückzahlung erfassen</h2>
+                <p>Nur eine bereits ausgeführte Rückzahlung mit Bankbeleg erfassen. Tapir löst keine Überweisung oder automatische Nachbelastung aus.</p>
+                {% if account and details.retained_amount > 0 %}
+                    <form method="post">
+                        {% csrf_token %}{% bootstrap_form refund_form %}
+                        <button class="btn btn-primary" name="action" value="refund" type="submit">Externe Rückzahlung erfassen</button>
+                    </form>
+                {% endif %}
+                {% for refund in refunds %}
+                    <p>{{ refund.refunded_on|date:"d.m.Y" }}: {{ refund.amount|floatformat:2 }} €, Bankreferenz {{ refund.reference }} – {{ refund.note }}</p>
+                {% empty %}
+                    <p>Noch keine externe Rückzahlung erfasst.</p>
+                {% endfor %}
+            </div>
+        </section>
+        <section class="card my-3">
+            <div class="card-body">
+                <h2>Dokumentierte Vereinbarungen</h2>
+                {% for entry in agreements %}
+                    <p>{{ entry.values.agreed_amount }} € / {{ entry.values.instalment_count }} Raten, Zustimmung vom {{ entry.values.consented_on }}: {{ entry.values.consent_note }}</p>
+                {% empty %}
+                    <p>Noch keine individuelle Vereinbarung dokumentiert.</p>
+                {% endfor %}
+            </div>
+        </section>
+    {% else %}
+        <form method="get" class="mb-3">
+            <label for="case-status">Fälle anzeigen</label>
+            <select id="case-status" name="status">
+                <option value="open" {% if not include_closed %}selected{% endif %}>Individuelle Vereinbarung offen</option>
+                <option value="all" {% if include_closed %}selected{% endif %}>Alle Einlagenkonten einschließlich abgeschlossener Fälle</option>
+            </select>
+            <button class="btn btn-secondary" type="submit">Filtern</button>
+        </form>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">Mitglied</th>
+                    <th scope="col">Anfrage vom</th>
+                    <th scope="col">Vereinbarter Gesamtbetrag</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for account in accounts %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'associations:deposit_case' member_id=account.member_id %}">{{ account.member.get_display_name }} ({{ account.member.email }})</a>
+                        </td>
+                        <td>{{ account.hardship_requested_at|date:"d.m.Y"|default:"–" }}</td>
+                        <td>
+                            {% if account.agreed_amount is not None %}{{ account.agreed_amount|floatformat:2 }} €{% else %}Noch offen{% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="3">Keine Fälle in dieser Auswahl.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if accounts.has_previous %}
+            <a href="?status={% if include_closed %}all{% else %}open{% endif %}&amp;page={{ accounts.previous_page_number }}">Zurück</a>
+        {% endif %}
+        <span>Seite {{ accounts.number }} von {{ accounts.paginator.num_pages }}</span>
+        {% if accounts.has_next %}
+            <a href="?status={% if include_closed %}all{% else %}open{% endif %}&amp;page={{ accounts.next_page_number }}">Weiter</a>
+        {% endif %}
+    {% endif %}
+{% endblock %}

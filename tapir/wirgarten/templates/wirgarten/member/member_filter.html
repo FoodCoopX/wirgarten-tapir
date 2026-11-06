@@ -1,5 +1,6 @@
 {% extends "wirgarten/generic/filter-list.html" %}
 {% load member_list %}
+{% load association_deposit %}
 {% load i18n %}
 {% load core %}
 {% load static %}
@@ -77,6 +78,9 @@
         {% if show_cooperative_content %}
             <th class="sort-header" data-sort="coop_shares_total_value">{% translate "Geschäftsguthaben" %}</th>
         {% endif %}
+        {% if show_deposit_content %}
+            <th scope="col">{{ deposit_name }}<br/><small>Buchungsrest / Status</small></th>
+        {% endif %}
         <th class="sort-header" data-sort="monthly_payment">{% translate "Umsatz/Monat" %}</th>
         <th class="sort-header" data-sort="current_member_contribution">{% translate "Solidarbeitrag" %}</th>
         <th>{% translate "Abholort" %}</th>
@@ -107,6 +111,7 @@
             {% if show_cooperative_content %}
                 <td class="text-end">{{ member.coop_shares_total_value|format_currency }} €&nbsp;&nbsp;</td>
             {% endif %}
+            {% if show_deposit_content %}{% deposit_overview_cell member cache %}{% endif %}
             <td class="text-end">{{ member.monthly_payment|format_currency }} €&nbsp;&nbsp;</td>
             <td class="text-end">
                 {% if not member.current_member_contribution and not member.future_member_contribution_amount %}

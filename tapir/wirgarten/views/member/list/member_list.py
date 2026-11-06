@@ -22,6 +22,12 @@ from tapir.accounts.services.email_verification_service import (
     EmailVerificationService,
 )
 from tapir.associations.models import AssociationMembershipType
+from tapir.associations.services.association_deposit_overview_provider import (
+    AssociationDepositOverviewProvider,
+)
+from tapir.associations.services.association_deposit_policy import (
+    AssociationDepositPolicy,
+)
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.german_name_sort_service import GermanNameSortService
 from tapir.coop.services.member_search_service import MemberSearchService
@@ -158,6 +164,13 @@ class MemberFilter(FilterSet):
         ],
     )
 
+    deposit_status = ChoiceFilter(
+        label="Einlagenstatus",
+        method="filter_deposit_status",
+        choices=list(AssociationDepositOverviewProvider.STATES.items())
+        + [("minimum_outstanding", "Mindestbetrag noch nicht gedeckt")],
+    )
+
     o = OrderingFilter(
         label=_("Sortierung"),
         initial=0,
@@ -192,8 +205,12 @@ class MemberFilter(FilterSet):
         empty_label=None,
     )
 
+    class Meta:
+        fields = []
+
     def __init__(self, data=None, *args, **kwargs):
         self.cache = kwargs.pop("cache", {})
+        include_deposit = kwargs.pop("include_deposit", False)
 
         if data is None:
             data = {"o": "-organisation_entry_date,-member_no,last_name_sort_key"}
@@ -210,6 +227,8 @@ class MemberFilter(FilterSet):
                 data["o"] += ",last_name_sort_key"
 
         super().__init__(data, *args, **kwargs)
+        if not include_deposit or not legal_status_is_association(cache=self.cache):
+            del self.filters["deposit_status"]
 
         if get_parameter_value(
             ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=self.cache
@@ -237,6 +256,11 @@ class MemberFilter(FilterSet):
             queryset, ["first_name", "last_name"], cache=self.cache
         )
         return super().filter_queryset(queryset)
+
+    def filter_deposit_status(self, queryset, name, value):
+        return AssociationDepositOverviewProvider.filter_members(
+            queryset, value, self.cache
+        )
 
     def filter_search(self, queryset, name, value):
         return MemberSearchService.filter_queryset(
@@ -331,6 +355,13 @@ class MemberListView(PermissionRequiredMixin, FilterView):
             == LEGAL_STATUS_ASSOCIATION
         )
         context["cache"] = self.cache
+        context["show_deposit_content"] = AssociationDepositOverviewProvider.can_view(
+            self.request.user, self.cache
+        )
+        if context["show_deposit_content"]:
+            context["deposit_name"] = AssociationDepositPolicy.get_settings(self.cache)[
+                "name"
+            ]
         context["delivery_charge_enabled"] = get_parameter_value(
             key=ParameterKeys.DELIVERY_CHARGE_PER_PICKUP_LOCATION_ENABLED,
             cache=self.cache,
@@ -340,6 +371,9 @@ class MemberListView(PermissionRequiredMixin, FilterView):
     def get_filterset_kwargs(self, filterset_class):
         kwargs = super().get_filterset_kwargs(filterset_class)
         kwargs["cache"] = self.cache
+        kwargs["include_deposit"] = AssociationDepositOverviewProvider.can_view(
+            self.request.user, self.cache
+        )
         return kwargs
 
     def get_queryset(self):

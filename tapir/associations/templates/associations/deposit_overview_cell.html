@@ -1,0 +1,5 @@
+{% load wirgarten %}
+<td class="text-end">
+    {% if deposit.retained_amount != None %}{{ deposit.retained_amount|format_currency }} €<br/>{% endif %}
+    <small>{{ deposit.state_label }}</small>
+</td>

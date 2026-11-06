@@ -2,6 +2,7 @@ import csv
 import mimetypes
 
 from django.contrib.auth.decorators import permission_required
+from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db.models import Count, Max, Q, Sum
 from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse_lazy
@@ -12,6 +13,12 @@ from django.views.generic import View
 from tapir.accounts.services.email_verification_service import EmailVerificationService
 from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
 from tapir.associations.models import AssociationMembership
+from tapir.associations.services.association_deposit_export_column_provider import (
+    AssociationDepositExportColumnProvider,
+)
+from tapir.associations.services.association_deposit_overview_provider import (
+    AssociationDepositOverviewProvider,
+)
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.core.services.organisation_entry_date_annotator import (
@@ -144,6 +151,12 @@ def export_coop_member_list(request, **kwargs):
         columns.append(KEY_ASSOCIATION_MEMBERSHIP_END)
         columns.append(KEY_ASSOCIATION_MEMBERSHIP_CANCELLATION_DATE)
 
+    include_deposit = AssociationDepositOverviewProvider.can_view(request.user, cache)
+    if include_deposit:
+        columns.extend(
+            column.display_name
+            for column in AssociationDepositExportColumnProvider.get_columns(cache)
+        )
     output, writer = begin_csv_string(columns)
 
     members = Member.objects.order_by("member_no")
@@ -278,6 +291,10 @@ def export_coop_member_list(request, **kwargs):
                 else ""
             )
 
+        if include_deposit:
+            data.update(
+                AssociationDepositExportColumnProvider.get_csv_row(entry, cache)
+            )
         data = {column: value for column, value in data.items() if column in columns}
 
         writer.writerow(data)
@@ -289,7 +306,9 @@ def export_coop_member_list(request, **kwargs):
     return response
 
 
-class ExportMembersView(View):
+class ExportMembersView(PermissionRequiredMixin, View):
+    permission_required = Permission.Accounts.VIEW
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.cache = {}
@@ -297,9 +316,15 @@ class ExportMembersView(View):
     def get(self, request, *args, **kwargs):
         # Get queryset based on filters and ordering
         filter_class = MemberFilter
-        queryset = filter_class(request.GET, queryset=self.get_queryset()).qs.order_by(
-            "member_no"
+        include_deposit = AssociationDepositOverviewProvider.can_view(
+            request.user, self.cache
         )
+        queryset = filter_class(
+            request.GET,
+            queryset=self.get_queryset(),
+            cache=self.cache,
+            include_deposit=include_deposit,
+        ).qs.order_by("member_no")
 
         # Create response object with CSV content
         response = HttpResponse(content_type="text/csv")
@@ -308,6 +333,11 @@ class ExportMembersView(View):
         )
         writer = csv.writer(response, delimiter=";")
 
+        deposit_columns = (
+            AssociationDepositExportColumnProvider.get_columns(self.cache)
+            if include_deposit
+            else []
+        )
         # Write header row
         writer.writerow(
             [
@@ -327,6 +357,7 @@ class ExportMembersView(View):
                 "Abholort",
                 "Solidarbeitrag",
             ]
+            + [column.display_name for column in deposit_columns]
         )
 
         for member in queryset:
@@ -364,6 +395,15 @@ class ExportMembersView(View):
                         or 0
                     ),
                 ]
+                + (
+                    list(
+                        AssociationDepositExportColumnProvider.get_csv_row(
+                            member, self.cache
+                        ).values()
+                    )
+                    if include_deposit
+                    else []
+                )
             )
 
         return response
