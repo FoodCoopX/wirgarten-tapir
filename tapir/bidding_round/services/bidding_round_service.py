@@ -586,15 +586,23 @@ class BiddingRoundService:
                 items_changed or bid.pickup_location_id != pickup_location_id
             )
             bid.pickup_location_id = pickup_location_id
-            if content_changed:
-                bid.admin_confirmed = None
             if entered_by_admin is not None:
                 bid.entered_by_admin = entered_by_admin
-            if admin_confirmed is not None:
-                bid.admin_confirmed = get_now(cache=cache) if admin_confirmed else None
+            cls._update_admin_confirmation(
+                bid, content_changed, admin_confirmed, cache=cache
+            )
             bid.save()
             if items_changed:
                 bid.items.all().delete()
                 BidItem.objects.bulk_create(proposed_items)
 
         return bid
+
+    @classmethod
+    def _update_admin_confirmation(
+        cls, bid: Bid, content_changed: bool, admin_confirmed: bool | None, cache: dict
+    ):
+        if admin_confirmed is not None:
+            bid.admin_confirmed = get_now(cache=cache) if admin_confirmed else None
+        elif content_changed:
+            bid.admin_confirmed = None
