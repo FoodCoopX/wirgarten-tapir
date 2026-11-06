@@ -2,6 +2,9 @@ PREFIX = "wirgarten"
 
 
 class ParameterKeys:
+    ASSOCIATION_DEPOSIT_NAME = "tapir.associations.deposit.name"
+    ASSOCIATION_DEPOSIT_MINIMUM = "tapir.associations.deposit.minimum"
+    ASSOCIATION_DEPOSIT_INCREMENT = "tapir.associations.deposit.increment"
     MEMBER_PICKUP_LOCATION_CHANGE_UNTIL = (
         f"{PREFIX}.member.pickup_location_change_until"
     )
