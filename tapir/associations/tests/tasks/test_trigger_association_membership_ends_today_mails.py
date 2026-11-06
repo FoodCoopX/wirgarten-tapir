@@ -7,6 +7,7 @@ from tapir_mail.triggers.transactional_trigger import (
     TransactionalTriggerData,
 )
 
+from tapir.associations.mail_tokens import ASSOCIATION_DEPOSIT_MAIL_TOKENS
 from tapir.associations.apps import AssociationsConfig
 from tapir.associations.tasks import trigger_association_membership_ends_today_mails
 from tapir.associations.tests.factories import AssociationMembershipFactory
@@ -51,7 +52,8 @@ class TestTriggerAssociationMembershipEndsTodayMails(TapirIntegrationTest):
                 token_data={
                     "membership_type_name": membership.type.name,
                     "end_date_set_on": "13.10.2020",
-                },
+                }
+                | dict.fromkeys(ASSOCIATION_DEPOSIT_MAIL_TOKENS.values(), ""),
             )
         )
         membership.refresh_from_db()

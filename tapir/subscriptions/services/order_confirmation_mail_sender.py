@@ -3,6 +3,9 @@ from tapir_mail.triggers.transactional_trigger import (
     TransactionalTriggerData,
 )
 
+from tapir.associations.services.association_deposit_mail_token_provider import (
+    AssociationDepositMailTokenProvider,
+)
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import Subscription, CoopShareTransaction
 from tapir.wirgarten.utils import format_subscription_list_html
@@ -15,6 +18,7 @@ class OrderConfirmationMailSender:
         confirm_creation_ids: list[str],
         confirm_purchase_ids: list[str],
     ):
+        cache = {}
         if len(confirm_creation_ids) == 0 and len(confirm_purchase_ids) == 0:
             return
 
@@ -32,7 +36,8 @@ class OrderConfirmationMailSender:
                             data["subscriptions"]
                         ),
                         "number_of_coop_shares": data["number_of_coop_shares"],
-                    },
+                    }
+                    | AssociationDepositMailTokenProvider.build_tokens(member, cache),
                 ),
             )
 

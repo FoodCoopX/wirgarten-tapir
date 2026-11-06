@@ -8,6 +8,7 @@ from tapir_mail.triggers.transactional_trigger import (
     TransactionalTriggerData,
 )
 
+from tapir.associations.mail_tokens import ASSOCIATION_DEPOSIT_MAIL_TOKENS
 from tapir.associations.apps import AssociationsConfig
 from tapir.associations.models import AssociationMembershipUpdatedLogEntry
 from tapir.associations.tests.factories import AssociationMembershipFactory
@@ -86,7 +87,8 @@ class SetAssociationMembershipEndDateApiView(TapirIntegrationTest):
                     "end_date_before": "31.12.2000",
                     "end_date_after": "01.01.2021",
                     "membership_type_name": "test type name",
-                },
+                }
+                | dict.fromkeys(ASSOCIATION_DEPOSIT_MAIL_TOKENS.values(), ""),
                 recipient_id_in_base_queryset=member.id,
             )
         )

@@ -10,6 +10,9 @@ from tapir_mail.triggers.transactional_trigger import (
 )
 
 from tapir.associations.models import AssociationMembership
+from tapir.associations.services.association_deposit_mail_token_provider import (
+    AssociationDepositMailTokenProvider,
+)
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.coop_membership_cancellation_manager import (
     CoopMembershipCancellationManager,
@@ -202,7 +205,8 @@ def _fire_membership_entry_trigger(member: Member, cache: dict):
                 "membership_start_date": OrganisationEntryDateAnnotator.get_organisation_entry_date(
                     recipient=member, cache=cache
                 ),
-            },
+            }
+            | AssociationDepositMailTokenProvider.build_tokens(member, cache),
         ),
     )
 

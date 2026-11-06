@@ -15,6 +15,7 @@ from tapir.accounts.services.email_verification_service import EmailVerification
 from tapir.accounts.services.keycloak_user_delete_service import (
     KeycloakUserDeleteService,
 )
+from tapir.associations.mail_tokens import ASSOCIATION_DEPOSIT_MAIL_TOKENS
 from tapir.associations.models import AssociationDepositAccount
 from tapir.associations.models import AssociationMembership
 from tapir.associations.tests.factories import AssociationMembershipTypeFactory
@@ -313,7 +314,8 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
                 "solidarity_contribution_start_date": "11.05.2026",
                 "monthly_total": "22,00",
                 "payment_rhythm": "Halbjährlich",
-            },
+            }
+            | dict.fromkeys(ASSOCIATION_DEPOSIT_MAIL_TOKENS.values(), ""),
             trigger_data.token_data,
         )
 
@@ -624,6 +626,10 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
             for call in mock_dispatch.call_args_list
             if call.args[0].key == Events.WAITING_LIST_ORDER_CONFIRMATION
         )
+        self.assertEqual("200,00", event.token_data["association_deposit_amount"])
+        self.assertEqual(
+            1, event.token_data["association_deposit_payment_plan"].count("(offen)")
+        )
 
     def test_missing_waiting_list_deposit_keeps_entry_without_member_or_debit(self):
         entry, data = self.prepare_deposit_confirmation()
@@ -704,6 +710,10 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
             for call in mock_dispatch.call_args_list
             if call.args[0].key == Events.WAITING_LIST_ORDER_CONFIRMATION
         )
+        self.assertEqual("200,00", event.token_data["association_deposit_amount"])
+        self.assertEqual(
+            4, event.token_data["association_deposit_payment_plan"].count("(offen)")
+        )
 
     @patch.object(TransactionalTrigger, "fire_all_released_configs", autospec=True)
     def test_new_waiting_list_member_hardship_keeps_unknown_agreement_without_payment(
@@ -731,6 +741,12 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
             call.args[0]
             for call in mock_dispatch.call_args_list
             if call.args[0].key == Events.WAITING_LIST_ORDER_CONFIRMATION
+        )
+        self.assertEqual(
+            "Nicht vereinbart", event.token_data["association_deposit_amount"]
+        )
+        self.assertEqual(
+            0, event.token_data["association_deposit_payment_plan"].count("(offen)")
         )
 
     def test_invalid_deposit_choices_rejected_before_external_user_creation(self):
