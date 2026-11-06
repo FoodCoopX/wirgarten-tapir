@@ -49,6 +49,7 @@ class MonthPaymentBuilderUtils:
             for payment in generated_payments
             if payment.mandate_ref_id == mandate_ref.ref
             and payment.type == payment_type
+            and payment.association_deposit_account_id is None
         )
 
         payments_for_this_period = [

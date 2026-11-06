@@ -9,6 +9,7 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.models import CoopSharesPurchasedLogEntry
 from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES
 from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
+from tapir.payments.services.payment_due_date_calculator import PaymentDueDateCalculator
 from tapir.wirgarten.models import (
     Member,
     Payment,
@@ -118,12 +119,9 @@ class CoopSharePurchaseHandler:
 
     @classmethod
     def get_payment_due_date(cls, shares_valid_at: datetime.date, cache: dict):
-        due_date = shares_valid_at.replace(day=1) + relativedelta(
-            day=get_parameter_value(ParameterKeys.PAYMENT_DUE_DAY, cache=cache)
+        return PaymentDueDateCalculator.get_first_due_date_on_or_after(
+            earliest_date=shares_valid_at, cache=cache
         )
-        if due_date < shares_valid_at:
-            due_date = due_date + relativedelta(months=1)
-        return due_date
 
     @classmethod
     def send_warning_mail_if_necessary(

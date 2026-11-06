@@ -19,6 +19,9 @@ from rest_framework.serializers import ListField
 from rest_framework.views import APIView
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
+from tapir.associations.services.association_deposit_membership_coverage import (
+    AssociationDepositMembershipCoverage,
+)
 from tapir.associations.models import AssociationMembership
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.models import Joker
@@ -166,7 +169,9 @@ class GetFutureMemberPaymentsApiView(APIView):
                 )
                 | Q(status=Payment.PaymentStatus.DUE)
             )
-            .select_related("coop_share_transaction")
+            .select_related(
+                "coop_share_transaction", "association_deposit_account__member"
+            )
             .prefetch_related("coop_share_transaction__payments")
         )
         current_month = get_today(cache=self.cache)
@@ -188,7 +193,9 @@ class GetFutureMemberPaymentsApiView(APIView):
             )
             generated_payments.update(member_payments)
             current_month = get_first_of_next_month(current_month)
-        return member_payments
+        return AssociationDepositMembershipCoverage.filter_upcoming_payments(
+            member_payments, self.cache
+        )
 
     @classmethod
     def build_extended_payments(
@@ -216,6 +223,10 @@ class GetFutureMemberPaymentsApiView(APIView):
             number_of_instalments = None
 
             match payment.type:
+                case payments_config.PAYMENT_TYPE_ASSOCIATION_DEPOSIT if (
+                    payment.association_deposit_account_id is not None
+                ):
+                    pass
                 case payments_config.PAYMENT_TYPE_COOP_SHARES:
                     if payment.coop_share_transaction is not None:
                         coop_share_transactions = [payment.coop_share_transaction]
@@ -275,6 +286,13 @@ class GetFutureMemberPaymentsApiView(APIView):
 
             extended_payments.append(
                 {
+                    "association_deposit_name": (
+                        get_parameter_value(
+                            ParameterKeys.ASSOCIATION_DEPOSIT_NAME, cache=cache
+                        )
+                        if payment.association_deposit_account_id
+                        else None
+                    ),
                     "payment": payment,
                     "subscriptions": subscriptions,
                     "coop_share_transactions": coop_share_transactions,
@@ -796,6 +814,7 @@ class PaymentIntendedUsePreviewContractsApiView(APIView):
         )
         payments = (
             Payment.objects.exclude(type=payments_config.PAYMENT_TYPE_COOP_SHARES)
+            .filter(association_deposit_account__isnull=True)
             .filter(due_date__year=random_date.year, due_date__month=random_date.month)
             .select_related("mandate_ref")
         )
@@ -1242,7 +1261,10 @@ class PaymentTransactionDetailsView(APIView):
 
         for mandate_ref in list(payments_by_mandate_ref.keys()):
             payments = payments_by_mandate_ref[mandate_ref]
-            if transaction.type == payments_config.PAYMENT_TYPE_COOP_SHARES:
+            if transaction.type in [
+                payments_config.PAYMENT_TYPE_COOP_SHARES,
+                payments_config.PAYMENT_TYPE_ASSOCIATION_DEPOSIT,
+            ]:
                 intended_use_by_mandate_ref[mandate_ref] = (
                     PaymentExportIntendedUseBuilder.build_intended_use(
                         payment=payments[0], is_contracts=False, cache=cache
@@ -1352,6 +1374,7 @@ class MembersNeedingBankingDataForRebuildApiView(APIView):
 
         member_ids = (
             Payment.objects.exclude(type=payments_config.PAYMENT_TYPE_COOP_SHARES)
+            .filter(association_deposit_account__isnull=True)
             .filter(
                 transaction__month__gte=from_date.replace(day=1),
                 transaction__month__lte=get_today(cache=cache),

@@ -2,7 +2,10 @@ from tapir.associations.services.association_membership_price_type_getter import
     AssociationMembershipTypePriceGetter,
 )
 from tapir.configuration.parameter import get_parameter_value
-from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES
+from tapir.payments.config import (
+    PAYMENT_TYPE_COOP_SHARES,
+    PAYMENT_TYPE_ASSOCIATION_DEPOSIT,
+)
 from tapir.payments.services.intended_use_pattern_expander import (
     IntendedUsePatternExpander,
 )
@@ -20,6 +23,15 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 class PaymentExportIntendedUseBuilder:
     @classmethod
     def build_intended_use(cls, payment: Payment, is_contracts: bool, cache: dict):
+        if (
+            payment.type == PAYMENT_TYPE_ASSOCIATION_DEPOSIT
+            and payment.association_deposit_account_id is not None
+        ):
+            name = get_parameter_value(
+                ParameterKeys.ASSOCIATION_DEPOSIT_NAME, cache=cache
+            )
+            site = get_parameter_value(ParameterKeys.SITE_NAME, cache=cache)
+            return f"{site}, {payment.mandate_ref.member.last_name}, {name}"
         if get_parameter_value(
             key=ParameterKeys.PAYMENT_INTENDED_USE_ENABLE_CUSTOM, cache=cache
         ):

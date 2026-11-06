@@ -26,7 +26,6 @@ from tapir.associations.models import (
     AssociationMembershipType,
     AssociationMembershipTypePrice,
     AssociationMembership,
-    AssociationMembershipUpdatedLogEntry,
 )
 from tapir.associations.serializers import (
     AssociationMembershipTypeSerializer,
@@ -393,17 +392,11 @@ class SetAssociationMembershipEndDateApiView(APIView):
             )
 
         with transaction.atomic():
-            before_changes = freeze_for_log(membership)
-            end_date_before = membership.end_date
-            membership.end_date = end_date
-            membership.cancellation_ts = get_now(cache=cache)
-            membership.save()
-            AssociationMembershipUpdatedLogEntry().populate(
-                old_frozen=before_changes,
-                new_model=membership,
-                actor=request.user,
-                user=membership.member,
-            ).save()
+            membership, end_date_before = (
+                AssociationMembershipChangeHandler.set_end_date(
+                    membership, end_date, request.user, cache
+                )
+            )
 
             TransactionalTrigger.fire_action(
                 trigger_data=TransactionalTriggerData(

@@ -9,10 +9,10 @@ from tapir.payments.services.pain_008_xml_string_generator import (
 )
 from tapir.utils.tests_utils import mock_parameter_value
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
+from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
-class TestSendErrorMailOrRaiseException(TapirUnitTest):
+class TestSendErrorMailOrRaiseException(TapirIntegrationTest):
     def test_sendErrorMailOrRaiseException_sendMailIsFalse_raiseGenericException(self):
         with self.assertRaises(Pain008XmlGenericException) as error:
             Pain008XmlFileCreator.send_error_mail_or_raise_exception(
@@ -36,12 +36,14 @@ class TestSendErrorMailOrRaiseException(TapirUnitTest):
             cache=cache, key=ParameterKeys.SITE_ADMIN_EMAIL, value="admin@example.com"
         )
 
-        Pain008XmlFileCreator.send_error_mail_or_raise_exception(
-            reason="test_reason",
-            file_name="test_name",
-            cache=cache,
-            send_mail=True,
-        )
+        with self.captureOnCommitCallbacks(execute=True):
+            Pain008XmlFileCreator.send_error_mail_or_raise_exception(
+                reason="test_reason",
+                file_name="test_name",
+                cache=cache,
+                send_mail=True,
+            )
+            self.assertFalse(mail.outbox)
 
         self.assertEqual(1, len(mail.outbox))
         sent_mail = mail.outbox[0]

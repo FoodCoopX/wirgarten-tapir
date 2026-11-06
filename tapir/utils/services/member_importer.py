@@ -1,6 +1,7 @@
 import datetime
 
 from django.core.management.base import OutputWrapper
+from django.db import transaction
 from django.utils import timezone
 
 from tapir.accounts.models import TapirUser
@@ -11,6 +12,9 @@ from tapir.associations.models import (
     AssociationMembershipType,
     AssociationMembershipCreatedLogEntry,
     AssociationMembershipUpdatedLogEntry,
+)
+from tapir.associations.services.association_deposit_member_import_validator import (
+    AssociationDepositMemberImportValidator,
 )
 from tapir.bakery.models import PreferredBread, Bread
 from tapir.configuration.parameter import get_parameter_value
@@ -49,6 +53,10 @@ class MemberImporter:
     ):
         if DataImportUtils.is_row_empty(row):
             return None
+        if any(key.startswith("Einlage ") for key in row):
+            raise TapirDataImportException(
+                "Einlagenfelder separat mit --type deposits nach den Mitgliedern importieren."
+            )
 
         member_no = int(DataImportUtils.normalize_cell(row.get("Nr")))
         member = Member.objects.filter(member_no=member_no).first()
@@ -85,9 +93,17 @@ class MemberImporter:
         return pickup_location
 
     @classmethod
+    @transaction.atomic
     def update_existing_member_if_necessary(
         cls, member: Member, row: dict[str, str], dry_run: bool
     ):
+        cache = {}
+        member = Member.objects.select_for_update(no_key=True).get(pk=member.pk)
+        preserve_membership = (
+            AssociationDepositMemberImportValidator.preserve_membership(
+                member, row, cache
+            )
+        )
         member_before = freeze_for_log(member)
         member_attributes_updated = cls.update_member_attributes_and_save_member(
             member=member, row=row, dry_run=dry_run
@@ -107,9 +123,11 @@ class MemberImporter:
             rhythm_from_import=row.get("Zahlungsintervall", None),
         )
 
-        association_membership_updated = cls.update_association_membership_if_necessary(
-            member=member, row=row
-        )
+        association_membership_updated = False
+        if not preserve_membership:
+            association_membership_updated = (
+                cls.update_association_membership_if_necessary(member=member, row=row)
+            )
 
         preferred_breads_updated = cls.update_preferred_breads(member=member, row=row)
 

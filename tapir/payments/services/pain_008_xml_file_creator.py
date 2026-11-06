@@ -3,6 +3,7 @@ from datetime import date
 
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
+from django.db import transaction
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.payments.services.pain_008_xml_string_generator import (
@@ -53,7 +54,22 @@ class Pain008XmlFileCreator:
             )
             return None, []
 
-        xml_file = export_file(
+        return (
+            cls.create_xml_file_from_bytes(
+                xml_bytes, file_name, send_mail, cache, errors_failed_payments
+            ),
+            errors_failed_payments,
+        )
+
+    @staticmethod
+    def create_xml_file_from_bytes(
+        xml_bytes: bytes,
+        file_name: str,
+        send_mail: bool,
+        cache: dict,
+        errors: list[str],
+    ) -> ExportedFile:
+        return export_file(
             filename=file_name,
             filetype=ExportedFile.FileType.XML,
             content=xml_bytes,
@@ -62,9 +78,8 @@ class Pain008XmlFileCreator:
                 key=ParameterKeys.PAYMENT_SEND_XML_FILE_PER_MAIL, cache=cache
             ),
             cache=cache,
-            errors=errors_failed_payments,
+            errors=errors,
         )
-        return xml_file, errors_failed_payments
 
     @classmethod
     def send_error_mail_or_raise_exception(
@@ -89,12 +104,21 @@ class Pain008XmlFileCreator:
             ),
         )
         email.content_subtype = "html"
-        email.send()
+        transaction.on_commit(email.send, robust=True)
 
     @classmethod
     def build_xml_string_with_valid_payments_and_errors_for_invalid_payments(
         cls, payments: list[Payment], collection_date: datetime.date, cache: dict
     ) -> tuple[bytes | None, list[str]]:
+        xml_string, errors, _ = cls.build_xml_string_and_valid_payments(
+            payments=payments, collection_date=collection_date, cache=cache
+        )
+        return xml_string, errors
+
+    @classmethod
+    def build_xml_string_and_valid_payments(
+        cls, payments: list[Payment], collection_date: datetime.date, cache: dict
+    ) -> tuple[bytes | None, list[str], list[Payment]]:
         errors = []
         valid_payments = []
         for payment in payments:
@@ -112,4 +136,4 @@ class Pain008XmlFileCreator:
                 payments=valid_payments, collection_date=collection_date, cache=cache
             )
 
-        return xml_string, errors
+        return xml_string, errors, valid_payments

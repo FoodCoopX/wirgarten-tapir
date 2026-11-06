@@ -6,13 +6,17 @@ import unicodedata
 from csv import DictReader
 from typing import Literal
 
-from django.core.management import BaseCommand
+from django.core.exceptions import ValidationError
+from django.core.management import BaseCommand, CommandError
 from django.db import transaction
 from icecream import ic
 
 from tapir.accounts.models import EmailChangeRequest
 from tapir.accounts.services.keycloak_user_delete_service import (
     KeycloakUserDeleteService,
+)
+from tapir.associations.services.association_deposit_import_deletion_validator import (
+    AssociationDepositImportDeletionValidator,
 )
 from tapir.deliveries.models import Joker
 from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES
@@ -30,6 +34,7 @@ from tapir.utils.models import (
     SubscriptionImportedLogEntry,
     SubscriptionImportUpdatedLogEntry,
 )
+from tapir.utils.services.data_import_utils import DataImportUtils
 from tapir.utils.services.member_importer import MemberImporter
 from tapir.utils.services.share_importer import ShareImporter
 from tapir.utils.services.subscription_importer import SubscriptionImporter
@@ -55,7 +60,9 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "--type", nargs=1, choices=["members", "shares", "subscriptions"]
+            "--type",
+            nargs=1,
+            choices=["members", "shares", "subscriptions"],
         )
         parser.add_argument("--file", nargs=1)
         parser.add_argument("--delete-all", action="store_true")
@@ -101,6 +108,17 @@ class Command(BaseCommand):
         return answer in ["y", "yes"]
 
     def handle(self, *args, **options):
+        cache = {}
+        if options["reset_all"] or (
+            options["delete_all"] and options.get("type") == ["members"]
+        ):
+            try:
+                AssociationDepositImportDeletionValidator.validate_member_reset_is_safe(
+                    cache
+                )
+            except ValidationError as error:
+                raise CommandError(" ".join(error.messages)) from error
+
         # Helper functions
         dry_run = options.get("dry_run", False)
 
@@ -172,6 +190,12 @@ class Command(BaseCommand):
                 self.verify_csv(cleaned_headers, raw_headers, reader)
                 return
 
+            if import_type == "members" and any(
+                h.startswith("Einlage ") for h in cleaned_headers
+            ):
+                raise CommandError(
+                    "Einlagenfelder separat nach den Mitgliedern mit --type deposits importieren."
+                )
             with transaction.atomic():
                 if delete_all:
                     if import_type == "members":
@@ -211,8 +235,12 @@ class Command(BaseCommand):
                         Subscription.objects.all().delete()
                         PaymentTransaction.objects.exclude(
                             type=PAYMENT_TYPE_COOP_SHARES
+                        ).exclude(
+                            payment__association_deposit_account__isnull=False
                         ).delete()
-                        Payment.objects.exclude(type=PAYMENT_TYPE_COOP_SHARES).delete()
+                        Payment.objects.filter(
+                            association_deposit_account__isnull=True
+                        ).exclude(type=PAYMENT_TYPE_COOP_SHARES).delete()
 
                 self.import_generic(
                     reader=reader,
@@ -246,6 +274,7 @@ class Command(BaseCommand):
             )
         )
 
+    @transaction.atomic
     def import_generic(
         self,
         reader: DictReader[str],
@@ -254,6 +283,7 @@ class Command(BaseCommand):
         print_stacktrace: bool,
         dry_run: bool,
     ):
+        cache = {}
         skipped = 0
         created = 0
         updated = 0
@@ -261,6 +291,17 @@ class Command(BaseCommand):
         if import_type not in ["members", "shares", "subscriptions"]:
             raise TapirDataImportException(f"Unknown import type: {import_type}")
 
+        if import_type == "members":
+            reader = list(reader)
+            list(
+                Member.objects.select_for_update(no_key=True)
+                .filter(
+                    member_no__in=[
+                        DataImportUtils.safe_int(row.get("Nr"), -1) for row in reader
+                    ]
+                )
+                .order_by("pk")
+            )
         for row_index, row in enumerate(reader):
             try:
                 with transaction.atomic():
@@ -289,6 +330,7 @@ class Command(BaseCommand):
                     updated += 1
 
             except Exception as exception:
+                cache.clear()
                 self.stderr.write(
                     f"Error while importing row with internal index {row_index} (should be line {row_index+2} in the file), import type: {import_type}"
                 )

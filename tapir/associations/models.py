@@ -84,3 +84,105 @@ class AssociationMembershipCreatedLogEntry(ModelLogEntry):
         self.type_name = membership.type.name
 
         return self
+
+
+class AssociationDepositAccount(TapirModel):
+    member = models.OneToOneField(Member, on_delete=models.PROTECT)
+    hardship_requested_at = models.DateTimeField(null=True)
+    agreement_revision = models.PositiveIntegerField(default=0)
+    instalment_count = models.PositiveIntegerField(default=1)
+    is_individual_agreement = models.BooleanField(default=False)
+    agreed_amount = models.DecimalField(max_digits=8, decimal_places=2, null=True)
+    effective_from = models.DateField(null=True)
+    collection_stopped_from = models.DateField(null=True)
+    refund_requires_agreement = models.BooleanField(default=False)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=(
+                    models.Q(agreed_amount=None, effective_from=None)
+                    | models.Q(
+                        agreed_amount__isnull=False,
+                        agreed_amount__gte=0,
+                        effective_from__isnull=False,
+                    )
+                ),
+                name="association_deposit_agreement_complete",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(instalment_count__gte=1),
+                name="association_deposit_positive_instalments",
+            ),
+        ]
+
+
+class AssociationDepositReceipt(TapirModel):
+    account = models.ForeignKey(
+        AssociationDepositAccount, on_delete=models.PROTECT, related_name="receipts"
+    )
+    reference = models.CharField(max_length=100, unique=True)
+    amount = models.DecimalField(max_digits=8, decimal_places=2)
+    received_on = models.DateField()
+    note = models.TextField()
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(amount__gt=0),
+                name="association_deposit_receipt_positive",
+            )
+        ]
+
+
+class AssociationDepositReceiptCreatedLogEntry(ModelLogEntry):
+    template_name = "associations/log/deposit_receipt_created.html"
+
+
+class AssociationDepositRefund(TapirModel):
+    account = models.ForeignKey(
+        AssociationDepositAccount, on_delete=models.PROTECT, related_name="refunds"
+    )
+    reference = models.CharField(max_length=100, unique=True)
+    amount = models.DecimalField(max_digits=8, decimal_places=2)
+    refunded_on = models.DateField()
+    note = models.TextField()
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(amount__gt=0),
+                name="association_deposit_refund_positive",
+            )
+        ]
+
+
+class AssociationDepositRefundCreatedLogEntry(ModelLogEntry):
+    template_name = "associations/log/deposit_refund_created.html"
+
+
+class AssociationDepositAgreementCreatedLogEntry(ModelLogEntry):
+    template_name = "associations/log/deposit_agreement_created.html"
+
+
+class AssociationDepositPaymentCreatedLogEntry(ModelLogEntry):
+    template_name = "associations/log/deposit_payment_created.html"
+
+
+class AssociationDepositIncreasedLogEntry(UpdateModelLogEntry):
+    template_name = "associations/log/deposit_increased.html"
+    excluded_fields = ["updated_at"]
+
+
+class AssociationDepositMembershipChangedLogEntry(ModelLogEntry):
+    template_name = "associations/log/deposit_membership_changed.html"
+
+
+class AssociationDepositHardshipRequestedLogEntry(ModelLogEntry):
+    template_name = "associations/log/deposit_hardship_requested.html"
+
+
+class AssociationDepositAgreementAuthorizedLogEntry(ModelLogEntry):
+    request_key = models.UUIDField(unique=True)
+    request_hash = models.CharField(max_length=64)
+    template_name = "associations/log/deposit_agreement_authorized.html"
