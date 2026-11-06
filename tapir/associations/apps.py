@@ -1,5 +1,7 @@
 from django.apps import AppConfig
 
+from tapir.associations.mail_tokens import ASSOCIATION_DEPOSIT_MAIL_TOKENS
+
 
 class AssociationsConfig(AppConfig):
     name = "tapir.associations"
@@ -22,7 +24,8 @@ class AssociationsConfig(AppConfig):
                 "End-Datum vorher": "end_date_before",
                 "End-Datum nachher": "end_date_after",
                 "Mitgliedschaft-Typ": "membership_type_name",
-            },
+            }
+            | ASSOCIATION_DEPOSIT_MAIL_TOKENS,
             required=lambda: legal_status_is_association(cache={}),
         )
 
@@ -32,6 +35,7 @@ class AssociationsConfig(AppConfig):
             tokens={
                 "Mitgliedschaft-Typ": "membership_type_name",
                 "Kündigungsregistrierungsdatum": "end_date_set_on",
-            },
+            }
+            | ASSOCIATION_DEPOSIT_MAIL_TOKENS,
             required=lambda: legal_status_is_association(cache={}),
         )

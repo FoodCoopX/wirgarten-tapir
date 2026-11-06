@@ -8,6 +8,7 @@ from tapir_mail.service.token import register_tokens
 from tapir_mail.service.triggers import register_trigger
 from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
+from tapir.associations.mail_tokens import ASSOCIATION_DEPOSIT_MAIL_TOKENS
 from tapir.configuration.parameter import get_parameter_value
 from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.core.services.member_mail_token_service import MemberMailTokenService
@@ -160,7 +161,8 @@ def _register_triggers():
         }
         | TOKENS_ORDER_PAYMENT
         | TOKENS_COOP_ENTRY
-        | TOKENS_SOLIDARITY_CONTRIBUTION,
+        | TOKENS_SOLIDARITY_CONTRIBUTION
+        | ASSOCIATION_DEPOSIT_MAIL_TOKENS,
         required=True,
     )
     register_transactional_trigger(
@@ -184,7 +186,8 @@ def _register_triggers():
         key=Events.REGISTER_MEMBERSHIP_ONLY,
         tokens=TOKENS_ORDER_PAYMENT
         | TOKENS_COOP_ENTRY
-        | TOKENS_SOLIDARITY_CONTRIBUTION,
+        | TOKENS_SOLIDARITY_CONTRIBUTION
+        | ASSOCIATION_DEPOSIT_MAIL_TOKENS,
         required=lambda: not legal_status_is_company(cache={}),
     )
     register_transactional_trigger(
@@ -273,7 +276,8 @@ def _register_triggers():
             "Wert Geno-Anteil": "price_of_a_share",
             "Gesamtwert der gezeichneten Geschäftsanteile": "price_of_all_shares",
             "Beitrittsdatum Genossenschaft": "membership_start_date",
-        },
+        }
+        | ASSOCIATION_DEPOSIT_MAIL_TOKENS,
         required=lambda: legal_status_is_cooperative(cache={}),
     )
 
@@ -317,7 +321,8 @@ def _register_triggers():
         }
         | TOKENS_ORDER_PAYMENT
         | TOKENS_COOP_ENTRY
-        | TOKENS_SOLIDARITY_CONTRIBUTION,
+        | TOKENS_SOLIDARITY_CONTRIBUTION
+        | ASSOCIATION_DEPOSIT_MAIL_TOKENS,
         required=True,
     )
 
@@ -327,7 +332,8 @@ def _register_triggers():
         tokens={
             "Vertragsliste": "contract_list",
             "Anzahl an GenoAnteile": "number_of_coop_shares",
-        },
+        }
+        | ASSOCIATION_DEPOSIT_MAIL_TOKENS,
         required=True,
     )
 

@@ -1533,6 +1533,10 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
             for call in mock_dispatch.call_args_list
             if call.args[0].key == Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION
         )
+        self.assertEqual("200,00", event.token_data["association_deposit_amount"])
+        self.assertEqual(
+            1, event.token_data["association_deposit_payment_plan"].count("(offen)")
+        )
 
     @patch.object(OnboardingTrigger, "on_subscription_updated", autospec=True)
     @patch.object(TransactionalTrigger, "fire_action", autospec=True)
@@ -1613,6 +1617,10 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
             for call in mock_dispatch.call_args_list
             if call.args[0].key == Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION
         )
+        self.assertEqual("200,00", event.token_data["association_deposit_amount"])
+        self.assertEqual(
+            4, event.token_data["association_deposit_payment_plan"].count("(offen)")
+        )
 
     @patch.object(OnboardingTrigger, "on_subscription_updated", autospec=True)
     @patch.object(TransactionalTrigger, "fire_all_released_configs", autospec=True)
@@ -1648,6 +1656,12 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
             call.args[0]
             for call in mock_dispatch.call_args_list
             if call.args[0].key == Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION
+        )
+        self.assertEqual(
+            "Nicht vereinbart", event.token_data["association_deposit_amount"]
+        )
+        self.assertEqual(
+            0, event.token_data["association_deposit_payment_plan"].count("(offen)")
         )
 
     def test_invalid_deposit_choices_rejected_before_external_user_creation(self):
