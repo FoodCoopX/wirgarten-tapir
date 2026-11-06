@@ -12,6 +12,9 @@ from django.db.models import (
     Sum,
 )
 
+from tapir.associations.services.association_deposit_export_column_provider import (
+    AssociationDepositExportColumnProvider,
+)
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.deliveries.services.joker_value_service import JokerValueService
@@ -141,7 +144,7 @@ class MemberColumnProvider:
                 description="",
                 get_value=cls.get_value_member_share_quantity_cancelled_in_previous_year,
             ),
-        ]
+        ] + AssociationDepositExportColumnProvider.get_columns(cache={})
 
     @classmethod
     def get_value_member_first_name(cls, member: Member, _, __):

@@ -1,0 +1,21 @@
+{% load wirgarten %}
+<section class="card my-3">
+    <div class="card-body">
+        <h2>Einlagenstand nach Austrittsjahr</h2>
+        <p>Aktueller Buchungsstand vom {{ deposit_departure_data.as_of|format_date }} zur Vorbereitung manueller Rückzahlungen.</p>
+        <p>Einlagen gesamt: <strong>{{ deposit_departure_data.overall_retained_amount|format_currency }} €</strong> (Buchungswert, kein Bankkontostand).</p>
+        <a href="{% url 'associations:deposit_departure_report' %}?year={{ deposit_departure_data.default_year }}">Jahresübersicht mit Bankdaten öffnen</a>
+        <table class="table">
+            <thead><tr><th scope="col">Letzter Austritt</th><th scope="col">Mitglieder</th><th scope="col">Buchungsrest nach Rückzahlungen</th></tr></thead>
+            <tbody>
+                {% for cohort in deposit_departure_data.cohorts %}
+                    <tr>
+                        <td><a href="{% url 'associations:deposit_departure_report' %}?year={{ cohort.year }}">{{ cohort.year }}</a></td>
+                        <td>{{ cohort.member_count }}</td>
+                        <td>{{ cohort.retained_amount|format_currency }} €</td>
+                    </tr>
+                {% empty %}<tr><td colspan="3">Keine abgeschlossenen Austrittskohorten mit Einlagenkonto.</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>

@@ -1,0 +1,55 @@
+{% extends "core/base.html" %}
+{% load django_bootstrap5 wirgarten member_list %}
+{% block title %}Einlagenstand ausgeschiedener Mitglieder{% endblock %}
+{% block content %}
+    <h1>{{ deposit_name }} – ausgeschiedene Mitglieder</h1>
+    <a href="{% url 'associations:deposit_administration' %}">Zur Einlagenverwaltung</a>
+    <form method="get" class="my-3">
+        {% bootstrap_form form %}
+        <button type="submit" class="btn btn-primary">Jahresübersicht anzeigen</button>
+    </form>
+    <p>Buchungswerte zur Vorbereitung manueller Rückzahlungen. Bitte vor einer Auszahlung mit den tatsächlichen Bankeingängen abgleichen.</p>
+    {% if report %}
+        <p>Austrittsjahr {{ report.year }}: {{ report.member_count }} Mitglieder. Aktueller Buchungsstand vom {{ report.as_of|format_date }}, rechnerisch verbleibend: <strong>{{ report.retained_amount|format_currency }} €</strong>.</p>
+        <p>Es zählt der letzte wirksame Austritt. Lückenlose Typwechsel sowie Mitglieder mit bestehender oder bereits geplanter Rückkehr sind nicht enthalten. Abgeschlossene Rückzahlungen bleiben mit ihrem aktuellen Rest sichtbar.</p>
+        <a class="btn btn-secondary mb-3" href="?year={{ report.year }}&amp;format=csv">Gesamte Jahresübersicht als CSV</a>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">Mitglied / letzter Austritt</th>
+                        <th scope="col">Status / vereinbart</th>
+                        <th scope="col">Extern eingegangen</th>
+                        <th scope="col">Verbucht / exportiert</th>
+                        <th scope="col">Extern zurückgezahlt</th>
+                        <th scope="col">Buchungsrest</th>
+                        <th scope="col">Offene / gestoppte Raten</th>
+                        <th scope="col">Bankdaten</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in page %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'associations:deposit_case' row.member.pk %}">{% formatted_member_number row.member cache %} {{ row.member.get_display_name }}</a><br/>
+                                {{ row.departure_date|format_date }}
+                            </td>
+                            <td>{{ row.state_label }}<br/>{% if row.agreed_amount != None %}{{ row.agreed_amount|format_currency }} €{% else %}Unbekannt{% endif %}</td>
+                            <td>{{ row.received_amount|format_currency }} €</td>
+                            <td>{{ row.committed_amount|format_currency }} €</td>
+                            <td>{{ row.refunded_amount|format_currency }} €</td>
+                            <td>{{ row.retained_amount|format_currency }} €</td>
+                            <td>{{ row.pending_amount|format_currency }} € / {{ row.stopped_amount|format_currency }} €</td>
+                            <td>{{ row.member.account_owner|default:"Fehlt" }}<br/>{{ row.member.iban|default:"Fehlt" }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="8">Keine ausgeschiedenen Mitglieder mit Einlagenkonto in diesem Jahr.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if page.has_previous %}<a href="?year={{ report.year }}&amp;page={{ page.previous_page_number }}">Vorherige Seite</a>{% endif %}
+        <span>Seite {{ page.number }} von {{ page.paginator.num_pages }}</span>
+        {% if page.has_next %}<a href="?year={{ report.year }}&amp;page={{ page.next_page_number }}">Nächste Seite</a>{% endif %}
+    {% endif %}
+{% endblock %}

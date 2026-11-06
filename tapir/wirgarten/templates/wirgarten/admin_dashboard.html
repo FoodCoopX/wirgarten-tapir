@@ -13,6 +13,9 @@
     {% vite_asset "dashboard/dashboard_entry.tsx" %}
 {% endblock %}
 {% block content %}
+    {% if deposit_departure_data %}
+        {% include "associations/deposit_departure_dashboard.html" %}
+    {% endif %}
     {% if no_growing_period %}
         <div style="justify-content: center; display: flex">
             <div class="alert alert-warning m-4"
