@@ -1,10 +1,15 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
 
-from tapir.associations import views
+from tapir.associations import views, deposit_views
 
 app_name = "associations"
 urlpatterns = [
+    path(
+        "api/member_deposit",
+        deposit_views.MemberAssociationDepositView.as_view(),
+        name="member_deposit",
+    ),
     path(
         "association_memberships_config",
         views.AssociationMembershipConfigView.as_view(),

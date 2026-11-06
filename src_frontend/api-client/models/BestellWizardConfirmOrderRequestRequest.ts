@@ -65,6 +65,12 @@ export interface BestellWizardConfirmOrderRequestRequest {
    * @type {number}
    * @memberof BestellWizardConfirmOrderRequestRequest
    */
+  associationDepositAmount?: number | null;
+  /**
+   *
+   * @type {number}
+   * @memberof BestellWizardConfirmOrderRequestRequest
+   */
   numberOfCoopShares: number;
   /**
    *
@@ -228,6 +234,10 @@ export function BestellWizardConfirmOrderRequestRequestFromJSONTyped(
     sepaAllowed: json["sepa_allowed"],
     contractAccepted: json["contract_accepted"],
     statuteAccepted: json["statute_accepted"],
+    associationDepositAmount:
+      json["association_deposit_amount"] == null
+        ? undefined
+        : json["association_deposit_amount"],
     numberOfCoopShares: json["number_of_coop_shares"],
     payCoopSharesInInstalments:
       json["pay_coop_shares_in_instalments"] == null
@@ -271,6 +281,7 @@ export function BestellWizardConfirmOrderRequestRequestToJSONTyped(
     sepa_allowed: value["sepaAllowed"],
     contract_accepted: value["contractAccepted"],
     statute_accepted: value["statuteAccepted"],
+    association_deposit_amount: value["associationDepositAmount"],
     number_of_coop_shares: value["numberOfCoopShares"],
     pay_coop_shares_in_instalments: value["payCoopSharesInInstalments"],
     pickup_location_ids: value["pickupLocationIds"],

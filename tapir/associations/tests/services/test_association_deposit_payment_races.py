@@ -9,9 +9,13 @@ from django.db import close_old_connections, transaction
 from django.test import TransactionTestCase
 from lxml import etree
 
+from tapir.associations.services.association_deposit_increase_recorder import (
+    AssociationDepositIncreaseRecorder,
+)
 from tapir.associations.models import (
     AssociationDepositPaymentCreatedLogEntry,
     AssociationDepositReceipt,
+    AssociationDepositIncreasedLogEntry,
 )
 from tapir.associations.services.association_deposit_payment_synchronizer import (
     AssociationDepositPaymentSynchronizer,
@@ -19,7 +23,10 @@ from tapir.associations.services.association_deposit_payment_synchronizer import
 from tapir.associations.services.association_deposit_receipt_recorder import (
     AssociationDepositReceiptRecorder,
 )
-from tapir.associations.tests.factories import AssociationDepositAccountFactory
+from tapir.associations.tests.factories import (
+    AssociationDepositAccountFactory,
+    AssociationMembershipFactory,
+)
 from tapir.configuration.models import TapirParameter
 from tapir.core.config import LEGAL_STATUS_ASSOCIATION
 from tapir.payments.config import PAYMENT_TYPE_ASSOCIATION_DEPOSIT
@@ -51,6 +58,9 @@ class TestAssociationDepositPaymentRaces(TapirFactoryMixin, TransactionTestCase)
         mock_keycloak(self)
         configure_mail_module()
         ParameterDefinitions().import_definitions(bulk_create=True)
+        TapirParameter.objects.filter(
+            key=ParameterKeys.ASSOCIATION_DEPOSIT_ENABLED
+        ).update(value="True")
         TapirParameter.objects.filter(
             key=ParameterKeys.ORGANISATION_LEGAL_STATUS
         ).update(value=LEGAL_STATUS_ASSOCIATION)
@@ -84,6 +94,10 @@ class TestAssociationDepositPaymentRaces(TapirFactoryMixin, TransactionTestCase)
                 if action == "payment":
                     return AssociationDepositPaymentSynchronizer.create_regular_deposit_payment(
                         member, member, {}
+                    ).pk
+                if action == "increase":
+                    return AssociationDepositIncreaseRecorder.increase_agreed_deposit(
+                        member, Decimal("250"), member, {}
                     ).pk
                 if action == "export":
                     return PaymentExportBuilder.export_all_unexported_payments(
@@ -283,3 +297,31 @@ class TestAssociationDepositPaymentRaces(TapirFactoryMixin, TransactionTestCase)
         self.assertEqual(
             receipt_id, AssociationDepositReceipt.objects.get(account__member=other).pk
         )
+
+    def enable_member_increases(self):
+        TapirParameter.objects.filter(
+            key=ParameterKeys.ASSOCIATION_DEPOSIT_ALLOW_MEMBER_INCREASE
+        ).update(value="True")
+        AssociationMembershipFactory(
+            member=self.member, start_date=datetime.date(2026, 11, 5), end_date=None
+        )
+
+    def test_concurrent_identical_increases_change_agreement_and_debit_once(self):
+        self.enable_member_increases()
+        self.run_requests(["increase", "increase"])
+        self.account.refresh_from_db()
+        self.assertEqual(Decimal("250"), self.account.agreed_amount)
+        self.assertEqual(1, AssociationDepositIncreasedLogEntry.objects.count())
+        self.assertEqual(Decimal("250"), self.account.payments.get().amount)
+        self.assertEqual(1, MandateReference.objects.count())
+
+    def test_increase_racing_with_receipt_keeps_correct_remaining_debit(self):
+        self.enable_member_increases()
+        AssociationDepositPaymentSynchronizer.create_regular_deposit_payment(
+            self.member, self.member, {}
+        )
+        self.run_requests(["increase", "receipt"])
+        self.account.refresh_from_db()
+        self.assertEqual(Decimal("250"), self.account.agreed_amount)
+        self.assertEqual(Decimal("25"), self.account.receipts.get().amount)
+        self.assertEqual(Decimal("225"), self.account.payments.get().amount)

@@ -62,6 +62,9 @@ class TestAssociationDepositPaymentIntegration(TapirIntegrationTest):
         )
 
     def test_future_payments_response_supports_deposit_without_contract_dates(self):
+        self._set_parameter(
+            ParameterKeys.ASSOCIATION_DEPOSIT_NAME, "Investitionsbeitrag"
+        )
         self.client.force_login(self.member)
         response = self.client.get(
             reverse("payments:member_future_payments"), {"member_id": self.member.pk}
@@ -76,6 +79,7 @@ class TestAssociationDepositPaymentIntegration(TapirIntegrationTest):
         self.assertEqual(
             self.account.pk, rows[0]["payment"]["association_deposit_account"]
         )
+        self.assertEqual("Investitionsbeitrag", rows[0]["association_deposit_name"])
         self.assertEqual([], rows[0]["subscriptions"])
         self.assertEqual([], rows[0]["association_memberships"])
 

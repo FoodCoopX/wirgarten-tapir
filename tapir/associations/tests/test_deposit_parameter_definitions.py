@@ -25,6 +25,13 @@ class TestDepositParameterDefinitions(TapirIntegrationTest):
         ParameterKeys.ASSOCIATION_DEPOSIT_INCREMENT,
     ]
 
+    option_keys = [
+        ParameterKeys.ASSOCIATION_DEPOSIT_ENABLED,
+        ParameterKeys.ASSOCIATION_DEPOSIT_SUPPORTING_MEMBERS_REQUIRED,
+        ParameterKeys.ASSOCIATION_DEPOSIT_ALLOW_LARGER_SIGNUP,
+        ParameterKeys.ASSOCIATION_DEPOSIT_ALLOW_MEMBER_INCREASE,
+    ]
+
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
@@ -40,13 +47,17 @@ class TestDepositParameterDefinitions(TapirIntegrationTest):
                     ParameterKeys.ORGANISATION_LEGAL_STATUS, legal_status
                 )
                 form = ParameterForm()
-                for key in self.parameter_keys:
+                for key in [*self.parameter_keys, *self.option_keys]:
                     self.assertEqual(
                         legal_status == LEGAL_STATUS_ASSOCIATION, key in form.fields
                     )
 
     def test_reimport_preserves_custom_values_and_unrelated_parameters(self):
         custom_values = {
+            ParameterKeys.ASSOCIATION_DEPOSIT_ENABLED: "True",
+            ParameterKeys.ASSOCIATION_DEPOSIT_SUPPORTING_MEMBERS_REQUIRED: "False",
+            ParameterKeys.ASSOCIATION_DEPOSIT_ALLOW_LARGER_SIGNUP: "True",
+            ParameterKeys.ASSOCIATION_DEPOSIT_ALLOW_MEMBER_INCREASE: "True",
             ParameterKeys.ASSOCIATION_DEPOSIT_NAME: "Investitionsbeitrag",
             ParameterKeys.ASSOCIATION_DEPOSIT_MINIMUM: "125.00",
             ParameterKeys.ASSOCIATION_DEPOSIT_INCREMENT: "12.50",

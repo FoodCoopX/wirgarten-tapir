@@ -39,6 +39,7 @@ import { scrollIntoView } from "../utils/scrollIntoView.ts";
 import { willBecomeMemberNow } from "../utils/willBecomeMemberNow.ts";
 
 interface Step10OrderSummaryProps {
+  associationDepositAmount?: number | null;
   settings: BestellWizardSettings;
   shoppingCart: ShoppingCart;
   numberOfCoopShares: number;
@@ -83,6 +84,7 @@ const PaymentRow: React.FC<{
 );
 
 const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
+  associationDepositAmount,
   settings,
   shoppingCart,
   numberOfCoopShares,
@@ -360,6 +362,15 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
       );
     }
 
+    if (associationDepositAmount != null) {
+      segments.push(
+        <PaymentRow
+          key="deposit"
+          label={`${settings.associationDeposit.name} (einmalig)`}
+          amount={associationDepositAmount}
+        />,
+      );
+    }
     if (monthlyPayments.length > 0) {
       segments.push(
         <>
@@ -557,6 +568,30 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                 </Accordion.Item>
               </Accordion>
             )}
+          {associationDepositAmount != null && (
+            <Accordion>
+              <Accordion.Item
+                eventKey="association_deposit"
+                onClick={scrollIntoView}
+              >
+                <Accordion.Header>
+                  {settings.associationDeposit.name}:{" "}
+                  {formatCurrency(associationDepositAmount)} einmalig
+                </Accordion.Header>
+                <AccordionBody>
+                  Rückzahlbare Einlage pro Mitglied, zusätzlich zu Vereins- und
+                  Erntebeiträgen.
+                  <TapirButton
+                    variant={BUTTON_VARIANT}
+                    size="sm"
+                    text="Einlage anpassen"
+                    icon="edit"
+                    onClick={() => setCurrentStep("6d_association_deposit")}
+                  />
+                </AccordionBody>
+              </Accordion.Item>
+            </Accordion>
+          )}
           {associationMembershipType && (
             <Accordion>
               <Accordion.Item

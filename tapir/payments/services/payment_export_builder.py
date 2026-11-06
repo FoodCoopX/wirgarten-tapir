@@ -8,6 +8,9 @@ from typing import Iterable
 from django.db import transaction
 from django.utils.html import format_html, format_html_join
 
+from tapir.associations.services.association_deposit_policy import (
+    AssociationDepositPolicy,
+)
 from tapir.associations.services.association_deposit_payment_synchronizer import (
     AssociationDepositPaymentSynchronizer,
 )
@@ -103,6 +106,8 @@ class PaymentExportBuilder:
     def export_association_deposit_payments(
         cls, reference_date: datetime.date, send_mail: bool, cache: dict
     ):
+        if not AssociationDepositPolicy.is_enabled(cache):
+            return []
         collection_date = PaymentDueDateCalculator.get_first_due_date_on_or_after(
             earliest_date=max(reference_date, get_today(cache=cache)), cache=cache
         )

@@ -15,6 +15,7 @@ from tapir.accounts.services.email_verification_service import EmailVerification
 from tapir.accounts.services.keycloak_user_delete_service import (
     KeycloakUserDeleteService,
 )
+from tapir.associations.models import AssociationDepositAccount
 from tapir.associations.models import AssociationMembership
 from tapir.associations.tests.factories import AssociationMembershipTypeFactory
 from tapir.core.config import (
@@ -566,3 +567,97 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
         response_content = response.json()
         self.assertFalse(response_content["order_confirmed"])
         self.assertNotIn("%(", response_content["error"])
+
+    def prepare_deposit_confirmation(self):
+        self._set_parameter(
+            ParameterKeys.ORGANISATION_LEGAL_STATUS, LEGAL_STATUS_ASSOCIATION
+        )
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_ENABLED, True)
+        entry = WaitingListEntryFactory(
+            confirmation_link_key=uuid.uuid4(),
+            member=None,
+            email="deposit-waiting@example.test",
+        )
+        mock_timezone(self, datetime.datetime(2026, 11, 5, 12))
+        GrowingPeriodFactory(
+            start_date=datetime.date(2026, 1, 1), end_date=datetime.date(2027, 12, 31)
+        )
+        membership_type = AssociationMembershipTypeFactory()
+        return entry, {
+            "entry_id": entry.pk,
+            "link_key": str(entry.confirmation_link_key),
+            "account_owner": "Test Mitglied",
+            "iban": "NL35ABNA7806242643",
+            "sepa_allowed": True,
+            "contract_accepted": True,
+            "number_of_coop_shares": 0,
+            "payment_rhythm": "semiannually",
+            "solidarity_contribution": 0,
+            "association_membership_type_id": membership_type.pk,
+        }
+
+    def test_new_waiting_list_member_explicitly_agrees_deposit(self):
+        entry, data = self.prepare_deposit_confirmation()
+        data["association_deposit_amount"] = "200"
+        response = self.client.post(
+            reverse("waiting_list:public_confirm_waiting_list_entry"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+        self.assertEqual(200, response.status_code, response.content)
+        self.assert_order_confirmed(response.json())
+        account = AssociationDepositAccount.objects.get()
+        self.assertEqual(200, account.agreed_amount)
+        self.assertEqual(200, account.payments.get().amount)
+
+    def test_missing_waiting_list_deposit_keeps_entry_without_member_or_debit(self):
+        entry, data = self.prepare_deposit_confirmation()
+        response = self.client.post(
+            reverse("waiting_list:public_confirm_waiting_list_entry"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+        self.assertFalse(response.json()["order_confirmed"])
+        self.assertIn("Vereinseinlage", response.json()["error"])
+        self.assertTrue(type(entry).objects.filter(pk=entry.pk).exists())
+        self.assertFalse(AssociationDepositAccount.objects.exists())
+        self.assertFalse(Member.objects.exists())
+
+    def test_zero_quantity_waiting_wish_does_not_require_supporting_deposit(self):
+        entry, data = self.prepare_deposit_confirmation()
+        self._set_parameter(
+            ParameterKeys.ASSOCIATION_DEPOSIT_SUPPORTING_MEMBERS_REQUIRED, False
+        )
+        WaitingListProductWish.objects.create(
+            waiting_list_entry=entry, product=ProductFactory(), quantity=0
+        )
+        response = self.client.post(
+            reverse("waiting_list:public_confirm_waiting_list_entry"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+        self.assertEqual(200, response.status_code, response.content)
+        self.assert_order_confirmed(response.json())
+        self.assertFalse(AssociationDepositAccount.objects.exists())
+
+    def test_positive_waiting_wish_requires_deposit_even_if_supporters_are_exempt(self):
+        entry, data = self.prepare_deposit_confirmation()
+        self._set_parameter(
+            ParameterKeys.ASSOCIATION_DEPOSIT_SUPPORTING_MEMBERS_REQUIRED, False
+        )
+        product = ProductFactory()
+        ProductPriceFactory(
+            product=product, valid_from=datetime.date(2026, 1, 1), price=30
+        )
+        WaitingListProductWish.objects.create(
+            waiting_list_entry=entry, product=product, quantity=1
+        )
+        response = self.client.post(
+            reverse("waiting_list:public_confirm_waiting_list_entry"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+        self.assertFalse(response.json()["order_confirmed"])
+        self.assertIn("Vereinseinlage", response.json()["error"])
+        self.assertFalse(AssociationDepositAccount.objects.exists())
+        self.assertFalse(Member.objects.exists())

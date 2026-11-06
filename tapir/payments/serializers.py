@@ -23,6 +23,7 @@ class PaymentSerializer(serializers.ModelSerializer):
 
 
 class ExtendedPaymentSerializer(serializers.Serializer):
+    association_deposit_name = serializers.CharField(allow_null=True)
     payment = PaymentSerializer()
     subscriptions = SubscriptionSerializer(many=True)
     coop_share_transactions = CoopShareTransactionSerializer(many=True)

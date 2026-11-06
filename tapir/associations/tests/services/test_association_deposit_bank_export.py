@@ -31,6 +31,7 @@ class TestAssociationDepositBankExport(TapirIntegrationTest):
     def setUp(self):
         super().setUp()
         for key, value in [
+            (ParameterKeys.ASSOCIATION_DEPOSIT_ENABLED, True),
             (ParameterKeys.ORGANISATION_LEGAL_STATUS, LEGAL_STATUS_ASSOCIATION),
             (ParameterKeys.PAYMENT_DUE_DAY, 5),
             (ParameterKeys.PAYMENT_ORGANISATION_IBAN, "NL88ABNA2011060885"),

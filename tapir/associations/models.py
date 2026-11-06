@@ -135,3 +135,8 @@ class AssociationDepositAgreementCreatedLogEntry(ModelLogEntry):
 
 class AssociationDepositPaymentCreatedLogEntry(ModelLogEntry):
     template_name = "associations/log/deposit_payment_created.html"
+
+
+class AssociationDepositIncreasedLogEntry(UpdateModelLogEntry):
+    template_name = "associations/log/deposit_increased.html"
+    excluded_fields = ["updated_at"]

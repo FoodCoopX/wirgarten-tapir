@@ -55,6 +55,7 @@ import Step5CPickupLocationConfirmWaitingList from "./steps/Step5CPickupLocation
 import Step6BAssociationMembership from "./steps/Step6BAssociationMembership.tsx";
 import Step6BCoopShares from "./steps/Step6BCoopShares.tsx";
 import Step6CCoopMemberNow from "./steps/Step6CCoopMemberNow.tsx";
+import Step6DAssociationDeposit from "./steps/Step6DAssociationDeposit.tsx";
 import Step7SolidarityContribution from "./steps/Step7SolidarityContribution.tsx";
 import Step8PersonalData from "./steps/Step8PersonalData.tsx";
 import Step9BankingData from "./steps/Step9BankingData.tsx";
@@ -111,6 +112,9 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
   ] = useState(false);
   const [pickupLocationsWithCapacityFull, setPickupLocationsWithCapacityFull] =
     useState<Set<PublicPickupLocation>>(new Set<PublicPickupLocation>());
+  const [associationDepositAmount, setAssociationDepositAmount] = useState<
+    number | null
+  >(null);
   const [selectedNumberOfCoopShares, setSelectedNumberOfCoopShares] =
     useState(0);
   const [statuteAccepted, setStatuteAccepted] = useState(false);
@@ -520,6 +524,9 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
         .waitingListApiPublicConfirmWaitingListEntryCreate({
           publicConfirmWaitingListEntryRequestRequest: {
             entryId: waitingListEntryDetails.entryId,
+            associationDepositAmount: steps.includes("6d_association_deposit")
+              ? associationDepositAmount
+              : null,
             accountOwner: personalData.accountOwner,
             contractAccepted:
               contractAccepted || waitingListEntryDetails.memberAlreadyExists,
@@ -592,6 +599,9 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
           distributionChannels: [...selectedDistributionChannels],
           feedback: feedback,
           associationMembershipTypeId: selectedAssociationMembershipType?.id,
+          associationDepositAmount: steps.includes("6d_association_deposit")
+            ? associationDepositAmount
+            : null,
         },
       })
       .then(handleOrderResponse)
@@ -770,9 +780,33 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             setPayInInstalments={setPayCoopSharesInInstalments}
           />
         );
+      case "6d_association_deposit":
+        return (
+          <Step6DAssociationDeposit
+            settings={settings}
+            required={
+              isAtLeastOneProductOrdered(
+                buildFilteredShoppingCart(
+                  shoppingCart,
+                  false,
+                  productTypesInWaitingList,
+                ),
+              ) || settings.associationDeposit.supportingMembersRequired
+            }
+            amount={associationDepositAmount}
+            setAmount={setAssociationDepositAmount}
+            stepActive={currentStep === step}
+            goToNextStep={goToNextStep}
+          />
+        );
       case "6b_association_membership":
         return (
           <Step6BAssociationMembership
+            associationDepositAmount={
+              steps.includes("6d_association_deposit")
+                ? associationDepositAmount
+                : null
+            }
             goToNextStep={goToNextStep}
             settings={settings}
             selectedAssociationMembershipType={
@@ -850,6 +884,11 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
       case "10_summary":
         return (
           <Step10OrderSummary
+            associationDepositAmount={
+              steps.includes("6d_association_deposit")
+                ? associationDepositAmount
+                : null
+            }
             goToNextStep={goToNextStep}
             settings={settings}
             studentStatusEnabled={studentStatusEnabled}

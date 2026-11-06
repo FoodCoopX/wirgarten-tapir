@@ -7,10 +7,11 @@ import { formatCurrency } from "../../utils/formatCurrency.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
 import TapirCheckbox from "../components/TapirCheckbox.tsx";
 import "../utils/flexColOnSmallScreen.css";
-import { scrollIntoView } from "../utils/scrollIntoView.ts";
 import { getVisibleAssociationMembershipTypes } from "../utils/getVisibleAssociationMembershipTypes.ts";
+import { scrollIntoView } from "../utils/scrollIntoView.ts";
 
 interface Step6BAssociationMembershipsProps {
+  associationDepositAmount?: number | null;
   goToNextStep: () => void;
   settings: BestellWizardSettings;
   selectedAssociationMembershipType: AssociationMembershipType | undefined;
@@ -38,6 +39,7 @@ function buildLabel(type: AssociationMembershipType, contractStartDate: Date) {
 const Step6BAssociationMemberships: React.FC<
   Step6BAssociationMembershipsProps
 > = ({
+  associationDepositAmount,
   goToNextStep,
   settings,
   selectedAssociationMembershipType,
@@ -125,6 +127,12 @@ const Step6BAssociationMemberships: React.FC<
         </div>
       </div>
 
+      {associationDepositAmount != null && (
+        <p>
+          Zusätzlich einmalig: {settings.associationDeposit.name}{" "}
+          {formatCurrency(associationDepositAmount)}.
+        </p>
+      )}
       <NextStepButton
         onClick={onNextClicked}
         isOrderStep={isOrderStep}

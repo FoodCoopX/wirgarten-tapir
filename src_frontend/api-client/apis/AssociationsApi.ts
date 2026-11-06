@@ -14,11 +14,13 @@
 
 import type {
   AdminSetAssociationMembershipRequestRequest,
+  AssociationDepositDetails,
   AssociationMembershipType,
   AssociationMembershipTypePrice,
   AssociationMembershipTypePriceRequest,
   AssociationMembershipTypeRequest,
   ExistingMemberUpdatesAssociationMembershipRequestRequest,
+  IncreaseAssociationDepositRequestRequest,
   MemberAssociationMembershipDetails,
   NumberOfAssociationMembersPerMonthResponse,
   OrderConfirmationResponse,
@@ -28,11 +30,13 @@ import type {
 } from "../models/index";
 import {
   AdminSetAssociationMembershipRequestRequestToJSON,
+  AssociationDepositDetailsFromJSON,
   AssociationMembershipTypeFromJSON,
   AssociationMembershipTypePriceFromJSON,
   AssociationMembershipTypePriceRequestToJSON,
   AssociationMembershipTypeRequestToJSON,
   ExistingMemberUpdatesAssociationMembershipRequestRequestToJSON,
+  IncreaseAssociationDepositRequestRequestToJSON,
   MemberAssociationMembershipDetailsFromJSON,
   NumberOfAssociationMembersPerMonthResponseFromJSON,
   OrderConfirmationResponseFromJSON,
@@ -60,6 +64,14 @@ export interface AssociationsApiExistingMemberUpdatesMembershipCreateRequest {
 
 export interface AssociationsApiMemberAssociationMembershipsRetrieveRequest {
   memberId?: string;
+}
+
+export interface AssociationsApiMemberDepositCreateRequest {
+  increaseAssociationDepositRequestRequest: IncreaseAssociationDepositRequestRequest;
+}
+
+export interface AssociationsApiMemberDepositRetrieveRequest {
+  memberId: string;
 }
 
 export interface AssociationsApiNumberOfAssociationMembersPerMonthRetrieveRequest {
@@ -438,6 +450,133 @@ export class AssociationsApi extends runtime.BaseAPI {
         requestParameters,
         initOverrides,
       );
+    return await response.value();
+  }
+
+  /**
+   */
+  async associationsApiMemberDepositCreateRaw(
+    requestParameters: AssociationsApiMemberDepositCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<AssociationDepositDetails>> {
+    if (requestParameters["increaseAssociationDepositRequestRequest"] == null) {
+      throw new runtime.RequiredError(
+        "increaseAssociationDepositRequestRequest",
+        'Required parameter "increaseAssociationDepositRequestRequest" was null or undefined when calling associationsApiMemberDepositCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/associations/api/member_deposit`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: IncreaseAssociationDepositRequestRequestToJSON(
+          requestParameters["increaseAssociationDepositRequestRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      AssociationDepositDetailsFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async associationsApiMemberDepositCreate(
+    requestParameters: AssociationsApiMemberDepositCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<AssociationDepositDetails> {
+    const response = await this.associationsApiMemberDepositCreateRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async associationsApiMemberDepositRetrieveRaw(
+    requestParameters: AssociationsApiMemberDepositRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<AssociationDepositDetails>> {
+    if (requestParameters["memberId"] == null) {
+      throw new runtime.RequiredError(
+        "memberId",
+        'Required parameter "memberId" was null or undefined when calling associationsApiMemberDepositRetrieve().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    if (requestParameters["memberId"] != null) {
+      queryParameters["member_id"] = requestParameters["memberId"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/associations/api/member_deposit`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      AssociationDepositDetailsFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async associationsApiMemberDepositRetrieve(
+    requestParameters: AssociationsApiMemberDepositRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<AssociationDepositDetails> {
+    const response = await this.associationsApiMemberDepositRetrieveRaw(
+      requestParameters,
+      initOverrides,
+    );
     return await response.value();
   }
 

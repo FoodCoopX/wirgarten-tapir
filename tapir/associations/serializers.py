@@ -103,3 +103,42 @@ class GraphDatasetSerializer(Serializer):
 class NumberOfAssociationMembersPerMonthResponseSerializer(Serializer):
     labels = ListField(child=CharField())
     datasets = GraphDatasetSerializer(many=True)
+
+
+class AssociationDepositSettingsSerializer(Serializer):
+    enabled = serializers.BooleanField()
+    name = CharField()
+    minimum = serializers.DecimalField(
+        max_digits=8, decimal_places=2, coerce_to_string=False
+    )
+    increment = serializers.DecimalField(
+        max_digits=8, decimal_places=2, coerce_to_string=False
+    )
+    supporting_members_required = serializers.BooleanField()
+    allow_larger_signup = serializers.BooleanField()
+    allow_member_increase = serializers.BooleanField()
+
+
+class AssociationDepositDetailsSerializer(Serializer):
+    settings = AssociationDepositSettingsSerializer()
+    visible = serializers.BooleanField()
+    agreed_amount = serializers.DecimalField(
+        max_digits=8, decimal_places=2, coerce_to_string=False, allow_null=True
+    )
+    received_amount = serializers.DecimalField(
+        max_digits=8, decimal_places=2, coerce_to_string=False
+    )
+    committed_amount = serializers.DecimalField(
+        max_digits=8, decimal_places=2, coerce_to_string=False
+    )
+    pending_amount = serializers.DecimalField(
+        max_digits=8, decimal_places=2, coerce_to_string=False
+    )
+    can_increase = serializers.BooleanField()
+
+
+class IncreaseAssociationDepositRequestSerializer(Serializer):
+    member_id = CharField()
+    total_amount = serializers.DecimalField(
+        max_digits=8, decimal_places=2, coerce_to_string=False
+    )

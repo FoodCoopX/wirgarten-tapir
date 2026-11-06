@@ -20,6 +20,12 @@
 export interface PublicConfirmWaitingListEntryRequestRequest {
   /**
    *
+   * @type {number}
+   * @memberof PublicConfirmWaitingListEntryRequestRequest
+   */
+  associationDepositAmount?: number | null;
+  /**
+   *
    * @type {string}
    * @memberof PublicConfirmWaitingListEntryRequestRequest
    */
@@ -135,6 +141,10 @@ export function PublicConfirmWaitingListEntryRequestRequestFromJSONTyped(
     return json;
   }
   return {
+    associationDepositAmount:
+      json["association_deposit_amount"] == null
+        ? undefined
+        : json["association_deposit_amount"],
     entryId: json["entry_id"],
     linkKey: json["link_key"],
     accountOwner: json["account_owner"],
@@ -167,6 +177,7 @@ export function PublicConfirmWaitingListEntryRequestRequestToJSONTyped(
   }
 
   return {
+    association_deposit_amount: value["associationDepositAmount"],
     entry_id: value["entryId"],
     link_key: value["linkKey"],
     account_owner: value["accountOwner"],

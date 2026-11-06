@@ -279,6 +279,13 @@ class GetFutureMemberPaymentsApiView(APIView):
 
             extended_payments.append(
                 {
+                    "association_deposit_name": (
+                        get_parameter_value(
+                            ParameterKeys.ASSOCIATION_DEPOSIT_NAME, cache=cache
+                        )
+                        if payment.association_deposit_account_id
+                        else None
+                    ),
                     "payment": payment,
                     "subscriptions": subscriptions,
                     "coop_share_transactions": coop_share_transactions,
