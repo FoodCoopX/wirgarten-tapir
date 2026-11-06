@@ -1,6 +1,9 @@
 from decimal import Decimal
 
 from tapir.bidding_round.config import CLOSED
+from tapir.bidding_round.services.round_contribution_service import (
+    RoundContributionService,
+)
 from tapir.bidding_round.models import BiddingRound
 from tapir.bidding_round.services.bidding_round_stats_service import (
     BiddingRoundStatsService,
@@ -142,7 +145,8 @@ class NonBidderContributionService:
         if standard_monthly_total + current_contribution >= target_monthly_total:
             return False
 
-        MemberSolidarityContributionService.assign_contribution_to_member(
+        RoundContributionService.assign_contribution(
+            bidding_round=bidding_round,
             member=member,
             change_date=reference_date,
             amount=target_monthly_total - standard_monthly_total,
