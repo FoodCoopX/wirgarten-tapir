@@ -61,9 +61,18 @@ class TestMemberAssociationDeposit(TapirIntegrationTest):
         data = self.client.get(self.url, {"member_id": self.member.pk}).json()
         self.assertEqual("Investitionsbeitrag", data["settings"]["name"])
         self.assertEqual(200, data["agreed_amount"])
+        preview = self.client.post(
+            reverse("associations:deposit_increase_preview"),
+            {"member_id": self.member.pk, "total_amount": "250"},
+        ).json()
         for _ in range(2):
             response = self.client.post(
-                self.url, {"member_id": self.member.pk, "total_amount": "250"}
+                self.url,
+                {
+                    "member_id": self.member.pk,
+                    "total_amount": "250",
+                    "confirmation": preview["confirmation"],
+                },
             )
             self.assertEqual(200, response.status_code, response.content)
             self.assertEqual(250, response.json()["agreed_amount"])
@@ -144,5 +153,6 @@ class TestMemberAssociationDeposit(TapirIntegrationTest):
         self.assertEqual(1000000, response.json()["received_amount"])
         self.assertEqual(200, response.json()["agreed_amount"])
         self.assertEqual(0, response.json()["committed_amount"])
+        self.assertEqual(999800, response.json()["overpayment_credit"])
         self.assertEqual(0, response.json()["pending_amount"])
         self.assertFalse(Payment.objects.exists())

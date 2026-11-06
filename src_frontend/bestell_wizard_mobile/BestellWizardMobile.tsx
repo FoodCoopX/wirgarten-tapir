@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import "../../tapir/core/static/core/bootstrap/5.3.8/css/bootstrap.min.css";
 import "../../tapir/core/static/core/css/base.css";
 import {
+  AssociationDepositPaymentOptionEnum,
   AssociationMembershipType,
   BestellWizardApi,
   CoopApi,
@@ -115,6 +116,10 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
   const [associationDepositAmount, setAssociationDepositAmount] = useState<
     number | null
   >(null);
+  const [associationDepositPaymentOption, setAssociationDepositPaymentOption] =
+    useState<AssociationDepositPaymentOptionEnum>(
+      AssociationDepositPaymentOptionEnum.Once,
+    );
   const [selectedNumberOfCoopShares, setSelectedNumberOfCoopShares] =
     useState(0);
   const [statuteAccepted, setStatuteAccepted] = useState(false);
@@ -527,6 +532,17 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             associationDepositAmount: steps.includes("6d_association_deposit")
               ? associationDepositAmount
               : null,
+            associationDepositPaymentOption: steps.includes(
+              "6d_association_deposit",
+            )
+              ? associationDepositPaymentOption
+              : AssociationDepositPaymentOptionEnum.Once,
+            associationDepositExpectedInstalments:
+              steps.includes("6d_association_deposit") &&
+              associationDepositPaymentOption ===
+                AssociationDepositPaymentOptionEnum.StandardInstalments
+                ? settings.associationDeposit.instalmentCount
+                : null,
             accountOwner: personalData.accountOwner,
             contractAccepted:
               contractAccepted || waitingListEntryDetails.memberAlreadyExists,
@@ -602,6 +618,17 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
           associationDepositAmount: steps.includes("6d_association_deposit")
             ? associationDepositAmount
             : null,
+          associationDepositPaymentOption: steps.includes(
+            "6d_association_deposit",
+          )
+            ? associationDepositPaymentOption
+            : AssociationDepositPaymentOptionEnum.Once,
+          associationDepositExpectedInstalments:
+            steps.includes("6d_association_deposit") &&
+            associationDepositPaymentOption ===
+              AssociationDepositPaymentOptionEnum.StandardInstalments
+              ? settings.associationDeposit.instalmentCount
+              : null,
         },
       })
       .then(handleOrderResponse)
@@ -649,6 +676,19 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     }
     setCurrentStep(productType.id! + "_order");
   }
+
+  const depositRequired =
+    isAtLeastOneProductOrdered(
+      buildFilteredShoppingCart(shoppingCart, false, productTypesInWaitingList),
+    ) || settings.associationDeposit.supportingMembersRequired;
+
+  const hasDepositStep = steps.includes("6d_association_deposit");
+  const selectedDepositAmount = hasDepositStep
+    ? associationDepositAmount
+    : null;
+  const selectedDepositPaymentOption = hasDepositStep
+    ? associationDepositPaymentOption
+    : AssociationDepositPaymentOptionEnum.Once;
 
   function getStepComponent(step: Step) {
     switch (step) {
@@ -784,16 +824,10 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
         return (
           <Step6DAssociationDeposit
             settings={settings}
-            required={
-              isAtLeastOneProductOrdered(
-                buildFilteredShoppingCart(
-                  shoppingCart,
-                  false,
-                  productTypesInWaitingList,
-                ),
-              ) || settings.associationDeposit.supportingMembersRequired
-            }
+            required={depositRequired}
             amount={associationDepositAmount}
+            paymentOption={associationDepositPaymentOption}
+            setPaymentOption={setAssociationDepositPaymentOption}
             setAmount={setAssociationDepositAmount}
             stepActive={currentStep === step}
             goToNextStep={goToNextStep}
@@ -802,11 +836,8 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
       case "6b_association_membership":
         return (
           <Step6BAssociationMembership
-            associationDepositAmount={
-              steps.includes("6d_association_deposit")
-                ? associationDepositAmount
-                : null
-            }
+            associationDepositAmount={selectedDepositAmount}
+            associationDepositPaymentOption={selectedDepositPaymentOption}
             goToNextStep={goToNextStep}
             settings={settings}
             selectedAssociationMembershipType={
@@ -884,11 +915,8 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
       case "10_summary":
         return (
           <Step10OrderSummary
-            associationDepositAmount={
-              steps.includes("6d_association_deposit")
-                ? associationDepositAmount
-                : null
-            }
+            associationDepositAmount={selectedDepositAmount}
+            associationDepositPaymentOption={selectedDepositPaymentOption}
             goToNextStep={goToNextStep}
             settings={settings}
             studentStatusEnabled={studentStatusEnabled}

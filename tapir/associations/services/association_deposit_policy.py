@@ -1,8 +1,9 @@
 from decimal import Decimal
 
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 
-from tapir.associations.models import AssociationDepositAccount
+from tapir.associations.models import AssociationDepositAccount, AssociationMembership
 from tapir.associations.services.association_deposit_amount_validator import (
     AssociationDepositAmountValidator,
 )
@@ -11,7 +12,8 @@ from tapir.associations.services.association_deposit_instalment_calculator impor
 )
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.utils import legal_status_is_association
+from tapir.wirgarten.utils import legal_status_is_association, get_today
+from tapir.wirgarten.models import Member
 
 
 class AssociationDepositPolicy:
@@ -27,8 +29,48 @@ class AssociationDepositPolicy:
             and account.agreed_amount is not None
             and account.agreed_amount > 0
             and not account.is_individual_agreement
-            and account.instalment_count == 1
+            and (account.instalment_count == 1 or settings["instalments_enabled"])
         )
+
+    @classmethod
+    def get_increasable_account(
+        cls, member: Member, cache: dict
+    ) -> AssociationDepositAccount:
+        settings = cls.get_settings(cache)
+        if not settings["enabled"] or not settings["allow_member_increase"]:
+            raise ValidationError(
+                "Einlagenerhöhungen im Mitgliederbereich sind nicht aktiviert."
+            )
+        account = AssociationDepositAccount.objects.filter(member=member).first()
+        if account is None or account.agreed_amount is None:
+            raise ValidationError("Es besteht noch keine Einlagenvereinbarung.")
+        if not cls.can_member_increase(account, cache):
+            raise ValidationError(
+                "Diese Einlage kann nur durch eine dokumentierte Verwaltungsvereinbarung geändert werden."
+            )
+        if (
+            not AssociationMembership.objects.filter(member=member)
+            .filter(Q(end_date=None) | Q(end_date__gte=get_today(cache)))
+            .exists()
+        ):
+            raise ValidationError(
+                "Für eine Erhöhung ist eine bestehende Vereinsmitgliedschaft erforderlich."
+            )
+        return account
+
+    @staticmethod
+    def validate_increase_amount(
+        account: AssociationDepositAccount, amount: Decimal, cache: dict
+    ):
+        AssociationDepositAmountValidator.validate_positive_amount(amount)
+        if amount < account.agreed_amount:
+            raise ValidationError(
+                "Die vereinbarte Einlage darf hier nur erhöht werden."
+            )
+        if amount != account.agreed_amount:
+            AssociationDepositAmountValidator.validate_regular_deposit_amount(
+                amount, cache
+            )
 
     @staticmethod
     def is_enabled(cache: dict) -> bool:

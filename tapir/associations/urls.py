@@ -7,6 +7,11 @@ from tapir.associations.deposit_admin_views import DepositAdministrationView
 app_name = "associations"
 urlpatterns = [
     path(
+        "api/deposit_increase_preview",
+        deposit_views.AssociationDepositIncreasePreviewView.as_view(),
+        name="deposit_increase_preview",
+    ),
+    path(
         "deposits", DepositAdministrationView.as_view(), name="deposit_administration"
     ),
     path(

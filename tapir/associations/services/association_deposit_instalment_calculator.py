@@ -8,6 +8,7 @@ from tapir.associations.services.association_deposit_amount_validator import (
     AssociationDepositAmountValidator,
 )
 from tapir.payments.services.payment_due_date_calculator import PaymentDueDateCalculator
+from tapir.wirgarten.models import Payment
 
 
 class AssociationDepositInstalmentCalculator:
@@ -26,6 +27,42 @@ class AssociationDepositInstalmentCalculator:
         AssociationDepositAmountValidator.validate_positive_amount(amount)
         if count > int(amount * 100):
             raise ValidationError("Jede Rate muss mindestens einen Cent betragen.")
+
+    @staticmethod
+    def adjust_open_payments(
+        amount: Decimal, count: int, payments: list[Payment], allow_increase: bool
+    ) -> list[dict]:
+        if count == 1 and len(payments) > 1:
+            raise ValidationError(
+                "Es bestehen mehrere offene Zahlungen ohne Ratenvereinbarung."
+            )
+        if amount == 0:
+            return []
+        schedule = [
+            {
+                "id": p.pk,
+                "amount": p.amount,
+                "due_date": p.due_date,
+                "instalment_number": p.instalment_number,
+            }
+            for p in payments
+        ]
+        difference = amount - sum(p["amount"] for p in schedule)
+        if difference > 0:
+            if count != 1 and not allow_increase:
+                raise ValidationError(
+                    "Der offene Ratenplan muss ausdrücklich neu vereinbart werden."
+                )
+            base, extra = divmod(int(difference * 100), len(schedule))
+            for index, rate in enumerate(schedule):
+                rate["amount"] += Decimal(base + (index < extra)) / 100
+        else:
+            credit = -difference
+            for rate in schedule:
+                applied = min(rate["amount"], credit)
+                rate["amount"] -= applied
+                credit -= applied
+        return [rate for rate in schedule if rate["amount"] > 0]
 
     @staticmethod
     def build_payment_schedule(

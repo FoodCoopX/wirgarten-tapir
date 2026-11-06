@@ -12,6 +12,11 @@
  * Do not edit the class manually.
  */
 
+import type { AssociationDepositPaymentDetails } from "./AssociationDepositPaymentDetails";
+import {
+  AssociationDepositPaymentDetailsFromJSON,
+  AssociationDepositPaymentDetailsToJSON,
+} from "./AssociationDepositPaymentDetails";
 import type { AssociationDepositSettings } from "./AssociationDepositSettings";
 import {
   AssociationDepositSettingsFromJSON,
@@ -66,6 +71,24 @@ export interface AssociationDepositDetails {
    * @memberof AssociationDepositDetails
    */
   canIncrease: boolean;
+  /**
+   *
+   * @type {string}
+   * @memberof AssociationDepositDetails
+   */
+  state: string;
+  /**
+   *
+   * @type {number}
+   * @memberof AssociationDepositDetails
+   */
+  overpaymentCredit: number | null;
+  /**
+   *
+   * @type {Array<AssociationDepositPaymentDetails>}
+   * @memberof AssociationDepositDetails
+   */
+  payments: Array<AssociationDepositPaymentDetails>;
 }
 
 /**
@@ -86,6 +109,13 @@ export function instanceOfAssociationDepositDetails(
     return false;
   if (!("canIncrease" in value) || value["canIncrease"] === undefined)
     return false;
+  if (!("state" in value) || value["state"] === undefined) return false;
+  if (
+    !("overpaymentCredit" in value) ||
+    value["overpaymentCredit"] === undefined
+  )
+    return false;
+  if (!("payments" in value) || value["payments"] === undefined) return false;
   return true;
 }
 
@@ -110,6 +140,11 @@ export function AssociationDepositDetailsFromJSONTyped(
     committedAmount: json["committed_amount"],
     pendingAmount: json["pending_amount"],
     canIncrease: json["can_increase"],
+    state: json["state"],
+    overpaymentCredit: json["overpayment_credit"],
+    payments: (json["payments"] as Array<any>).map(
+      AssociationDepositPaymentDetailsFromJSON,
+    ),
   };
 }
 
@@ -135,5 +170,10 @@ export function AssociationDepositDetailsToJSONTyped(
     committed_amount: value["committedAmount"],
     pending_amount: value["pendingAmount"],
     can_increase: value["canIncrease"],
+    state: value["state"],
+    overpayment_credit: value["overpaymentCredit"],
+    payments: (value["payments"] as Array<any>).map(
+      AssociationDepositPaymentDetailsToJSON,
+    ),
   };
 }

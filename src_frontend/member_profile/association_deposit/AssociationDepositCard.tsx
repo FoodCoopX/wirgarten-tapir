@@ -1,11 +1,16 @@
 import { useEffect, useState } from "react";
-import { Alert, Card, Form } from "react-bootstrap";
-import { AssociationDepositDetails, AssociationsApi } from "../../api-client";
+import { Alert, Card, Form, Modal, Table } from "react-bootstrap";
+import {
+  AssociationDepositDetails,
+  AssociationDepositIncreasePreview,
+  AssociationsApi,
+} from "../../api-client";
 import TapirButton from "../../components/TapirButton.tsx";
 import TapirToastContainer from "../../components/TapirToastContainer.tsx";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
+import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 import { isValidDepositAmount } from "../../utils/isValidDepositAmount.ts";
 
@@ -23,6 +28,7 @@ export default function AssociationDepositCard({
   const api = useApi(AssociationsApi, csrfToken);
   const [details, setDetails] = useState<AssociationDepositDetails>();
   const [amount, setAmount] = useState("");
+  const [preview, setPreview] = useState<AssociationDepositIncreasePreview>();
   const [saving, setSaving] = useState(false);
   const [showError, setShowError] = useState(false);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
@@ -40,19 +46,17 @@ export default function AssociationDepositCard({
       ),
     );
     setShowError(false);
+    setPreview(undefined);
+  }
+
+  async function loadData() {
+    update(await api.associationsApiMemberDepositRetrieve({ memberId }));
   }
 
   useEffect(() => {
-    api
-      .associationsApiMemberDepositRetrieve({ memberId })
-      .then(update)
-      .catch((error) =>
-        handleRequestError(
-          error,
-          "Fehler beim Laden der Einlage",
-          setToastDatas,
-        ),
-      );
+    loadData().catch((error) =>
+      handleRequestError(error, "Fehler beim Laden der Einlage", setToastDatas),
+    );
   }, [memberId]);
 
   async function increase() {
@@ -70,21 +74,54 @@ export default function AssociationDepositCard({
     }
     setSaving(true);
     try {
-      update(
-        await api.associationsApiMemberDepositCreate({
-          increaseAssociationDepositRequestRequest: {
+      setPreview(
+        await api.associationsApiDepositIncreasePreviewCreate({
+          previewAssociationDepositIncreaseRequestRequest: {
             memberId,
             totalAmount: Number(amount),
           },
         }),
       );
-      onDepositChanged();
     } catch (error) {
       await handleRequestError(
         error,
-        "Die Einlage konnte nicht erhöht werden",
+        "Die Erhöhung konnte nicht vorbereitet werden",
         setToastDatas,
       );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function confirmIncrease() {
+    if (!preview) return;
+    setSaving(true);
+    try {
+      update(
+        await api.associationsApiMemberDepositCreate({
+          increaseAssociationDepositRequestRequest: {
+            memberId,
+            totalAmount: preview.totalAmount,
+            confirmation: preview.confirmation,
+          },
+        }),
+      );
+      onDepositChanged();
+    } catch (error) {
+      setPreview(undefined);
+      await handleRequestError(
+        error,
+        "Bitte den aktuellen Zahlungsplan neu prüfen und bestätigen",
+        setToastDatas,
+      );
+      await loadData().catch((reloadError) =>
+        handleRequestError(
+          reloadError,
+          "Fehler beim Aktualisieren der Einlage",
+          setToastDatas,
+        ),
+      );
+      onDepositChanged();
     } finally {
       setSaving(false);
     }
@@ -98,6 +135,29 @@ export default function AssociationDepositCard({
             <Card.Title className="mb-0">{details.settings.name}</Card.Title>
           </Card.Header>
           <Card.Body>
+            {details.state === "pending" && (
+              <Alert variant="info">
+                <strong>Individuelle Vereinbarung offen</strong>
+                <p className="mb-0">
+                  Gesamtbetrag und Zahlungsplan sind noch nicht vereinbart. Bis
+                  zu einer ausdrücklichen Vereinbarung wird kein Einlagenbetrag
+                  eingezogen. Dies ist keine automatische Befreiung.
+                </p>
+              </Alert>
+            )}
+            {details.state === "waived" && (
+              <Alert variant="success">
+                Vollständiger Verzicht vereinbart. Es besteht keine offene
+                Einlagenforderung.
+              </Alert>
+            )}
+            {details.state === "individual" && (
+              <p>
+                Individuelle Vereinbarung. Änderungen werden persönlich mit der
+                Verwaltung vereinbart und dokumentiert.
+              </p>
+            )}
+            {details.state === "regular" && <p>Reguläre Vereinbarung.</p>}
             {details.agreedAmount === null ? (
               <p>Es ist keine Einlage vereinbart.</p>
             ) : (
@@ -114,6 +174,38 @@ export default function AssociationDepositCard({
               <dt>Offener Einzug</dt>
               <dd>{formatCurrency(details.pendingAmount)}</dd>
             </dl>
+            {(details.overpaymentCredit ?? 0) > 0 && (
+              <Alert variant="info">
+                Guthaben über dem vereinbarten Betrag:{" "}
+                <strong>{formatCurrency(details.overpaymentCredit!)}</strong>.
+                Eine Rückzahlung wird dadurch nicht automatisch ausgelöst.
+              </Alert>
+            )}
+            {details.payments.length > 0 && (
+              <Table size="sm" responsive>
+                <caption>Zahlungen: {details.settings.name}</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Termin</th>
+                    <th scope="col">Betrag</th>
+                    <th scope="col">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {details.payments.map((payment) => (
+                    <tr key={payment.id}>
+                      <td>{formatDateNumeric(payment.dueDate)}</td>
+                      <td>{formatCurrency(payment.amount)}</td>
+                      <td>
+                        {payment.status === "PAID"
+                          ? "Verbucht / exportiert"
+                          : "Offen"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+            )}
             <small>
               Rückzahlbare Einlage pro Mitglied, unabhängig von Vereins- und
               Erntebeiträgen.
@@ -150,12 +242,76 @@ export default function AssociationDepositCard({
                   onClick={increase}
                   loading={saving}
                   disabled={saving}
-                  text={`Gesamtbetrag verbindlich auf ${formatCurrency(Number(amount) || 0)} erhöhen`}
+                  text="Erhöhung und Zahlungsplan prüfen"
                 />
               </Form.Group>
             )}
           </Card.Body>
         </Card>
+      )}
+      {preview && details && (
+        <Modal
+          show
+          onHide={() => {
+            if (!saving) setPreview(undefined);
+          }}
+        >
+          <Modal.Header closeButton>
+            <Modal.Title>
+              {details.settings.name}: Erhöhung bestätigen
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <p>
+              Neuer Gesamtbetrag:{" "}
+              <strong>{formatCurrency(preview.totalAmount)}</strong>.
+            </p>
+            <p>
+              Extern eingegangen: {formatCurrency(preview.receivedAmount)}.
+              Bereits verbucht / exportiert:{" "}
+              {formatCurrency(preview.committedAmount)}.
+            </p>
+            <p>
+              Verbleibender Einzug:{" "}
+              <strong>{formatCurrency(preview.pendingAmount)}</strong>. Bitte
+              prüfe diese Zahlungen; erst nach deiner Bestätigung wird die
+              Erhöhung vereinbart.
+            </p>
+            <Table size="sm">
+              <thead>
+                <tr>
+                  <th scope="col">Termin</th>
+                  <th scope="col">Betrag</th>
+                </tr>
+              </thead>
+              <tbody>
+                {preview.payments.map((payment) => (
+                  <tr
+                    key={`${payment.dueDate.getTime()}-${payment.instalmentNumber ?? "single"}`}
+                  >
+                    <td>{formatDateNumeric(payment.dueDate)}</td>
+                    <td>{formatCurrency(payment.amount)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </Modal.Body>
+          <Modal.Footer>
+            <TapirButton
+              variant="secondary"
+              text="Abbrechen"
+              disabled={saving}
+              onClick={() => setPreview(undefined)}
+            />
+            <TapirButton
+              variant="primary"
+              text={`Gesamtbetrag verbindlich auf ${formatCurrency(preview.totalAmount)} erhöhen`}
+              loading={saving}
+              disabled={saving}
+              onClick={confirmIncrease}
+            />
+          </Modal.Footer>
+        </Modal>
       )}
       <TapirToastContainer
         toastDatas={toastDatas}

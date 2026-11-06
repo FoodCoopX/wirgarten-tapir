@@ -30,6 +30,12 @@ export interface IncreaseAssociationDepositRequestRequest {
    * @memberof IncreaseAssociationDepositRequestRequest
    */
   totalAmount: number;
+  /**
+   *
+   * @type {string}
+   * @memberof IncreaseAssociationDepositRequestRequest
+   */
+  confirmation: string;
 }
 
 /**
@@ -40,6 +46,8 @@ export function instanceOfIncreaseAssociationDepositRequestRequest(
 ): value is IncreaseAssociationDepositRequestRequest {
   if (!("memberId" in value) || value["memberId"] === undefined) return false;
   if (!("totalAmount" in value) || value["totalAmount"] === undefined)
+    return false;
+  if (!("confirmation" in value) || value["confirmation"] === undefined)
     return false;
   return true;
 }
@@ -60,6 +68,7 @@ export function IncreaseAssociationDepositRequestRequestFromJSONTyped(
   return {
     memberId: json["member_id"],
     totalAmount: json["total_amount"],
+    confirmation: json["confirmation"],
   };
 }
 
@@ -80,5 +89,6 @@ export function IncreaseAssociationDepositRequestRequestToJSONTyped(
   return {
     member_id: value["memberId"],
     total_amount: value["totalAmount"],
+    confirmation: value["confirmation"],
   };
 }

@@ -9,12 +9,17 @@ from rest_framework.views import APIView
 from tapir.associations.serializers import (
     AssociationDepositDetailsSerializer,
     IncreaseAssociationDepositRequestSerializer,
+    PreviewAssociationDepositIncreaseRequestSerializer,
+    AssociationDepositIncreasePreviewSerializer,
 )
 from tapir.associations.services.association_deposit_details_provider import (
     AssociationDepositDetailsProvider,
 )
 from tapir.associations.services.association_deposit_increase_recorder import (
     AssociationDepositIncreaseRecorder,
+)
+from tapir.associations.services.association_deposit_increase_preview import (
+    AssociationDepositIncreasePreview,
 )
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import Member
@@ -46,17 +51,21 @@ class MemberAssociationDepositView(APIView):
     )
     def post(self, request):
         cache = {}
+        if request.user.pk != request.data.get(
+            "member_id"
+        ) and not request.user.has_perm(Permission.Coop.MANAGE):
+            raise PermissionDenied
         serializer = IncreaseAssociationDepositRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         member_id = serializer.validated_data["member_id"]
-        if request.user.pk != member_id and not request.user.has_perm(
-            Permission.Coop.MANAGE
-        ):
-            raise PermissionDenied
         member = get_object_or_404(Member, pk=member_id)
         try:
             AssociationDepositIncreaseRecorder.increase_agreed_deposit(
-                member, serializer.validated_data["total_amount"], request.user, cache
+                member,
+                serializer.validated_data["total_amount"],
+                request.user,
+                cache,
+                confirmation=serializer.validated_data["confirmation"],
             )
         except DjangoValidationError as error:
             raise ValidationError(error.messages) from error
@@ -65,3 +74,30 @@ class MemberAssociationDepositView(APIView):
                 AssociationDepositDetailsProvider.get_deposit_details(member, cache)
             ).data
         )
+
+
+class AssociationDepositIncreasePreviewView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    @extend_schema(
+        request=PreviewAssociationDepositIncreaseRequestSerializer,
+        responses={200: AssociationDepositIncreasePreviewSerializer},
+    )
+    def post(self, request):
+        cache = {}
+        if request.user.pk != request.data.get(
+            "member_id"
+        ) and not request.user.has_perm(Permission.Coop.MANAGE):
+            raise PermissionDenied
+        serializer = PreviewAssociationDepositIncreaseRequestSerializer(
+            data=request.data
+        )
+        serializer.is_valid(raise_exception=True)
+        member = get_object_or_404(Member, pk=serializer.validated_data["member_id"])
+        try:
+            preview = AssociationDepositIncreasePreview.build_preview(
+                member, serializer.validated_data["total_amount"], cache
+            )
+        except DjangoValidationError as error:
+            raise ValidationError(error.messages) from error
+        return Response(AssociationDepositIncreasePreviewSerializer(preview).data)

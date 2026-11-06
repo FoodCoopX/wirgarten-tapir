@@ -16,11 +16,13 @@ from tapir.associations.services.association_deposit_instalment_calculator impor
 from tapir.associations.services.association_deposit_remaining_amount_calculator import (
     AssociationDepositRemainingAmountCalculator,
 )
+from tapir.associations.services.association_deposit_due_date_provider import (
+    AssociationDepositDueDateProvider,
+)
 from tapir.payments.config import PAYMENT_TYPE_ASSOCIATION_DEPOSIT
 from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
-from tapir.payments.services.payment_due_date_calculator import PaymentDueDateCalculator
 from tapir.wirgarten.models import Member, Payment
-from tapir.wirgarten.utils import get_now, get_today, legal_status_is_association
+from tapir.wirgarten.utils import legal_status_is_association
 
 
 class AssociationDepositPaymentSynchronizer:
@@ -62,9 +64,19 @@ class AssociationDepositPaymentSynchronizer:
 
     @classmethod
     def create_regular_deposit_payment(
-        cls, member: Member, actor: TapirUser | None, cache: dict
+        cls,
+        member: Member,
+        actor: TapirUser | None,
+        cache: dict,
+        allow_standard_increase: bool = False,
     ) -> Payment | None:
-        return cls._synchronize_pending_payment(member, actor, cache, create=True)
+        return cls._synchronize_pending_payment(
+            member,
+            actor,
+            cache,
+            create=True,
+            allow_standard_increase=allow_standard_increase,
+        )
 
     @classmethod
     def update_existing_deposit_payment(
@@ -88,7 +100,11 @@ class AssociationDepositPaymentSynchronizer:
     @staticmethod
     @transaction.atomic
     def _synchronize_pending_payment(
-        member: Member, actor: TapirUser | None, cache: dict, create: bool
+        member: Member,
+        actor: TapirUser | None,
+        cache: dict,
+        create: bool,
+        allow_standard_increase: bool = False,
     ) -> Payment | None:
         member = Member.objects.select_for_update(no_key=True).get(pk=member.pk)
         pending_payments = list(
@@ -115,37 +131,15 @@ class AssociationDepositPaymentSynchronizer:
             return None
         if pending:
             return AssociationDepositPaymentSynchronizer._update_open_payment_plan(
-                account, pending_payments, remaining, cache
+                account, pending_payments, remaining, allow_standard_increase, cache
             )
 
-        if not member.sepa_consent or member.sepa_consent > get_now(cache=cache):
-            raise ValidationError(
-                "Für den Einzug ist eine gültige SEPA-Zustimmung erforderlich."
-            )
-        cache.pop(MandateReferenceProvider.CACHE_KEY, None)
+        first_due = AssociationDepositDueDateProvider.get_first_due_date(
+            member, account, cache
+        )
         mandate = MandateReferenceProvider.get_or_create_mandate_reference(
-            member=member, cache=cache
+            member, cache
         )
-        earliest = max(
-            account.effective_from, get_today(cache=cache), mandate.start_ts.date()
-        )
-        memberships = (
-            AssociationMembership.objects.filter(member=member)
-            .filter(Q(end_date=None) | Q(end_date__gte=earliest))
-            .order_by("start_date")
-        )
-        first_due = None
-        for membership in memberships:
-            candidate = PaymentDueDateCalculator.get_first_due_date_on_or_after(
-                max(earliest, membership.start_date), cache
-            )
-            if membership.end_date is None or candidate <= membership.end_date:
-                first_due = candidate
-                break
-        if first_due is None:
-            raise ValidationError(
-                "Für den Einzug ist eine gültige Vereinsmitgliedschaft erforderlich."
-            )
         schedule = AssociationDepositInstalmentCalculator.build_payment_schedule(
             remaining,
             account.instalment_count,
@@ -186,26 +180,23 @@ class AssociationDepositPaymentSynchronizer:
 
     @staticmethod
     def _update_open_payment_plan(
-        account, pending_payments: list[Payment], remaining, cache: dict
+        account,
+        pending_payments: list[Payment],
+        remaining,
+        allow_standard_increase: bool,
+        cache: dict,
     ):
-        pending = pending_payments[0]
-        if account.instalment_count == 1 and len(pending_payments) == 1:
-            if pending.amount != remaining:
-                pending.amount = remaining
-                pending.save(update_fields=["amount", "updated_at"])
-            return pending
-        reduction = sum(payment.amount for payment in pending_payments) - remaining
-        if reduction < 0:
-            raise ValidationError(
-                "Der offene Ratenplan muss ausdrücklich neu vereinbart werden."
-            )
+        schedule = AssociationDepositInstalmentCalculator.adjust_open_payments(
+            remaining,
+            account.instalment_count,
+            pending_payments,
+            allow_standard_increase,
+        )
+        amounts = {rate["id"]: rate["amount"] for rate in schedule}
         for payment in pending_payments:
-            applied = min(payment.amount, reduction)
-            reduction -= applied
-            if applied:
-                payment.amount -= applied
-                if payment.amount == 0:
-                    payment.delete()
-                else:
-                    payment.save(update_fields=["amount", "updated_at"])
+            if payment.pk not in amounts:
+                payment.delete()
+            elif payment.amount != amounts[payment.pk]:
+                payment.amount = amounts[payment.pk]
+                payment.save(update_fields=["amount", "updated_at"])
         return next((payment for payment in pending_payments if payment.pk), None)

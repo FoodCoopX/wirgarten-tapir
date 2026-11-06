@@ -44,6 +44,15 @@ class AssociationDepositDetailsProvider:
             "agreed_amount": agreed,
             "received_amount": received,
             "state": state,
+            "payments": (
+                list(
+                    account.payments.order_by("due_date", "pk").values(
+                        "id", "amount", "due_date", "instalment_number", "status"
+                    )
+                )
+                if account
+                else []
+            ),
             "overpayment_credit": (
                 max(Decimal("0"), received + committed - agreed)
                 if agreed is not None

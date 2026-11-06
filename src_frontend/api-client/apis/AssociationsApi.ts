@@ -15,6 +15,7 @@
 import type {
   AdminSetAssociationMembershipRequestRequest,
   AssociationDepositDetails,
+  AssociationDepositIncreasePreview,
   AssociationMembershipType,
   AssociationMembershipTypePrice,
   AssociationMembershipTypePriceRequest,
@@ -26,11 +27,13 @@ import type {
   OrderConfirmationResponse,
   PatchedAssociationMembershipTypePriceRequest,
   PatchedAssociationMembershipTypeRequest,
+  PreviewAssociationDepositIncreaseRequestRequest,
   SetAssociationMembershipEndDateRequestRequest,
 } from "../models/index";
 import {
   AdminSetAssociationMembershipRequestRequestToJSON,
   AssociationDepositDetailsFromJSON,
+  AssociationDepositIncreasePreviewFromJSON,
   AssociationMembershipTypeFromJSON,
   AssociationMembershipTypePriceFromJSON,
   AssociationMembershipTypePriceRequestToJSON,
@@ -42,6 +45,7 @@ import {
   OrderConfirmationResponseFromJSON,
   PatchedAssociationMembershipTypePriceRequestToJSON,
   PatchedAssociationMembershipTypeRequestToJSON,
+  PreviewAssociationDepositIncreaseRequestRequestToJSON,
   SetAssociationMembershipEndDateRequestRequestToJSON,
 } from "../models/index";
 import * as runtime from "../runtime";
@@ -56,6 +60,10 @@ export interface AssociationsApiAssociationMembershipTypeHardDeleteDestroyReques
 
 export interface AssociationsApiAssociationMembershipTypeSoftDeleteDestroyRequest {
   typeId?: string;
+}
+
+export interface AssociationsApiDepositIncreasePreviewCreateRequest {
+  previewAssociationDepositIncreaseRequestRequest: PreviewAssociationDepositIncreaseRequestRequest;
 }
 
 export interface AssociationsApiExistingMemberUpdatesMembershipCreateRequest {
@@ -322,6 +330,73 @@ export class AssociationsApi extends runtime.BaseAPI {
         requestParameters,
         initOverrides,
       );
+    return await response.value();
+  }
+
+  /**
+   */
+  async associationsApiDepositIncreasePreviewCreateRaw(
+    requestParameters: AssociationsApiDepositIncreasePreviewCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<AssociationDepositIncreasePreview>> {
+    if (
+      requestParameters["previewAssociationDepositIncreaseRequestRequest"] ==
+      null
+    ) {
+      throw new runtime.RequiredError(
+        "previewAssociationDepositIncreaseRequestRequest",
+        'Required parameter "previewAssociationDepositIncreaseRequestRequest" was null or undefined when calling associationsApiDepositIncreasePreviewCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/associations/api/deposit_increase_preview`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: PreviewAssociationDepositIncreaseRequestRequestToJSON(
+          requestParameters["previewAssociationDepositIncreaseRequestRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      AssociationDepositIncreasePreviewFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async associationsApiDepositIncreasePreviewCreate(
+    requestParameters: AssociationsApiDepositIncreasePreviewCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<AssociationDepositIncreasePreview> {
+    const response = await this.associationsApiDepositIncreasePreviewCreateRaw(
+      requestParameters,
+      initOverrides,
+    );
     return await response.value();
   }
 

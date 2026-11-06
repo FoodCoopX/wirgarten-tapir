@@ -11,6 +11,12 @@ from django.db import close_old_connections, transaction
 from django.test import TransactionTestCase
 from lxml import etree
 
+from tapir.associations.services.association_deposit_increase_preview import (
+    AssociationDepositIncreasePreview,
+)
+from tapir.associations.services.association_deposit_signup_handler import (
+    AssociationDepositSignupHandler,
+)
 from tapir.associations.services.association_deposit_increase_recorder import (
     AssociationDepositIncreaseRecorder,
 )
@@ -19,6 +25,7 @@ from tapir.associations.services.association_deposit_agreement_authorizer import
 )
 from tapir.associations.models import (
     AssociationDepositAgreementAuthorizedLogEntry,
+    AssociationDepositAccount,
     AssociationDepositPaymentCreatedLogEntry,
     AssociationDepositReceipt,
     AssociationDepositIncreasedLogEntry,
@@ -118,6 +125,21 @@ class TestAssociationDepositPaymentRaces(TapirFactoryMixin, TransactionTestCase)
                         )
                     except ValidationError as error:
                         if "inzwischen" in str(error):
+                            return "stale"
+                        raise
+                if action.startswith("confirmed_increase"):
+                    try:
+                        return (
+                            AssociationDepositIncreaseRecorder.increase_agreed_deposit(
+                                member,
+                                self.increase_requests[action][0],
+                                member,
+                                {},
+                                confirmation=self.increase_requests[action][1],
+                            ).pk
+                        )
+                    except ValidationError as error:
+                        if "inzwischen" in str(error) or "nur erhöht" in str(error):
                             return "stale"
                         raise
                 if action == "payment":
@@ -411,3 +433,76 @@ class TestAssociationDepositPaymentRaces(TapirFactoryMixin, TransactionTestCase)
         else:
             self.assertEqual(1, self.account.receipts.count())
             self.assertEqual(Decimal("175"), payment.amount)
+
+    def prepare_confirmed_standard_increases(self):
+        self._set_race_parameter(
+            ParameterKeys.ASSOCIATION_DEPOSIT_INSTALMENTS_ENABLED, True
+        )
+        self._set_race_parameter(
+            ParameterKeys.ASSOCIATION_DEPOSIT_ALLOW_MEMBER_INCREASE, True
+        )
+        self.account.delete()
+        AssociationDepositSignupHandler.create_signup_deposit(
+            self.member,
+            Decimal("200"),
+            datetime.date(2026, 11, 5),
+            True,
+            self.member,
+            {},
+            payment_option="standard_instalments",
+            expected_instalments=4,
+        )
+        self.account = AssociationDepositAccount.objects.get(member=self.member)
+        self.increase_requests = {}
+        for amount in [Decimal("250"), Decimal("300")]:
+            preview = AssociationDepositIncreasePreview.build_preview(
+                self.member, amount, {}
+            )
+            self.increase_requests["confirmed_increase_" + str(amount)] = (
+                amount,
+                preview["confirmation"],
+            )
+
+    @staticmethod
+    def _set_race_parameter(key, value):
+        TapirParameter.objects.filter(key=key).update(value=str(value))
+
+    def test_concurrent_identical_confirmed_increases_create_one_standard_increase(
+        self,
+    ):
+        self.prepare_confirmed_standard_increases()
+        results = self.run_requests(
+            ["confirmed_increase_250", "confirmed_increase_250"]
+        )
+        self.assertEqual(results[0], results[1])
+        self.assertEqual(
+            [Decimal("62.50")] * 4,
+            list(self.account.payments.values_list("amount", flat=True)),
+        )
+        self.assertEqual(1, AssociationDepositIncreasedLogEntry.objects.count())
+
+    def test_competing_confirmed_targets_require_reconfirmation_for_second_writer(self):
+        self.prepare_confirmed_standard_increases()
+        results = self.run_requests(
+            ["confirmed_increase_250", "confirmed_increase_300"]
+        )
+        self.assertEqual(1, results.count("stale"))
+        self.account.refresh_from_db()
+        self.assertEqual(
+            self.account.agreed_amount,
+            sum(self.account.payments.values_list("amount", flat=True)),
+        )
+        self.assertEqual(1, AssociationDepositIncreasedLogEntry.objects.count())
+
+    def test_receipt_racing_confirmed_standard_increase_is_included_or_rejected_as_stale(
+        self,
+    ):
+        self.prepare_confirmed_standard_increases()
+        results = self.run_requests(["confirmed_increase_250", "receipt"])
+        self.account.refresh_from_db()
+        self.assertEqual(1, self.account.receipts.count())
+        expected = Decimal("200") if results[0] == "stale" else Decimal("250")
+        self.assertEqual(expected, self.account.agreed_amount)
+        self.assertEqual(
+            expected - 25, sum(self.account.payments.values_list("amount", flat=True))
+        )
