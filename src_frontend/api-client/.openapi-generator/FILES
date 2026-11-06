@@ -18,7 +18,11 @@ index.ts
 models/AdminSetAssociationMembershipRequestRequest.ts
 models/AssignmentLogEntry.ts
 models/AssignmentLogEntryStatusEnum.ts
+models/AssociationDepositDetails.ts
+models/AssociationDepositIncreasePreview.ts
+models/AssociationDepositPaymentDetails.ts
 models/AssociationDepositPaymentOptionEnum.ts
+models/AssociationDepositScheduledPayment.ts
 models/AssociationDepositSettings.ts
 models/AssociationMembership.ts
 models/AssociationMembershipType.ts
@@ -115,6 +119,7 @@ models/GroupedEmailDispatch.ts
 models/GrowingPeriod.ts
 models/GrowingPeriodRequest.ts
 models/GrowingPeriodWithDeliveryDayAdjustments.ts
+models/IncreaseAssociationDepositRequestRequest.ts
 models/Ingredient.ts
 models/IngredientRequest.ts
 models/Joker.ts
@@ -246,6 +251,7 @@ models/PreferredBreadStatistics.ts
 models/PreferredBreadsBulkUpdate.ts
 models/PreferredBreadsBulkUpdateRequest.ts
 models/PreferredLanguageEnum.ts
+models/PreviewAssociationDepositIncreaseRequestRequest.ts
 models/Product.ts
 models/ProductBasketSizeEquivalence.ts
 models/ProductBasketSizeEquivalenceRequest.ts

@@ -8,11 +8,13 @@ import TapirToastContainer from "../../components/TapirToastContainer.tsx";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
+import AssociationDepositCard from "../association_deposit/AssociationDepositCard.tsx";
 import { getCurrentMembership } from "./getCurrentMembership.tsx";
 import { getFutureMemberships } from "./getFutureMemberships.tsx";
 import { getPastMemberships } from "./getPastMemberships.tsx";
 
 interface AssociationMembershipCardProps {
+  onDepositChanged: () => void;
   memberId: string;
   csrfToken: string;
 }
@@ -20,6 +22,7 @@ interface AssociationMembershipCardProps {
 const AssociationMembershipCard: React.FC<AssociationMembershipCardProps> = ({
   memberId,
   csrfToken,
+  onDepositChanged,
 }) => {
   const api = useApi(AssociationsApi, csrfToken);
   const [loading, setLoading] = useState(true);
@@ -101,6 +104,11 @@ const AssociationMembershipCard: React.FC<AssociationMembershipCardProps> = ({
           </Card.Footer>
         )}
       </Card>
+      <AssociationDepositCard
+        memberId={memberId}
+        csrfToken={csrfToken}
+        onDepositChanged={onDepositChanged}
+      />
       <TapirToastContainer
         toastDatas={toastDatas}
         setToastDatas={setToastDatas}

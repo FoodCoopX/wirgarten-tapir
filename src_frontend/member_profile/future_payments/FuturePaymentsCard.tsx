@@ -15,6 +15,7 @@ import FuturePaymentsModal from "./FuturePaymentsModal.tsx";
 import { groupTransactionsByDueDate } from "./groupTransactionsByDueDate.ts";
 
 interface FuturePaymentsCardProps {
+  refreshVersion: number;
   memberId: string;
   csrfToken: string;
   deliveryChargeEnabled: boolean;
@@ -24,6 +25,7 @@ const FuturePaymentsCard: React.FC<FuturePaymentsCardProps> = ({
   memberId,
   csrfToken,
   deliveryChargeEnabled,
+  refreshVersion,
 }) => {
   const api = useApi(PaymentsApi, csrfToken);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
@@ -60,7 +62,7 @@ const FuturePaymentsCard: React.FC<FuturePaymentsCardProps> = ({
         );
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [memberId, refreshVersion]);
 
   function getEarliestDueDateAsString() {
     const dueDates = extendedPayments.map((payment) =>

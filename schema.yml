@@ -73,6 +73,34 @@ paths:
               schema:
                 type: string
           description: ''
+  /associations/api/deposit_increase_preview:
+    post:
+      operationId: associations_api_deposit_increase_preview_create
+      tags:
+      - associations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PreviewAssociationDepositIncreaseRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PreviewAssociationDepositIncreaseRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PreviewAssociationDepositIncreaseRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssociationDepositIncreasePreview'
+          description: ''
   /associations/api/existing_member_updates_membership:
     post:
       operationId: associations_api_existing_member_updates_membership_create
@@ -121,6 +149,55 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MemberAssociationMembershipDetails'
+          description: ''
+  /associations/api/member_deposit:
+    get:
+      operationId: associations_api_member_deposit_retrieve
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - associations
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssociationDepositDetails'
+          description: ''
+    post:
+      operationId: associations_api_member_deposit_create
+      tags:
+      - associations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IncreaseAssociationDepositRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/IncreaseAssociationDepositRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/IncreaseAssociationDepositRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssociationDepositDetails'
           description: ''
   /associations/api/number_of_association_members_per_month:
     get:
@@ -8741,6 +8818,166 @@ components:
         * `no_favorites` - no_favorites
         * `got_favorite` - got_favorite
         * `no_match` - no_match
+    AssociationDepositDetails:
+      type: object
+      properties:
+        settings:
+          $ref: '#/components/schemas/AssociationDepositSettings'
+        visible:
+          type: boolean
+        agreed_amount:
+          type: number
+          format: double
+          maximum: 1000000
+          minimum: -1000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+          nullable: true
+        received_amount:
+          type: number
+          format: double
+          maximum: 10000000000
+          minimum: -10000000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+        committed_amount:
+          type: number
+          format: double
+          maximum: 10000000000
+          minimum: -10000000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+        pending_amount:
+          type: number
+          format: double
+          maximum: 10000000000
+          minimum: -10000000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+        refunded_amount:
+          type: number
+          format: double
+          maximum: 10000000000
+          minimum: -10000000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+        retained_amount:
+          type: number
+          format: double
+          maximum: 10000000000
+          minimum: -10000000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+        refund_requires_agreement:
+          type: boolean
+        stopped_amount:
+          type: number
+          format: double
+          maximum: 10000000000
+          minimum: -10000000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+        can_increase:
+          type: boolean
+        state:
+          type: string
+        overpayment_credit:
+          type: number
+          format: double
+          maximum: 10000000000
+          minimum: -10000000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+          nullable: true
+        payments:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssociationDepositPaymentDetails'
+      required:
+      - agreed_amount
+      - can_increase
+      - committed_amount
+      - overpayment_credit
+      - payments
+      - pending_amount
+      - received_amount
+      - refund_requires_agreement
+      - refunded_amount
+      - retained_amount
+      - settings
+      - state
+      - stopped_amount
+      - visible
+    AssociationDepositIncreasePreview:
+      type: object
+      properties:
+        total_amount:
+          type: number
+          format: double
+          maximum: 1000000
+          minimum: -1000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+        received_amount:
+          type: number
+          format: double
+          maximum: 10000000000
+          minimum: -10000000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+        committed_amount:
+          type: number
+          format: double
+          maximum: 10000000000
+          minimum: -10000000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+        pending_amount:
+          type: number
+          format: double
+          maximum: 10000000000
+          minimum: -10000000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+        payments:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssociationDepositScheduledPayment'
+        confirmation:
+          type: string
+      required:
+      - committed_amount
+      - confirmation
+      - payments
+      - pending_amount
+      - received_amount
+      - total_amount
+    AssociationDepositPaymentDetails:
+      type: object
+      properties:
+        amount:
+          type: number
+          format: double
+          maximum: 1000000
+          minimum: -1000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+        due_date:
+          type: string
+          format: date
+        instalment_number:
+          type: integer
+          nullable: true
+        id:
+          type: string
+        status:
+          type: string
+      required:
+      - amount
+      - due_date
+      - id
+      - instalment_number
+      - status
     AssociationDepositPaymentOptionEnum:
       enum:
       - once
@@ -8751,6 +8988,26 @@ components:
         * `once` - once
         * `standard_instalments` - standard_instalments
         * `hardship` - hardship
+    AssociationDepositScheduledPayment:
+      type: object
+      properties:
+        amount:
+          type: number
+          format: double
+          maximum: 1000000
+          minimum: -1000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+        due_date:
+          type: string
+          format: date
+        instalment_number:
+          type: integer
+          nullable: true
+      required:
+      - amount
+      - due_date
+      - instalment_number
     AssociationDepositSettings:
       type: object
       properties:
@@ -12379,6 +12636,26 @@ components:
       - joker_restrictions
       - jokers_enabled
       - max_jokers_per_member
+    IncreaseAssociationDepositRequestRequest:
+      type: object
+      properties:
+        member_id:
+          type: string
+          minLength: 1
+        total_amount:
+          type: number
+          format: double
+          maximum: 1000000
+          minimum: -1000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+        confirmation:
+          type: string
+          minLength: 1
+      required:
+      - confirmation
+      - member_id
+      - total_amount
     Ingredient:
       type: object
       properties:
@@ -15292,6 +15569,22 @@ components:
       type: string
       description: "* `de` - \U0001F1E9\U0001F1EA Deutsch\n* `en` - \U0001F1EC\U0001F1E7
         English"
+    PreviewAssociationDepositIncreaseRequestRequest:
+      type: object
+      properties:
+        member_id:
+          type: string
+          minLength: 1
+        total_amount:
+          type: number
+          format: double
+          maximum: 1000000
+          minimum: -1000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+      required:
+      - member_id
+      - total_amount
     Product:
       type: object
       properties:

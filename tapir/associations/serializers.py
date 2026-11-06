@@ -121,3 +121,81 @@ class AssociationDepositSettingsSerializer(Serializer):
     instalment_count = serializers.IntegerField()
     hardship_enabled = serializers.BooleanField()
     hardship_label = CharField()
+
+
+class AssociationDepositScheduledPaymentSerializer(Serializer):
+    amount = serializers.DecimalField(
+        max_digits=8, decimal_places=2, coerce_to_string=False
+    )
+    due_date = DateField()
+    instalment_number = IntegerField(allow_null=True)
+
+
+class AssociationDepositPaymentDetailsSerializer(
+    AssociationDepositScheduledPaymentSerializer
+):
+    id = CharField()
+    status = CharField()
+
+
+class AssociationDepositDetailsSerializer(Serializer):
+    settings = AssociationDepositSettingsSerializer()
+    visible = serializers.BooleanField()
+    agreed_amount = serializers.DecimalField(
+        max_digits=8, decimal_places=2, coerce_to_string=False, allow_null=True
+    )
+    received_amount = serializers.DecimalField(
+        max_digits=12, decimal_places=2, coerce_to_string=False
+    )
+    committed_amount = serializers.DecimalField(
+        max_digits=12, decimal_places=2, coerce_to_string=False
+    )
+    pending_amount = serializers.DecimalField(
+        max_digits=12, decimal_places=2, coerce_to_string=False
+    )
+    refunded_amount = serializers.DecimalField(
+        max_digits=12, decimal_places=2, coerce_to_string=False
+    )
+    retained_amount = serializers.DecimalField(
+        max_digits=12, decimal_places=2, coerce_to_string=False
+    )
+    refund_requires_agreement = serializers.BooleanField()
+    stopped_amount = serializers.DecimalField(
+        max_digits=12, decimal_places=2, coerce_to_string=False
+    )
+    can_increase = serializers.BooleanField()
+    state = CharField()
+    overpayment_credit = serializers.DecimalField(
+        max_digits=12, decimal_places=2, coerce_to_string=False, allow_null=True
+    )
+    payments = AssociationDepositPaymentDetailsSerializer(many=True)
+
+
+class PreviewAssociationDepositIncreaseRequestSerializer(Serializer):
+    member_id = CharField()
+    total_amount = serializers.DecimalField(
+        max_digits=8, decimal_places=2, coerce_to_string=False
+    )
+
+
+class IncreaseAssociationDepositRequestSerializer(
+    PreviewAssociationDepositIncreaseRequestSerializer
+):
+    confirmation = CharField()
+
+
+class AssociationDepositIncreasePreviewSerializer(Serializer):
+    total_amount = serializers.DecimalField(
+        max_digits=8, decimal_places=2, coerce_to_string=False
+    )
+    received_amount = serializers.DecimalField(
+        max_digits=12, decimal_places=2, coerce_to_string=False
+    )
+    committed_amount = serializers.DecimalField(
+        max_digits=12, decimal_places=2, coerce_to_string=False
+    )
+    pending_amount = serializers.DecimalField(
+        max_digits=12, decimal_places=2, coerce_to_string=False
+    )
+    payments = AssociationDepositScheduledPaymentSerializer(many=True)
+    confirmation = CharField()
