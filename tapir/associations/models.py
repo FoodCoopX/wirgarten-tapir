@@ -186,3 +186,7 @@ class AssociationDepositAgreementAuthorizedLogEntry(ModelLogEntry):
     request_key = models.UUIDField(unique=True)
     request_hash = models.CharField(max_length=64)
     template_name = "associations/log/deposit_agreement_authorized.html"
+
+
+class AssociationDepositImportedLogEntry(ModelLogEntry):
+    template_name = "associations/log/deposit_imported.html"
