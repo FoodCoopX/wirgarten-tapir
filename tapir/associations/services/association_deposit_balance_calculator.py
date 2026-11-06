@@ -30,6 +30,12 @@ class AssociationDepositBalanceCalculator:
         refunded = AssociationDepositRefund.objects.filter(
             account__member=member, refunded_on__lte=get_today(cache)
         ).aggregate(total=Sum("amount"))["total"] or Decimal("0")
+        return AssociationDepositBalanceCalculator.from_totals(
+            received, committed, refunded
+        )
+
+    @staticmethod
+    def from_totals(received: Decimal, committed: Decimal, refunded: Decimal) -> dict:
         return {
             "received_amount": received,
             "committed_amount": committed,

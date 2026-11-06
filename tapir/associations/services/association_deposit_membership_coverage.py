@@ -28,12 +28,16 @@ class AssociationDepositMembershipCoverage:
 
     @staticmethod
     def _read_periods(member, cache: dict) -> list[tuple]:
-        periods = []
-        for start, end in (
+        return AssociationDepositMembershipCoverage.merge_periods(
             AssociationMembership.objects.filter(member=member)
             .order_by("start_date", "pk")
             .values_list("start_date", "end_date")
-        ):
+        )
+
+    @staticmethod
+    def merge_periods(memberships) -> list[tuple]:
+        periods = []
+        for start, end in memberships:
             end = end or datetime.date.max
             if periods and (start - periods[-1][1]).days <= 1:
                 periods[-1] = (periods[-1][0], max(end, periods[-1][1]))

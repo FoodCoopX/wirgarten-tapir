@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from django.db.models import Q, Sum
+from django.db.models import Q
 
 from tapir.associations.services.association_deposit_membership_coverage import (
     AssociationDepositMembershipCoverage,
@@ -19,22 +19,16 @@ from tapir.wirgarten.utils import get_today
 class AssociationDepositDetailsProvider:
     @staticmethod
     def get_deposit_details(member: Member, cache: dict) -> dict:
-        settings = AssociationDepositPolicy.get_settings(cache)
-        account = AssociationDepositAccount.objects.filter(member=member).first()
-        agreed = account.agreed_amount if account else None
+        account = (
+            AssociationDepositAccount.objects.select_related("member")
+            .filter(member=member)
+            .first()
+        )
         balance = AssociationDepositBalanceCalculator.get_balance(member, cache)
-        pending = Decimal("0")
-        if account:
-            pending = account.payments.filter(
-                transaction=None, status=Payment.PaymentStatus.DUE
-            ).aggregate(total=Sum("amount"))["total"] or Decimal("0")
         has_membership = (
             AssociationMembership.objects.filter(member=member)
             .filter(Q(end_date=None) | Q(end_date__gte=get_today(cache)))
             .exists()
-        )
-        state = AssociationDepositDetailsProvider._get_account_state(
-            account, agreed, cache
         )
         payments = (
             list(
@@ -49,6 +43,28 @@ class AssociationDepositDetailsProvider:
             )
             if account
             else []
+        )
+        return AssociationDepositDetailsProvider.build_details(
+            account, balance, payments, has_membership, cache
+        )
+
+    @staticmethod
+    def build_details(
+        account, balance: dict, payments: list, has_membership: bool, cache: dict
+    ) -> dict:
+        settings = AssociationDepositPolicy.get_settings(cache)
+        agreed = account.agreed_amount if account else None
+        pending = sum(
+            (
+                payment["amount"]
+                for payment in payments
+                if payment["transaction_id"] is None
+                and payment["status"] == Payment.PaymentStatus.DUE
+            ),
+            Decimal("0"),
+        )
+        state = AssociationDepositDetailsProvider._get_account_state(
+            account, agreed, cache
         )
         stopped = AssociationDepositDetailsProvider._mark_stopped_payments(
             account, payments, cache
