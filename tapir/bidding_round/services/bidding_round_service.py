@@ -19,6 +19,7 @@ from tapir.bidding_round.models import (
     BiddingRoundProductPrice,
 )
 from tapir.bidding_round.services.bid_validator import BidValidator
+from tapir.bidding_round.services.bid_content_comparer import BidContentComparer
 from tapir.bidding_round.services.bidding_round_mail_token_builder import (
     BiddingRoundMailTokenBuilder,
 )
@@ -499,13 +500,19 @@ class BiddingRoundService:
 
             bid_exists = Bid.objects.filter(member=member, round=bidding_round).exists()
             bid = cls.get_or_create_bid(member, bidding_round, cache=cache)
-            bid.pickup_location_id = pickup_location_id
-            bid.save()
-
-            bid.items.all().delete()
-            BidItem.objects.bulk_create(
-                [cls._build_bid_item(bid, item) for item in items]
+            proposed_items = [cls._build_bid_item(bid, item) for item in items]
+            items_changed = not BidContentComparer.items_are_equal(
+                bid.items.all(), proposed_items
             )
+            pickup_changed = bid.pickup_location_id != pickup_location_id
+            if bid_exists and not items_changed and not pickup_changed:
+                return bid
+            bid.pickup_location_id = pickup_location_id
+            bid.admin_confirmed = None
+            bid.save()
+            if items_changed:
+                bid.items.all().delete()
+                BidItem.objects.bulk_create(proposed_items)
 
         TransactionalTrigger.fire_action(
             trigger_data=TransactionalTriggerData(
@@ -564,17 +571,30 @@ class BiddingRoundService:
                         )
                     )
 
+            proposed_items = (
+                [cls._build_bid_item(bid, item) for item in items]
+                if items is not None
+                else None
+            )
+            items_changed = (
+                proposed_items is not None
+                and not BidContentComparer.items_are_equal(
+                    bid.items.all(), proposed_items
+                )
+            )
+            content_changed = (
+                items_changed or bid.pickup_location_id != pickup_location_id
+            )
             bid.pickup_location_id = pickup_location_id
+            if content_changed:
+                bid.admin_confirmed = None
             if entered_by_admin is not None:
                 bid.entered_by_admin = entered_by_admin
             if admin_confirmed is not None:
                 bid.admin_confirmed = get_now(cache=cache) if admin_confirmed else None
             bid.save()
-
-            if items is not None:
+            if items_changed:
                 bid.items.all().delete()
-                BidItem.objects.bulk_create(
-                    [cls._build_bid_item(bid, item) for item in items]
-                )
+                BidItem.objects.bulk_create(proposed_items)
 
         return bid
