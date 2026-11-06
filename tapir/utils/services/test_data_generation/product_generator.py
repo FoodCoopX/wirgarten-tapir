@@ -4,6 +4,9 @@ from tapir.bestell_wizard.models import ProductTypeAccordionInBestellWizard
 from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.pickup_locations.models import ProductBasketSizeEquivalence
 from tapir.utils.config import Organization
+from tapir.utils.services.test_data_generation.vierlande_generator import (
+    VierlandeGenerator,
+)
 from tapir.wirgarten.constants import WEEKLY, EVEN_WEEKS, NO_DELIVERY, EVERY_FOUR_WEEKS
 from tapir.wirgarten.models import (
     ProductType,
@@ -30,6 +33,7 @@ class ProductGenerator:
         min_coop_shares: int,
         description_in_bestellwizard: str = "",
         solidarity_choices: str = "",
+        url_of_image_in_bestellwizard: str = "",
     ):
         product = Product.objects.create(
             type=product_type,
@@ -38,7 +42,8 @@ class ProductGenerator:
             min_coop_shares=min_coop_shares,
             description_in_bestellwizard=description_in_bestellwizard,
             solidarity_choices=solidarity_choices,
-            url_of_image_in_bestellwizard=f"https://placehold.co/700x1000?text=Produkt+{name}",
+            url_of_image_in_bestellwizard=url_of_image_in_bestellwizard
+            or f"https://placehold.co/700x1000?text=Produkt+{name}",
         )
 
         # prices were a bit cheaper last year
@@ -129,6 +134,10 @@ class ProductGenerator:
                 cls.generate_products_biotop(product_type_ernteanteile=ernteanteile)
             case Organization.VEREIN:
                 cls.generate_products_verein(product_type_ernteanteile=ernteanteile)
+            case Organization.VIERLANDE:
+                VierlandeGenerator.generate_products(
+                    product_generator=cls, product_type_ernteanteile=ernteanteile
+                )
             case Organization.L2G:
                 cls.generate_products_l2g(product_type_ernteanteile=ernteanteile)
             case Organization.MM:
@@ -499,6 +508,12 @@ class ProductGenerator:
             min_coop_shares=0,
         )
 
+    REALISTIC_CAPACITIES_BY_PRODUCT_TYPE_NAME = {
+        "Ernteanteile": 230,
+        "Hühneranteile": 230,
+        "Hofpunkt": 230,
+    }
+
     @classmethod
     def generate_product_capacities(cls):
         capacities = []
@@ -508,7 +523,9 @@ class ProductGenerator:
                     ProductCapacity(
                         product_type=product_type,
                         period=growing_period,
-                        capacity=1000,
+                        capacity=cls.REALISTIC_CAPACITIES_BY_PRODUCT_TYPE_NAME.get(
+                            product_type.name, 1000
+                        ),
                     )
                 )
         ProductCapacity.objects.bulk_create(capacities)

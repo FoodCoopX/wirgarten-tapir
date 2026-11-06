@@ -27,6 +27,9 @@ from tapir.utils.config import Organization
 from tapir.utils.json_user import JsonUser
 from tapir.utils.models import copy_user_info
 from tapir.utils.services.tapir_cache import TapirCache
+from tapir.utils.services.test_data_generation.vierlande_generator import (
+    VierlandeGenerator,
+)
 from tapir.utils.shortcuts import get_timezone_aware_datetime, get_from_cache_or_compute
 from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.models import (
@@ -87,10 +90,18 @@ class UserGenerator:
             return 250
         if organization == Organization.BAKERY:
             return 60
+        if organization == Organization.VIERLANDE:
+            return VierlandeGenerator.TOTAL_MEMBER_COUNT
         return 200
 
     @classmethod
     def generate_users_and_subscriptions(cls, organization: Organization):
+        if organization == Organization.VIERLANDE:
+            VierlandeGenerator.generate_users_and_subscriptions(
+                user_generator=cls, organization=organization
+            )
+            return
+
         user_count = cls.get_user_count(organization)
         # Users generated with https://randomuser.me
         print(f"Creating {user_count} users, this may take a while")
@@ -136,16 +147,7 @@ class UserGenerator:
         Subscription.objects.update(created_at=F("start_date"))
 
     @classmethod
-    def generate_user(
-        cls,
-        parsed_user,
-        cache,
-        fake,
-        products_from_base_type,
-        additional_products,
-        members_that_need_a_pickup_location,
-        required_products,
-    ):
+    def create_member(cls, parsed_user, cache, fake):
         json_user = JsonUser.from_parsed_user(parsed_user)
         json_user.date_joined = get_timezone_aware_datetime(
             cls.get_random_date_in_range_biased_towards_lower_end(
@@ -175,6 +177,20 @@ class UserGenerator:
             user=member,
             initial_password=member.email.split("@")[0],
         )
+        return member
+
+    @classmethod
+    def generate_user(
+        cls,
+        parsed_user,
+        cache,
+        fake,
+        products_from_base_type,
+        additional_products,
+        members_that_need_a_pickup_location,
+        required_products,
+    ):
+        member = cls.create_member(parsed_user=parsed_user, cache=cache, fake=fake)
 
         member_without_subscriptions = random.random() < 0.20
         min_coop_shares = 0

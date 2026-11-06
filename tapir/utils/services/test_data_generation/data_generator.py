@@ -4,6 +4,7 @@ import factory.random
 from django.core.management import call_command
 
 from tapir.accounts.models import EmailChangeRequest
+from tapir.accounts.services.keycloak_theme_service import KeycloakThemeService
 from tapir.accounts.services.keycloak_user_delete_service import (
     KeycloakUserDeleteService,
 )
@@ -27,8 +28,14 @@ from tapir.log.models import LogEntry
 from tapir.payments.models import MemberCredit
 from tapir.utils.config import Organization
 from tapir.utils.services.test_data_generation.bakery_generator import BakeryGenerator
+from tapir.utils.services.test_data_generation.bidding_round_generator import (
+    BiddingRoundGenerator,
+)
 from tapir.utils.services.test_data_generation.configuration_generator import (
     ConfigurationGenerator,
+)
+from tapir.utils.services.test_data_generation.email_configuration_generator import (
+    EmailConfigurationGenerator,
 )
 from tapir.utils.services.test_data_generation.joker_generator import JokerGenerator
 from tapir.utils.services.test_data_generation.member_credit_generator import (
@@ -42,6 +49,9 @@ from tapir.utils.services.test_data_generation.solidarity_contribution_generator
     SolidarityContributionGenerator,
 )
 from tapir.utils.services.test_data_generation.user_generator import UserGenerator
+from tapir.utils.services.test_data_generation.vierlande_generator import (
+    VierlandeGenerator,
+)
 from tapir.utils.services.test_data_generation.waiting_list_generator import (
     WaitingListGenerator,
 )
@@ -112,7 +122,7 @@ class DataGenerator:
             models = model_class.objects.all()
             models.delete()
 
-        members_to_delete = Member.objects.filter(email__endswith="@example.com")
+        members_to_delete = Member.objects.filter(email__icontains="@example.")
         for member in members_to_delete:
             KeycloakUserDeleteService.delete_user_if_exists(user=member)
         members_to_delete.delete()
@@ -137,6 +147,16 @@ class DataGenerator:
         PickupLocationGenerator.generate_pickup_locations(generate_test_data_for)
         print("Updating configuration...")
         ConfigurationGenerator.update_settings_for_organization(generate_test_data_for)
+        print("Updating Keycloak theme...")
+        try:
+            KeycloakThemeService.set_realm_configuration_for_organization(
+                generate_test_data_for, cache={}
+            )
+        except Exception as error:  # noqa: BLE001 - theming must not block populate
+            print(
+                f"Warning: could not update the Keycloak realm theme ({error}). "
+                "The login page keeps its current theme."
+            )
         if generate_bakery_data:
             BakeryGenerator.generate_masterdata()
         UserGenerator.generate_users_and_subscriptions(generate_test_data_for)
@@ -148,8 +168,14 @@ class DataGenerator:
         WaitingListGenerator.generate_waiting_list(generate_test_data_for)
         print("Creating Solidarity contributions...")
         SolidarityContributionGenerator.generate_solidarity_contributions()
+        print("Creating bidding round...")
+        BiddingRoundGenerator.generate_bidding_round(
+            organization=generate_test_data_for
+        )
         print("Creating member credits...")
         MemberCreditGenerator.generate_member_credits()
+        print("Creating email configurations...")
+        EmailConfigurationGenerator.generate_email_configurations()
         print("Creating payment history...")
         call_command("rebuild_payment_history", "--no-confirm")
         print("Test data generation done")
@@ -209,6 +235,8 @@ class DataGenerator:
             Organization.BAKERY,
         ]:
             return 1
+        if generate_test_data_for == Organization.VIERLANDE:
+            return VierlandeGenerator.STARTING_MONTH
         if generate_test_data_for == Organization.WIRGARTEN:
             return 7
         if generate_test_data_for == Organization.L2G:

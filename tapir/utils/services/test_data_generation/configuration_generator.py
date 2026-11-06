@@ -6,10 +6,14 @@ from tapir.core.config import (
     LEGAL_STATUS_COOPERATIVE,
     LEGAL_STATUS_ASSOCIATION,
     LEGAL_STATUS_COMPANY,
+    THEME_VIERLANDE,
     THEME_TEST,
 )
 from tapir.pickup_locations.config import PICKING_MODE_BASKET, PICKING_MODE_SHARE
 from tapir.utils.config import Organization
+from tapir.utils.services.test_data_generation.vierlande_generator import (
+    VierlandeGenerator,
+)
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
@@ -18,13 +22,19 @@ class ConfigurationGenerator:
     def update_settings_for_organization(cls, organization):
         TapirParameter.objects.filter(key=ParameterKeys.JOKERS_ENABLED).update(
             value=organization
-            in [Organization.BIOTOP, Organization.VEREIN, Organization.BAKERY]
+            in [
+                Organization.BIOTOP,
+                Organization.VEREIN,
+                Organization.VIERLANDE,
+                Organization.BAKERY,
+            ]
         )
 
         legal_statuses = {
             Organization.BIOTOP: LEGAL_STATUS_COOPERATIVE,
             Organization.WIRGARTEN: LEGAL_STATUS_COOPERATIVE,
             Organization.VEREIN: LEGAL_STATUS_ASSOCIATION,
+            Organization.VIERLANDE: LEGAL_STATUS_ASSOCIATION,
             Organization.L2G: LEGAL_STATUS_COMPANY,
             Organization.MM: LEGAL_STATUS_COMPANY,
             Organization.BAKERY: LEGAL_STATUS_COOPERATIVE,
@@ -34,13 +44,18 @@ class ConfigurationGenerator:
         ).update(value=legal_statuses[organization])
 
         TapirParameter.objects.filter(key=ParameterKeys.ORGANISATION_THEME).update(
-            value=THEME_TEST
+            value=(
+                THEME_VIERLANDE
+                if organization == Organization.VIERLANDE
+                else THEME_TEST
+            )
         )
 
         picking_modes = {
             Organization.BIOTOP: PICKING_MODE_BASKET,
             Organization.WIRGARTEN: PICKING_MODE_SHARE,
             Organization.VEREIN: PICKING_MODE_SHARE,
+            Organization.VIERLANDE: PICKING_MODE_SHARE,
             Organization.L2G: PICKING_MODE_SHARE,
             Organization.MM: PICKING_MODE_SHARE,
             Organization.BAKERY: PICKING_MODE_SHARE,
@@ -51,12 +66,16 @@ class ConfigurationGenerator:
 
         TapirParameter.objects.filter(
             key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
-        ).update(value=organization in [Organization.BIOTOP, Organization.MM])
+        ).update(
+            value=organization
+            in [Organization.BIOTOP, Organization.MM, Organization.VIERLANDE]
+        )
 
         delivery_day = {
             Organization.BIOTOP: 4,
             Organization.WIRGARTEN: 2,
             Organization.VEREIN: 2,
+            Organization.VIERLANDE: 2,
             Organization.L2G: 3,
             Organization.MM: 2,
             Organization.BAKERY: 1,
@@ -64,6 +83,10 @@ class ConfigurationGenerator:
         TapirParameter.objects.filter(key=ParameterKeys.DELIVERY_DAY).update(
             value=delivery_day[organization]
         )
+
+        TapirParameter.objects.filter(
+            key=ParameterKeys.DELIVERY_CHARGE_PER_PICKUP_LOCATION_ENABLED
+        ).update(value=True)
 
         if organization == Organization.BIOTOP:
             TapirParameter.objects.filter(key=ParameterKeys.PAYMENT_DUE_DAY).update(
@@ -121,3 +144,6 @@ class ConfigurationGenerator:
                 order_in_bestell_wizard=2,
                 description_in_bestell_wizard="Test description 2",
             )
+
+        if organization == Organization.VIERLANDE:
+            VierlandeGenerator.update_configuration()

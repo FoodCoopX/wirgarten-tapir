@@ -48,10 +48,7 @@ class JsonUser:
         date_joined = parsed_json["registered"]["date"].replace("Z", "+00:00")
         date_joined = datetime.datetime.fromisoformat(date_joined)
 
-        if parsed_json["nat"] == "DE":
-            preferred_language = "de"
-        else:
-            preferred_language = "en"
+        preferred_language = "de"
 
         num_shares = max(parsed_json["location"]["street"]["number"] % 10, 1)
 
