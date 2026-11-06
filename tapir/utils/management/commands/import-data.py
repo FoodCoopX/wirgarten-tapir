@@ -18,6 +18,9 @@ from tapir.accounts.services.keycloak_user_delete_service import (
 from tapir.associations.services.association_deposit_import_deletion_validator import (
     AssociationDepositImportDeletionValidator,
 )
+from tapir.associations.services.association_deposit_importer import (
+    AssociationDepositImporter,
+)
 from tapir.deliveries.models import Joker
 from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES
 from tapir.payments.models import MemberCredit
@@ -62,7 +65,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--type",
             nargs=1,
-            choices=["members", "shares", "subscriptions"],
+            choices=["members", "shares", "subscriptions", "deposits"],
         )
         parser.add_argument("--file", nargs=1)
         parser.add_argument("--delete-all", action="store_true")
@@ -190,6 +193,10 @@ class Command(BaseCommand):
                 self.verify_csv(cleaned_headers, raw_headers, reader)
                 return
 
+            if import_type == "deposits" and delete_all:
+                raise CommandError(
+                    "Einlagen-Eröffnungsimport unterstützt kein --delete-all."
+                )
             if import_type == "members" and any(
                 h.startswith("Einlage ") for h in cleaned_headers
             ):
@@ -279,7 +286,7 @@ class Command(BaseCommand):
         self,
         reader: DictReader[str],
         update_existing: bool,
-        import_type: Literal["members", "shares", "subscriptions"],
+        import_type: Literal["members", "shares", "subscriptions", "deposits"],
         print_stacktrace: bool,
         dry_run: bool,
     ):
@@ -288,10 +295,10 @@ class Command(BaseCommand):
         created = 0
         updated = 0
 
-        if import_type not in ["members", "shares", "subscriptions"]:
+        if import_type not in ["members", "shares", "subscriptions", "deposits"]:
             raise TapirDataImportException(f"Unknown import type: {import_type}")
 
-        if import_type == "members":
+        if import_type in ("members", "deposits"):
             reader = list(reader)
             list(
                 Member.objects.select_for_update(no_key=True)
@@ -306,6 +313,10 @@ class Command(BaseCommand):
             try:
                 with transaction.atomic():
                     match import_type:
+                        case "deposits":
+                            import_status = AssociationDepositImporter.import_deposit(
+                                row, cache
+                            )
                         case "members":
                             import_status = MemberImporter.import_member(
                                 row=row,
