@@ -1,10 +1,12 @@
 import datetime
+import uuid
 from concurrent.futures import ThreadPoolExecutor
 from decimal import Decimal
 from threading import Barrier
 from unittest.mock import patch
 
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
 from django.db import close_old_connections, transaction
 from django.test import TransactionTestCase
 from lxml import etree
@@ -12,7 +14,11 @@ from lxml import etree
 from tapir.associations.services.association_deposit_increase_recorder import (
     AssociationDepositIncreaseRecorder,
 )
+from tapir.associations.services.association_deposit_agreement_authorizer import (
+    AssociationDepositAgreementAuthorizer,
+)
 from tapir.associations.models import (
+    AssociationDepositAgreementAuthorizedLogEntry,
     AssociationDepositPaymentCreatedLogEntry,
     AssociationDepositReceipt,
     AssociationDepositIncreasedLogEntry,
@@ -77,6 +83,9 @@ class TestAssociationDepositPaymentRaces(TapirFactoryMixin, TransactionTestCase)
         self.member = MemberFactory(
             iban="NL88ABNA2011060885", account_owner="Kontoinhaber"
         )
+        AssociationMembershipFactory(
+            member=self.member, start_date=datetime.date(2026, 11, 5), end_date=None
+        )
         self.account = AssociationDepositAccountFactory(
             member=self.member,
             agreed_amount=Decimal("200"),
@@ -91,6 +100,26 @@ class TestAssociationDepositPaymentRaces(TapirFactoryMixin, TransactionTestCase)
             try:
                 member = Member.objects.get(pk=self.member.pk)
                 barrier.wait(timeout=10)
+                if action.startswith("agreement"):
+                    try:
+                        return (
+                            AssociationDepositAgreementAuthorizer.authorize_agreement(
+                                member,
+                                Decimal("100"),
+                                datetime.date(2026, 11, 5),
+                                4,
+                                datetime.date(2026, 11, 5),
+                                "Dokumentierte Zustimmung",
+                                0,
+                                self.agreement_keys[action],
+                                self.agreement_admin,
+                                {},
+                            ).pk
+                        )
+                    except ValidationError as error:
+                        if "inzwischen" in str(error):
+                            return "stale"
+                        raise
                 if action == "payment":
                     return AssociationDepositPaymentSynchronizer.create_regular_deposit_payment(
                         member, member, {}
@@ -224,6 +253,9 @@ class TestAssociationDepositPaymentRaces(TapirFactoryMixin, TransactionTestCase)
 
     def test_members_can_create_payments_for_each_other_concurrently(self):
         other = MemberFactory(iban="NL88ABNA2011060885", account_owner="Kontoinhaber")
+        AssociationMembershipFactory(
+            member=other, start_date=datetime.date(2026, 11, 5), end_date=None
+        )
         AssociationDepositAccountFactory(
             member=other,
             agreed_amount=Decimal("200"),
@@ -325,3 +357,31 @@ class TestAssociationDepositPaymentRaces(TapirFactoryMixin, TransactionTestCase)
         self.assertEqual(Decimal("250"), self.account.agreed_amount)
         self.assertEqual(Decimal("25"), self.account.receipts.get().amount)
         self.assertEqual(Decimal("225"), self.account.payments.get().amount)
+
+    def test_concurrent_admin_retries_create_one_agreement_and_four_rates(self):
+        self.agreement_admin = MemberFactory(is_superuser=True)
+        self.agreement_keys = {"agreement": uuid.uuid4()}
+        results = self.run_requests(["agreement", "agreement"])
+        self.assertEqual(results[0], results[1])
+        self.assertEqual(
+            1, AssociationDepositAgreementAuthorizedLogEntry.objects.count()
+        )
+        self.assertEqual(
+            [Decimal("25")] * 4,
+            list(self.account.payments.values_list("amount", flat=True)),
+        )
+
+    def test_concurrent_different_admin_requests_reject_the_stale_revision(self):
+        self.agreement_admin = MemberFactory(is_superuser=True)
+        self.agreement_keys = {
+            "agreement_one": uuid.uuid4(),
+            "agreement_two": uuid.uuid4(),
+        }
+        results = self.run_requests(["agreement_one", "agreement_two"])
+        self.assertEqual(1, results.count("stale"))
+        self.assertEqual(
+            1, AssociationDepositAgreementAuthorizedLogEntry.objects.count()
+        )
+        self.assertEqual(4, self.account.payments.count())
+        self.account.refresh_from_db()
+        self.assertEqual(1, self.account.agreement_revision)

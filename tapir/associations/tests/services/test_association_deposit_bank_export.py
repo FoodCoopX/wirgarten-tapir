@@ -5,6 +5,7 @@ from unittest.mock import patch
 from django.core import mail
 from lxml import etree
 
+from tapir.associations.tests.factories import AssociationMembershipFactory
 from tapir.associations.services.association_deposit_payment_synchronizer import (
     AssociationDepositPaymentSynchronizer,
 )
@@ -50,6 +51,9 @@ class TestAssociationDepositBankExport(TapirIntegrationTest):
             iban=iban,
             account_owner="Kontoinhaber",
             sepa_consent=datetime.datetime(2026, 11, 1, tzinfo=datetime.UTC),
+        )
+        AssociationMembershipFactory(
+            member=member, start_date=self.today, end_date=None
         )
         account = AssociationDepositAccountFactory(
             member=member, agreed_amount=Decimal(amount), effective_from=self.today

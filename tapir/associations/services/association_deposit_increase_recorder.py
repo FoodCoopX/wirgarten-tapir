@@ -39,6 +39,10 @@ class AssociationDepositIncreaseRecorder:
         account = AssociationDepositAccount.objects.filter(member=member).first()
         if account is None or account.agreed_amount is None:
             raise ValidationError("Es besteht noch keine Einlagenvereinbarung.")
+        if not AssociationDepositPolicy.can_member_increase(account, cache):
+            raise ValidationError(
+                "Diese Einlage kann nur durch eine dokumentierte Verwaltungsvereinbarung geändert werden."
+            )
         if (
             not AssociationMembership.objects.filter(member=member)
             .filter(Q(end_date=None) | Q(end_date__gte=get_today(cache)))
@@ -58,8 +62,11 @@ class AssociationDepositIncreaseRecorder:
             total_amount, cache
         )
         old = freeze_for_log(account)
+        account.agreement_revision += 1
         account.agreed_amount = total_amount
-        account.save(update_fields=["agreed_amount", "updated_at"])
+        account.save(
+            update_fields=["agreed_amount", "agreement_revision", "updated_at"]
+        )
         AssociationDepositIncreasedLogEntry().populate(
             old_frozen=old, new_model=account, actor=actor, user=member
         ).save()

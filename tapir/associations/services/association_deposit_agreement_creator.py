@@ -31,10 +31,16 @@ class AssociationDepositAgreementCreator:
         AssociationDepositAmountValidator.validate_positive_amount(amount)
         Member.objects.select_for_update(no_key=True).get(pk=member.pk)
         account, _ = AssociationDepositAccount.objects.get_or_create(member=member)
+        if account.hardship_requested_at is not None and account.agreed_amount is None:
+            raise ValidationError(
+                "Zuerst muss eine dokumentierte individuelle Vereinbarung vorliegen."
+            )
         if account.agreed_amount is not None:
             if (
                 account.agreed_amount != amount
                 or account.effective_from != effective_from
+                or account.instalment_count != 1
+                or account.is_individual_agreement
             ):
                 raise ValidationError(
                     "Es besteht bereits eine abweichende Einlagenvereinbarung."
@@ -49,9 +55,21 @@ class AssociationDepositAgreementCreator:
                 "Eine neue reguläre Vereinbarung darf nicht rückdatiert werden."
             )
 
+        account.agreement_revision += 1
         account.agreed_amount = amount
         account.effective_from = effective_from
-        account.save(update_fields=["agreed_amount", "effective_from", "updated_at"])
+        account.instalment_count = 1
+        account.is_individual_agreement = False
+        account.save(
+            update_fields=[
+                "agreed_amount",
+                "effective_from",
+                "instalment_count",
+                "is_individual_agreement",
+                "agreement_revision",
+                "updated_at",
+            ]
+        )
         AssociationDepositAgreementCreatedLogEntry().populate(
             model=account, actor=actor, user=member
         ).save()

@@ -88,6 +88,10 @@ class AssociationMembershipCreatedLogEntry(ModelLogEntry):
 
 class AssociationDepositAccount(TapirModel):
     member = models.OneToOneField(Member, on_delete=models.PROTECT)
+    hardship_requested_at = models.DateTimeField(null=True)
+    agreement_revision = models.PositiveIntegerField(default=0)
+    instalment_count = models.PositiveIntegerField(default=1)
+    is_individual_agreement = models.BooleanField(default=False)
     agreed_amount = models.DecimalField(max_digits=8, decimal_places=2, null=True)
     effective_from = models.DateField(null=True)
 
@@ -103,7 +107,11 @@ class AssociationDepositAccount(TapirModel):
                     )
                 ),
                 name="association_deposit_agreement_complete",
-            )
+            ),
+            models.CheckConstraint(
+                condition=models.Q(instalment_count__gte=1),
+                name="association_deposit_positive_instalments",
+            ),
         ]
 
 
@@ -140,3 +148,13 @@ class AssociationDepositPaymentCreatedLogEntry(ModelLogEntry):
 class AssociationDepositIncreasedLogEntry(UpdateModelLogEntry):
     template_name = "associations/log/deposit_increased.html"
     excluded_fields = ["updated_at"]
+
+
+class AssociationDepositHardshipRequestedLogEntry(ModelLogEntry):
+    template_name = "associations/log/deposit_hardship_requested.html"
+
+
+class AssociationDepositAgreementAuthorizedLogEntry(ModelLogEntry):
+    request_key = models.UUIDField(unique=True)
+    request_hash = models.CharField(max_length=64)
+    template_name = "associations/log/deposit_agreement_authorized.html"

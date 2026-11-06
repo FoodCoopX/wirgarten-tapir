@@ -5,6 +5,7 @@ from tempfile import NamedTemporaryFile
 from django.core.management import call_command
 from django.urls import reverse
 
+from tapir.associations.tests.factories import AssociationMembershipFactory
 from tapir.associations.services.association_deposit_payment_synchronizer import (
     AssociationDepositPaymentSynchronizer,
 )
@@ -47,6 +48,9 @@ class TestAssociationDepositPaymentIntegration(TapirIntegrationTest):
         mock_timezone(self, datetime.datetime(2026, 11, 5, 12))
         self.today = datetime.date(2026, 11, 5)
         self.member = MemberFactory()
+        AssociationMembershipFactory(
+            member=self.member, start_date=self.today, end_date=None
+        )
         self.account = AssociationDepositAccountFactory(
             member=self.member, agreed_amount=Decimal("200"), effective_from=self.today
         )
@@ -110,6 +114,9 @@ class TestAssociationDepositPaymentIntegration(TapirIntegrationTest):
         self.payment.status = Payment.PaymentStatus.PAID
         self.payment.save()
         another = MemberFactory()
+        AssociationMembershipFactory(
+            member=another, start_date=self.today, end_date=None
+        )
         AssociationDepositAccountFactory(
             member=another, agreed_amount=200, effective_from=self.today
         )

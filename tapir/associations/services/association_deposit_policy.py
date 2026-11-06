@@ -2,6 +2,7 @@ from decimal import Decimal
 
 from django.core.exceptions import ValidationError
 
+from tapir.associations.models import AssociationDepositAccount
 from tapir.associations.services.association_deposit_amount_validator import (
     AssociationDepositAmountValidator,
 )
@@ -11,6 +12,21 @@ from tapir.wirgarten.utils import legal_status_is_association
 
 
 class AssociationDepositPolicy:
+    @classmethod
+    def can_member_increase(
+        cls, account: AssociationDepositAccount | None, cache: dict
+    ) -> bool:
+        settings = cls.get_settings(cache)
+        return bool(
+            settings["enabled"]
+            and settings["allow_member_increase"]
+            and account is not None
+            and account.agreed_amount is not None
+            and account.agreed_amount > 0
+            and not account.is_individual_agreement
+            and account.instalment_count == 1
+        )
+
     @staticmethod
     def is_enabled(cache: dict) -> bool:
         return legal_status_is_association(cache=cache) and get_parameter_value(

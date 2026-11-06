@@ -3,6 +3,7 @@ from decimal import Decimal
 
 from django.core.exceptions import ValidationError
 
+from tapir.associations.tests.factories import AssociationMembershipFactory
 from tapir.associations.models import AssociationDepositPaymentCreatedLogEntry
 from tapir.associations.services.association_deposit_payment_synchronizer import (
     AssociationDepositPaymentSynchronizer,
@@ -38,6 +39,9 @@ class TestAssociationDepositPayments(TapirIntegrationTest):
         mock_timezone(self, datetime.datetime(2026, 11, 5, 12))
         self.today = datetime.date(2026, 11, 5)
         self.member = MemberFactory()
+        AssociationMembershipFactory(
+            member=self.member, start_date=self.today, end_date=None
+        )
         self.account = AssociationDepositAccountFactory(
             member=self.member, agreed_amount=Decimal("200"), effective_from=self.today
         )

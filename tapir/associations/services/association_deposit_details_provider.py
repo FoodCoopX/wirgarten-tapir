@@ -41,9 +41,6 @@ class AssociationDepositDetailsProvider:
             ),
             "committed_amount": committed,
             "pending_amount": pending,
-            "can_increase": settings["enabled"]
-            and settings["allow_member_increase"]
-            and agreed is not None
-            and agreed > 0
+            "can_increase": AssociationDepositPolicy.can_member_increase(account, cache)
             and has_membership,
         }
