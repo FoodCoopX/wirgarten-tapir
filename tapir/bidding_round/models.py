@@ -46,6 +46,7 @@ class BiddingRound(BiddingRoundTapirModel):
     end_at = models.DateTimeField(null=False)
     include_auto_renewed = models.BooleanField(default=True)
     contracts_created_at = models.DateTimeField(null=True)
+    contribution_changes_tracked = models.BooleanField(default=False)
     comment = models.TextField(blank=True)
     # Locked average bid: the position on the 0/50/100 axis and the surcharge chosen
     # in the evaluation are frozen here so that contract creation uses exactly the
@@ -241,14 +242,7 @@ class BiddingRoundReplacedSubscription(BiddingRoundTapirModel):
                     serializers.serialize("json", subscriptions)
                 ),
                 "deliveries": json.loads(serializers.serialize("json", deliveries)),
-                "created_links": [
-                    {
-                        "subscription_id": link.subscription_id,
-                        "round_id": link.round_id,
-                        "is_bidder_contract": link.is_bidder_contract,
-                    }
-                    for link in links
-                ],
+                "created_links": json.loads(serializers.serialize("json", links)),
                 "price_logs": [
                     {"log_entry_id": log_entry_id, "subscription_id": subscription_id}
                     for log_entry_id, subscription_id in price_logs
@@ -270,12 +264,32 @@ class BiddingRoundReplacedSubscription(BiddingRoundTapirModel):
         ):
             deserialized.save()
         for link in self.data.get("created_links", []):
-            BiddingRoundCreatedSubscription.objects.get_or_create(
-                subscription_id=link["subscription_id"],
-                round_id=link["round_id"],
-                defaults={"is_bidder_contract": link["is_bidder_contract"]},
-            )
+            if "model" in link:
+                for deserialized in serializers.deserialize("json", json.dumps([link])):
+                    deserialized.save()
+            else:
+                BiddingRoundCreatedSubscription.objects.get_or_create(
+                    subscription_id=link["subscription_id"],
+                    round_id=link["round_id"],
+                    defaults={"is_bidder_contract": link["is_bidder_contract"]},
+                )
         for price_log in self.data.get("price_logs", []):
             SubscriptionPriceChangedLogEntry.objects.filter(
                 id=price_log["log_entry_id"], subscription__isnull=True
             ).update(subscription_id=price_log["subscription_id"])
+
+
+class BiddingRoundContributionChange(TapirModel):
+    round = models.ForeignKey(BiddingRound, on_delete=models.CASCADE)
+    member = models.ForeignKey(Member, on_delete=models.CASCADE)
+    previous_contributions = models.JSONField()
+    applied_contributions = models.JSONField()
+    previous_log_links = models.JSONField()
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["round", "member"],
+                name="unique_round_member_contribution_change",
+            )
+        ]

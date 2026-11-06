@@ -7,6 +7,7 @@ from django.utils.translation import gettext_lazy as _
 
 from tapir.bidding_round.config import CLOSED
 from tapir.bidding_round.models import (
+    BiddingRound,
     BiddingRoundCreatedSubscription,
     BiddingRoundReplacedSubscription,
 )
@@ -14,6 +15,9 @@ from tapir.bidding_round.services.bidding_round_capacity_service import (
     BiddingRoundCapacityService,
 )
 from tapir.bidding_round.services.bidding_round_service import BiddingRoundService
+from tapir.bidding_round.services.round_contribution_service import (
+    RoundContributionService,
+)
 from tapir.bidding_round.services.bidding_round_stats_service import (
     BiddingRoundStatsService,
 )
@@ -25,9 +29,6 @@ from tapir.payments.services.mandate_reference_provider import (
 )
 from tapir.pickup_locations.services.member_pickup_location_setter import (
     MemberPickupLocationSetter,
-)
-from tapir.solidarity_contribution.services.member_solidarity_contribution_service import (
-    MemberSolidarityContributionService,
 )
 from tapir.subscriptions.services.automatic_subscription_renewal_service import (
     AutomaticSubscriptionRenewalService,
@@ -44,6 +45,7 @@ from tapir.wirgarten.utils import get_now
 
 class ContractCreator:
     @classmethod
+    @transaction.atomic
     def create_contracts_from_bids(
         cls,
         bidding_round,
@@ -54,6 +56,9 @@ class ContractCreator:
         create_auto_renewed_contracts=False,
         auto_renewed_member_ids=None,
     ):
+        bidding_round = BiddingRound.objects.select_for_update().get(
+            pk=bidding_round.pk
+        )
         if bidding_round.status != CLOSED:
             raise ValidationError(
                 _("Verträge können erst nach Ende der Beitragsrunde erstellt werden.")
@@ -95,6 +100,7 @@ class ContractCreator:
                 bidding_round, cache=cache
             )
 
+        bidding_round.contribution_changes_tracked = True
         errors = []
         created_subscriptions = []
         for bid in bids:
@@ -128,17 +134,21 @@ class ContractCreator:
                 )
             )
 
-        non_bidder_member_ids = (
-            NonBidderContributionService.apply_non_bidder_contributions(
-                bidding_round, actor=actor, cache=cache
-            )
-        )
-
-        # Only mark the round as done when at least one contract was actually created,
-        # so a failed run can be retried without unlocking.
+        non_bidder_member_ids = []
         if created_subscriptions:
+            non_bidder_member_ids = (
+                NonBidderContributionService.apply_non_bidder_contributions(
+                    bidding_round, actor=actor, cache=cache
+                )
+            )
             bidding_round.contracts_created_at = get_now(cache=cache)
-            bidding_round.save(update_fields=["contracts_created_at", "updated_at"])
+            bidding_round.save(
+                update_fields=[
+                    "contracts_created_at",
+                    "contribution_changes_tracked",
+                    "updated_at",
+                ]
+            )
         logger.info(
             "Bidding round %s contract creation by %s: %s subscriptions created, "
             "%s errors",
@@ -376,7 +386,8 @@ class ContractCreator:
             ),
             Decimal("0"),
         )
-        MemberSolidarityContributionService.assign_contribution_to_member(
+        RoundContributionService.assign_contribution(
+            bidding_round=bidding_round,
             member=bid.member,
             change_date=period.start_date,
             amount=bid_monthly_total - standard_monthly_total,

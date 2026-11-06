@@ -36,6 +36,7 @@ class TestBiddingRoundContractDeletionService(TapirIntegrationTest):
         BiddingRoundCreatedSubscription.objects.create(
             round=round_, subscription=subscription, is_bidder_contract=True
         )
+        round_.contribution_changes_tracked = True
         round_.contracts_created_at = get_now()
         round_.save()
 
@@ -78,6 +79,7 @@ class TestBiddingRoundContractDeletionService(TapirIntegrationTest):
         BiddingRoundCreatedSubscription.objects.create(
             round=round_, subscription=created, is_bidder_contract=True
         )
+        round_.contribution_changes_tracked = True
         round_.contracts_created_at = get_now()
         round_.save()
 

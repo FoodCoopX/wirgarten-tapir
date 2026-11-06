@@ -50,7 +50,10 @@ class TestBiddingRoundMail(TapirIntegrationTest):
         item = build_item(round_product, product)
 
         BiddingRoundService.save_bid(member, round_, [item], cache={})
-        BiddingRoundService.save_bid(member, round_, [item], cache={})
+        mock_fire_action.reset_mock()
+        BiddingRoundService.save_bid(
+            member, round_, [{**item, "amount_1": "90.00"}], cache={}
+        )
 
         _assert_trigger_fired(mock_fire_action, Events.BIDDING_ROUND_BID_UPDATED)
 
