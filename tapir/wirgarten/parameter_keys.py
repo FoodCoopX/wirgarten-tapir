@@ -131,6 +131,77 @@ class ParameterKeys:
         f"{PREFIX}.subscriptions.days_before_growing_period_choice"
     )
 
+    BIDDING_ROUND_ENABLED = f"{PREFIX}.bidding_round.enabled"
+    BIDDING_ROUND_URL_ENABLED = f"{PREFIX}.bidding_round.url_enabled"
+    BIDDING_ROUND_PICKUP_LOCATION_CHANGE_ENABLED = (
+        f"{PREFIX}.bidding_round.pickup_location_change_enabled"
+    )
+    BIDDING_ROUND_STATS_INCLUDE_AUTO_RENEWED = (
+        f"{PREFIX}.bidding_round.stats_include_auto_renewed"
+    )
+    BIDDING_ROUND_STATS_MEMBERSHIP_INCLUDED_IN_PRODUCT_TYPE = (
+        f"{PREFIX}.bidding_round.stats_membership_included_in_product_type"
+    )
+    BIDDING_ROUND_NON_BIDDERS_MIN_AVERAGE = (
+        f"{PREFIX}.bidding_round.non_bidders_min_average"
+    )
+    BIDDING_ROUND_BID_QUANTITY_ENABLED = f"{PREFIX}.bidding_round.bid.quantity_enabled"
+    BIDDING_ROUND_PUBLIC_INTRO_TITLE = f"{PREFIX}.bidding_round.public.intro_title"
+    BIDDING_ROUND_PUBLIC_INTRO_TEXT = f"{PREFIX}.bidding_round.public.intro_text"
+    BIDDING_ROUND_PUBLIC_ENDED_TEXT = f"{PREFIX}.bidding_round.public.ended_text"
+    BIDDING_ROUND_PUBLIC_LOGIN_TITLE = f"{PREFIX}.bidding_round.public.login_title"
+    BIDDING_ROUND_PUBLIC_LOGIN_TEXT = f"{PREFIX}.bidding_round.public.login_text"
+    BIDDING_ROUND_PUBLIC_SUMMARY_TITLE = f"{PREFIX}.bidding_round.public.summary_title"
+    BIDDING_ROUND_PUBLIC_SUBMIT_LABEL = f"{PREFIX}.bidding_round.public.submit_label"
+    BIDDING_ROUND_PUBLIC_PICKUP_LOCATION_TITLE = (
+        f"{PREFIX}.bidding_round.public.pickup_location_title"
+    )
+    BIDDING_ROUND_PUBLIC_PICKUP_LOCATION_TEXT = (
+        f"{PREFIX}.bidding_round.public.pickup_location_text"
+    )
+    BIDDING_ROUND_PUBLIC_STATS_TITLE = f"{PREFIX}.bidding_round.public.stats_title"
+    BIDDING_ROUND_PUBLIC_STATS_TEXT = f"{PREFIX}.bidding_round.public.stats_text"
+    BIDDING_ROUND_PUBLIC_STATS_EXPLANATION = (
+        f"{PREFIX}.bidding_round.public.stats_explanation"
+    )
+    BIDDING_ROUND_PUBLIC_STATS_TRAFFIC_LIGHT_SLIDER_HINT = (
+        f"{PREFIX}.bidding_round.public.stats_traffic_light_slider_hint"
+    )
+    BIDDING_ROUND_PUBLIC_STATS_SIMPLE_LEVELS_SLIDER_HINT = (
+        f"{PREFIX}.bidding_round.public.stats_simple_levels_slider_hint"
+    )
+    BIDDING_ROUND_BID_QUANTITY_LABEL = f"{PREFIX}.bidding_round.bid.quantity_label"
+    BIDDING_ROUND_BID_AMOUNT_LABEL = f"{PREFIX}.bidding_round.bid.amount_label"
+    BIDDING_ROUND_BID_REFERENCE_VALUE_HINT = (
+        f"{PREFIX}.bidding_round.bid.reference_value_hint"
+    )
+    BIDDING_ROUND_BID_SIMPLE_EXPLANATION = (
+        f"{PREFIX}.bidding_round.bid.simple_explanation"
+    )
+    BIDDING_ROUND_BID_TRAFFIC_LIGHT_EXPLANATION = (
+        f"{PREFIX}.bidding_round.bid.traffic_light_explanation"
+    )
+    BIDDING_ROUND_BID_SIMPLE_LEVELS_EXPLANATION = (
+        f"{PREFIX}.bidding_round.bid.simple_levels_explanation"
+    )
+    BIDDING_ROUND_BID_LEVEL_1_LABEL = f"{PREFIX}.bidding_round.bid.level_1_label"
+    BIDDING_ROUND_BID_LEVEL_2_LABEL = f"{PREFIX}.bidding_round.bid.level_2_label"
+    BIDDING_ROUND_BID_LEVEL_3_LABEL = f"{PREFIX}.bidding_round.bid.level_3_label"
+    BIDDING_ROUND_BID_GREEN_LABEL = f"{PREFIX}.bidding_round.bid.green_label"
+    BIDDING_ROUND_BID_YELLOW_LABEL = f"{PREFIX}.bidding_round.bid.yellow_label"
+    BIDDING_ROUND_BID_RED_LABEL = f"{PREFIX}.bidding_round.bid.red_label"
+    BIDDING_ROUND_BID_PICKUP_LOCATION_LABEL = (
+        f"{PREFIX}.bidding_round.bid.pickup_location_label"
+    )
+    BIDDING_ROUND_BID_LIVE_YEARLY_LABEL = (
+        f"{PREFIX}.bidding_round.bid.live_yearly_label"
+    )
+    BIDDING_ROUND_BID_MONTHLY_HINT = f"{PREFIX}.bidding_round.bid.monthly_hint"
+    BIDDING_ROUND_BID_MONTHLY_UNIT = f"{PREFIX}.bidding_round.bid.monthly_unit"
+    BIDDING_ROUND_BID_CONFIRM_TEXT = f"{PREFIX}.bidding_round.bid.confirm_text"
+    BIDDING_ROUND_BID_SUCCESS_TEXT = f"{PREFIX}.bidding_round.bid.success_text"
+    BIDDING_ROUND_BID_ERROR_TEXT = f"{PREFIX}.bidding_round.bid.error_text"
+
     TESTS_OVERRIDE_DATE_PRESET = f"{PREFIX}.tests.override_date_preset"
     TESTS_OVERRIDE_DATE = f"{PREFIX}.tests.override_date"
 

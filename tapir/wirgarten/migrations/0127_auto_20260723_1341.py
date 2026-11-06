@@ -36,6 +36,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("wirgarten", "0126_pickuplocation_route_info"),
+        ("configuration", "0007_tapirparameter_remove_field_required"),
     ]
 
     operations = [

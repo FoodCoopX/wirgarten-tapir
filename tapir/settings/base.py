@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     "tapir.products",
     "tapir.bestell_wizard",
     "tapir.solidarity_contribution",
+    "tapir.bidding_round",
     "tapir.associations",
     "django_tables2",
     "django_filters",

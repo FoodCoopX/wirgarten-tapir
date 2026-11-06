@@ -15,6 +15,9 @@ from tapir.wirgarten.parameter_definitions.parameter_definitions_bakery import (
 from tapir.wirgarten.parameter_definitions.parameter_definitions_bestellwizard import (
     ParameterDefinitionsBestellwizard,
 )
+from tapir.wirgarten.parameter_definitions.parameter_definitions_bidding_round import (
+    ParameterDefinitionsBiddingRound,
+)
 from tapir.wirgarten.parameter_definitions.parameter_definitions_business import (
     ParameterDefinitionsBusiness,
 )
@@ -72,6 +75,9 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
 
     def define_all_parameters(self):
         ParameterDefinitionsBestellwizard.define_all_member_bestellwizard(importer=self)
+        ParameterDefinitionsBiddingRound.define_all_parameters_bidding_round(
+            importer=self
+        )
         ParameterDefinitionsBusiness.define_all_member_business(importer=self)
         ParameterDefinitionsDelivery.define_all_parameters_delivery(importer=self)
         ParameterDefinitionsEmails.define_all_parameters_emails(importer=self)
