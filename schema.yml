@@ -8741,6 +8741,63 @@ components:
         * `no_favorites` - no_favorites
         * `got_favorite` - got_favorite
         * `no_match` - no_match
+    AssociationDepositPaymentOptionEnum:
+      enum:
+      - once
+      - standard_instalments
+      - hardship
+      type: string
+      description: |-
+        * `once` - once
+        * `standard_instalments` - standard_instalments
+        * `hardship` - hardship
+    AssociationDepositSettings:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        name:
+          type: string
+        minimum:
+          type: number
+          format: double
+          maximum: 1000000
+          minimum: -1000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+        increment:
+          type: number
+          format: double
+          maximum: 1000000
+          minimum: -1000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+        supporting_members_required:
+          type: boolean
+        allow_larger_signup:
+          type: boolean
+        allow_member_increase:
+          type: boolean
+        instalments_enabled:
+          type: boolean
+        instalment_count:
+          type: integer
+        hardship_enabled:
+          type: boolean
+        hardship_label:
+          type: string
+      required:
+      - allow_larger_signup
+      - allow_member_increase
+      - enabled
+      - hardship_enabled
+      - hardship_label
+      - increment
+      - instalment_count
+      - instalments_enabled
+      - minimum
+      - name
+      - supporting_members_required
     AssociationMembership:
       type: object
       properties:
@@ -8950,6 +9007,8 @@ components:
     BestellWizardBaseDataResponse:
       type: object
       properties:
+        association_deposit:
+          $ref: '#/components/schemas/AssociationDepositSettings'
         price_of_a_share:
           type: number
           format: double
@@ -9053,6 +9112,7 @@ components:
           type: boolean
       required:
       - allow_investing_membership
+      - association_deposit
       - association_membership_types
       - associations_allow_investing_membership
       - contact_mail_address
@@ -9136,6 +9196,23 @@ components:
           type: boolean
         statute_accepted:
           type: boolean
+        association_deposit_amount:
+          type: number
+          format: double
+          maximum: 1000000
+          minimum: -1000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+          nullable: true
+        association_deposit_payment_option:
+          allOf:
+          - $ref: '#/components/schemas/AssociationDepositPaymentOptionEnum'
+          default: once
+        association_deposit_expected_instalments:
+          type: integer
+          maximum: 12
+          minimum: 1
+          nullable: true
         number_of_coop_shares:
           type: integer
         pay_coop_shares_in_instalments:
@@ -15444,6 +15521,23 @@ components:
     PublicConfirmWaitingListEntryRequestRequest:
       type: object
       properties:
+        association_deposit_amount:
+          type: number
+          format: double
+          maximum: 1000000
+          minimum: -1000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+          nullable: true
+        association_deposit_payment_option:
+          allOf:
+          - $ref: '#/components/schemas/AssociationDepositPaymentOptionEnum'
+          default: once
+        association_deposit_expected_instalments:
+          type: integer
+          maximum: 12
+          minimum: 1
+          nullable: true
         entry_id:
           type: string
           minLength: 1

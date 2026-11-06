@@ -18,6 +18,8 @@ index.ts
 models/AdminSetAssociationMembershipRequestRequest.ts
 models/AssignmentLogEntry.ts
 models/AssignmentLogEntryStatusEnum.ts
+models/AssociationDepositPaymentOptionEnum.ts
+models/AssociationDepositSettings.ts
 models/AssociationMembership.ts
 models/AssociationMembershipType.ts
 models/AssociationMembershipTypePrice.ts

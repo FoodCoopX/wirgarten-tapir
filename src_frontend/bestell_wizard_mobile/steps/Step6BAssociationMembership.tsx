@@ -1,16 +1,21 @@
 import React, { useEffect, useState } from "react";
 import { Accordion } from "react-bootstrap";
-import { AssociationMembershipType } from "../../api-client";
+import {
+  AssociationDepositPaymentOptionEnum,
+  AssociationMembershipType,
+} from "../../api-client";
 import { getAssociationMembershipTypeCurrentPrice } from "../../association_memberships_config/getAssociationMembershipTypeCurrentPrice.ts";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
 import TapirCheckbox from "../components/TapirCheckbox.tsx";
 import "../utils/flexColOnSmallScreen.css";
-import { scrollIntoView } from "../utils/scrollIntoView.ts";
 import { getVisibleAssociationMembershipTypes } from "../utils/getVisibleAssociationMembershipTypes.ts";
+import { scrollIntoView } from "../utils/scrollIntoView.ts";
 
 interface Step6BAssociationMembershipsProps {
+  associationDepositAmount?: number | null;
+  associationDepositPaymentOption?: AssociationDepositPaymentOptionEnum;
   goToNextStep: () => void;
   settings: BestellWizardSettings;
   selectedAssociationMembershipType: AssociationMembershipType | undefined;
@@ -38,6 +43,8 @@ function buildLabel(type: AssociationMembershipType, contractStartDate: Date) {
 const Step6BAssociationMemberships: React.FC<
   Step6BAssociationMembershipsProps
 > = ({
+  associationDepositAmount,
+  associationDepositPaymentOption,
   goToNextStep,
   settings,
   selectedAssociationMembershipType,
@@ -125,6 +132,23 @@ const Step6BAssociationMemberships: React.FC<
         </div>
       </div>
 
+      {associationDepositAmount != null && (
+        <p>
+          Zusätzlich: {settings.associationDeposit.name}{" "}
+          {formatCurrency(associationDepositAmount)} gesamt
+          {associationDepositPaymentOption ===
+          AssociationDepositPaymentOptionEnum.StandardInstalments
+            ? ` in ${settings.associationDeposit.instalmentCount} monatlichen Raten.`
+            : " als Einmalzahlung."}
+        </p>
+      )}
+      {associationDepositPaymentOption ===
+        AssociationDepositPaymentOptionEnum.Hardship && (
+        <p>
+          {settings.associationDeposit.name}: Individuelle Vereinbarung offen.
+          Noch kein Gesamtbetrag und kein Einzug vereinbart.
+        </p>
+      )}
       <NextStepButton
         onClick={onNextClicked}
         isOrderStep={isOrderStep}

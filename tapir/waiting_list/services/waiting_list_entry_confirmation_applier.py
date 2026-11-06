@@ -10,6 +10,9 @@ from tapir.accounts.services.keycloak_user_delete_service import (
     KeycloakUserDeleteService,
 )
 from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
+from tapir.associations.services.association_deposit_signup_handler import (
+    AssociationDepositSignupHandler,
+)
 from tapir.associations.models import AssociationMembershipType
 from tapir.bestell_wizard.services.bestell_wizard_order_fulfiller import (
     BestellWizardOrderFulfiller,
@@ -125,7 +128,7 @@ class WaitingListEntryConfirmationApplier:
         )
 
         if legal_status_is_association(cache=cache) and is_new_member:
-            BestellWizardOrderFulfiller.create_association_membership(
+            membership = BestellWizardOrderFulfiller.create_association_membership(
                 member=member,
                 association_membership_type=AssociationMembershipType.objects.get(
                     id=validated_data["association_membership_type_id"]
@@ -134,6 +137,26 @@ class WaitingListEntryConfirmationApplier:
                 cache=cache,
                 subscriptions=new_subscriptions,
             )
+
+            if (
+                validated_data.get("association_deposit_amount") is not None
+                or validated_data.get("association_deposit_payment_option", "once")
+                != "once"
+            ):
+                AssociationDepositSignupHandler.create_signup_deposit(
+                    member,
+                    validated_data["association_deposit_amount"],
+                    membership.start_date,
+                    bool(new_subscriptions),
+                    actor,
+                    cache,
+                    payment_option=validated_data.get(
+                        "association_deposit_payment_option", "once"
+                    ),
+                    expected_instalments=validated_data.get(
+                        "association_deposit_expected_instalments"
+                    ),
+                )
 
         waiting_list_entry.delete()
 

@@ -15,6 +15,7 @@ from tapir.accounts.services.email_verification_service import EmailVerification
 from tapir.accounts.services.keycloak_user_delete_service import (
     KeycloakUserDeleteService,
 )
+from tapir.associations.models import AssociationDepositAccount
 from tapir.associations.models import AssociationMembership
 from tapir.associations.tests.factories import AssociationMembershipTypeFactory
 from tapir.core.config import (
@@ -23,7 +24,7 @@ from tapir.core.config import (
     LEGAL_STATUS_ASSOCIATION,
 )
 from tapir.waiting_list.tests.factories import WaitingListEntryFactory
-from tapir.wirgarten.constants import WEEKLY
+from tapir.wirgarten.constants import WEEKLY, NO_DELIVERY
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
     CoopShareTransaction,
@@ -566,3 +567,236 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
         response_content = response.json()
         self.assertFalse(response_content["order_confirmed"])
         self.assertNotIn("%(", response_content["error"])
+
+    def prepare_deposit_confirmation(self, with_product=False):
+        self._set_parameter(
+            ParameterKeys.ORGANISATION_LEGAL_STATUS, LEGAL_STATUS_ASSOCIATION
+        )
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_ENABLED, True)
+        entry = WaitingListEntryFactory(
+            confirmation_link_key=uuid.uuid4(),
+            member=None,
+            email="deposit-waiting@example.test",
+        )
+        mock_timezone(self, datetime.datetime(2026, 11, 5, 12))
+        GrowingPeriodFactory(
+            start_date=datetime.date(2026, 1, 1), end_date=datetime.date(2027, 12, 31)
+        )
+        if with_product:
+            product = ProductFactory(type__delivery_cycle=NO_DELIVERY[0])
+            ProductPriceFactory(
+                product=product, price=30, valid_from=datetime.date(2026, 1, 1)
+            )
+            WaitingListProductWish.objects.create(
+                waiting_list_entry=entry, product=product, quantity=1
+            )
+        membership_type = AssociationMembershipTypeFactory()
+        return entry, {
+            "entry_id": entry.pk,
+            "link_key": str(entry.confirmation_link_key),
+            "account_owner": "Test Mitglied",
+            "iban": "NL35ABNA7806242643",
+            "sepa_allowed": True,
+            "contract_accepted": True,
+            "number_of_coop_shares": 0,
+            "payment_rhythm": "semiannually",
+            "solidarity_contribution": 0,
+            "association_membership_type_id": membership_type.pk,
+        }
+
+    @patch.object(TransactionalTrigger, "fire_all_released_configs", autospec=True)
+    def test_new_waiting_list_member_explicitly_agrees_deposit(self, mock_dispatch):
+        entry, data = self.prepare_deposit_confirmation(with_product=True)
+        data["association_deposit_amount"] = "200"
+        response = self.client.post(
+            reverse("waiting_list:public_confirm_waiting_list_entry"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+        self.assertEqual(200, response.status_code, response.content)
+        self.assert_order_confirmed(response.json())
+        account = AssociationDepositAccount.objects.get()
+        self.assertEqual(200, account.agreed_amount)
+        self.assertEqual(200, account.payments.get().amount)
+
+        event = next(
+            call.args[0]
+            for call in mock_dispatch.call_args_list
+            if call.args[0].key == Events.WAITING_LIST_ORDER_CONFIRMATION
+        )
+
+    def test_missing_waiting_list_deposit_keeps_entry_without_member_or_debit(self):
+        entry, data = self.prepare_deposit_confirmation()
+        response = self.client.post(
+            reverse("waiting_list:public_confirm_waiting_list_entry"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+        self.assertFalse(response.json()["order_confirmed"])
+        self.assertIn("Vereinseinlage", response.json()["error"])
+        self.assertTrue(type(entry).objects.filter(pk=entry.pk).exists())
+        self.assertFalse(AssociationDepositAccount.objects.exists())
+        self.assertFalse(Member.objects.exists())
+
+    def test_zero_quantity_waiting_wish_does_not_require_supporting_deposit(self):
+        entry, data = self.prepare_deposit_confirmation()
+        self._set_parameter(
+            ParameterKeys.ASSOCIATION_DEPOSIT_SUPPORTING_MEMBERS_REQUIRED, False
+        )
+        WaitingListProductWish.objects.create(
+            waiting_list_entry=entry, product=ProductFactory(), quantity=0
+        )
+        response = self.client.post(
+            reverse("waiting_list:public_confirm_waiting_list_entry"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+        self.assertEqual(200, response.status_code, response.content)
+        self.assert_order_confirmed(response.json())
+        self.assertFalse(AssociationDepositAccount.objects.exists())
+
+    def test_positive_waiting_wish_requires_deposit_even_if_supporters_are_exempt(self):
+        entry, data = self.prepare_deposit_confirmation()
+        self._set_parameter(
+            ParameterKeys.ASSOCIATION_DEPOSIT_SUPPORTING_MEMBERS_REQUIRED, False
+        )
+        product = ProductFactory()
+        ProductPriceFactory(
+            product=product, valid_from=datetime.date(2026, 1, 1), price=30
+        )
+        WaitingListProductWish.objects.create(
+            waiting_list_entry=entry, product=product, quantity=1
+        )
+        response = self.client.post(
+            reverse("waiting_list:public_confirm_waiting_list_entry"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+        self.assertFalse(response.json()["order_confirmed"])
+        self.assertIn("Vereinseinlage", response.json()["error"])
+        self.assertFalse(AssociationDepositAccount.objects.exists())
+        self.assertFalse(Member.objects.exists())
+
+    @patch.object(TransactionalTrigger, "fire_all_released_configs", autospec=True)
+    def test_new_waiting_list_member_can_select_standard_rates(self, mock_dispatch):
+        entry, data = self.prepare_deposit_confirmation(with_product=True)
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_INSTALMENTS_ENABLED, True)
+        data.update(
+            association_deposit_amount="200",
+            association_deposit_payment_option="standard_instalments",
+            association_deposit_expected_instalments=4,
+        )
+        response = self.client.post(
+            reverse("waiting_list:public_confirm_waiting_list_entry"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+        self.assert_order_confirmed(response.json())
+        account = AssociationDepositAccount.objects.get()
+        self.assertFalse(account.is_individual_agreement)
+        self.assertEqual(
+            [Decimal("50")] * 4, list(account.payments.values_list("amount", flat=True))
+        )
+        self.assertFalse(type(entry).objects.filter(pk=entry.pk).exists())
+
+        event = next(
+            call.args[0]
+            for call in mock_dispatch.call_args_list
+            if call.args[0].key == Events.WAITING_LIST_ORDER_CONFIRMATION
+        )
+
+    @patch.object(TransactionalTrigger, "fire_all_released_configs", autospec=True)
+    def test_new_waiting_list_member_hardship_keeps_unknown_agreement_without_payment(
+        self,
+        mock_dispatch,
+    ):
+        entry, data = self.prepare_deposit_confirmation(with_product=True)
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_HARDSHIP_ENABLED, True)
+        data["association_deposit_payment_option"] = "hardship"
+        response = self.client.post(
+            reverse("waiting_list:public_confirm_waiting_list_entry"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+        self.assert_order_confirmed(response.json())
+        account = AssociationDepositAccount.objects.get()
+        self.assertIsNone(account.agreed_amount)
+        self.assertIsNone(account.effective_from)
+        self.assertIsNotNone(account.hardship_requested_at)
+        self.assertFalse(account.payments.exists())
+        self.assertFalse(type(entry).objects.filter(pk=entry.pk).exists())
+        self.assertEqual(1, AssociationMembership.objects.count())
+
+        event = next(
+            call.args[0]
+            for call in mock_dispatch.call_args_list
+            if call.args[0].key == Events.WAITING_LIST_ORDER_CONFIRMATION
+        )
+
+    def test_invalid_deposit_choices_rejected_before_external_user_creation(self):
+        entry, data = self.prepare_deposit_confirmation()
+        cases = [
+            ("hardship", None, False, False, 4),
+            ("hardship", "0", True, False, 4),
+            ("hardship", "200", True, False, 4),
+            ("standard_instalments", "200", False, False, 4),
+            ("standard_instalments", "200", False, True, 0),
+            ("standard_instalments", "200", False, True, 121),
+            ("standard_instalments", "200", False, True, 6),
+            ("standard_instalments", "200", False, True, 10**9),
+            ("standard_instalments", "100", False, True, 4),
+        ]
+        for option, amount, hardship, rates, count in cases:
+            with self.subTest(
+                option=option, amount=amount, count=count, enabled=(hardship, rates)
+            ):
+                self._set_parameter(
+                    ParameterKeys.ASSOCIATION_DEPOSIT_HARDSHIP_ENABLED, hardship
+                )
+                self._set_parameter(
+                    ParameterKeys.ASSOCIATION_DEPOSIT_INSTALMENTS_ENABLED, rates
+                )
+                self._set_parameter(
+                    ParameterKeys.ASSOCIATION_DEPOSIT_INSTALMENT_COUNT, str(count)
+                )
+                data.update(
+                    association_deposit_amount=amount,
+                    association_deposit_payment_option=option,
+                    association_deposit_expected_instalments=(
+                        4 if option == "standard_instalments" else None
+                    ),
+                )
+                response = self.client.post(
+                    reverse("waiting_list:public_confirm_waiting_list_entry"),
+                    data=json.dumps(data),
+                    content_type="application/json",
+                )
+                self.assertEqual(200, response.status_code, response.content)
+                self.assertFalse(response.json()["order_confirmed"])
+                self.assertTrue(response.json()["error"])
+                self.mock_keycloak_client.create_user.assert_not_called()
+                self.assertFalse(Member.objects.exists())
+                self.assertFalse(AssociationDepositAccount.objects.exists())
+                self.assertTrue(type(entry).objects.filter(pk=entry.pk).exists())
+
+    def test_subcent_standard_rates_rejected_before_external_user_creation(self):
+        entry, data = self.prepare_deposit_confirmation()
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_INSTALMENTS_ENABLED, True)
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_MINIMUM, "0.01")
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_INCREMENT, "0.01")
+        data.update(
+            association_deposit_amount="0.01",
+            association_deposit_payment_option="standard_instalments",
+            association_deposit_expected_instalments=4,
+        )
+        self.client.raise_request_exception = False
+        response = self.client.post(
+            reverse("waiting_list:public_confirm_waiting_list_entry"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+        self.mock_keycloak_client.create_user.assert_not_called()
+        self.assertEqual(200, response.status_code, response.content)
+        self.assertFalse(response.json()["order_confirmed"])
+        self.assertFalse(Member.objects.exists())
+        self.assertTrue(type(entry).objects.filter(pk=entry.pk).exists())

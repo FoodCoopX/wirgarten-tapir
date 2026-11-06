@@ -1,5 +1,8 @@
 from rest_framework import serializers
 
+from tapir.associations.services.association_deposit_instalment_calculator import (
+    AssociationDepositInstalmentCalculator,
+)
 from tapir.deliveries.serializers import (
     SubscriptionSerializer,
 )
@@ -135,6 +138,24 @@ class PublicWaitingListEntryExistingMemberCreateSerializer(serializers.Serialize
 
 
 class PublicConfirmWaitingListEntryRequestSerializer(serializers.Serializer):
+    association_deposit_amount = serializers.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        required=False,
+        allow_null=True,
+        default=None,
+        coerce_to_string=False,
+    )
+    association_deposit_payment_option = serializers.ChoiceField(
+        choices=["once", "standard_instalments", "hardship"], default="once"
+    )
+    association_deposit_expected_instalments = serializers.IntegerField(
+        required=False,
+        allow_null=True,
+        default=None,
+        min_value=1,
+        max_value=AssociationDepositInstalmentCalculator.MAX_INSTALMENTS,
+    )
     entry_id = serializers.CharField()
     link_key = serializers.CharField()
     account_owner = serializers.CharField(allow_blank=True)

@@ -320,6 +320,9 @@ function buildAssociationSteps(
   }
 
   if (willBecomeMemberNow(settings, becomeMemberNow)) {
+    if (settings.associationDeposit.enabled) {
+      associationSteps.push("6d_association_deposit");
+    }
     associationSteps.push("6b_association_membership");
   }
 
