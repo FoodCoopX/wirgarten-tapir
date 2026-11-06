@@ -88,6 +88,23 @@ class AssociationMembershipCreatedLogEntry(ModelLogEntry):
 
 class AssociationDepositAccount(TapirModel):
     member = models.OneToOneField(Member, on_delete=models.PROTECT)
+    agreed_amount = models.DecimalField(max_digits=8, decimal_places=2, null=True)
+    effective_from = models.DateField(null=True)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=(
+                    models.Q(agreed_amount=None, effective_from=None)
+                    | models.Q(
+                        agreed_amount__isnull=False,
+                        agreed_amount__gte=0,
+                        effective_from__isnull=False,
+                    )
+                ),
+                name="association_deposit_agreement_complete",
+            )
+        ]
 
 
 class AssociationDepositReceipt(TapirModel):
@@ -110,3 +127,7 @@ class AssociationDepositReceipt(TapirModel):
 
 class AssociationDepositReceiptCreatedLogEntry(ModelLogEntry):
     template_name = "associations/log/deposit_receipt_created.html"
+
+
+class AssociationDepositAgreementCreatedLogEntry(ModelLogEntry):
+    template_name = "associations/log/deposit_agreement_created.html"
