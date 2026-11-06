@@ -3,6 +3,9 @@ from decimal import Decimal
 
 from django.conf import settings
 
+from tapir.associations.parameter_definitions import (
+    ParameterDefinitionsAssociationDeposit,
+)
 from tapir.configuration.models import (
     TapirParameterDatatype,
     TapirParameterDefinitionImporter,
@@ -71,6 +74,9 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             TapirParameter.objects.bulk_create(self.parameters_to_create)
 
     def define_all_parameters(self):
+        ParameterDefinitionsAssociationDeposit.define_all_parameters_association_deposit(
+            importer=self
+        )
         ParameterDefinitionsBestellwizard.define_all_member_bestellwizard(importer=self)
         ParameterDefinitionsBusiness.define_all_member_business(importer=self)
         ParameterDefinitionsDelivery.define_all_parameters_delivery(importer=self)
