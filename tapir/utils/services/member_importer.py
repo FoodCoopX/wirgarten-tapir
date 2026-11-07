@@ -32,11 +32,10 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
 class MemberImporter:
-    # Off during dry runs: the database changes are rolled back, a changed Keycloak e-mail would not be
-    keycloak_updates_enabled = True
-
     @classmethod
-    def import_member(cls, row: dict[str, str], update_existing: bool):
+    def import_member(
+        cls, row: dict[str, str], update_existing: bool, *, self_service: bool = False
+    ):
         if DataImportUtils.is_row_empty(row):
             return None
 
@@ -48,7 +47,9 @@ class MemberImporter:
                 return MEMBER_IMPORT_STATUS_SKIPPED
 
             try:
-                return cls.update_existing_member_if_necessary(member=member, row=row)
+                return cls.update_existing_member_if_necessary(
+                    member=member, row=row, self_service=self_service
+                )
             except Exception as e:
                 raise TapirDataImportException(
                     f"Error updating member {member_no}: {e}"
@@ -71,31 +72,30 @@ class MemberImporter:
         return pickup_location
 
     @classmethod
-    def update_existing_member_if_necessary(cls, member: Member, row: dict[str, str]):
-        member_attributes_updated = cls.update_member_attributes_and_save_member(
-            member=member, row=row
+    def update_existing_member_if_necessary(
+        cls, member: Member, row: dict[str, str], *, self_service: bool = False
+    ):
+        updated = cls.update_member_attributes_and_save_member(
+            member=member, row=row, self_service=self_service
         )
-        pickup_location_updated = cls.update_member_pickup_location(
-            member=member, row=row
-        )
-        solidarity_updated = cls.update_solidarity_contribution(member=member, row=row)
+        if not self_service or "Abholort" in row:
+            updated |= cls.update_member_pickup_location(member=member, row=row)
+        if not self_service or "Solidarpreis in EUR" in row:
+            updated |= cls.update_solidarity_contribution(member=member, row=row)
+        if not self_service or "Zahlungsintervall" in row:
+            updated |= cls.update_payment_rhythm_if_necessary(
+                member=member,
+                reference_date=DataImportUtils.to_date(row["consent_sepa"]),
+                rhythm_from_import=row.get("Zahlungsintervall"),
+            )
+        if not self_service or "Vereinsmitgliedschafttyp" in row:
+            membership_updated = cls.update_association_membership_if_necessary(
+                member=member, row=row
+            )
+            if self_service:
+                updated |= membership_updated
 
-        payment_rhythm_updated = cls.update_payment_rhythm_if_necessary(
-            member=member,
-            reference_date=DataImportUtils.to_date(row["consent_sepa"]),
-            rhythm_from_import=row.get("Zahlungsintervall", None),
-        )
-
-        cls.update_association_membership_if_necessary(member=member, row=row)
-
-        if (
-            member_attributes_updated
-            or pickup_location_updated
-            or solidarity_updated
-            or payment_rhythm_updated
-        ):
-            return MEMBER_IMPORT_STATUS_UPDATED
-        return MEMBER_IMPORT_STATUS_SKIPPED
+        return MEMBER_IMPORT_STATUS_UPDATED if updated else MEMBER_IMPORT_STATUS_SKIPPED
 
     @classmethod
     def update_payment_rhythm_if_necessary(
@@ -130,10 +130,17 @@ class MemberImporter:
 
     @classmethod
     def update_member_attributes_and_save_member(
-        cls, member: Member, row: dict[str, str]
+        cls, member: Member, row: dict[str, str], *, self_service: bool = False
     ):
-        member_updated = False
+        target_mail = cls.build_mail(row=row, member_no=member.member_no)
         email_before = member.email
+        if self_service and member.keycloak_id and email_before != target_mail:
+            raise TapirDataImportException(
+                "Die E-Mail-Adresse eines verknüpften Kontos bitte über die "
+                "E-Mail-Änderung in der Mitgliederverwaltung ändern."
+            )
+
+        member_updated = False
 
         map_from_row_header_to_member_attribute = {
             "Vorname": "first_name",
@@ -164,6 +171,8 @@ class MemberImporter:
             row_header,
             member_attribute,
         ) in map_from_row_header_to_member_attribute.items():
+            if self_service and row_header not in row:
+                continue
             converter = map_from_row_header_to_converter.get(
                 row_header, DataImportUtils.normalize_cell
             )
@@ -174,18 +183,18 @@ class MemberImporter:
             ):
                 member_updated = True
 
-        new_street = " ".join(
-            s.strip()
-            for s in [
-                DataImportUtils.normalize_cell(row.get("Straße")),
-                DataImportUtils.normalize_cell(row.get("Hausnr.")),
-            ]
-            if s and s.strip() != ""
-        )
-        if DataImportUtils.update_if_diff(member, "street", new_street):
-            member_updated = True
+        if not self_service or "Straße" in row or "Hausnr." in row:
+            new_street = " ".join(
+                s.strip()
+                for s in [
+                    DataImportUtils.normalize_cell(row.get("Straße")),
+                    DataImportUtils.normalize_cell(row.get("Hausnr.")),
+                ]
+                if s and s.strip() != ""
+            )
+            if DataImportUtils.update_if_diff(member, "street", new_street):
+                member_updated = True
 
-        target_mail = cls.build_mail(row=row, member_no=member.member_no)
         if DataImportUtils.update_if_diff(
             member,
             "email",
@@ -194,11 +203,7 @@ class MemberImporter:
             member_updated = True
             member.username = member.email
 
-        if (
-            email_before != member.email
-            and member.keycloak_id
-            and cls.keycloak_updates_enabled
-        ):
+        if email_before != member.email and member.keycloak_id:
             Member.objects.filter(id=member.id).update(email=member.email)
             KeycloakUserManager.get_keycloak_client(cache={}).update_user(
                 user_id=member.keycloak_id, payload={"email": member.email}

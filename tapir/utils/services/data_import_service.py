@@ -1,5 +1,6 @@
 import io
 from dataclasses import dataclass, field
+from functools import partial
 from typing import Callable
 
 from django.db import transaction
@@ -48,7 +49,7 @@ IMPORT_TYPES = {
         ImportType(
             key="members",
             name="Mitglieder",
-            importer=MemberImporter.import_member,
+            importer=partial(MemberImporter.import_member, self_service=True),
             required_columns=(
                 "Nr",
                 "Vorname",
@@ -217,8 +218,6 @@ class DataImportService:
         if result.missing_columns:
             return result
 
-        keycloak_updates_before = MemberImporter.keycloak_updates_enabled
-        MemberImporter.keycloak_updates_enabled = not dry_run
         try:
             with transaction.atomic():
                 cls.import_rows(import_type, data, update_existing, result)
@@ -226,8 +225,6 @@ class DataImportService:
                     raise DryRunException()
         except DryRunException:
             pass
-        finally:
-            MemberImporter.keycloak_updates_enabled = keycloak_updates_before
         return result
 
     @classmethod

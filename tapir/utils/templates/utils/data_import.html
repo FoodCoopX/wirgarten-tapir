@@ -19,6 +19,11 @@
                     Jede Datei wird zuerst nur geprüft. Gespeichert wird erst mit „Übernehmen“, und nur, wenn keine Zeile
                     einen Fehler hat. Vorlagen mit allen Spalten (Pflichtspalten fett) und einer Beispielzeile:
                 </p>
+                <p class="mb-2">
+                    Beim Aktualisieren von Mitgliedern bleiben Daten aus fehlenden Spalten erhalten.
+                    Leere Zellen in vorhandenen Spalten können bestehende Werte löschen.
+                    E-Mail-Adressen verknüpfter Konten können in der Mitgliederverwaltung geändert werden.
+                </p>
                 <div class="d-flex flex-wrap gap-2">
                     {% for import_type in import_types %}
                         <a class="btn tapir-btn btn-outline-primary"
