@@ -1,8 +1,12 @@
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.db import transaction
+from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
 
+from tapir.coop.services.member_number_service import MemberNumberService
+from tapir.wirgarten.constants import Permission
+from tapir.wirgarten.forms.member_number import MemberNumberForm
 from tapir.wirgarten.forms.member import (
     CancellationReasonForm,
     SubscriptionRenewalForm,
@@ -25,6 +29,23 @@ from tapir.wirgarten.utils import (
     member_detail_url,
 )
 from tapir.wirgarten.views.modal import get_form_modal
+
+
+@require_http_methods(["GET", "POST"])
+@permission_required(Permission.Accounts.MANAGE, raise_exception=True)
+@csrf_protect
+def get_member_number_form(request, pk):
+    member = get_object_or_404(Member, pk=pk)
+    return get_form_modal(
+        request=request,
+        form_class=MemberNumberForm,
+        handle_validation_errors=True,
+        instance=member,
+        handler=lambda form: MemberNumberService.set_member_number(
+            member, form.cleaned_data["member_no"], actor=request.user
+        ),
+        redirect_url_resolver=lambda _: member_detail_url(member.pk),
+    )
 
 
 @require_http_methods(["GET", "POST"])

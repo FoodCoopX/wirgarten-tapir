@@ -96,7 +96,16 @@
         <div class="card-body">
           <dl class="mb-0">
             <dt>{% translate "Mitgliedsnummer" %}</dt>
-            <dd id="tapir_user_member_number">{% formatted_member_number object cache %}</dd>
+            <dd id="tapir_user_member_number">
+              {% formatted_member_number object cache %}
+              {% if perms.accounts.manage %}
+                {% translate "Mitgliedsnummer ändern" as change_member_number_label %}
+                <button type="button" class="btn btn-sm btn-outline-primary ms-2"
+                        onclick="FormModal.load('{% url 'wirgarten:member_number_edit' pk=object.pk %}', '{{ change_member_number_label|escapejs }}')">
+                  {{ change_member_number_label }}
+                </button>
+              {% endif %}
+            </dd>
             <dt>{% translate "Name" %}</dt>
             <dd id="tapir_user_display_name">{{ object.get_display_name }}</dd>
             <dt>{% translate "E-Mail" %}</dt>

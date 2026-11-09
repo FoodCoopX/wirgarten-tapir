@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.forms import Form, ModelForm
 from django.shortcuts import render
 from django.template.response import TemplateResponse
@@ -13,6 +14,7 @@ def get_form_modal(
     handler,
     instance=None,
     redirect_url_resolver=(lambda x: str),
+    handle_validation_errors=False,
     **kwargs
 ):
     """
@@ -40,15 +42,21 @@ def get_form_modal(
         # check whether it's valid:
         if form.is_valid():
             # process the data in modal.cleaned_data as required
-            handler_result = handler(form)
-            redirect_url = redirect_url_resolver(handler_result)
+            try:
+                handler_result = handler(form)
+            except ValidationError as error:
+                if not handle_validation_errors:
+                    raise
+                form.add_error(None, error)
+            else:
+                redirect_url = redirect_url_resolver(handler_result)
 
-            # redirect to a new URL:
-            return render(
-                request,
-                "wirgarten/generic/modal/form-modal-redirect.html",
-                {"url": redirect_url},
-            )
+                # redirect to a new URL:
+                return render(
+                    request,
+                    "wirgarten/generic/modal/form-modal-redirect.html",
+                    {"url": redirect_url},
+                )
         else:
             print("Form not valid! ", form.errors)
 

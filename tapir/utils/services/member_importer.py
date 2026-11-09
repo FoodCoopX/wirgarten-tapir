@@ -14,6 +14,7 @@ from tapir.associations.models import (
 )
 from tapir.bakery.models import PreferredBread, Bread
 from tapir.configuration.parameter import get_parameter_value
+from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.log.models import TextLogEntry
 from tapir.log.util import freeze_for_log
 from tapir.payments.services.member_payment_rhythm_service import (
@@ -401,6 +402,7 @@ class MemberImporter:
         dry_run: bool,
         stdout: OutputWrapper,
     ):
+        MemberNumberService.validate_member_number_available(member_no, member_id=None)
         member = cls.build_new_member(member_no=member_no, row=row, stdout=stdout)
         cls.update_member_attributes_and_save_member(
             member=member, row=row, dry_run=dry_run

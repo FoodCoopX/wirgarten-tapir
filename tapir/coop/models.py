@@ -1,8 +1,14 @@
 from django.db import models
 
+from tapir.core.models import TapirModel
 from tapir.log.models import LogEntry
-from tapir.wirgarten.models import CoopShareTransaction
+from tapir.wirgarten.models import CoopShareTransaction, Member
 from tapir.wirgarten.utils import format_date
+
+
+class RetiredMemberNumber(TapirModel):
+    number = models.IntegerField(unique=True)
+    member = models.ForeignKey(Member, on_delete=models.SET_NULL, null=True)
 
 
 class CoopSharesRevokedLogEntry(LogEntry):

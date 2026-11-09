@@ -175,6 +175,7 @@ class PersonalDataForm(FormWithRequestMixin, ModelForm):
             )
 
     def clean(self):
+        super().clean()
         self._validate_duplicate_email()
         self._validate_birthdate()
 

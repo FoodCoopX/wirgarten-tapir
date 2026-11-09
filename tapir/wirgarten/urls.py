@@ -19,6 +19,7 @@ from tapir.wirgarten.views.member.details.actions import (
 )
 from tapir.wirgarten.views.member.details.member_details import MemberDetailView
 from tapir.wirgarten.views.member.details.modals import (
+    get_member_number_form,
     get_cancellation_reason_form,
     get_coop_shares_waiting_list_form,
     get_renew_contracts_form,
@@ -130,6 +131,7 @@ urlpatterns = [
     ),
     path("members", MemberListView.as_view(), name="member_list"),
     path("members/create", get_member_personal_data_create_form, name="member_create"),
+    path("members/<str:pk>/number", get_member_number_form, name="member_number_edit"),
     path(
         "members/<str:pk>/cancelcontract",
         cancel_contract_at_period_end,

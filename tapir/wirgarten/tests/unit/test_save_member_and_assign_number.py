@@ -1,11 +1,11 @@
 from unittest.mock import Mock, patch
 
 from tapir.coop.services.member_number_service import MemberNumberService
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
+from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 from tapir.wirgarten.views.member.list.modals import save_member_and_assign_number
 
 
-class TestSaveMemberAndAssignNumber(TapirUnitTest):
+class TestSaveMemberAndAssignNumber(TapirIntegrationTest):
     @patch.object(
         MemberNumberService,
         "assign_member_number_if_eligible",
@@ -16,6 +16,7 @@ class TestSaveMemberAndAssignNumber(TapirUnitTest):
         self, mock_assign_if_eligible: Mock
     ):
         form = Mock()
+        form.cleaned_data = {}
         logged_in_user = Mock()
         form.request.user = logged_in_user
         member = Mock()
@@ -39,6 +40,7 @@ class TestSaveMemberAndAssignNumber(TapirUnitTest):
         self, mock_assign_if_eligible: Mock
     ):
         form = Mock()
+        form.cleaned_data = {}
         logged_in_user = Mock()
         form.request.user = logged_in_user
         member = Mock()

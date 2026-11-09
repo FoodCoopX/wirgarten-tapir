@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+from tapir.coop.models import RetiredMemberNumber
 from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.coop.services.member_number_service import MemberNumberService
@@ -9,6 +10,14 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
 class TestComputeNextMemberNumber(TapirUnitTest):
+    def setUp(self):
+        super().setUp()
+        patcher = patch.object(
+            RetiredMemberNumber.objects, "aggregate", return_value={"number__max": None}
+        )
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
     @patch.object(Member.objects, "aggregate", autospec=True)
     def test_computeNextMemberNumber_noExistingMembers_returnsStartValue(
         self, mock_aggregate
