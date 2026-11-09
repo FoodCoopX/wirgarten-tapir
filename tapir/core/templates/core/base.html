@@ -67,6 +67,7 @@
             </nav>
             {% include 'wirgarten/generic/modal/form-modal.html' %}
             {% include 'wirgarten/generic/modal/confirmation-modal.html' %}
+            <script src="{% static 'wirgarten/js/modal-focus.js' %}"></script>
             <div class="container-fluid" style="padding-right:1em; padding-left:1em;">
                 {% if perms.coop.view %}
                     <nav id="sidebar" class="bg-light sidebar custom-sidebar">
@@ -80,6 +81,7 @@
                 {% endif %}
                 <main id="main-content"
                       role="main"
+                      tabindex="-1"
                       {% if perms.coop.view %}style="margin-left:4em;"{% endif %}>
                     {% bootstrap_messages %}
                     {% block content %}{% endblock %}
