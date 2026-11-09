@@ -12,6 +12,9 @@
  * Do not edit the class manually.
  */
 
+import type { PickupLocationOpeningTime } from "./PickupLocationOpeningTime";
+import { PickupLocationOpeningTimeFromJSON } from "./PickupLocationOpeningTime";
+
 /**
  *
  * @export
@@ -30,6 +33,12 @@ export interface PickupLocation {
    * @memberof PickupLocation
    */
   readonly deliveryDay: number | null;
+  /**
+   *
+   * @type {Array<PickupLocationOpeningTime>}
+   * @memberof PickupLocation
+   */
+  readonly openingTimes: Array<PickupLocationOpeningTime>;
   /**
    *
    * @type {Date}
@@ -154,6 +163,8 @@ export function instanceOfPickupLocation(
 ): value is PickupLocation {
   if (!("deliveryDay" in value) || value["deliveryDay"] === undefined)
     return false;
+  if (!("openingTimes" in value) || value["openingTimes"] === undefined)
+    return false;
   if (!("createdAt" in value) || value["createdAt"] === undefined) return false;
   if (!("updatedAt" in value) || value["updatedAt"] === undefined) return false;
   if (!("name" in value) || value["name"] === undefined) return false;
@@ -179,6 +190,9 @@ export function PickupLocationFromJSONTyped(
   return {
     id: json["id"] == null ? undefined : json["id"],
     deliveryDay: json["delivery_day"],
+    openingTimes: (json["opening_times"] as Array<any>).map(
+      PickupLocationOpeningTimeFromJSON,
+    ),
     createdAt: new Date(json["created_at"]),
     updatedAt: new Date(json["updated_at"]),
     name: json["name"],
@@ -217,7 +231,7 @@ export function PickupLocationToJSON(json: any): PickupLocation {
 export function PickupLocationToJSONTyped(
   value?: Omit<
     PickupLocation,
-    "delivery_day" | "created_at" | "updated_at"
+    "delivery_day" | "opening_times" | "created_at" | "updated_at"
   > | null,
   ignoreDiscriminator: boolean = false,
 ): any {

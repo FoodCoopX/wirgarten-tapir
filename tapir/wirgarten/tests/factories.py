@@ -173,7 +173,7 @@ class PickupLocationFactory(factory.django.DjangoModelFactory[PickupLocation]):
     class Meta:
         model = PickupLocation
 
-    name = factory.Faker("company")
+    name = factory.Sequence(lambda n: f"Abholort {n}")
     street = factory.Faker("street_address")
     postcode = factory.Faker("postcode")
     city = factory.Faker("city")

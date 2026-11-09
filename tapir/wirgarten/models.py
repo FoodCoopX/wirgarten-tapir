@@ -99,8 +99,8 @@ class PickupLocation(TapirModel):
     class Meta:
         constraints = [
             UniqueConstraint(
-                fields=["name", "coords_lat", "coords_lon"],
-                name="unique_location",
+                fields=["name"],
+                name="unique_pickup_location_name",
             ),
         ]
 

@@ -5157,6 +5157,40 @@ paths:
                 items:
                   $ref: '#/components/schemas/PickupLocation'
           description: ''
+    post:
+      operationId: pickup_locations_pickup_locations_create
+      tags:
+      - pickup_locations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PickupLocationSaveRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PickupLocationSaveRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PickupLocationSaveRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PickupLocation'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /pickup_locations/pickup_locations/{id}/:
     get:
       operationId: pickup_locations_pickup_locations_retrieve
@@ -5179,6 +5213,47 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PickupLocation'
+          description: ''
+    put:
+      operationId: pickup_locations_pickup_locations_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der pickup location identifiziert.
+        required: true
+      tags:
+      - pickup_locations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PickupLocationSaveRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PickupLocationSaveRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PickupLocationSaveRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PickupLocation'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
           description: ''
   /pickup_locations/public_pickup_locations/:
     get:
@@ -14834,6 +14909,11 @@ components:
           type: integer
           nullable: true
           readOnly: true
+        opening_times:
+          type: array
+          items:
+            $ref: '#/components/schemas/PickupLocationOpeningTime'
+          readOnly: true
         created_at:
           type: string
           format: date-time
@@ -14919,6 +14999,7 @@ components:
       - created_at
       - delivery_day
       - name
+      - opening_times
       - postcode
       - street
       - updated_at
@@ -15109,6 +15190,101 @@ components:
       - open_time
       - pickup_location
       - updated_at
+    PickupLocationOpeningTimeInputRequest:
+      type: object
+      properties:
+        day_of_week:
+          $ref: '#/components/schemas/DayOfWeekEnum'
+        open_time:
+          type: string
+          format: time
+        close_time:
+          type: string
+          format: time
+      required:
+      - close_time
+      - day_of_week
+      - open_time
+    PickupLocationSaveRequestRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+        coords_lat:
+          type: string
+          format: decimal
+        coords_lon:
+          type: string
+          format: decimal
+        street:
+          type: string
+          minLength: 1
+          maxLength: 150
+        street_2:
+          type: string
+          default: ''
+          maxLength: 150
+        postcode:
+          type: string
+          minLength: 1
+          maxLength: 32
+        city:
+          type: string
+          minLength: 1
+          maxLength: 50
+        info:
+          type: string
+          default: ''
+          maxLength: 3000
+        access_code:
+          type: string
+          default: ''
+          maxLength: 20
+        messenger_group_link:
+          type: string
+          default: ''
+          maxLength: 150
+        contact_name:
+          type: string
+          default: ''
+          maxLength: 150
+        photo_link:
+          type: string
+          default: ''
+          maxLength: 512
+        location_route_id:
+          type: string
+          nullable: true
+          minLength: 1
+        route_info:
+          type: string
+          default: ''
+          maxLength: 3000
+        start_date:
+          type: string
+          format: date
+          nullable: true
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        show_details_in_basket_totals_export:
+          type: boolean
+          default: false
+        opening_times:
+          type: array
+          items:
+            $ref: '#/components/schemas/PickupLocationOpeningTimeInputRequest'
+      required:
+      - city
+      - coords_lat
+      - coords_lon
+      - name
+      - opening_times
+      - postcode
+      - street
     PickupLocationsByDeliveryDayResponse:
       type: object
       properties:

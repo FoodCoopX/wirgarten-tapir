@@ -18,20 +18,6 @@ from tapir.wirgarten.models import (
 from tapir.wirgarten.utils import get_today
 
 
-class PickupLocationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PickupLocation
-        fields = "__all__"
-
-    delivery_day = serializers.SerializerMethodField()
-
-    @extend_schema_field(serializers.IntegerField(allow_null=True))
-    def get_delivery_day(self, pickup_location: PickupLocation) -> int | None:
-        return PickupLocationDeliveryDayService.get_delivery_day(
-            pickup_location_id=pickup_location.id, cache=self.context["cache"]
-        )
-
-
 class PickupLocationOpeningTimeSerializer(serializers.ModelSerializer):
     class Meta:
         model = PickupLocationOpeningTime
@@ -42,6 +28,50 @@ class PickupLocationOpeningTimeSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_day_of_week_string(opening_time: PickupLocationOpeningTime) -> str:
         return OPTIONS_WEEKDAYS[opening_time.day_of_week][1]
+
+
+class PickupLocationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PickupLocation
+        fields = "__all__"
+
+    delivery_day = serializers.SerializerMethodField()
+    opening_times = PickupLocationOpeningTimeSerializer(many=True, read_only=True)
+
+    @extend_schema_field(serializers.IntegerField(allow_null=True))
+    def get_delivery_day(self, pickup_location: PickupLocation) -> int | None:
+        return PickupLocationDeliveryDayService.get_delivery_day(
+            pickup_location_id=pickup_location.id, cache=self.context["cache"]
+        )
+
+
+class PickupLocationOpeningTimeInputSerializer(serializers.Serializer):
+    day_of_week = serializers.ChoiceField(choices=OPTIONS_WEEKDAYS)
+    open_time = serializers.TimeField()
+    close_time = serializers.TimeField()
+
+
+class PickupLocationSaveRequestSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=150)
+    coords_lat = serializers.DecimalField(max_digits=None, decimal_places=None)
+    coords_lon = serializers.DecimalField(max_digits=None, decimal_places=None)
+    street = serializers.CharField(max_length=150)
+    street_2 = serializers.CharField(max_length=150, allow_blank=True, default="")
+    postcode = serializers.CharField(max_length=32)
+    city = serializers.CharField(max_length=50)
+    info = serializers.CharField(max_length=3000, allow_blank=True, default="")
+    access_code = serializers.CharField(max_length=20, allow_blank=True, default="")
+    messenger_group_link = serializers.CharField(
+        max_length=150, allow_blank=True, default=""
+    )
+    contact_name = serializers.CharField(max_length=150, allow_blank=True, default="")
+    photo_link = serializers.CharField(max_length=512, allow_blank=True, default="")
+    location_route_id = serializers.CharField(allow_null=True, default=None)
+    route_info = serializers.CharField(max_length=3000, allow_blank=True, default="")
+    start_date = serializers.DateField(allow_null=True, default=None)
+    end_date = serializers.DateField(allow_null=True, default=None)
+    show_details_in_basket_totals_export = serializers.BooleanField(default=False)
+    opening_times = PickupLocationOpeningTimeInputSerializer(many=True)
 
 
 class ProductBasketSizeEquivalenceSerializer(serializers.Serializer):

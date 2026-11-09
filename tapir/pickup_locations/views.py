@@ -21,6 +21,7 @@ from tapir.pickup_locations.serializers import (
     PickupLocationCapacityCheckResponseSerializer,
     PickupLocationCapacityCheckRequestSerializer,
     PickupLocationSerializer,
+    PickupLocationSaveRequestSerializer,
     LocationRouteSerializer,
 )
 from tapir.pickup_locations.services.member_pickup_location_getter import (
@@ -44,6 +45,9 @@ from tapir.pickup_locations.services.pickup_location_delivery_charge_service imp
 from tapir.pickup_locations.services.pickup_location_highest_usage_after_date_service import (
     PickupLocationHighestUsageAfterDateService,
 )
+from tapir.pickup_locations.services.pickup_location_validator import (
+    PickupLocationValidator,
+)
 from tapir.pickup_locations.services.public_pickup_locations_provider import (
     PublicPickupLocationProvider,
 )
@@ -62,6 +66,7 @@ from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
     PickupLocation,
     PickupLocationCapability,
+    PickupLocationOpeningTime,
     ProductType,
     Member,
     GrowingPeriod,
@@ -156,7 +161,7 @@ class PickupLocationCapacitiesView(APIView):
 
 
 class PickupLocationViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = PickupLocation.objects.all()
+    queryset = PickupLocation.objects.prefetch_related("opening_times")
     serializer_class = PickupLocationSerializer
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
 
@@ -164,6 +169,48 @@ class PickupLocationViewSet(viewsets.ReadOnlyModelViewSet):
         context = super().get_serializer_context()
         context["cache"] = {}
         return context
+
+    @extend_schema(
+        request=PickupLocationSaveRequestSerializer,
+        responses={201: PickupLocationSerializer, 400: dict},
+    )
+    def create(self, request, *args, **kwargs):
+        data = self._save(request=request, pickup_location=PickupLocation())
+        return Response(data, status=status.HTTP_201_CREATED)
+
+    @extend_schema(
+        request=PickupLocationSaveRequestSerializer,
+        responses={200: PickupLocationSerializer, 400: dict},
+    )
+    def update(self, request, *args, **kwargs):
+        data = self._save(request=request, pickup_location=self.get_object())
+        return Response(data, status=status.HTTP_200_OK)
+
+    def _save(self, request, pickup_location: PickupLocation) -> dict:
+        request_serializer = PickupLocationSaveRequestSerializer(data=request.data)
+        request_serializer.is_valid(raise_exception=True)
+
+        opening_times = [
+            PickupLocationOpeningTime(pickup_location=pickup_location, **opening_time)
+            for opening_time in request_serializer.validated_data.pop("opening_times")
+        ]
+        for field_name, value in request_serializer.validated_data.items():
+            setattr(pickup_location, field_name, value)
+
+        errors = PickupLocationValidator.validate(
+            pickup_location=pickup_location, opening_times=opening_times, cache={}
+        )
+        if errors:
+            raise serializers.ValidationError(errors)
+
+        with transaction.atomic():
+            pickup_location.save()
+            PickupLocationOpeningTime.objects.filter(
+                pickup_location=pickup_location
+            ).delete()
+            PickupLocationOpeningTime.objects.bulk_create(opening_times)
+
+        return self.get_serializer(self.get_queryset().get(id=pickup_location.id)).data
 
 
 class PickupLocationCapacityEvolutionView(APIView):

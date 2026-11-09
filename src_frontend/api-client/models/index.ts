@@ -221,6 +221,8 @@ export * from "./PickupLocationDeliveryChargeEntry";
 export * from "./PickupLocationDeliveryChargesResponse";
 export * from "./PickupLocationDeliveryDay";
 export * from "./PickupLocationOpeningTime";
+export * from "./PickupLocationOpeningTimeInputRequest";
+export * from "./PickupLocationSaveRequestRequest";
 export * from "./PickupLocationsByDeliveryDayResponse";
 export * from "./PreferenceSatisfactionResponse";
 export * from "./PreferredBread";

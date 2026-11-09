@@ -236,6 +236,8 @@ models/PickupLocationDeliveryChargeEntry.ts
 models/PickupLocationDeliveryChargesResponse.ts
 models/PickupLocationDeliveryDay.ts
 models/PickupLocationOpeningTime.ts
+models/PickupLocationOpeningTimeInputRequest.ts
+models/PickupLocationSaveRequestRequest.ts
 models/PickupLocationsByDeliveryDayResponse.ts
 models/PreferenceSatisfactionResponse.ts
 models/PreferredBread.ts

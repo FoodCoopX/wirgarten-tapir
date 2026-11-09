@@ -26,6 +26,7 @@ import type {
   PickupLocationCapacityEvolution,
   PickupLocationDeliveryChargeCreateRequestRequest,
   PickupLocationDeliveryChargesResponse,
+  PickupLocationSaveRequestRequest,
   PublicPickupLocation,
 } from "../models/index";
 import {
@@ -42,6 +43,7 @@ import {
   PickupLocationDeliveryChargeCreateRequestRequestToJSON,
   PickupLocationDeliveryChargesResponseFromJSON,
   PickupLocationFromJSON,
+  PickupLocationSaveRequestRequestToJSON,
   PublicPickupLocationFromJSON,
 } from "../models/index";
 import * as runtime from "../runtime";
@@ -106,8 +108,17 @@ export interface PickupLocationsLocationRoutesUpdateRequest {
   locationRouteRequest: LocationRouteRequest;
 }
 
+export interface PickupLocationsPickupLocationsCreateRequest {
+  pickupLocationSaveRequestRequest: PickupLocationSaveRequestRequest;
+}
+
 export interface PickupLocationsPickupLocationsRetrieveRequest {
   id: string;
+}
+
+export interface PickupLocationsPickupLocationsUpdateRequest {
+  id: string;
+  pickupLocationSaveRequestRequest: PickupLocationSaveRequestRequest;
 }
 
 export interface PickupLocationsPublicPickupLocationsRetrieveRequest {
@@ -1048,6 +1059,70 @@ export class PickupLocationsApi extends runtime.BaseAPI {
 
   /**
    */
+  async pickupLocationsPickupLocationsCreateRaw(
+    requestParameters: PickupLocationsPickupLocationsCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<PickupLocation>> {
+    if (requestParameters["pickupLocationSaveRequestRequest"] == null) {
+      throw new runtime.RequiredError(
+        "pickupLocationSaveRequestRequest",
+        'Required parameter "pickupLocationSaveRequestRequest" was null or undefined when calling pickupLocationsPickupLocationsCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/pickup_locations/pickup_locations/`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: PickupLocationSaveRequestRequestToJSON(
+          requestParameters["pickupLocationSaveRequestRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      PickupLocationFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async pickupLocationsPickupLocationsCreate(
+    requestParameters: PickupLocationsPickupLocationsCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<PickupLocation> {
+    const response = await this.pickupLocationsPickupLocationsCreateRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
   async pickupLocationsPickupLocationsListRaw(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<Array<PickupLocation>>> {
@@ -1150,6 +1225,80 @@ export class PickupLocationsApi extends runtime.BaseAPI {
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<PickupLocation> {
     const response = await this.pickupLocationsPickupLocationsRetrieveRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async pickupLocationsPickupLocationsUpdateRaw(
+    requestParameters: PickupLocationsPickupLocationsUpdateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<PickupLocation>> {
+    if (requestParameters["id"] == null) {
+      throw new runtime.RequiredError(
+        "id",
+        'Required parameter "id" was null or undefined when calling pickupLocationsPickupLocationsUpdate().',
+      );
+    }
+
+    if (requestParameters["pickupLocationSaveRequestRequest"] == null) {
+      throw new runtime.RequiredError(
+        "pickupLocationSaveRequestRequest",
+        'Required parameter "pickupLocationSaveRequestRequest" was null or undefined when calling pickupLocationsPickupLocationsUpdate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/pickup_locations/pickup_locations/{id}/`.replace(
+          `{${"id"}}`,
+          encodeURIComponent(String(requestParameters["id"])),
+        ),
+        method: "PUT",
+        headers: headerParameters,
+        query: queryParameters,
+        body: PickupLocationSaveRequestRequestToJSON(
+          requestParameters["pickupLocationSaveRequestRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      PickupLocationFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async pickupLocationsPickupLocationsUpdate(
+    requestParameters: PickupLocationsPickupLocationsUpdateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<PickupLocation> {
+    const response = await this.pickupLocationsPickupLocationsUpdateRaw(
       requestParameters,
       initOverrides,
     );
