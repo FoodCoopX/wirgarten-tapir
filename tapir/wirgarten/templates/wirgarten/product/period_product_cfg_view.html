@@ -24,6 +24,17 @@
         transform: rotate(90deg);
       }
     }
+
+    @media (max-width: 575.98px) {
+      .product-config-layout > .card > .card-header {
+        flex-wrap: wrap;
+        row-gap: .5rem;
+      }
+
+      .product-config-layout > .card > .card-header > h5 {
+        flex-basis: 100%;
+      }
+    }
   </style>
 {% endblock head %}
 {% block title %}
