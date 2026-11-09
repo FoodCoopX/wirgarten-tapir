@@ -5,19 +5,20 @@ body {
 /* Sidebar, stolen from https://getbootstrap.com/docs/4.1/examples/dashboard/ */
 
 .sidebar {
+  --sidebar-top-padding: 48px;
   position: fixed;
   top: 0;
   bottom: 0;
   left: 0;
   z-index: 100; /* Behind the navbar */
-  padding: 48px 0 0; /* Height of navbar */
+  padding: var(--sidebar-top-padding) 0 0; /* Height of navbar */
   box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
 }
 
 .sidebar-sticky {
   position: relative;
   top: 0;
-  height: calc(100vh - 48px);
+  height: calc(100vh - var(--sidebar-top-padding));
   padding-top: .5rem;
   overflow-x: hidden;
   overflow-y: auto; /* Scrollable contents if viewport is shorter than content. */
@@ -225,10 +226,10 @@ div.option.selected {
 }
 
 .custom-sidebar {
+  --sidebar-top-padding: 4.5em;
   width: 4em;
   transition: width 0.3s ease;
   position: absolute;
-  padding-top: 4.5em;
   white-space: nowrap;
   z-index: 990;
   box-shadow: 3px 0 8px rgba(0, 0, 0, 0.2);
