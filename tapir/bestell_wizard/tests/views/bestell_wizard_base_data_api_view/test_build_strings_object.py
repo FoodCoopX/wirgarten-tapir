@@ -109,6 +109,11 @@ class TestBuildStringsObject(TapirUnitTest):
             cache=cache,
         )
         mock_parameter_value(
+            key=ParameterKeys.BESTELLWIZARD_STEP5B_HOME_DELIVERY_TITLE,
+            value="test_step5b_home_delivery_title",
+            cache=cache,
+        )
+        mock_parameter_value(
             key=ParameterKeys.BESTELLWIZARD_STEP5C_TITLE,
             value="test_step5c_title",
             cache=cache,
@@ -313,6 +318,7 @@ class TestBuildStringsObject(TapirUnitTest):
                 "step5a_title": "test_step5a_title",
                 "step5a_text": "test_step5a_text",
                 "step5b_title": "test_step5b_title",
+                "step5b_home_delivery_title": "test_step5b_home_delivery_title",
                 "step5c_title": "test_step5c_title",
                 "step5c_text": "test_step5c_text",
                 "home_delivery_choice_text": "test_home_delivery_choice_text",

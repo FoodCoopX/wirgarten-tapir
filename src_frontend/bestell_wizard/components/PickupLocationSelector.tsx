@@ -95,7 +95,7 @@ const PickupLocationSelector: React.FC<PickupLocationSelectorProps> = ({
                 setSelectedPickupLocations([pickupLocation]);
               }}
               className={getClassForPickupLocationListItem(pickupLocation)}
-              disabled={disabledLocationIds?.includes(pickupLocation.id!)}
+              disabled={disabledLocationIds?.includes(pickupLocation.id)}
             >
               <strong>{pickupLocation.name}</strong>{" "}
               {buildCapacityIndicator(pickupLocation)}

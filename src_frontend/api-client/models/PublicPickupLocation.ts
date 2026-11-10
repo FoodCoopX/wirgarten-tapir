@@ -26,49 +26,49 @@ export interface PublicPickupLocation {
    * @type {string}
    * @memberof PublicPickupLocation
    */
-  id?: string;
+  readonly id: string;
   /**
    *
    * @type {string}
    * @memberof PublicPickupLocation
    */
-  name: string;
+  readonly name: string;
   /**
    *
    * @type {string}
    * @memberof PublicPickupLocation
    */
-  latitude?: string | null;
+  readonly latitude: string | null;
   /**
    *
    * @type {string}
    * @memberof PublicPickupLocation
    */
-  longitude?: string | null;
+  readonly longitude: string | null;
   /**
    *
    * @type {string}
    * @memberof PublicPickupLocation
    */
-  street: string;
+  readonly street: string;
   /**
    *
    * @type {string}
    * @memberof PublicPickupLocation
    */
-  street2?: string;
+  readonly street2: string;
   /**
    *
    * @type {string}
    * @memberof PublicPickupLocation
    */
-  postcode: string;
+  readonly postcode: string;
   /**
    *
    * @type {string}
    * @memberof PublicPickupLocation
    */
-  city: string;
+  readonly city: string;
   /**
    *
    * @type {Array<PickupLocationOpeningTime>}
@@ -92,7 +92,7 @@ export interface PublicPickupLocation {
    * @type {boolean}
    * @memberof PublicPickupLocation
    */
-  isHomeDelivery?: boolean;
+  readonly isHomeDelivery: boolean;
 }
 
 /**
@@ -101,8 +101,12 @@ export interface PublicPickupLocation {
 export function instanceOfPublicPickupLocation(
   value: object,
 ): value is PublicPickupLocation {
+  if (!("id" in value) || value["id"] === undefined) return false;
   if (!("name" in value) || value["name"] === undefined) return false;
+  if (!("latitude" in value) || value["latitude"] === undefined) return false;
+  if (!("longitude" in value) || value["longitude"] === undefined) return false;
   if (!("street" in value) || value["street"] === undefined) return false;
+  if (!("street2" in value) || value["street2"] === undefined) return false;
   if (!("postcode" in value) || value["postcode"] === undefined) return false;
   if (!("city" in value) || value["city"] === undefined) return false;
   if (!("openingTimes" in value) || value["openingTimes"] === undefined)
@@ -113,6 +117,8 @@ export function instanceOfPublicPickupLocation(
   )
     return false;
   if (!("deliveryDay" in value) || value["deliveryDay"] === undefined)
+    return false;
+  if (!("isHomeDelivery" in value) || value["isHomeDelivery"] === undefined)
     return false;
   return true;
 }
@@ -129,12 +135,12 @@ export function PublicPickupLocationFromJSONTyped(
     return json;
   }
   return {
-    id: json["id"] == null ? undefined : json["id"],
+    id: json["id"],
     name: json["name"],
-    latitude: json["latitude"] == null ? undefined : json["latitude"],
-    longitude: json["longitude"] == null ? undefined : json["longitude"],
+    latitude: json["latitude"],
+    longitude: json["longitude"],
     street: json["street"],
-    street2: json["street_2"] == null ? undefined : json["street_2"],
+    street2: json["street_2"],
     postcode: json["postcode"],
     city: json["city"],
     openingTimes: (json["opening_times"] as Array<any>).map(
@@ -142,8 +148,7 @@ export function PublicPickupLocationFromJSONTyped(
     ),
     currentDeliveryCharge: json["current_delivery_charge"],
     deliveryDay: json["delivery_day"],
-    isHomeDelivery:
-      json["is_home_delivery"] == null ? undefined : json["is_home_delivery"],
+    isHomeDelivery: json["is_home_delivery"],
   };
 }
 
@@ -154,7 +159,18 @@ export function PublicPickupLocationToJSON(json: any): PublicPickupLocation {
 export function PublicPickupLocationToJSONTyped(
   value?: Omit<
     PublicPickupLocation,
-    "opening_times" | "current_delivery_charge" | "delivery_day"
+    | "id"
+    | "name"
+    | "latitude"
+    | "longitude"
+    | "street"
+    | "street_2"
+    | "postcode"
+    | "city"
+    | "opening_times"
+    | "current_delivery_charge"
+    | "delivery_day"
+    | "is_home_delivery"
   > | null,
   ignoreDiscriminator: boolean = false,
 ): any {
@@ -162,15 +178,5 @@ export function PublicPickupLocationToJSONTyped(
     return value;
   }
 
-  return {
-    id: value["id"],
-    name: value["name"],
-    latitude: value["latitude"],
-    longitude: value["longitude"],
-    street: value["street"],
-    street_2: value["street2"],
-    postcode: value["postcode"],
-    city: value["city"],
-    is_home_delivery: value["isHomeDelivery"],
-  };
+  return {};
 }

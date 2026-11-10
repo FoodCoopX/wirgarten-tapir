@@ -18,7 +18,7 @@ import { getFirstDelivery } from "../utils/getFirstDelivery.ts";
 import { wouldTheOrderFitTheProductCapacities } from "../utils/wouldTheOrderFitTheProductCapacities.ts";
 import "./map.css";
 
-interface Step5BPickupLocationMapProps {
+interface Step5CPickupLocationMapProps {
   pickupLocations: PublicPickupLocation[];
   selectedPickupLocations: PublicPickupLocation[];
   setSelectedPickupLocations: (locations: PublicPickupLocation[]) => void;
@@ -38,7 +38,7 @@ interface Step5BPickupLocationMapProps {
   changesDisabled: boolean;
 }
 
-const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
+const Step5CPickupLocationMap: React.FC<Step5CPickupLocationMapProps> = ({
   pickupLocations,
   selectedPickupLocations,
   setSelectedPickupLocations,
@@ -218,7 +218,7 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
                     ),
                   )
                     ? getFirstDelivery(
-                        pickupLocation.id!,
+                        pickupLocation.id,
                         firstDeliveryDatesByPickupLocationAndProductType,
                       )
                     : "Kapazität frei"}
@@ -255,4 +255,4 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
   );
 };
 
-export default Step5BPickupLocationMap;
+export default Step5CPickupLocationMap;

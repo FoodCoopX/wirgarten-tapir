@@ -1,29 +1,25 @@
-import React from "react";
-import { PublicPickupLocation, PublicProductType } from "../../api-client";
-import "./map.css";
 import "leaflet/dist/leaflet.css";
+import React from "react";
+import { Form } from "react-bootstrap";
+import { PublicPickupLocation } from "../../api-client";
 import TapirButton from "../../components/TapirButton.tsx";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
-import { Form } from "react-bootstrap";
-import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
-import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
+import "./map.css";
 
-interface Step5BPickupLocationWishesProps {
+interface Step5CPickupLocationWishesProps {
+  pickupLocations: PublicPickupLocation[];
   selectedPickupLocations: PublicPickupLocation[];
   setSelectedPickupLocations: (locations: PublicPickupLocation[]) => void;
   pickupLocationsWithCapacityFull: Set<PublicPickupLocation>;
-  settings: BestellWizardSettings;
-  shoppingCart: ShoppingCart;
-  productTypesInWaitingList: Set<PublicProductType>;
 }
 
-const Step5BPickupLocationWishes: React.FC<Step5BPickupLocationWishesProps> = ({
+const MAX_NUMBER_OF_WISHES = 3;
+
+const Step5CPickupLocationWishes: React.FC<Step5CPickupLocationWishesProps> = ({
+  pickupLocations,
   selectedPickupLocations,
   setSelectedPickupLocations,
   pickupLocationsWithCapacityFull,
-  settings,
-  shoppingCart,
-  productTypesInWaitingList,
 }) => {
   function setPickupLocationAtIndex(
     pickupLocation: PublicPickupLocation,
@@ -35,7 +31,7 @@ const Step5BPickupLocationWishes: React.FC<Step5BPickupLocationWishesProps> = ({
   }
 
   function getOptions(index: number) {
-    let options = settings.pickupLocations;
+    let options = pickupLocations;
     for (let i = 0; i < index; i++) {
       options = options.filter(
         (pickupLocation) => pickupLocation !== selectedPickupLocations[i],
@@ -56,6 +52,10 @@ const Step5BPickupLocationWishes: React.FC<Step5BPickupLocationWishesProps> = ({
     return label;
   }
 
+  const unselectedPickupLocations = pickupLocations.filter(
+    (pickupLocation) => !selectedPickupLocations.includes(pickupLocation),
+  );
+
   return (
     <div className={"d-flex flex-column gap-2 align-items-center"}>
       {selectedPickupLocations.map((selectedPickupLocation, index) => (
@@ -66,7 +66,7 @@ const Step5BPickupLocationWishes: React.FC<Step5BPickupLocationWishesProps> = ({
               style={{ maxWidth: "200px" }}
               onChange={(event) =>
                 setPickupLocationAtIndex(
-                  settings.pickupLocations.find(
+                  pickupLocations.find(
                     (pickupLocation) =>
                       pickupLocation.id === event.target.value,
                   )!,
@@ -96,21 +96,22 @@ const Step5BPickupLocationWishes: React.FC<Step5BPickupLocationWishesProps> = ({
           </div>
         </Form.Group>
       ))}
-      {selectedPickupLocations.length < 3 && (
-        <TapirButton
-          variant={BUTTON_VARIANT}
-          text={"Weiterer Wunsch"}
-          icon={"add_circle"}
-          onClick={() =>
-            setSelectedPickupLocations([
-              ...selectedPickupLocations,
-              settings.pickupLocations[0],
-            ])
-          }
-        />
-      )}
+      {selectedPickupLocations.length < MAX_NUMBER_OF_WISHES &&
+        unselectedPickupLocations.length > 0 && (
+          <TapirButton
+            variant={BUTTON_VARIANT}
+            text={"Weiterer Wunsch"}
+            icon={"add_circle"}
+            onClick={() =>
+              setSelectedPickupLocations([
+                ...selectedPickupLocations,
+                unselectedPickupLocations[0],
+              ])
+            }
+          />
+        )}
     </div>
   );
 };
 
-export default Step5BPickupLocationWishes;
+export default Step5CPickupLocationWishes;

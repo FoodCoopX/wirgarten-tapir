@@ -31,7 +31,7 @@ import Step10OrderSummary from "../../bestell_wizard_mobile/steps/Step10OrderSum
 import Step11Legal from "../../bestell_wizard_mobile/steps/Step11Legal.tsx";
 import Step3BGrowingPeriodChoice from "../../bestell_wizard_mobile/steps/Step3BGrowingPeriodChoice.tsx";
 import Step4BProductTypeOrder from "../../bestell_wizard_mobile/steps/Step4BProductTypeOrder.tsx";
-import Step5BPickupLocationChoice from "../../bestell_wizard_mobile/steps/Step5BPickupLocationChoice.tsx";
+import Step5CPickupLocationChoice from "../../bestell_wizard_mobile/steps/Step5CPickupLocationChoice.tsx";
 import Step9BankingData from "../../bestell_wizard_mobile/steps/Step9BankingData.tsx";
 import StepGenericIntro from "../../bestell_wizard_mobile/steps/StepGenericIntro.tsx";
 import { PickupLocationTab } from "../../bestell_wizard_mobile/types/PickupLocationTab.ts";
@@ -239,7 +239,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
     newSteps.push(productTypeId + "_intro", productTypeId + "_order");
 
     if (mustAddPickupLocation) {
-      newSteps.push("5a_pickup_location_intro", "5b_pickup_location_choice");
+      newSteps.push("5a_pickup_location_intro", "5c_pickup_location_choice");
     }
 
     newSteps.push("9_banking_data", "10_summary", "11_legal");
@@ -383,7 +383,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
         publicWaitingListEntryExistingMemberCreateRequest: {
           shoppingCart: shoppingCart,
           pickupLocationIds: selectedPickupLocations.map(
-            (pickupLocations) => pickupLocations.id!,
+            (pickupLocations) => pickupLocations.id,
           ),
           memberId: memberId,
         },
@@ -434,9 +434,9 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
             stepActive={step === currentStep}
           />
         );
-      case "5b_pickup_location_choice":
+      case "5c_pickup_location_choice":
         return (
-          <Step5BPickupLocationChoice
+          <Step5CPickupLocationChoice
             settings={settings}
             selectedPickupLocations={selectedPickupLocations}
             setSelectedPickupLocations={setSelectedPickupLocations}
@@ -445,7 +445,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
             }
             pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
             goToNextStep={goToNextStep}
-            stepIsActive={step === "5b_pickup_location_choice"}
+            stepIsActive={step === "5c_pickup_location_choice"}
             firstDeliveryDatesByPickupLocationAndProductType={
               firstDeliveryDatesByPickupLocationAndProductType
             }

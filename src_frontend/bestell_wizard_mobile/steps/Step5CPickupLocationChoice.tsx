@@ -8,17 +8,18 @@ import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import DeliveryDayTabs from "../../components/DeliveryDayTabs.tsx";
 import { getUniqueDeliveryDays } from "../../utils/getUniqueDeliveryDays.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
-import Step5BPickupLocationList from "../components/Step5BPickupLocationList.tsx";
-import Step5BPickupLocationMap from "../components/Step5BPickupLocationMap.tsx";
-import Step5BPickupLocationWishes from "../components/Step5BPickupLocationWishes.tsx";
+import Step5CPickupLocationList from "../components/Step5CPickupLocationList.tsx";
+import Step5CPickupLocationMap from "../components/Step5CPickupLocationMap.tsx";
+import Step5CPickupLocationWishes from "../components/Step5CPickupLocationWishes.tsx";
 import {
   ALL_PICKUP_LOCATION_TABS,
   PickupLocationTab,
 } from "../types/PickupLocationTab.ts";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
-import { wouldTheOrderFitTheProductCapacities } from "../utils/wouldTheOrderFitTheProductCapacities.ts";
+import { getPickupLocationsForDeliveryMode } from "../utils/getPickupLocationsForDeliveryMode.ts";
+import { shouldShowPickupLocationWishes } from "../utils/shouldShowPickupLocationWishes.ts";
 
-interface Step5BPickupLocationChoiceProps {
+interface Step5CPickupLocationChoiceProps {
   settings: BestellWizardSettings;
   selectedPickupLocations: PublicPickupLocation[];
   setSelectedPickupLocations: (locations: PublicPickupLocation[]) => void;
@@ -53,7 +54,7 @@ function getTabName(tab: PickupLocationTab) {
   }
 }
 
-const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
+const Step5CPickupLocationChoice: React.FC<Step5CPickupLocationChoiceProps> = ({
   settings,
   selectedPickupLocations,
   setSelectedPickupLocations,
@@ -81,19 +82,24 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
     null,
   );
 
-  const availableDeliveryDays = useMemo(
-    () => getUniqueDeliveryDays(settings.pickupLocations),
+  const pickupLocations = useMemo(
+    () => getPickupLocationsForDeliveryMode(settings.pickupLocations, "pickup"),
     [settings.pickupLocations],
+  );
+
+  const availableDeliveryDays = useMemo(
+    () => getUniqueDeliveryDays(pickupLocations),
+    [pickupLocations],
   );
 
   const filteredPickupLocations = useMemo(() => {
     if (selectedDeliveryDay === null) {
-      return settings.pickupLocations;
+      return pickupLocations;
     }
-    return settings.pickupLocations.filter(
+    return pickupLocations.filter(
       (loc) => loc.deliveryDay === selectedDeliveryDay,
     );
-  }, [settings.pickupLocations, selectedDeliveryDay]);
+  }, [pickupLocations, selectedDeliveryDay]);
 
   useEffect(() => {
     if (!stepActive) {
@@ -129,29 +135,15 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
   }, [carouselRef, mapRef]);
 
   function showTabWishes() {
-    if (changesDisabled) {
-      return false;
-    }
-
-    if (
-      !wouldTheOrderFitTheProductCapacities(
-        shoppingCart,
-        productTypeIdsOverCapacity,
-        productIdsOverCapacity,
-        settings,
-      )
-    ) {
-      return true;
-    }
-
-    switch (selectedPickupLocations.length) {
-      case 0:
-        return false;
-      case 1:
-        return pickupLocationsWithCapacityFull.has(selectedPickupLocations[0]);
-      default:
-        return true;
-    }
+    return shouldShowPickupLocationWishes(
+      changesDisabled,
+      shoppingCart,
+      productTypeIdsOverCapacity,
+      productIdsOverCapacity,
+      settings,
+      selectedPickupLocations,
+      pickupLocationsWithCapacityFull,
+    );
   }
 
   function getNextButtonText() {
@@ -209,7 +201,7 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
       >
         <Carousel.Item style={{ position: "absolute", inset: 0 }}>
           <div style={{ position: "absolute", inset: 0 }}>
-            <Step5BPickupLocationMap
+            <Step5CPickupLocationMap
               pickupLocations={filteredPickupLocations}
               selectedPickupLocations={selectedPickupLocations}
               setSelectedPickupLocations={setSelectedPickupLocations}
@@ -231,7 +223,7 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
           </div>
         </Carousel.Item>
         <Carousel.Item style={{ position: "absolute", inset: 0 }}>
-          <Step5BPickupLocationList
+          <Step5CPickupLocationList
             pickupLocations={filteredPickupLocations}
             selectedPickupLocations={selectedPickupLocations}
             setSelectedPickupLocations={setSelectedPickupLocations}
@@ -251,13 +243,11 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
         </Carousel.Item>
         {showTabWishes() && (
           <Carousel.Item>
-            <Step5BPickupLocationWishes
-              settings={settings}
+            <Step5CPickupLocationWishes
+              pickupLocations={pickupLocations}
               selectedPickupLocations={selectedPickupLocations}
               setSelectedPickupLocations={setSelectedPickupLocations}
               pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
-              shoppingCart={shoppingCart}
-              productTypesInWaitingList={productTypesInWaitingList}
             />
           </Carousel.Item>
         )}
@@ -274,4 +264,4 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
   );
 };
 
-export default Step5BPickupLocationChoice;
+export default Step5CPickupLocationChoice;

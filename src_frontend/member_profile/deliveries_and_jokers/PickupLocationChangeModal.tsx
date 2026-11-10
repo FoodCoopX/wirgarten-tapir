@@ -209,7 +209,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
           publicWaitingListEntryExistingMemberCreateRequest: {
             memberId: memberId,
             pickupLocationIds: selectedPickupLocations.map(
-              (pickupLocations) => pickupLocations.id!,
+              (pickupLocations) => pickupLocations.id,
             ),
             shoppingCart: {},
           },
@@ -257,7 +257,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
     } else {
       pickupLocationsApi
         .pickupLocationsApiChangeMemberPickupLocationCreate({
-          pickupLocationId: selectedPickupLocations[0].id!,
+          pickupLocationId: selectedPickupLocations[0].id,
           memberId: memberId,
         })
         .then((response) => {

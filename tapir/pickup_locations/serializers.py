@@ -130,6 +130,7 @@ class PublicPickupLocationSerializer(serializers.ModelSerializer):
             "delivery_day",
             "is_home_delivery",
         ]
+        read_only_fields = fields
 
     opening_times = serializers.SerializerMethodField()
     current_delivery_charge = serializers.SerializerMethodField()

@@ -1,5 +1,5 @@
-import { Step } from "../types/Step.ts";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
+import { Step } from "../types/Step.ts";
 import { getProductTypeFromStep } from "./getProductTypeFromStep.ts";
 
 export function getStepBackground(
@@ -15,7 +15,9 @@ export function getStepBackground(
     case "3_product_type_choice":
       return settings.images.step3BackgroundImage;
     case "5a_pickup_location_intro":
-    case "5b_pickup_location_choice":
+    case "5b_delivery_mode_choice":
+    case "5c_pickup_location_choice":
+    case "5d_home_delivery_choice":
       return settings.images.step5BackgroundImage;
     case "6a_coop_intro":
     case "6b_coop_shares":
@@ -23,6 +25,7 @@ export function getStepBackground(
     case "7_solidarity_contribution":
       return settings.images.step4dBackgroundImage;
     case "8_personal_data":
+    case "8b_delivery_address":
       return settings.images.step8BackgroundImage;
     case "9_banking_data":
       return settings.images.step9BackgroundImage;

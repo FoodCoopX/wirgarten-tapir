@@ -9417,6 +9417,8 @@ components:
           type: string
         step5b_title:
           type: string
+        step5b_home_delivery_title:
+          type: string
         step5c_title:
           type: string
         step5c_text:
@@ -9529,6 +9531,7 @@ components:
       - step4d_title
       - step5a_text
       - step5a_title
+      - step5b_home_delivery_title
       - step5b_title
       - step5c_text
       - step5c_title
@@ -16259,38 +16262,40 @@ components:
       properties:
         id:
           type: string
-          maxLength: 10
+          readOnly: true
         name:
           type: string
-          maxLength: 150
+          readOnly: true
         latitude:
           type: string
           format: decimal
           pattern: ^-?\d{0,2}(?:\.\d{0,10})?$
+          readOnly: true
           nullable: true
           title: Breitengrad
         longitude:
           type: string
           format: decimal
           pattern: ^-?\d{0,2}(?:\.\d{0,10})?$
+          readOnly: true
           nullable: true
           title: Längengrad
         street:
           type: string
+          readOnly: true
           title: Straße und Hausnummer
-          maxLength: 150
         street_2:
           type: string
+          readOnly: true
           title: Adresszusatz
-          maxLength: 150
         postcode:
           type: string
+          readOnly: true
           title: Postleitzahl
-          maxLength: 32
         city:
           type: string
+          readOnly: true
           title: Ort
-          maxLength: 50
         opening_times:
           type: array
           items:
@@ -16307,15 +16312,21 @@ components:
           readOnly: true
         is_home_delivery:
           type: boolean
+          readOnly: true
           title: Hauslieferung
       required:
       - city
       - current_delivery_charge
       - delivery_day
+      - id
+      - is_home_delivery
+      - latitude
+      - longitude
       - name
       - opening_times
       - postcode
       - street
+      - street_2
     PublicProduct:
       type: object
       properties:
