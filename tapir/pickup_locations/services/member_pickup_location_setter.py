@@ -21,12 +21,14 @@ from tapir.pickup_locations.services.home_delivery_address_validator import (
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
+from tapir.pickup_locations.services.pickup_location_mail_token_service import (
+    PickupLocationMailTokenService,
+)
 from tapir.pickup_locations.services.pickup_location_opening_times_formatter import (
     PickupLocationOpeningTimesFormatter,
 )
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.services.tapir_cache_manager import TapirCacheManager
-from tapir.utils.user_utils import UserUtils
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import Member, MemberPickupLocation
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -110,11 +112,8 @@ class MemberPickupLocationSetter:
                                 cache=cache,
                             )
                         ),
-                        "address": UserUtils.build_display_address(
-                            street=new_pickup_location.street,
-                            street_2=new_pickup_location.street_2,
-                            postcode=new_pickup_location.postcode,
-                            city=new_pickup_location.city,
+                        "address": PickupLocationMailTokenService.build_address(
+                            member=member, pickup_location=new_pickup_location
                         ),
                         "access_code": new_pickup_location.access_code,
                         "messenger_group_link": new_pickup_location.messenger_group_link,
