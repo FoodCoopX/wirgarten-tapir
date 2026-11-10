@@ -1,7 +1,7 @@
 <#ftl output_format="HTML">
 <#macro emailLayout>
 <!DOCTYPE html>
-<html lang="${locale.language}" dir="${(ltr)?then('ltr','rtl')}">
+<html lang="${locale.language}" dir="${(ltr!true)?then('ltr','rtl')}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
