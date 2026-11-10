@@ -1237,14 +1237,14 @@ files = [
 
 [[package]]
 name = "django"
-version = "6.0.9"
+version = "6.1.2"
 description = "A high-level Python web framework that encourages rapid development and clean, pragmatic design."
 optional = false
 python-versions = ">=3.12"
 groups = ["main", "dev"]
 files = [
-    {file = "django-6.0.9-py3-none-any.whl", hash = "sha256:5c6473d05bbea9c43359cc36701b5deec3c925f5311963786e1346544c1a68c0"},
-    {file = "django-6.0.9.tar.gz", hash = "sha256:8ce037c971f421cfb47d38c097ca233a8f6dd42d9e9501a37e02dd7d08c5cb3f"},
+    {file = "django-6.1.2-py3-none-any.whl", hash = "sha256:141efee6ec64d1db6db90683bf734c550102450f444fb099063b0be1bd27d991"},
+    {file = "django-6.1.2.tar.gz", hash = "sha256:a1e92451ccb8b514e91bbb3b6d186d20b4030558f116b5d9de6535455ff210b7"},
 ]
 
 [package.dependencies]
@@ -5140,4 +5140,4 @@ bakery = ["ortools"]
 [metadata]
 lock-version = "2.1"
 python-versions = "3.14.10"
-content-hash = "4294c47ae09761937fdb9669d63f85a36983414d129970c5042eb6a5dad6d028"
+content-hash = "9d875ce3a58e134140eb85eb067daf02189f6ebb5b071bf3702e27aee0273b00"

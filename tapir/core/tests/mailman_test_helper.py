@@ -81,7 +81,9 @@ class MailmanTestHelper:
     @classmethod
     def build_mock_list(cls, mailing_list_data: MockMailingListData):
         mock_list = Mock()
-        mock_list.fqdn_listname = f"{mailing_list_data.name}@{settings.EMAIL_HOST}"
+        mock_list.fqdn_listname = (
+            f"{mailing_list_data.name}@{settings.MAILING_LIST_DOMAIN}"
+        )
         mock_list.members = [
             Mock(address=recipient)
             for recipient in mailing_list_data.confirmed_recipients
