@@ -30,7 +30,7 @@ class TestGetProductTypeIdsWithoutEnoughCapacityForOrder(TapirUnitTest):
         }
 
         mock_is_there_enough_free_global_capacity_for_single_product_type.side_effect = (
-            lambda order_for_a_single_product_type, member_id, subscription_start_date, product_type_id, check_waiting_list_entries, cache: product_type_id
+            lambda order_for_a_single_product_type, member_id, subscription_start_date, product_type_id, check_waiting_list_entries, cache, extra_capacity_used_by_member, extra_capacity_used_by_other_members: product_type_id
             == product_2.type_id
         )
 
@@ -55,6 +55,8 @@ class TestGetProductTypeIdsWithoutEnoughCapacityForOrder(TapirUnitTest):
                     product_type_id=product_1.type_id,
                     check_waiting_list_entries=True,
                     cache=cache,
+                    extra_capacity_used_by_member=0,
+                    extra_capacity_used_by_other_members=0,
                 ),
                 call(
                     order_for_a_single_product_type={product_2: 2},
@@ -63,6 +65,8 @@ class TestGetProductTypeIdsWithoutEnoughCapacityForOrder(TapirUnitTest):
                     product_type_id=product_2.type_id,
                     check_waiting_list_entries=True,
                     cache=cache,
+                    extra_capacity_used_by_member=0,
+                    extra_capacity_used_by_other_members=0,
                 ),
                 call(
                     order_for_a_single_product_type={product_3: 3},
@@ -71,6 +75,8 @@ class TestGetProductTypeIdsWithoutEnoughCapacityForOrder(TapirUnitTest):
                     product_type_id=product_3.type_id,
                     check_waiting_list_entries=True,
                     cache=cache,
+                    extra_capacity_used_by_member=0,
+                    extra_capacity_used_by_other_members=0,
                 ),
             ],
             any_order=True,

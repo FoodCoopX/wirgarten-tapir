@@ -7,8 +7,6 @@ CLOSED = "closed"
 SIMPLE = "simple"
 TRAFFIC_LIGHT = "traffic_light"
 
-SOLIDARITY = "solidarity"
-
 OPTIONS_BIDDING_ROUND_STATUS = [
     (CONFIGURATION, _("Konfiguration")),
     (ACTIVE, _("Aktiv")),

@@ -39,10 +39,21 @@ class MemberPickupLocationSetter:
         valid_from: datetime.date,
         actor: TapirUser | None,
         cache: dict,
+        send_change_mail: bool = True,
     ):
         old_pickup_location = MemberPickupLocationGetter.get_member_pickup_location(
             member=member, reference_date=valid_from, cache=cache
         )
+
+        if (
+            old_pickup_location is not None
+            and pickup_location_id is not None
+            and old_pickup_location.id == pickup_location_id
+        ):
+            # The pickup location does not actually change, so there is nothing to link,
+            # log, refund or notify about.
+            return
+
         if old_pickup_location is None:
             valid_from = min(valid_from, get_today(cache=cache))
 
@@ -84,6 +95,11 @@ class MemberPickupLocationSetter:
                 MemberCreditCreator.save_credits_with_log_entries(
                     refund_credits, actor=actor
                 )
+
+            if not send_change_mail:
+                # The change is recorded (and refunded) but the member is not notified,
+                # e.g. when contracts are created from a bidding round.
+                return
 
             pickup_location = TapirCache.get_pickup_location_by_id(
                 cache=cache, pickup_location_id=pickup_location_id

@@ -60,6 +60,8 @@ class TestCheckForPickingModeShare(TapirIntegrationTest):
             subscription_start=subscription_start,
             ordered_product_to_quantity_map=ordered_product_to_quantity_map,
             check_waiting_list_entries=True,
+            extra_capacity_used_by_member_by_product_type=None,
+            extra_capacity_used_by_other_members=0,
             cache=cache,
         )
 
@@ -109,6 +111,8 @@ class TestCheckForPickingModeShare(TapirIntegrationTest):
                     subscription_start=subscription_start,
                     ordered_product_to_quantity_map=ordered_product_to_quantity_map,
                     check_waiting_list_entries=True,
+                    extra_capacity_used_by_member_by_product_type=None,
+                    extra_capacity_used_by_other_members=0,
                     cache=cache,
                 ),
                 call(
@@ -118,6 +122,8 @@ class TestCheckForPickingModeShare(TapirIntegrationTest):
                     subscription_start=subscription_start,
                     ordered_product_to_quantity_map=ordered_product_to_quantity_map,
                     check_waiting_list_entries=True,
+                    extra_capacity_used_by_member_by_product_type=None,
+                    extra_capacity_used_by_other_members=0,
                     cache=cache,
                 ),
             ],

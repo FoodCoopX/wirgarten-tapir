@@ -27,10 +27,18 @@ class GlobalCapacityChecker:
         subscription_start_date: datetime.date,
         cache: dict,
         check_waiting_list_entries: bool = True,
+        extra_capacity_used_by_member_by_product_type: dict | None = None,
+        extra_capacity_used_by_other_members_by_product_type: dict | None = None,
     ):
         product_type_ids = {
             product.type_id for product in order_with_all_product_types.keys()
         }
+        extra_capacity_used_by_member_by_product_type = (
+            extra_capacity_used_by_member_by_product_type or {}
+        )
+        extra_capacity_used_by_other_members_by_product_type = (
+            extra_capacity_used_by_other_members_by_product_type or {}
+        )
         product_type_ids_without_enough_capacity = []
         for product_type_id in product_type_ids:
             enough = cls.is_there_enough_free_global_capacity_for_single_product_type(
@@ -44,6 +52,16 @@ class GlobalCapacityChecker:
                 product_type_id=product_type_id,
                 check_waiting_list_entries=check_waiting_list_entries,
                 cache=cache,
+                extra_capacity_used_by_member=(
+                    extra_capacity_used_by_member_by_product_type.get(
+                        product_type_id, 0
+                    )
+                ),
+                extra_capacity_used_by_other_members=(
+                    extra_capacity_used_by_other_members_by_product_type.get(
+                        product_type_id, 0
+                    )
+                ),
             )
             if not enough:
                 product_type_ids_without_enough_capacity.append(product_type_id)
@@ -74,6 +92,8 @@ class GlobalCapacityChecker:
         product_type_id,
         check_waiting_list_entries: bool,
         cache: dict,
+        extra_capacity_used_by_member: float = 0,
+        extra_capacity_used_by_other_members: float = 0,
     ):
         free_capacity = ProductTypeLowestFreeCapacityAfterDateCalculator.get_lowest_free_capacity_after_date(
             product_type=TapirCache.get_product_type_by_id(
@@ -110,7 +130,9 @@ class GlobalCapacityChecker:
         return free_capacity >= (
             capacity_used_by_the_ordered_products
             - float(capacity_used_by_the_current_subscriptions)
+            - float(extra_capacity_used_by_member)
             + float(capacity_reserved_by_the_waiting_list_entries)
+            + float(extra_capacity_used_by_other_members)
         )
 
     @classmethod
