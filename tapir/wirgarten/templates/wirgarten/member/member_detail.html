@@ -44,6 +44,18 @@
           </div>
         </a>
       {% endif %}
+      {% if open_bidding_round %}
+        <a href="{% url 'bidding_rounds:bidding_rounds' %}"
+           class="btn btn-lg w-100 d-flex align-items-center justify-content-center gap-2"
+           style="background-color: #2E7D32; color: white; border: none; padding: 1rem; transition: all 0.3s ease;"
+           onmouseover="this.style.backgroundColor='#388E3C'"
+           onmouseout="this.style.backgroundColor='#2E7D32'">
+          <div class="d-flex flex-column align-items-start">
+            <strong style="font-size: 1.1rem;">Zur {{ bidding_round_display_name }}</strong>
+            <small style="opacity: 0.9;">Gib dein Gebot für die nächste Saison ab.</small>
+          </div>
+        </a>
+      {% endif %}
       {% if show_coop_shares %}
         <div id="coop_shares_card"
              data-member-id="{{ object.id }}"
