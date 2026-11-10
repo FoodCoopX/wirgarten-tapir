@@ -6,7 +6,7 @@ import unicodedata
 from csv import DictReader
 from typing import Literal
 
-from django.core.management import BaseCommand
+from django.core.management import BaseCommand, CommandError
 from django.db import transaction
 from icecream import ic
 
@@ -51,7 +51,12 @@ from tapir.wirgarten.models import (
 
 
 class Command(BaseCommand):
-    help = "Imports data from CSV files into the database"
+    help = (
+        "Imports data from CSV files into the database. For a historical SEPA import, "
+        "add Mandatsreferenz to the full members CSV and supply consent_sepa as the original "
+        "signature date, plus IBAN and Kontoinhaber. Existing accounts must match "
+        "both Nr and Mailadresse. Use --dry-run to check the file first."
+    )
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -171,6 +176,19 @@ class Command(BaseCommand):
             if options.get("verify_csv"):
                 self.verify_csv(cleaned_headers, raw_headers, reader)
                 return
+
+            if (
+                import_type == "members"
+                and MemberImporter.MANDATE_REFERENCE_COLUMN in cleaned_headers
+            ):
+                if delete_all:
+                    raise CommandError(
+                        "Der Import historischer Mandate unterstützt kein --delete-all."
+                    )
+                if len(cleaned_headers) != len(set(cleaned_headers)):
+                    raise CommandError(
+                        "Doppelte Spalten im Import historischer Mandate."
+                    )
 
             with transaction.atomic():
                 if delete_all:

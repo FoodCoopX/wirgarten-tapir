@@ -1,7 +1,9 @@
 import datetime
 
 from django.core.management.base import OutputWrapper
+from django.core.validators import validate_email
 from django.utils import timezone
+from localflavor.generic.validators import IBANValidator
 
 from tapir.accounts.models import TapirUser
 from tapir.accounts.services.email_normaliser import EmailNormaliser
@@ -19,6 +21,9 @@ from tapir.log.util import freeze_for_log
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
+from tapir.payments.services.mandate_reference_pattern_validator import (
+    MandateReferencePatternValidator,
+)
 from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.utils.config import (
     MEMBER_IMPORT_STATUS_UPDATED,
@@ -30,6 +35,7 @@ from tapir.utils.models import MemberImportedLogEntry, MemberImportUpdatedLogEnt
 from tapir.utils.services.data_import_utils import DataImportUtils
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import (
+    MandateReference,
     PickupLocation,
     Member,
     MemberPickupLocation,
@@ -39,6 +45,8 @@ from tapir.wirgarten.utils import get_now, get_today
 
 
 class MemberImporter:
+    MANDATE_REFERENCE_COLUMN = "Mandatsreferenz"
+
     @classmethod
     def import_member(
         cls,
@@ -51,7 +59,14 @@ class MemberImporter:
             return None
 
         member_no = int(DataImportUtils.normalize_cell(row.get("Nr")))
-        member = Member.objects.filter(member_no=member_no).first()
+        members = Member.objects.filter(member_no=member_no)
+        if cls.MANDATE_REFERENCE_COLUMN in row:
+            if member_no < 1:
+                raise TapirDataImportException("Die Mitgliedsnummer muss positiv sein.")
+            member = members.select_for_update().first()
+            row = cls.prepare_historical_mandate_row(member, row)
+        else:
+            member = members.first()
 
         if member:
             if not update_existing:
@@ -72,6 +87,88 @@ class MemberImporter:
             )
         except Exception as e:
             raise TapirDataImportException(f"Error creating member {member_no}: {e}")
+
+    @classmethod
+    def prepare_historical_mandate_row(cls, member: Member | None, row: dict):
+        email = EmailNormaliser.normalise(row.get("Mailadresse") or "")
+        validate_email(email)
+        other_users = TapirUser.objects.filter(email__iexact=email)
+        if member is not None:
+            other_users = other_users.exclude(pk=member.pk)
+        if other_users.exists() or (
+            member is not None and EmailNormaliser.normalise(member.email) != email
+        ):
+            raise TapirDataImportException(
+                "Mitgliedsnummer und E-Mail-Adresse stimmen nicht eindeutig mit einem Konto überein."
+            )
+        row = {**row, "Mailadresse": member.email if member else email}
+
+        reference = DataImportUtils.normalize_cell(row[cls.MANDATE_REFERENCE_COLUMN])
+        iban = DataImportUtils.normalize_cell(row.get("IBAN")).replace(" ", "")
+        date = DataImportUtils.normalize_cell(row.get("consent_sepa"))
+        if (
+            member
+            and member.iban
+            and member.iban.replace(" ", "").upper() != iban.upper()
+        ):
+            raise TapirDataImportException(
+                "Die vorhandene IBAN weicht ab. Bitte das Mandat vor dem Import prüfen."
+            )
+        if not any((reference, iban, date)):
+            if member and MandateReference.objects.filter(member=member).exists():
+                raise TapirDataImportException(
+                    "Für das vorhandene Mandat fehlen die Importdaten."
+                )
+            return row
+        if (
+            not reference
+            or not iban
+            or not date
+            or not DataImportUtils.is_cell_filled(row, "Kontoinhaber")
+        ):
+            raise TapirDataImportException(
+                "Bitte Mandatsreferenz, consent_sepa, IBAN und Kontoinhaber gemeinsam angeben."
+            )
+        validator = MandateReferencePatternValidator
+        if len(reference) > validator.MANDATE_REF_LENGTH or any(
+            char.upper() not in validator.ALLOWED_SYMBOLS for char in reference
+        ):
+            raise TapirDataImportException("Ungültige historische Mandatsreferenz.")
+        IBANValidator()(iban)
+        signature = DataImportUtils.to_datetime_from_date(date)
+        if signature is None or signature.date() > get_today(cache={}):
+            raise TapirDataImportException(
+                "consent_sepa muss ein gültiges historisches Datum sein."
+            )
+        return {
+            **row,
+            cls.MANDATE_REFERENCE_COLUMN: reference,
+            "consent_sepa": signature.isoformat(),
+        }
+
+    @staticmethod
+    def save_historical_mandate(
+        member: Member, reference: str, signature: datetime.datetime
+    ):
+        if (
+            MandateReference.objects.filter(member=member)
+            .exclude(ref=reference)
+            .exists()
+        ):
+            raise TapirDataImportException(
+                "Für das Mitglied ist bereits eine andere Mandatsreferenz gespeichert."
+            )
+        mandate, created = MandateReference.objects.get_or_create(
+            ref=reference, defaults={"member": member, "start_ts": signature}
+        )
+        if (
+            mandate.member_id != member.pk
+            or mandate.start_ts.date() != signature.date()
+        ):
+            raise TapirDataImportException(
+                "Die Mandatsreferenz ist bereits für ein anderes Konto oder Datum gespeichert."
+            )
+        return created
 
     @classmethod
     def get_pickup_location_by_name(cls, name: str):
@@ -230,7 +327,10 @@ class MemberImporter:
         if DataImportUtils.update_if_diff(member, "street", new_street):
             member_updated = True
 
-        target_mail = cls.build_mail(row=row, member_no=member.member_no)
+        if cls.MANDATE_REFERENCE_COLUMN in row:
+            target_mail = row["Mailadresse"]
+        else:
+            target_mail = cls.build_mail(row=row, member_no=member.member_no)
         if DataImportUtils.update_if_diff(
             member,
             "email",
@@ -249,6 +349,14 @@ class MemberImporter:
         if member_updated:
             member.save()
 
+        reference = row.get(cls.MANDATE_REFERENCE_COLUMN)
+        if reference:
+            return (
+                cls.save_historical_mandate(
+                    member, reference, target_consents["sepa_consent"]
+                )
+                or member_updated
+            )
         return member_updated
 
     @classmethod
@@ -441,6 +549,9 @@ class MemberImporter:
     def build_new_member(
         cls, member_no: int, row: dict[str, str], stdout: OutputWrapper
     ):
+        if cls.MANDATE_REFERENCE_COLUMN in row:
+            return Member(member_no=member_no)
+
         # The TapirUser could already exist, typically if an admin user has been created
         # using the create_admin command. In that case we want to reuse that account.
 
