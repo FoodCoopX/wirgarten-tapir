@@ -27,6 +27,15 @@ class PersonalDataSerializer(serializers.Serializer):
     pseudonym = serializers.CharField(allow_blank=True, default="", max_length=150)
 
 
+class DeliveryAddressSerializer(serializers.Serializer):
+    same_as_billing_address = serializers.BooleanField()
+    street = serializers.CharField(allow_blank=True, default="")
+    street_2 = serializers.CharField(allow_blank=True, default="")
+    postcode = serializers.CharField(allow_blank=True, default="")
+    city = serializers.CharField(allow_blank=True, default="")
+    country = serializers.CharField(allow_blank=True, default="DE")
+
+
 class BestellWizardConfirmOrderRequestSerializer(serializers.Serializer):
     # map of productId -> quantity ordered
     shopping_cart_order = serializers.DictField(child=serializers.IntegerField())
@@ -50,6 +59,7 @@ class BestellWizardConfirmOrderRequestSerializer(serializers.Serializer):
     association_membership_type_id = serializers.CharField(
         required=False, allow_blank=True
     )
+    delivery_address = DeliveryAddressSerializer(required=False)
 
 
 class BestellWizardCapacityCheckRequestSerializer(serializers.Serializer):
@@ -88,6 +98,7 @@ class BestellWizardStringsSerializer(serializers.Serializer):
     step5b_title = serializers.CharField()
     step5c_title = serializers.CharField()
     step5c_text = serializers.CharField()
+    home_delivery_choice_text = serializers.CharField()
     step6a_title = serializers.CharField()
     step6a_text = serializers.CharField()
     step6b_title = serializers.CharField()

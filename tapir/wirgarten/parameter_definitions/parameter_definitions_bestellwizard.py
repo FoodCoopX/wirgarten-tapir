@@ -436,6 +436,18 @@ class ParameterDefinitionsBestellwizard:
         )
         bestellwizard_parameter_order -= 1
 
+        importer.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_HOME_DELIVERY_CHOICE_TEXT,
+            label="Seite 5: Hauslieferung Auswahl - Text",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="<p>Wir liefern nur an Adressen in unserem Liefergebiet.</p>",
+            description="Wird bei der Wahl der Hauslieferung angezeigt. Erklärt, welche Lieferadressen akzeptiert werden.",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+            meta=ParameterMeta(textarea=True),
+        )
+        bestellwizard_parameter_order -= 1
+
         legal_status_name = cls.get_legal_status_name()
 
         importer.parameter_definition(

@@ -9,9 +9,18 @@ from tapir.bestell_wizard.services.bestell_wizard_order_validator import (
     BestellWizardOrderValidator,
 )
 from tapir.bestell_wizard.views import BestellWizardConfirmOrderApiView
+from tapir.pickup_locations.services.member_delivery_address_getter import (
+    DeliveryAddressInput,
+)
 
 
 class TestValidateAndFulfillOrder(TapirUnitTest):
+    @patch.object(
+        BestellWizardOrderValidator, "validate_home_delivery_address", autospec=True
+    )
+    @patch.object(
+        BestellWizardConfirmOrderApiView, "build_delivery_address_input", autospec=True
+    )
     @patch(
         "tapir.bestell_wizard.views.get_today",
         autospec=True,
@@ -35,12 +44,18 @@ class TestValidateAndFulfillOrder(TapirUnitTest):
         mock_validate_order_and_user_data_and_distribution_channels: Mock,
         mock_create_member_and_fulfill_order: Mock,
         mock_get_today: Mock,
+        mock_build_delivery_address_input: Mock,
+        mock_validate_home_delivery_address: Mock,
     ):
         today = Mock()
         mock_get_today.return_value = today
 
         request = Mock()
-        validated_serializer_data = {"growing_period_id": "test_id"}
+        validated_serializer_data = {
+            "growing_period_id": "test_id",
+            "pickup_location_ids": ["test_pickup_location_id"],
+            "personal_data": {"first_name": "John"},
+        }
         cache = Mock()
 
         contract_start_date = Mock()
@@ -50,6 +65,15 @@ class TestValidateAndFulfillOrder(TapirUnitTest):
 
         member = Mock()
         mock_create_member_and_fulfill_order.return_value = member
+        delivery_address_input = DeliveryAddressInput(
+            same_as_billing_address=True,
+            street="",
+            street_2="",
+            postcode="",
+            city="",
+            country="",
+        )
+        mock_build_delivery_address_input.return_value = delivery_address_input
 
         result = BestellWizardConfirmOrderApiView.validate_and_fulfill_order(
             request,
@@ -67,8 +91,18 @@ class TestValidateAndFulfillOrder(TapirUnitTest):
             contract_start_date=contract_start_date,
             cache=cache,
         )
+        mock_build_delivery_address_input.assert_called_once_with(
+            validated_serializer_data=validated_serializer_data
+        )
+        mock_validate_home_delivery_address.assert_called_once_with(
+            pickup_location_ids=["test_pickup_location_id"],
+            delivery_address_input=delivery_address_input,
+            personal_data={"first_name": "John"},
+            cache=cache,
+        )
         mock_create_member_and_fulfill_order.assert_called_once_with(
             validated_serializer_data=validated_serializer_data,
+            delivery_address_input=delivery_address_input,
             contract_start_date=contract_start_date,
             request=request,
             cache=cache,

@@ -15,7 +15,6 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
 MISSING_ADDRESS_MESSAGE = "Für die Hauslieferung wird eine vollständige Lieferadresse (Straße, PLZ und Ort) benötigt."
 
 
-@patch.object(MemberDeliveryAddressGetter, "get_delivery_address", autospec=True)
 class TestHomeDeliveryAddressValidator(TapirUnitTest):
     @staticmethod
     def _build_address(**overrides: str) -> DeliveryAddress:
@@ -29,8 +28,10 @@ class TestHomeDeliveryAddressValidator(TapirUnitTest):
         fields.update(overrides)
         return DeliveryAddress(**fields)
 
+    @patch.object(HomeDeliveryAddressValidator, "validate_address", autospec=True)
+    @patch.object(MemberDeliveryAddressGetter, "get_delivery_address", autospec=True)
     def test_validate_normalLocation_doesNotResolveAddress(
-        self, mock_get_delivery_address: MagicMock
+        self, mock_get_delivery_address: MagicMock, mock_validate_address: MagicMock
     ):
         HomeDeliveryAddressValidator.validate(
             address_owner=MemberFactory.build(),
@@ -38,49 +39,62 @@ class TestHomeDeliveryAddressValidator(TapirUnitTest):
         )
 
         mock_get_delivery_address.assert_not_called()
+        mock_validate_address.assert_not_called()
 
-    def test_validate_homeDeliveryAndCompleteAddress_doesNotRaise(
-        self, mock_get_delivery_address: MagicMock
+    @patch.object(HomeDeliveryAddressValidator, "validate_address", autospec=True)
+    @patch.object(MemberDeliveryAddressGetter, "get_delivery_address", autospec=True)
+    def test_validate_homeDelivery_validatesResolvedAddress(
+        self, mock_get_delivery_address: MagicMock, mock_validate_address: MagicMock
     ):
         member = MemberFactory.build()
-        mock_get_delivery_address.return_value = self._build_address()
+        pickup_location = PickupLocationFactory.build(is_home_delivery=True)
+        address = self._build_address()
+        mock_get_delivery_address.return_value = address
 
         HomeDeliveryAddressValidator.validate(
-            address_owner=member,
-            pickup_location=PickupLocationFactory.build(is_home_delivery=True),
+            address_owner=member, pickup_location=pickup_location
         )
 
         mock_get_delivery_address.assert_called_once_with(address_owner=member)
+        mock_validate_address.assert_called_once_with(
+            delivery_address=address, pickup_location=pickup_location
+        )
 
-    def test_validate_homeDeliveryAndStreetMissing_raisesValidationError(
-        self, mock_get_delivery_address: MagicMock
+    def test_validateAddress_normalLocationAndIncompleteAddress_doesNotRaise(self):
+        HomeDeliveryAddressValidator.validate_address(
+            delivery_address=self._build_address(street=""),
+            pickup_location=PickupLocationFactory.build(is_home_delivery=False),
+        )
+
+    def test_validateAddress_homeDeliveryAndCompleteAddress_doesNotRaise(self):
+        HomeDeliveryAddressValidator.validate_address(
+            delivery_address=self._build_address(),
+            pickup_location=PickupLocationFactory.build(is_home_delivery=True),
+        )
+
+    def test_validateAddress_homeDeliveryAndStreetMissing_raisesValidationError(
+        self,
     ):
-        mock_get_delivery_address.return_value = self._build_address(street="")
-
         with self.assertRaisesMessage(ValidationError, MISSING_ADDRESS_MESSAGE):
-            HomeDeliveryAddressValidator.validate(
-                address_owner=MemberFactory.build(),
+            HomeDeliveryAddressValidator.validate_address(
+                delivery_address=self._build_address(street=""),
                 pickup_location=PickupLocationFactory.build(is_home_delivery=True),
             )
 
-    def test_validate_homeDeliveryAndPostcodeMissing_raisesValidationError(
-        self, mock_get_delivery_address: MagicMock
+    def test_validateAddress_homeDeliveryAndPostcodeMissing_raisesValidationError(
+        self,
     ):
-        mock_get_delivery_address.return_value = self._build_address(postcode="")
-
         with self.assertRaisesMessage(ValidationError, MISSING_ADDRESS_MESSAGE):
-            HomeDeliveryAddressValidator.validate(
-                address_owner=MemberFactory.build(),
+            HomeDeliveryAddressValidator.validate_address(
+                delivery_address=self._build_address(postcode=""),
                 pickup_location=PickupLocationFactory.build(is_home_delivery=True),
             )
 
-    def test_validate_homeDeliveryAndCityMissing_raisesValidationError(
-        self, mock_get_delivery_address: MagicMock
+    def test_validateAddress_homeDeliveryAndCityMissing_raisesValidationError(
+        self,
     ):
-        mock_get_delivery_address.return_value = self._build_address(city="")
-
         with self.assertRaisesMessage(ValidationError, MISSING_ADDRESS_MESSAGE):
-            HomeDeliveryAddressValidator.validate(
-                address_owner=MemberFactory.build(),
+            HomeDeliveryAddressValidator.validate_address(
+                delivery_address=self._build_address(city=""),
                 pickup_location=PickupLocationFactory.build(is_home_delivery=True),
             )

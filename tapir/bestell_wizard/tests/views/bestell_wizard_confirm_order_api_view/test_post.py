@@ -977,6 +977,121 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         self.assertStatusCode(response, 400)
         self.assertFalse(Member.objects.exists())
 
+    @patch.object(EmailVerificationService, "send_verification_email", autospec=True)
+    @patch.object(OnboardingTrigger, "on_subscription_updated", autospec=True)
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_orderWithHomeDeliveryAndSeparateAddress_memberCreatedWithDeliveryAddress(
+        self, *_
+    ):
+        PickupLocation.objects.filter(id=self.pickup_location_1.id).update(
+            is_home_delivery=True
+        )
+        data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        data["delivery_address"] = self._build_separate_delivery_address()
+
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        self.assert_order_confirmed(response.json())
+        member = Member.objects.get()
+        self.assertFalse(member.delivery_same_as_billing_address)
+        self.assertEqual("Lieferweg 2", member.delivery_street)
+        self.assertEqual("22222", member.delivery_postcode)
+        self.assertEqual("Lieferdorf", member.delivery_city)
+        self.assertEqual(
+            self.pickup_location_1.id,
+            MemberPickupLocation.objects.get(member=member).pickup_location_id,
+        )
+
+    def test_post_orderWithHomeDeliveryAndIncompleteAddress_returnOrderNotConfirmedAndDontCreateMember(
+        self,
+    ):
+        PickupLocation.objects.filter(id=self.pickup_location_1.id).update(
+            is_home_delivery=True
+        )
+        data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        data["delivery_address"] = self._build_separate_delivery_address(street="")
+
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assertFalse(response_content["order_confirmed"])
+        self.assertEqual(
+            "Für die Hauslieferung wird eine vollständige Lieferadresse (Straße, PLZ und Ort) benötigt.",
+            response_content["error"],
+        )
+        self.assertFalse(Member.objects.exists())
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_waitingListEntryWithHomeDeliveryAndSeparateAddress_entryCreatedWithDeliveryAddress(
+        self, _
+    ):
+        PickupLocation.objects.filter(id=self.pickup_location_2.id).update(
+            is_home_delivery=True
+        )
+        data = self.build_valid_post_data_for_a_waiting_list_entry()
+        data["delivery_address"] = self._build_separate_delivery_address()
+
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        self.assert_order_confirmed(response.json())
+        waiting_list_entry = WaitingListEntry.objects.get()
+        self.assertFalse(waiting_list_entry.delivery_same_as_billing_address)
+        self.assertEqual("Lieferweg 2", waiting_list_entry.delivery_street)
+        self.assertEqual("22222", waiting_list_entry.delivery_postcode)
+        self.assertEqual("Lieferdorf", waiting_list_entry.delivery_city)
+
+    def test_post_waitingListEntryWithHomeDeliveryAndIncompleteAddress_returnsOrderNotConfirmedAndDontCreateEntry(
+        self,
+    ):
+        PickupLocation.objects.filter(id=self.pickup_location_2.id).update(
+            is_home_delivery=True
+        )
+        data = self.build_valid_post_data_for_a_waiting_list_entry()
+        data["delivery_address"] = self._build_separate_delivery_address(city="")
+
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assertFalse(response_content["order_confirmed"])
+        self.assertEqual(
+            "Für die Hauslieferung wird eine vollständige Lieferadresse (Straße, PLZ und Ort) benötigt.",
+            response_content["error"],
+        )
+        self.assertFalse(WaitingListEntry.objects.exists())
+
+    @staticmethod
+    def _build_separate_delivery_address(**overrides: str) -> dict[str, Any]:
+        delivery_address = {
+            "same_as_billing_address": False,
+            "street": "Lieferweg 2",
+            "street_2": "",
+            "postcode": "22222",
+            "city": "Lieferdorf",
+            "country": "DE",
+        }
+        delivery_address.update(overrides)
+        return delivery_address
+
     @classmethod
     def build_valid_post_data_for_a_waiting_list_entry(cls) -> dict[str, Any]:
         return {

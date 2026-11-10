@@ -23,6 +23,12 @@ from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
+from tapir.pickup_locations.services.member_delivery_address_getter import (
+    DeliveryAddressInput,
+)
+from tapir.pickup_locations.services.member_delivery_address_setter import (
+    MemberDeliveryAddressSetter,
+)
 from tapir.pickup_locations.services.member_pickup_location_setter import (
     MemberPickupLocationSetter,
 )
@@ -62,6 +68,7 @@ class BestellWizardOrderFulfiller:
     def create_member_and_fulfill_order(
         cls,
         validated_serializer_data: dict,
+        delivery_address_input: DeliveryAddressInput,
         contract_start_date: datetime.date,
         request,
         cache: dict,
@@ -82,6 +89,7 @@ class BestellWizardOrderFulfiller:
         is_student = validated_serializer_data["student_status_enabled"]
         member = cls.create_member(
             personal_data=validated_serializer_data["personal_data"],
+            delivery_address_input=delivery_address_input,
             is_student=is_student,
             cache=cache,
             request=request,
@@ -187,7 +195,14 @@ class BestellWizardOrderFulfiller:
         response.sources.set(sources)
 
     @classmethod
-    def create_member(cls, personal_data, is_student: bool, cache: dict, request):
+    def create_member(
+        cls,
+        personal_data,
+        delivery_address_input: DeliveryAddressInput,
+        is_student: bool,
+        cache: dict,
+        request,
+    ):
         now = get_now(cache=cache)
         contracts_signed = dict.fromkeys(
             ["sepa_consent", "withdrawal_consent", "privacy_consent"], now
@@ -202,12 +217,16 @@ class BestellWizardOrderFulfiller:
                 first_name=personal_data["first_name"],
             )
 
-        member = Member.objects.create(
+        member = Member(
             **personal_data,
             **contracts_signed,
             is_student=is_student,
             username=personal_data["email"]
         )
+        MemberDeliveryAddressSetter.apply_delivery_address_input(
+            target=member, delivery_address_input=delivery_address_input
+        )
+        member.save()
         MemberNumberService.assign_member_number_if_eligible(
             member,
             cache=cache,

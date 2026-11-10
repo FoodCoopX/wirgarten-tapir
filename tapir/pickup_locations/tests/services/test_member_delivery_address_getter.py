@@ -1,5 +1,6 @@
 from tapir.pickup_locations.services.member_delivery_address_getter import (
     DeliveryAddress,
+    DeliveryAddressInput,
     MemberDeliveryAddressGetter,
 )
 from tapir.waiting_list.tests.factories import WaitingListEntryFactory
@@ -127,5 +128,63 @@ class TestMemberDeliveryAddressGetter(TapirUnitTest):
             ),
             MemberDeliveryAddressGetter.get_delivery_address(
                 address_owner=waiting_list_entry
+            ),
+        )
+
+    def test_getDeliveryAddressFromInput_sameAsBillingAddress_returnsPersonalDataAddress(
+        self,
+    ):
+        self.assertEqual(
+            DeliveryAddress(
+                street="Rechnungsstraße 1",
+                street_2="Hinterhaus",
+                postcode="11111",
+                city="Rechnungsstadt",
+                country="DE",
+            ),
+            MemberDeliveryAddressGetter.get_delivery_address_from_input(
+                delivery_address_input=DeliveryAddressInput(
+                    same_as_billing_address=True,
+                    street="",
+                    street_2="",
+                    postcode="",
+                    city="",
+                    country="",
+                ),
+                personal_data={
+                    "street": "Rechnungsstraße 1",
+                    "street_2": "Hinterhaus",
+                    "postcode": "11111",
+                    "city": "Rechnungsstadt",
+                    "country": "DE",
+                },
+            ),
+        )
+
+    def test_getDeliveryAddressFromInput_separateAddress_returnsInputAddress(self):
+        self.assertEqual(
+            DeliveryAddress(
+                street="Lieferweg 2",
+                street_2="",
+                postcode="22222",
+                city="Lieferdorf",
+                country="AT",
+            ),
+            MemberDeliveryAddressGetter.get_delivery_address_from_input(
+                delivery_address_input=DeliveryAddressInput(
+                    same_as_billing_address=False,
+                    street="Lieferweg 2",
+                    street_2="",
+                    postcode="22222",
+                    city="Lieferdorf",
+                    country="AT",
+                ),
+                personal_data={
+                    "street": "Rechnungsstraße 1",
+                    "street_2": "Hinterhaus",
+                    "postcode": "11111",
+                    "city": "Rechnungsstadt",
+                    "country": "DE",
+                },
             ),
         )

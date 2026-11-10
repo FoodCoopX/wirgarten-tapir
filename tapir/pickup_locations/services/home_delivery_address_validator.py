@@ -1,6 +1,7 @@
 from django.core.exceptions import ValidationError
 
 from tapir.pickup_locations.services.member_delivery_address_getter import (
+    DeliveryAddress,
     MemberDeliveryAddressGetter,
 )
 from tapir.wirgarten.models import Member, PickupLocation, WaitingListEntry
@@ -18,8 +19,23 @@ class HomeDeliveryAddressValidator:
         if not pickup_location.is_home_delivery:
             return
 
-        address = MemberDeliveryAddressGetter.get_delivery_address(
-            address_owner=address_owner
+        cls.validate_address(
+            delivery_address=MemberDeliveryAddressGetter.get_delivery_address(
+                address_owner=address_owner
+            ),
+            pickup_location=pickup_location,
         )
-        if not (address.street and address.postcode and address.city):
+
+    @classmethod
+    def validate_address(
+        cls, delivery_address: DeliveryAddress, pickup_location: PickupLocation
+    ):
+        if not pickup_location.is_home_delivery:
+            return
+
+        if not (
+            delivery_address.street
+            and delivery_address.postcode
+            and delivery_address.city
+        ):
             raise ValidationError(cls.MISSING_ADDRESS_MESSAGE)

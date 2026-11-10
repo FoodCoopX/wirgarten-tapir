@@ -222,6 +222,9 @@ class ParameterKeys:
     )
     BESTELLWIZARD_STEP5C_TITLE = f"{PREFIX}.bestellwizard.step5c.title"
     BESTELLWIZARD_STEP5C_TEXT = f"{PREFIX}.bestellwizard.step5c.text"
+    BESTELLWIZARD_HOME_DELIVERY_CHOICE_TEXT = (
+        f"{PREFIX}.bestellwizard.home_delivery_choice.text"
+    )
     BESTELLWIZARD_STEP6A_TITLE = f"{PREFIX}.bestellwizard.step6a.title"
     BESTELLWIZARD_STEP6A_TEXT = f"{PREFIX}.bestellwizard.step6a.text"
     BESTELLWIZARD_STEP6_BACKGROUND_IMAGE = (

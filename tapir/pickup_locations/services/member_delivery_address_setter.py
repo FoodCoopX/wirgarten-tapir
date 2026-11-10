@@ -2,7 +2,10 @@ from django.db import transaction
 
 from tapir.accounts.models import TapirUser
 from tapir.pickup_locations.models import MemberDeliveryAddressChangedLogEntry
-from tapir.wirgarten.models import Member
+from tapir.pickup_locations.services.member_delivery_address_getter import (
+    DeliveryAddressInput,
+)
+from tapir.wirgarten.models import Member, WaitingListEntry
 
 ADDRESS_FIELDS = [
     "delivery_street",
@@ -34,6 +37,26 @@ class MemberDeliveryAddressSetter:
                 old_address=old_address,
                 new_address=new_address,
             ).save()
+
+    @staticmethod
+    def copy_delivery_address(
+        source: Member | WaitingListEntry, target: Member | WaitingListEntry
+    ) -> None:
+        for field_name in ["delivery_same_as_billing_address", *ADDRESS_FIELDS]:
+            setattr(target, field_name, getattr(source, field_name))
+
+    @staticmethod
+    def apply_delivery_address_input(
+        target: Member | WaitingListEntry, delivery_address_input: DeliveryAddressInput
+    ) -> None:
+        target.delivery_same_as_billing_address = (
+            delivery_address_input.same_as_billing_address
+        )
+        target.delivery_street = delivery_address_input.street
+        target.delivery_street_2 = delivery_address_input.street_2
+        target.delivery_postcode = delivery_address_input.postcode
+        target.delivery_city = delivery_address_input.city
+        target.delivery_country = delivery_address_input.country
 
     @classmethod
     def _format_for_log(cls, member: Member) -> str:

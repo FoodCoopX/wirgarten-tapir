@@ -1,4 +1,7 @@
 from tapir.pickup_locations.models import MemberDeliveryAddressChangedLogEntry
+from tapir.pickup_locations.services.member_delivery_address_getter import (
+    DeliveryAddressInput,
+)
 from tapir.pickup_locations.services.member_delivery_address_setter import (
     MemberDeliveryAddressSetter,
 )
@@ -74,3 +77,26 @@ class TestMemberDeliveryAddressSetter(TapirIntegrationTest):
         self.assertNotEqual(
             "Nicht gespeichert", Member.objects.get(id=self.member.id).first_name
         )
+
+    def test_applyDeliveryAddressInput_default_setsFieldsWithoutSaving(self):
+        member = MemberFactory.build()
+
+        MemberDeliveryAddressSetter.apply_delivery_address_input(
+            target=member,
+            delivery_address_input=DeliveryAddressInput(
+                same_as_billing_address=False,
+                street="Lieferweg 2",
+                street_2="Hof",
+                postcode="22222",
+                city="Lieferdorf",
+                country="AT",
+            ),
+        )
+
+        self.assertFalse(member.delivery_same_as_billing_address)
+        self.assertEqual("Lieferweg 2", member.delivery_street)
+        self.assertEqual("Hof", member.delivery_street_2)
+        self.assertEqual("22222", member.delivery_postcode)
+        self.assertEqual("Lieferdorf", member.delivery_city)
+        self.assertEqual("AT", member.delivery_country)
+        self.assertFalse(Member.objects.filter(id=member.id).exists())

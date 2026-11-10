@@ -12,6 +12,11 @@
  * Do not edit the class manually.
  */
 
+import type { DeliveryAddressRequest } from "./DeliveryAddressRequest";
+import {
+  DeliveryAddressRequestFromJSON,
+  DeliveryAddressRequestToJSON,
+} from "./DeliveryAddressRequest";
 import type { PersonalDataRequest } from "./PersonalDataRequest";
 import {
   PersonalDataRequestFromJSON,
@@ -138,6 +143,12 @@ export interface BestellWizardConfirmOrderRequestRequest {
    * @memberof BestellWizardConfirmOrderRequestRequest
    */
   associationMembershipTypeId?: string;
+  /**
+   *
+   * @type {DeliveryAddressRequest}
+   * @memberof BestellWizardConfirmOrderRequestRequest
+   */
+  deliveryAddress?: DeliveryAddressRequest;
 }
 
 /**
@@ -247,6 +258,10 @@ export function BestellWizardConfirmOrderRequestRequestFromJSONTyped(
       json["association_membership_type_id"] == null
         ? undefined
         : json["association_membership_type_id"],
+    deliveryAddress:
+      json["delivery_address"] == null
+        ? undefined
+        : DeliveryAddressRequestFromJSON(json["delivery_address"]),
   };
 }
 
@@ -284,5 +299,6 @@ export function BestellWizardConfirmOrderRequestRequestToJSONTyped(
     distribution_channels: value["distributionChannels"],
     feedback: value["feedback"],
     association_membership_type_id: value["associationMembershipTypeId"],
+    delivery_address: DeliveryAddressRequestToJSON(value["deliveryAddress"]),
   };
 }

@@ -155,6 +155,12 @@ export interface BestellWizardStrings {
    * @type {string}
    * @memberof BestellWizardStrings
    */
+  homeDeliveryChoiceText: string;
+  /**
+   *
+   * @type {string}
+   * @memberof BestellWizardStrings
+   */
   step6aTitle: string;
   /**
    *
@@ -413,6 +419,11 @@ export function instanceOfBestellWizardStrings(
     return false;
   if (!("step5cText" in value) || value["step5cText"] === undefined)
     return false;
+  if (
+    !("homeDeliveryChoiceText" in value) ||
+    value["homeDeliveryChoiceText"] === undefined
+  )
+    return false;
   if (!("step6aTitle" in value) || value["step6aTitle"] === undefined)
     return false;
   if (!("step6aText" in value) || value["step6aText"] === undefined)
@@ -557,6 +568,7 @@ export function BestellWizardStringsFromJSONTyped(
     step5bTitle: json["step5b_title"],
     step5cTitle: json["step5c_title"],
     step5cText: json["step5c_text"],
+    homeDeliveryChoiceText: json["home_delivery_choice_text"],
     step6aTitle: json["step6a_title"],
     step6aText: json["step6a_text"],
     step6bTitle: json["step6b_title"],
@@ -629,6 +641,7 @@ export function BestellWizardStringsToJSONTyped(
     step5b_title: value["step5bTitle"],
     step5c_title: value["step5cTitle"],
     step5c_text: value["step5cText"],
+    home_delivery_choice_text: value["homeDeliveryChoiceText"],
     step6a_title: value["step6aTitle"],
     step6a_text: value["step6aText"],
     step6b_title: value["step6bTitle"],
