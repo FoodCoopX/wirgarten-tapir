@@ -226,11 +226,14 @@ class ChangeMemberPickupLocationRequestSerializer(serializers.Serializer):
     delivery_address = DeliveryAddressSerializer(required=False)
 
 
-class MemberDeliveryAddressSerializer(serializers.Serializer):
+class StoredDeliveryAddressSerializer(serializers.Serializer):
     same_as_billing_address = serializers.BooleanField()
     street = serializers.CharField()
     street_2 = serializers.CharField()
     postcode = serializers.CharField()
     city = serializers.CharField()
     country = serializers.CharField()
+
+
+class MemberDeliveryAddressSerializer(StoredDeliveryAddressSerializer):
     change_warning_text = serializers.CharField()

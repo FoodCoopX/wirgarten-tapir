@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Modal, Tab, Tabs } from "react-bootstrap";
 import {
+  DeliveryAddressRequest,
   PickupLocation,
   Product,
   WaitingListApi,
@@ -64,6 +65,12 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
   );
   const [comment, setComment] = useState("");
   const [category, setCategory] = useState("");
+  const [deliveryAddress, setDeliveryAddress] =
+    useState<DeliveryAddressRequest>({ sameAsBillingAddress: true });
+
+  const hasHomeDeliveryWish = pickupLocationWishes.some(
+    (wish) => wish.pickupLocation.isHomeDelivery,
+  );
 
   useEffect(() => {
     setFirstName(entryDetails.firstName);
@@ -79,6 +86,7 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
     setProductWishes(entryDetails.productWishes ?? []);
     setComment(entryDetails.comment);
     setCategory(entryDetails.category ?? "");
+    setDeliveryAddress(entryDetails.deliveryAddress);
   }, [entryDetails]);
 
   function onConfirmDelete() {
@@ -129,6 +137,7 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
             (wish) => wish.pickupLocation.id!,
           ),
           shoppingCart: buildShoppingCart(),
+          deliveryAddress: hasHomeDeliveryWish ? deliveryAddress : undefined,
         },
       })
       .then(() => {
@@ -185,6 +194,9 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
                 setCity={setCity}
                 comment={comment}
                 setComment={setComment}
+                showDeliveryAddress={hasHomeDeliveryWish}
+                deliveryAddress={deliveryAddress}
+                setDeliveryAddress={setDeliveryAddress}
               />
             </Tab>
             <Tab eventKey="wishes" title="Wünsche">

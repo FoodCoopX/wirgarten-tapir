@@ -296,6 +296,7 @@ models/StaticSegment.ts
 models/StaticSegmentRecipient.ts
 models/StaticSegmentRecipientRequest.ts
 models/StaticSegmentRequest.ts
+models/StoredDeliveryAddress.ts
 models/StoredUpload.ts
 models/StoredUploadRequest.ts
 models/StoveSession.ts

@@ -17174,6 +17174,28 @@ components:
           maxLength: 255
       required:
       - name
+    StoredDeliveryAddress:
+      type: object
+      properties:
+        same_as_billing_address:
+          type: boolean
+        street:
+          type: string
+        street_2:
+          type: string
+        postcode:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+      required:
+      - city
+      - country
+      - postcode
+      - same_as_billing_address
+      - street
+      - street_2
     StoredUpload:
       type: object
       properties:
@@ -18036,10 +18058,13 @@ components:
           type: string
         can_be_fulfilled:
           type: boolean
+        delivery_address:
+          $ref: '#/components/schemas/StoredDeliveryAddress'
       required:
       - city
       - comment
       - country
+      - delivery_address
       - email
       - first_name
       - id
@@ -18201,6 +18226,8 @@ components:
           type: string
         category:
           type: string
+        delivery_address:
+          $ref: '#/components/schemas/DeliveryAddressRequest'
       required:
       - city
       - comment

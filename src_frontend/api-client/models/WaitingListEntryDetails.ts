@@ -16,6 +16,11 @@ import type { PickupLocation } from "./PickupLocation";
 import { PickupLocationFromJSON, PickupLocationToJSON } from "./PickupLocation";
 import type { Product } from "./Product";
 import { ProductFromJSON, ProductToJSON } from "./Product";
+import type { StoredDeliveryAddress } from "./StoredDeliveryAddress";
+import {
+  StoredDeliveryAddressFromJSON,
+  StoredDeliveryAddressToJSON,
+} from "./StoredDeliveryAddress";
 import type { Subscription } from "./Subscription";
 import { SubscriptionFromJSON, SubscriptionToJSON } from "./Subscription";
 import type { WaitingListPickupLocationWish } from "./WaitingListPickupLocationWish";
@@ -227,6 +232,12 @@ export interface WaitingListEntryDetails {
    * @memberof WaitingListEntryDetails
    */
   canBeFulfilled?: boolean;
+  /**
+   *
+   * @type {StoredDeliveryAddress}
+   * @memberof WaitingListEntryDetails
+   */
+  deliveryAddress: StoredDeliveryAddress;
 }
 
 /**
@@ -260,6 +271,8 @@ export function instanceOfWaitingListEntryDetails(
   )
     return false;
   if (!("comment" in value) || value["comment"] === undefined) return false;
+  if (!("deliveryAddress" in value) || value["deliveryAddress"] === undefined)
+    return false;
   return true;
 }
 
@@ -346,6 +359,7 @@ export function WaitingListEntryDetailsFromJSONTyped(
       json["payment_rhythm"] == null ? undefined : json["payment_rhythm"],
     canBeFulfilled:
       json["can_be_fulfilled"] == null ? undefined : json["can_be_fulfilled"],
+    deliveryAddress: StoredDeliveryAddressFromJSON(json["delivery_address"]),
   };
 }
 
@@ -426,5 +440,6 @@ export function WaitingListEntryDetailsToJSONTyped(
     link: value["link"],
     payment_rhythm: value["paymentRhythm"],
     can_be_fulfilled: value["canBeFulfilled"],
+    delivery_address: StoredDeliveryAddressToJSON(value["deliveryAddress"]),
   };
 }

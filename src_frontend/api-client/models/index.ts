@@ -281,6 +281,7 @@ export * from "./StaticSegment";
 export * from "./StaticSegmentRecipient";
 export * from "./StaticSegmentRecipientRequest";
 export * from "./StaticSegmentRequest";
+export * from "./StoredDeliveryAddress";
 export * from "./StoredUpload";
 export * from "./StoredUploadRequest";
 export * from "./StoveSession";
