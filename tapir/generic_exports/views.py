@@ -212,7 +212,7 @@ class CsvExportTemplateListApiView(APIView):
 
         return Response(
             PdfExportTemplateSerializer(
-                CsvExportTemplateManager.get_templates().values(), many=True
+                CsvExportTemplateManager.get_templates(cache={}).values(), many=True
             ).data,
             status=status.HTTP_200_OK,
         )
@@ -230,7 +230,7 @@ class CreateCsvExportFromTemplateApiView(APIView):
         try:
             with transaction.atomic():
                 CsvExportTemplateManager.create_exports_from_template(
-                    request.query_params.get("template_id")
+                    template_id=request.query_params.get("template_id"), cache={}
                 )
         except TemplateAlreadyExistsException as error:
             return Response(
