@@ -7,16 +7,42 @@
 {% load configuration %}
 {% block head %}
   {% vite_asset 'product_config/product_config_entry.tsx' %}
+  <style>
+    .product-config-layout {
+      margin-top: 2em;
+      display: grid;
+      grid-gap: 1em;
+      grid-template-columns: 1fr 1em 1fr 1em 1fr;
+    }
+
+    @media (max-width: 1199.98px) {
+      .product-config-layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .product-config-layout > .material-icons {
+        transform: rotate(90deg);
+      }
+    }
+
+    @media (max-width: 575.98px) {
+      .product-config-layout > .card > .card-header {
+        flex-wrap: wrap;
+        row-gap: .5rem;
+      }
+
+      .product-config-layout > .card > .card-header > h5 {
+        flex-basis: 100%;
+      }
+    }
+  </style>
 {% endblock head %}
 {% block title %}
   Vertragsperiode & Produkte - {{ block.super }}
 {% endblock %}
 {% block content %}
   {% csrf_token %}
-  <div style="margin-top: 2em;
-              display: grid;
-              grid-gap: 1em;
-              grid-template-columns: 1fr 1em 1fr 1em 1fr">
+  <div class="product-config-layout">
     <div class="card">
       <div class="card-header d-flex flex-row justify-content-between align-items-center">
         <h5 class="mb-0">{% translate 'Vertragsperiode' %}</h5>
