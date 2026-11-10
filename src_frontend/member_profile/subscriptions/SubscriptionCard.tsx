@@ -35,14 +35,16 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
         </p>
       );
     }
+    const contactEmailLink = (
+      <a href={"mailto:" + contactEmail}>{contactEmail}</a>
+    );
     return (
       <p className={"mb-0"}>
         Beachte: Du kannst deine Vertragskonstellation ändern, solange sie
         insgesamt nicht kleiner wird als deine bisherige. Du kannst zum Beispiel
         einen größeren Anteil gegen mehrere kleinere tauschen, wenn sie zusammen
         mindestens gleich groß sind. Möchtest du deine Anteile insgesamt
-        reduzieren, wende dich bitte an die Verwaltung (
-        <a href={"mailto:" + contactEmail}>{contactEmail}</a>).
+        reduzieren, wende dich bitte an die Verwaltung ({contactEmailLink}).
       </p>
     );
   }
@@ -122,7 +124,9 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
           </span>
           {showContractEdit && (
             <div className={"d-flex flex-row gap-2"}>
-              <TapirHelpButton text={buildHelpText()} />
+              {subscriptions.length > 0 && (
+                <TapirHelpButton text={buildHelpText()} />
+              )}
               <TapirButton
                 variant={"outline-primary"}
                 icon={subscriptions.length == 0 ? "add" : "contract_edit"}
