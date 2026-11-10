@@ -5255,6 +5255,30 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
+    delete:
+      operationId: pickup_locations_pickup_locations_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der pickup location identifiziert.
+        required: true
+      tags:
+      - pickup_locations
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '204':
+          description: No response body
+        '400':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
   /pickup_locations/public_pickup_locations/:
     get:
       operationId: pickup_locations_public_pickup_locations_list

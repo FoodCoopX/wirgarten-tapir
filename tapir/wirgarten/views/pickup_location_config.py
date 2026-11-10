@@ -1,11 +1,6 @@
-from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db.models import Q
-from django.http import HttpResponseRedirect, HttpResponse
-from django.urls import reverse_lazy
 from django.views import generic
-from django.views.decorators.csrf import csrf_protect
-from django.views.decorators.http import require_http_methods
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.pickup_locations.services.pickup_location_active_filter import (
@@ -15,16 +10,12 @@ from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.forms.pickup_location import (
     get_pickup_locations_map_data,
     pickup_location_to_dict,
-    PickupLocationEditForm,
 )
-from tapir.wirgarten.models import PickupLocation, PickupLocationCapability
+from tapir.wirgarten.models import PickupLocation
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import get_active_pickup_location_capabilities
 from tapir.wirgarten.service.products import get_active_product_types
 from tapir.wirgarten.utils import get_today
-from tapir.wirgarten.views.modal import get_form_modal
-
-PAGE_ROOT = reverse_lazy("wirgarten:pickup_locations")
 
 
 class PickupLocationCfgView(PermissionRequiredMixin, generic.TemplateView):
@@ -101,53 +92,3 @@ class PickupLocationCfgView(PermissionRequiredMixin, generic.TemplateView):
             )
 
         return list(queryset)
-
-
-@require_http_methods(["GET", "POST"])
-@permission_required(Permission.Coop.MANAGE)
-@csrf_protect
-def get_pickup_location_add_form(request, **kwargs):
-    """
-    This view handles the admin modal form for adding a new pickup location.
-    """
-
-    return get_form_modal(
-        request=request,
-        form_class=PickupLocationEditForm,
-        handler=lambda x: x.save(),
-        redirect_url_resolver=lambda x: (
-            reverse_lazy("wirgarten:pickup_locations") + "?selected=" + x.id
-        ),
-    )
-
-
-@require_http_methods(["GET", "POST"])
-@permission_required(Permission.Coop.MANAGE)
-@csrf_protect
-def get_pickup_location_edit_form(request, **kwargs):
-    """
-    This view handles the admin modal form for editing a pickup location.
-    """
-    return get_form_modal(
-        request=request,
-        form_class=PickupLocationEditForm,
-        handler=lambda x: x.save(),
-        redirect_url_resolver=lambda x: PAGE_ROOT + "?selected=" + x.id,
-        **kwargs,
-    )
-
-
-@require_http_methods(["GET"])
-@permission_required(Permission.Coop.MANAGE)
-@csrf_protect
-def delete_pickup_location(request, **kwargs):
-    """
-    This view deletes a pickup location.
-    """
-    try:
-        pl = PickupLocation.objects.get(id=kwargs["id"])
-        PickupLocationCapability.objects.filter(pickup_location=pl).delete()
-        pl.delete()
-        return HttpResponseRedirect(PAGE_ROOT + "?" + request.environ["QUERY_STRING"])
-    except PickupLocation.DoesNotExist:
-        return HttpResponse(status=404)

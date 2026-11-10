@@ -25,7 +25,8 @@ def build_pickup_location(**overrides) -> PickupLocation:
 
 
 def build_opening_time(
-    open_time=datetime.time(14, 0), close_time=datetime.time(18, 0)
+    open_time: datetime.time = datetime.time(14, 0),
+    close_time: datetime.time = datetime.time(18, 0),
 ) -> PickupLocationOpeningTime:
     return PickupLocationOpeningTime(
         day_of_week=1, open_time=open_time, close_time=close_time
@@ -36,7 +37,10 @@ def build_opening_time(
 @patch.object(TapirCache, "get_all_pickup_locations", return_value=[], autospec=True)
 class TestPickupLocationValidator(TapirUnitTest):
     @staticmethod
-    def _validate(pickup_location: PickupLocation, opening_times=None):
+    def _validate(
+        pickup_location: PickupLocation,
+        opening_times: list[PickupLocationOpeningTime] | None = None,
+    ) -> dict[str, str]:
         return PickupLocationValidator.validate(
             pickup_location=pickup_location,
             opening_times=(

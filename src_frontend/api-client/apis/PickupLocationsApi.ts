@@ -112,6 +112,10 @@ export interface PickupLocationsPickupLocationsCreateRequest {
   pickupLocationSaveRequestRequest: PickupLocationSaveRequestRequest;
 }
 
+export interface PickupLocationsPickupLocationsDestroyRequest {
+  id: string;
+}
+
 export interface PickupLocationsPickupLocationsRetrieveRequest {
   id: string;
 }
@@ -1119,6 +1123,65 @@ export class PickupLocationsApi extends runtime.BaseAPI {
       initOverrides,
     );
     return await response.value();
+  }
+
+  /**
+   */
+  async pickupLocationsPickupLocationsDestroyRaw(
+    requestParameters: PickupLocationsPickupLocationsDestroyRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<void>> {
+    if (requestParameters["id"] == null) {
+      throw new runtime.RequiredError(
+        "id",
+        'Required parameter "id" was null or undefined when calling pickupLocationsPickupLocationsDestroy().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/pickup_locations/pickup_locations/{id}/`.replace(
+          `{${"id"}}`,
+          encodeURIComponent(String(requestParameters["id"])),
+        ),
+        method: "DELETE",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.VoidApiResponse(response);
+  }
+
+  /**
+   */
+  async pickupLocationsPickupLocationsDestroy(
+    requestParameters: PickupLocationsPickupLocationsDestroyRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<void> {
+    await this.pickupLocationsPickupLocationsDestroyRaw(
+      requestParameters,
+      initOverrides,
+    );
   }
 
   /**

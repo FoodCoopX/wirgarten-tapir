@@ -1,6 +1,7 @@
 import datetime
 from decimal import Decimal
 
+from django.http import HttpResponse
 from django.urls import reverse
 from rest_framework import status
 
@@ -20,7 +21,7 @@ from tapir.wirgarten.tests.factories import (
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
-def build_request_data(**overrides):
+def build_request_data(**overrides) -> dict:
     data = {
         "name": "Test Abholort",
         "coords_lat": "48.1",
@@ -48,14 +49,14 @@ class TestPickupLocationViewSetSave(TapirIntegrationTest):
         super().setUp()
         self._login_as_admin()
 
-    def _create(self, data):
+    def _create(self, data: dict) -> HttpResponse:
         return self.client.post(
             reverse("pickup_locations:pickup_locations-list"),
             data=data,
             content_type="application/json",
         )
 
-    def _update(self, pickup_location_id, data):
+    def _update(self, pickup_location_id: str, data: dict) -> HttpResponse:
         return self.client.put(
             reverse(
                 "pickup_locations:pickup_locations-detail",

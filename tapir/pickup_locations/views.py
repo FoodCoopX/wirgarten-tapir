@@ -6,6 +6,7 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
 from rest_framework import status, viewsets, permissions, serializers
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -44,6 +45,9 @@ from tapir.pickup_locations.services.pickup_location_delivery_charge_service imp
 )
 from tapir.pickup_locations.services.pickup_location_highest_usage_after_date_service import (
     PickupLocationHighestUsageAfterDateService,
+)
+from tapir.pickup_locations.services.pickup_location_deletion_validator import (
+    PickupLocationDeletionValidator,
 )
 from tapir.pickup_locations.services.pickup_location_validator import (
     PickupLocationValidator,
@@ -174,7 +178,7 @@ class PickupLocationViewSet(viewsets.ReadOnlyModelViewSet):
         request=PickupLocationSaveRequestSerializer,
         responses={201: PickupLocationSerializer, 400: dict},
     )
-    def create(self, request, *args, **kwargs):
+    def create(self, request: Request, *args, **kwargs) -> Response:
         data = self._save(request=request, pickup_location=PickupLocation())
         return Response(data, status=status.HTTP_201_CREATED)
 
@@ -182,11 +186,11 @@ class PickupLocationViewSet(viewsets.ReadOnlyModelViewSet):
         request=PickupLocationSaveRequestSerializer,
         responses={200: PickupLocationSerializer, 400: dict},
     )
-    def update(self, request, *args, **kwargs):
+    def update(self, request: Request, *args, **kwargs) -> Response:
         data = self._save(request=request, pickup_location=self.get_object())
         return Response(data, status=status.HTTP_200_OK)
 
-    def _save(self, request, pickup_location: PickupLocation) -> dict:
+    def _save(self, request: Request, pickup_location: PickupLocation) -> dict:
         request_serializer = PickupLocationSaveRequestSerializer(data=request.data)
         request_serializer.is_valid(raise_exception=True)
 
@@ -211,6 +215,18 @@ class PickupLocationViewSet(viewsets.ReadOnlyModelViewSet):
             PickupLocationOpeningTime.objects.bulk_create(opening_times)
 
         return self.get_serializer(self.get_queryset().get(id=pickup_location.id)).data
+
+    @extend_schema(responses={204: None, 400: str})
+    def destroy(self, request: Request, *args, **kwargs) -> Response:
+        pickup_location = self.get_object()
+        error = PickupLocationDeletionValidator.validate(
+            pickup_location=pickup_location
+        )
+        if error is not None:
+            return Response(error, status=status.HTTP_400_BAD_REQUEST)
+
+        pickup_location.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class PickupLocationCapacityEvolutionView(APIView):
