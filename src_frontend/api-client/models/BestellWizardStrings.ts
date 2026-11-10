@@ -143,6 +143,12 @@ export interface BestellWizardStrings {
    * @type {string}
    * @memberof BestellWizardStrings
    */
+  step5bHomeDeliveryTitle: string;
+  /**
+   *
+   * @type {string}
+   * @memberof BestellWizardStrings
+   */
   step5cTitle: string;
   /**
    *
@@ -150,6 +156,12 @@ export interface BestellWizardStrings {
    * @memberof BestellWizardStrings
    */
   step5cText: string;
+  /**
+   *
+   * @type {string}
+   * @memberof BestellWizardStrings
+   */
+  homeDeliveryChoiceText: string;
   /**
    *
    * @type {string}
@@ -409,9 +421,19 @@ export function instanceOfBestellWizardStrings(
     return false;
   if (!("step5bTitle" in value) || value["step5bTitle"] === undefined)
     return false;
+  if (
+    !("step5bHomeDeliveryTitle" in value) ||
+    value["step5bHomeDeliveryTitle"] === undefined
+  )
+    return false;
   if (!("step5cTitle" in value) || value["step5cTitle"] === undefined)
     return false;
   if (!("step5cText" in value) || value["step5cText"] === undefined)
+    return false;
+  if (
+    !("homeDeliveryChoiceText" in value) ||
+    value["homeDeliveryChoiceText"] === undefined
+  )
     return false;
   if (!("step6aTitle" in value) || value["step6aTitle"] === undefined)
     return false;
@@ -555,8 +577,10 @@ export function BestellWizardStringsFromJSONTyped(
     step5aTitle: json["step5a_title"],
     step5aText: json["step5a_text"],
     step5bTitle: json["step5b_title"],
+    step5bHomeDeliveryTitle: json["step5b_home_delivery_title"],
     step5cTitle: json["step5c_title"],
     step5cText: json["step5c_text"],
+    homeDeliveryChoiceText: json["home_delivery_choice_text"],
     step6aTitle: json["step6a_title"],
     step6aText: json["step6a_text"],
     step6bTitle: json["step6b_title"],
@@ -627,8 +651,10 @@ export function BestellWizardStringsToJSONTyped(
     step5a_title: value["step5aTitle"],
     step5a_text: value["step5aText"],
     step5b_title: value["step5bTitle"],
+    step5b_home_delivery_title: value["step5bHomeDeliveryTitle"],
     step5c_title: value["step5cTitle"],
     step5c_text: value["step5cText"],
+    home_delivery_choice_text: value["homeDeliveryChoiceText"],
     step6a_title: value["step6aTitle"],
     step6a_text: value["step6aText"],
     step6b_title: value["step6bTitle"],

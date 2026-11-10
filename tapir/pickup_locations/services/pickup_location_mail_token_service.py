@@ -1,5 +1,8 @@
 from tapir_mail.models import StaticSegmentRecipient
 
+from tapir.pickup_locations.services.member_delivery_address_getter import (
+    MemberDeliveryAddressGetter,
+)
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
@@ -8,7 +11,7 @@ from tapir.pickup_locations.services.pickup_location_opening_times_formatter imp
 )
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.user_utils import UserUtils
-from tapir.wirgarten.models import Member
+from tapir.wirgarten.models import Member, PickupLocation
 from tapir.wirgarten.utils import get_today
 
 
@@ -54,11 +57,20 @@ class PickupLocationMailTokenService:
         if pickup_location is None:
             return cls.NOT_APPLICABLE
 
+        return cls.build_address(member=recipient, pickup_location=pickup_location)
+
+    @staticmethod
+    def build_address(member: Member, pickup_location: PickupLocation) -> str:
+        address = pickup_location
+        if pickup_location.is_home_delivery:
+            address = MemberDeliveryAddressGetter.get_delivery_address(
+                address_owner=member
+            )
         return UserUtils.build_display_address(
-            street=pickup_location.street,
-            street_2=pickup_location.street_2,
-            postcode=pickup_location.postcode,
-            city=pickup_location.city,
+            street=address.street,
+            street_2=address.street_2,
+            postcode=address.postcode,
+            city=address.city,
         )
 
     @classmethod

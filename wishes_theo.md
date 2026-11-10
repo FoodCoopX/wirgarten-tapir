@@ -54,3 +54,5 @@ through the matrix channel or by tagging me in issues or PRs.
   pass deserialized parameters instead, in a data class if it's too many parameters
 - There are a few places where we let admins configure strings with tokens, typically in the bestell wizard, but some
   use {} and some use {{}}, we should be consistent.
+- We still use some of the legacy modals, they should be replaced with react components. The legacy modals have a bug
+  where they shortly show an error before closing even if the operation succeeded.

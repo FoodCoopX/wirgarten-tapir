@@ -56,11 +56,19 @@ class PickupLocation(TapirModel):
     """
 
     name = models.TextField(_("Name"), max_length=150)
-    coords_lon = models.DecimalField(
-        _("Coordinates Longitude"), decimal_places=10, max_digits=12
+    latitude = models.DecimalField(
+        _("Breitengrad"),
+        decimal_places=10,
+        max_digits=12,
+        null=True,
+        blank=True,
     )
-    coords_lat = models.DecimalField(
-        _("Coordinates Latitude"), decimal_places=10, max_digits=12
+    longitude = models.DecimalField(
+        _("Längengrad"),
+        decimal_places=10,
+        max_digits=12,
+        null=True,
+        blank=True,
     )
     street = models.CharField(_("Straße und Hausnummer"), max_length=150)
     street_2 = models.CharField(_("Adresszusatz"), max_length=150, blank=True)
@@ -95,12 +103,13 @@ class PickupLocation(TapirModel):
         _("Im Gesamtkistenanzahls-Zettel Details anzeigen"),
         default=False,
     )
+    is_home_delivery = models.BooleanField(_("Hauslieferung"), default=False)
 
     class Meta:
         constraints = [
             UniqueConstraint(
-                fields=["name", "coords_lat", "coords_lon"],
-                name="unique_location",
+                fields=["name"],
+                name="unique_pickup_location_name",
             ),
         ]
 
@@ -381,6 +390,12 @@ class Member(TapirUser):
     is_student = models.BooleanField(_("Student*in"), default=False)
     pseudonym = models.CharField(_("Pseudonym"), max_length=150, blank=True)
     has_received_membership_started_mail = models.BooleanField(default=False)
+    delivery_same_as_billing_address = models.BooleanField(default=True)
+    delivery_street = models.CharField(max_length=150, blank=True)
+    delivery_street_2 = models.CharField(max_length=150, blank=True)
+    delivery_postcode = models.CharField(max_length=32, blank=True)
+    delivery_city = models.CharField(max_length=50, blank=True)
+    delivery_country = CountryField(blank=True, default="DE")
 
     @property
     def pickup_location(self):
@@ -1072,6 +1087,12 @@ class WaitingListEntry(TapirModel):
     category = models.CharField(max_length=100, null=True)
     confirmation_link_key = models.UUIDField(null=True)
     link_sent_date = models.DateTimeField(null=True)
+    delivery_same_as_billing_address = models.BooleanField(default=True)
+    delivery_street = models.CharField(max_length=150, blank=True)
+    delivery_street_2 = models.CharField(max_length=150, blank=True)
+    delivery_postcode = models.CharField(max_length=32, blank=True)
+    delivery_city = models.CharField(max_length=50, blank=True)
+    delivery_country = CountryField(blank=True, default="DE")
 
 
 class WaitingListPickupLocationWish(TapirModel):

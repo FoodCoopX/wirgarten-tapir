@@ -12,8 +12,10 @@ export function getPhase(step: Step): Phase {
     case "3b_growing_period_choice":
       return "intro";
     case "5a_pickup_location_intro":
-    case "5b_pickup_location_choice":
-    case "5c_pickup_location_confirm_waiting_list":
+    case "5b_delivery_mode_choice":
+    case "5c_pickup_location_choice":
+    case "5d_home_delivery_choice":
+    case "5e_pickup_location_confirm_waiting_list":
       return "pickup_location";
     case "6a_coop_intro":
     case "6b_coop_shares":
@@ -23,6 +25,7 @@ export function getPhase(step: Step): Phase {
     case "7_solidarity_contribution":
       return "solidarity";
     case "8_personal_data":
+    case "8b_delivery_address":
     case "9_banking_data":
     case "10_summary":
     case "11_legal":

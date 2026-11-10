@@ -27,7 +27,10 @@ class TestValidateNumberOfShares(TapirUnitTest):
         cache = Mock()
         mock_get_minimum_number_of_shares_for_tapir_order.return_value = 4
 
-        with self.assertRaises(ValidationError) as error_context:
+        with self.assertRaisesMessage(
+            ValidationError,
+            "Diese Bestellung erfordert mindestens 4 Genossenschaftsanteile",
+        ):
             WaitingListEntryConfirmationValidator.validate_number_of_shares(
                 order=order,
                 desired_number_of_coop_shares=3,
@@ -37,10 +40,6 @@ class TestValidateNumberOfShares(TapirUnitTest):
 
         mock_get_minimum_number_of_shares_for_tapir_order.assert_called_once_with(
             order=order, cache=cache
-        )
-        self.assertEqual(
-            "Diese Bestellung erfordert mindestens 4 Genossenschaftsanteile",
-            error_context.exception.message,
         )
 
     @patch.object(

@@ -28,6 +28,15 @@ from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
+from tapir.pickup_locations.services.home_delivery_address_validator import (
+    HomeDeliveryAddressValidator,
+)
+from tapir.pickup_locations.services.member_delivery_address_getter import (
+    DeliveryAddressInput,
+)
+from tapir.pickup_locations.services.member_delivery_address_setter import (
+    MemberDeliveryAddressSetter,
+)
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
@@ -402,6 +411,14 @@ class WaitingListApiView(APIView):
             "iban": iban,
             "payment_rhythm": payment_rhythm,
             "can_be_fulfilled": can_be_fulfilled,
+            "delivery_address": {
+                "same_as_billing_address": entry.delivery_same_as_billing_address,
+                "street": entry.delivery_street,
+                "street_2": entry.delivery_street_2,
+                "postcode": entry.delivery_postcode,
+                "city": entry.delivery_city,
+                "country": str(entry.delivery_country),
+            },
         }
 
     @staticmethod
@@ -507,6 +524,20 @@ class WaitingListEntryUpdateView(APIView):
         WaitingListEntryCreator.set_personal_data_from_validated_data(
             waiting_list_entry, serializer.validated_data
         )
+        delivery_address = serializer.validated_data.get("delivery_address")
+        if delivery_address is not None:
+            MemberDeliveryAddressSetter.apply_delivery_address_input(
+                target=waiting_list_entry,
+                delivery_address_input=DeliveryAddressInput(**delivery_address),
+            )
+
+        try:
+            self.validate_home_delivery_address(
+                waiting_list_entry=waiting_list_entry,
+                pickup_location_ids=serializer.validated_data["pickup_location_ids"],
+            )
+        except ValidationError as error:
+            return Response(error.message, status=status.HTTP_400_BAD_REQUEST)
 
         waiting_list_entry.desired_start_date = serializer.validated_data.get(
             "desired_start_date", None
@@ -532,6 +563,19 @@ class WaitingListEntryUpdateView(APIView):
         )
 
         return Response("OK", status=status.HTTP_200_OK)
+
+    def validate_home_delivery_address(
+        self, waiting_list_entry: WaitingListEntry, pickup_location_ids: list[str]
+    ):
+        for pickup_location_id in pickup_location_ids:
+            pickup_location = TapirCache.get_pickup_location_by_id(
+                cache=self.cache, pickup_location_id=pickup_location_id
+            )
+            if pickup_location is None:
+                continue
+            HomeDeliveryAddressValidator.validate(
+                address_owner=waiting_list_entry, pickup_location=pickup_location
+            )
 
 
 class WaitingListCategoriesView(APIView):

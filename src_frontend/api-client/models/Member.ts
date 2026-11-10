@@ -14,6 +14,11 @@
 
 import type { Land } from "./Land";
 import { LandFromJSON, LandToJSON } from "./Land";
+import type { MemberDeliveryCountry } from "./MemberDeliveryCountry";
+import {
+  MemberDeliveryCountryFromJSON,
+  MemberDeliveryCountryToJSON,
+} from "./MemberDeliveryCountry";
 import type { PreferredLanguageEnum } from "./PreferredLanguageEnum";
 import {
   PreferredLanguageEnumFromJSON,
@@ -218,6 +223,42 @@ export interface Member {
    * @memberof Member
    */
   hasReceivedMembershipStartedMail?: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof Member
+   */
+  deliverySameAsBillingAddress?: boolean;
+  /**
+   *
+   * @type {string}
+   * @memberof Member
+   */
+  deliveryStreet?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof Member
+   */
+  deliveryStreet2?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof Member
+   */
+  deliveryPostcode?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof Member
+   */
+  deliveryCity?: string;
+  /**
+   *
+   * @type {MemberDeliveryCountry}
+   * @memberof Member
+   */
+  deliveryCountry?: MemberDeliveryCountry;
 }
 
 /**
@@ -300,6 +341,22 @@ export function MemberFromJSONTyped(
       json["has_received_membership_started_mail"] == null
         ? undefined
         : json["has_received_membership_started_mail"],
+    deliverySameAsBillingAddress:
+      json["delivery_same_as_billing_address"] == null
+        ? undefined
+        : json["delivery_same_as_billing_address"],
+    deliveryStreet:
+      json["delivery_street"] == null ? undefined : json["delivery_street"],
+    deliveryStreet2:
+      json["delivery_street_2"] == null ? undefined : json["delivery_street_2"],
+    deliveryPostcode:
+      json["delivery_postcode"] == null ? undefined : json["delivery_postcode"],
+    deliveryCity:
+      json["delivery_city"] == null ? undefined : json["delivery_city"],
+    deliveryCountry:
+      json["delivery_country"] == null
+        ? undefined
+        : MemberDeliveryCountryFromJSON(json["delivery_country"]),
   };
 }
 
@@ -366,5 +423,11 @@ export function MemberToJSONTyped(
     pseudonym: value["pseudonym"],
     has_received_membership_started_mail:
       value["hasReceivedMembershipStartedMail"],
+    delivery_same_as_billing_address: value["deliverySameAsBillingAddress"],
+    delivery_street: value["deliveryStreet"],
+    delivery_street_2: value["deliveryStreet2"],
+    delivery_postcode: value["deliveryPostcode"],
+    delivery_city: value["deliveryCity"],
+    delivery_country: MemberDeliveryCountryToJSON(value["deliveryCountry"]),
   };
 }

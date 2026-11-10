@@ -4,8 +4,10 @@ from tapir.deliveries.serializers import (
     SubscriptionSerializer,
 )
 from tapir.pickup_locations.serializers import (
+    DeliveryAddressSerializer,
     PublicPickupLocationSerializer,
     PickupLocationSerializer,
+    StoredDeliveryAddressSerializer,
 )
 from tapir.products.serializers import PublicProductSerializer, ProductSerializer
 from tapir.wirgarten.models import (
@@ -74,6 +76,7 @@ class WaitingListEntryDetailsSerializer(serializers.Serializer):
     link = serializers.URLField(required=False)
     payment_rhythm = serializers.CharField(required=False)
     can_be_fulfilled = serializers.BooleanField(required=False)
+    delivery_address = StoredDeliveryAddressSerializer()
 
 
 class PublicWaitingListEntryDetailsSerializer(serializers.Serializer):
@@ -126,6 +129,7 @@ class WaitingListEntryUpdateSerializer(serializers.Serializer):
     desired_start_date = serializers.DateField(required=False)
     comment = serializers.CharField(allow_blank=True)
     category = serializers.CharField(required=False, allow_blank=True)
+    delivery_address = DeliveryAddressSerializer(required=False)
 
 
 class PublicWaitingListEntryExistingMemberCreateSerializer(serializers.Serializer):

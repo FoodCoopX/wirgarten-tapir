@@ -102,15 +102,14 @@ class TestGetSmallestProduct(TapirUnitTest):
 
         mock_get_products_with_product_type.return_value = []
 
-        with self.assertRaises(TapirImproperlyConfigured) as error_context:
+        with self.assertRaisesMessage(
+            TapirImproperlyConfigured,
+            "No product found for product type test product (no_delivery)",
+        ):
             GlobalCapacityChecker.get_smallest_product(
                 product_type, reference_date=reference_date, cache=cache
             )
 
-        self.assertEqual(
-            "No product found for product type test product (no_delivery)",
-            str(error_context.exception),
-        )
         mock_get_products_with_product_type.assert_called_once_with(
             cache=cache, product_type_id=product_type.id
         )

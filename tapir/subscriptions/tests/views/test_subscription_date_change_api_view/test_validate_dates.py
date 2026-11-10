@@ -55,7 +55,10 @@ class TestValidateDates(TapirUnitTest):
             lambda date, cache: growing_periods[date.year]
         )
 
-        with self.assertRaises(ValidationError) as error:
+        with self.assertRaisesMessage(
+            ValidationError,
+            "Das neue Start-Datum muss im gleiche Vertragsperiode liegen wie das alte",
+        ):
             SubscriptionDateChangeApplier.validate_dates(
                 subscription=subscription,
                 start_date=datetime.date(year=2022, month=5, day=17),
@@ -63,10 +66,6 @@ class TestValidateDates(TapirUnitTest):
                 cache=cache,
             )
 
-        self.assertEqual(
-            "Das neue Start-Datum muss im gleiche Vertragsperiode liegen wie das alte",
-            error.exception.message,
-        )
         self.assertEqual(2, mock_get_growing_period_at_date.call_count)
 
     @patch.object(TapirCache, "get_growing_period_at_date", autospec=True)
@@ -93,7 +92,10 @@ class TestValidateDates(TapirUnitTest):
             lambda date, cache: growing_periods[date.year]
         )
 
-        with self.assertRaises(ValidationError) as error:
+        with self.assertRaisesMessage(
+            ValidationError,
+            "Das neue End-Datum muss im gleiche Vertragsperiode liegen wie das alte",
+        ):
             SubscriptionDateChangeApplier.validate_dates(
                 subscription=subscription,
                 start_date=subscription.start_date,
@@ -101,8 +103,4 @@ class TestValidateDates(TapirUnitTest):
                 cache=cache,
             )
 
-        self.assertEqual(
-            "Das neue End-Datum muss im gleiche Vertragsperiode liegen wie das alte",
-            error.exception.message,
-        )
         self.assertEqual(4, mock_get_growing_period_at_date.call_count)

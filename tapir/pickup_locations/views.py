@@ -6,6 +6,7 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
 from rest_framework import status, viewsets, permissions, serializers
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -13,6 +14,9 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.pickup_locations.models import PickupLocationDeliveryCharge
 from tapir.pickup_locations.serializers import (
+    ChangeMemberPickupLocationRequestSerializer,
+    DeliveryAddressSerializer,
+    MemberDeliveryAddressSerializer,
     PickupLocationCapacitiesSerializer,
     PickupLocationCapacityEvolutionSerializer,
     PickupLocationDeliveryChargeCreateRequestSerializer,
@@ -21,7 +25,17 @@ from tapir.pickup_locations.serializers import (
     PickupLocationCapacityCheckResponseSerializer,
     PickupLocationCapacityCheckRequestSerializer,
     PickupLocationSerializer,
+    PickupLocationSaveRequestSerializer,
     LocationRouteSerializer,
+)
+from tapir.pickup_locations.services.home_delivery_address_validator import (
+    HomeDeliveryAddressValidator,
+)
+from tapir.pickup_locations.services.member_delivery_address_getter import (
+    DeliveryAddressInput,
+)
+from tapir.pickup_locations.services.member_delivery_address_setter import (
+    MemberDeliveryAddressSetter,
 )
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
@@ -44,6 +58,12 @@ from tapir.pickup_locations.services.pickup_location_delivery_charge_service imp
 from tapir.pickup_locations.services.pickup_location_highest_usage_after_date_service import (
     PickupLocationHighestUsageAfterDateService,
 )
+from tapir.pickup_locations.services.pickup_location_deletion_validator import (
+    PickupLocationDeletionValidator,
+)
+from tapir.pickup_locations.services.pickup_location_validator import (
+    PickupLocationValidator,
+)
 from tapir.pickup_locations.services.public_pickup_locations_provider import (
     PublicPickupLocationProvider,
 )
@@ -62,6 +82,7 @@ from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
     PickupLocation,
     PickupLocationCapability,
+    PickupLocationOpeningTime,
     ProductType,
     Member,
     GrowingPeriod,
@@ -156,7 +177,7 @@ class PickupLocationCapacitiesView(APIView):
 
 
 class PickupLocationViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = PickupLocation.objects.all()
+    queryset = PickupLocation.objects.prefetch_related("opening_times")
     serializer_class = PickupLocationSerializer
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
 
@@ -164,6 +185,60 @@ class PickupLocationViewSet(viewsets.ReadOnlyModelViewSet):
         context = super().get_serializer_context()
         context["cache"] = {}
         return context
+
+    @extend_schema(
+        request=PickupLocationSaveRequestSerializer,
+        responses={201: PickupLocationSerializer, 400: dict},
+    )
+    def create(self, request: Request, *args, **kwargs) -> Response:
+        data = self._save(request=request, pickup_location=PickupLocation())
+        return Response(data, status=status.HTTP_201_CREATED)
+
+    @extend_schema(
+        request=PickupLocationSaveRequestSerializer,
+        responses={200: PickupLocationSerializer, 400: dict},
+    )
+    def update(self, request: Request, *args, **kwargs) -> Response:
+        data = self._save(request=request, pickup_location=self.get_object())
+        return Response(data, status=status.HTTP_200_OK)
+
+    def _save(self, request: Request, pickup_location: PickupLocation) -> dict:
+        request_serializer = PickupLocationSaveRequestSerializer(data=request.data)
+        request_serializer.is_valid(raise_exception=True)
+
+        opening_times = [
+            PickupLocationOpeningTime(pickup_location=pickup_location, **opening_time)
+            for opening_time in request_serializer.validated_data.pop("opening_times")
+        ]
+        for field_name, value in request_serializer.validated_data.items():
+            setattr(pickup_location, field_name, value)
+
+        errors = PickupLocationValidator.validate(
+            pickup_location=pickup_location, opening_times=opening_times, cache={}
+        )
+        if errors:
+            raise serializers.ValidationError(errors)
+
+        with transaction.atomic():
+            pickup_location.save()
+            PickupLocationOpeningTime.objects.filter(
+                pickup_location=pickup_location
+            ).delete()
+            PickupLocationOpeningTime.objects.bulk_create(opening_times)
+
+        return self.get_serializer(self.get_queryset().get(id=pickup_location.id)).data
+
+    @extend_schema(responses={204: None, 400: str})
+    def destroy(self, request: Request, *args, **kwargs) -> Response:
+        pickup_location = self.get_object()
+        error = PickupLocationDeletionValidator.validate(
+            pickup_location=pickup_location
+        )
+        if error is not None:
+            return Response(error, status=status.HTTP_400_BAD_REQUEST)
+
+        pickup_location.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class PickupLocationCapacityEvolutionView(APIView):
@@ -388,14 +463,13 @@ class ChangeMemberPickupLocationApiView(APIView):
         self.cache = {}
 
     @extend_schema(
-        parameters=[
-            OpenApiParameter(name="member_id", type=str),
-            OpenApiParameter(name="pickup_location_id", type=str),
-        ],
+        request=ChangeMemberPickupLocationRequestSerializer,
         responses={200: OrderConfirmationResponseSerializer},
     )
     def post(self, request):
-        member_id = request.query_params.get("member_id")
+        serializer = ChangeMemberPickupLocationRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        member_id = serializer.validated_data["member_id"]
         check_permission_or_self(member_id, request)
         if not request.user.has_perm(
             Permission.Accounts.MANAGE
@@ -404,10 +478,17 @@ class ChangeMemberPickupLocationApiView(APIView):
         ):
             raise PermissionDenied()
         member = get_object_or_404(Member, id=member_id)
-        new_pickup_location_id = request.query_params.get("pickup_location_id")
+        new_pickup_location_id = serializer.validated_data["pickup_location_id"]
         new_pickup_location = get_object_or_404(
             PickupLocation, id=new_pickup_location_id
         )
+
+        delivery_address = serializer.validated_data.get("delivery_address")
+        if delivery_address is not None and new_pickup_location.is_home_delivery:
+            MemberDeliveryAddressSetter.apply_delivery_address_input(
+                target=member,
+                delivery_address_input=DeliveryAddressInput(**delivery_address),
+            )
 
         valid_from = calculate_pickup_location_change_date(cache=self.cache)
 
@@ -425,6 +506,9 @@ class ChangeMemberPickupLocationApiView(APIView):
             )
 
         with transaction.atomic():
+            MemberDeliveryAddressSetter.save_delivery_address(
+                member=member, actor=request.user
+            )
             MemberPickupLocationSetter.link_member_to_pickup_location(
                 pickup_location_id=new_pickup_location_id,
                 member=member,
@@ -498,6 +582,10 @@ class ChangeMemberPickupLocationApiView(APIView):
             raise ValidationError(
                 "Dieser Abholort hat nicht genug Kapazitäten für deine Verträge."
             )
+
+        HomeDeliveryAddressValidator.validate(
+            address_owner=member, pickup_location=new_pickup_location
+        )
 
 
 class PickupLocationDeliveryChargesView(APIView):
@@ -587,3 +675,89 @@ class LocationRouteViewSet(viewsets.ModelViewSet):
     queryset = LocationRoute.objects.order_by("name")
     serializer_class = LocationRouteSerializer
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+
+class MemberDeliveryAddressApiView(APIView):
+    def __init__(self):
+        super().__init__()
+        self.cache = {}
+
+    @extend_schema(
+        parameters=[OpenApiParameter(name="member_id", type=str)],
+        responses={200: MemberDeliveryAddressSerializer},
+    )
+    def get(self, request):
+        member = self.get_member_and_check_permission(request=request)
+
+        return Response(
+            MemberDeliveryAddressSerializer(
+                {
+                    "same_as_billing_address": member.delivery_same_as_billing_address,
+                    "street": member.delivery_street,
+                    "street_2": member.delivery_street_2,
+                    "postcode": member.delivery_postcode,
+                    "city": member.delivery_city,
+                    "country": str(member.delivery_country),
+                    "change_warning_text": self.get_change_warning_text(),
+                }
+            ).data
+        )
+
+    @extend_schema(
+        parameters=[OpenApiParameter(name="member_id", type=str)],
+        request=DeliveryAddressSerializer,
+        responses={200: OrderConfirmationResponseSerializer},
+    )
+    def put(self, request):
+        member = self.get_member_and_check_permission(request=request)
+        serializer = DeliveryAddressSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        MemberDeliveryAddressSetter.apply_delivery_address_input(
+            target=member,
+            delivery_address_input=DeliveryAddressInput(**serializer.validated_data),
+        )
+
+        try:
+            for (
+                pickup_location
+            ) in MemberPickupLocationGetter.get_current_and_future_home_delivery_locations(
+                member_id=member.id,
+                reference_date=get_today(cache=self.cache),
+                cache=self.cache,
+            ):
+                HomeDeliveryAddressValidator.validate(
+                    address_owner=member, pickup_location=pickup_location
+                )
+        except ValidationError as error:
+            return Response(
+                OrderConfirmationResponseSerializer(
+                    {"order_confirmed": False, "error": error.message}
+                ).data
+            )
+
+        MemberDeliveryAddressSetter.save_delivery_address(
+            member=member, actor=request.user
+        )
+
+        return Response(
+            OrderConfirmationResponseSerializer(
+                {"order_confirmed": True, "error": None}
+            ).data
+        )
+
+    @staticmethod
+    def get_member_and_check_permission(request: Request) -> Member:
+        member_id = request.query_params.get("member_id")
+        check_permission_or_self(member_id, request)
+        return get_object_or_404(Member, id=member_id)
+
+    def get_change_warning_text(self) -> str:
+        if calculate_pickup_location_change_date(cache=self.cache) <= get_today(
+            cache=self.cache
+        ):
+            return ""
+
+        return get_parameter_value(
+            key=ParameterKeys.MEMBER_DELIVERY_ADDRESS_CHANGE_WARNING_TEXT,
+            cache=self.cache,
+        )

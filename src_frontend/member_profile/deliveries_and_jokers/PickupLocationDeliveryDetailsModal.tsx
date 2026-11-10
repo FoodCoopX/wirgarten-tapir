@@ -20,18 +20,20 @@ const PickupLocationDeliveryDetailsModal: React.FC<
         </Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <p>
-          {pickupLocation.street}
-          <br />
-          {pickupLocation.street2 && (
-            <>
-              {pickupLocation.street2}
-              <br />
-            </>
-          )}
-          {pickupLocation.postcode} {pickupLocation.city}
-          <br />
-        </p>
+        {!pickupLocation.isHomeDelivery && (
+          <p>
+            {pickupLocation.street}
+            <br />
+            {pickupLocation.street2 && (
+              <>
+                {pickupLocation.street2}
+                <br />
+              </>
+            )}
+            {pickupLocation.postcode} {pickupLocation.city}
+            <br />
+          </p>
+        )}
         <p>
           {pickupLocation.info && (
             <>
@@ -63,7 +65,9 @@ const PickupLocationDeliveryDetailsModal: React.FC<
           )}
         </p>
         <p>
-          <h5>Abholtage</h5>
+          <h5>
+            {pickupLocation.isHomeDelivery ? "Lieferfenster" : "Abholtage"}
+          </h5>
           <ul>
             {openingTimes.map((openingTime) => {
               return (

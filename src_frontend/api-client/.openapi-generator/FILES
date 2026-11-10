@@ -63,6 +63,7 @@ models/CabLoggedInUserChangeTargetsPaymentRhythmResponse.ts
 models/CancelSubscriptionsRequestRequest.ts
 models/CancelSubscriptionsViewResponse.ts
 models/CancellationData.ts
+models/ChangeMemberPickupLocationRequestRequest.ts
 models/ChangeTypeEnum.ts
 models/ConfirmSubscriptionChangesRequestRequest.ts
 models/ConvertWeekToDateForSubscriptionChangesResponse.ts
@@ -75,6 +76,8 @@ models/CsvExportModelRequest.ts
 models/CustomCycleDeliveryWeeksRequest.ts
 models/DayOfWeekEnum.ts
 models/Delivery.ts
+models/DeliveryAddressRequest.ts
+models/DeliveryCountryEnum.ts
 models/DeliveryCycleEnum.ts
 models/DeliveryDayAdjustment.ts
 models/DeliveryDayAdjustmentRequest.ts
@@ -144,6 +147,8 @@ models/MemberCredit.ts
 models/MemberCreditCreateRequest.ts
 models/MemberCreditSettleRequest.ts
 models/MemberDataToConfirm.ts
+models/MemberDeliveryAddress.ts
+models/MemberDeliveryCountry.ts
 models/MemberEmailRequestRequest.ts
 models/MemberEmailResponse.ts
 models/MemberExtraEmail.ts
@@ -236,6 +241,8 @@ models/PickupLocationDeliveryChargeEntry.ts
 models/PickupLocationDeliveryChargesResponse.ts
 models/PickupLocationDeliveryDay.ts
 models/PickupLocationOpeningTime.ts
+models/PickupLocationOpeningTimeInputRequest.ts
+models/PickupLocationSaveRequestRequest.ts
 models/PickupLocationsByDeliveryDayResponse.ts
 models/PreferenceSatisfactionResponse.ts
 models/PreferredBread.ts
@@ -289,6 +296,7 @@ models/StaticSegment.ts
 models/StaticSegmentRecipient.ts
 models/StaticSegmentRecipientRequest.ts
 models/StaticSegmentRequest.ts
+models/StoredDeliveryAddress.ts
 models/StoredUpload.ts
 models/StoredUploadRequest.ts
 models/StoveSession.ts

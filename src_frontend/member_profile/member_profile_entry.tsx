@@ -176,6 +176,9 @@ if (domNodePersonalDataDropdown) {
       extraEmailAddressesEnabled={
         domNodePersonalDataDropdown.dataset.extraEmailAddressesEnabled == "True"
       }
+      hasHomeDelivery={
+        domNodePersonalDataDropdown.dataset.hasHomeDelivery === "True"
+      }
     />,
   );
 }

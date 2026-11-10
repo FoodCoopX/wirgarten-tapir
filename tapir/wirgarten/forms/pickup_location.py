@@ -4,9 +4,6 @@ from typing import List
 
 from dateutil.relativedelta import relativedelta
 from django import forms
-from django.core.exceptions import ValidationError
-from django.db import transaction
-from django.forms import Textarea
 from django.utils.translation import gettext_lazy as _
 
 from tapir.configuration.parameter import get_parameter_value
@@ -22,26 +19,18 @@ from tapir.pickup_locations.services.pickup_location_capacity_mode_share_checker
 from tapir.pickup_locations.services.pickup_location_active_filter import (
     PickupLocationActiveFilter,
 )
-from tapir.utils.forms import DateInput
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.wirgarten.constants import NO_DELIVERY, HTML_ALLOWED_TEXT
+from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.models import (
-    PICKUP_LOCATION_END_DATE_HELP_TEXT,
-    PICKUP_LOCATION_START_DATE_HELP_TEXT,
     PickupLocation,
-    PickupLocationOpeningTime,
     Subscription,
     Member,
-    LocationRoute,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import (
     get_active_pickup_location_capabilities,
 )
 from tapir.wirgarten.service.get_next_delivery_date import get_next_delivery_date
-from tapir.wirgarten.service.pickup_location_date_validation import (
-    PickupLocationDateValidator,
-)
 from tapir.wirgarten.service.products import (
     get_active_subscriptions,
     get_product_price,
@@ -146,7 +135,13 @@ def pickup_location_to_dict(
         .distinct()
         .count(),
         "location_route": getattr(pickup_location.location_route, "name", ""),
-        "coords": f"{pickup_location.coords_lon},{pickup_location.coords_lat}",
+        "coords": (
+            f"{pickup_location.latitude},{pickup_location.longitude}"
+            if pickup_location.latitude is not None
+            and pickup_location.longitude is not None
+            else None
+        ),
+        "is_home_delivery": pickup_location.is_home_delivery,
         "route_info": pickup_location.route_info,
         "start_date": (
             pickup_location.start_date.isoformat()
@@ -311,315 +306,3 @@ class PickupLocationChoiceForm(forms.Form):
             )
 
         return len(self.errors) == 0
-
-
-class PickupLocationEditForm(forms.Form):
-    template_name = "wirgarten/pickup_location/pickup_location_edit.form.html"
-    n_columns = 2
-
-    def __init__(self, *args, **kwargs):
-        super(PickupLocationEditForm, self).__init__(*args)
-
-        self.fields["coords"] = forms.CharField(
-            label=_("Koordinaten"), help_text="z.B: 53.2731785,10.3741756"
-        )
-        self.fields["location_route"] = forms.ModelChoiceField(
-            label=_("Ausfahrrunde"),
-            queryset=LocationRoute.objects.all(),
-            required=False,
-        )
-        self.fields["name"] = forms.CharField(label=_("Name"), required=True)
-        self.fields["street"] = forms.CharField(
-            label=_("Straße & Hausnummer"), required=True
-        )
-        self.fields["postcode"] = forms.CharField(
-            label=_("Postleitzahl"), required=True
-        )
-        self.fields["city"] = forms.CharField(label=_("Ort"), required=True)
-
-        self.fields["access_code"] = forms.CharField(
-            label=_("Zugangscode"), required=False
-        )
-        self.fields["messenger_group_link"] = forms.CharField(
-            label=_("Link zur Messenger-Gruppe"), required=False
-        )
-        self.fields["contact_name"] = forms.CharField(
-            label=_("Name der Abholort-Pat*innen"), required=False
-        )
-        self.fields["photo_link"] = forms.CharField(
-            label=_("Link zum Foto des Abholorts"), required=False
-        )
-        self.fields["show_details_in_basket_totals_export"] = forms.BooleanField(
-            label=_("Im Gesamtkistenanzahls-Zettel Details anzeigen"),
-            required=False,
-        )
-        self.fields["info"] = forms.CharField(
-            label=_("Zusätzliche Informationen zur Abholung"),
-            required=False,
-            max_length=3000,
-            help_text="z.B.: im Hinterhof. "
-            + HTML_ALLOWED_TEXT
-            + " (max. 3000 Zeichen inkl. HTML-Tags)",
-            widget=Textarea,
-        )
-        self.fields["route_info"] = forms.CharField(
-            label=_("Information Fahrer"),
-            required=False,
-            max_length=3000,
-            help_text="z.B.: kleine Kisten links abstellen; große Tauschkiste. (max. 3000 Zeichen)",
-            widget=Textarea,
-        )
-        self.fields["start_date"] = forms.DateField(
-            label=_("Verfügbar ab"),
-            required=False,
-            help_text=_(PICKUP_LOCATION_START_DATE_HELP_TEXT),
-            widget=DateInput(),
-        )
-        self.fields["end_date"] = forms.DateField(
-            label=_("Verfügbar bis"),
-            required=False,
-            help_text=_(PICKUP_LOCATION_END_DATE_HELP_TEXT),
-            widget=DateInput(),
-        )
-
-        self.colspans = {
-            "coords": 1,
-            "start_date": 1,
-            "end_date": 1,
-            "show_details_in_basket_totals_export": 2,
-            "info": 2,
-            "route_info": 2,
-            "monday_times": 2,
-            "tuesday_times": 2,
-            "wednesday_times": 2,
-            "thursday_times": 2,
-            "friday_times": 2,
-            "saturday_times": 2,
-            "sunday_times": 2,
-        }
-
-        self.fields["monday_times"] = forms.CharField(
-            label=_("Montag"),
-            required=False,
-            widget=forms.TextInput(attrs={"placeholder": "HH:MM-HH:MM"}),
-        )
-        self.fields["tuesday_times"] = forms.CharField(
-            label=_("Dienstag"),
-            required=False,
-            widget=forms.TextInput(attrs={"placeholder": "HH:MM-HH:MM"}),
-        )
-        self.fields["wednesday_times"] = forms.CharField(
-            label=_("Mittwoch"),
-            required=False,
-            widget=forms.TextInput(attrs={"placeholder": "HH:MM-HH:MM"}),
-        )
-        self.fields["thursday_times"] = forms.CharField(
-            label=_("Donnerstag"),
-            required=False,
-            widget=forms.TextInput(attrs={"placeholder": "HH:MM-HH:MM"}),
-        )
-        self.fields["friday_times"] = forms.CharField(
-            label=_("Freitag"),
-            required=False,
-            widget=forms.TextInput(attrs={"placeholder": "HH:MM-HH:MM"}),
-        )
-        self.fields["saturday_times"] = forms.CharField(
-            label=_("Samstag"),
-            required=False,
-            widget=forms.TextInput(attrs={"placeholder": "HH:MM-HH:MM"}),
-        )
-        self.fields["sunday_times"] = forms.CharField(
-            label=_("Sonntag"),
-            required=False,
-            widget=forms.TextInput(attrs={"placeholder": "HH:MM-HH:MM"}),
-        )
-
-        if "id" in kwargs:
-            self.pickup_location = PickupLocation.objects.get(id=kwargs["id"])
-            self.fields["coords"].initial = (
-                f"{self.pickup_location.coords_lon},{self.pickup_location.coords_lat}"
-            )
-            self.fields["location_route"].initial = self.pickup_location.location_route
-            self.fields["name"].initial = self.pickup_location.name
-            self.fields["street"].initial = self.pickup_location.street
-            self.fields["postcode"].initial = self.pickup_location.postcode
-            self.fields["city"].initial = self.pickup_location.city
-            self.fields["info"].initial = self.pickup_location.info
-            self.fields["route_info"].initial = self.pickup_location.route_info
-            self.fields["access_code"].initial = self.pickup_location.access_code
-            self.fields["messenger_group_link"].initial = (
-                self.pickup_location.messenger_group_link
-            )
-            self.fields["contact_name"].initial = self.pickup_location.contact_name
-            self.fields["photo_link"].initial = self.pickup_location.photo_link
-            self.fields["start_date"].initial = self.pickup_location.start_date
-            self.fields["end_date"].initial = self.pickup_location.end_date
-            self.fields["show_details_in_basket_totals_export"].initial = (
-                self.pickup_location.show_details_in_basket_totals_export
-            )
-
-            opening_times = PickupLocationOpeningTime.objects.filter(
-                pickup_location=self.pickup_location
-            )
-            opening_times_map = {}
-            for ot in opening_times:
-                times_list = opening_times_map.get(ot.day_of_week, [])
-                times_list.append(
-                    f"{ot.open_time.strftime('%H:%M')}-{ot.close_time.strftime('%H:%M')}"
-                )
-                opening_times_map[ot.day_of_week] = times_list
-
-            self.fields["monday_times"].initial = ", ".join(
-                opening_times_map[0] if 0 in opening_times_map else []
-            )
-            self.fields["tuesday_times"].initial = ", ".join(
-                opening_times_map[1] if 1 in opening_times_map else []
-            )
-            self.fields["wednesday_times"].initial = ", ".join(
-                opening_times_map[2] if 2 in opening_times_map else []
-            )
-            self.fields["thursday_times"].initial = ", ".join(
-                opening_times_map[3] if 3 in opening_times_map else []
-            )
-            self.fields["friday_times"].initial = ", ".join(
-                opening_times_map[4] if 4 in opening_times_map else []
-            )
-            self.fields["saturday_times"].initial = ", ".join(
-                opening_times_map[5] if 5 in opening_times_map else []
-            )
-            self.fields["sunday_times"].initial = ", ".join(
-                opening_times_map[6] if 6 in opening_times_map else []
-            )
-
-    def clean(self):
-        cleaned_data = super().clean()
-
-        def validate_times(field):
-            times = cleaned_data.get(field)
-            if not times:
-                return False
-            times = [time.strip() for time in times.split(",")]
-            for time in times:
-                try:
-                    start, end = time.split("-")
-                    start_time = datetime.datetime.strptime(start, "%H:%M")
-                    end_time = datetime.datetime.strptime(end, "%H:%M")
-                    if start_time >= end_time:
-                        self.add_error(
-                            field,
-                            ValidationError("End time must be later than start time"),
-                        )
-                except Exception:
-                    self.add_error(
-                        field,
-                        ValidationError(
-                            "Bitte geben Sie die Öffnungszeiten im Format 'HH:MM-HH:MM' an."
-                        ),
-                    )
-            return True
-
-        coords = cleaned_data.get("coords")
-        if coords:
-            coords = coords.split(",")
-            if len(coords) != 2:
-                self.add_error(
-                    "coords",
-                    ValidationError(
-                        "Bitte geben Sie die Koordinaten im Format 'Längengrad,Breitengrad' an."
-                    ),
-                )
-            try:
-                float(coords[0].strip())
-                float(coords[1].strip())
-            except Exception:
-                self.add_error(
-                    "coords",
-                    ValidationError(
-                        "Bitte geben Sie die Koordinaten im Format 'Längengrad,Breitengrad' an."
-                    ),
-                )
-
-        time_fields = [
-            "monday_times",
-            "tuesday_times",
-            "wednesday_times",
-            "thursday_times",
-            "friday_times",
-            "saturday_times",
-            "sunday_times",
-        ]
-        at_least_one_time_filled = False
-        for field in time_fields:
-            at_least_one_time_filled = at_least_one_time_filled or validate_times(field)
-        if not at_least_one_time_filled:
-            raise ValidationError("Mindestens ein Abholtag muss eingetragen werden.")
-
-        start_date = cleaned_data.get("start_date")
-        end_date = cleaned_data.get("end_date")
-        if start_date and end_date and end_date < start_date:
-            self.add_error(
-                "end_date", ValidationError("Ende darf nicht vor Beginn liegen.")
-            )
-
-        for field_name, message in PickupLocationDateValidator.validate(
-            start_date, end_date
-        ).items():
-            self.add_error(field_name, ValidationError(message))
-
-        return cleaned_data
-
-    @transaction.atomic
-    def save(self):
-        pl = (
-            self.pickup_location
-            if hasattr(self, "pickup_location")
-            else PickupLocation()
-        )
-        coords = self.cleaned_data["coords"].split(",")
-
-        pl.coords_lon = coords[0].strip()
-        pl.coords_lat = coords[1].strip()
-        pl.location_route = self.cleaned_data["location_route"]
-        pl.show_details_in_basket_totals_export = self.cleaned_data[
-            "show_details_in_basket_totals_export"
-        ]
-
-        pl.name = self.cleaned_data["name"]
-        pl.street = self.cleaned_data["street"]
-        pl.postcode = self.cleaned_data["postcode"]
-        pl.city = self.cleaned_data["city"]
-        pl.info = self.cleaned_data["info"]
-        pl.route_info = self.cleaned_data["route_info"]
-        pl.access_code = self.cleaned_data["access_code"]
-        pl.contact_name = self.cleaned_data["contact_name"]
-        pl.messenger_group_link = self.cleaned_data["messenger_group_link"]
-        pl.photo_link = self.cleaned_data["photo_link"]
-        pl.start_date = self.cleaned_data["start_date"]
-        pl.end_date = self.cleaned_data["end_date"]
-
-        pl.save()
-
-        PickupLocationOpeningTime.objects.filter(pickup_location=pl).delete()
-
-        def create_opening_time(day: int, times: str):
-            monday_times = times.split(",")
-            for time in monday_times:
-                if not time.strip():
-                    continue
-                start, end = time.split("-")
-                PickupLocationOpeningTime.objects.create(
-                    pickup_location=pl,
-                    day_of_week=day,
-                    open_time=start.strip(),
-                    close_time=end.strip(),
-                )
-
-        create_opening_time(0, self.cleaned_data["monday_times"])
-        create_opening_time(1, self.cleaned_data["tuesday_times"])
-        create_opening_time(2, self.cleaned_data["wednesday_times"])
-        create_opening_time(3, self.cleaned_data["thursday_times"])
-        create_opening_time(4, self.cleaned_data["friday_times"])
-        create_opening_time(5, self.cleaned_data["saturday_times"])
-        create_opening_time(6, self.cleaned_data["sunday_times"])
-
-        return pl

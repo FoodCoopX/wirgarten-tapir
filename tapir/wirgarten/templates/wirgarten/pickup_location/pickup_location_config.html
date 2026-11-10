@@ -39,13 +39,13 @@
                 <h4 style="margin-right: 3em">{{ pickup_locations|length }} Abholorte</h4>
                 <div class="d-flex justify-content-between" style="flex-grow: 2">
                     <div class="d-flex gap-2">{% if perms.coop.manage %}
-                        {% include 'wirgarten/generic/action-button.html' with onclick='handleAddPickupLocation()' title='Abholort hinzufügen' type='success' icon='add_location_alt' %}
-                        {% include 'wirgarten/generic/action-button.html' with onclick='handleEdit()' id='edit-location' title='Abholort bearbeiten' disabled=True type='primary' icon='edit' %}
+                        <div id="pickup_location_edit_buttons">
+                            <span class="spinner-border"></span>
+                        </div>
                         <div id="pickup_location_capacity_edit_button"
                              data-enable-delivery-charge="{{ enable_delivery_charge }}">
                             <span class="spinner-border"></span>
                         </div>
-                        {% include 'wirgarten/generic/action-button.html' with onclick='handleDelete()' id='delete-location' title='Abholort löschen' disabled=True type='danger' icon='delete' %}
                     {% endif %}
                     </div>
                     <div>
@@ -70,7 +70,7 @@
                             <th>Adresse</th>
                             <th style="text-align:left">Kapazitäten</th>
                             <th>Mitglieder</th>
-                            <th>Verfügbar</th>
+                            <th>Betriebszeitraum</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -83,6 +83,7 @@
                                         {{ pl.location_route }}
                                     {% endif %}
                                     <strong>{{ pl.name }}</strong>
+                                    {% if pl.is_home_delivery %}<span class="badge bg-info ms-1">Hauslieferung</span>{% endif %}
                                 </td>
                                 <td>
                                     <small style="line-height: 1em;">{{ pl.opening_times|safe }}</small>
@@ -135,13 +136,6 @@
     </div>
     </div>
     <script>
-        const handleAddPickupLocation = () => {
-            FormModal.load('{% url 'wirgarten:pickup_locations_add' %}', 'Abholort hinzufügen');
-        }
-
-        const canDelete = {}
-        {% for pl in pickup_locations %}canDelete["{{pl.id}}"] = {{pl.members}} == 0;{% endfor %}
-
         initSelected();
     </script>
 {% endblock %}

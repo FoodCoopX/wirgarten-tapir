@@ -3,6 +3,7 @@ import React from "react";
 import { Accordion, AccordionBody } from "react-bootstrap";
 import {
   AssociationMembershipType,
+  DeliveryAddressRequest,
   PublicGrowingPeriod,
   PublicPickupLocation,
   PublicProductType,
@@ -23,6 +24,7 @@ import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
 import { Step } from "../types/Step.ts";
 import { atLeastOneMonthlyPayment } from "../utils/atLeastOneMonthlyPayment.ts";
+import { buildDeliveryChargeBadge } from "../utils/buildDeliveryChargeBadge.tsx";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import { doesWaitingListHaveProductType } from "../utils/doesWaitingListHaveProductType.ts";
 import { getAssociationMembershipTypeMonthlyPriceFormatted } from "../utils/getAssociationMembershipTypeMonthlyPriceFormatted.ts";
@@ -66,6 +68,7 @@ interface Step10OrderSummaryProps {
   hideTrialPeriod: boolean;
   stepActive: boolean;
   setCurrentStep: (step: Step) => void;
+  deliveryAddress?: DeliveryAddressRequest;
 }
 
 const PaymentRow: React.FC<{
@@ -108,6 +111,7 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
   hideTrialPeriod,
   stepActive,
   setCurrentStep,
+  deliveryAddress,
 }) => {
   function getRelevantPickupLocation(): PublicPickupLocation | undefined {
     if (waitingListEntryDetails === undefined) {
@@ -190,7 +194,7 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
     if (!pickupLocation) {
       return undefined;
     }
-    const pickupLocationId = pickupLocation.id!;
+    const pickupLocationId = pickupLocation.id;
 
     if (
       !(pickupLocationId in firstDeliveryDatesByPickupLocationAndProductType)
@@ -222,6 +226,59 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
     }
 
     return "Unbekannt";
+  }
+
+  function formatDeliveryAddress() {
+    if (deliveryAddress === undefined || waitingListEntryDetails) {
+      return undefined;
+    }
+
+    if (deliveryAddress.sameAsBillingAddress) {
+      return formatAddress(
+        personalData.street,
+        personalData.street2,
+        personalData.postcode,
+        personalData.city,
+      );
+    }
+
+    return formatAddress(
+      deliveryAddress.street ?? "",
+      deliveryAddress.street2 ?? "",
+      deliveryAddress.postcode ?? "",
+      deliveryAddress.city ?? "",
+    );
+  }
+
+  function buildActivePickupLocationItems(
+    pickupLocation: PublicPickupLocation,
+  ) {
+    if (!pickupLocation.isHomeDelivery) {
+      return (
+        <li>
+          Aktive Verteilstation:{" "}
+          {pickupLocation.name +
+            " (" +
+            formatAddress(
+              pickupLocation.street,
+              pickupLocation.street2,
+              pickupLocation.postcode,
+              pickupLocation.city,
+            ) +
+            ")"}
+        </li>
+      );
+    }
+
+    const address = formatDeliveryAddress();
+    const deliveryChargeBadge = buildDeliveryChargeBadge(pickupLocation);
+    return (
+      <>
+        <li>Hauslieferung: {pickupLocation.name}</li>
+        {address && <li>Lieferadresse: {address}</li>}
+        {deliveryChargeBadge && <li>Liefergebühr: {deliveryChargeBadge}</li>}
+      </>
+    );
   }
 
   function getLocationsNotActive() {
@@ -444,26 +501,23 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                           {!productType.noDelivery && (
                             <>
                               <li>
-                                Erste Abholung:{" "}
+                                {activePickupLocation?.isHomeDelivery
+                                  ? "Erste Lieferung"
+                                  : "Erste Abholung"}
+                                :{" "}
                                 {(selectedPickupLocations.length > 0 ||
                                   waitingListEntryDetails?.currentPickupLocation) &&
                                   formatDateNumeric(
                                     getDateOfFirstDelivery(productType.id!),
                                   )}
                               </li>
-                              <li>
-                                Aktive Verteilstation:{" "}
-                                {activePickupLocation &&
-                                  activePickupLocation.name +
-                                    " (" +
-                                    formatAddress(
-                                      activePickupLocation.street,
-                                      activePickupLocation.street2,
-                                      activePickupLocation.postcode,
-                                      activePickupLocation.city,
-                                    ) +
-                                    ")"}
-                              </li>
+                              {activePickupLocation ? (
+                                buildActivePickupLocationItems(
+                                  activePickupLocation,
+                                )
+                              ) : (
+                                <li>Aktive Verteilstation:</li>
+                              )}
                               {!hideTrialPeriod &&
                                 settings.trialPeriodLengthInWeeks > 0 && (
                                   <li>

@@ -15,15 +15,20 @@ from tapir.payments.services.month_payment_builder_delivery_charges import (
     MonthPaymentBuilderDeliveryCharges,
 )
 from tapir.pickup_locations.models import PickupLocationChangedLogEntry
+from tapir.pickup_locations.services.home_delivery_address_validator import (
+    HomeDeliveryAddressValidator,
+)
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
+)
+from tapir.pickup_locations.services.pickup_location_mail_token_service import (
+    PickupLocationMailTokenService,
 )
 from tapir.pickup_locations.services.pickup_location_opening_times_formatter import (
     PickupLocationOpeningTimesFormatter,
 )
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.services.tapir_cache_manager import TapirCacheManager
-from tapir.utils.user_utils import UserUtils
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import Member, MemberPickupLocation
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -40,6 +45,14 @@ class MemberPickupLocationSetter:
         actor: TapirUser | None,
         cache: dict,
     ):
+        new_pickup_location = TapirCache.get_pickup_location_by_id(
+            cache=cache, pickup_location_id=pickup_location_id
+        )
+        if new_pickup_location is not None:
+            HomeDeliveryAddressValidator.validate(
+                address_owner=member, pickup_location=new_pickup_location
+            )
+
         old_pickup_location = MemberPickupLocationGetter.get_member_pickup_location(
             member=member, reference_date=valid_from, cache=cache
         )
@@ -85,16 +98,12 @@ class MemberPickupLocationSetter:
                     refund_credits, actor=actor
                 )
 
-            pickup_location = TapirCache.get_pickup_location_by_id(
-                cache=cache, pickup_location_id=pickup_location_id
-            )
-
             TransactionalTrigger.fire_action(
                 TransactionalTriggerData(
                     key=Events.MEMBERAREA_CHANGE_PICKUP_LOCATION,
                     recipient_id_in_base_queryset=member.id,
                     token_data={
-                        "pickup_location": pickup_location.name,
+                        "pickup_location": new_pickup_location.name,
                         "pickup_location_start_date": format_date(
                             cls.get_date_of_first_delivery(
                                 location_change_valid_from=valid_from,
@@ -103,17 +112,14 @@ class MemberPickupLocationSetter:
                                 cache=cache,
                             )
                         ),
-                        "address": UserUtils.build_display_address(
-                            street=pickup_location.street,
-                            street_2=pickup_location.street_2,
-                            postcode=pickup_location.postcode,
-                            city=pickup_location.city,
+                        "address": PickupLocationMailTokenService.build_address(
+                            member=member, pickup_location=new_pickup_location
                         ),
-                        "access_code": pickup_location.access_code,
-                        "messenger_group_link": pickup_location.messenger_group_link,
-                        "contact_name": pickup_location.contact_name,
-                        "photo_link": pickup_location.photo_link,
-                        "infos": pickup_location.info,
+                        "access_code": new_pickup_location.access_code,
+                        "messenger_group_link": new_pickup_location.messenger_group_link,
+                        "contact_name": new_pickup_location.contact_name,
+                        "photo_link": new_pickup_location.photo_link,
+                        "infos": new_pickup_location.info,
                         "opening_times": PickupLocationOpeningTimesFormatter.get_formatted_opening_times(
                             pickup_location_id=pickup_location_id, cache=cache
                         ),

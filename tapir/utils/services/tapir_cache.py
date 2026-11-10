@@ -30,6 +30,7 @@ from tapir.wirgarten.models import (
     ProductPrice,
     PickupLocation,
     PickupLocationOpeningTime,
+    LocationRoute,
     CoopShareTransaction,
     ProductCapacity,
     GrowingPeriod,
@@ -357,20 +358,43 @@ class TapirCache:
         )
 
     @classmethod
-    def get_pickup_location_by_id(cls, cache: dict, pickup_location_id):
+    def get_pickup_location_by_id(
+        cls, cache: dict, pickup_location_id: str | None
+    ) -> PickupLocation | None:
         if pickup_location_id is None:
             return None
 
-        def compute():
-            return {
+        return cls._get_pickup_locations_by_id(cache=cache).get(
+            pickup_location_id, None
+        )
+
+    @classmethod
+    def get_all_pickup_locations(cls, cache: dict) -> list[PickupLocation]:
+        return list(cls._get_pickup_locations_by_id(cache=cache).values())
+
+    @classmethod
+    def _get_pickup_locations_by_id(cls, cache: dict) -> dict[str, PickupLocation]:
+        return get_from_cache_or_compute(
+            cache,
+            "pickup_location_by_id",
+            lambda: {
                 pickup_location.id: pickup_location
                 for pickup_location in PickupLocation.objects.all()
-            }
-
-        pickup_location_by_id_cache = get_from_cache_or_compute(
-            cache, "pickup_location_by_id", lambda: compute()
+            },
         )
-        return pickup_location_by_id_cache.get(pickup_location_id, None)
+
+    @classmethod
+    def get_location_route_by_id(
+        cls, cache: dict, location_route_id: str
+    ) -> LocationRoute | None:
+        return get_from_cache_or_compute(
+            cache,
+            "location_route_by_id",
+            lambda: {
+                location_route.id: location_route
+                for location_route in LocationRoute.objects.all()
+            },
+        ).get(location_route_id, None)
 
     @classmethod
     def get_product_by_id(cls, cache: dict, product_id):

@@ -12,6 +12,9 @@ from tapir.coop.services.minimum_number_of_shares_validator import (
     MinimumNumberOfSharesValidator,
 )
 from tapir.coop.services.personal_data_validator import PersonalDataValidator
+from tapir.pickup_locations.services.home_delivery_address_validator import (
+    HomeDeliveryAddressValidator,
+)
 from tapir.solidarity_contribution.services.solidarity_validator import (
     SolidarityValidator,
 )
@@ -50,7 +53,22 @@ class WaitingListEntryConfirmationValidator:
             if not validated_data["contract_accepted"]:
                 raise ValidationError("Vertragsgrundsätze müssen akzeptiert sein")
 
+        cls.validate_home_delivery_address(waiting_list_entry=waiting_list_entry)
+
         return waiting_list_entry
+
+    @classmethod
+    def validate_home_delivery_address(cls, waiting_list_entry: WaitingListEntry):
+        pickup_location_wish = waiting_list_entry.pickup_location_wishes.order_by(
+            "priority"
+        ).first()
+        if pickup_location_wish is None:
+            return
+
+        HomeDeliveryAddressValidator.validate(
+            address_owner=waiting_list_entry,
+            pickup_location=pickup_location_wish.pickup_location,
+        )
 
     @classmethod
     def validate_new_member_data(

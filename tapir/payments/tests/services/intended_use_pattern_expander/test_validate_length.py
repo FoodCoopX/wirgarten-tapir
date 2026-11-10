@@ -13,15 +13,13 @@ class TestValidateLength(TapirUnitTest):
         )
 
     def test_validateLength_longerThanMaxLength_raisesValidationError(self):
-        with self.assertRaises(ValidationError) as context:
+        with self.assertRaisesMessage(
+            ValidationError,
+            f"Der Verwendungszweck ist zu lang (141 Zeichen, maximal 140): '{"x" * 141}'",
+        ):
             IntendedUsePatternExpander._validate_length(
                 "x" * (IntendedUsePatternExpander.MAX_LENGTH + 1)
             )
-
-        self.assertEqual(
-            f"Der Verwendungszweck ist zu lang (141 Zeichen, maximal 140): '{"x" * 141}'",
-            context.exception.message,
-        )
 
     def test_validateLength_specialCharactersExpandBeyondMaxLength_raisesValidationError(
         self,

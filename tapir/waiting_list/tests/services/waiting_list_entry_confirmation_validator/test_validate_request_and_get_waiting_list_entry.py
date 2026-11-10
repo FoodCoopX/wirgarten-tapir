@@ -134,12 +134,10 @@ class TestValidateRequestAndGetWaitingListEntry(TapirUnitTest):
         }
         cache = {}
 
-        with self.assertRaises(ValidationError) as error:
+        with self.assertRaisesMessage(ValidationError, "SEPA-Mandat muss erlaubt sein"):
             WaitingListEntryConfirmationValidator.validate_request_and_get_waiting_list_entry(
                 validated_data=validated_data, cache=cache
             )
-
-        self.assertEqual("SEPA-Mandat muss erlaubt sein", error.exception.message)
 
         mock_get_entry_by_id_and_validate_link_key.assert_called_once_with(
             entry_id="test_entry_id", link_key="test_link_key"
@@ -168,14 +166,12 @@ class TestValidateRequestAndGetWaitingListEntry(TapirUnitTest):
         }
         cache = {}
 
-        with self.assertRaises(ValidationError) as error:
+        with self.assertRaisesMessage(
+            ValidationError, "Vertragsgrundsätze müssen akzeptiert sein"
+        ):
             WaitingListEntryConfirmationValidator.validate_request_and_get_waiting_list_entry(
                 validated_data=validated_data, cache=cache
             )
-
-        self.assertEqual(
-            "Vertragsgrundsätze müssen akzeptiert sein", error.exception.message
-        )
 
         mock_get_entry_by_id_and_validate_link_key.assert_called_once_with(
             entry_id="test_entry_id", link_key="test_link_key"

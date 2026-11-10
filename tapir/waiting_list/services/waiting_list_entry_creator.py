@@ -1,6 +1,12 @@
 from tapir.bestell_wizard.services.bestell_wizard_order_validator import (
     BestellWizardOrderValidator,
 )
+from tapir.pickup_locations.services.member_delivery_address_getter import (
+    DeliveryAddressInput,
+)
+from tapir.pickup_locations.services.member_delivery_address_setter import (
+    MemberDeliveryAddressSetter,
+)
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
@@ -22,6 +28,7 @@ class WaitingListEntryCreator:
         pickup_location_ids_in_priority_order: list[str],
         number_of_coop_shares: int,
         personal_data: dict,
+        delivery_address_input: DeliveryAddressInput,
         cache: dict,
     ):
         return cls._create_entry(
@@ -29,7 +36,8 @@ class WaitingListEntryCreator:
             pickup_location_ids_in_priority_order=pickup_location_ids_in_priority_order,
             number_of_coop_shares=number_of_coop_shares,
             personal_data=personal_data,
-            member_id=None,
+            delivery_address_input=delivery_address_input,
+            member=None,
             cache=cache,
         )
 
@@ -55,7 +63,8 @@ class WaitingListEntryCreator:
             pickup_location_ids_in_priority_order=pickup_location_ids_in_priority_order,
             number_of_coop_shares=0,
             personal_data=None,
-            member_id=member.id,
+            delivery_address_input=None,
+            member=member,
             cache=cache,
         )
 
@@ -66,18 +75,28 @@ class WaitingListEntryCreator:
         pickup_location_ids_in_priority_order: list[str],
         number_of_coop_shares: int,
         personal_data: dict | None,
-        member_id: None | str,
+        delivery_address_input: DeliveryAddressInput | None,
+        member: Member | None,
         cache: dict,
     ):
         waiting_list_entry = WaitingListEntry(
             privacy_consent=get_now(cache=cache),
             number_of_coop_shares=number_of_coop_shares,
-            member_id=member_id,
+            member=member,
         )
 
         if personal_data is not None:
             cls.set_personal_data_from_validated_data(waiting_list_entry, personal_data)
             waiting_list_entry.pseudonym = personal_data["pseudonym"]
+        if delivery_address_input is not None:
+            MemberDeliveryAddressSetter.apply_delivery_address_input(
+                target=waiting_list_entry,
+                delivery_address_input=delivery_address_input,
+            )
+        if member is not None:
+            MemberDeliveryAddressSetter.copy_delivery_address(
+                source=member, target=waiting_list_entry
+            )
 
         waiting_list_entry.save()
 

@@ -30,10 +30,8 @@ class TestPopulateCommand(TapirIntegrationTest):
     def test_resetAll_unknownOrganization_raisesCommandErrorListingTheValidOnes(
         self, _clear, _generate_all
     ):
-        with self.assertRaises(CommandError) as context:
+        with self.assertRaisesMessage(CommandError, "BIOTOP"):
             call_command("populate", "--reset_all", "--org", "nope")
-
-        self.assertIn("BIOTOP", str(context.exception))
 
     def test_resetAll_withoutBakeryOrg_doesNotGenerateBakeryData(
         self, _clear, mock_generate_all

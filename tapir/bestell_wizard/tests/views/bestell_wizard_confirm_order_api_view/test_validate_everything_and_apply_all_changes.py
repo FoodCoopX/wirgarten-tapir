@@ -430,16 +430,15 @@ class TestValidateEverythingAndApplyAllChanges(TapirUnitTest):
             value=True,
         )
 
-        with self.assertRaises(ValidationError) as error:
+        with self.assertRaisesMessage(
+            ValidationError, "Nur Warteliste-Einträge sind erlaubt."
+        ):
             BestellWizardConfirmOrderApiView.validate_everything_and_apply_all_changes(
                 validated_serializer_data=validated_serializer_data,
                 request=Mock(),
                 cache=cache,
             )
 
-        self.assertEqual(
-            "Nur Warteliste-Einträge sind erlaubt.", error.exception.message
-        )
         mock_validate_and_fulfill_order.assert_not_called()
         mock_validate_and_create_waiting_list_entry_potential_member.assert_not_called()
         mock_validate_and_create_waiting_list_entry_existing_member.assert_not_called()

@@ -1,23 +1,24 @@
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import React, { useEffect } from "react";
-import { PublicPickupLocation, PublicProductType } from "../../api-client";
-import formatAddress from "../../utils/formatAddress.ts";
-import { formatOpeningTimes } from "../../bestell_wizard/utils/formatOpeningTimes.ts";
 import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 import { MapRef } from "react-leaflet/MapContainer";
-import L from "leaflet";
-import "./map.css";
-import "leaflet/dist/leaflet.css";
+import { PublicPickupLocation, PublicProductType } from "../../api-client";
+import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
+import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
+import { buildFilteredShoppingCart } from "../../bestell_wizard/utils/buildFilteredShoppingCart.ts";
+import { formatOpeningTimes } from "../../bestell_wizard/utils/formatOpeningTimes.ts";
+import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
 import TapirButton from "../../components/TapirButton.tsx";
+import formatAddress from "../../utils/formatAddress.ts";
+import { getPickupLocationLatLng } from "../../utils/getPickupLocationLatLng.ts";
+import { buildDeliveryChargeBadge } from "../utils/buildDeliveryChargeBadge.tsx";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import { getFirstDelivery } from "../utils/getFirstDelivery.ts";
-import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
-import { buildFilteredShoppingCart } from "../../bestell_wizard/utils/buildFilteredShoppingCart.ts";
-import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { wouldTheOrderFitTheProductCapacities } from "../utils/wouldTheOrderFitTheProductCapacities.ts";
-import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
-import { buildDeliveryChargeBadge } from "../utils/buildDeliveryChargeBadge.tsx";
+import "./map.css";
 
-interface Step5BPickupLocationMapProps {
+interface Step5CPickupLocationMapProps {
   pickupLocations: PublicPickupLocation[];
   selectedPickupLocations: PublicPickupLocation[];
   setSelectedPickupLocations: (locations: PublicPickupLocation[]) => void;
@@ -37,7 +38,7 @@ interface Step5BPickupLocationMapProps {
   changesDisabled: boolean;
 }
 
-const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
+const Step5CPickupLocationMap: React.FC<Step5CPickupLocationMapProps> = ({
   pickupLocations,
   selectedPickupLocations,
   setSelectedPickupLocations,
@@ -54,6 +55,10 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
   settings,
   changesDisabled,
 }) => {
+  const pickupLocationsOnMap = pickupLocations.filter(
+    (pickupLocation) => getPickupLocationLatLng(pickupLocation) !== null,
+  );
+
   useEffect(() => {
     if (tabIsActive && mapRef) {
       setTimeout(() => {
@@ -85,10 +90,9 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
     }
 
     const bounds = L.latLngBounds(
-      pickupLocations.map((pickupLocation) => [
-        Number.parseFloat(pickupLocation.coordsLon),
-        Number.parseFloat(pickupLocation.coordsLat),
-      ]),
+      pickupLocationsOnMap.map((pickupLocation) =>
+        getPickupLocationLatLng(pickupLocation)!,
+      ),
     );
     mapRef.fitBounds(bounds, { padding: [50, 50] });
   }
@@ -166,12 +170,13 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
     return "Auswählen";
   }
 
+  if (pickupLocationsOnMap.length === 0) {
+    return null;
+  }
+
   return (
     <MapContainer
-      center={[
-        Number.parseFloat(pickupLocations[0].coordsLon),
-        Number.parseFloat(pickupLocations[0].coordsLat),
-      ]}
+      center={getPickupLocationLatLng(pickupLocationsOnMap[0])!}
       zoom={13}
       scrollWheelZoom={true}
       ref={setMapRef}
@@ -182,12 +187,9 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
         referrerPolicy={"no-referrer-when-downgrade"}
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      {pickupLocations.map((pickupLocation) => (
+      {pickupLocationsOnMap.map((pickupLocation) => (
         <Marker
-          position={[
-            Number.parseFloat(pickupLocation.coordsLon),
-            Number.parseFloat(pickupLocation.coordsLat),
-          ]}
+          position={getPickupLocationLatLng(pickupLocation)!}
           icon={L.icon({
             iconUrl: "/static/subscriptions/" + getMarkerIcon(pickupLocation),
             shadowUrl: "/static/subscriptions/marker-shadow.png",
@@ -216,7 +218,7 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
                     ),
                   )
                     ? getFirstDelivery(
-                        pickupLocation.id!,
+                        pickupLocation.id,
                         firstDeliveryDatesByPickupLocationAndProductType,
                       )
                     : "Kapazität frei"}
@@ -253,4 +255,4 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
   );
 };
 
-export default Step5BPickupLocationMap;
+export default Step5CPickupLocationMap;

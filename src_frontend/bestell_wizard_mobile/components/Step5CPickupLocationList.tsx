@@ -9,7 +9,7 @@ import formatAddress from "../../utils/formatAddress.ts";
 import { buildDeliveryChargeBadge } from "../utils/buildDeliveryChargeBadge.tsx";
 import { getFirstDelivery } from "../utils/getFirstDelivery.ts";
 
-interface Step5BPickupLocationListProps {
+interface Step5CPickupLocationListProps {
   pickupLocations: PublicPickupLocation[];
   selectedPickupLocations: PublicPickupLocation[];
   setSelectedPickupLocations: (locations: PublicPickupLocation[]) => void;
@@ -23,9 +23,10 @@ interface Step5BPickupLocationListProps {
   productTypesInWaitingList: Set<PublicProductType>;
   shoppingCart: ShoppingCart;
   changesDisabled: boolean;
+  isHomeDelivery?: boolean;
 }
 
-const Step5BPickupLocationList: React.FC<Step5BPickupLocationListProps> = ({
+const Step5CPickupLocationList: React.FC<Step5CPickupLocationListProps> = ({
   pickupLocations,
   selectedPickupLocations,
   setSelectedPickupLocations,
@@ -37,6 +38,7 @@ const Step5BPickupLocationList: React.FC<Step5BPickupLocationListProps> = ({
   shoppingCart,
   productTypesInWaitingList,
   changesDisabled,
+  isHomeDelivery,
 }) => {
   function getClassForPickupLocationListItem(
     pickupLocation: PublicPickupLocation,
@@ -76,7 +78,7 @@ const Step5BPickupLocationList: React.FC<Step5BPickupLocationListProps> = ({
       )
     ) {
       freeCapacityText = getFirstDelivery(
-        pickupLocation.id!,
+        pickupLocation.id,
         firstDeliveryDatesByPickupLocationAndProductType,
       );
     } else {
@@ -97,7 +99,7 @@ const Step5BPickupLocationList: React.FC<Step5BPickupLocationListProps> = ({
   useEffect(() => {
     if (tabIsActive && selectedPickupLocations.length > 0) {
       setTimeout(() => {
-        const elem = document.getElementById(selectedPickupLocations[0].id!);
+        const elem = document.getElementById(selectedPickupLocations[0].id);
         elem?.scrollIntoView();
       }, 10);
     }
@@ -153,17 +155,24 @@ const Step5BPickupLocationList: React.FC<Step5BPickupLocationListProps> = ({
               )}
               <br />
               {buildCapacityIndicator(pickupLocation)}
+              {!isHomeDelivery && (
+                <>
+                  <br />
+                  <small>
+                    {formatAddress(
+                      pickupLocation.street,
+                      pickupLocation.street2,
+                      pickupLocation.postcode,
+                      pickupLocation.city,
+                    )}
+                  </small>
+                </>
+              )}
               <br />
               <small>
-                {formatAddress(
-                  pickupLocation.street,
-                  pickupLocation.street2,
-                  pickupLocation.postcode,
-                  pickupLocation.city,
-                )}
+                {isHomeDelivery && "Lieferfenster: "}
+                {formatOpeningTimes(pickupLocation)}
               </small>
-              <br />
-              <small>{formatOpeningTimes(pickupLocation)}</small>
             </small>
           </ListGroupItem>
         );
@@ -172,4 +181,4 @@ const Step5BPickupLocationList: React.FC<Step5BPickupLocationListProps> = ({
   );
 };
 
-export default Step5BPickupLocationList;
+export default Step5CPickupLocationList;

@@ -23,10 +23,8 @@ class TestPickingModeProvider(TapirUnitTest):
             cache=cache, key=ParameterKeys.PICKING_MODE, value="invalid"
         )
 
-        with self.assertRaises(TapirImproperlyConfigured) as error_context:
-            PickingModeProvider.get_picking_mode(cache=cache)
-
-        self.assertEqual(
+        with self.assertRaisesMessage(
+            TapirImproperlyConfigured,
             "Unknown picking mode: invalid, valid modes are: ['picking_mode_basket', 'picking_mode_share']",
-            str(error_context.exception),
-        )
+        ):
+            PickingModeProvider.get_picking_mode(cache=cache)

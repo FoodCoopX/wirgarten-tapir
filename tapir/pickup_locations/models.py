@@ -80,3 +80,29 @@ class PickupLocationChangedLogEntry(LogEntry):
         context_data["new_pickup_location_name"] = self.new_pickup_location_name
         context_data["valid_from"] = self.valid_from
         return context_data
+
+
+class MemberDeliveryAddressChangedLogEntry(LogEntry):
+    template_name = (
+        "pickup_locations/log/member_delivery_address_changed_log_entry.html"
+    )
+    old_address = models.CharField(max_length=600)
+    new_address = models.CharField(max_length=600)
+
+    def populate_delivery_address(
+        self,
+        actor: TapirUser | None,
+        user: TapirUser,
+        old_address: str,
+        new_address: str,
+    ):
+        super().populate(actor=actor, user=user)
+        self.old_address = old_address
+        self.new_address = new_address
+        return self
+
+    def get_context_data(self):
+        context_data = super().get_context_data()
+        context_data["old_address"] = self.old_address
+        context_data["new_address"] = self.new_address
+        return context_data

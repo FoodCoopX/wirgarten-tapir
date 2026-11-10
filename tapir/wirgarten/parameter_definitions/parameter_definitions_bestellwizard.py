@@ -414,6 +414,18 @@ class ParameterDefinitionsBestellwizard:
         bestellwizard_parameter_order -= 1
 
         importer.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP5B_HOME_DELIVERY_TITLE,
+            label="Seite 5B: Hauslieferung Auswahl - Titel",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Welche Hauslieferung möchtest du?",
+            description="Wird nur angezeigt, wenn mehrere Hauslieferungen zur Auswahl stehen.",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+            meta=ParameterMeta(vars_hint=["vorname"]),
+        )
+        bestellwizard_parameter_order -= 1
+
+        importer.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_STEP5C_TITLE,
             label="Seite 5C: Bestätigung der Verteilstation - Titel",
             datatype=TapirParameterDatatype.STRING,
@@ -433,6 +445,18 @@ class ParameterDefinitionsBestellwizard:
             description="",
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
+        )
+        bestellwizard_parameter_order -= 1
+
+        importer.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_HOME_DELIVERY_CHOICE_TEXT,
+            label="Seite 5: Hauslieferung Auswahl - Text",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="<p>Wir liefern nur an Adressen in unserem Liefergebiet.</p>",
+            description="Wird bei der Wahl der Hauslieferung angezeigt. Erklärt, welche Lieferadressen akzeptiert werden.",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+            meta=ParameterMeta(textarea=True),
         )
         bestellwizard_parameter_order -= 1
 

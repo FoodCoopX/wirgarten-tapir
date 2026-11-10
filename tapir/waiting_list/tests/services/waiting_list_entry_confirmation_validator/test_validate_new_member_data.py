@@ -322,14 +322,13 @@ class TestValidateNewMemberData(TapirUnitTest):
         mock_get_contract_start_date.return_value = contract_start_date
         mock_is_the_ordered_solidarity_allowed.return_value = False
 
-        with self.assertRaises(ValidationError) as error:
+        with self.assertRaisesMessage(ValidationError, "Solidarbeitrag zu niedrig"):
             WaitingListEntryConfirmationValidator.validate_new_member_data(
                 waiting_list_entry=waiting_list_entry,
                 validated_data=validated_data,
                 cache=cache,
             )
 
-        self.assertEqual("Solidarbeitrag zu niedrig", error.exception.message)
         mock_validate_personal_data_new_member.assert_called_once_with(
             email="test_email",
             phone_number="test_phone_number",

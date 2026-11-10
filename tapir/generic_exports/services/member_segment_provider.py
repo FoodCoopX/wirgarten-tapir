@@ -3,15 +3,23 @@ import datetime
 from django.db.models import QuerySet, Q
 
 from tapir.deliveries.models import Joker
+from tapir.deliveries.services.members_with_delivery_in_week_getter import (
+    MembersWithDeliveryInWeekGetter,
+)
 from tapir.generic_exports.services.export_segment_manager import ExportSegment
 from tapir.generic_exports.services.member_column_provider import MemberColumnProvider
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
+)
 from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.utils.services.tapir_cache import TapirCache
+from tapir.utils.shortcuts import get_monday
 from tapir.wirgarten.models import Subscription
 from tapir.wirgarten.service.member import (
     annotate_member_queryset_with_coop_shares_total_value,
     annotate_member_queryset_with_monthly_payment,
 )
+from tapir.wirgarten.service.get_next_delivery_date import get_next_delivery_date
 from tapir.wirgarten.service.products import get_active_and_future_subscriptions
 from tapir.wirgarten.utils import (
     get_now,
@@ -23,6 +31,7 @@ from tapir.wirgarten.utils import (
 
 class MemberSegmentProvider:
     SEGMENT_ID_ALL_MEMBERS = "members.all"
+    SEGMENT_ID_WITH_HOME_DELIVERY_THIS_WEEK = "members.with_home_delivery_this_week"
 
     @classmethod
     def get_member_segments(cls):
@@ -62,6 +71,15 @@ class MemberSegmentProvider:
                 display_name="Mitglieder mit gekündigte Anteile im Vorjahr",
                 description="",
                 get_queryset=cls.get_queryset_members_with_cancelled_shares_in_previous_year,
+                get_available_columns=MemberColumnProvider.get_member_columns,
+            ),
+            ExportSegment(
+                id=cls.SEGMENT_ID_WITH_HOME_DELIVERY_THIS_WEEK,
+                display_name="Mitglieder mit Hauslieferung diese Woche",
+                description="Alle Mitglieder, die in der Kalenderwoche (Mo–So) des Exports "
+                "an einen Hauslieferungs-Abholort beliefert werden, ohne Joker und Spenden. "
+                "Der Export sollte am Montag vor der ersten Lieferung laufen.",
+                get_queryset=cls.get_queryset_members_with_home_delivery_this_week,
                 get_available_columns=MemberColumnProvider.get_member_columns,
             ),
         ]
@@ -182,6 +200,47 @@ class MemberSegmentProvider:
             coopsharetransaction__transaction_type=CoopShareTransaction.CoopShareTransactionType.CANCELLATION,
             coopsharetransaction__valid_at__range=timerange,
         )
+
+    @classmethod
+    def get_queryset_members_with_home_delivery_this_week(
+        cls, reference_datetime: datetime.datetime
+    ) -> QuerySet:
+        from tapir.wirgarten.models import Member
+
+        cache = {}
+        delivery_date = get_next_delivery_date(
+            reference_date=get_monday(reference_datetime.date()), cache=cache
+        )
+        members_with_delivery = (
+            MembersWithDeliveryInWeekGetter.get_members_with_delivery_in_week(
+                product_type=None,
+                reference_date=reference_datetime.date(),
+                cache=cache,
+            )
+        )
+        member_ids = [
+            member_id
+            for member_id in members_with_delivery.values_list("id", flat=True)
+            if cls._is_member_at_home_delivery_location(
+                member_id=member_id, reference_date=delivery_date, cache=cache
+            )
+        ]
+        return Member.objects.filter(id__in=member_ids).order_by("member_no")
+
+    @staticmethod
+    def _is_member_at_home_delivery_location(
+        member_id: str, reference_date: datetime.date, cache: dict
+    ) -> bool:
+        pickup_location_id = (
+            MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
+                member_id=member_id, reference_date=reference_date, cache=cache
+            )
+        )
+        if pickup_location_id is None:
+            return False
+        return TapirCache.get_pickup_location_by_id(
+            cache=cache, pickup_location_id=pickup_location_id
+        ).is_home_delivery
 
     @classmethod
     def get_queryset_active_members(

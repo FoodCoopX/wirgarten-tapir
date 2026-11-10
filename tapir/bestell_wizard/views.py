@@ -42,6 +42,9 @@ from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalcu
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
+from tapir.pickup_locations.services.member_delivery_address_getter import (
+    DeliveryAddressInput,
+)
 from tapir.pickup_locations.services.pickup_location_active_filter import (
     PickupLocationActiveFilter,
 )
@@ -322,9 +325,19 @@ class BestellWizardConfirmOrderApiView(APIView):
             contract_start_date=contract_start_date,
             cache=cache,
         )
+        delivery_address_input = cls.build_delivery_address_input(
+            validated_serializer_data=validated_serializer_data
+        )
+        BestellWizardOrderValidator.validate_home_delivery_address(
+            pickup_location_ids=validated_serializer_data["pickup_location_ids"],
+            delivery_address_input=delivery_address_input,
+            personal_data=validated_serializer_data["personal_data"],
+            cache=cache,
+        )
 
         return BestellWizardOrderFulfiller.create_member_and_fulfill_order(
             validated_serializer_data=validated_serializer_data,
+            delivery_address_input=delivery_address_input,
             contract_start_date=contract_start_date,
             request=request,
             cache=cache,
@@ -353,6 +366,15 @@ class BestellWizardConfirmOrderApiView(APIView):
             phone_number=validated_serializer_data["personal_data"]["phone_number"],
             cache=cache,
         )
+        delivery_address_input = cls.build_delivery_address_input(
+            validated_serializer_data=validated_serializer_data
+        )
+        BestellWizardOrderValidator.validate_home_delivery_address(
+            pickup_location_ids=validated_serializer_data["pickup_location_ids"],
+            delivery_address_input=delivery_address_input,
+            personal_data=validated_serializer_data["personal_data"],
+            cache=cache,
+        )
         entry = WaitingListEntryCreator.create_entry_potential_member(
             order=waiting_list_order,
             pickup_location_ids_in_priority_order=validated_serializer_data[
@@ -360,6 +382,7 @@ class BestellWizardConfirmOrderApiView(APIView):
             ],
             number_of_coop_shares=validated_serializer_data["number_of_coop_shares"],
             personal_data=validated_serializer_data["personal_data"],
+            delivery_address_input=delivery_address_input,
             cache=cache,
         )
         WaitingListEntryConfirmationEmailSender.send_confirmation_mail(
@@ -401,6 +424,30 @@ class BestellWizardConfirmOrderApiView(APIView):
         WaitingListEntryConfirmationEmailSender.send_confirmation_mail(
             entry=entry,
             existing_member_id=member.id,
+        )
+
+    @staticmethod
+    def build_delivery_address_input(
+        validated_serializer_data: dict,
+    ) -> DeliveryAddressInput:
+        delivery_address = validated_serializer_data.get("delivery_address")
+        if delivery_address is None or delivery_address["same_as_billing_address"]:
+            return DeliveryAddressInput(
+                same_as_billing_address=True,
+                street="",
+                street_2="",
+                postcode="",
+                city="",
+                country="",
+            )
+
+        return DeliveryAddressInput(
+            same_as_billing_address=False,
+            street=delivery_address["street"],
+            street_2=delivery_address["street_2"],
+            postcode=delivery_address["postcode"],
+            city=delivery_address["city"],
+            country=delivery_address["country"],
         )
 
 
@@ -624,8 +671,10 @@ class BestellWizardBaseDataApiView(APIView):
             "step5a_title": ParameterKeys.BESTELLWIZARD_STEP5A_TITLE,
             "step5a_text": ParameterKeys.BESTELLWIZARD_STEP5A_TEXT,
             "step5b_title": ParameterKeys.BESTELLWIZARD_STEP5B_TITLE,
+            "step5b_home_delivery_title": ParameterKeys.BESTELLWIZARD_STEP5B_HOME_DELIVERY_TITLE,
             "step5c_title": ParameterKeys.BESTELLWIZARD_STEP5C_TITLE,
             "step5c_text": ParameterKeys.BESTELLWIZARD_STEP5C_TEXT,
+            "home_delivery_choice_text": ParameterKeys.BESTELLWIZARD_HOME_DELIVERY_CHOICE_TEXT,
             "step6a_title": ParameterKeys.BESTELLWIZARD_STEP6A_TITLE,
             "step6a_text": ParameterKeys.BESTELLWIZARD_STEP6A_TEXT,
             "step6b_title": ParameterKeys.BESTELLWIZARD_STEP6B_TITLE,

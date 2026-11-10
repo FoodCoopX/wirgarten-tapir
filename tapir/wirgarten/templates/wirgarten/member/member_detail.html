@@ -90,7 +90,8 @@
           <span
             id="personal_data_dropdown"
             data-member-id="{{ object.id }}"
-            data-extra-email-addresses-enabled="{{ extra_email_addresses_enabled }}">
+            data-extra-email-addresses-enabled="{{ extra_email_addresses_enabled }}"
+            data-has-home-delivery="{{ has_home_delivery }}">
           </span>
         </div>
         <div class="card-body">
@@ -145,6 +146,19 @@
                 <span class="text-danger">{% translate "Fehlt" %}</span>
               {% endif %}
             </dd>
+            {% if has_home_delivery %}
+              <dt>{% translate "Lieferadresse" %}</dt>
+              <dd id="tapir_user_delivery_address">
+                {% if delivery_address_complete %}
+                  {{ delivery_address }}
+                  {% if object.delivery_same_as_billing_address %}
+                    <span class="text-muted">({% translate "wie Rechnungsadresse" %})</span>
+                  {% endif %}
+                {% else %}
+                  <span class="text-danger">{% translate "Unvollständig" %}</span>
+                {% endif %}
+              </dd>
+            {% endif %}
             {% if bakery_enabled %}
               <dt>{% translate "Pseudonym" %}</dt>
               <dd id="tapir_user_pseudonym">

@@ -74,6 +74,9 @@ class ParameterKeys:
     MEMBER_DASHBOARD_PICKUP_LOCATION_LABEL = (
         f"{PREFIX}.member.dashboard.pickup_location_label"
     )
+    MEMBER_DELIVERY_ADDRESS_CHANGE_WARNING_TEXT = (
+        f"{PREFIX}.member.dashboard.delivery_address_change_warning_text"
+    )
     DELIVERY_DAY = f"{PREFIX}.delivery.weekday"
     DELIVERY_CHARGE_PER_PICKUP_LOCATION_ENABLED = (
         f"{PREFIX}.delivery.charge_per_pickup_location.enabled"
@@ -217,11 +220,17 @@ class ParameterKeys:
     BESTELLWIZARD_STEP5A_TITLE = f"{PREFIX}.bestellwizard.step5a.title"
     BESTELLWIZARD_STEP5A_TEXT = f"{PREFIX}.bestellwizard.step5a.text"
     BESTELLWIZARD_STEP5B_TITLE = f"{PREFIX}.bestellwizard.step5b.title"
+    BESTELLWIZARD_STEP5B_HOME_DELIVERY_TITLE = (
+        f"{PREFIX}.bestellwizard.step5b.home_delivery_title"
+    )
     BESTELLWIZARD_STEP5_BACKGROUND_IMAGE = (
         f"{PREFIX}.bestellwizard.step5.background_image"
     )
     BESTELLWIZARD_STEP5C_TITLE = f"{PREFIX}.bestellwizard.step5c.title"
     BESTELLWIZARD_STEP5C_TEXT = f"{PREFIX}.bestellwizard.step5c.text"
+    BESTELLWIZARD_HOME_DELIVERY_CHOICE_TEXT = (
+        f"{PREFIX}.bestellwizard.home_delivery_choice.text"
+    )
     BESTELLWIZARD_STEP6A_TITLE = f"{PREFIX}.bestellwizard.step6a.title"
     BESTELLWIZARD_STEP6A_TEXT = f"{PREFIX}.bestellwizard.step6a.text"
     BESTELLWIZARD_STEP6_BACKGROUND_IMAGE = (

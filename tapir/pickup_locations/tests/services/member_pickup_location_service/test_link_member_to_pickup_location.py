@@ -2,6 +2,8 @@ import datetime
 from decimal import Decimal
 from unittest.mock import patch, Mock
 
+from django.core.exceptions import ValidationError
+
 from tapir_mail.triggers.transactional_trigger import (
     TransactionalTrigger,
     TransactionalTriggerData,
@@ -312,3 +314,82 @@ class TestLinkMemberToPickupLocation(TapirIntegrationTest):
         self.assertEqual(old_pickup_location.id, saved_credit.pickup_location_id)
         self.assertEqual(member.id, saved_credit.member_id)
         self.assertEqual(1, MemberCreditCreatedLogEntry.objects.count())
+
+    def test_linkMemberToPickupLocation_homeDeliveryWithoutAddress_raisesAndDoesNotLink(
+        self,
+    ):
+        member = MemberFactory.create(street="", postcode="", city="")
+        home_delivery_location = PickupLocationFactory.create(is_home_delivery=True)
+
+        with self.assertRaisesMessage(
+            ValidationError,
+            "Für die Hauslieferung wird eine vollständige Lieferadresse (Straße, PLZ und Ort) benötigt.",
+        ):
+            MemberPickupLocationSetter.link_member_to_pickup_location(
+                pickup_location_id=home_delivery_location.id,
+                member=member,
+                actor=member,
+                valid_from=datetime.date(year=2020, month=2, day=1),
+                cache={},
+            )
+
+        self.assertFalse(MemberPickupLocation.objects.exists())
+
+    def test_linkMemberToPickupLocation_homeDeliveryWithAddress_linksMember(self):
+        member = MemberFactory.create(
+            street="Rechnungsstraße 1", postcode="11111", city="Rechnungsstadt"
+        )
+        home_delivery_location = PickupLocationFactory.create(is_home_delivery=True)
+
+        MemberPickupLocationSetter.link_member_to_pickup_location(
+            pickup_location_id=home_delivery_location.id,
+            member=member,
+            actor=member,
+            valid_from=datetime.date(year=2020, month=2, day=1),
+            cache={},
+        )
+
+        self.assertEqual(
+            home_delivery_location, MemberPickupLocation.objects.get().pickup_location
+        )
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_linkMemberToPickupLocation_homeDelivery_sendsDeliveryAddressInConfirmationMail(
+        self, mock_fire_action: Mock
+    ):
+        member = MemberFactory.create(
+            delivery_same_as_billing_address=False,
+            delivery_street="Lieferweg 2",
+            delivery_street_2="",
+            delivery_postcode="22222",
+            delivery_city="Lieferdorf",
+        )
+        MemberPickupLocationFactory.create(
+            member=member, valid_from=datetime.date(year=2019, month=6, day=1)
+        )
+        home_delivery_location = PickupLocationFactory.create(
+            is_home_delivery=True,
+            street="Depotstraße 1",
+            postcode="11111",
+            city="Depotstadt",
+        )
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=home_delivery_location,
+            day_of_week=4,
+            open_time=datetime.time(hour=10),
+            close_time=datetime.time(hour=18),
+        )
+
+        MemberPickupLocationSetter.link_member_to_pickup_location(
+            pickup_location_id=home_delivery_location.id,
+            member=member,
+            actor=member,
+            valid_from=datetime.date(year=2020, month=2, day=1),
+            cache={},
+        )
+
+        mock_fire_action.assert_called_once()
+        trigger_data: TransactionalTriggerData = mock_fire_action.call_args.args[0]
+        self.assertEqual(
+            "Lieferweg 2, 22222 Lieferdorf", trigger_data.token_data["address"]
+        )
