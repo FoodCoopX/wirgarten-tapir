@@ -472,7 +472,7 @@
       "disableableCredentialTypes": [],
       "requiredActions": [],
       "clientRoles": {
-        "realm-management": ["manage-users"]
+        "realm-management": ["manage-users", "manage-realm"]
       },
       "notBefore": 0,
       "groups": []
