@@ -14,46 +14,47 @@ from tapir.wirgarten.tests.factories import LocationRouteFactory, PickupLocation
 from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
-def build_pickup_location(**overrides) -> PickupLocation:
-    fields = {
-        "name": "Test Abholort",
-        "start_date": datetime.date(2026, 1, 5),
-        "end_date": datetime.date(2026, 12, 27),
-    }
-    fields.update(overrides)
-    return PickupLocationFactory.build(**fields)
-
-
-def build_opening_time(
-    open_time: datetime.time = datetime.time(14, 0),
-    close_time: datetime.time = datetime.time(18, 0),
-) -> PickupLocationOpeningTime:
-    return PickupLocationOpeningTime(
-        day_of_week=1, open_time=open_time, close_time=close_time
-    )
-
-
 @patch.object(TapirCache, "get_location_route_by_id", return_value=None, autospec=True)
 @patch.object(TapirCache, "get_all_pickup_locations", return_value=[], autospec=True)
 class TestPickupLocationValidator(TapirUnitTest):
     @staticmethod
+    def _build_pickup_location(**overrides) -> PickupLocation:
+        fields = {
+            "name": "Test Abholort",
+            "start_date": datetime.date(2026, 1, 5),
+            "end_date": datetime.date(2026, 12, 27),
+        }
+        fields.update(overrides)
+        return PickupLocationFactory.build(**fields)
+
+    @staticmethod
+    def _build_opening_time(
+        open_time: datetime.time = datetime.time(14, 0),
+        close_time: datetime.time = datetime.time(18, 0),
+    ) -> PickupLocationOpeningTime:
+        return PickupLocationOpeningTime(
+            day_of_week=1, open_time=open_time, close_time=close_time
+        )
+
+    @classmethod
     def _validate(
+        cls,
         pickup_location: PickupLocation,
         opening_times: list[PickupLocationOpeningTime] | None = None,
     ) -> dict[str, str]:
         return PickupLocationValidator.validate(
             pickup_location=pickup_location,
             opening_times=(
-                [build_opening_time()] if opening_times is None else opening_times
+                [cls._build_opening_time()] if opening_times is None else opening_times
             ),
             cache={},
         )
 
     def test_validate_validData_returnsNoErrors(self, _, __):
-        self.assertEqual({}, self._validate(build_pickup_location()))
+        self.assertEqual({}, self._validate(self._build_pickup_location()))
 
     def test_validate_noOpeningTimes_returnsError(self, _, __):
-        errors = self._validate(build_pickup_location(), opening_times=[])
+        errors = self._validate(self._build_pickup_location(), opening_times=[])
 
         self.assertEqual(
             {"opening_times": PickupLocationValidator.NO_OPENING_TIMES_MESSAGE}, errors
@@ -61,9 +62,9 @@ class TestPickupLocationValidator(TapirUnitTest):
 
     def test_validate_closeTimeNotAfterOpenTime_returnsError(self, _, __):
         errors = self._validate(
-            build_pickup_location(),
+            self._build_pickup_location(),
             opening_times=[
-                build_opening_time(
+                self._build_opening_time(
                     open_time=datetime.time(14, 0), close_time=datetime.time(14, 0)
                 )
             ],
@@ -75,7 +76,7 @@ class TestPickupLocationValidator(TapirUnitTest):
 
     def test_validate_endDateBeforeStartDate_returnsError(self, _, __):
         errors = self._validate(
-            build_pickup_location(
+            self._build_pickup_location(
                 start_date=datetime.date(2026, 12, 7),
                 end_date=datetime.date(2026, 12, 6),
             )
@@ -87,7 +88,7 @@ class TestPickupLocationValidator(TapirUnitTest):
 
     def test_validate_startDateNotOnMonday_returnsError(self, _, __):
         errors = self._validate(
-            build_pickup_location(start_date=datetime.date(2026, 1, 6))
+            self._build_pickup_location(start_date=datetime.date(2026, 1, 6))
         )
 
         self.assertEqual(
@@ -96,7 +97,7 @@ class TestPickupLocationValidator(TapirUnitTest):
 
     def test_validate_endDateNotOnSunday_returnsError(self, _, __):
         errors = self._validate(
-            build_pickup_location(end_date=datetime.date(2026, 12, 26))
+            self._build_pickup_location(end_date=datetime.date(2026, 12, 26))
         )
 
         self.assertEqual(
@@ -104,7 +105,9 @@ class TestPickupLocationValidator(TapirUnitTest):
         )
 
     def test_validate_noDates_returnsNoErrors(self, _, __):
-        errors = self._validate(build_pickup_location(start_date=None, end_date=None))
+        errors = self._validate(
+            self._build_pickup_location(start_date=None, end_date=None)
+        )
 
         self.assertEqual({}, errors)
 
@@ -115,7 +118,7 @@ class TestPickupLocationValidator(TapirUnitTest):
         mock_get_location_route_by_id.return_value = location_route
 
         errors = self._validate(
-            build_pickup_location(location_route_id=location_route.id)
+            self._build_pickup_location(location_route_id=location_route.id)
         )
 
         self.assertEqual({}, errors)
@@ -124,7 +127,9 @@ class TestPickupLocationValidator(TapirUnitTest):
         )
 
     def test_validate_unknownLocationRoute_returnsError(self, _, __):
-        errors = self._validate(build_pickup_location(location_route_id="unknown"))
+        errors = self._validate(
+            self._build_pickup_location(location_route_id="unknown")
+        )
 
         self.assertEqual(
             {
@@ -140,7 +145,7 @@ class TestPickupLocationValidator(TapirUnitTest):
             PickupLocationFactory.build(name="Test Abholort")
         ]
 
-        errors = self._validate(build_pickup_location())
+        errors = self._validate(self._build_pickup_location())
 
         self.assertEqual(
             {"name": PickupLocationValidator.DUPLICATE_NAME_MESSAGE}, errors
@@ -149,7 +154,7 @@ class TestPickupLocationValidator(TapirUnitTest):
     def test_validate_otherLocationWithSameCoordinates_returnsNoErrors(
         self, mock_get_all_pickup_locations: MagicMock, _
     ):
-        pickup_location = build_pickup_location()
+        pickup_location = self._build_pickup_location()
         mock_get_all_pickup_locations.return_value = [
             PickupLocationFactory.build(
                 name="Anderer Abholort",
@@ -165,7 +170,7 @@ class TestPickupLocationValidator(TapirUnitTest):
     def test_validate_sameLocationWithSameName_returnsNoErrors(
         self, mock_get_all_pickup_locations: MagicMock, _
     ):
-        pickup_location = build_pickup_location()
+        pickup_location = self._build_pickup_location()
         mock_get_all_pickup_locations.return_value = [pickup_location]
 
         errors = self._validate(pickup_location)
@@ -173,7 +178,9 @@ class TestPickupLocationValidator(TapirUnitTest):
         self.assertEqual({}, errors)
 
     def test_validate_normalLocationWithoutCoordinates_returnsErrors(self, _, __):
-        errors = self._validate(build_pickup_location(latitude=None, longitude=None))
+        errors = self._validate(
+            self._build_pickup_location(latitude=None, longitude=None)
+        )
 
         self.assertEqual(
             {
@@ -185,7 +192,9 @@ class TestPickupLocationValidator(TapirUnitTest):
 
     def test_validate_homeDeliveryWithoutCoordinates_returnsNoErrors(self, _, __):
         errors = self._validate(
-            build_pickup_location(is_home_delivery=True, latitude=None, longitude=None)
+            self._build_pickup_location(
+                is_home_delivery=True, latitude=None, longitude=None
+            )
         )
 
         self.assertEqual({}, errors)

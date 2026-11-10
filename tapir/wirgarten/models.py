@@ -390,6 +390,12 @@ class Member(TapirUser):
     is_student = models.BooleanField(_("Student*in"), default=False)
     pseudonym = models.CharField(_("Pseudonym"), max_length=150, blank=True)
     has_received_membership_started_mail = models.BooleanField(default=False)
+    delivery_same_as_billing_address = models.BooleanField(default=True)
+    delivery_street = models.CharField(max_length=150, blank=True)
+    delivery_street_2 = models.CharField(max_length=150, blank=True)
+    delivery_postcode = models.CharField(max_length=32, blank=True)
+    delivery_city = models.CharField(max_length=50, blank=True)
+    delivery_country = CountryField(blank=True, default="DE")
 
     @property
     def pickup_location(self):
@@ -1081,6 +1087,12 @@ class WaitingListEntry(TapirModel):
     category = models.CharField(max_length=100, null=True)
     confirmation_link_key = models.UUIDField(null=True)
     link_sent_date = models.DateTimeField(null=True)
+    delivery_same_as_billing_address = models.BooleanField(default=True)
+    delivery_street = models.CharField(max_length=150, blank=True)
+    delivery_street_2 = models.CharField(max_length=150, blank=True)
+    delivery_postcode = models.CharField(max_length=32, blank=True)
+    delivery_city = models.CharField(max_length=50, blank=True)
+    delivery_country = CountryField(blank=True, default="DE")
 
 
 class WaitingListPickupLocationWish(TapirModel):

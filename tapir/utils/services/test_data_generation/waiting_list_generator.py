@@ -147,9 +147,38 @@ class WaitingListGenerator:
                     )
                 )
 
-        WaitingListEntry.objects.bulk_update(entries, ["number_of_coop_shares"])
+        home_delivery_entry_ids = {
+            wish.waiting_list_entry.id
+            for wish in pickup_location_wishes
+            if wish.pickup_location.is_home_delivery
+        }
+        fake = Faker("de_DE")
+        for entry in entries:
+            if entry.id in home_delivery_entry_ids:
+                cls.fill_delivery_address(entry=entry, fake=fake)
+
+        WaitingListEntry.objects.bulk_update(
+            entries,
+            [
+                "number_of_coop_shares",
+                "delivery_same_as_billing_address",
+                "delivery_street",
+                "delivery_postcode",
+                "delivery_city",
+            ],
+        )
         WaitingListPickupLocationWish.objects.bulk_create(pickup_location_wishes)
         WaitingListProductWish.objects.bulk_create(product_wishes)
+
+    @classmethod
+    def fill_delivery_address(cls, entry: WaitingListEntry, fake: Faker):
+        if random.random() < 0.5:
+            entry.delivery_same_as_billing_address = True
+            return
+        entry.delivery_same_as_billing_address = False
+        entry.delivery_street = fake.street_address()
+        entry.delivery_postcode = fake.postcode()
+        entry.delivery_city = fake.city()
 
     @classmethod
     def build_pickup_location_wishes(

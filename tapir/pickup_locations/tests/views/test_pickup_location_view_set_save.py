@@ -21,26 +21,26 @@ from tapir.wirgarten.tests.factories import (
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
-def build_request_data(**overrides) -> dict:
-    data = {
-        "name": "Test Abholort",
-        "latitude": "48.1",
-        "longitude": "11.5",
-        "street": "Musterstraße 1",
-        "postcode": "12345",
-        "city": "Musterstadt",
-        "start_date": "2026-01-05",
-        "end_date": "2026-12-27",
-        "opening_times": [
-            {"day_of_week": 1, "open_time": "14:00", "close_time": "18:00"},
-            {"day_of_week": 3, "open_time": "08:00", "close_time": "09:30"},
-        ],
-    }
-    data.update(overrides)
-    return data
-
-
 class TestPickupLocationViewSetSave(TapirIntegrationTest):
+    @staticmethod
+    def _build_request_data(**overrides) -> dict:
+        data = {
+            "name": "Test Abholort",
+            "latitude": "48.1",
+            "longitude": "11.5",
+            "street": "Musterstraße 1",
+            "postcode": "12345",
+            "city": "Musterstadt",
+            "start_date": "2026-01-05",
+            "end_date": "2026-12-27",
+            "opening_times": [
+                {"day_of_week": 1, "open_time": "14:00", "close_time": "18:00"},
+                {"day_of_week": 3, "open_time": "08:00", "close_time": "09:30"},
+            ],
+        }
+        data.update(overrides)
+        return data
+
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
@@ -69,7 +69,7 @@ class TestPickupLocationViewSetSave(TapirIntegrationTest):
     def test_create_loggedInAsNormalMember_returns403(self):
         self.client.force_login(MemberFactory.create(is_superuser=False))
 
-        response = self._create(build_request_data())
+        response = self._create(self._build_request_data())
 
         self.assertStatusCode(response, status.HTTP_403_FORBIDDEN)
         self.assertFalse(PickupLocation.objects.exists())
@@ -78,7 +78,7 @@ class TestPickupLocationViewSetSave(TapirIntegrationTest):
         location_route = LocationRouteFactory.create()
 
         response = self._create(
-            build_request_data(
+            self._build_request_data(
                 location_route_id=location_route.id,
                 show_details_in_basket_totals_export=True,
             )
@@ -112,7 +112,9 @@ class TestPickupLocationViewSetSave(TapirIntegrationTest):
 
     def test_create_homeDeliveryWithoutCoordinates_createsPickupLocation(self):
         response = self._create(
-            build_request_data(is_home_delivery=True, longitude=None, latitude=None)
+            self._build_request_data(
+                is_home_delivery=True, longitude=None, latitude=None
+            )
         )
 
         self.assertStatusCode(response, status.HTTP_201_CREATED)
@@ -122,7 +124,7 @@ class TestPickupLocationViewSetSave(TapirIntegrationTest):
         self.assertIsNone(pickup_location.latitude)
 
     def test_create_invalidData_returns400AndCreatesNothing(self):
-        response = self._create(build_request_data(start_date="2026-01-06"))
+        response = self._create(self._build_request_data(start_date="2026-01-06"))
 
         self.assertStatusCode(response, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
@@ -142,7 +144,7 @@ class TestPickupLocationViewSetSave(TapirIntegrationTest):
 
         response = self._update(
             pickup_location.id,
-            build_request_data(
+            self._build_request_data(
                 name="Neuer Name",
                 start_date=None,
                 end_date=None,
@@ -170,7 +172,8 @@ class TestPickupLocationViewSetSave(TapirIntegrationTest):
         pickup_location = PickupLocationFactory.create(name="Alter Name")
 
         response = self._update(
-            pickup_location.id, build_request_data(name="Neuer Name", opening_times=[])
+            pickup_location.id,
+            self._build_request_data(name="Neuer Name", opening_times=[]),
         )
 
         self.assertStatusCode(response, status.HTTP_400_BAD_REQUEST)
@@ -182,6 +185,6 @@ class TestPickupLocationViewSetSave(TapirIntegrationTest):
         self.assertEqual("Alter Name", pickup_location.name)
 
     def test_update_unknownPickupLocation_returns404(self):
-        response = self._update("unknown", build_request_data())
+        response = self._update("unknown", self._build_request_data())
 
         self.assertStatusCode(response, status.HTTP_404_NOT_FOUND)
