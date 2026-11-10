@@ -4757,17 +4757,20 @@ paths:
   /pickup_locations/api/change_member_pickup_location:
     post:
       operationId: pickup_locations_api_change_member_pickup_location_create
-      parameters:
-      - in: query
-        name: member_id
-        schema:
-          type: string
-      - in: query
-        name: pickup_location_id
-        schema:
-          type: string
       tags:
       - pickup_locations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangeMemberPickupLocationRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ChangeMemberPickupLocationRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ChangeMemberPickupLocationRequestRequest'
+        required: true
       security:
       - tokenAuth: []
       - cookieAuth: []
@@ -10543,6 +10546,20 @@ components:
       - subscribed_products
       - trial_period_duration
       - trial_period_is_flexible
+    ChangeMemberPickupLocationRequestRequest:
+      type: object
+      properties:
+        member_id:
+          type: string
+          minLength: 1
+        pickup_location_id:
+          type: string
+          minLength: 1
+        delivery_address:
+          $ref: '#/components/schemas/DeliveryAddressRequest'
+      required:
+      - member_id
+      - pickup_location_id
     ChangeTypeEnum:
       enum:
       - ADDED
@@ -17789,6 +17806,8 @@ components:
         payment_rhythm:
           type: string
           minLength: 1
+        delivery_address:
+          $ref: '#/components/schemas/DeliveryAddressRequest'
       required:
       - account_owner
       - cancellation_policy_read

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Alert, Form, Modal, Spinner } from "react-bootstrap";
 import { v4 as uuidv4 } from "uuid";
 import { DeliveryAddressRequest, PickupLocationsApi } from "../../api-client";
+import DeliveryAddressFields from "../../components/DeliveryAddressFields.tsx";
 import TapirButton from "../../components/TapirButton.tsx";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
@@ -15,15 +16,6 @@ interface DeliveryAddressModalProps {
   show: boolean;
   onHide: () => void;
 }
-
-type AddressField = "street" | "street2" | "postcode" | "city";
-
-const FIELDS: { field: AddressField; label: string }[] = [
-  { field: "street", label: "Straße & Hausnummer" },
-  { field: "street2", label: "Adresszusatz (optional)" },
-  { field: "postcode", label: "Postleitzahl" },
-  { field: "city", label: "Stadt" },
-];
 
 const DeliveryAddressModal: React.FC<DeliveryAddressModalProps> = ({
   memberId,
@@ -115,26 +107,10 @@ const DeliveryAddressModal: React.FC<DeliveryAddressModalProps> = ({
                 <span dangerouslySetInnerHTML={{ __html: changeWarningText }} />
               </Alert>
             )}
-            <Form.Check
-              id={"delivery_same_as_billing_address"}
-              label={"Lieferadresse entspricht der Rechnungsadresse"}
-              checked={form.sameAsBillingAddress}
-              onChange={(event) =>
-                setForm({ ...form, sameAsBillingAddress: event.target.checked })
-              }
+            <DeliveryAddressFields
+              deliveryAddress={form}
+              setDeliveryAddress={setForm}
             />
-            {!form.sameAsBillingAddress &&
-              FIELDS.map(({ field, label }) => (
-                <Form.Group key={field} controlId={"delivery_" + field}>
-                  <Form.Label>{label}</Form.Label>
-                  <Form.Control
-                    value={form[field] ?? ""}
-                    onChange={(event) =>
-                      setForm({ ...form, [field]: event.target.value })
-                    }
-                  />
-                </Form.Group>
-              ))}
           </Form>
         )}
       </Modal.Body>

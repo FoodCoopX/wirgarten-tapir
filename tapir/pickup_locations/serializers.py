@@ -220,6 +220,12 @@ class DeliveryAddressSerializer(serializers.Serializer):
     country = serializers.CharField(allow_blank=True, default="DE")
 
 
+class ChangeMemberPickupLocationRequestSerializer(serializers.Serializer):
+    member_id = serializers.CharField()
+    pickup_location_id = serializers.CharField()
+    delivery_address = DeliveryAddressSerializer(required=False)
+
+
 class MemberDeliveryAddressSerializer(serializers.Serializer):
     same_as_billing_address = serializers.BooleanField()
     street = serializers.CharField()

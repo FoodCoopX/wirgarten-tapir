@@ -10,6 +10,12 @@ from rest_framework.views import APIView
 from tapir.bestell_wizard.serializers import (
     BestellWizardCapacityCheckResponseSerializer,
 )
+from tapir.pickup_locations.services.member_delivery_address_getter import (
+    DeliveryAddressInput,
+)
+from tapir.pickup_locations.services.member_delivery_address_setter import (
+    MemberDeliveryAddressSetter,
+)
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
@@ -122,6 +128,12 @@ class UpdateSubscriptionsApiView(APIView):
         payment_rhythm = serializer.validated_data.get("payment_rhythm", None)
         sepa_allowed = serializer.validated_data["sepa_allowed"]
         cancellation_policy_read = serializer.validated_data["cancellation_policy_read"]
+        delivery_address = serializer.validated_data.get("delivery_address")
+        if delivery_address is not None:
+            MemberDeliveryAddressSetter.apply_delivery_address_input(
+                target=member,
+                delivery_address_input=DeliveryAddressInput(**delivery_address),
+            )
 
         try:
             logged_in_user_is_admin = request.user.has_perm(Permission.Accounts.MANAGE)

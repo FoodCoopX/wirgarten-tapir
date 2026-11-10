@@ -99,23 +99,30 @@ const PickupLocationSelector: React.FC<PickupLocationSelectorProps> = ({
             >
               <strong>{pickupLocation.name}</strong>{" "}
               {buildCapacityIndicator(pickupLocation)}
+              {!pickupLocation.isHomeDelivery && (
+                <>
+                  <br />
+                  <small>
+                    {formatAddress(
+                      pickupLocation.street,
+                      pickupLocation.street2,
+                      pickupLocation.postcode,
+                      pickupLocation.city,
+                    )}
+                  </small>
+                </>
+              )}
               <br />
               <small>
-                {formatAddress(
-                  pickupLocation.street,
-                  pickupLocation.street2,
-                  pickupLocation.postcode,
-                  pickupLocation.city,
-                )}
+                {pickupLocation.isHomeDelivery && "Lieferfenster: "}
+                {formatOpeningTimes(pickupLocation)}
               </small>
-              <br />
-              <small>{formatOpeningTimes(pickupLocation)}</small>
             </ListGroupItem>
           ))}
         </ListGroup>
       </Col>
-      <Col xs={12} md className={"mt-3 mt-md-0"}>
-        {pickupLocationsOnMap.length > 0 && (
+      {pickupLocationsOnMap.length > 0 && (
+        <Col xs={12} md className={"mt-3 mt-md-0"}>
           <MapContainer
             className={"pickup-location-map"}
             center={getPickupLocationLatLng(pickupLocationsOnMap[0])!}
@@ -158,8 +165,8 @@ const PickupLocationSelector: React.FC<PickupLocationSelectorProps> = ({
               </Marker>
             ))}
           </MapContainer>
-        )}
-      </Col>
+        </Col>
+      )}
     </Row>
   );
 };

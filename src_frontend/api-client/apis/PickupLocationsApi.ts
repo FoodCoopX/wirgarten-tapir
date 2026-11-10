@@ -13,6 +13,7 @@
  */
 
 import type {
+  ChangeMemberPickupLocationRequestRequest,
   DeliveryAddressRequest,
   LocationRoute,
   LocationRouteRequest,
@@ -32,6 +33,7 @@ import type {
   PublicPickupLocation,
 } from "../models/index";
 import {
+  ChangeMemberPickupLocationRequestRequestToJSON,
   DeliveryAddressRequestToJSON,
   LocationRouteFromJSON,
   LocationRouteRequestToJSON,
@@ -53,8 +55,7 @@ import {
 import * as runtime from "../runtime";
 
 export interface PickupLocationsApiChangeMemberPickupLocationCreateRequest {
-  memberId?: string;
-  pickupLocationId?: string;
+  changeMemberPickupLocationRequestRequest: ChangeMemberPickupLocationRequestRequest;
 }
 
 export interface PickupLocationsApiGetMemberPickupLocationRetrieveRequest {
@@ -152,18 +153,18 @@ export class PickupLocationsApi extends runtime.BaseAPI {
     requestParameters: PickupLocationsApiChangeMemberPickupLocationCreateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<OrderConfirmationResponse>> {
+    if (requestParameters["changeMemberPickupLocationRequestRequest"] == null) {
+      throw new runtime.RequiredError(
+        "changeMemberPickupLocationRequestRequest",
+        'Required parameter "changeMemberPickupLocationRequestRequest" was null or undefined when calling pickupLocationsApiChangeMemberPickupLocationCreate().',
+      );
+    }
+
     const queryParameters: any = {};
 
-    if (requestParameters["memberId"] != null) {
-      queryParameters["member_id"] = requestParameters["memberId"];
-    }
-
-    if (requestParameters["pickupLocationId"] != null) {
-      queryParameters["pickup_location_id"] =
-        requestParameters["pickupLocationId"];
-    }
-
     const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
 
     if (this.configuration && this.configuration.apiKey) {
       headerParameters["Authorization"] =
@@ -185,6 +186,9 @@ export class PickupLocationsApi extends runtime.BaseAPI {
         method: "POST",
         headers: headerParameters,
         query: queryParameters,
+        body: ChangeMemberPickupLocationRequestRequestToJSON(
+          requestParameters["changeMemberPickupLocationRequestRequest"],
+        ),
       },
       initOverrides,
     );
@@ -197,7 +201,7 @@ export class PickupLocationsApi extends runtime.BaseAPI {
   /**
    */
   async pickupLocationsApiChangeMemberPickupLocationCreate(
-    requestParameters: PickupLocationsApiChangeMemberPickupLocationCreateRequest = {},
+    requestParameters: PickupLocationsApiChangeMemberPickupLocationCreateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<OrderConfirmationResponse> {
     const response =

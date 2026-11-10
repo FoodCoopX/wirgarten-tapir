@@ -63,6 +63,7 @@ models/CabLoggedInUserChangeTargetsPaymentRhythmResponse.ts
 models/CancelSubscriptionsRequestRequest.ts
 models/CancelSubscriptionsViewResponse.ts
 models/CancellationData.ts
+models/ChangeMemberPickupLocationRequestRequest.ts
 models/ChangeTypeEnum.ts
 models/ConfirmSubscriptionChangesRequestRequest.ts
 models/ConvertWeekToDateForSubscriptionChangesResponse.ts

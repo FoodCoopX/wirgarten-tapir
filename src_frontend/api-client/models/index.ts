@@ -48,6 +48,7 @@ export * from "./CabLoggedInUserChangeTargetsPaymentRhythmResponse";
 export * from "./CancellationData";
 export * from "./CancelSubscriptionsRequestRequest";
 export * from "./CancelSubscriptionsViewResponse";
+export * from "./ChangeMemberPickupLocationRequestRequest";
 export * from "./ChangeTypeEnum";
 export * from "./ConfirmSubscriptionChangesRequestRequest";
 export * from "./ConvertWeekToDateForSubscriptionChangesResponse";

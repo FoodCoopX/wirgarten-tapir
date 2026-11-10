@@ -2,6 +2,9 @@ import datetime
 from unittest.mock import patch, Mock
 
 from tapir.payments.services.member_credit_creator import MemberCreditCreator
+from tapir.pickup_locations.services.member_delivery_address_setter import (
+    MemberDeliveryAddressSetter,
+)
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
@@ -18,6 +21,7 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
 from tapir.wirgarten.tests.test_utils import mock_timezone
 
 
+@patch.object(MemberDeliveryAddressSetter, "save_delivery_address", autospec=True)
 @patch.object(MemberCreditCreator, "create_member_credit_if_necessary", autospec=True)
 @patch.object(
     SubscriptionUpdateViewChangeApplier,
@@ -135,6 +139,7 @@ class TestSubscriptionUpdateViewChangeApplierApplyChanges(TapirUnitTest):
         mock_send_order_confirmation_mail: Mock,
         mock_change_payment_rhythm_if_necessary: Mock,
         mock_create_member_credit_if_necessary: Mock,
+        mock_save_delivery_address: Mock,
     ):
         contract_start_date = Mock()
         mock_get_member_pickup_location_id.return_value = "same_id"
@@ -199,6 +204,8 @@ class TestSubscriptionUpdateViewChangeApplierApplyChanges(TapirUnitTest):
             comment="Produkt-Anteil vom Admin durch dem Mitgliederbereich reduziert",
             cache=cache,
         )
+
+        mock_save_delivery_address.assert_called_once_with(member=member, actor=actor)
 
         self.assertEqual("test_iban", member.iban)
         self.assertEqual("test_account_owner", member.account_owner)

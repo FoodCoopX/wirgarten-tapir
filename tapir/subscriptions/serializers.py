@@ -5,7 +5,10 @@ from tapir.core.config import LEGAL_STATUS_OPTIONS
 from tapir.deliveries.serializers import (
     SubscriptionSerializer,
 )
-from tapir.pickup_locations.serializers import PickupLocationSerializer
+from tapir.pickup_locations.serializers import (
+    DeliveryAddressSerializer,
+    PickupLocationSerializer,
+)
 from tapir.products.serializers import (
     PublicProductTypeSerializer,
     ProductTypeSerializer,
@@ -166,6 +169,7 @@ class UpdateSubscriptionsRequestSerializer(serializers.Serializer):
     account_owner = serializers.CharField(allow_blank=True)
     iban = serializers.CharField(allow_blank=True)
     payment_rhythm = serializers.CharField(required=False)
+    delivery_address = DeliveryAddressSerializer(required=False)
 
 
 class MemberProfileCapacityCheckRequestSerializer(serializers.Serializer):

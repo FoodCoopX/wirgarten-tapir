@@ -14,6 +14,7 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.pickup_locations.models import PickupLocationDeliveryCharge
 from tapir.pickup_locations.serializers import (
+    ChangeMemberPickupLocationRequestSerializer,
     DeliveryAddressSerializer,
     MemberDeliveryAddressSerializer,
     PickupLocationCapacitiesSerializer,
@@ -462,14 +463,13 @@ class ChangeMemberPickupLocationApiView(APIView):
         self.cache = {}
 
     @extend_schema(
-        parameters=[
-            OpenApiParameter(name="member_id", type=str),
-            OpenApiParameter(name="pickup_location_id", type=str),
-        ],
+        request=ChangeMemberPickupLocationRequestSerializer,
         responses={200: OrderConfirmationResponseSerializer},
     )
     def post(self, request):
-        member_id = request.query_params.get("member_id")
+        serializer = ChangeMemberPickupLocationRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        member_id = serializer.validated_data["member_id"]
         check_permission_or_self(member_id, request)
         if not request.user.has_perm(
             Permission.Accounts.MANAGE
@@ -478,10 +478,17 @@ class ChangeMemberPickupLocationApiView(APIView):
         ):
             raise PermissionDenied()
         member = get_object_or_404(Member, id=member_id)
-        new_pickup_location_id = request.query_params.get("pickup_location_id")
+        new_pickup_location_id = serializer.validated_data["pickup_location_id"]
         new_pickup_location = get_object_or_404(
             PickupLocation, id=new_pickup_location_id
         )
+
+        delivery_address = serializer.validated_data.get("delivery_address")
+        if delivery_address is not None and new_pickup_location.is_home_delivery:
+            MemberDeliveryAddressSetter.apply_delivery_address_input(
+                target=member,
+                delivery_address_input=DeliveryAddressInput(**delivery_address),
+            )
 
         valid_from = calculate_pickup_location_change_date(cache=self.cache)
 
@@ -499,6 +506,9 @@ class ChangeMemberPickupLocationApiView(APIView):
             )
 
         with transaction.atomic():
+            MemberDeliveryAddressSetter.save_delivery_address(
+                member=member, actor=request.user
+            )
             MemberPickupLocationSetter.link_member_to_pickup_location(
                 pickup_location_id=new_pickup_location_id,
                 member=member,

@@ -9,10 +9,13 @@ from tapir_mail.triggers.transactional_trigger import (
 )
 
 from tapir.configuration.models import TapirParameter
-from tapir.pickup_locations.models import PickupLocationChangedLogEntry
+from tapir.pickup_locations.models import (
+    MemberDeliveryAddressChangedLogEntry,
+    PickupLocationChangedLogEntry,
+)
 from tapir.wirgarten.constants import WEEKLY
 from tapir.wirgarten.mail_events import Events
-from tapir.wirgarten.models import MemberPickupLocation
+from tapir.wirgarten.models import Member, MemberPickupLocation, PickupLocation
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tapirmail import configure_mail_module
@@ -77,9 +80,8 @@ class TestChangeMemberPickupLocationApiView(TapirIntegrationTest):
         )
 
         self.client.force_login(member)
-        url = reverse("pickup_locations:change_member_pickup_location")
-        response = self.client.post(
-            f"{url}?member_id={member.id}&pickup_location_id={new_pickup_location.id}"
+        response = self._post(
+            member_id=member.id, pickup_location_id=new_pickup_location.id
         )
 
         self.assertStatusCode(response, status.HTTP_200_OK)
@@ -147,9 +149,9 @@ class TestChangeMemberPickupLocationApiView(TapirIntegrationTest):
         )
 
         self.client.force_login(member)
-        url = reverse("pickup_locations:change_member_pickup_location")
-        response = self.client.post(
-            f"{url}?member_id={member.id}&pickup_location_id={old_member_pickup_location.pickup_location.id}"
+        response = self._post(
+            member_id=member.id,
+            pickup_location_id=old_member_pickup_location.pickup_location.id,
         )
 
         self.assertStatusCode(response, status.HTTP_200_OK)
@@ -187,9 +189,9 @@ class TestChangeMemberPickupLocationApiView(TapirIntegrationTest):
         )
 
         self.client.force_login(member)
-        url = reverse("pickup_locations:change_member_pickup_location")
-        response = self.client.post(
-            f"{url}?member_id={member.id}&pickup_location_id={old_member_pickup_location.pickup_location.id}"
+        response = self._post(
+            member_id=member.id,
+            pickup_location_id=old_member_pickup_location.pickup_location.id,
         )
 
         self.assertStatusCode(response, status.HTTP_200_OK)
@@ -228,9 +230,8 @@ class TestChangeMemberPickupLocationApiView(TapirIntegrationTest):
         )
 
         self.client.force_login(member)
-        url = reverse("pickup_locations:change_member_pickup_location")
-        response = self.client.post(
-            f"{url}?member_id={member.id}&pickup_location_id={new_pickup_location.id}"
+        response = self._post(
+            member_id=member.id, pickup_location_id=new_pickup_location.id
         )
 
         self.assertStatusCode(response, status.HTTP_200_OK)
@@ -255,9 +256,8 @@ class TestChangeMemberPickupLocationApiView(TapirIntegrationTest):
         member = old_member_pickup_location.member
 
         self.client.force_login(member)
-        url = reverse("pickup_locations:change_member_pickup_location")
-        response = self.client.post(
-            f"{url}?member_id={member.id}&pickup_location_id={new_pickup_location.id}"
+        response = self._post(
+            member_id=member.id, pickup_location_id=new_pickup_location.id
         )
 
         self.assertStatusCode(response, status.HTTP_200_OK)
@@ -296,9 +296,8 @@ class TestChangeMemberPickupLocationApiView(TapirIntegrationTest):
         ProductPriceFactory.create(product=subscription.product, size=2)
 
         self.client.force_login(member)
-        url = reverse("pickup_locations:change_member_pickup_location")
-        response = self.client.post(
-            f"{url}?member_id={member.id}&pickup_location_id={new_pickup_location.id}"
+        response = self._post(
+            member_id=member.id, pickup_location_id=new_pickup_location.id
         )
 
         self.assertStatusCode(response, status.HTTP_200_OK)
@@ -330,9 +329,8 @@ class TestChangeMemberPickupLocationApiView(TapirIntegrationTest):
         )
 
         self.client.force_login(MemberFactory.create(is_superuser=False))
-        url = reverse("pickup_locations:change_member_pickup_location")
-        response = self.client.post(
-            f"{url}?member_id={member.id}&pickup_location_id={new_pickup_location.id}"
+        response = self._post(
+            member_id=member.id, pickup_location_id=new_pickup_location.id
         )
 
         self.assertStatusCode(response, status.HTTP_403_FORBIDDEN)
@@ -360,9 +358,8 @@ class TestChangeMemberPickupLocationApiView(TapirIntegrationTest):
 
         admin = MemberFactory.create(is_superuser=True)
         self.client.force_login(admin)
-        url = reverse("pickup_locations:change_member_pickup_location")
-        response = self.client.post(
-            f"{url}?member_id={target_member.id}&pickup_location_id={new_pickup_location.id}"
+        response = self._post(
+            member_id=target_member.id, pickup_location_id=new_pickup_location.id
         )
 
         self.assertStatusCode(response, status.HTTP_200_OK)
@@ -421,9 +418,8 @@ class TestChangeMemberPickupLocationApiView(TapirIntegrationTest):
         )
 
         self.client.force_login(member)
-        url = reverse("pickup_locations:change_member_pickup_location")
-        response = self.client.post(
-            f"{url}?member_id={member.id}&pickup_location_id={new_pickup_location.id}"
+        response = self._post(
+            member_id=member.id, pickup_location_id=new_pickup_location.id
         )
 
         self.assertStatusCode(response, status.HTTP_403_FORBIDDEN)
@@ -455,9 +451,8 @@ class TestChangeMemberPickupLocationApiView(TapirIntegrationTest):
 
         admin = MemberFactory.create(is_superuser=True)
         self.client.force_login(admin)
-        url = reverse("pickup_locations:change_member_pickup_location")
-        response = self.client.post(
-            f"{url}?member_id={target_member.id}&pickup_location_id={new_pickup_location.id}"
+        response = self._post(
+            member_id=target_member.id, pickup_location_id=new_pickup_location.id
         )
 
         self.assertStatusCode(response, status.HTTP_200_OK)
@@ -493,9 +488,8 @@ class TestChangeMemberPickupLocationApiView(TapirIntegrationTest):
         )
 
         self.client.force_login(member)
-        url = reverse("pickup_locations:change_member_pickup_location")
-        response = self.client.post(
-            f"{url}?member_id={member.id}&pickup_location_id={new_pickup_location.id}"
+        response = self._post(
+            member_id=member.id, pickup_location_id=new_pickup_location.id
         )
 
         self.assertStatusCode(response, status.HTTP_200_OK)
@@ -508,6 +502,136 @@ class TestChangeMemberPickupLocationApiView(TapirIntegrationTest):
         self.assertFalse(PickupLocationChangedLogEntry.objects.exists())
 
         mock_fire_action.assert_not_called()
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_homeDeliveryWithAddressInRequest_savesAddressAndAppliesChanges(
+        self, _: Mock
+    ):
+        member, new_pickup_location = (
+            self._create_member_with_subscription_and_home_delivery_location()
+        )
+
+        self.client.force_login(member)
+        response = self._post(
+            member_id=member.id,
+            pickup_location_id=new_pickup_location.id,
+            data={"delivery_address": self._build_separate_address()},
+        )
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assert_response_content_is_correct(response, error_message=None)
+
+        member.refresh_from_db()
+        self.assertFalse(member.delivery_same_as_billing_address)
+        self.assertEqual("Lieferweg 2", member.delivery_street)
+        self.assertEqual("22222", member.delivery_postcode)
+        self.assertEqual("Lieferdorf", member.delivery_city)
+        self.assertEqual(1, MemberDeliveryAddressChangedLogEntry.objects.count())
+        self.assertEqual(
+            new_pickup_location.id,
+            MemberPickupLocation.objects.order_by("valid_from")
+            .last()
+            .pickup_location_id,
+        )
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_homeDeliveryWithIncompleteAddressInRequest_doesntApplyChangesAndReturnsFalse(
+        self, mock_fire_action: Mock
+    ):
+        member, new_pickup_location = (
+            self._create_member_with_subscription_and_home_delivery_location()
+        )
+
+        self.client.force_login(member)
+        response = self._post(
+            member_id=member.id,
+            pickup_location_id=new_pickup_location.id,
+            data={"delivery_address": self._build_separate_address(city="")},
+        )
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assert_response_content_is_correct(
+            response,
+            error_message="Für die Hauslieferung wird eine vollständige Lieferadresse (Straße, PLZ und Ort) benötigt.",
+        )
+
+        member.refresh_from_db()
+        self.assertTrue(member.delivery_same_as_billing_address)
+        self.assertEqual("", member.delivery_street)
+        self.assertFalse(MemberDeliveryAddressChangedLogEntry.objects.exists())
+        self.assertEqual(1, MemberPickupLocation.objects.count())
+        mock_fire_action.assert_not_called()
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_addressInRequestButNewLocationIsNotHomeDelivery_ignoresAddress(
+        self, _: Mock
+    ):
+        old_member_pickup_location = MemberPickupLocationFactory.create(
+            valid_from=datetime.datetime(year=1998, month=1, day=1)
+        )
+        member = old_member_pickup_location.member
+        new_pickup_location = PickupLocationFactory.create()
+        SubscriptionFactory.create(
+            member=member,
+            start_date=datetime.datetime(year=1998, month=1, day=1),
+            product__type__delivery_cycle=WEEKLY[0],
+        )
+
+        self.client.force_login(member)
+        response = self._post(
+            member_id=member.id,
+            pickup_location_id=new_pickup_location.id,
+            data={"delivery_address": self._build_separate_address()},
+        )
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assert_response_content_is_correct(response, error_message=None)
+
+        member.refresh_from_db()
+        self.assertTrue(member.delivery_same_as_billing_address)
+        self.assertEqual("", member.delivery_street)
+        self.assertFalse(MemberDeliveryAddressChangedLogEntry.objects.exists())
+
+    @staticmethod
+    def _create_member_with_subscription_and_home_delivery_location() -> (
+        tuple[Member, PickupLocation]
+    ):
+        member = MemberPickupLocationFactory.create(
+            valid_from=datetime.datetime(year=1998, month=1, day=1),
+            member__street="",
+            member__postcode="",
+            member__city="",
+        ).member
+        SubscriptionFactory.create(
+            member=member,
+            start_date=datetime.datetime(year=1998, month=1, day=1),
+            product__type__delivery_cycle=WEEKLY[0],
+        )
+        return member, PickupLocationFactory.create(is_home_delivery=True)
+
+    @staticmethod
+    def _build_separate_address(**overrides: str) -> dict[str, str | bool]:
+        address = {
+            "same_as_billing_address": False,
+            "street": "Lieferweg 2",
+            "street_2": "",
+            "postcode": "22222",
+            "city": "Lieferdorf",
+            "country": "DE",
+        }
+        address.update(overrides)
+        return address
+
+    def _post(self, member_id: str, pickup_location_id: str, data: dict | None = None):
+        return self.client.post(
+            reverse("pickup_locations:change_member_pickup_location"),
+            data={
+                "member_id": member_id,
+                "pickup_location_id": pickup_location_id,
+                **(data or {}),
+            },
+            content_type="application/json",
+        )
 
     def assert_response_content_is_correct(self, response, error_message: str | None):
         self.assertEqual(
@@ -528,9 +652,8 @@ class TestChangeMemberPickupLocationApiView(TapirIntegrationTest):
         member = old_member_pickup_location.member
 
         self.client.force_login(member)
-        url = reverse("pickup_locations:change_member_pickup_location")
-        response = self.client.post(
-            f"{url}?member_id={member.id}&pickup_location_id={new_pickup_location.id}"
+        response = self._post(
+            member_id=member.id, pickup_location_id=new_pickup_location.id
         )
 
         self.assertStatusCode(response, status.HTTP_200_OK)
@@ -557,9 +680,8 @@ class TestChangeMemberPickupLocationApiView(TapirIntegrationTest):
         member = old_member_pickup_location.member
 
         self.client.force_login(member)
-        url = reverse("pickup_locations:change_member_pickup_location")
-        response = self.client.post(
-            f"{url}?member_id={member.id}&pickup_location_id={new_pickup_location.id}"
+        response = self._post(
+            member_id=member.id, pickup_location_id=new_pickup_location.id
         )
 
         self.assertStatusCode(response, status.HTTP_200_OK)

@@ -1,7 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { Modal, Spinner } from "react-bootstrap";
+import {
+  ButtonGroup,
+  Form,
+  Modal,
+  Spinner,
+  ToggleButton,
+} from "react-bootstrap";
 import { v4 as uuidv4 } from "uuid";
 import {
+  DeliveryAddressRequest,
   PickupLocationsApi,
   PublicPickupLocation,
   type PublicSubscription,
@@ -12,7 +19,11 @@ import PickupLocationSelector from "../../bestell_wizard/components/PickupLocati
 import PickupLocationWaitingListSelector from "../../bestell_wizard/components/PickupLocationWaitingListSelector.tsx";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { checkPickupLocationCapacities } from "../../bestell_wizard/utils/checkPickupLocationCapacities.ts";
+import { DeliveryMode } from "../../bestell_wizard_mobile/types/DeliveryMode.ts";
+import { getPickupLocationsForDeliveryMode } from "../../bestell_wizard_mobile/utils/getPickupLocationsForDeliveryMode.ts";
+import { isDeliveryAddressValid } from "../../bestell_wizard_mobile/utils/isDeliveryAddressValid.ts";
 import ConfirmModal from "../../components/ConfirmModal.tsx";
+import DeliveryAddressFields from "../../components/DeliveryAddressFields.tsx";
 import DeliveryDayTabs from "../../components/DeliveryDayTabs.tsx";
 import TapirButton from "../../components/TapirButton.tsx";
 import TapirHelpButton from "../../components/TapirHelpButton.tsx";
@@ -71,20 +82,37 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
   ] = useState(false);
   const [hasWaitingListEntry, setHasWaitingListEntry] = useState(false);
   const [currentPickupLocationId, setCurrentPickupLocationId] = useState("");
+  const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>("pickup");
+  const [deliveryAddress, setDeliveryAddress] =
+    useState<DeliveryAddressRequest>({ sameAsBillingAddress: true });
+
+  const homeDeliveryAvailable = pickupLocations.some(
+    (pickupLocation) => pickupLocation.isHomeDelivery,
+  );
+
+  const pickupLocationsForDeliveryMode = React.useMemo(
+    () => getPickupLocationsForDeliveryMode(pickupLocations, deliveryMode),
+    [pickupLocations, deliveryMode],
+  );
 
   const availableDeliveryDays = React.useMemo(
-    () => getUniqueDeliveryDays(pickupLocations),
-    [pickupLocations],
+    () => getUniqueDeliveryDays(pickupLocationsForDeliveryMode),
+    [pickupLocationsForDeliveryMode],
   );
 
   const filteredPickupLocations = React.useMemo(() => {
     if (selectedDeliveryDay === null) {
-      return pickupLocations;
+      return pickupLocationsForDeliveryMode;
     }
-    return pickupLocations.filter(
+    return pickupLocationsForDeliveryMode.filter(
       (loc) => loc.deliveryDay === selectedDeliveryDay,
     );
-  }, [pickupLocations, selectedDeliveryDay]);
+  }, [pickupLocationsForDeliveryMode, selectedDeliveryDay]);
+
+  const homeDeliverySelected =
+    selectedPickupLocations.length === 1 &&
+    selectedPickupLocations[0].isHomeDelivery &&
+    !waitingListModeEnabled;
 
   useEffect(() => {
     pickupLocationsApi
@@ -110,11 +138,34 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
       .pickupLocationsApiGetMemberPickupLocationRetrieve({ memberId: memberId })
       .then((result) => {
         setCurrentPickupLocationId(result.location?.id ?? "");
+        if (result.location?.isHomeDelivery) {
+          setDeliveryMode("home_delivery");
+        }
       })
       .catch((error) =>
         handleRequestError(
           error,
           "Fehler beim Laden der aktuellen Verteilstation",
+          setToastDatas,
+        ),
+      );
+
+    pickupLocationsApi
+      .pickupLocationsApiMemberDeliveryAddressRetrieve({ memberId: memberId })
+      .then((result) =>
+        setDeliveryAddress({
+          sameAsBillingAddress: result.sameAsBillingAddress,
+          street: result.street,
+          street2: result.street2,
+          postcode: result.postcode,
+          city: result.city,
+          country: result.country || "DE",
+        }),
+      )
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Laden der Lieferadresse",
           setToastDatas,
         ),
       );
@@ -201,6 +252,12 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
     pickupLocationsCapacityCheckLoading,
   ]);
 
+  function onDeliveryModeChange(newDeliveryMode: DeliveryMode) {
+    setDeliveryMode(newDeliveryMode);
+    setSelectedDeliveryDay(null);
+    setSelectedPickupLocations([]);
+  }
+
   function onConfirm() {
     setConfirmLoading(true);
     if (waitingListModeEnabled) {
@@ -257,8 +314,11 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
     } else {
       pickupLocationsApi
         .pickupLocationsApiChangeMemberPickupLocationCreate({
-          pickupLocationId: selectedPickupLocations[0].id,
-          memberId: memberId,
+          changeMemberPickupLocationRequestRequest: {
+            memberId: memberId,
+            pickupLocationId: selectedPickupLocations[0].id,
+            deliveryAddress: homeDeliverySelected ? deliveryAddress : undefined,
+          },
         })
         .then((response) => {
           if (response.orderConfirmed) {
@@ -326,6 +386,26 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
           </div>
         </Modal.Header>
         <Modal.Body>
+          {homeDeliveryAvailable && (
+            <ButtonGroup className={"mb-3 w-100"}>
+              {(["pickup", "home_delivery"] as DeliveryMode[]).map((mode) => (
+                <ToggleButton
+                  key={mode}
+                  id={"delivery_mode_" + mode}
+                  value={mode}
+                  type={"radio"}
+                  variant={"outline-primary"}
+                  name={"delivery_mode"}
+                  checked={deliveryMode === mode}
+                  onChange={() => onDeliveryModeChange(mode)}
+                >
+                  {mode === "pickup"
+                    ? "Abholung an einer Verteilstation"
+                    : "Hauslieferung"}
+                </ToggleButton>
+              ))}
+            </ButtonGroup>
+          )}
           <DeliveryDayTabs
             availableDays={availableDeliveryDays}
             selectedDay={selectedDeliveryDay}
@@ -358,6 +438,15 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
               disabledLocationIds={[currentPickupLocationId]}
             />
           )}
+          {homeDeliverySelected && (
+            <Form className={"d-flex flex-column gap-2 mt-3"}>
+              <h5 className={"mb-0"}>Lieferadresse</h5>
+              <DeliveryAddressFields
+                deliveryAddress={deliveryAddress}
+                setDeliveryAddress={setDeliveryAddress}
+              />
+            </Form>
+          )}
         </Modal.Body>
         <Modal.Footer>
           <TapirButton
@@ -368,7 +457,10 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
             }
             variant={"primary"}
             icon={waitingListModeEnabled ? "pending_actions" : "check"}
-            disabled={selectedPickupLocations.length === 0}
+            disabled={
+              selectedPickupLocations.length === 0 ||
+              (homeDeliverySelected && !isDeliveryAddressValid(deliveryAddress))
+            }
             onClick={onConfirm}
             loading={confirmLoading}
           />
