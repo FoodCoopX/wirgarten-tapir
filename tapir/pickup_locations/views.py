@@ -25,6 +25,9 @@ from tapir.pickup_locations.serializers import (
     PickupLocationSaveRequestSerializer,
     LocationRouteSerializer,
 )
+from tapir.pickup_locations.services.home_delivery_address_validator import (
+    HomeDeliveryAddressValidator,
+)
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
@@ -561,6 +564,10 @@ class ChangeMemberPickupLocationApiView(APIView):
             raise ValidationError(
                 "Dieser Abholort hat nicht genug Kapazitäten für deine Verträge."
             )
+
+        HomeDeliveryAddressValidator.validate(
+            address_owner=member, pickup_location=new_pickup_location
+        )
 
 
 class PickupLocationDeliveryChargesView(APIView):

@@ -481,8 +481,6 @@ class UserGenerator:
                 )
             )
 
-        MemberPickupLocation.objects.bulk_create(member_pickup_locations)
-
         fake = Faker("de_DE")
         members_with_home_delivery = [
             member_pickup_location.member
@@ -500,6 +498,7 @@ class UserGenerator:
                 "delivery_city",
             ],
         )
+        MemberPickupLocation.objects.bulk_create(member_pickup_locations)
 
     @classmethod
     def fill_delivery_address(cls, member: Member, fake: Faker):

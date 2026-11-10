@@ -28,6 +28,7 @@ from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
     CoopShareTransaction,
     Member,
+    MemberPickupLocation,
     OrderFeedback,
     WaitingListEntry,
     WaitingListProductWish,
@@ -38,6 +39,7 @@ from tapir.wirgarten.models import (
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
+    MemberFactory,
     PickupLocationFactory,
     GrowingPeriodFactory,
     ProductFactory,
@@ -566,3 +568,90 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
         response_content = response.json()
         self.assertFalse(response_content["order_confirmed"])
         self.assertNotIn("%(", response_content["error"])
+
+    @staticmethod
+    def _build_confirm_data(entry: WaitingListEntry) -> dict:
+        return {
+            "entry_id": str(entry.id),
+            "link_key": str(entry.confirmation_link_key),
+            "account_owner": "John Doe",
+            "iban": "NL35ABNA7806242643",
+            "sepa_allowed": True,
+            "contract_accepted": True,
+            "number_of_coop_shares": 2,
+            "payment_rhythm": "semiannually",
+            "solidarity_contribution": 0,
+            "association_membership_type_id": None,
+        }
+
+    def test_post_existingMemberWithHomeDeliveryWish_copiesDeliveryAddressAndLinksMember(
+        self,
+    ):
+        member = MemberFactory.create()
+        entry = WaitingListEntryFactory.create(
+            confirmation_link_key=uuid.uuid4(),
+            member=member,
+            delivery_same_as_billing_address=False,
+            delivery_street="Lieferweg 2",
+            delivery_postcode="22222",
+            delivery_city="Lieferdorf",
+        )
+        home_delivery_location = PickupLocationFactory.create(is_home_delivery=True)
+        WaitingListPickupLocationWish.objects.create(
+            waiting_list_entry=entry, pickup_location=home_delivery_location, priority=1
+        )
+        mock_timezone(test=self, now=datetime.datetime(year=1997, month=3, day=30))
+        GrowingPeriodFactory.create(start_date=datetime.date(year=1997, month=1, day=1))
+
+        response = self.client.post(
+            reverse("waiting_list:public_confirm_waiting_list_entry"),
+            data=json.dumps(self._build_confirm_data(entry=entry)),
+            content_type="application/json",
+        )
+
+        response_content = response.json()
+        self.assertTrue(
+            response_content["order_confirmed"],
+            f"Order not confirmed. Error: {response_content.get('error')}",
+        )
+        member.refresh_from_db()
+        self.assertFalse(member.delivery_same_as_billing_address)
+        self.assertEqual("Lieferweg 2", member.delivery_street)
+        self.assertEqual("22222", member.delivery_postcode)
+        self.assertEqual("Lieferdorf", member.delivery_city)
+        self.assertEqual(
+            home_delivery_location, MemberPickupLocation.objects.get().pickup_location
+        )
+
+    def test_post_homeDeliveryWishWithoutAddress_returnsErrorAndCreatesNoMember(
+        self,
+    ):
+        entry = WaitingListEntryFactory.create(
+            confirmation_link_key=uuid.uuid4(),
+            member=None,
+            street="",
+            postcode="",
+            city="",
+        )
+        WaitingListPickupLocationWish.objects.create(
+            waiting_list_entry=entry,
+            pickup_location=PickupLocationFactory.create(is_home_delivery=True),
+            priority=1,
+        )
+        mock_timezone(test=self, now=datetime.datetime(year=1997, month=3, day=30))
+        GrowingPeriodFactory.create(start_date=datetime.date(year=1997, month=1, day=1))
+
+        response = self.client.post(
+            reverse("waiting_list:public_confirm_waiting_list_entry"),
+            data=json.dumps(self._build_confirm_data(entry=entry)),
+            content_type="application/json",
+        )
+
+        self.assertEqual(
+            {
+                "order_confirmed": False,
+                "error": "Für die Hauslieferung wird eine vollständige Lieferadresse (Straße, PLZ und Ort) benötigt.",
+            },
+            response.json(),
+        )
+        self.assertFalse(Member.objects.exists())

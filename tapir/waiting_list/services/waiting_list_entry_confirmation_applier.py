@@ -18,6 +18,10 @@ from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
+from tapir.pickup_locations.services.member_delivery_address_setter import (
+    ADDRESS_FIELDS,
+    MemberDeliveryAddressSetter,
+)
 from tapir.pickup_locations.services.member_pickup_location_setter import (
     MemberPickupLocationSetter,
 )
@@ -270,6 +274,11 @@ class WaitingListEntryConfirmationApplier:
         if pickup_location_wish is None:
             return
 
+        if pickup_location_wish.pickup_location.is_home_delivery:
+            cls.copy_delivery_address(
+                waiting_list_entry=waiting_list_entry, member=member, actor=actor
+            )
+
         MemberPickupLocationSetter.link_member_to_pickup_location(
             pickup_location_wish.pickup_location_id,
             member=member,
@@ -277,3 +286,11 @@ class WaitingListEntryConfirmationApplier:
             actor=actor,
             cache=cache,
         )
+
+    @classmethod
+    def copy_delivery_address(
+        cls, waiting_list_entry: WaitingListEntry, member: Member, actor: TapirUser
+    ):
+        for field_name in ["delivery_same_as_billing_address", *ADDRESS_FIELDS]:
+            setattr(member, field_name, getattr(waiting_list_entry, field_name))
+        MemberDeliveryAddressSetter.save_delivery_address(member=member, actor=actor)

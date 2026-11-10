@@ -2,6 +2,8 @@ import datetime
 from decimal import Decimal
 from unittest.mock import patch, Mock
 
+from django.core.exceptions import ValidationError
+
 from tapir_mail.triggers.transactional_trigger import (
     TransactionalTrigger,
     TransactionalTriggerData,
@@ -312,3 +314,41 @@ class TestLinkMemberToPickupLocation(TapirIntegrationTest):
         self.assertEqual(old_pickup_location.id, saved_credit.pickup_location_id)
         self.assertEqual(member.id, saved_credit.member_id)
         self.assertEqual(1, MemberCreditCreatedLogEntry.objects.count())
+
+    def test_linkMemberToPickupLocation_homeDeliveryWithoutAddress_raisesAndDoesNotLink(
+        self,
+    ):
+        member = MemberFactory.create(street="", postcode="", city="")
+        home_delivery_location = PickupLocationFactory.create(is_home_delivery=True)
+
+        with self.assertRaisesMessage(
+            ValidationError,
+            "Für die Hauslieferung wird eine vollständige Lieferadresse (Straße, PLZ und Ort) benötigt.",
+        ):
+            MemberPickupLocationSetter.link_member_to_pickup_location(
+                pickup_location_id=home_delivery_location.id,
+                member=member,
+                actor=member,
+                valid_from=datetime.date(year=2020, month=2, day=1),
+                cache={},
+            )
+
+        self.assertFalse(MemberPickupLocation.objects.exists())
+
+    def test_linkMemberToPickupLocation_homeDeliveryWithAddress_linksMember(self):
+        member = MemberFactory.create(
+            street="Rechnungsstraße 1", postcode="11111", city="Rechnungsstadt"
+        )
+        home_delivery_location = PickupLocationFactory.create(is_home_delivery=True)
+
+        MemberPickupLocationSetter.link_member_to_pickup_location(
+            pickup_location_id=home_delivery_location.id,
+            member=member,
+            actor=member,
+            valid_from=datetime.date(year=2020, month=2, day=1),
+            cache={},
+        )
+
+        self.assertEqual(
+            home_delivery_location, MemberPickupLocation.objects.get().pickup_location
+        )

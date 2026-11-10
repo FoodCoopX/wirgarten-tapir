@@ -474,6 +474,41 @@ class TestChangeMemberPickupLocationApiView(TapirIntegrationTest):
 
         mock_fire_action.assert_called_once()
 
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_homeDeliveryWithoutAddress_doesntApplyChangesAndReturnsFalse(
+        self, mock_fire_action: Mock
+    ):
+        old_member_pickup_location = MemberPickupLocationFactory.create(
+            valid_from=datetime.datetime(year=1998, month=1, day=1),
+            member__street="",
+            member__postcode="",
+            member__city="",
+        )
+        member = old_member_pickup_location.member
+        new_pickup_location = PickupLocationFactory.create(is_home_delivery=True)
+        SubscriptionFactory.create(
+            member=member,
+            start_date=datetime.datetime(year=1998, month=1, day=1),
+            product__type__delivery_cycle=WEEKLY[0],
+        )
+
+        self.client.force_login(member)
+        url = reverse("pickup_locations:change_member_pickup_location")
+        response = self.client.post(
+            f"{url}?member_id={member.id}&pickup_location_id={new_pickup_location.id}"
+        )
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assert_response_content_is_correct(
+            response,
+            error_message="Für die Hauslieferung wird eine vollständige Lieferadresse (Straße, PLZ und Ort) benötigt.",
+        )
+
+        self.assertEqual(1, MemberPickupLocation.objects.count())
+        self.assertFalse(PickupLocationChangedLogEntry.objects.exists())
+
+        mock_fire_action.assert_not_called()
+
     def assert_response_content_is_correct(self, response, error_message: str | None):
         self.assertEqual(
             {"order_confirmed": error_message is None, "error": error_message},

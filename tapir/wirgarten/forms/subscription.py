@@ -13,6 +13,9 @@ from tapir.accounts.models import TapirUser
 from tapir.bakery.services.breaddelivery_service import BreadDeliveryService
 from tapir.configuration.parameter import get_parameter_value
 from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
+from tapir.pickup_locations.services.home_delivery_address_validator import (
+    HomeDeliveryAddressValidator,
+)
 from tapir.pickup_locations.services.member_pickup_location_setter import (
     MemberPickupLocationSetter,
 )
@@ -40,6 +43,7 @@ from tapir.wirgarten.models import (
     MandateReference,
     Member,
     MemberPickupLocation,
+    PickupLocation,
     Product,
     ProductType,
     Subscription,
@@ -64,6 +68,19 @@ from tapir.wirgarten.service.products import (
 from tapir.wirgarten.utils import format_date, get_now, get_today
 
 BASE_PRODUCT_FIELD_PREFIX = "base_product_"
+
+
+def clean_home_delivery_pickup_location(
+    pickup_location: PickupLocation | None, member_id: str
+) -> PickupLocation | None:
+    if pickup_location is None:
+        return pickup_location
+
+    HomeDeliveryAddressValidator.validate(
+        address_owner=Member.objects.get(id=member_id),
+        pickup_location=pickup_location,
+    )
+    return pickup_location
 
 
 class BaseProductForm(forms.Form):
@@ -434,6 +451,12 @@ class BaseProductForm(forms.Form):
                     )
                 }
             )
+
+    def clean_pickup_location(self):
+        return clean_home_delivery_pickup_location(
+            pickup_location=self.cleaned_data.get("pickup_location"),
+            member_id=self.member_id,
+        )
 
     def validate_pickup_location(self):
         if not MemberPickupLocation.objects.filter(member_id=self.member_id).exists():
@@ -889,6 +912,12 @@ class AdditionalProductForm(forms.Form):
             .order_by("-valid_from")
             .first()
             .pickup_location
+        )
+
+    def clean_pickup_location(self):
+        return clean_home_delivery_pickup_location(
+            pickup_location=self.cleaned_data.get("pickup_location"),
+            member_id=self.member_id,
         )
 
     def validate_pickup_location(self, cache: dict):
