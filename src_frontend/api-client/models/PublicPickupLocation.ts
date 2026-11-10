@@ -38,13 +38,13 @@ export interface PublicPickupLocation {
    * @type {string}
    * @memberof PublicPickupLocation
    */
-  coordsLon: string;
+  coordsLon?: string | null;
   /**
    *
    * @type {string}
    * @memberof PublicPickupLocation
    */
-  coordsLat: string;
+  coordsLat?: string | null;
   /**
    *
    * @type {string}
@@ -87,6 +87,12 @@ export interface PublicPickupLocation {
    * @memberof PublicPickupLocation
    */
   readonly deliveryDay: number | null;
+  /**
+   *
+   * @type {boolean}
+   * @memberof PublicPickupLocation
+   */
+  isHomeDelivery?: boolean;
 }
 
 /**
@@ -96,8 +102,6 @@ export function instanceOfPublicPickupLocation(
   value: object,
 ): value is PublicPickupLocation {
   if (!("name" in value) || value["name"] === undefined) return false;
-  if (!("coordsLon" in value) || value["coordsLon"] === undefined) return false;
-  if (!("coordsLat" in value) || value["coordsLat"] === undefined) return false;
   if (!("street" in value) || value["street"] === undefined) return false;
   if (!("postcode" in value) || value["postcode"] === undefined) return false;
   if (!("city" in value) || value["city"] === undefined) return false;
@@ -127,8 +131,8 @@ export function PublicPickupLocationFromJSONTyped(
   return {
     id: json["id"] == null ? undefined : json["id"],
     name: json["name"],
-    coordsLon: json["coords_lon"],
-    coordsLat: json["coords_lat"],
+    coordsLon: json["coords_lon"] == null ? undefined : json["coords_lon"],
+    coordsLat: json["coords_lat"] == null ? undefined : json["coords_lat"],
     street: json["street"],
     street2: json["street_2"] == null ? undefined : json["street_2"],
     postcode: json["postcode"],
@@ -138,6 +142,8 @@ export function PublicPickupLocationFromJSONTyped(
     ),
     currentDeliveryCharge: json["current_delivery_charge"],
     deliveryDay: json["delivery_day"],
+    isHomeDelivery:
+      json["is_home_delivery"] == null ? undefined : json["is_home_delivery"],
   };
 }
 
@@ -165,5 +171,6 @@ export function PublicPickupLocationToJSONTyped(
     street_2: value["street2"],
     postcode: value["postcode"],
     city: value["city"],
+    is_home_delivery: value["isHomeDelivery"],
   };
 }

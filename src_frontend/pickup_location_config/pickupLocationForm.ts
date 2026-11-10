@@ -28,6 +28,7 @@ export interface FormState {
   contactName: string;
   photoLink: string;
   showDetailsInBasketTotalsExport: boolean;
+  isHomeDelivery: boolean;
   info: string;
   routeInfo: string;
   startDate: string;
@@ -54,6 +55,7 @@ export const API_KEYS: Record<keyof FormState, string> = {
   contactName: "contact_name",
   photoLink: "photo_link",
   showDetailsInBasketTotalsExport: "show_details_in_basket_totals_export",
+  isHomeDelivery: "is_home_delivery",
   info: "info",
   routeInfo: "route_info",
   startDate: "start_date",
@@ -75,6 +77,7 @@ export const EMPTY_FORM: FormState = {
   contactName: "",
   photoLink: "",
   showDetailsInBasketTotalsExport: false,
+  isHomeDelivery: false,
   info: "",
   routeInfo: "",
   startDate: "",
@@ -88,8 +91,8 @@ function dateToInputValue(date: Date | null | undefined) {
 export function buildFormState(pickupLocation: PickupLocation): FormState {
   return {
     name: pickupLocation.name,
-    coordsLat: pickupLocation.coordsLat,
-    coordsLon: pickupLocation.coordsLon,
+    coordsLat: pickupLocation.coordsLat ?? "",
+    coordsLon: pickupLocation.coordsLon ?? "",
     street: pickupLocation.street,
     street2: pickupLocation.street2 ?? "",
     postcode: pickupLocation.postcode,
@@ -101,6 +104,7 @@ export function buildFormState(pickupLocation: PickupLocation): FormState {
     photoLink: pickupLocation.photoLink ?? "",
     showDetailsInBasketTotalsExport:
       pickupLocation.showDetailsInBasketTotalsExport ?? false,
+    isHomeDelivery: pickupLocation.isHomeDelivery ?? false,
     info: pickupLocation.info ?? "",
     routeInfo: pickupLocation.routeInfo ?? "",
     startDate: dateToInputValue(pickupLocation.startDate),
@@ -114,6 +118,10 @@ export function buildRequest(
 ): PickupLocationSaveRequestRequest {
   return {
     ...form,
+    coordsLat: form.isHomeDelivery ? null : form.coordsLat || null,
+    coordsLon: form.isHomeDelivery ? null : form.coordsLon || null,
+    accessCode: form.isHomeDelivery ? "" : form.accessCode,
+    messengerGroupLink: form.isHomeDelivery ? "" : form.messengerGroupLink,
     locationRouteId: form.locationRouteId || null,
     startDate: form.startDate ? new Date(form.startDate) : null,
     endDate: form.endDate ? new Date(form.endDate) : null,

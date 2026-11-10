@@ -14953,11 +14953,13 @@ components:
           type: string
           format: decimal
           pattern: ^-?\d{0,2}(?:\.\d{0,10})?$
+          nullable: true
           title: Coordinates Longitude
         coords_lat:
           type: string
           format: decimal
           pattern: ^-?\d{0,2}(?:\.\d{0,10})?$
+          nullable: true
           title: Coordinates Latitude
         street:
           type: string
@@ -15013,13 +15015,14 @@ components:
         show_details_in_basket_totals_export:
           type: boolean
           title: Im Gesamtkistenanzahls-Zettel Details anzeigen
+        is_home_delivery:
+          type: boolean
+          title: Hauslieferung
         location_route:
           type: string
           nullable: true
       required:
       - city
-      - coords_lat
-      - coords_lon
       - created_at
       - delivery_day
       - name
@@ -15239,9 +15242,11 @@ components:
         coords_lat:
           type: string
           format: decimal
+          nullable: true
         coords_lon:
           type: string
           format: decimal
+          nullable: true
         street:
           type: string
           minLength: 1
@@ -15297,14 +15302,15 @@ components:
         show_details_in_basket_totals_export:
           type: boolean
           default: false
+        is_home_delivery:
+          type: boolean
+          default: false
         opening_times:
           type: array
           items:
             $ref: '#/components/schemas/PickupLocationOpeningTimeInputRequest'
       required:
       - city
-      - coords_lat
-      - coords_lon
       - name
       - opening_times
       - postcode
@@ -15716,11 +15722,13 @@ components:
           type: string
           format: decimal
           pattern: ^-?\d{0,2}(?:\.\d{0,10})?$
+          nullable: true
           title: Coordinates Longitude
         coords_lat:
           type: string
           format: decimal
           pattern: ^-?\d{0,2}(?:\.\d{0,10})?$
+          nullable: true
           title: Coordinates Latitude
         street:
           type: string
@@ -15752,10 +15760,11 @@ components:
           type: integer
           nullable: true
           readOnly: true
+        is_home_delivery:
+          type: boolean
+          title: Hauslieferung
       required:
       - city
-      - coords_lat
-      - coords_lon
       - current_delivery_charge
       - delivery_day
       - name

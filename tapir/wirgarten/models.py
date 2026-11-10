@@ -57,10 +57,18 @@ class PickupLocation(TapirModel):
 
     name = models.TextField(_("Name"), max_length=150)
     coords_lon = models.DecimalField(
-        _("Coordinates Longitude"), decimal_places=10, max_digits=12
+        _("Coordinates Longitude"),
+        decimal_places=10,
+        max_digits=12,
+        null=True,
+        blank=True,
     )
     coords_lat = models.DecimalField(
-        _("Coordinates Latitude"), decimal_places=10, max_digits=12
+        _("Coordinates Latitude"),
+        decimal_places=10,
+        max_digits=12,
+        null=True,
+        blank=True,
     )
     street = models.CharField(_("Straße und Hausnummer"), max_length=150)
     street_2 = models.CharField(_("Adresszusatz"), max_length=150, blank=True)
@@ -95,6 +103,7 @@ class PickupLocation(TapirModel):
         _("Im Gesamtkistenanzahls-Zettel Details anzeigen"),
         default=False,
     )
+    is_home_delivery = models.BooleanField(_("Hauslieferung"), default=False)
 
     class Meta:
         constraints = [

@@ -247,7 +247,10 @@ const PickupLocationEditModal: React.FC<PickupLocationEditModalProps> = ({
   }
 
   function textField(
-    key: Exclude<keyof FormState, "showDetailsInBasketTotalsExport">,
+    key: Exclude<
+      keyof FormState,
+      "showDetailsInBasketTotalsExport" | "isHomeDelivery"
+    >,
     label: string,
     options: {
       required?: boolean;
@@ -323,28 +326,57 @@ const PickupLocationEditModal: React.FC<PickupLocationEditModalProps> = ({
           <Row>
             <Col md={12}>{textField("name", "Name", { required: true })}</Col>
             <Col md={6}>
-              {textField("street", "Straße & Hausnummer", { required: true })}
+              {textField("street", "Straße & Hausnummer", {
+                required: true,
+                help: form.isHomeDelivery
+                  ? "Bei Hauslieferung: Adresse des Depots bzw. Startpunkt der Tour."
+                  : undefined,
+              })}
             </Col>
             <Col md={6}>{textField("street2", "Adresszusatz")}</Col>
             <Col md={4}>
               {textField("postcode", "Postleitzahl", { required: true })}
             </Col>
             <Col md={8}>{textField("city", "Ort", { required: true })}</Col>
-            <Col md={6}>
-              {/* coords_lon holds the latitude and coords_lat the longitude everywhere in Tapir */}
-              {textField("coordsLon", "Breitengrad", {
-                required: true,
-                type: "number",
-                placeholder: "z.B. 53.2731785",
-              })}
+            <Col md={12}>
+              <Form.Check
+                className={"mb-2"}
+                id={"is_home_delivery"}
+                label={
+                  <>
+                    Hauslieferung
+                    <HelpTooltip
+                      text={
+                        "Die Mitglieder werden an ihre eigene Adresse beliefert, statt an diesem Ort abzuholen."
+                      }
+                    />
+                  </>
+                }
+                checked={form.isHomeDelivery}
+                onChange={(event) =>
+                  updateForm("isHomeDelivery", event.target.checked)
+                }
+              />
             </Col>
-            <Col md={6}>
-              {textField("coordsLat", "Längengrad", {
-                required: true,
-                type: "number",
-                placeholder: "z.B. 10.3741756",
-              })}
-            </Col>
+            {!form.isHomeDelivery && (
+              <>
+                <Col md={6}>
+                  {/* coords_lon holds the latitude and coords_lat the longitude everywhere in Tapir */}
+                  {textField("coordsLon", "Breitengrad", {
+                    required: true,
+                    type: "number",
+                    placeholder: "z.B. 53.2731785",
+                  })}
+                </Col>
+                <Col md={6}>
+                  {textField("coordsLat", "Längengrad", {
+                    required: true,
+                    type: "number",
+                    placeholder: "z.B. 10.3741756",
+                  })}
+                </Col>
+              </>
+            )}
           </Row>
         </Section>
 
@@ -363,13 +395,17 @@ const PickupLocationEditModal: React.FC<PickupLocationEditModalProps> = ({
                 help: `${HTML_ALLOWED_TEXT} Max. 3000 Zeichen inkl. HTML-Tags.`,
               })}
             </Col>
-            <Col md={6}>{textField("accessCode", "Zugangscode")}</Col>
+            {!form.isHomeDelivery && (
+              <Col md={6}>{textField("accessCode", "Zugangscode")}</Col>
+            )}
             <Col md={6}>
               {textField("contactName", "Name der Abholort-Pat*innen")}
             </Col>
-            <Col md={6}>
-              {textField("messengerGroupLink", "Link zur Messenger-Gruppe")}
-            </Col>
+            {!form.isHomeDelivery && (
+              <Col md={6}>
+                {textField("messengerGroupLink", "Link zur Messenger-Gruppe")}
+              </Col>
+            )}
             <Col md={6}>
               {textField("photoLink", "Link zum Foto des Abholorts")}
             </Col>

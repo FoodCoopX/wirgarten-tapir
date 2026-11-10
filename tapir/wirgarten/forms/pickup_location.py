@@ -135,7 +135,13 @@ def pickup_location_to_dict(
         .distinct()
         .count(),
         "location_route": getattr(pickup_location.location_route, "name", ""),
-        "coords": f"{pickup_location.coords_lon},{pickup_location.coords_lat}",
+        "coords": (
+            f"{pickup_location.coords_lon},{pickup_location.coords_lat}"
+            if pickup_location.coords_lon is not None
+            and pickup_location.coords_lat is not None
+            else None
+        ),
+        "is_home_delivery": pickup_location.is_home_delivery,
         "route_info": pickup_location.route_info,
         "start_date": (
             pickup_location.start_date.isoformat()

@@ -1,12 +1,21 @@
 import datetime
+from decimal import Decimal
 
 from tapir.core.exceptions import TapirImproperlyConfigured
-from tapir.pickup_locations.models import PickupLocationBasketCapacity
+from tapir.pickup_locations.models import (
+    PickupLocationBasketCapacity,
+    PickupLocationDeliveryCharge,
+)
 from tapir.utils.config import Organization
 from tapir.utils.services.test_data_generation.product_generator import (
     BREAD_PRODUCT_TYPE_NAME,
 )
-from tapir.wirgarten.models import ProductType, PickupLocationOpeningTime
+from tapir.wirgarten.models import (
+    PickupLocation,
+    PickupLocationCapability,
+    PickupLocationOpeningTime,
+    ProductType,
+)
 from tapir.wirgarten.tests.factories import (
     PickupLocationFactory,
     PickupLocationCapabilityFactory,
@@ -32,6 +41,58 @@ class PickupLocationGenerator:
                 cls.generate_pickup_locations_for_bakery()
             case _:
                 raise TapirImproperlyConfigured(f"Unknown organization: {organization}")
+
+        cls.generate_home_delivery_location()
+
+    @classmethod
+    def generate_home_delivery_location(cls):
+        depot = PickupLocation.objects.order_by("created_at").first()
+        home_delivery = PickupLocationFactory.create(
+            name="Hauslieferung",
+            is_home_delivery=True,
+            coords_lon=None,
+            coords_lat=None,
+            street=depot.street,
+            postcode=depot.postcode,
+            city=depot.city,
+            info="Lieferung an die eigene Haustür.",
+        )
+
+        for capability in PickupLocationCapability.objects.filter(
+            pickup_location=depot
+        ):
+            PickupLocationCapabilityFactory.create(
+                pickup_location=home_delivery,
+                product_type=capability.product_type,
+                max_capacity=20,
+            )
+        for basket_capacity in PickupLocationBasketCapacity.objects.filter(
+            pickup_location=depot
+        ):
+            PickupLocationBasketCapacity.objects.create(
+                pickup_location=home_delivery,
+                basket_size_name=basket_capacity.basket_size_name,
+                capacity=20,
+            )
+
+        delivery_day = (
+            PickupLocationOpeningTime.objects.filter(pickup_location=depot)
+            .order_by("day_of_week")
+            .first()
+            .day_of_week
+        )
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=home_delivery,
+            day_of_week=delivery_day,
+            open_time=datetime.time(hour=14),
+            close_time=datetime.time(hour=19),
+        )
+
+        PickupLocationDeliveryCharge.objects.create(
+            pickup_location=home_delivery,
+            amount=Decimal("3.50"),
+            valid_from=datetime.date(year=2020, month=1, day=6),
+        )
 
     @classmethod
     def generate_pickup_locations_for_wirgarten(cls):

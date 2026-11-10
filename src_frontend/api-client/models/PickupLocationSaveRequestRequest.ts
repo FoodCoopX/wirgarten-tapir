@@ -35,13 +35,13 @@ export interface PickupLocationSaveRequestRequest {
    * @type {string}
    * @memberof PickupLocationSaveRequestRequest
    */
-  coordsLat: string;
+  coordsLat?: string | null;
   /**
    *
    * @type {string}
    * @memberof PickupLocationSaveRequestRequest
    */
-  coordsLon: string;
+  coordsLon?: string | null;
   /**
    *
    * @type {string}
@@ -128,6 +128,12 @@ export interface PickupLocationSaveRequestRequest {
   showDetailsInBasketTotalsExport?: boolean;
   /**
    *
+   * @type {boolean}
+   * @memberof PickupLocationSaveRequestRequest
+   */
+  isHomeDelivery?: boolean;
+  /**
+   *
    * @type {Array<PickupLocationOpeningTimeInputRequest>}
    * @memberof PickupLocationSaveRequestRequest
    */
@@ -141,8 +147,6 @@ export function instanceOfPickupLocationSaveRequestRequest(
   value: object,
 ): value is PickupLocationSaveRequestRequest {
   if (!("name" in value) || value["name"] === undefined) return false;
-  if (!("coordsLat" in value) || value["coordsLat"] === undefined) return false;
-  if (!("coordsLon" in value) || value["coordsLon"] === undefined) return false;
   if (!("street" in value) || value["street"] === undefined) return false;
   if (!("postcode" in value) || value["postcode"] === undefined) return false;
   if (!("city" in value) || value["city"] === undefined) return false;
@@ -166,8 +170,8 @@ export function PickupLocationSaveRequestRequestFromJSONTyped(
   }
   return {
     name: json["name"],
-    coordsLat: json["coords_lat"],
-    coordsLon: json["coords_lon"],
+    coordsLat: json["coords_lat"] == null ? undefined : json["coords_lat"],
+    coordsLon: json["coords_lon"] == null ? undefined : json["coords_lon"],
     street: json["street"],
     street2: json["street_2"] == null ? undefined : json["street_2"],
     postcode: json["postcode"],
@@ -191,6 +195,8 @@ export function PickupLocationSaveRequestRequestFromJSONTyped(
       json["show_details_in_basket_totals_export"] == null
         ? undefined
         : json["show_details_in_basket_totals_export"],
+    isHomeDelivery:
+      json["is_home_delivery"] == null ? undefined : json["is_home_delivery"],
     openingTimes: (json["opening_times"] as Array<any>).map(
       PickupLocationOpeningTimeInputRequestFromJSON,
     ),
@@ -236,6 +242,7 @@ export function PickupLocationSaveRequestRequestToJSONTyped(
         : (value["endDate"] as any).toISOString().substring(0, 10),
     show_details_in_basket_totals_export:
       value["showDetailsInBasketTotalsExport"],
+    is_home_delivery: value["isHomeDelivery"],
     opening_times: (value["openingTimes"] as Array<any>).map(
       PickupLocationOpeningTimeInputRequestToJSON,
     ),

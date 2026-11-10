@@ -53,8 +53,12 @@ class PickupLocationOpeningTimeInputSerializer(serializers.Serializer):
 
 class PickupLocationSaveRequestSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=150)
-    coords_lat = serializers.DecimalField(max_digits=None, decimal_places=None)
-    coords_lon = serializers.DecimalField(max_digits=None, decimal_places=None)
+    coords_lat = serializers.DecimalField(
+        max_digits=None, decimal_places=None, allow_null=True, default=None
+    )
+    coords_lon = serializers.DecimalField(
+        max_digits=None, decimal_places=None, allow_null=True, default=None
+    )
     street = serializers.CharField(max_length=150)
     street_2 = serializers.CharField(max_length=150, allow_blank=True, default="")
     postcode = serializers.CharField(max_length=32)
@@ -71,6 +75,7 @@ class PickupLocationSaveRequestSerializer(serializers.Serializer):
     start_date = serializers.DateField(allow_null=True, default=None)
     end_date = serializers.DateField(allow_null=True, default=None)
     show_details_in_basket_totals_export = serializers.BooleanField(default=False)
+    is_home_delivery = serializers.BooleanField(default=False)
     opening_times = PickupLocationOpeningTimeInputSerializer(many=True)
 
 
@@ -123,6 +128,7 @@ class PublicPickupLocationSerializer(serializers.ModelSerializer):
             "opening_times",
             "current_delivery_charge",
             "delivery_day",
+            "is_home_delivery",
         ]
 
     opening_times = serializers.SerializerMethodField()

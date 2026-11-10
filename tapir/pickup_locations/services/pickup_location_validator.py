@@ -11,6 +11,7 @@ class PickupLocationValidator:
     END_BEFORE_START_MESSAGE = "Ende darf nicht vor Beginn liegen."
     UNKNOWN_LOCATION_ROUTE_MESSAGE = "Unbekannte Ausfahrrunde."
     DUPLICATE_NAME_MESSAGE = "Es gibt bereits einen Abholort mit diesem Namen."
+    COORDINATES_REQUIRED_MESSAGE = "Koordinaten sind für Abholorte erforderlich."
 
     @classmethod
     def validate(
@@ -53,5 +54,10 @@ class PickupLocationValidator:
             for other in TapirCache.get_all_pickup_locations(cache=cache)
         ):
             errors["name"] = cls.DUPLICATE_NAME_MESSAGE
+
+        if not pickup_location.is_home_delivery:
+            for field_name in ["coords_lat", "coords_lon"]:
+                if getattr(pickup_location, field_name) is None:
+                    errors[field_name] = cls.COORDINATES_REQUIRED_MESSAGE
 
         return errors

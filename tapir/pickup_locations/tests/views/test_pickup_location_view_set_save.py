@@ -110,6 +110,17 @@ class TestPickupLocationViewSetSave(TapirIntegrationTest):
         self.assertEqual(1, response.json()["delivery_day"])
         self.assertEqual(2, len(response.json()["opening_times"]))
 
+    def test_create_homeDeliveryWithoutCoordinates_createsPickupLocation(self):
+        response = self._create(
+            build_request_data(is_home_delivery=True, coords_lat=None, coords_lon=None)
+        )
+
+        self.assertStatusCode(response, status.HTTP_201_CREATED)
+        pickup_location = PickupLocation.objects.get()
+        self.assertTrue(pickup_location.is_home_delivery)
+        self.assertIsNone(pickup_location.coords_lat)
+        self.assertIsNone(pickup_location.coords_lon)
+
     def test_create_invalidData_returns400AndCreatesNothing(self):
         response = self._create(build_request_data(start_date="2026-01-06"))
 

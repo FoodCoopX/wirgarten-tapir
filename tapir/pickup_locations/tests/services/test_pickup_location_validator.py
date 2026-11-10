@@ -171,3 +171,23 @@ class TestPickupLocationValidator(TapirUnitTest):
         errors = self._validate(pickup_location)
 
         self.assertEqual({}, errors)
+
+    def test_validate_normalLocationWithoutCoordinates_returnsErrors(self, _, __):
+        errors = self._validate(build_pickup_location(coords_lat=None, coords_lon=None))
+
+        self.assertEqual(
+            {
+                "coords_lat": "Koordinaten sind für Abholorte erforderlich.",
+                "coords_lon": "Koordinaten sind für Abholorte erforderlich.",
+            },
+            errors,
+        )
+
+    def test_validate_homeDeliveryWithoutCoordinates_returnsNoErrors(self, _, __):
+        errors = self._validate(
+            build_pickup_location(
+                is_home_delivery=True, coords_lat=None, coords_lon=None
+            )
+        )
+
+        self.assertEqual({}, errors)

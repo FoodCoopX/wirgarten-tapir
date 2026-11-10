@@ -62,13 +62,13 @@ export interface PickupLocation {
    * @type {string}
    * @memberof PickupLocation
    */
-  coordsLon: string;
+  coordsLon?: string | null;
   /**
    *
    * @type {string}
    * @memberof PickupLocation
    */
-  coordsLat: string;
+  coordsLat?: string | null;
   /**
    *
    * @type {string}
@@ -149,6 +149,12 @@ export interface PickupLocation {
   showDetailsInBasketTotalsExport?: boolean;
   /**
    *
+   * @type {boolean}
+   * @memberof PickupLocation
+   */
+  isHomeDelivery?: boolean;
+  /**
+   *
    * @type {string}
    * @memberof PickupLocation
    */
@@ -168,8 +174,6 @@ export function instanceOfPickupLocation(
   if (!("createdAt" in value) || value["createdAt"] === undefined) return false;
   if (!("updatedAt" in value) || value["updatedAt"] === undefined) return false;
   if (!("name" in value) || value["name"] === undefined) return false;
-  if (!("coordsLon" in value) || value["coordsLon"] === undefined) return false;
-  if (!("coordsLat" in value) || value["coordsLat"] === undefined) return false;
   if (!("street" in value) || value["street"] === undefined) return false;
   if (!("postcode" in value) || value["postcode"] === undefined) return false;
   if (!("city" in value) || value["city"] === undefined) return false;
@@ -196,8 +200,8 @@ export function PickupLocationFromJSONTyped(
     createdAt: new Date(json["created_at"]),
     updatedAt: new Date(json["updated_at"]),
     name: json["name"],
-    coordsLon: json["coords_lon"],
-    coordsLat: json["coords_lat"],
+    coordsLon: json["coords_lon"] == null ? undefined : json["coords_lon"],
+    coordsLat: json["coords_lat"] == null ? undefined : json["coords_lat"],
     street: json["street"],
     street2: json["street_2"] == null ? undefined : json["street_2"],
     postcode: json["postcode"],
@@ -219,6 +223,8 @@ export function PickupLocationFromJSONTyped(
       json["show_details_in_basket_totals_export"] == null
         ? undefined
         : json["show_details_in_basket_totals_export"],
+    isHomeDelivery:
+      json["is_home_delivery"] == null ? undefined : json["is_home_delivery"],
     locationRoute:
       json["location_route"] == null ? undefined : json["location_route"],
   };
@@ -264,6 +270,7 @@ export function PickupLocationToJSONTyped(
         : (value["endDate"] as any).toISOString().substring(0, 10),
     show_details_in_basket_totals_export:
       value["showDetailsInBasketTotalsExport"],
+    is_home_delivery: value["isHomeDelivery"],
     location_route: value["locationRoute"],
   };
 }

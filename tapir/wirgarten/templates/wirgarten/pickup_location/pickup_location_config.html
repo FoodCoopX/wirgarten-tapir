@@ -83,6 +83,7 @@
                                         {{ pl.location_route }}
                                     {% endif %}
                                     <strong>{{ pl.name }}</strong>
+                                    {% if pl.is_home_delivery %}<span class="badge bg-info ms-1">Hauslieferung</span>{% endif %}
                                 </td>
                                 <td>
                                     <small style="line-height: 1em;">{{ pl.opening_times|safe }}</small>

@@ -18,7 +18,13 @@ var initMap = (
   const idToCoords = (id) => {
     return data[id]["coords"].split(",");
   };
-  const map = L.map("map").setView(idToCoords(Object.entries(data)[0][0]), 12);
+  const idsWithCoords = Object.keys(data).filter((id) => data[id]["coords"]);
+  const map = L.map("map");
+  if (idsWithCoords.length > 0) {
+    map.setView(idToCoords(idsWithCoords[0]), 12);
+  } else {
+    map.setView([51.16, 10.45], 6);
+  }
 
   const possibleLocations = Object.entries(data)
     .filter(([id, pl]) => true)
@@ -33,6 +39,7 @@ var initMap = (
   };
 
   for (const [id, pl] of Object.entries(data)) {
+    if (!pl.coords) continue;
     const marker = L.marker(idToCoords(id), { icon: markerIcon }).addTo(map);
 
     marker.bindPopup(`<div style="text-align: center">
@@ -51,7 +58,7 @@ var initMap = (
   }
 
   const select = (id, callback = false) => {
-    if (!data[id]) return;
+    if (!data[id] || !markers[id]) return;
 
     const target = idToCoords(id);
     target[0] = Number.parseFloat(target[0]) + 0.002;
