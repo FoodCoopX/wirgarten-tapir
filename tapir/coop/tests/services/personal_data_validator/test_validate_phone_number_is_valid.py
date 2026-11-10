@@ -28,12 +28,10 @@ class TestValidatePhoneNumberIsValid(TapirUnitTest):
     def test_validatePhoneNumberIsValid_invalidNumber_raisesValidationError(self):
         self.set_phone_number_required(False)
 
-        with self.assertRaises(ValidationError) as error:
+        with self.assertRaisesMessage(ValidationError, "Ungültige Telefonnummer"):
             PersonalDataValidator.validate_phone_number_is_valid(
                 phone_number="123", cache=self.cache
             )
-
-        self.assertEqual("Ungültige Telefonnummer", error.exception.message)
 
     def test_validatePhoneNumberIsValid_emptyAndNotRequired_noError(self):
         self.set_phone_number_required(False)
@@ -45,21 +43,21 @@ class TestValidatePhoneNumberIsValid(TapirUnitTest):
     def test_validatePhoneNumberIsValid_emptyAndRequired_raisesValidationError(self):
         self.set_phone_number_required(True)
 
-        with self.assertRaises(ValidationError) as error:
+        with self.assertRaisesMessage(
+            ValidationError, "Bitte gib eine Telefonnummer an."
+        ):
             PersonalDataValidator.validate_phone_number_is_valid(
                 phone_number="", cache=self.cache
             )
-
-        self.assertEqual("Bitte gib eine Telefonnummer an.", error.exception.message)
 
     def test_validatePhoneNumberIsValid_onlyWhitespaceAndRequired_raisesValidationError(
         self,
     ):
         self.set_phone_number_required(True)
 
-        with self.assertRaises(ValidationError) as error:
+        with self.assertRaisesMessage(
+            ValidationError, "Bitte gib eine Telefonnummer an."
+        ):
             PersonalDataValidator.validate_phone_number_is_valid(
                 phone_number="   ", cache=self.cache
             )
-
-        self.assertEqual("Bitte gib eine Telefonnummer an.", error.exception.message)

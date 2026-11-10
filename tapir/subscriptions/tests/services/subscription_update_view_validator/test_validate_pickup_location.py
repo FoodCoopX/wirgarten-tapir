@@ -36,10 +36,8 @@ class TestSubscriptionUpdateViewValidatorValidatePickupLocation(TapirUnitTest):
         }
 
     def assert_raises_validation_error(self, error_message: str, **params):
-        with self.assertRaises(ValidationError) as error:
+        with self.assertRaisesMessage(ValidationError, error_message):
             SubscriptionUpdateViewValidator.validate_pickup_location(**params)
-
-        self.assertEqual(error_message, error.exception.message)
 
     def test_validatePickupLocation_orderDoesNotNeedPickupLocation_returnsNone(
         self,

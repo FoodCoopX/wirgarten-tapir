@@ -29,12 +29,12 @@ class TestGetEarliestPossibleMembershipCancellationDate(TapirIntegrationTest):
             period__start_date=datetime.date(year=2020, month=1, day=1),
         )
 
-        with self.assertRaises(ValidationError) as error:
+        with self.assertRaisesMessage(
+            ValidationError, "Dieses Mitglied hat aktive Verträge"
+        ):
             AssociationMembershipCancellationManager.get_earliest_possible_membership_cancellation_date(
                 member=subscription.member, cache={}
             )
-
-        self.assertEqual("Dieses Mitglied hat aktive Verträge", error.exception.message)
 
     def test_getEarliestPossibleMembershipCancellationDate_oneUncancelledPastSubscriptionExists_subscriptionIgnored(
         self,

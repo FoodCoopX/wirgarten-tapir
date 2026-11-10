@@ -56,14 +56,12 @@ class TestSubscriptionUpdateViewValidatorValidateAllProductsBelongToProductType(
         mock_get_product_by_id.side_effect = [cached_product_a, cached_product_b]
         cache = Mock()
 
-        with self.assertRaises(ValidationError) as error:
+        with self.assertRaisesMessage(
+            ValidationError,
+            f"Product 'Product B' does not belong to product type with id: {product_type_id}",
+        ):
             SubscriptionUpdateViewValidator.validate_all_products_belong_to_product_type(
                 order={product_a: 1, product_b: 2},
                 product_type_id=product_type_id,
                 cache=cache,
             )
-
-        self.assertEqual(
-            f"Product 'Product B' does not belong to product type with id: {product_type_id}",
-            error.exception.message,
-        )
