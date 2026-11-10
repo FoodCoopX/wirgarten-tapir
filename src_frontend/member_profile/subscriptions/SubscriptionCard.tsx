@@ -5,6 +5,7 @@ import { PublicProductType, PublicSubscription } from "../../api-client";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import TapirButton from "../../components/TapirButton.tsx";
+import TapirHelpButton from "../../components/TapirHelpButton.tsx";
 import { isSubscriptionActive } from "../../utils/isSubscriptionActive.ts";
 
 interface SubscriptionCardProps {
@@ -12,6 +13,8 @@ interface SubscriptionCardProps {
   productType: PublicProductType;
   bestellWizardUrl: string;
   showContractEdit: boolean;
+  contactEmail: string;
+  adminVersion: boolean;
 }
 
 const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
@@ -19,7 +22,31 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
   productType,
   bestellWizardUrl,
   showContractEdit,
+  contactEmail,
+  adminVersion,
 }) => {
+  function buildHelpText() {
+    if (adminVersion) {
+      return (
+        <p className={"mb-0"}>
+          Beachte: Das Mitglied kann seine Vertragskonstellation ändern, solange
+          sie insgesamt nicht kleiner wird als die bisherige. Nur du als Admin
+          kannst die Anteile insgesamt reduzieren.
+        </p>
+      );
+    }
+    return (
+      <p className={"mb-0"}>
+        Beachte: Du kannst deine Vertragskonstellation ändern, solange sie
+        insgesamt nicht kleiner wird als deine bisherige. Du kannst zum Beispiel
+        einen größeren Anteil gegen mehrere kleinere tauschen, wenn sie zusammen
+        mindestens gleich groß sind. Möchtest du deine Anteile insgesamt
+        reduzieren, wende dich bitte an die Verwaltung (
+        <a href={"mailto:" + contactEmail}>{contactEmail}</a>).
+      </p>
+    );
+  }
+
   return (
     <Card>
       <Card.Body>
@@ -94,13 +121,16 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
             </small>
           </span>
           {showContractEdit && (
-            <TapirButton
-              variant={"outline-primary"}
-              icon={subscriptions.length == 0 ? "add" : "contract_edit"}
-              onClick={() => {
-                location.assign(bestellWizardUrl);
-              }}
-            />
+            <div className={"d-flex flex-row gap-2"}>
+              <TapirHelpButton text={buildHelpText()} />
+              <TapirButton
+                variant={"outline-primary"}
+                icon={subscriptions.length == 0 ? "add" : "contract_edit"}
+                onClick={() => {
+                  location.assign(bestellWizardUrl);
+                }}
+              />
+            </div>
           )}
         </div>
       </Card.Footer>
