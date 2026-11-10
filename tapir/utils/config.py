@@ -5,6 +5,7 @@ class Organization(Enum):
     WIRGARTEN = "wirgarten"
     BIOTOP = "biotop"
     VEREIN = "verein"
+    VIERLANDE = "vierlande"
     L2G = "l2g"
     MM = "mm"
     BAKERY = "bakery"
