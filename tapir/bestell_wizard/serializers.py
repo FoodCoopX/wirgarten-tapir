@@ -5,7 +5,10 @@ from tapir.core.config import LEGAL_STATUS_OPTIONS
 from tapir.deliveries.serializers import (
     PublicGrowingPeriodSerializer,
 )
-from tapir.pickup_locations.serializers import PublicPickupLocationSerializer
+from tapir.pickup_locations.serializers import (
+    DeliveryAddressSerializer,
+    PublicPickupLocationSerializer,
+)
 from tapir.products.serializers import PublicProductTypeSerializer
 from tapir.solidarity_contribution.config import (
     OPTIONS_BESTELL_WIZARD_SOLIDARITY_STEP_POSITION,
@@ -25,15 +28,6 @@ class PersonalDataSerializer(serializers.Serializer):
     account_owner = serializers.CharField(allow_blank=True)
     iban = serializers.CharField(allow_blank=True)
     pseudonym = serializers.CharField(allow_blank=True, default="", max_length=150)
-
-
-class DeliveryAddressSerializer(serializers.Serializer):
-    same_as_billing_address = serializers.BooleanField()
-    street = serializers.CharField(allow_blank=True, default="")
-    street_2 = serializers.CharField(allow_blank=True, default="")
-    postcode = serializers.CharField(allow_blank=True, default="")
-    city = serializers.CharField(allow_blank=True, default="")
-    country = serializers.CharField(allow_blank=True, default="DE")
 
 
 class BestellWizardConfirmOrderRequestSerializer(serializers.Serializer):

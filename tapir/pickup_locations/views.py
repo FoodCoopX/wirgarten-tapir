@@ -14,6 +14,8 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.pickup_locations.models import PickupLocationDeliveryCharge
 from tapir.pickup_locations.serializers import (
+    DeliveryAddressSerializer,
+    MemberDeliveryAddressSerializer,
     PickupLocationCapacitiesSerializer,
     PickupLocationCapacityEvolutionSerializer,
     PickupLocationDeliveryChargeCreateRequestSerializer,
@@ -27,6 +29,12 @@ from tapir.pickup_locations.serializers import (
 )
 from tapir.pickup_locations.services.home_delivery_address_validator import (
     HomeDeliveryAddressValidator,
+)
+from tapir.pickup_locations.services.member_delivery_address_getter import (
+    DeliveryAddressInput,
+)
+from tapir.pickup_locations.services.member_delivery_address_setter import (
+    MemberDeliveryAddressSetter,
 )
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
@@ -657,3 +665,89 @@ class LocationRouteViewSet(viewsets.ModelViewSet):
     queryset = LocationRoute.objects.order_by("name")
     serializer_class = LocationRouteSerializer
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+
+class MemberDeliveryAddressApiView(APIView):
+    def __init__(self):
+        super().__init__()
+        self.cache = {}
+
+    @extend_schema(
+        parameters=[OpenApiParameter(name="member_id", type=str)],
+        responses={200: MemberDeliveryAddressSerializer},
+    )
+    def get(self, request):
+        member = self.get_member_and_check_permission(request=request)
+
+        return Response(
+            MemberDeliveryAddressSerializer(
+                {
+                    "same_as_billing_address": member.delivery_same_as_billing_address,
+                    "street": member.delivery_street,
+                    "street_2": member.delivery_street_2,
+                    "postcode": member.delivery_postcode,
+                    "city": member.delivery_city,
+                    "country": str(member.delivery_country),
+                    "change_warning_text": self.get_change_warning_text(),
+                }
+            ).data
+        )
+
+    @extend_schema(
+        parameters=[OpenApiParameter(name="member_id", type=str)],
+        request=DeliveryAddressSerializer,
+        responses={200: OrderConfirmationResponseSerializer},
+    )
+    def put(self, request):
+        member = self.get_member_and_check_permission(request=request)
+        serializer = DeliveryAddressSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        MemberDeliveryAddressSetter.apply_delivery_address_input(
+            target=member,
+            delivery_address_input=DeliveryAddressInput(**serializer.validated_data),
+        )
+
+        try:
+            for (
+                pickup_location
+            ) in MemberPickupLocationGetter.get_current_and_future_home_delivery_locations(
+                member_id=member.id,
+                reference_date=get_today(cache=self.cache),
+                cache=self.cache,
+            ):
+                HomeDeliveryAddressValidator.validate(
+                    address_owner=member, pickup_location=pickup_location
+                )
+        except ValidationError as error:
+            return Response(
+                OrderConfirmationResponseSerializer(
+                    {"order_confirmed": False, "error": error.message}
+                ).data
+            )
+
+        MemberDeliveryAddressSetter.save_delivery_address(
+            member=member, actor=request.user
+        )
+
+        return Response(
+            OrderConfirmationResponseSerializer(
+                {"order_confirmed": True, "error": None}
+            ).data
+        )
+
+    @staticmethod
+    def get_member_and_check_permission(request: Request) -> Member:
+        member_id = request.query_params.get("member_id")
+        check_permission_or_self(member_id, request)
+        return get_object_or_404(Member, id=member_id)
+
+    def get_change_warning_text(self) -> str:
+        if calculate_pickup_location_change_date(cache=self.cache) <= get_today(
+            cache=self.cache
+        ):
+            return ""
+
+        return get_parameter_value(
+            key=ParameterKeys.MEMBER_DELIVERY_ADDRESS_CHANGE_WARNING_TEXT,
+            cache=self.cache,
+        )

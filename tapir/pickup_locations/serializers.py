@@ -209,3 +209,22 @@ class LocationRouteSerializer(serializers.ModelSerializer):
             .order_by("name")
             .values_list("name", flat=True)
         )
+
+
+class DeliveryAddressSerializer(serializers.Serializer):
+    same_as_billing_address = serializers.BooleanField()
+    street = serializers.CharField(allow_blank=True, default="")
+    street_2 = serializers.CharField(allow_blank=True, default="")
+    postcode = serializers.CharField(allow_blank=True, default="")
+    city = serializers.CharField(allow_blank=True, default="")
+    country = serializers.CharField(allow_blank=True, default="DE")
+
+
+class MemberDeliveryAddressSerializer(serializers.Serializer):
+    same_as_billing_address = serializers.BooleanField()
+    street = serializers.CharField()
+    street_2 = serializers.CharField()
+    postcode = serializers.CharField()
+    city = serializers.CharField()
+    country = serializers.CharField()
+    change_warning_text = serializers.CharField()

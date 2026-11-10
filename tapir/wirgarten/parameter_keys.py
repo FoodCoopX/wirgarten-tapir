@@ -74,6 +74,9 @@ class ParameterKeys:
     MEMBER_DASHBOARD_PICKUP_LOCATION_LABEL = (
         f"{PREFIX}.member.dashboard.pickup_location_label"
     )
+    MEMBER_DELIVERY_ADDRESS_CHANGE_WARNING_TEXT = (
+        f"{PREFIX}.member.dashboard.delivery_address_change_warning_text"
+    )
     DELIVERY_DAY = f"{PREFIX}.delivery.weekday"
     DELIVERY_CHARGE_PER_PICKUP_LOCATION_ENABLED = (
         f"{PREFIX}.delivery.charge_per_pickup_location.enabled"

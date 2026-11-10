@@ -33,9 +33,13 @@ class HomeDeliveryAddressValidator:
         if not pickup_location.is_home_delivery:
             return
 
-        if not (
+        if not cls.is_complete(delivery_address=delivery_address):
+            raise ValidationError(cls.MISSING_ADDRESS_MESSAGE)
+
+    @staticmethod
+    def is_complete(delivery_address: DeliveryAddress) -> bool:
+        return bool(
             delivery_address.street
             and delivery_address.postcode
             and delivery_address.city
-        ):
-            raise ValidationError(cls.MISSING_ADDRESS_MESSAGE)
+        )

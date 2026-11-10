@@ -13,8 +13,10 @@
  */
 
 import type {
+  DeliveryAddressRequest,
   LocationRoute,
   LocationRouteRequest,
+  MemberDeliveryAddress,
   Mpl,
   OrderConfirmationResponse,
   PatchedLocationRouteRequest,
@@ -30,8 +32,10 @@ import type {
   PublicPickupLocation,
 } from "../models/index";
 import {
+  DeliveryAddressRequestToJSON,
   LocationRouteFromJSON,
   LocationRouteRequestToJSON,
+  MemberDeliveryAddressFromJSON,
   MplFromJSON,
   OrderConfirmationResponseFromJSON,
   PatchedLocationRouteRequestToJSON,
@@ -56,6 +60,15 @@ export interface PickupLocationsApiChangeMemberPickupLocationCreateRequest {
 export interface PickupLocationsApiGetMemberPickupLocationRetrieveRequest {
   growingPeriodId?: string;
   memberId?: string;
+}
+
+export interface PickupLocationsApiMemberDeliveryAddressRetrieveRequest {
+  memberId?: string;
+}
+
+export interface PickupLocationsApiMemberDeliveryAddressUpdateRequest {
+  memberId?: string;
+  deliveryAddressRequest: DeliveryAddressRequest;
 }
 
 export interface PickupLocationsApiPickupLocationCapacitiesPartialUpdateRequest {
@@ -251,6 +264,132 @@ export class PickupLocationsApi extends runtime.BaseAPI {
   ): Promise<Mpl> {
     const response =
       await this.pickupLocationsApiGetMemberPickupLocationRetrieveRaw(
+        requestParameters,
+        initOverrides,
+      );
+    return await response.value();
+  }
+
+  /**
+   */
+  async pickupLocationsApiMemberDeliveryAddressRetrieveRaw(
+    requestParameters: PickupLocationsApiMemberDeliveryAddressRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<MemberDeliveryAddress>> {
+    const queryParameters: any = {};
+
+    if (requestParameters["memberId"] != null) {
+      queryParameters["member_id"] = requestParameters["memberId"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/pickup_locations/api/member_delivery_address`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      MemberDeliveryAddressFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async pickupLocationsApiMemberDeliveryAddressRetrieve(
+    requestParameters: PickupLocationsApiMemberDeliveryAddressRetrieveRequest = {},
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<MemberDeliveryAddress> {
+    const response =
+      await this.pickupLocationsApiMemberDeliveryAddressRetrieveRaw(
+        requestParameters,
+        initOverrides,
+      );
+    return await response.value();
+  }
+
+  /**
+   */
+  async pickupLocationsApiMemberDeliveryAddressUpdateRaw(
+    requestParameters: PickupLocationsApiMemberDeliveryAddressUpdateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<OrderConfirmationResponse>> {
+    if (requestParameters["deliveryAddressRequest"] == null) {
+      throw new runtime.RequiredError(
+        "deliveryAddressRequest",
+        'Required parameter "deliveryAddressRequest" was null or undefined when calling pickupLocationsApiMemberDeliveryAddressUpdate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    if (requestParameters["memberId"] != null) {
+      queryParameters["member_id"] = requestParameters["memberId"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/pickup_locations/api/member_delivery_address`,
+        method: "PUT",
+        headers: headerParameters,
+        query: queryParameters,
+        body: DeliveryAddressRequestToJSON(
+          requestParameters["deliveryAddressRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      OrderConfirmationResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async pickupLocationsApiMemberDeliveryAddressUpdate(
+    requestParameters: PickupLocationsApiMemberDeliveryAddressUpdateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<OrderConfirmationResponse> {
+    const response =
+      await this.pickupLocationsApiMemberDeliveryAddressUpdateRaw(
         requestParameters,
         initOverrides,
       );

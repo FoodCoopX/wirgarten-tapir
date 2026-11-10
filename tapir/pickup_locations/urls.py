@@ -35,6 +35,11 @@ urlpatterns = [
         views.ChangeMemberPickupLocationApiView.as_view(),
         name="change_member_pickup_location",
     ),
+    path(
+        "api/member_delivery_address",
+        views.MemberDeliveryAddressApiView.as_view(),
+        name="member_delivery_address",
+    ),
 ]
 
 router = DefaultRouter()

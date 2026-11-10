@@ -1,3 +1,5 @@
+import datetime
+
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.db.models import F, Sum
@@ -12,6 +14,15 @@ from tapir.coop.services.coop_membership_cancellation_manager import (
 from tapir.coop.services.membership_text_service import MembershipTextService
 from tapir.deliveries.config import DELIVERY_DONATION_MODE_DISABLED
 from tapir.payments.models import MemberPaymentRhythm
+from tapir.pickup_locations.services.home_delivery_address_validator import (
+    HomeDeliveryAddressValidator,
+)
+from tapir.pickup_locations.services.member_delivery_address_getter import (
+    MemberDeliveryAddressGetter,
+)
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
+)
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
@@ -45,6 +56,7 @@ from tapir.wirgarten.utils import (
     legal_status_is_association,
     legal_status_is_cooperative,
 )
+from tapir.utils.user_utils import UserUtils
 from tapir.wirgarten.views.mixin import PermissionOrSelfRequiredMixin
 
 
@@ -227,9 +239,38 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
 
         context["show_mailing_list_content"] = settings.MAILING_LISTS_ENABLED
 
+        self.add_delivery_address_context(context=context, today=today, cache=cache)
+
         context["cache"] = cache
 
         return context
+
+    def add_delivery_address_context(
+        self, context: dict, today: datetime.date, cache: dict
+    ):
+        context["has_home_delivery"] = (
+            len(
+                MemberPickupLocationGetter.get_current_and_future_home_delivery_locations(
+                    member_id=self.object.id, reference_date=today, cache=cache
+                )
+            )
+            > 0
+        )
+        if not context["has_home_delivery"]:
+            return
+
+        delivery_address = MemberDeliveryAddressGetter.get_delivery_address(
+            address_owner=self.object
+        )
+        context["delivery_address_complete"] = HomeDeliveryAddressValidator.is_complete(
+            delivery_address=delivery_address
+        )
+        context["delivery_address"] = UserUtils.build_display_address(
+            street=delivery_address.street,
+            street_2=delivery_address.street_2,
+            postcode=delivery_address.postcode,
+            city=delivery_address.city,
+        )
 
     def add_renewal_notice_context(self, context, next_month, today, cache: dict):
         """

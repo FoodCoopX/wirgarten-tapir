@@ -4804,6 +4804,59 @@ paths:
               schema:
                 $ref: '#/components/schemas/mpl'
           description: ''
+  /pickup_locations/api/member_delivery_address:
+    get:
+      operationId: pickup_locations_api_member_delivery_address_retrieve
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - pickup_locations
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberDeliveryAddress'
+          description: ''
+    put:
+      operationId: pickup_locations_api_member_delivery_address_update
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - pickup_locations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeliveryAddressRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DeliveryAddressRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DeliveryAddressRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderConfirmationResponse'
+          description: ''
   /pickup_locations/api/pickup_location_capacities:
     get:
       operationId: pickup_locations_api_pickup_location_capacities_retrieve
@@ -13672,6 +13725,31 @@ components:
       - subscription_changes
       - subscription_creations
       - subscriptions_deleted
+    MemberDeliveryAddress:
+      type: object
+      properties:
+        same_as_billing_address:
+          type: boolean
+        street:
+          type: string
+        street_2:
+          type: string
+        postcode:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+        change_warning_text:
+          type: string
+      required:
+      - change_warning_text
+      - city
+      - country
+      - postcode
+      - same_as_billing_address
+      - street
+      - street_2
     MemberEmailRequestRequest:
       type: object
       properties:
