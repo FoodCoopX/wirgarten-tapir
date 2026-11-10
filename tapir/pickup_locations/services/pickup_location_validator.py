@@ -56,7 +56,7 @@ class PickupLocationValidator:
             errors["name"] = cls.DUPLICATE_NAME_MESSAGE
 
         if not pickup_location.is_home_delivery:
-            for field_name in ["coords_lat", "coords_lon"]:
+            for field_name in ["latitude", "longitude"]:
                 if getattr(pickup_location, field_name) is None:
                     errors[field_name] = cls.COORDINATES_REQUIRED_MESSAGE
 

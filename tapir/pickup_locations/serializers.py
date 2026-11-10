@@ -53,10 +53,10 @@ class PickupLocationOpeningTimeInputSerializer(serializers.Serializer):
 
 class PickupLocationSaveRequestSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=150)
-    coords_lat = serializers.DecimalField(
+    latitude = serializers.DecimalField(
         max_digits=None, decimal_places=None, allow_null=True, default=None
     )
-    coords_lon = serializers.DecimalField(
+    longitude = serializers.DecimalField(
         max_digits=None, decimal_places=None, allow_null=True, default=None
     )
     street = serializers.CharField(max_length=150)
@@ -119,8 +119,8 @@ class PublicPickupLocationSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "name",
-            "coords_lon",
-            "coords_lat",
+            "latitude",
+            "longitude",
             "street",
             "street_2",
             "postcode",

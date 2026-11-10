@@ -14949,18 +14949,18 @@ components:
         name:
           type: string
           maxLength: 150
-        coords_lon:
+        latitude:
           type: string
           format: decimal
           pattern: ^-?\d{0,2}(?:\.\d{0,10})?$
           nullable: true
-          title: Coordinates Longitude
-        coords_lat:
+          title: Breitengrad
+        longitude:
           type: string
           format: decimal
           pattern: ^-?\d{0,2}(?:\.\d{0,10})?$
           nullable: true
-          title: Coordinates Latitude
+          title: Längengrad
         street:
           type: string
           title: Straße und Hausnummer
@@ -15239,11 +15239,11 @@ components:
           type: string
           minLength: 1
           maxLength: 150
-        coords_lat:
+        latitude:
           type: string
           format: decimal
           nullable: true
-        coords_lon:
+        longitude:
           type: string
           format: decimal
           nullable: true
@@ -15718,18 +15718,18 @@ components:
         name:
           type: string
           maxLength: 150
-        coords_lon:
+        latitude:
           type: string
           format: decimal
           pattern: ^-?\d{0,2}(?:\.\d{0,10})?$
           nullable: true
-          title: Coordinates Longitude
-        coords_lat:
+          title: Breitengrad
+        longitude:
           type: string
           format: decimal
           pattern: ^-?\d{0,2}(?:\.\d{0,10})?$
           nullable: true
-          title: Coordinates Latitude
+          title: Längengrad
         street:
           type: string
           title: Straße und Hausnummer

@@ -56,15 +56,15 @@ class PickupLocation(TapirModel):
     """
 
     name = models.TextField(_("Name"), max_length=150)
-    coords_lon = models.DecimalField(
-        _("Coordinates Longitude"),
+    latitude = models.DecimalField(
+        _("Breitengrad"),
         decimal_places=10,
         max_digits=12,
         null=True,
         blank=True,
     )
-    coords_lat = models.DecimalField(
-        _("Coordinates Latitude"),
+    longitude = models.DecimalField(
+        _("Längengrad"),
         decimal_places=10,
         max_digits=12,
         null=True,

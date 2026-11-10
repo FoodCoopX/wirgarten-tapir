@@ -38,13 +38,13 @@ export interface PublicPickupLocation {
    * @type {string}
    * @memberof PublicPickupLocation
    */
-  coordsLon?: string | null;
+  latitude?: string | null;
   /**
    *
    * @type {string}
    * @memberof PublicPickupLocation
    */
-  coordsLat?: string | null;
+  longitude?: string | null;
   /**
    *
    * @type {string}
@@ -131,8 +131,8 @@ export function PublicPickupLocationFromJSONTyped(
   return {
     id: json["id"] == null ? undefined : json["id"],
     name: json["name"],
-    coordsLon: json["coords_lon"] == null ? undefined : json["coords_lon"],
-    coordsLat: json["coords_lat"] == null ? undefined : json["coords_lat"],
+    latitude: json["latitude"] == null ? undefined : json["latitude"],
+    longitude: json["longitude"] == null ? undefined : json["longitude"],
     street: json["street"],
     street2: json["street_2"] == null ? undefined : json["street_2"],
     postcode: json["postcode"],
@@ -165,8 +165,8 @@ export function PublicPickupLocationToJSONTyped(
   return {
     id: value["id"],
     name: value["name"],
-    coords_lon: value["coordsLon"],
-    coords_lat: value["coordsLat"],
+    latitude: value["latitude"],
+    longitude: value["longitude"],
     street: value["street"],
     street_2: value["street2"],
     postcode: value["postcode"],

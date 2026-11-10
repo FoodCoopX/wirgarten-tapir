@@ -24,8 +24,8 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 def build_request_data(**overrides) -> dict:
     data = {
         "name": "Test Abholort",
-        "coords_lat": "48.1",
-        "coords_lon": "11.5",
+        "latitude": "48.1",
+        "longitude": "11.5",
         "street": "Musterstraße 1",
         "postcode": "12345",
         "city": "Musterstadt",
@@ -88,8 +88,8 @@ class TestPickupLocationViewSetSave(TapirIntegrationTest):
         pickup_location = PickupLocation.objects.get()
         self.assertEqual(pickup_location.id, response.json()["id"])
         self.assertEqual("Test Abholort", pickup_location.name)
-        self.assertEqual(Decimal("48.1"), pickup_location.coords_lat)
-        self.assertEqual(Decimal("11.5"), pickup_location.coords_lon)
+        self.assertEqual(Decimal("48.1"), pickup_location.latitude)
+        self.assertEqual(Decimal("11.5"), pickup_location.longitude)
         self.assertEqual(location_route, pickup_location.location_route)
         self.assertTrue(pickup_location.show_details_in_basket_totals_export)
         self.assertEqual(datetime.date(2026, 1, 5), pickup_location.start_date)
@@ -112,14 +112,14 @@ class TestPickupLocationViewSetSave(TapirIntegrationTest):
 
     def test_create_homeDeliveryWithoutCoordinates_createsPickupLocation(self):
         response = self._create(
-            build_request_data(is_home_delivery=True, coords_lat=None, coords_lon=None)
+            build_request_data(is_home_delivery=True, longitude=None, latitude=None)
         )
 
         self.assertStatusCode(response, status.HTTP_201_CREATED)
         pickup_location = PickupLocation.objects.get()
         self.assertTrue(pickup_location.is_home_delivery)
-        self.assertIsNone(pickup_location.coords_lat)
-        self.assertIsNone(pickup_location.coords_lon)
+        self.assertIsNone(pickup_location.longitude)
+        self.assertIsNone(pickup_location.latitude)
 
     def test_create_invalidData_returns400AndCreatesNothing(self):
         response = self._create(build_request_data(start_date="2026-01-06"))

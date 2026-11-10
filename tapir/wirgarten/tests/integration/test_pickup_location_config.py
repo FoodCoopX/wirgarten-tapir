@@ -33,7 +33,7 @@ class TestPickupLocationConfig(TapirIntegrationTest):
 
     def test_getPickupLocationsMapData_withCoordinates_serializesLatitudeFirst(self):
         pickup_location = PickupLocationFactory.create(
-            coords_lon=Decimal("47.7"), coords_lat=Decimal("11.5")
+            latitude=Decimal("47.7"), longitude=Decimal("11.5")
         )
         data = json.loads(get_pickup_locations_map_data([pickup_location], [], {}))
         self.assertEqual("47.7,11.5", data[pickup_location.id]["coords"])
@@ -42,7 +42,7 @@ class TestPickupLocationConfig(TapirIntegrationTest):
         self,
     ):
         pickup_location = PickupLocationFactory.create(
-            is_home_delivery=True, coords_lon=None, coords_lat=None
+            is_home_delivery=True, latitude=None, longitude=None
         )
         data = json.loads(get_pickup_locations_map_data([pickup_location], [], {}))
         self.assertIsNone(data[pickup_location.id]["coords"])

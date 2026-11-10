@@ -35,13 +35,13 @@ export interface PickupLocationSaveRequestRequest {
    * @type {string}
    * @memberof PickupLocationSaveRequestRequest
    */
-  coordsLat?: string | null;
+  latitude?: string | null;
   /**
    *
    * @type {string}
    * @memberof PickupLocationSaveRequestRequest
    */
-  coordsLon?: string | null;
+  longitude?: string | null;
   /**
    *
    * @type {string}
@@ -170,8 +170,8 @@ export function PickupLocationSaveRequestRequestFromJSONTyped(
   }
   return {
     name: json["name"],
-    coordsLat: json["coords_lat"] == null ? undefined : json["coords_lat"],
-    coordsLon: json["coords_lon"] == null ? undefined : json["coords_lon"],
+    latitude: json["latitude"] == null ? undefined : json["latitude"],
+    longitude: json["longitude"] == null ? undefined : json["longitude"],
     street: json["street"],
     street2: json["street_2"] == null ? undefined : json["street_2"],
     postcode: json["postcode"],
@@ -219,8 +219,8 @@ export function PickupLocationSaveRequestRequestToJSONTyped(
 
   return {
     name: value["name"],
-    coords_lat: value["coordsLat"],
-    coords_lon: value["coordsLon"],
+    latitude: value["latitude"],
+    longitude: value["longitude"],
     street: value["street"],
     street_2: value["street2"],
     postcode: value["postcode"],

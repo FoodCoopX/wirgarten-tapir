@@ -178,8 +178,8 @@ class PickupLocationFactory(factory.django.DjangoModelFactory[PickupLocation]):
     postcode = factory.Faker("postcode")
     city = factory.Faker("city")
     info = factory.Faker("sentence")
-    coords_lon = 0
-    coords_lat = 0
+    latitude = 0
+    longitude = 0
     route_info = factory.Faker("sentence")
 
 

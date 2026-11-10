@@ -153,8 +153,8 @@ class TestPickupLocationValidator(TapirUnitTest):
         mock_get_all_pickup_locations.return_value = [
             PickupLocationFactory.build(
                 name="Anderer Abholort",
-                coords_lat=pickup_location.coords_lat,
-                coords_lon=pickup_location.coords_lon,
+                latitude=pickup_location.latitude,
+                longitude=pickup_location.longitude,
             )
         ]
 
@@ -173,21 +173,19 @@ class TestPickupLocationValidator(TapirUnitTest):
         self.assertEqual({}, errors)
 
     def test_validate_normalLocationWithoutCoordinates_returnsErrors(self, _, __):
-        errors = self._validate(build_pickup_location(coords_lat=None, coords_lon=None))
+        errors = self._validate(build_pickup_location(latitude=None, longitude=None))
 
         self.assertEqual(
             {
-                "coords_lat": "Koordinaten sind für Abholorte erforderlich.",
-                "coords_lon": "Koordinaten sind für Abholorte erforderlich.",
+                "latitude": "Koordinaten sind für Abholorte erforderlich.",
+                "longitude": "Koordinaten sind für Abholorte erforderlich.",
             },
             errors,
         )
 
     def test_validate_homeDeliveryWithoutCoordinates_returnsNoErrors(self, _, __):
         errors = self._validate(
-            build_pickup_location(
-                is_home_delivery=True, coords_lat=None, coords_lon=None
-            )
+            build_pickup_location(is_home_delivery=True, latitude=None, longitude=None)
         )
 
         self.assertEqual({}, errors)

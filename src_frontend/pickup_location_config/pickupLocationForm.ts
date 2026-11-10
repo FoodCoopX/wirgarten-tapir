@@ -16,8 +16,8 @@ export const WEEKDAYS = [
 
 export interface FormState {
   name: string;
-  coordsLat: string;
-  coordsLon: string;
+  latitude: string;
+  longitude: string;
   street: string;
   street2: string;
   postcode: string;
@@ -43,8 +43,8 @@ export interface OpeningTimeRow {
 
 export const API_KEYS: Record<keyof FormState, string> = {
   name: "name",
-  coordsLat: "coords_lat",
-  coordsLon: "coords_lon",
+  latitude: "latitude",
+  longitude: "longitude",
   street: "street",
   street2: "street_2",
   postcode: "postcode",
@@ -65,8 +65,8 @@ export const OPENING_TIMES_API_KEY = "opening_times";
 
 export const EMPTY_FORM: FormState = {
   name: "",
-  coordsLat: "",
-  coordsLon: "",
+  latitude: "",
+  longitude: "",
   street: "",
   street2: "",
   postcode: "",
@@ -91,8 +91,8 @@ function dateToInputValue(date: Date | null | undefined) {
 export function buildFormState(pickupLocation: PickupLocation): FormState {
   return {
     name: pickupLocation.name,
-    coordsLat: pickupLocation.coordsLat ?? "",
-    coordsLon: pickupLocation.coordsLon ?? "",
+    latitude: pickupLocation.latitude ?? "",
+    longitude: pickupLocation.longitude ?? "",
     street: pickupLocation.street,
     street2: pickupLocation.street2 ?? "",
     postcode: pickupLocation.postcode,
@@ -118,8 +118,8 @@ export function buildRequest(
 ): PickupLocationSaveRequestRequest {
   return {
     ...form,
-    coordsLat: form.isHomeDelivery ? null : form.coordsLat || null,
-    coordsLon: form.isHomeDelivery ? null : form.coordsLon || null,
+    latitude: form.isHomeDelivery ? null : form.latitude || null,
+    longitude: form.isHomeDelivery ? null : form.longitude || null,
     accessCode: form.isHomeDelivery ? "" : form.accessCode,
     messengerGroupLink: form.isHomeDelivery ? "" : form.messengerGroupLink,
     locationRouteId: form.locationRouteId || null,

@@ -361,15 +361,14 @@ const PickupLocationEditModal: React.FC<PickupLocationEditModalProps> = ({
             {!form.isHomeDelivery && (
               <>
                 <Col md={6}>
-                  {/* coords_lon holds the latitude and coords_lat the longitude everywhere in Tapir */}
-                  {textField("coordsLon", "Breitengrad", {
+                  {textField("latitude", "Breitengrad", {
                     required: true,
                     type: "number",
                     placeholder: "z.B. 53.2731785",
                   })}
                 </Col>
                 <Col md={6}>
-                  {textField("coordsLat", "Längengrad", {
+                  {textField("longitude", "Längengrad", {
                     required: true,
                     type: "number",
                     placeholder: "z.B. 10.3741756",

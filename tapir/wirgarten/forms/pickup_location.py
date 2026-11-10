@@ -136,9 +136,9 @@ def pickup_location_to_dict(
         .count(),
         "location_route": getattr(pickup_location.location_route, "name", ""),
         "coords": (
-            f"{pickup_location.coords_lon},{pickup_location.coords_lat}"
-            if pickup_location.coords_lon is not None
-            and pickup_location.coords_lat is not None
+            f"{pickup_location.latitude},{pickup_location.longitude}"
+            if pickup_location.latitude is not None
+            and pickup_location.longitude is not None
             else None
         ),
         "is_home_delivery": pickup_location.is_home_delivery,
