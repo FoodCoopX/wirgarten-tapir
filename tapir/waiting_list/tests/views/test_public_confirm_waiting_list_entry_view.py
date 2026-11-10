@@ -535,3 +535,34 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
             f"Order not confirmed. Error: {response_content.get('error')}",
         )
         self.assertEqual("Brotfan", Member.objects.get().pseudonym)
+
+    def test_post_emptyIban_errorMessageHasNoPlaceholders(self):
+        entry = WaitingListEntryFactory.create(
+            confirmation_link_key=uuid.uuid4(), member=None
+        )
+        mock_timezone(test=self, now=datetime.datetime(year=1997, month=3, day=30))
+        GrowingPeriodFactory.create(start_date=datetime.date(year=1997, month=1, day=1))
+
+        confirm_data = {
+            "entry_id": str(entry.id),
+            "link_key": str(entry.confirmation_link_key),
+            "account_owner": "John Doe",
+            "iban": "",
+            "sepa_allowed": True,
+            "contract_accepted": True,
+            "number_of_coop_shares": 2,
+            "payment_rhythm": "semiannually",
+            "solidarity_contribution": 0,
+            "association_membership_type_id": None,
+        }
+
+        response = self.client.post(
+            reverse("waiting_list:public_confirm_waiting_list_entry"),
+            data=json.dumps(confirm_data),
+            content_type="application/json",
+        )
+
+        self.assertEqual(200, response.status_code)
+        response_content = response.json()
+        self.assertFalse(response_content["order_confirmed"])
+        self.assertNotIn("%(", response_content["error"])

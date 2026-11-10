@@ -4,6 +4,8 @@ from tapir.bakery.solver.dataclasses import BreadInfo, PickupLocationInfo
 from tapir.bakery.solver.groups import (
     group_max_pieces,
     group_min_pieces,
+    limit_groups,
+    resolve_groups,
     stove_groups,
 )
 
@@ -22,6 +24,7 @@ def build_model(
     """
     model = cp_model.CpModel()
 
+    available_breads = resolve_groups(available_breads)
     bread_map = {b.bread_id: b for b in available_breads}
     bread_ids = list(bread_map.keys())
     total_deliveries = sum(loc.total_deliveries for loc in pickup_locations)
@@ -109,11 +112,9 @@ def build_model(
             lb = bread.fixed_pieces
             ub = bread.fixed_pieces
         else:
-            # C15 holds a grouped bread's minimum against its group's total.
-            if bread.min_pieces is None or b_id in grouped_bread_ids:
-                lb = 0
-            else:
-                lb = bread.min_pieces
+            # For a grouped bread these are its settings for the day; C15
+            # bounds the group's total.
+            lb = bread.min_pieces if bread.min_pieces is not None else 0
             ub = (
                 bread.max_pieces
                 if bread.max_pieces is not None
@@ -353,8 +354,9 @@ def build_model(
             if claims:
                 model.add(sum(claims) <= distribution_vars[b_id, loc.location_id])
 
-    # C15: Every grouped bread's min/max bounds its group's total
-    for members in groups.values():
+    # C15: Every grouped bread's own min/max (not the day's) bounds its
+    #      group's total, a fixed amount outside the oven included
+    for members in limit_groups(available_breads).values():
         group_total = sum(total_baked[b.bread_id] for b in members)
         group_min = group_min_pieces(members)
         group_max = group_max_pieces(members)
@@ -374,6 +376,10 @@ def build_model(
     # stations: a group's layer is shared to save waste or to give members
     # their favourite, but variety alone only pays for it when the extra bread
     # reaches more than 5 stations, so the bakers don't get single-loaf splits.
+    #
+    # The spread is not part of it: _run_solver minimises it in a second solve
+    # that keeps this objective at its best value, so it only chooses among
+    # otherwise equal plans.
 
     SESSIONS_W = 10_000_000
     SPANNING_W = 1_000_000
@@ -404,8 +410,25 @@ def build_model(
         for sess in range(max_sessions)
         for lay in range(stove_layers)
     )
+    # The spread: every station's count of every bread, squared. With a
+    # station's total fixed it is smallest when its loaves are shared out
+    # evenly, so middle counts win over 15 of one bread and 1 of the rest.
+    # count² is the line through (k, k²) and (k + 1, (k + 1)²) for every k:
+    # minimised, the square sits on the highest of them, which is count²
+    # exactly at whole counts, and the LP relaxation stays tight.
+    deliveries = {loc.location_id: loc.total_deliveries for loc in pickup_locations}
+    squares = []
+    for (b_id, loc_id), count in distribution_vars.items():
+        # C7 caps a count at the station's deliveries, and a capacity can be
+        # far larger.
+        max_count = min(capacities.get((b_id, loc_id), 0), deliveries[loc_id])
+        square = model.new_int_var(0, max_count * max_count, f"sq_{b_id}_{loc_id}")
+        for k in range(max_count):
+            model.add(square >= (2 * k + 1) * count - k * (k + 1))
+        squares.append(square)
+    total_spread = sum(squares)
 
-    model.maximize(
+    main_objective = (
         -SESSIONS_W * total_sessions
         - SPANNING_W * total_spanning
         + PREFERENCE_W * total_members_satisfied
@@ -413,6 +436,7 @@ def build_model(
         + VARIETY_W * total_variety
         - SHARING_W * total_sharing
     )
+    model.maximize(main_objective)
 
     vars_dict = {
         "bread_map": bread_map,
@@ -432,6 +456,8 @@ def build_model(
         "member_satisfied": member_satisfied,
         "valid_member_prefs": valid_member_prefs,
         "total_member_prefs": len(valid_member_prefs),
+        "main_objective": main_objective,
+        "spread": total_spread,
     }
     return model, vars_dict
 

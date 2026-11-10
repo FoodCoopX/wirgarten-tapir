@@ -600,7 +600,7 @@ class WaitingListCreateEntryExistingMemberView(APIView):
                 OrderConfirmationResponseSerializer(
                     {
                         "order_confirmed": False,
-                        "error": error.message,
+                        "error": ",".join(error.messages),
                         "redirect_url": None,
                     }
                 ).data
@@ -852,7 +852,7 @@ class PublicConfirmWaitingListEntryView(APIView):
         except ValidationError as error:
             return Response(
                 OrderConfirmationResponseSerializer(
-                    {"order_confirmed": False, "error": error.message}
+                    {"order_confirmed": False, "error": ",".join(error.messages)}
                 ).data
             )
 

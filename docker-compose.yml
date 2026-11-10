@@ -25,6 +25,8 @@ services:
         - |
           bash -c "{ printf 'HEAD /health/ready HTTP/1.0\r\n\r\n' >&0; grep 'HTTP/1.0 200'; } 0<>/dev/tcp/localhost/9000"
       interval: 10s
+      start_period: 120s
+      start_interval: 1s
       timeout: 5s
       retries: 30
     ports:
@@ -50,6 +52,8 @@ services:
         - |
           bash -c "{ printf 'GET / HTTP/1.0\r\n\r\n' >&0; grep 'HTTP/1.1 [23][0-9][0-9]'; } 0<>/dev/tcp/localhost/8000"
       interval: 10s
+      start_period: 120s
+      start_interval: 1s
       timeout: 5s
       retries: 30
     volumes:
@@ -73,6 +77,8 @@ services:
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready --dbname tapir --username tapir" ]
       interval: 10s
+      start_period: 120s
+      start_interval: 1s
       timeout: 5s
       retries: 30
     # volumes:
@@ -138,7 +144,6 @@ services:
   # instead of delivering it, so nothing escapes to real inboxes.
   mailpit:
     image: axllent/mailpit:latest
-    restart: unless-stopped
     environment:
       # - MP_DATABASE=/db/mailpit.db
       - MP_SMTP_AUTH_ALLOW_INSECURE=true

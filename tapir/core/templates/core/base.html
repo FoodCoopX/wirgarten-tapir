@@ -20,8 +20,6 @@
         <link rel="stylesheet"
               href="{% static 'core/css/selectize.default.min.css' %}" />
         {% get_parameter_value_tag "organisation.theme" cache as theme %}
-        <link rel="stylesheet"
-              href="{% static 'core/themes/'|add:theme|add:'/css/custom.css' %}" />
         <link rel="shortcut icon"
               type="image/png"
               href="{% static 'core/themes/'|add:theme|add:'/favicon.ico' %}" />
@@ -40,12 +38,14 @@
         {% vite_hmr_client %}
         {% vite_react_refresh %}
         {% block head %}{% endblock %}
+        <link rel="stylesheet"
+              href="{% static 'core/themes/'|add:theme|add:'/css/custom.css' %}" />
     </head>
     <body>
         <div id="page-content">
             <nav class="navbar navbar-expand-sm navbar-dark bg-dark sticky-top shadow px-3">
                 <span class="navbar-brand">
-                    <img alt="Wirgarten Logo"
+                    <img alt="{% get_parameter_value_tag 'wirgarten.site.name' cache %}"
                          height="30"
                          src="{% static 'core/themes/'|add:theme|add:'/images/Logo_white.webp' %}">
                 </span>

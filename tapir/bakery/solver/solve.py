@@ -14,6 +14,9 @@ from tapir.bakery.solver.solver_model import build_model, extract_solution
 
 # The solver preview view waits for the result inside the request.
 PREVIEW_TIME_LIMIT_SECONDS = 60
+# The second solve only evens out the spread, see _spread_evenly; it stops
+# after this, or earlier when the first one has used up the time limit.
+SPREAD_TIME_LIMIT_SECONDS = 5
 
 
 def _run_solver(
@@ -28,7 +31,8 @@ def _run_solver(
 ) -> tuple[list[dict], list[SolverDiagnostic], str]:
     """
     status_str is one of 'optimal', 'feasible', 'infeasible', 'error',
-    'no_data', 'no_solutions'.
+    'no_data', 'no_solutions'. 'optimal' refers to the plan itself; the even
+    spread of _spread_evenly afterwards is best effort within its time limit.
     """
     diagnostics: list[SolverDiagnostic] = []
 
@@ -106,7 +110,9 @@ def _run_solver(
     def make_extractor(vd):
         def extract(callback):
             sol = extract_solution(callback.value, vd)
-            sol["objective"] = callback.objective_value
+            # The plan's own objective; the second solve optimises the spread.
+            sol["objective"] = callback.value(vd["main_objective"])
+            sol["spread"] = callback.value(vd["spread"])
             return sol
 
         return extract
@@ -152,7 +158,14 @@ def _run_solver(
     if not collector.solutions:
         return [], diagnostics, "no_solutions"
 
-    solutions = collector.get_best_solutions()
+    spread_time = min(SPREAD_TIME_LIMIT_SECONDS, time_limit_seconds - solver.wall_time)
+    solutions = []
+    if spread_time >= 1:
+        solutions = _spread_evenly(
+            model, v, solver, make_extractor(v), max_solutions, spread_time
+        )
+    if not solutions:
+        solutions = collector.get_best_solutions()
 
     if not solutions:
         return [], diagnostics, "no_solutions"
@@ -160,6 +173,41 @@ def _run_solver(
     result_status = "optimal" if solve_status == cp_model.OPTIMAL else "feasible"
 
     return solutions, diagnostics, result_status
+
+
+def _spread_evenly(
+    model: cp_model.CpModel,
+    v: dict,
+    solver: cp_model.CpSolver,
+    extract,
+    max_solutions: int,
+    time_limit_seconds: float,
+) -> list[dict]:
+    """
+    The second solve: keeps the first one's best objective, starts from its
+    plan and looks only for a more even spread of the loaves over the
+    stations. Together the two cannot be proven optimal in the time the
+    preview has, while the first alone is quick. Returns nothing when no plan
+    is found in time.
+
+    It keeps the first objective's weighted sum, not each of its terms: an
+    equally good plan can trade one term against another. It changes the
+    model in place (hints, a constraint, the objective).
+    """
+    for index in range(len(model.proto.variables)):
+        var = model.get_int_var_from_proto_index(index)
+        model.add_hint(var, solver.value(var))
+    model.add(v["main_objective"] >= round(solver.objective_value))
+    model.maximize(-v["spread"])
+
+    spread_solver = cp_model.CpSolver()
+    spread_solver.parameters.max_time_in_seconds = time_limit_seconds
+    spread_solver.parameters.num_workers = 8
+    spread_solver.parameters.log_search_progress = settings.DEBUG
+
+    collector = BreadSolutionCollector(max_solutions, extract)
+    spread_solver.solve(model, collector)
+    return collector.get_best_solutions()
 
 
 def solve_bread_planning(

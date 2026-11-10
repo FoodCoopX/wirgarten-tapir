@@ -1,1 +1,1 @@
-export type TapirTheme = "l2g" | "biotop";
+export type TapirTheme = "l2g" | "biotop" | "gemuesekoop";

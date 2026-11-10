@@ -12,9 +12,15 @@ class BreadInfo:
     min_remaining_pieces: int  # minimum extra pieces beyond deliveries
     fixed_pieces: int | None = None  # if set, exactly this many must be baked
     # Breads with the same group_id share stove layers and min/max, see
-    # tapir.bakery.models.BreadGroup. A fixed_pieces bread stays outside.
+    # tapir.bakery.models.BreadGroup. A fixed_pieces bread counts toward its
+    # group, see resolve_groups.
     group_id: str | None = None
     group_name: str | None = None
+    # For a grouped bread, min_pieces/max_pieces hold only its settings for
+    # the day and bound the bread alone; these hold its values from the bread
+    # itself, which bound the group's total. See resolve_groups.
+    group_min_pieces: int | None = None
+    group_max_pieces: int | None = None
 
 
 @dataclass

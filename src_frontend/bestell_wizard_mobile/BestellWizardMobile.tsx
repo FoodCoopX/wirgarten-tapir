@@ -28,6 +28,7 @@ import { getEmptyPersonalData } from "../bestell_wizard/utils/getEmptyPersonalDa
 import { getTestPersonalData } from "../bestell_wizard/utils/getTestPersonalData.ts";
 import { isAtLeastOneProductOrdered } from "../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
 import { isShoppingCartEmpty } from "../bestell_wizard/utils/isShoppingCartEmpty.ts";
+import { selectAllRequiredProductTypes } from "../bestell_wizard/utils/selectAllRequiredProductTypes.ts";
 import { sortProductTypes } from "../bestell_wizard/utils/sortProductTypes.ts";
 import { updateMinimumNumberOfShares } from "../bestell_wizard/utils/updateMinimumNumberOfShares.ts";
 import { updateProductsAndProductTypesOverCapacity } from "../bestell_wizard/utils/updateProductsAndProductTypesOverCapacity.ts";
@@ -169,6 +170,9 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     ])
       .then(([baseData, minNumberOfShares]) => {
         const newSettings = buildSettings(baseData);
+        if (waitingListEntryDetails) {
+          newSettings.forceWaitingList = false;
+        }
         setSettings(newSettings);
         setSettingsLoaded(true);
         setSelectedProductTypes(
@@ -259,9 +263,19 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
 
     setContractStartDate(selectedGrowingPeriod.contractStartDate);
 
-    if (waitingListEntryDetails === undefined) {
-      setSelectedProductTypes(
-        settings.introEnabled ? [] : selectedGrowingPeriod.productTypes,
+    if (waitingListEntryDetails !== undefined) {
+      return;
+    }
+
+    if (!settings.introEnabled) {
+      setSelectedProductTypes(selectedGrowingPeriod.productTypes);
+    } else if (investingMembership) {
+      setSelectedProductTypes([]);
+    } else {
+      selectAllRequiredProductTypes(
+        selectedGrowingPeriod.productTypes,
+        [],
+        setSelectedProductTypes,
       );
     }
   }, [selectedGrowingPeriod]);

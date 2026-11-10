@@ -1,0 +1,159 @@
+/* Gemüsekoop Köln e.V. — palette and typography from www.gemuesekoop.de. */
+@import url("fonts.css");
+
+:root {
+  --primary: #209d50;
+  --primary-hover: #18783d;
+  --secondary: #384e32;
+  --secondary-hover: #263b22;
+  --active-color: #e4f2e6;
+  --background: #f7f6f2;
+  --white: #fff;
+  --black: #1d231c;
+  --gk-neutral: #e1dfd9;
+  --gk-ink: #1d231c;
+  --gk-link: #176e38;
+  --bs-body-font-family: "Nunito Sans", Arial, sans-serif;
+  --bs-body-color: var(--gk-ink);
+  --bs-body-bg: var(--background);
+  --bs-primary: var(--primary);
+  --bs-primary-rgb: 32, 157, 80;
+  --bs-secondary: var(--secondary);
+  --bs-secondary-rgb: 56, 78, 50;
+  --bs-link-color: var(--gk-link);
+  --bs-link-color-rgb: 23, 110, 56;
+  --bs-link-hover-color: #104f28;
+  --bs-link-hover-color-rgb: 16, 79, 40;
+  --bs-border-color: var(--gk-neutral);
+  --bs-focus-ring-color: rgba(32, 157, 80, 0.25);
+}
+
+body {
+  font-family: var(--bs-body-font-family);
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--gk-ink);
+  background: var(--background);
+}
+
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
+  font-family: "Sansita", "Nunito Sans", sans-serif;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--gk-ink);
+}
+
+a { color: var(--gk-link); }
+a:hover { color: var(--bs-link-hover-color); }
+
+/* Keep the compact navigation and its sidebar aligned on small screens. */
+.navbar.bg-dark {
+  background-color: var(--gk-ink) !important;
+  flex-wrap: nowrap;
+  min-height: 64px;
+}
+.navbar-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0;
+}
+.navbar-brand img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  border-radius: 50%;
+  background: #fff;
+}
+.navbar-brand::after {
+  content: "Gemüsekoop Köln e.V.";
+  font: 700 1.125rem/1.2 "Sansita", sans-serif;
+  color: #fff;
+}
+.navbar-brand + div { min-width: 0; }
+.sidebar { padding-top: 64px; }
+.sidebar-sticky { height: calc(100vh - 64px); }
+.sidebar.bg-light { background-color: #eeede7 !important; }
+.sidebar .nav-link.active, .sidebar .nav-link:hover { color: var(--gk-link); }
+
+.card, .modal-content, .dropdown-menu, .list-group-item {
+  background-color: #fff;
+  border-color: var(--gk-neutral);
+}
+.card { border-radius: 12px; }
+.card-header { background-color: #eeede7; }
+.form-control, .form-select, .selectize-input {
+  background-color: #fff;
+  color: var(--gk-ink);
+}
+.form-control:focus, .form-select:focus, .selectize-input.focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 0.2rem rgba(32, 157, 80, 0.2);
+}
+.form-check-input:checked {
+  background-color: var(--gk-link);
+  border-color: var(--gk-link);
+}
+
+/* Dark green gives small white button labels adequate contrast. */
+.btn-primary {
+  --bs-btn-bg: #18783d;
+  --bs-btn-border-color: #18783d;
+  --bs-btn-hover-bg: #105e2e;
+  --bs-btn-hover-border-color: #105e2e;
+  --bs-btn-active-bg: #104f28;
+  --bs-btn-active-border-color: #104f28;
+  --bs-btn-disabled-bg: #18783d;
+  --bs-btn-disabled-border-color: #18783d;
+  --bs-btn-focus-shadow-rgb: 32, 157, 80;
+}
+.btn-outline-primary {
+  --bs-btn-color: var(--gk-link);
+  --bs-btn-border-color: var(--gk-link);
+  --bs-btn-hover-bg: #18783d;
+  --bs-btn-hover-border-color: #18783d;
+  --bs-btn-active-bg: #104f28;
+  --bs-btn-active-border-color: #104f28;
+  --bs-btn-disabled-color: var(--gk-link);
+  --bs-btn-disabled-border-color: var(--gk-link);
+  --bs-btn-focus-shadow-rgb: 32, 157, 80;
+}
+.btn-secondary { --bs-btn-focus-shadow-rgb: 56, 78, 50; }
+.btn-primary, .btn-secondary, .btn-outline-primary { font-weight: 700; }
+.text-primary { color: var(--gk-link) !important; }
+.nav-pills { --bs-nav-pills-link-active-bg: #18783d; }
+.pagination {
+  --bs-pagination-color: var(--gk-link);
+  --bs-pagination-hover-color: #104f28;
+  --bs-pagination-active-bg: #18783d;
+  --bs-pagination-active-border-color: #18783d;
+}
+.progress { --bs-progress-bar-bg: #18783d; }
+.table { --bs-table-bg: #fff; }
+.table thead { --bs-table-bg: #eeede7; }
+.dashboard-section-heading {
+  font-family: "Sansita", "Nunito Sans", sans-serif !important;
+  line-height: 1.25;
+}
+.dashboard-container > *, .dashboard-tile .card-body { min-width: 0; }
+.dashboard-tile canvas { max-width: 100%; }
+a:focus-visible, button:focus-visible {
+  outline: 3px solid var(--gk-link);
+  outline-offset: 3px;
+}
+.navbar a:focus-visible, .navbar button:focus-visible { outline-color: #fff; }
+
+@media (max-width: 700px) {
+  .navbar-brand::after { display: none; }
+}
+/* The shared dashboard assigns spans up to four columns, even on phones. */
+@media (max-width: 767px) {
+  .dashboard-container { grid-template-columns: minmax(0, 1fr); }
+  .dashboard-container > * { grid-area: auto / 1 / auto / -1 !important; }
+  .dashboard-section-heading { font-size: 1.4rem; }
+  .dashboard-tile .card-body { padding: 1rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .photo { animation: none; }
+}

@@ -231,8 +231,9 @@ class BreadsPerPickupLocationPerWeek(TapirModel):
 
 class BreadsToBakePerWeek(TapirModel):
     """
-    A bread with fixed_pieces occupies no stove layers, so its quantity cannot
-    be recovered by summing StoveSession.
+    A bread with fixed_pieces occupies no stove layers (unless it shares them
+    with its BreadGroup), so its quantity cannot be recovered by summing
+    StoveSession.
     """
 
     year = models.PositiveIntegerField()

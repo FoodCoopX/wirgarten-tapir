@@ -13,13 +13,13 @@
         <link rel="shortcut icon"
               type="image/png"
               href="{% static 'core/themes/'|add:theme|add:'/favicon.ico' %}" />
-        <link rel="stylesheet"
-              href="{% static 'core/themes/'|add:theme|add:'/css/custom.css' %}" />
         {% javascript_environment_variables %}
         {% vite_hmr_client %}
         {% vite_react_refresh %}
         {% vite_asset 'waiting_list/waiting_list_confirm_entry.tsx' %}
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet"
+              href="{% static 'core/themes/'|add:theme|add:'/css/custom.css' %}" />
         <script src="{% static 'core/bootstrap/5.3.8/js/bootstrap.bundle.min.js' %}"></script>
     </head>
     <body style="{{ body_style }}; width: 100dvw; height: 100dvh;">

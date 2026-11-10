@@ -14,7 +14,6 @@ services:
 
   mailman-core:
     image: maxking/mailman-core:rolling
-    restart: unless-stopped
     # volumes:
     #   - mailman-core:/opt/mailman
     stop_grace_period: 30s
@@ -37,7 +36,6 @@ services:
 
   mailman-web:
     image: maxking/mailman-web:rolling
-    restart: unless-stopped
     depends_on:
       mailman-db:
         condition: service_healthy

@@ -87,6 +87,12 @@ def collect_solver_input(
             fixed_pieces = specifics.fixed_pieces
             min_pieces = None
             max_pieces = None
+        elif b.group_id is not None:
+            # A grouped bread's own values bound its group, so only the day's
+            # settings bound the bread alone. resolve_groups falls back to its
+            # own values when it has no group that day.
+            min_pieces = specifics.min_pieces if specifics else None
+            max_pieces = specifics.max_pieces if specifics else None
         else:
             min_pieces = (
                 specifics.min_pieces
@@ -117,6 +123,8 @@ def collect_solver_input(
                 fixed_pieces=fixed_pieces,
                 group_id=b.group_id,
                 group_name=b.group.name if b.group else None,
+                group_min_pieces=b.min_pieces if b.group_id else None,
+                group_max_pieces=b.max_pieces if b.group_id else None,
             )
         )
 

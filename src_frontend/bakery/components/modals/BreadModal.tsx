@@ -399,6 +399,7 @@ export const BreadModal: React.FC<BreadModalProps> = ({
                   Brote einer Gruppe (z.B. aus einem Teig) können zusammen auf
                   einer Etage gebacken werden. Min. und Max. Stücke gelten dann
                   für alle am Backtag verfügbaren Brote der Gruppe zusammen.
+                  Tageseinstellungen gelten dagegen nur für das einzelne Brot.
                 </span>
                 <select
                   id="group"
