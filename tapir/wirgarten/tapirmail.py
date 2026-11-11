@@ -1,5 +1,6 @@
 from typing import Callable
 
+from django.conf import settings
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from tapir_mail.models import StaticSegment, StaticSegmentRecipient
@@ -8,6 +9,7 @@ from tapir_mail.service.token import register_tokens
 from tapir_mail.service.triggers import register_trigger
 from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
+from tapir.bakery.services.bread_mail_token_service import BreadMailTokenService
 from tapir.configuration.parameter import get_parameter_value
 from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.core.services.member_mail_token_service import MemberMailTokenService
@@ -85,6 +87,14 @@ def configure_mail_module():
 
 def _register_tokens():
     cache = {}
+    bakery_tokens = (
+        {
+            "Brote der Woche": BreadMailTokenService.breads_this_week,
+            "Brote der nächsten Woche": BreadMailTokenService.breads_next_week,
+        }
+        if settings.BAKERY_ENABLED
+        else {}
+    )
     register_tokens(
         user_tokens={
             "Vorname": "first_name",
@@ -144,6 +154,7 @@ def _register_tokens():
             "Verteilstation - Abholzeiten": PickupLocationMailTokenService.pickup_location_opening_times,
             "Newsletter - Verwaltungslink": NewsletterManagementLinkProvider.get_newsletter_management_link,
             TOKEN_FIRST_PICKUP_DATE: OrderConfirmationMailTokenBuilder.get_first_pickup_date_for_recipient,
+            **bakery_tokens,
         },
     )
 

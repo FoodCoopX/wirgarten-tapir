@@ -2,9 +2,15 @@ import datetime
 from decimal import Decimal
 from typing import Set
 
+
 from tapir.associations.models import (
     AssociationMembershipTypePrice,
     AssociationMembership,
+)
+from tapir.bakery.models import (
+    Bread,
+    BreadCapacityPickupLocation,
+    BreadDelivery,
 )
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.models import (
@@ -980,3 +986,46 @@ class TapirCache:
             key="coop_share_transaction_by_member_id",
             compute_function=compute,
         ).get(member_id, [])
+
+    @classmethod
+    def get_member_ids_with_bread_delivery_in_week(
+        cls, cache: dict, year: int, delivery_week: int
+    ) -> set[str]:
+        def compute():
+            deliveries = BreadDelivery.objects.filter(
+                year=year, delivery_week=delivery_week
+            )
+            return set(deliveries.values_list("subscription__member_id", flat=True))
+
+        member_ids_by_week = get_from_cache_or_compute(
+            cache, "member_ids_with_bread_delivery_by_week", lambda: {}
+        )
+        return get_from_cache_or_compute(
+            member_ids_by_week, (year, delivery_week), compute
+        )
+
+    @classmethod
+    def get_breads_with_capacity_by_pickup_location_id(
+        cls, cache: dict, year: int, delivery_week: int
+    ) -> dict[str, list[Bread]]:
+        def compute():
+            capacities = (
+                BreadCapacityPickupLocation.objects.filter(
+                    year=year, delivery_week=delivery_week, capacity__gt=0
+                )
+                .select_related("bread")
+                .prefetch_related("bread__contents__ingredient")
+                .order_by("bread__name")
+            )
+
+            breads_by_pickup_location_id = {}
+            for capacity in capacities:
+                breads_by_pickup_location_id.setdefault(
+                    capacity.pickup_location_id, []
+                ).append(capacity.bread)
+            return breads_by_pickup_location_id
+
+        breads_by_week = get_from_cache_or_compute(
+            cache, "breads_with_capacity_by_pickup_location_id_by_week", lambda: {}
+        )
+        return get_from_cache_or_compute(breads_by_week, (year, delivery_week), compute)

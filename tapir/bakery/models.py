@@ -111,6 +111,7 @@ class BreadContent(TapirModel):
 
     class Meta:
         unique_together = ("bread", "ingredient")
+        ordering = ["sort_order"]
 
     def __str__(self):
         return f"{self.bread.name} - {self.ingredient.name}"
