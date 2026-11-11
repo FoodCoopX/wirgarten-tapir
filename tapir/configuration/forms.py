@@ -1,4 +1,5 @@
 from django import forms
+from django.core.validators import MaxLengthValidator
 from django.forms import Textarea
 from django.utils.translation import gettext_lazy as _
 
@@ -53,7 +54,10 @@ def create_field(param: TapirParameter, cache: dict):
             help_text=help_text,
             required=False,
             initial=param_value,
-            validators=param_meta.validators,
+            validators=[
+                *param_meta.validators,
+                MaxLengthValidator(TapirParameter._meta.get_field("value").max_length),
+            ],
             widget=Textarea if param_meta.textarea else None,
             disabled=not param.enabled,
         )
