@@ -14728,7 +14728,6 @@ components:
           minLength: 1
         description_in_bestellwizard:
           type: string
-          minLength: 1
         url_of_image_in_bestellwizard:
           type: string
         capacity:
