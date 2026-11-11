@@ -56,7 +56,9 @@
       <div id="contract-tiles"
            data-show-cancellation-card="{{ subscriptionAutomaticRenewal }}"
            data-member-id="{{ object.pk }}"
-           data-show-contract-edit="{{ show_contract_edit }}">
+           data-show-contract-edit="{{ show_contract_edit }}"
+           data-contact-email="{{ contactEmail }}"
+           data-user-is-admin="{{ perms.accounts.manage }}">
         <div id="subscription_cards" data-member-id="{{ object.pk }}">
           {% include "wirgarten/member/loading_spinner.html" %}
         </div>

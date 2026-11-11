@@ -17,12 +17,16 @@ interface SubscriptionCardsProps {
   memberId: string;
   csrfToken: string;
   showContractEdit: boolean;
+  contactEmail: string;
+  adminVersion: boolean;
 }
 
 const SubscriptionCards: React.FC<SubscriptionCardsProps> = ({
   memberId,
   csrfToken,
   showContractEdit,
+  contactEmail,
+  adminVersion,
 }) => {
   const api = useApi(SubscriptionsApi, csrfToken);
   const [subscriptions, setSubscriptions] = useState<PublicSubscription[]>([]);
@@ -71,6 +75,8 @@ const SubscriptionCards: React.FC<SubscriptionCardsProps> = ({
               productType.id!,
             )}
             showContractEdit={showContractEdit}
+            contactEmail={contactEmail}
+            adminVersion={adminVersion}
           />
         ))
       )}

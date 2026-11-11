@@ -56,6 +56,8 @@ if (contractTilesElement) {
         showContractEdit={
           contractTilesElement.dataset.showContractEdit === "True"
         }
+        contactEmail={contractTilesElement.dataset.contactEmail!}
+        adminVersion={contractTilesElement.dataset.userIsAdmin === "True"}
       />
       {showCancellationCard && (
         <SubscriptionCancellationCard
