@@ -100,7 +100,9 @@ class TestExtendedProductViewPatch(TapirIntegrationTest):
     def test_patch_default_solidarityChoicesSaved(self):
         member = MemberFactory.create(is_superuser=True)
         self.client.force_login(member)
-        product = ProductFactory.create(solidarity_choices="")
+        product = ProductFactory.create(
+            solidarity_choices="", description_in_bestellwizard=""
+        )
         growing_period = GrowingPeriodFactory.create()
 
         data = {
@@ -112,7 +114,7 @@ class TestExtendedProductViewPatch(TapirIntegrationTest):
             "size": 1,
             "basket_size_equivalences": [],
             "growing_period_id": growing_period.id,
-            "description_in_bestellwizard": "test description",
+            "description_in_bestellwizard": "",
             "url_of_image_in_bestellwizard": "https://test.url.com",
             "capacity": 123,
             "min_coop_shares": 2,
@@ -130,3 +132,4 @@ class TestExtendedProductViewPatch(TapirIntegrationTest):
         self.assertStatusCode(response, 200)
         product.refresh_from_db()
         self.assertEqual("-10,0,10", product.solidarity_choices)
+        self.assertEqual("", product.description_in_bestellwizard)
