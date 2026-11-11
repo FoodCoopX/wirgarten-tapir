@@ -3,7 +3,6 @@ const init = (c_p_map_json, pe_c_map_json) => {
   activateCapacityList(c_p_map_json);
   activateProductList();
   manageButtons();
-  activateDetails();
 };
 
 const CLASS_ROW_ACTIVE = "table-active";
