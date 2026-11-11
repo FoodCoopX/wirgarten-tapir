@@ -56,3 +56,5 @@ through the matrix channel or by tagging me in issues or PRs.
   use {} and some use {{}}, we should be consistent.
 - We still use some of the legacy modals, they should be replaced with react components. The legacy modals have a bug
   where they shortly show an error before closing even if the operation succeeded.
+- The media library of the mail module should show where each media is used, and have the option to filter by unused
+  medias.
