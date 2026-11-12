@@ -58,11 +58,8 @@ const MemberProfileSolidarityContributionCard: React.FC<
         setUserCanSetLowerValue(response.userCanSetLowerValue);
         setUserCanUpdateContribution(response.userCanUpdateContribution);
       })
-      .catch(async (error) => {
-        await handleRequestError(
-          error,
-          "Fehler beim Laden des Solidarbeitrags.",
-        );
+      .catch((error) => {
+        handleRequestError(error, "Fehler beim Laden des Solidarbeitrags.");
       })
       .finally(() => setLoading(false));
   }, [memberId]);
@@ -108,11 +105,8 @@ const MemberProfileSolidarityContributionCard: React.FC<
         }
         setSolidarityContributions(result.contributions);
       })
-      .catch(async (error) => {
-        await handleRequestError(
-          error,
-          "Fehler beim Speichern des Solidarbeitrags.",
-        );
+      .catch((error) => {
+        handleRequestError(error, "Fehler beim Speichern des Solidarbeitrags.");
       })
       .finally(() => setLoading(false));
   }

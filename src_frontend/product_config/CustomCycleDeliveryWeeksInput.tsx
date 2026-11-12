@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Alert, Form, Spinner } from "react-bootstrap";
 import { DeliveriesApi, GrowingPeriod } from "../api-client";
-import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
-import { CustomCycleDeliveryWeeks } from "../types/CustomCycleDeliveryWeeks.ts";
 import TapirButton from "../components/TapirButton.tsx";
+import TapirHelpButton from "../components/TapirHelpButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
+import { CustomCycleDeliveryWeeks } from "../types/CustomCycleDeliveryWeeks.ts";
+import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
 import { getCsrfToken } from "../utils/getCsrfToken.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
-import TapirHelpButton from "../components/TapirHelpButton.tsx";
 import { getParameterFromUrl } from "./get_parameter_from_url.ts";
 
 interface CustomCycleDeliveryWeeksInputProps {
@@ -104,12 +104,9 @@ const CustomCycleDeliveryWeeksInput: React.FC<
           setDeliveryDates(response.customCycleDeliveryWeeksDates);
         }
       })
-      .catch(async (error) => {
+      .catch((error) => {
         if (error.cause?.name === "AbortError") return;
-        await handleRequestError(
-          error,
-          "Fehler beim Laden der Lieferung-Daten",
-        );
+        handleRequestError(error, "Fehler beim Laden der Lieferung-Daten");
       });
   }, [deliveryWeeks]);
 

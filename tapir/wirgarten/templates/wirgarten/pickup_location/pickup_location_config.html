@@ -16,8 +16,10 @@
     <div style="margin-top: 1em">
         <form method="get"
               class="card card-body py-2 mb-2 d-flex flex-row gap-2 align-items-center">
+            <label for="pickup_location_search" class="visually-hidden">Suche</label>
             <input type="text"
                    name="search"
+                   id="pickup_location_search"
                    value="{{ search }}"
                    placeholder="Suche..."
                    class="form-control"

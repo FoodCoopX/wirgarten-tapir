@@ -88,7 +88,7 @@ const PickupLocationEditBase: React.FC<PickupLocationEditBaseProps> = ({
           );
           return;
         }
-        await handleRequestError(
+        handleRequestError(
           error,
           "Fehler beim Löschen des Abholorts",
           setToastDatas,

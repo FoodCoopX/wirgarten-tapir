@@ -233,7 +233,7 @@ const PickupLocationEditModal: React.FC<PickupLocationEditModalProps> = ({
       .catch(async (error) => {
         const fieldErrors = await extractFieldErrors(error);
         if (fieldErrors === null) {
-          await handleRequestError(
+          handleRequestError(
             error,
             "Fehler beim Speichern des Abholorts",
             setToastDatas,

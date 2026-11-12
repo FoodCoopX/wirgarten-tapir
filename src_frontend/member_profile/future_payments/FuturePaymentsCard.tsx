@@ -52,8 +52,8 @@ const FuturePaymentsCard: React.FC<FuturePaymentsCardProps> = ({
           groupTransactionsByDueDate(extendedPayments, response.credits),
         );
       })
-      .catch(async (error) => {
-        await handleRequestError(
+      .catch((error) => {
+        handleRequestError(
           error,
           "Fehler beim Laden der Zahlungen",
           setToastDatas,

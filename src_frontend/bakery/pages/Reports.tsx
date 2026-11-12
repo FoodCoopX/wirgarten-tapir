@@ -102,7 +102,7 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
 
   const handleApplied = () => {
     // Keep the preview until the applied plan has loaded, otherwise the old plan flashes up.
-    loadSolverResults().then(() => setPreviewByDay({}));
+    void loadSolverResults().then(() => setPreviewByDay({}));
     loadAllPickupLists();
   };
 
@@ -136,7 +136,7 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
     setPickupListByDayByLocation({});
     setSelectedPickupLocationByDay({});
     setCheckedByDay({});
-    loadSolverResults();
+    void loadSolverResults();
     loadAllPickupLists();
   }, [year, week, initialDataLoaded, deliveryDays, allPickupLocations]);
 

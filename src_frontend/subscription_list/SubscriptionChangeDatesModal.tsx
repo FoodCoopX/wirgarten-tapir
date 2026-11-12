@@ -145,13 +145,12 @@ const SubscriptionChangeDatesModal: React.FC<
         setSubscription(subscription);
         setMemberId(subscription.member);
       })
-      .catch(
-        async (error) =>
-          await handleRequestError(
-            error,
-            "Fehler bei der Bestätigung der Bestellung",
-            setToastDatas,
-          ),
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler bei der Bestätigung der Bestellung",
+          setToastDatas,
+        ),
       )
       .finally(() => setMainDataLoading(false));
 
@@ -186,13 +185,12 @@ const SubscriptionChangeDatesModal: React.FC<
         );
         setSolidarityContributions(solidarityData.contributions);
       })
-      .catch(
-        async (error) =>
-          await handleRequestError(
-            error,
-            "Fehler bei der Laden der zusätzliche DAten",
-            setToastDatas,
-          ),
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler bei der Laden der zusätzliche DAten",
+          setToastDatas,
+        ),
       )
       .finally(() => setExtraDataLoading(false));
   }, [memberId, show]);
@@ -276,12 +274,9 @@ const SubscriptionChangeDatesModal: React.FC<
         setStartDate(response.startDate);
         setEndDate(response.endDate);
       })
-      .catch(async (error) => {
+      .catch((error) => {
         if (error.cause?.name === "AbortError") return;
-        await handleRequestError(
-          error,
-          "Fehler beim Laden der Lieferung-Daten",
-        );
+        handleRequestError(error, "Fehler beim Laden der Lieferung-Daten");
       });
   }
 
@@ -300,7 +295,9 @@ const SubscriptionChangeDatesModal: React.FC<
           <div>
             Aktuelle Vertragsdaten:
             <ul>
-              <li>Produkt: {formatSubscription(subscription as Subscription)}</li>
+              <li>
+                Produkt: {formatSubscription(subscription as Subscription)}
+              </li>
               <li>Start: {formatDateNumeric(subscription.startDate)}</li>
               <li>End: {formatDateNumeric(subscription.endDate)}</li>
               {memberData && (

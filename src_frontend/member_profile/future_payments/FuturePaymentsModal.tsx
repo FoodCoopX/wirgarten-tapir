@@ -116,8 +116,8 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
           groupTransactionsByDueDate(response.payments, response.credits),
         );
       })
-      .catch(async (error) => {
-        await handleRequestError(
+      .catch((error) => {
+        handleRequestError(
           error,
           "Fehler beim Laden der vergangenen Zahlungen",
           setToastDatas,

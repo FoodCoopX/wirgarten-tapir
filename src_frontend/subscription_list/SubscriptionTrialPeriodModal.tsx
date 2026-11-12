@@ -60,13 +60,12 @@ const SubscriptionTrialPeriodModal: React.FC<
           formatDateForInput(subscriptionData.trialEndDateOverride),
         );
       })
-      .catch(
-        async (requestError) =>
-          await handleRequestError(
-            requestError,
-            "Fehler beim Laden der Probezeit-Daten",
-            setToastDatas,
-          ),
+      .catch((requestError) =>
+        handleRequestError(
+          requestError,
+          "Fehler beim Laden der Probezeit-Daten",
+          setToastDatas,
+        ),
       )
       .finally(() => setLoading(false));
   }, [show, subscriptionId]);

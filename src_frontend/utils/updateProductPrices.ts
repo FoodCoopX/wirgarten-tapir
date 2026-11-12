@@ -36,9 +36,9 @@ export function updateProductPrices(
 
       setSettings({ ...settings });
     })
-    .catch(async (error) => {
+    .catch((error) => {
       if (error.cause?.name === "AbortError") return;
-      await handleRequestError(
+      handleRequestError(
         error,
         "Fehler beim Laden der Produkt-Preise",
         setToastDatas,

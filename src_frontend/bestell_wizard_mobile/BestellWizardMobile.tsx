@@ -590,8 +590,8 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
           },
         })
         .then(handleOrderResponse)
-        .catch(async (error) => {
-          await handleRequestError(
+        .catch((error) => {
+          handleRequestError(
             error,
             "Fehler bei der Bestätigung der Warteliste-Eintrag",
             setToastDatas,
@@ -654,8 +654,8 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
         },
       })
       .then(handleOrderResponse)
-      .catch(async (error) => {
-        await handleRequestError(
+      .catch((error) => {
+        handleRequestError(
           error,
           "Fehler bei der Bestätigung der Bestellung",
           setToastDatas,

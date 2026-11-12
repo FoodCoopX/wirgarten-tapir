@@ -442,8 +442,8 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
           setOrderLoading(false);
         }
       })
-      .catch(async (error) => {
-        await handleRequestError(
+      .catch((error) => {
+        handleRequestError(
           error,
           "Fehler beim Anpassen der Verträge",
           setToastDatas,
@@ -473,8 +473,8 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
           setOrderLoading(false);
         }
       })
-      .catch(async (error) => {
-        await handleRequestError(
+      .catch((error) => {
+        handleRequestError(
           error,
           "Fehler beim Erzeugen des Wartelisteneintrags",
           setToastDatas,

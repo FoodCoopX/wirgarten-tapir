@@ -4,12 +4,20 @@ import { ResponseError } from "../api-client";
 import { ToastData } from "../types/ToastData.ts";
 import { addToast } from "./addToast.ts";
 
-export async function handleRequestError(
+export function handleRequestError(
+  error: unknown,
+  errorMessage: string,
+  setToastDatas?: React.Dispatch<React.SetStateAction<ToastData[]>>,
+): void {
+  console.error(error);
+  void showError(error, errorMessage, setToastDatas);
+}
+
+async function showError(
   error: unknown,
   errorMessage: string,
   setToastDatas?: React.Dispatch<React.SetStateAction<ToastData[]>>,
 ) {
-  console.error(error);
   let text = "";
   if (error instanceof ResponseError) {
     text = await error.response.text().catch(() => "");
