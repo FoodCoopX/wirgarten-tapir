@@ -149,7 +149,7 @@
             const params = Tapir.getUrlParams();
 
             if (params.member) {
-                for (row of memberRows) {
+                for (const row of memberRows) {
                     if (row.id === `member-${params.member}`) {
                         row.classList.add('table-active');
                     } else {
@@ -157,11 +157,11 @@
                     }
                 }
 
-                for (btn of buttons) {
+                for (const btn of buttons) {
                     btn.disabled = false;
                 }
 
-                for (btn of trialDependentButtons) {
+                for (const btn of trialDependentButtons) {
                     if (params.trial === "true") {
                         btn.classList.add('btn-outline-warning')
                         btn.classList.remove('btn-outline-danger')

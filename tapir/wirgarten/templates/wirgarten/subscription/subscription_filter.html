@@ -110,7 +110,7 @@
 
             const rows = document.getElementsByClassName('entry-row');
             const buttons = document.getElementsByClassName('needs-contract');
-            for (row of rows) {
+            for (const row of rows) {
                 if (row.id === `entry-${params.contract}`) {
                     row.classList.add('table-active');
                 } else {
@@ -118,7 +118,7 @@
                 }
             }
 
-            for (btn of buttons) {
+            for (const btn of buttons) {
                 btn.disabled = !params.contract;
             }
         }

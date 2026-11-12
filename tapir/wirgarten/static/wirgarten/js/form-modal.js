@@ -40,7 +40,7 @@ const FormModal = {
       if (modalInfoContent) {
         modalInfoContent.innerText = info;
 
-        for (clazz of modalInfoContent.classList) {
+        for (const clazz of [...modalInfoContent.classList]) {
           if (clazz.startsWith("alert-")) {
             modalInfoContent.classList.remove(clazz);
           }
@@ -93,7 +93,7 @@ const FormModal = {
   },
 };
 
-MSG_HANDLERS = [
+const MSG_HANDLERS = [
   ["modal-close", FormModal.close],
   [
     "modal-save-successful",
