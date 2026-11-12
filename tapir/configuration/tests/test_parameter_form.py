@@ -1,6 +1,7 @@
 from django.test import override_settings
 
 from tapir.configuration.forms import ParameterForm
+from tapir.core.config import LEGAL_STATUS_ASSOCIATION
 from tapir.wirgarten.constants import ParameterCategory
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
@@ -31,3 +32,23 @@ class TestParameterForm(TapirIntegrationTest):
 
         self.assertFalse(form.is_valid())
         self.assertIn(ParameterKeys.SITE_NAME, form.errors)
+
+    def test_init_depositIncrement_isOnlyShownWhenHigherDepositsAreAllowed(self):
+        self._set_parameter(
+            ParameterKeys.ORGANISATION_LEGAL_STATUS, LEGAL_STATUS_ASSOCIATION
+        )
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_ENABLED, True)
+        self.assertNotIn(
+            ParameterKeys.ASSOCIATION_DEPOSIT_INCREMENT, ParameterForm().fields
+        )
+
+        for key in (
+            ParameterKeys.ASSOCIATION_DEPOSIT_ALLOW_LARGER_SIGNUP,
+            ParameterKeys.ASSOCIATION_DEPOSIT_ALLOW_MEMBER_INCREASE,
+        ):
+            with self.subTest(key=key):
+                self._set_parameter(key, True)
+                self.assertIn(
+                    ParameterKeys.ASSOCIATION_DEPOSIT_INCREMENT, ParameterForm().fields
+                )
+                self._set_parameter(key, False)
