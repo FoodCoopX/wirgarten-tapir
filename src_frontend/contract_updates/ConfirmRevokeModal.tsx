@@ -20,10 +20,17 @@ const ConfirmRevokeModal: React.FC<ConfirmRevokeModalProps> = ({
   loading,
   selectedChanges,
 }) => {
+  const hasCoopShares = Array.from(selectedChanges).some(
+    (change) => change.sharePurchases.length > 0,
+  );
+  const revokedItems = hasCoopShares
+    ? "Die ausgewählten Zeichnungen werden gelöscht."
+    : "Die ausgewählten Verträge werden gelöscht.";
+
   function buildRevokeConfirmationModalText() {
     return (
       <>
-        <p>Bist du sicher das du folgende Änderungen widerrufen willst?</p>
+        <p>Möchtest du die Änderungen für folgende Mitglieder widerrufen?</p>
         <ul>
           {Array.from(selectedChanges).map((change) => (
             <li key={change.member.id}>
@@ -52,9 +59,8 @@ const ConfirmRevokeModal: React.FC<ConfirmRevokeModalProps> = ({
             <Col>
               <h4 className={"card-subtitle"}>Widerrufen</h4>
               <p>
-                Wenn die Zeichnungen widerrufen werden bekommt das Mitglied eine
-                automatisiert Mail. Alle Verträge und Genossenschaftsanteile
-                werden aus der Datenbank gelöscht.
+                {revokedItems} Die betroffenen Mitglieder erhalten automatisch
+                eine E-Mail.
               </p>
               <div className={"d-flex justify-content-end"}>
                 <TapirButton
@@ -69,11 +75,8 @@ const ConfirmRevokeModal: React.FC<ConfirmRevokeModalProps> = ({
             <Col>
               <h4 className={"card-subtitle"}>Auf Warteliste verschieben</h4>
               <p>
-                Wenn die Zeichnungen auf der Warteliste verschoben werden,
-                bekommt das Mitglied keine automatisiert Mail. Alle Verträge und
-                Genossenschaftsanteile werden aus der Datenbank gelöscht, aber
-                einen Warteliste-Eintrag wird erzeugt der genau die Zeichnungen
-                entspricht.
+                {revokedItems} Tapir legt einen Wartelisteneintrag an und sendet
+                keine automatische E-Mail.
               </p>
               <div className={"d-flex justify-content-end"}>
                 <TapirButton

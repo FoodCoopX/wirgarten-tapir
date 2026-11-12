@@ -1,15 +1,16 @@
-import React, { useEffect, useState } from "react";
 import "dayjs/locale/de";
+import React, { useEffect, useState } from "react";
+import { Form, Modal, Spinner } from "react-bootstrap";
 import { CoopApi } from "../../api-client";
+import { isIbanValid } from "../../bestell_wizard/utils/isIbanValid.ts";
+import TapirButton from "../../components/TapirButton.tsx";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
-import { Form, Modal, Spinner } from "react-bootstrap";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
-import TapirButton from "../../components/TapirButton.tsx";
-import { isIbanValid } from "../../bestell_wizard/utils/isIbanValid.ts";
 
 interface MemberBankingDataModalProps {
   memberId: string;
+  sepaConsentLabel: string;
   csrfToken: string;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
   show: boolean;
@@ -18,6 +19,7 @@ interface MemberBankingDataModalProps {
 
 const MemberBankingDataModal: React.FC<MemberBankingDataModalProps> = ({
   memberId,
+  sepaConsentLabel,
   csrfToken,
   setToastDatas,
   show,
@@ -30,7 +32,6 @@ const MemberBankingDataModal: React.FC<MemberBankingDataModalProps> = ({
   const [showValidation, setShowValidation] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [organisationName, setOrganisationName] = useState("");
 
   useEffect(() => {
     if (!show) return;
@@ -42,7 +43,6 @@ const MemberBankingDataModal: React.FC<MemberBankingDataModalProps> = ({
       .then((response) => {
         setIban(response.iban);
         setAccountOwner(response.accountOwner);
-        setOrganisationName(response.organisationName);
       })
       .catch((error) =>
         handleRequestError(
@@ -126,11 +126,7 @@ const MemberBankingDataModal: React.FC<MemberBankingDataModalProps> = ({
                 id={"sepa_consent"}
                 isInvalid={showValidation && !sepaConsent}
                 isValid={showValidation && sepaConsent}
-                label={
-                  "Ich ermächtige die " +
-                  organisationName +
-                  ", die gezeichneten Geschäftsanteile sowie die monatlichen Beträge für den Ernteanteil und ggf. weitere Produkte mittels Lastschrift von meinem Bankkonto einzuziehen. Zugleich weise ich mein Kreditinstitut an, die gezogene Lastschrift einzulösen."
-                }
+                label={sepaConsentLabel}
               />
             </Form.Group>
           </Form>

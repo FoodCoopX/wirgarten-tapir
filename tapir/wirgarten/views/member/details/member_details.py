@@ -31,6 +31,7 @@ from tapir.subscriptions.services.subscription_price_calculator import (
 )
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.constants import Permission
+from tapir.wirgarten.forms.registration.payment_data import PaymentDataForm
 from tapir.wirgarten.models import (
     CoopShareTransaction,
     GrowingPeriod,
@@ -194,6 +195,9 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         )
 
         context["show_coop_shares"] = legal_status_is_cooperative(cache=cache)
+        context["sepa_consent_label"] = PaymentDataForm.get_sepa_consent_label(
+            cache=cache
+        )
         context["show_association_membership"] = legal_status_is_association(
             cache=cache
         ) and get_parameter_value(

@@ -192,6 +192,7 @@ if (domNodeBankData) {
   root.render(
     <MemberBankingDataBase
       memberId={domNodeBankData.dataset.memberId!}
+      sepaConsentLabel={domNodeBankData.dataset.sepaConsentLabel!}
       csrfToken={getCsrfToken()}
     />,
   );
