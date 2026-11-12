@@ -82,7 +82,6 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
 }) => {
   const [isOver18, setIsOver18] = useState(false);
   const [showValidation, setShowValidation] = useState(false);
-  const [controller, setController] = useState<AbortController>();
   const bestellWizardApi = useApi(BestellWizardApi, getCsrfToken());
 
   useEffect(() => {
@@ -96,37 +95,45 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
   }, [changesDisabled]);
 
   useEffect(() => {
-    if (changesDisabled) {
-      return;
-    }
-    if (controller) controller.abort();
-
-    if (!isEmailValid(personalData.email)) {
+    setEmailAddressAlreadyInUse(false);
+    if (changesDisabled || !isEmailValid(personalData.email)) {
+      setEmailAddressAlreadyInUseLoading(false);
       return;
     }
 
     setEmailAddressAlreadyInUseLoading(true);
-    const localController = new AbortController();
-    setController(localController);
+    const controller = new AbortController();
 
-    bestellWizardApi
+    void bestellWizardApi
       .bestellWizardApiIsEmailAddressValidRetrieve(
         { email: personalData.email },
-        { signal: localController.signal },
+        { signal: controller.signal },
       )
       .then((valid) => {
-        setEmailAddressAlreadyInUse(!valid);
+        if (!controller.signal.aborted) setEmailAddressAlreadyInUse(!valid);
       })
       .catch((error) => {
-        if (error.cause?.name === "AbortError") return;
+        if (controller.signal.aborted) return;
         handleRequestError(
           error,
           "Fehler beim Prüfen der Mail-Gültigkeit",
           setToastDatas,
         );
       })
-      .finally(() => setEmailAddressAlreadyInUseLoading(false));
-  }, [personalData.email, changesDisabled]);
+      .finally(() => {
+        if (!controller.signal.aborted)
+          setEmailAddressAlreadyInUseLoading(false);
+      });
+
+    return () => controller.abort();
+  }, [
+    bestellWizardApi,
+    changesDisabled,
+    personalData.email,
+    setEmailAddressAlreadyInUse,
+    setEmailAddressAlreadyInUseLoading,
+    setToastDatas,
+  ]);
 
   function validate() {
     setShowValidation(true);
@@ -137,6 +144,7 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
         emailAddressAlreadyInUse,
         settings.phoneNumberRequired,
       ) &&
+      !emailAddressAlreadyInUseLoading &&
       isOver18
     ) {
       goToNextStep();
@@ -203,9 +211,13 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
   function getExtraText(key: keyof PersonalData) {
     switch (key) {
       case "email":
-        return emailAddressAlreadyInUse && !emailAddressAlreadyInUseLoading
-          ? "Diese Email-Adresse ist schon vergeben"
-          : "";
+        return emailAddressAlreadyInUse && !emailAddressAlreadyInUseLoading ? (
+          <>
+            Diese E-Mail-Adresse ist schon vergeben. Falls du bereits ein Konto
+            hast, kannst du dich im Mitgliederbereich anmelden.{" "}
+            <a href="/">Zum Mitgliederbereich</a>
+          </>
+        ) : null;
       case "emailConfirm":
         return shouldShowEmailMismatchWarning(
           personalData.email,
