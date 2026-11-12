@@ -5031,4 +5031,4 @@ bakery = ["ortools"]
 [metadata]
 lock-version = "2.1"
 python-versions = "3.14.10"
-content-hash = "03e9dbd18482c59fae41c66f6556d02e7e4cbf72ecb84b43523895e5ccaf47eb"
+content-hash = "706e1846cb12bbf43c4a2ab4641dfc7455fc940108041783836c52e746a7fcd8"

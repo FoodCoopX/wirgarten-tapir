@@ -2,6 +2,7 @@ import io
 from dataclasses import dataclass, field
 from typing import Callable
 
+from django.core.management.base import OutputWrapper
 from django.db import transaction
 
 from tapir.utils.config import (
@@ -9,7 +10,6 @@ from tapir.utils.config import (
     MEMBER_IMPORT_STATUS_SKIPPED,
     MEMBER_IMPORT_STATUS_UPDATED,
 )
-from tapir.utils.exceptions import DryRunException
 from tapir.utils.services.member_importer import MemberImporter
 from tapir.utils.services.share_importer import ShareImporter
 from tapir.utils.services.subscription_importer import SubscriptionImporter
@@ -25,6 +25,22 @@ STATUS_FROM_IMPORTER = {
     MEMBER_IMPORT_STATUS_UPDATED: STATUS_UPDATED,
     MEMBER_IMPORT_STATUS_SKIPPED: STATUS_SKIPPED,
 }
+
+
+def import_shares(row, update_existing, dry_run, stdout):
+    return ShareImporter.import_shares_single_member(
+        row=row, update_existing=update_existing
+    )
+
+
+def import_subscription(row, update_existing, dry_run, stdout):
+    return SubscriptionImporter.import_subscription(
+        row=row, update_existing=update_existing
+    )
+
+
+def discarded_stdout() -> OutputWrapper:
+    return OutputWrapper(io.StringIO())
 
 
 @dataclass(frozen=True)
@@ -104,7 +120,7 @@ IMPORT_TYPES = {
         ImportType(
             key="shares",
             name="Genossenschaftsanteile",
-            importer=ShareImporter.import_shares_single_member,
+            importer=import_shares,
             required_columns=(
                 "Mitgliedsnummer",
                 "Bewegungsart (Z,Ü,K)",
@@ -123,7 +139,7 @@ IMPORT_TYPES = {
         ImportType(
             key="subscriptions",
             name="Verträge",
-            importer=SubscriptionImporter.import_subscription,
+            importer=import_subscription,
             required_columns=(
                 "Mitgliedernummer",
                 "product",
@@ -217,17 +233,10 @@ class DataImportService:
         if result.missing_columns:
             return result
 
-        keycloak_updates_before = MemberImporter.keycloak_updates_enabled
-        MemberImporter.keycloak_updates_enabled = not dry_run
-        try:
-            with transaction.atomic():
-                cls.import_rows(import_type, data, update_existing, result)
-                if dry_run or result.count(STATUS_ERROR):
-                    raise DryRunException()
-        except DryRunException:
-            pass
-        finally:
-            MemberImporter.keycloak_updates_enabled = keycloak_updates_before
+        with transaction.atomic():
+            cls.import_rows(import_type, data, update_existing, dry_run, result)
+            if dry_run or result.count(STATUS_ERROR):
+                transaction.set_rollback(True)
         return result
 
     @classmethod
@@ -236,6 +245,7 @@ class DataImportService:
         import_type: ImportType,
         data: TabularData,
         update_existing: bool,
+        dry_run: bool,
         result: ImportResult,
     ):
         for index, row in enumerate(data.rows):
@@ -250,7 +260,10 @@ class DataImportService:
             try:
                 with transaction.atomic():
                     status = import_type.importer(
-                        row=row, update_existing=update_existing
+                        row=row,
+                        update_existing=update_existing,
+                        dry_run=dry_run,
+                        stdout=discarded_stdout(),
                     )
                 result.rows.append(
                     RowResult(
