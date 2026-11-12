@@ -56,7 +56,7 @@ class PreferenceSatisfactionService:
             (d.bread_id, d.pickup_location_id): d.count for d in distribution_qs
         }
 
-        bread_ids = set(d.bread_id for d in deliveries if d.bread_id)
+        bread_ids = {d.bread_id for d in deliveries if d.bread_id}
         bread_ids.update(bread_id for bread_id, _ in distributed_breads_lookup.keys())
         bread_map = {b.id: b for b in Bread.objects.filter(id__in=bread_ids)}
 

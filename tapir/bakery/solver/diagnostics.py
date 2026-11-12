@@ -495,7 +495,6 @@ def diagnose_infeasibility(
         total_cap = sum(
             capacities.get((b.bread_id, loc.location_id), 0) for loc in pickup_locations
         )
-        fixed = total_fixed_demand.get(b.bread_id, 0)
         if b.min_pieces is not None and b.min_pieces > 0:
             min_to_deliver = b.min_pieces - (b.min_remaining_pieces or 0)
             if min_to_deliver > total_cap:

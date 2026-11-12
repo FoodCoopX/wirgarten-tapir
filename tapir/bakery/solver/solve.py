@@ -261,7 +261,7 @@ def solve_bread_planning_all(
     max_solutions: int = 10,
     member_preferences: list[dict] | None = None,
 ) -> dict:
-    solutions, diagnostics, status_str = _run_solver(
+    solutions, diagnostics, _ = _run_solver(
         available_breads=available_breads,
         pickup_locations=pickup_locations,
         capacities=capacities,

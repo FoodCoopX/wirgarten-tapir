@@ -25,7 +25,7 @@ class PreferredBreadStatisticsService:
         )
         deliveries = [d for ds in deliveries_by_location.values() for d in ds]
 
-        member_ids = list(set(d.subscription.member_id for d in deliveries))
+        member_ids = list({d.subscription.member_id for d in deliveries})
         total_members = len(member_ids)
 
         preferred_qs = PreferredBread.objects.filter(
@@ -45,7 +45,7 @@ class PreferredBreadStatisticsService:
             else:
                 members_without_preferences += 1
 
-        members_with_pref_entry = set(p.member_id for p in preferred_qs)
+        members_with_pref_entry = {p.member_id for p in preferred_qs}
         members_without_preferences += sum(
             1 for m_id in member_ids if m_id not in members_with_pref_entry
         )

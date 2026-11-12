@@ -211,7 +211,7 @@ def send_cancellation_confirmation_email(
     member_id = resolve_member_id(member)
     member = Member.objects.get(pk=member_id)
 
-    contract_list = f"{'<br/>'.join(map(lambda x: '- ' + str(x), subs_to_cancel))}"
+    contract_list = "<br/>".join(f"- {subscription}" for subscription in subs_to_cancel)
     if revoke_coop_membership:
         contract_list += "\n- " + MembershipTextService.get_membership_text(cache=cache)
 

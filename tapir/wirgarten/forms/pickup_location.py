@@ -46,7 +46,7 @@ def get_pickup_locations_map_data(
             f"{pickup_location.id}": pickup_location_to_dict(
                 location_capabilities, pickup_location, cache
             )
-            for pickup_location in list(pickup_locations)
+            for pickup_location in pickup_locations
         },
     )
 
@@ -196,18 +196,14 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
 
         selected_product_types = {
             product_type_name: sum(
-                map(
-                    lambda subscription: (
-                        float(
-                            get_product_price(
-                                subscription.product,
-                                cache=self.cache,
-                            ).size
-                        )
-                        * (subscription.quantity or 0)
-                    ),
-                    subscriptions,
+                float(
+                    get_product_price(
+                        subscription.product,
+                        cache=self.cache,
+                    ).size
                 )
+                * (subscription.quantity or 0)
+                for subscription in subscriptions
             )
             for product_type_name, subscriptions in initial["subs"].items()
             if subscriptions

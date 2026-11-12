@@ -398,7 +398,10 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
                     contract_end_date,
                     next_growing_period,
                     cache=cache,
-                    contract_list=f"{'<br/>'.join(map(lambda x: '- ' + str(x), future_subs))}<br/>",
+                    contract_list="<br/>".join(
+                        f"- {subscription}" for subscription in future_subs
+                    )
+                    + "<br/>",
                 ),
             },
             "no_capacity": {

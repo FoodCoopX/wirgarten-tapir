@@ -148,7 +148,6 @@ class OnboardingTrigger(Trigger[OnboardingTriggerData]):
 
     @classmethod
     def get_field_definitions(cls):
-        Choice = Trigger.DropdownFieldDefinition.Choice
         return [
             cls.FieldDefinition(
                 field_name="days_offset",
@@ -159,10 +158,15 @@ class OnboardingTrigger(Trigger[OnboardingTriggerData]):
                 field_name="delivery",
                 label="Nummer der Lieferung",
                 choices=[
-                    Choice(value=0, label="1ste Lieferung"),
-                    Choice(value=1, label="2te Lieferung"),
-                    Choice(value=2, label="3te Lieferung"),
-                    Choice(value=3, label="4te Lieferung"),
+                    Trigger.DropdownFieldDefinition.Choice(value=index, label=label)
+                    for index, label in enumerate(
+                        [
+                            "1ste Lieferung",
+                            "2te Lieferung",
+                            "3te Lieferung",
+                            "4te Lieferung",
+                        ]
+                    )
                 ],
             ),
         ]

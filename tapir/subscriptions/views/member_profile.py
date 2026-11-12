@@ -41,6 +41,7 @@ from tapir.subscriptions.services.subscription_update_view_validator import (
 )
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.utils.services.tapir_cache import TapirCache
+from tapir.utils.shortcuts import get_any_element
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import Member, GrowingPeriod
 from tapir.wirgarten.service.products import (
@@ -231,7 +232,9 @@ class MemberProfileCapacityCheckApiView(APIView):
                     cache=self.cache,
                 )
             ):
-                ids_of_product_types_over_capacity.append(list(order.keys())[0].type_id)
+                ids_of_product_types_over_capacity.append(
+                    get_any_element(order).type_id
+                )
 
         ids_of_products_over_capacity = []
         for product, quantity in order.items():

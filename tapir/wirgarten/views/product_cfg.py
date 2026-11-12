@@ -73,17 +73,15 @@ class ProductCfgView(PermissionRequiredMixin, generic.TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # growing periods
-        context["growing_periods"] = list(
-            map(
-                lambda growing_period: {
-                    "id": growing_period.id,
-                    "status": self.get_growing_period_status(growing_period),
-                    "start_date": growing_period.start_date,
-                    "end_date": growing_period.end_date,
-                },
-                GrowingPeriod.objects.all().order_by("-start_date"),
-            )
-        )
+        context["growing_periods"] = [
+            {
+                "id": growing_period.id,
+                "status": self.get_growing_period_status(growing_period),
+                "start_date": growing_period.start_date,
+                "end_date": growing_period.end_date,
+            }
+            for growing_period in GrowingPeriod.objects.all().order_by("-start_date")
+        ]
 
         product_prices_by_product_id = itertools.groupby(
             ProductPrice.objects.all().order_by("product__id", "-valid_from"),
@@ -119,34 +117,28 @@ class ProductCfgView(PermissionRequiredMixin, generic.TemplateView):
 
         context["pe_c_map"] = json.dumps(
             {
-                k: list(map(lambda c: c.id, v))
+                k: [capacity.id for capacity in v]
                 for k, v in itertools.groupby(
                     context["capacities"], lambda capacity: capacity.period.id
                 )
             }
         )
         c_p_map = {
-            capacity.id: list(
-                map(
-                    lambda x: x["id"],
-                    filter(
-                        lambda p: p["type_id"] == capacity.product_type.id
-                        and any(
-                            map(
-                                lambda ppi: ppi.valid_from < capacity.period.end_date,
-                                p["prices"],
-                            )
-                        ),
-                        context["products"],
-                    ),
+            capacity.id: [
+                product["id"]
+                for product in context["products"]
+                if product["type_id"] == capacity.product_type.id
+                and any(
+                    price.valid_from < capacity.period.end_date
+                    for price in product["prices"]
                 )
-            )
+            ]
             for capacity in context["capacities"]
         }
         context["c_p_map"] = json.dumps(c_p_map)
 
         context["tax_rates"] = {
-            k: round(float(list(v)[0].tax_rate) * 100.0, 1)
+            k: round(float(next(v).tax_rate) * 100.0, 1)
             for k, v in itertools.groupby(
                 TaxRate.objects.filter(product_type__in=ProductType.objects.all()),
                 lambda t: t.product_type.id,

@@ -3,7 +3,7 @@ import datetime
 import locale
 import os
 from contextlib import contextmanager
-from typing import Callable
+from typing import Callable, Iterable
 
 from django.shortcuts import redirect
 from django.utils import timezone
@@ -69,8 +69,8 @@ def is_running_tests():
     return "PYTEST_CURRENT_TEST" in os.environ
 
 
-def get_any_element_from_set(s: set):
-    return next(iter(s))
+def get_any_element(iterable: Iterable):
+    return next(iter(iterable))
 
 
 @contextmanager

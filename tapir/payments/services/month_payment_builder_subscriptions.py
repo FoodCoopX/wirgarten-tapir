@@ -29,7 +29,7 @@ from tapir.subscriptions.services.subscription_price_calculator import (
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.utils.services.date_range_overlap_checker import DateRangeOverlapChecker
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.utils.shortcuts import get_last_day_of_month, get_any_element_from_set
+from tapir.utils.shortcuts import get_last_day_of_month, get_any_element
 from tapir.wirgarten.constants import (
     NO_DELIVERY,
     WEEKLY,
@@ -132,7 +132,7 @@ class MonthPaymentBuilderSubscriptions:
             return False
 
         return (
-            get_any_element_from_set(subscriptions).product.type.delivery_cycle
+            get_any_element(subscriptions).product.type.delivery_cycle
             == CUSTOM_CYCLE[0]
         )
 

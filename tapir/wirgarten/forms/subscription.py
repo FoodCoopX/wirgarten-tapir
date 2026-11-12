@@ -325,13 +325,8 @@ class BaseProductForm(forms.Form):
             }
             harvest_share_strings.append(
                 ",".join(
-                    map(
-                        lambda p: BASE_PRODUCT_FIELD_PREFIX
-                        + p.name
-                        + ":"
-                        + str(prices[p.id]),
-                        harvest_share_products,
-                    )
+                    f"{BASE_PRODUCT_FIELD_PREFIX}{product.name}:{prices[product.id]}"
+                    for product in harvest_share_products
                 )
             )
         self.harvest_shares = ";".join(harvest_share_strings)
@@ -750,10 +745,7 @@ class AdditionalProductForm(forms.Form):
                 add_pickup_location_fields()
 
         self.prices = ",".join(
-            map(
-                lambda k: k + ":" + str(prices[self.products[k].id]),
-                self.products.keys(),
-            )
+            f"{key}:{prices[product.id]}" for key, product in self.products.items()
         )
 
     @transaction.atomic

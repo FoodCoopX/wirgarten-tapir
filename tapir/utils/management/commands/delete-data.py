@@ -93,10 +93,7 @@ class Command(BaseCommand):
                 print("DRY-RUN: Would delete mandate references: ", ref_list)
                 # check payments
                 for mr in ref_list:
-                    pres = Payment.objects.filter(mandate_ref_id=mr.ref)
-                    if pres:
-                        for p in pres:
-                            pay_list.append(p)
+                    pay_list.extend(Payment.objects.filter(mandate_ref_id=mr.ref))
                 print("DRY-RUN: Would delete payments: ", pay_list)
                 if not dry:
                     for p in pay_list:
@@ -109,11 +106,11 @@ class Command(BaseCommand):
                 return
             # now delete LogEntries
             try:
-                logEntries = LogEntry.objects.filter(member_id=m_id)
+                log_entries = LogEntry.objects.filter(member_id=m_id)
                 if dry:
-                    print("DRY-RUN: Would delete log entries: ", logEntries)
+                    print("DRY-RUN: Would delete log entries: ", log_entries)
                 else:
-                    res = logEntries.delete()
+                    res = log_entries.delete()
                     print("Deleted:", res)
             except Exception as e:
                 print(e)
@@ -126,4 +123,3 @@ class Command(BaseCommand):
                     print(f"Deleted member {m} with all dependent records.")
                 except Exception as e:
                     print(e)
-            return

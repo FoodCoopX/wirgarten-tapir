@@ -50,16 +50,14 @@ class PickupLocationCfgView(PermissionRequiredMixin, generic.TemplateView):
             "name"
         )
 
-        context["pickup_locations"] = list(
-            map(
-                lambda pickup_location: pickup_location_to_dict(
-                    location_capabilities=capabilities,
-                    pickup_location=pickup_location,
-                    cache=cache,
-                ),
-                pickup_locations,
+        context["pickup_locations"] = [
+            pickup_location_to_dict(
+                location_capabilities=capabilities,
+                pickup_location=pickup_location,
+                cache=cache,
             )
-        )
+            for pickup_location in pickup_locations
+        ]
 
         context["enable_delivery_charge"] = get_parameter_value(
             key=ParameterKeys.DELIVERY_CHARGE_PER_PICKUP_LOCATION_ENABLED, cache=cache
