@@ -23,6 +23,9 @@ class CsvExportBuilder:
         return ExportedFile.objects.create(
             name=cls.build_file_name(csv_export.file_name, reference_datetime, "csv"),
             type=ExportedFile.FileType.CSV,
+            requires_coop_manage=ExportSegmentManager.get_segment_by_id(
+                csv_export.export_segment_id
+            ).requires_coop_manage,
             file=bytes(
                 cls.build_csv_export_string(csv_export, reference_datetime), "utf-8"
             ),

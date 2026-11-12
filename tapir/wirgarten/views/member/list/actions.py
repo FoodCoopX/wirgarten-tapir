@@ -2,6 +2,7 @@ import csv
 import mimetypes
 
 from django.contrib.auth.decorators import permission_required
+from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db.models import Count, Max, Q, Sum
 from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse_lazy
@@ -12,6 +13,9 @@ from django.views.generic import View
 from tapir.accounts.services.email_verification_service import EmailVerificationService
 from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
 from tapir.associations.models import AssociationMembership
+from tapir.associations.services.association_deposit_overview_provider import (
+    AssociationDepositOverviewProvider,
+)
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.core.services.organisation_entry_date_annotator import (
@@ -289,17 +293,24 @@ def export_coop_member_list(request, **kwargs):
     return response
 
 
-class ExportMembersView(View):
+class ExportMembersView(PermissionRequiredMixin, View):
+    permission_required = Permission.Accounts.VIEW
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.cache = {}
 
     def get(self, request, *args, **kwargs):
         # Get queryset based on filters and ordering
-        filter_class = MemberFilter
-        queryset = filter_class(request.GET, queryset=self.get_queryset()).qs.order_by(
-            "member_no"
+        show_deposits = AssociationDepositOverviewProvider.can_view(
+            request.user, self.cache
         )
+        queryset = MemberFilter(
+            request.GET,
+            queryset=self.get_queryset(),
+            cache=self.cache,
+            show_deposits=show_deposits,
+        ).qs.order_by("member_no")
 
         # Create response object with CSV content
         response = HttpResponse(content_type="text/csv")
@@ -327,6 +338,11 @@ class ExportMembersView(View):
                 "Abholort",
                 "Solidarbeitrag",
             ]
+            + (
+                ["Vereinseinlage vereinbart (€)", "Vereinseinlage exportiert (€)"]
+                if show_deposits
+                else []
+            )
         )
 
         for member in queryset:
@@ -364,6 +380,14 @@ class ExportMembersView(View):
                         or 0
                     ),
                 ]
+                + (
+                    [
+                        format_currency(member.deposit_agreed),
+                        format_currency(member.deposit_exported),
+                    ]
+                    if show_deposits
+                    else []
+                )
             )
 
         return response
