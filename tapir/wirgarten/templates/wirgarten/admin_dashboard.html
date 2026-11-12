@@ -37,25 +37,25 @@
         </div>
     {% else %}
         <div class="dashboard-container">
-            <div class="dashboard-section-heading">Umsatz- und Vertriebsdaten aktuelle Vertragslaufzeit</div>
+            <div class="dashboard-section-heading">Aktuelle Vertragsperiode</div>
             <div title="Kapazitäten/Auslastung in der aktuellen Vertragslaufzeit"
                  class="dashboard-tile card capacity-tile clickable">
                 <div class="card-body">
-                    <h4>Aktuelle Kapazitäten/Auslastung</h4>
+                    <h4>Kapazitäten und Auslastung</h4>
                     <b>zum {{ next_contract_start_date|format_date }}</b>
                     <canvas height="10000px" width="10000px" id="product-capacity-chart"></canvas>
                 </div>
             </div>
             <div class="dashboard-tile card capacity-tile clickable">
                 <div class="card-body">
-                    <h4>Vertriebskanalerfolg</h4>
+                    <h4>Anmeldungen nach Quelle</h4>
                     <canvas height="10000px" width="10000px" id="traffic-source-chart"></canvas>
                 </div>
             </div>
             <div class="dashboard-tile card harvest-share-variants-tile clickable">
                 <a href="{% url 'wirgarten:product' %}">
                     <div class="card-body">
-                        <h4>Top Ernteanteile Varianten</h4>
+                        <h4>Ernteanteile nach Variante</h4>
                         <canvas id="harvest-share-variants-chart"></canvas>
                     </div>
                 </a>
@@ -80,7 +80,7 @@
                         {% if solidarity_overplus > 0 %}+{% endif %}
                         <strong>{{ solidarity_overplus|format_currency }}</strong> €
                     </div>
-                    <small><strong>Solidar Überschuss</strong> / Monat</small>
+                    <small><strong>Monatlicher Solidarüberschuss</strong></small>
                 </div>
             </div>
     {% endif %}
@@ -96,7 +96,7 @@
     {% if next_capacity_labels %}
         <div class="dashboard-section-heading">
             <hr/>
-            Daten für die kommende Saison/Vertragslaufzeit
+            Kommende Vertragsperiode
         </div>
         <div class="dashboard-tile card capacity-tile clickable">
             <div class="card-body">
@@ -127,9 +127,9 @@
         <div class="dashboard-tile card harvest-share-variants-tile"
              style="grid-column: 1 / -1">
             <div class="card-body">
-                <h4>Cashflow Forecast</h4>
+                <h4>Cashflow-Prognose</h4>
                 <canvas style="max-height:20em" id="cashflow-forecast-chart"></canvas>
-                <h3 id="cashflow-loading">Loading...</h3>
+                <h3 id="cashflow-loading">Wird geladen …</h3>
             </div>
         </div>
         {% if show_cooperative_content %}
