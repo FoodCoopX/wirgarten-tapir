@@ -12,6 +12,11 @@
  * Do not edit the class manually.
  */
 
+import type { AssociationDepositPaymentOptionEnum } from "./AssociationDepositPaymentOptionEnum";
+import {
+  AssociationDepositPaymentOptionEnumFromJSON,
+  AssociationDepositPaymentOptionEnumToJSON,
+} from "./AssociationDepositPaymentOptionEnum";
 import type { DeliveryAddressRequest } from "./DeliveryAddressRequest";
 import {
   DeliveryAddressRequestFromJSON,
@@ -65,6 +70,18 @@ export interface BestellWizardConfirmOrderRequestRequest {
    * @memberof BestellWizardConfirmOrderRequestRequest
    */
   statuteAccepted: boolean;
+  /**
+   *
+   * @type {number}
+   * @memberof BestellWizardConfirmOrderRequestRequest
+   */
+  associationDepositAmount?: number | null;
+  /**
+   *
+   * @type {AssociationDepositPaymentOptionEnum}
+   * @memberof BestellWizardConfirmOrderRequestRequest
+   */
+  associationDepositPaymentOption?: AssociationDepositPaymentOptionEnum;
   /**
    *
    * @type {number}
@@ -239,6 +256,16 @@ export function BestellWizardConfirmOrderRequestRequestFromJSONTyped(
     sepaAllowed: json["sepa_allowed"],
     contractAccepted: json["contract_accepted"],
     statuteAccepted: json["statute_accepted"],
+    associationDepositAmount:
+      json["association_deposit_amount"] == null
+        ? undefined
+        : json["association_deposit_amount"],
+    associationDepositPaymentOption:
+      json["association_deposit_payment_option"] == null
+        ? undefined
+        : AssociationDepositPaymentOptionEnumFromJSON(
+            json["association_deposit_payment_option"],
+          ),
     numberOfCoopShares: json["number_of_coop_shares"],
     payCoopSharesInInstalments:
       json["pay_coop_shares_in_instalments"] == null
@@ -286,6 +313,11 @@ export function BestellWizardConfirmOrderRequestRequestToJSONTyped(
     sepa_allowed: value["sepaAllowed"],
     contract_accepted: value["contractAccepted"],
     statute_accepted: value["statuteAccepted"],
+    association_deposit_amount: value["associationDepositAmount"],
+    association_deposit_payment_option:
+      AssociationDepositPaymentOptionEnumToJSON(
+        value["associationDepositPaymentOption"],
+      ),
     number_of_coop_shares: value["numberOfCoopShares"],
     pay_coop_shares_in_instalments: value["payCoopSharesInInstalments"],
     pickup_location_ids: value["pickupLocationIds"],

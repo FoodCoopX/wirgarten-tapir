@@ -7,8 +7,8 @@ import { formatCurrency } from "../../utils/formatCurrency.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
 import TapirCheckbox from "../components/TapirCheckbox.tsx";
 import "../utils/flexColOnSmallScreen.css";
-import { scrollIntoView } from "../utils/scrollIntoView.ts";
 import { getVisibleAssociationMembershipTypes } from "../utils/getVisibleAssociationMembershipTypes.ts";
+import { scrollIntoView } from "../utils/scrollIntoView.ts";
 
 interface Step6BAssociationMembershipsProps {
   goToNextStep: () => void;

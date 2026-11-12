@@ -2,6 +2,7 @@ import dayjs from "dayjs";
 import React from "react";
 import { Accordion, AccordionBody } from "react-bootstrap";
 import {
+  AssociationDepositPaymentOptionEnum,
   AssociationMembershipType,
   DeliveryAddressRequest,
   PublicGrowingPeriod,
@@ -41,6 +42,8 @@ import { scrollIntoView } from "../utils/scrollIntoView.ts";
 import { willBecomeMemberNow } from "../utils/willBecomeMemberNow.ts";
 
 interface Step10OrderSummaryProps {
+  associationDepositAmount?: number | null;
+  associationDepositPaymentOption?: AssociationDepositPaymentOptionEnum;
   settings: BestellWizardSettings;
   shoppingCart: ShoppingCart;
   numberOfCoopShares: number;
@@ -86,6 +89,8 @@ const PaymentRow: React.FC<{
 );
 
 const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
+  associationDepositAmount,
+  associationDepositPaymentOption,
   settings,
   shoppingCart,
   numberOfCoopShares,
@@ -113,6 +118,12 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
   setCurrentStep,
   deliveryAddress,
 }) => {
+  const depositSummary =
+    associationDepositPaymentOption ===
+    AssociationDepositPaymentOptionEnum.IndividualAgreement
+      ? "Individuelle Vereinbarung offen – noch kein Einzug"
+      : `${formatCurrency(associationDepositAmount ?? 0)} als Einmalzahlung`;
+
   function getRelevantPickupLocation(): PublicPickupLocation | undefined {
     if (waitingListEntryDetails === undefined) {
       return getFirstPickupLocationWithCapacity(
@@ -417,6 +428,26 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
       );
     }
 
+    if (associationDepositAmount != null) {
+      segments.push(
+        <PaymentRow
+          key="deposit"
+          label={`${settings.associationDeposit.name} (einmalig)`}
+          amount={associationDepositAmount}
+        />,
+      );
+    }
+    if (
+      associationDepositPaymentOption ===
+      AssociationDepositPaymentOptionEnum.IndividualAgreement
+    ) {
+      segments.push(
+        <p key="deposit-pending">
+          {settings.associationDeposit.name}: Individuelle Vereinbarung offen.
+          Noch kein Gesamtbetrag und kein Einzug vereinbart.
+        </p>,
+      );
+    }
     if (monthlyPayments.length > 0) {
       segments.push(
         <>
@@ -631,6 +662,20 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                         associationMembershipType,
                         contractStartDate,
                       )}
+                    </li>
+                  )}
+                  {(associationDepositAmount != null ||
+                    associationDepositPaymentOption ===
+                      AssociationDepositPaymentOptionEnum.IndividualAgreement) && (
+                    <li>
+                      {settings.associationDeposit.name}: {depositSummary}
+                      <TapirButton
+                        variant={BUTTON_VARIANT}
+                        size="sm"
+                        text="Einlage anpassen"
+                        icon="edit"
+                        onClick={() => setCurrentStep("6d_association_deposit")}
+                      />
                     </li>
                   )}
                   {getVisibleAssociationMembershipTypes(

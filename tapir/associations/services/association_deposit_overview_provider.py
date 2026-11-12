@@ -55,6 +55,7 @@ class AssociationDepositOverviewProvider:
         deposits = AssociationDeposit.objects.filter(membership_id=membership_id)
         exported = deposits.filter(payment__transaction__isnull=False)
         return queryset.annotate(
+            deposit_agreement_requested=Exists(deposits.filter(payment=None)),
             deposit_agreed=Coalesce(
                 Subquery(
                     deposits.order_by()

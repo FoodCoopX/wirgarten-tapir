@@ -39,7 +39,7 @@ class AssociationDepositPaymentCreator:
         )
         existing = AssociationDeposit.objects.filter(membership=membership).first()
         if existing is not None:
-            if existing.payment.amount != amount:
+            if existing.payment is None or existing.payment.amount != amount:
                 raise ValidationError(
                     "Für diese Mitgliedschaft wurde bereits eine Einlage vereinbart."
                 )

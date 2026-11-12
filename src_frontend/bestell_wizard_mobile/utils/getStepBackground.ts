@@ -20,6 +20,7 @@ export function getStepBackground(
     case "5d_home_delivery_choice":
       return settings.images.step5BackgroundImage;
     case "6a_coop_intro":
+    case "6d_association_deposit":
     case "6b_coop_shares":
       return settings.images.step6BackgroundImage;
     case "7_solidarity_contribution":

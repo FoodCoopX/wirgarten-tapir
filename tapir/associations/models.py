@@ -59,7 +59,7 @@ class AssociationDeposit(TapirModel):
         related_name="deposit",
     )
     payment = models.OneToOneField(
-        Payment, on_delete=models.CASCADE, related_name="association_deposit"
+        Payment, null=True, on_delete=models.CASCADE, related_name="association_deposit"
     )
 
 
