@@ -116,7 +116,12 @@ def parameter_definition(
     ),
     no_db_request=False,
 ):
-    __validate_initial_value(datatype, initial_value, key, meta.validators)
+    __validate_initial_value(
+        datatype=datatype,
+        initial_value=initial_value,
+        key=key,
+        validators=meta.validators,
+    )
 
     param = __create_or_update_parameter(
         category,
@@ -200,28 +205,34 @@ def __create_or_update_parameter(
     return param
 
 
-def __validate_initial_value(datatype, initial_value, key, validators):
-    try:
-        if isinstance(initial_value, str):
-            assert datatype == TapirParameterDatatype.STRING
-        elif isinstance(initial_value, bool):
-            assert datatype == TapirParameterDatatype.BOOLEAN
-        elif isinstance(initial_value, int):
-            assert datatype == TapirParameterDatatype.INTEGER
-        elif isinstance(initial_value, float):
-            assert datatype == TapirParameterDatatype.DECIMAL
-        elif isinstance(initial_value, datetime.date):
-            assert datatype == TapirParameterDatatype.DATE
-    except AssertionError:
+def __validate_initial_value(
+    datatype: TapirParameterDatatype,
+    initial_value: str | int | float | bool | datetime.date,
+    key: str,
+    validators: list[Callable],
+):
+    expected_datatype = __get_expected_datatype(initial_value)
+    if expected_datatype is not None and datatype != expected_datatype:
         raise TypeError(
-            "Parameter '{key}' is defined with datatype '{datatype}', \
-            but the initial value is of type '{actual_type}': {value}".format(
-                key=key,
-                datatype=datatype,
-                value=initial_value,
-                actual_type=type(initial_value),
-            )
+            f"Parameter '{key}' is defined with datatype '{datatype}', "
+            f"but the initial value is of type '{type(initial_value)}': {initial_value}"
         )
 
     for validator in validators:
         validator(initial_value)
+
+
+def __get_expected_datatype(
+    initial_value: str | int | float | bool | datetime.date,
+) -> TapirParameterDatatype | None:
+    if isinstance(initial_value, str):
+        return TapirParameterDatatype.STRING
+    if isinstance(initial_value, bool):
+        return TapirParameterDatatype.BOOLEAN
+    if isinstance(initial_value, int):
+        return TapirParameterDatatype.INTEGER
+    if isinstance(initial_value, float):
+        return TapirParameterDatatype.DECIMAL
+    if isinstance(initial_value, datetime.date):
+        return TapirParameterDatatype.DATE
+    return None
