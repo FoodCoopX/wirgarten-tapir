@@ -1,13 +1,18 @@
 import json
+from unittest.mock import patch
 
 from django.urls import reverse
 
+from tapir.core.config import LEGAL_STATUS_ASSOCIATION
 from tapir.generic_exports.services.export_segment_manager import (
     ExportSegment,
     ExportSegmentColumn,
     ExportSegmentManager,
 )
+from tapir.generic_exports.services.member_segment_provider import MemberSegmentProvider
+from tapir.generic_exports.tests.factories import CsvExportFactory, PdfExportFactory
 from tapir.wirgarten.models import Member
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
@@ -77,6 +82,36 @@ class TestGetExportSegmentsView(TapirIntegrationTest):
         response = self.client.get(reverse("generic_exports:export_segments"))
 
         self.assertStatusCode(response, 403)
+
+    def test_getExportSegmentsView_association_keepsSavedCooperativeSegments(self):
+        self._set_parameter(
+            ParameterKeys.ORGANISATION_LEGAL_STATUS, LEGAL_STATUS_ASSOCIATION
+        )
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+        url = reverse("generic_exports:export_segments")
+        segments = {
+            segment.id: segment
+            for segment in MemberSegmentProvider.get_member_segments()
+        }
+        csv_segment = "members.with_contract_since_more_than_one_year_but_no_coop_share"
+        pdf_segment = "members.with_cancelled_shares_in_previous_year"
+
+        with patch.object(ExportSegmentManager, "registered_export_segments", segments):
+            response = self.client.get(url)
+            self.assertStatusCode(response, 200)
+            segment_ids = {segment["id"] for segment in response.json()}
+            self.assertIn(MemberSegmentProvider.SEGMENT_ID_ALL_MEMBERS, segment_ids)
+            self.assertNotIn(csv_segment, segment_ids)
+            self.assertNotIn(pdf_segment, segment_ids)
+
+            CsvExportFactory.create(export_segment_id=csv_segment)
+            PdfExportFactory.create(export_segment_id=pdf_segment)
+
+            response = self.client.get(url)
+            self.assertStatusCode(response, 200)
+            segment_ids = {segment["id"] for segment in response.json()}
+            self.assertIn(csv_segment, segment_ids)
+            self.assertIn(pdf_segment, segment_ids)
 
     def get_test_segments(self):
         return [
