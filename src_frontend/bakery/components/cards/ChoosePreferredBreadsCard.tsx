@@ -127,7 +127,7 @@ export const ChoosePreferredBreadsCard: React.FC<
           {loading ? (
             <div className="text-center py-4">
               <div className="spinner-border spinner-bakery-primary">
-                <span className="visually-hidden">Loading...</span>
+                <span className="visually-hidden">Wird geladen …</span>
               </div>
             </div>
           ) : preferredBreads.length === 0 ? (
