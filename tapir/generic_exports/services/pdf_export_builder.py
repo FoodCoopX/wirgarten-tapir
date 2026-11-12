@@ -78,6 +78,9 @@ class PdfExportBuilder:
                 rendered_file_name, reference_datetime, "pdf"
             ),
             type=ExportedFile.FileType.PDF,
+            requires_coop_manage=ExportSegmentManager.get_segment_by_id(
+                pdf_export.export_segment_id
+            ).requires_coop_manage,
             file=pdf_file,
         )
         return exported_file

@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.http import Http404
 
 from tapir.generic_exports.services.csv_export_template_manager import (
@@ -15,6 +17,15 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestCsvExportTemplateManager(TapirUnitTest):
+    def setUp(self):
+        super().setUp()
+        self.enterContext(
+            patch(
+                "tapir.generic_exports.services.csv_export_template_manager.legal_status_is_association",
+                return_value=False,
+            )
+        )
+
     @staticmethod
     def _build_cache(pickup_locations: list[PickupLocation]) -> dict:
         return {

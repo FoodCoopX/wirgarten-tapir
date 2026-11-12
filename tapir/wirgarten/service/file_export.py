@@ -52,6 +52,16 @@ def __send_email(
     email.send()
 
 
+def spreadsheet_text(value: str | None) -> str:
+    if value is None:
+        return ""
+    if value.startswith(("\t", "\r", "\n")) or value.lstrip().startswith(
+        ("=", "+", "-", "@", "＝", "＋", "－", "＠")
+    ):
+        return "'" + value
+    return value
+
+
 def begin_csv_string(field_names: list[str], delimiter: str = ";"):
     """
     Call this to start writing your CSV file.

@@ -1,11 +1,13 @@
 from unittest.mock import patch, Mock
 
 from tapir.generic_exports.services.csv_export_builder import CsvExportBuilder
+from tapir.generic_exports.services.export_segment_manager import ExportSegmentManager
 from tapir.wirgarten.models import ExportedFile
 from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestCreateExportedFile(TapirUnitTest):
+    @patch.object(ExportSegmentManager, "get_segment_by_id", autospec=True)
     @patch.object(CsvExportBuilder, "build_csv_export_string", autospec=True)
     @patch.object(CsvExportBuilder, "build_file_name", autospec=True)
     @patch.object(ExportedFile, "objects")
@@ -14,11 +16,13 @@ class TestCreateExportedFile(TapirUnitTest):
         mock_objects: Mock,
         mock_build_file_name: Mock,
         mock_build_csv_export_string: Mock,
+        mock_get_segment_by_id: Mock,
     ):
         export = Mock()
         export.file_name = "input_file_name"
         reference_datetime = Mock()
         expected = Mock()
+        mock_get_segment_by_id.return_value.requires_coop_manage = False
         mock_objects.create.return_value = expected
         mock_build_file_name.return_value = "output_file_name"
         mock_build_csv_export_string.return_value = "file_as_string"
@@ -27,7 +31,10 @@ class TestCreateExportedFile(TapirUnitTest):
 
         self.assertEqual(expected, result)
         mock_objects.create.assert_called_once_with(
-            name="output_file_name", type="csv", file=bytes("file_as_string", "utf-8")
+            name="output_file_name",
+            type="csv",
+            file=bytes("file_as_string", "utf-8"),
+            requires_coop_manage=False,
         )
         mock_build_file_name.assert_called_once_with(
             "input_file_name", reference_datetime, "csv"
