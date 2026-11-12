@@ -208,7 +208,7 @@ class TestWaitingListAPIView(TapirIntegrationTest):
         )
         self.assertTrue(response_content["results"][1]["can_be_fulfilled"])
 
-    def test_waitingListView_association_sortsByFirstMembershipStart(self):
+    def test_get_association_sortsByFirstMembershipStart(self):
         self._login_as_admin()
         self._set_parameter(
             ParameterKeys.ORGANISATION_LEGAL_STATUS, LEGAL_STATUS_ASSOCIATION

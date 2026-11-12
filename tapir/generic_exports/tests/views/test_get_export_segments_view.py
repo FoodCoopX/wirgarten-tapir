@@ -83,7 +83,7 @@ class TestGetExportSegmentsView(TapirIntegrationTest):
 
         self.assertStatusCode(response, 403)
 
-    def test_getExportSegmentsView_association_keepsSavedCooperativeSegments(self):
+    def test_get_association_keepsSavedCooperativeSegments(self):
         self._set_parameter(
             ParameterKeys.ORGANISATION_LEGAL_STATUS, LEGAL_STATUS_ASSOCIATION
         )
