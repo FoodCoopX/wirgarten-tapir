@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import "../../../tapir/core/static/core/bootstrap/5.3.8/css/bootstrap.min.css";
 import "../../../tapir/core/static/core/css/base.css";
 import {
@@ -59,6 +59,15 @@ const BestellWizardShoppingCartOverlay: React.FC<
   selectedGrowingPeriod,
   setCurrentStep,
 }) => {
+  useEffect(() => {
+    if (!showOverlay) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onHide();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [showOverlay, onHide]);
+
   function canEditProductTypeOrder(productType: PublicProductType) {
     return (
       steps.indexOf(productType.id! + "_intro") < steps.indexOf(currentStep)
@@ -104,6 +113,7 @@ const BestellWizardShoppingCartOverlay: React.FC<
           transition: "0.1s",
           pointerEvents: showOverlay ? "all" : "none",
         }}
+        role="presentation"
         onClick={onHide}
       />
       <div
@@ -119,20 +129,24 @@ const BestellWizardShoppingCartOverlay: React.FC<
           zIndex: 1001,
           top: 0,
         }}
-        onClick={(event) => event.stopPropagation()}
       >
-        <div
+        <button
+          type="button"
+          aria-label="Warenkorb schließen"
           style={{
             position: "absolute",
             right: "1vh",
             top: "1vh",
             fontSize: "5vh",
+            background: "none",
+            border: "none",
+            padding: 0,
           }}
           className={"material-icons"}
           onClick={onHide}
         >
           close
-        </div>
+        </button>
         <ul style={{ marginTop: "7vh" }}>
           {getProductTypeList().map((productType) => (
             <li
