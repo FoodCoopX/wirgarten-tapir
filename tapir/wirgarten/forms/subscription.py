@@ -293,7 +293,7 @@ class BaseProductForm(forms.Form):
             today = get_today(self.cache)
             next_delivery_date = get_next_delivery_date(
                 today + relativedelta(days=2), cache=self.cache
-            )  # FIXME: the +2 days should be a configurable treshold. It takes some time to prepare the deliveries in which no changes are allowed
+            )
             next_month = today + relativedelta(months=1, day=1)
             if next_month < next_delivery_date:
                 next_month += relativedelta(months=1)
@@ -708,12 +708,9 @@ class AdditionalProductForm(forms.Form):
             next_delivery_date = get_next_delivery_date(
                 today + relativedelta(days=2), cache=self.cache
             )
-            # FIXME: the +2 days should be a configurable threshold.
-            # FIXME: It takes some time to prepare the deliveries in which no changes are allowed
             next_month = today + relativedelta(months=1, day=1)
 
             def add_pickup_location_fields():
-                # FIXME: no dummy, use the real diff value
                 new_sub_dummy = Subscription(
                     quantity=1,
                     product=Product.objects.get(type=self.product_type, base=True),
