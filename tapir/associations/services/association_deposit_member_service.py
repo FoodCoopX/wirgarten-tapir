@@ -24,9 +24,14 @@ class AssociationDepositMemberService:
     def _get_amount(deposit) -> Decimal:
         if deposit is None:
             return Decimal("0")
-        return deposit.payments.aggregate(amount=Sum("amount", default=Decimal("0")))[
-            "amount"
-        ]
+        payments = deposit.payments.aggregate(
+            amount=Sum("amount", default=Decimal("0"))
+        )["amount"]
+        return (
+            payments
+            + (deposit.opening_balance or Decimal("0"))
+            + (deposit.imported_outstanding_amount or Decimal("0"))
+        )
 
     @classmethod
     def get_details(cls, member, cache: dict) -> dict:
@@ -47,9 +52,14 @@ class AssociationDepositMemberService:
             "visible": settings["enabled"] or deposit is not None,
             "name": settings["name"],
             "amount": amount,
-            "agreement_requested": bool(deposit and not deposit.payments.exists()),
+            "agreement_requested": bool(
+                deposit
+                and deposit.opening_balance is None
+                and not deposit.payments.exists()
+            ),
             "can_increase": bool(
                 amount
+                and not deposit.imported_outstanding_amount
                 and AssociationMembership.objects.filter(member=member)
                 .active_at(get_today(cache=cache))
                 .exists()
@@ -84,6 +94,10 @@ class AssociationDepositMemberService:
         if current <= 0 or total_amount < current:
             raise ValidationError(
                 "Eine bestehende Einlage kann hier nur erhöht werden."
+            )
+        if deposit.imported_outstanding_amount:
+            raise ValidationError(
+                "Bitte kläre den importierten offenen Betrag mit der Verwaltung."
             )
         if total_amount == current:
             return
