@@ -6,10 +6,23 @@ from decimal import Decimal
 from typing import Iterable
 
 from django.db import transaction
+from django.db.models import Exists, OuterRef, Q
+from django.utils.html import escape
 
+from tapir.associations.models import AssociationMembership
+from tapir.associations.services.association_deposit_settings import (
+    association_deposits_enabled,
+)
 from tapir.configuration.parameter import get_parameter_value
-from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES
+from tapir.payments.config import (
+    PAYMENT_TYPE_COOP_SHARES,
+    PAYMENT_TYPE_ASSOCIATION_DEPOSIT,
+)
 from tapir.payments.services.pain_008_xml_file_creator import Pain008XmlFileCreator
+from tapir.payments.services.pain_008_xml_string_generator import (
+    Pain008XmlGlobalException,
+)
+from tapir.payments.services.payment_due_date_calculator import PaymentDueDateCalculator
 from tapir.payments.services.payment_export_intended_use_builder import (
     PaymentExportIntendedUseBuilder,
 )
@@ -26,6 +39,7 @@ from tapir.wirgarten.utils import (
     format_date,
     format_currency,
     legal_status_is_cooperative,
+    get_today,
 )
 
 
@@ -38,10 +52,26 @@ class PaymentExportBuilder:
     KEY_MANDATE_DATE = "Mandatsdatum"
 
     @classmethod
-    @transaction.atomic
     def export_all_unexported_payments(
-        cls, reference_date: datetime.date, send_mail: bool, cache: dict
+        cls,
+        reference_date: datetime.date,
+        send_mail: bool,
+        cache: dict,
+        *,
+        include_deposits: bool = True,
     ):
+        errors = cls._export_contracts_and_shares(reference_date, send_mail, cache)
+        if include_deposits and association_deposits_enabled(cache):
+            errors.extend(
+                cls._export_association_deposits(reference_date, send_mail, cache)
+            )
+        return errors
+
+    @classmethod
+    @transaction.atomic
+    def _export_contracts_and_shares(
+        cls, reference_date: datetime.date, send_mail: bool, cache: dict
+    ) -> list[str]:
         payments = cls.get_unexported_payments(reference_date=reference_date)
         contract_payments, coop_share_payments = (
             cls.split_payments_by_contract_or_coop_shares(payments)
@@ -71,6 +101,83 @@ class PaymentExportBuilder:
             )
 
         return errors_failed_payments_contracts + errors_failed_payments_shares
+
+    @classmethod
+    @transaction.atomic
+    def _export_association_deposits(
+        cls, reference_date: datetime.date, send_mail: bool, cache: dict
+    ) -> list[str]:
+        collection_date = PaymentDueDateCalculator.get_first_due_date_on_or_after(
+            earliest_date=max(reference_date, get_today(cache=cache)), cache=cache
+        )
+        active_memberships = AssociationMembership.objects.filter(
+            member_id=OuterRef("association_deposit__membership__member_id"),
+            start_date__lte=collection_date,
+        ).filter(Q(end_date=None) | Q(end_date__gte=collection_date))
+        payments = list(
+            Payment.objects.filter(
+                status=Payment.PaymentStatus.DUE,
+                transaction=None,
+                due_date__lte=collection_date,
+                association_deposit__membership__isnull=False,
+            )
+            .filter(
+                Q(association_deposit__membership__end_date__isnull=True)
+                | Q(association_deposit__membership__end_date__gte=collection_date)
+            )
+            .filter(
+                Q(association_deposit__membership__start_date__lte=collection_date)
+                | Exists(active_memberships.select_for_update(no_key=True))
+            )
+            .select_related("mandate_ref__member", "association_deposit__membership")
+            .select_for_update(of=("self", "association_deposit__membership"))
+            .order_by("pk")
+        )
+        if not payments:
+            return []
+
+        file_name = f"{PAYMENT_TYPE_ASSOCIATION_DEPOSIT}-Einzahlungen {format_month_and_year(collection_date)}"
+        try:
+            xml_bytes, valid, errors = (
+                Pain008XmlFileCreator.build_xml_string_with_valid_payments_and_errors_for_invalid_payments(
+                    payments=payments, collection_date=collection_date, cache=cache
+                )
+            )
+        except Pain008XmlGlobalException as exception:
+            if send_mail:
+                Pain008XmlFileCreator.send_error_mail_or_raise_exception(
+                    escape(exception.message),
+                    file_name,
+                    cache,
+                    send_mail=True,
+                )
+            return [exception.message]
+
+        if xml_bytes is None:
+            if send_mail:
+                Pain008XmlFileCreator.send_error_mail_or_raise_exception(
+                    Pain008XmlFileCreator.format_payment_errors(errors),
+                    file_name,
+                    cache,
+                    send_mail=True,
+                )
+            return errors
+
+        csv_file = cls.create_csv_file(
+            valid, False, file_name, send_mail, cache, send_after_commit=True
+        )
+        xml_file = Pain008XmlFileCreator.save_xml_file(
+            file_name, xml_bytes, send_mail, cache, errors, send_after_commit=True
+        )
+        cls.create_and_assign_transaction(
+            csv_file,
+            xml_file,
+            False,
+            valid,
+            collection_date,
+            payment_type=PAYMENT_TYPE_ASSOCIATION_DEPOSIT,
+        )
+        return errors
 
     @classmethod
     def export_payments_if_necessary(
@@ -134,11 +241,14 @@ class PaymentExportBuilder:
         is_contract_payments: bool,
         payments: Iterable[Payment],
         reference_date: datetime.date,
+        *,
+        payment_type: str | None = None,
     ):
         payment_transaction = PaymentTransaction.objects.create(
             csv_file=csv_file,
             xml_file=xml_file,
-            type=PaymentExportIntendedUseBuilder.get_payment_type_display_legacy(
+            type=payment_type
+            or PaymentExportIntendedUseBuilder.get_payment_type_display_legacy(
                 is_contract_payments
             ),
             month=reference_date.replace(day=1),
@@ -193,6 +303,7 @@ class PaymentExportBuilder:
         max_due_date = get_last_day_of_month(reference_date)
         return (
             Payment.objects.filter(transaction__isnull=True, due_date__lte=max_due_date)
+            .filter(association_deposit__isnull=True)
             .select_related("mandate_ref__member", "coop_share_transaction")
             .prefetch_related("coop_share_transaction__payments")
         )
@@ -209,16 +320,8 @@ class PaymentExportBuilder:
         file_name = f"{PaymentExportIntendedUseBuilder.get_payment_type_display_legacy(is_contract_payments)}-Einzahlungen {format_month_and_year(reference_date)}"
         payments = list(payments)
 
-        csv_string = cls.build_csv_string(payments, is_contract_payments, cache)
-        csv_file = export_file(
-            filename=file_name,
-            filetype=ExportedFile.FileType.CSV,
-            content=bytes(csv_string, "utf-8"),
-            send_email=send_mail
-            and get_parameter_value(
-                key=ParameterKeys.PAYMENT_SEND_CSV_FILE_PER_MAIL, cache=cache
-            ),
-            cache=cache,
+        csv_file = cls.create_csv_file(
+            payments, is_contract_payments, file_name, send_mail, cache
         )
 
         xml_file = None
@@ -235,6 +338,30 @@ class PaymentExportBuilder:
             )
 
         return csv_file, xml_file, errors_failed_payments
+
+    @classmethod
+    def create_csv_file(
+        cls,
+        payments: list[Payment],
+        is_contract_payments: bool,
+        file_name: str,
+        send_mail: bool,
+        cache: dict,
+        *,
+        send_after_commit: bool = False,
+    ) -> ExportedFile:
+        csv_string = cls.build_csv_string(payments, is_contract_payments, cache)
+        return export_file(
+            filename=file_name,
+            filetype=ExportedFile.FileType.CSV,
+            content=bytes(csv_string, "utf-8"),
+            send_email=send_mail
+            and get_parameter_value(
+                key=ParameterKeys.PAYMENT_SEND_CSV_FILE_PER_MAIL, cache=cache
+            ),
+            cache=cache,
+            send_after_commit=send_after_commit,
+        )
 
     @classmethod
     def build_csv_string(
@@ -267,7 +394,9 @@ class PaymentExportBuilder:
                     cls.KEY_INTENDED_USE: intended_use,
                     cls.KEY_MANDATE_REF: payment.mandate_ref.ref,
                     cls.KEY_MANDATE_DATE: format_date(
-                        payment.mandate_ref.member.sepa_consent.date()
+                        payment.mandate_ref.start_ts.date()
+                        if hasattr(payment, "association_deposit")
+                        else payment.mandate_ref.member.sepa_consent.date()
                     ),
                 }
             )

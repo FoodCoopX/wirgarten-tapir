@@ -28,6 +28,7 @@ class TestCreateXmlFileAndSendMail(TapirUnitTest):
         mock_build_xml_string_with_valid_payments_and_errors_for_invalid_payments.return_value = (
             xml_bytes,
             [],
+            [],
         )
 
         xml_file = MagicMock()
@@ -61,6 +62,7 @@ class TestCreateXmlFileAndSendMail(TapirUnitTest):
             send_email=True,
             cache=cache,
             errors=[],
+            send_after_commit=False,
         )
 
     @patch(
@@ -79,6 +81,7 @@ class TestCreateXmlFileAndSendMail(TapirUnitTest):
         xml_bytes = MagicMock()
         mock_build_xml_string_with_valid_payments_and_errors_for_invalid_payments.return_value = (
             xml_bytes,
+            [],
             [],
         )
 
@@ -113,6 +116,7 @@ class TestCreateXmlFileAndSendMail(TapirUnitTest):
             send_email=False,
             cache=cache,
             errors=[],
+            send_after_commit=False,
         )
 
     @patch(
@@ -131,6 +135,7 @@ class TestCreateXmlFileAndSendMail(TapirUnitTest):
         xml_bytes = MagicMock()
         mock_build_xml_string_with_valid_payments_and_errors_for_invalid_payments.return_value = (
             xml_bytes,
+            [],
             [],
         )
 
@@ -165,6 +170,7 @@ class TestCreateXmlFileAndSendMail(TapirUnitTest):
             send_email=False,
             cache=cache,
             errors=[],
+            send_after_commit=False,
         )
 
     @patch(
@@ -229,6 +235,7 @@ class TestCreateXmlFileAndSendMail(TapirUnitTest):
         errors_failed_payments = ["error_1", "error_2"]
         mock_build_xml_string_with_valid_payments_and_errors_for_invalid_payments.return_value = (
             xml_bytes,
+            [],
             errors_failed_payments,
         )
 
@@ -260,6 +267,7 @@ class TestCreateXmlFileAndSendMail(TapirUnitTest):
             send_email=False,
             cache=cache,
             errors=errors_failed_payments,
+            send_after_commit=False,
         )
 
     @patch(
@@ -282,6 +290,7 @@ class TestCreateXmlFileAndSendMail(TapirUnitTest):
         errors_failed_payments = ["error_1", "error_2"]
         mock_build_xml_string_with_valid_payments_and_errors_for_invalid_payments.return_value = (
             None,
+            [],
             errors_failed_payments,
         )
 

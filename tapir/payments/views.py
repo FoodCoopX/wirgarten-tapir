@@ -166,7 +166,7 @@ class GetFutureMemberPaymentsApiView(APIView):
                 )
                 | Q(status=Payment.PaymentStatus.DUE)
             )
-            .select_related("coop_share_transaction")
+            .select_related("coop_share_transaction", "association_deposit")
             .prefetch_related("coop_share_transaction__payments")
         )
         current_month = get_today(cache=self.cache)
@@ -179,14 +179,13 @@ class GetFutureMemberPaymentsApiView(APIView):
                 generated_payments=generated_payments,
                 member_id=member_id,
             )
-            member_payments.update(
-                [
-                    payment
-                    for payment in payments
-                    if payment.mandate_ref_id in mandate_ref_ids
-                ]
-            )
-            generated_payments.update(member_payments)
+            payments = [
+                payment
+                for payment in payments
+                if payment.mandate_ref_id in mandate_ref_ids
+            ]
+            member_payments.update(payments)
+            generated_payments.update(payments)
             current_month = get_first_of_next_month(current_month)
         return member_payments
 
@@ -264,6 +263,10 @@ class GetFutureMemberPaymentsApiView(APIView):
                         existing_memberships=existing_memberships,
                         payment=payment,
                     )
+                case payments_config.PAYMENT_TYPE_ASSOCIATION_DEPOSIT if hasattr(
+                    payment, "association_deposit"
+                ):
+                    pass
                 case _:
                     subscriptions = cls.get_relevant_subscriptions(
                         existing_subscriptions=existing_subscriptions,
@@ -438,7 +441,7 @@ class GetPastMemberPaymentsApiView(APIView):
         member_payments = set(
             Payment.objects.filter(mandate_ref__ref__in=mandate_ref_ids)
             .filter(due_date__lte=get_today(cache=self.cache))
-            .select_related("coop_share_transaction")
+            .select_related("coop_share_transaction", "association_deposit")
             .prefetch_related("coop_share_transaction__payments")
         )
 
@@ -795,7 +798,8 @@ class PaymentIntendedUsePreviewContractsApiView(APIView):
             days=random.randint(0, (max_date - min_date).days)
         )
         payments = (
-            Payment.objects.exclude(type=payments_config.PAYMENT_TYPE_COOP_SHARES)
+            Payment.objects.filter(association_deposit__isnull=True)
+            .exclude(type=payments_config.PAYMENT_TYPE_COOP_SHARES)
             .filter(due_date__year=random_date.year, due_date__month=random_date.month)
             .select_related("mandate_ref")
         )
@@ -1225,7 +1229,7 @@ class PaymentTransactionDetailsView(APIView):
         cache = {}
 
         payments = transaction.payment_set.select_related(
-            "mandate_ref__member", "coop_share_transaction"
+            "mandate_ref__member", "coop_share_transaction", "association_deposit"
         ).prefetch_related("coop_share_transaction__payments")
 
         payments_by_mandate_ref = {}
@@ -1242,7 +1246,7 @@ class PaymentTransactionDetailsView(APIView):
 
         for mandate_ref in list(payments_by_mandate_ref.keys()):
             payments = payments_by_mandate_ref[mandate_ref]
-            if transaction.type == payments_config.PAYMENT_TYPE_COOP_SHARES:
+            if transaction.type in payments_config.ONE_OFF_TRANSACTION_TYPES:
                 intended_use_by_mandate_ref[mandate_ref] = (
                     PaymentExportIntendedUseBuilder.build_intended_use(
                         payment=payments[0], is_contracts=False, cache=cache
@@ -1351,7 +1355,8 @@ class MembersNeedingBankingDataForRebuildApiView(APIView):
         ).date()
 
         member_ids = (
-            Payment.objects.exclude(type=payments_config.PAYMENT_TYPE_COOP_SHARES)
+            Payment.objects.filter(association_deposit__isnull=True)
+            .exclude(type=payments_config.PAYMENT_TYPE_COOP_SHARES)
             .filter(
                 transaction__month__gte=from_date.replace(day=1),
                 transaction__month__lte=get_today(cache=cache),

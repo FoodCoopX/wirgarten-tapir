@@ -37,6 +37,9 @@ from tapir.associations.serializers import (
     SetAssociationMembershipEndDateRequestSerializer,
     NumberOfAssociationMembersPerMonthResponseSerializer,
 )
+from tapir.associations.services.association_deposit_membership_end_handler import (
+    AssociationDepositMembershipEndHandler,
+)
 from tapir.associations.services.association_membership_change_handler import (
     AssociationMembershipChangeHandler,
 )
@@ -393,8 +396,13 @@ class SetAssociationMembershipEndDateApiView(APIView):
             )
 
         with transaction.atomic():
+            Member.objects.select_for_update(no_key=True).get(pk=membership.member_id)
+            membership.refresh_from_db()
             before_changes = freeze_for_log(membership)
             end_date_before = membership.end_date
+            AssociationDepositMembershipEndHandler.preserve_deposits(
+                membership, end_date
+            )
             membership.end_date = end_date
             membership.cancellation_ts = get_now(cache=cache)
             membership.save()

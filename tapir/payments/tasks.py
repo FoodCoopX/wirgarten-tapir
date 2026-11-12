@@ -26,7 +26,10 @@ def create_payments_for_this_month(reference_date: datetime.date | None = None):
 
 @shared_task
 def export_payments_for_this_month(
-    reference_date: datetime.date | None = None, send_mail: bool = True
+    reference_date: datetime.date | None = None,
+    send_mail: bool = True,
+    *,
+    include_deposits: bool = True,
 ):
     cache = {}
     if reference_date is None:
@@ -41,6 +44,7 @@ def export_payments_for_this_month(
         reference_date=reference_date,
         send_mail=send_mail,
         cache=cache,
+        include_deposits=include_deposits,
     )
 
 

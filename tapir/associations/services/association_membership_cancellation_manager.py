@@ -1,12 +1,16 @@
 import datetime
 
 from django.core.exceptions import ValidationError
+from django.db import transaction
 
 from tapir.accounts.models import TapirUser
 from tapir.associations.models import (
     AssociationMembership,
     AssociationMembershipUpdatedLogEntry,
     AssociationMembershipDeletedLogEntry,
+)
+from tapir.associations.services.association_deposit_membership_end_handler import (
+    AssociationDepositMembershipEndHandler,
 )
 from tapir.log.util import freeze_for_log
 from tapir.utils.services.tapir_cache import TapirCache
@@ -53,6 +57,7 @@ class AssociationMembershipCancellationManager:
         return True
 
     @classmethod
+    @transaction.atomic
     def cancel_association_membership(
         cls,
         member: Member,
@@ -60,10 +65,15 @@ class AssociationMembershipCancellationManager:
         actor: TapirUser,
         cache: dict,
     ):
+        Member.objects.select_for_update(no_key=True).get(pk=member.pk)
+        membership_cache = {}
         current_membership = TapirCache.get_member_association_membership_at_date(
-            cache=cache, member=member, reference_date=end_date
+            cache=membership_cache, member=member, reference_date=end_date
         )
         if current_membership is not None:
+            AssociationDepositMembershipEndHandler.preserve_deposits(
+                current_membership, end_date, removes_future=True
+            )
             cls._set_membership_end_date(
                 membership=current_membership,
                 end_date=end_date,
@@ -72,7 +82,7 @@ class AssociationMembershipCancellationManager:
             )
 
         for membership in TapirCache.get_member_association_memberships(
-            member=member, cache=cache
+            member=member, cache=membership_cache
         ):
             if membership.start_date > end_date:
                 AssociationMembershipDeletedLogEntry().populate_membership(

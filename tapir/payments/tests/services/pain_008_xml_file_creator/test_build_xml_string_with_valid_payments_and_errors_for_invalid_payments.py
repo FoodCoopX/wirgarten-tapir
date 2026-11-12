@@ -23,13 +23,14 @@ class TestBuildXmlStringWithValidPaymentsAndErrorsForInvalidPayments(TapirUnitTe
 
         mock_build_xml_string.return_value = "test_string"
 
-        xml_string, errors = (
+        xml_string, valid_payments, errors = (
             Pain008XmlFileCreator.build_xml_string_with_valid_payments_and_errors_for_invalid_payments(
                 payments=all_payments, collection_date=collection_date, cache=cache
             )
         )
 
         self.assertEqual("test_string", xml_string)
+        self.assertEqual(all_payments, valid_payments)
         self.assertEqual([], errors)
 
         self.assertEqual(4, mock_validate_single_payment.call_count)
@@ -68,13 +69,14 @@ class TestBuildXmlStringWithValidPaymentsAndErrorsForInvalidPayments(TapirUnitTe
         mock_validate_single_payment.side_effect = raise_exception_if_failed_payment
         mock_build_xml_string.return_value = "test_string"
 
-        xml_string, errors = (
+        xml_string, valid_payments, errors = (
             Pain008XmlFileCreator.build_xml_string_with_valid_payments_and_errors_for_invalid_payments(
                 payments=all_payments, collection_date=collection_date, cache=cache
             )
         )
 
         self.assertEqual("test_string", xml_string)
+        self.assertEqual([payment_1, payment_3], valid_payments)
         self.assertEqual(
             ["Error of the second payment", "Error of the fourth payment"], errors
         )
@@ -108,13 +110,14 @@ class TestBuildXmlStringWithValidPaymentsAndErrorsForInvalidPayments(TapirUnitTe
             "Error"
         )
 
-        xml_string, errors = (
+        xml_string, valid_payments, errors = (
             Pain008XmlFileCreator.build_xml_string_with_valid_payments_and_errors_for_invalid_payments(
                 payments=all_payments, collection_date=collection_date, cache=cache
             )
         )
 
-        self.assertEqual(None, xml_string)
+        self.assertIsNone(xml_string)
+        self.assertEqual([], valid_payments)
 
         self.assertEqual(4, mock_validate_single_payment.call_count)
         mock_validate_single_payment.assert_has_calls(

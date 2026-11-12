@@ -1,7 +1,9 @@
 import csv
+from functools import partial
 
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
+from django.db import transaction
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.models import ExportedFile
@@ -77,10 +79,16 @@ def export_file(
     send_email: bool,
     cache: dict | None = None,
     errors: list[str] | None = None,
+    *,
+    send_after_commit: bool = False,
 ) -> ExportedFile:
     file = ExportedFile.objects.create(name=filename, type=filetype, file=content)
 
     if send_email:
-        __send_email(file, cache=cache, errors=errors)
+        send = partial(__send_email, file, cache=cache, errors=errors)
+        if send_after_commit:
+            transaction.on_commit(send, robust=True)
+        else:
+            send()
 
     return file

@@ -15,7 +15,7 @@ from tapir.accounts.services.keycloak_user_delete_service import (
     KeycloakUserDeleteService,
 )
 from tapir.deliveries.models import Joker
-from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES
+from tapir.payments.config import ONE_OFF_TRANSACTION_TYPES, PAYMENT_TYPE_COOP_SHARES
 from tapir.payments.models import MemberCredit
 from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.utils.config import (
@@ -210,9 +210,11 @@ class Command(BaseCommand):
                         SubscriptionImportUpdatedLogEntry.objects.all().delete()
                         Subscription.objects.all().delete()
                         PaymentTransaction.objects.exclude(
-                            type=PAYMENT_TYPE_COOP_SHARES
+                            type__in=ONE_OFF_TRANSACTION_TYPES
                         ).delete()
-                        Payment.objects.exclude(type=PAYMENT_TYPE_COOP_SHARES).delete()
+                        Payment.objects.filter(
+                            association_deposit__isnull=True
+                        ).exclude(type=PAYMENT_TYPE_COOP_SHARES).delete()
 
                 self.import_generic(
                     reader=reader,

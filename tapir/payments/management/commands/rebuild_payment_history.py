@@ -2,7 +2,10 @@ from django.core.management import BaseCommand
 from django.db import transaction
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES
+from tapir.payments.config import (
+    PAYMENT_TYPE_COOP_SHARES,
+    PAYMENT_TYPE_ASSOCIATION_DEPOSIT,
+)
 from tapir.payments.tasks import (
     create_payments_for_this_month,
     export_payments_for_this_month,
@@ -38,9 +41,15 @@ class Command(BaseCommand):
                 print("Aborting")
                 return
 
-        Payment.objects.exclude(type=PAYMENT_TYPE_COOP_SHARES).delete()
-        Payment.objects.update(transaction=None)
-        PaymentTransaction.objects.all().delete()
+        Payment.objects.filter(association_deposit__isnull=True).exclude(
+            type=PAYMENT_TYPE_COOP_SHARES
+        ).delete()
+        Payment.objects.filter(association_deposit__isnull=True).update(
+            transaction=None
+        )
+        PaymentTransaction.objects.exclude(
+            type=PAYMENT_TYPE_ASSOCIATION_DEPOSIT
+        ).delete()
 
         current_date = get_parameter_value(
             key=ParameterKeys.PAYMENT_START_DATE
@@ -51,7 +60,7 @@ class Command(BaseCommand):
         while current_date < today:
             create_payments_for_this_month(reference_date=current_date)
             errors = export_payments_for_this_month(
-                reference_date=current_date, send_mail=False
+                reference_date=current_date, send_mail=False, include_deposits=False
             )
             for error in errors:
                 print(error)
