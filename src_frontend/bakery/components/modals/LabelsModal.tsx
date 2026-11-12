@@ -117,9 +117,7 @@ export const LabelsModal: React.FC<BreadLabelsModalProps> = ({
                           : "white",
                       }}
                     >
-                      <span className="flex-grow-1">
-                        <strong>{label.name}</strong>
-                      </span>
+                      <strong className="flex-grow-1">{label.name}</strong>
                       <span className="form-check form-switch">
                         <input
                           className="form-check-input"

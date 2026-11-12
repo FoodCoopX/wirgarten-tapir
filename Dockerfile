@@ -4,6 +4,8 @@ RUN npm install -g --ignore-scripts mjml@4.14.1
 FROM python:3.14.10 AS python-base
 ENV PYTHONUNBUFFERED=1
 ENV POETRY_VIRTUALENVS_PATH=/opt/venvs
+ENV POETRY_INSTALLER_ONLY_BINARY=:all:
+ENV POETRY_INSTALLER_NO_BINARY=mailmanclient
 
 WORKDIR /app
 

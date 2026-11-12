@@ -17,9 +17,9 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 
 CHECK_ONLY=false
-if [ "${1:-}" = "--check" ]; then
+if [[ "${1:-}" == "--check" ]]; then
   CHECK_ONLY=true
-elif [ -n "${1:-}" ]; then
+elif [[ -n "${1:-}" ]]; then
   echo "unknown argument: $1" >&2
   echo "usage: $0 [--check]" >&2
   exit 2
@@ -41,15 +41,15 @@ for entry in "${LINKS[@]}"; do
   link="${entry%%:*}"
   target="${entry#*:}"
 
-  if [ -L "$link" ] && [ "$(readlink "$link")" = "$target" ] && [ -e "$link" ]; then
+  if [[ -L "$link" && "$(readlink "$link")" == "$target" && -e "$link" ]]; then
     echo "ok       $link -> $target"
     continue
   fi
 
   if $CHECK_ONLY; then
-    if [ -L "$link" ]; then
+    if [[ -L "$link" ]]; then
       echo "BROKEN   $link -> $(readlink "$link") (expected $target)"
-    elif [ -e "$link" ]; then
+    elif [[ -e "$link" ]]; then
       echo "NOT LINK $link (expected a symlink to $target)"
     else
       echo "MISSING  $link (expected a symlink to $target)"
@@ -66,7 +66,7 @@ for entry in "${LINKS[@]}"; do
 done
 
 if $CHECK_ONLY; then
-  if [ "$failures" -gt 0 ]; then
+  if [[ "$failures" -gt 0 ]]; then
     echo
     echo "$failures link(s) need repair. Run $0 without --check."
     exit 1
@@ -77,7 +77,7 @@ if $CHECK_ONLY; then
 fi
 
 echo
-if [ "$changes" -gt 0 ]; then
+if [[ "$changes" -gt 0 ]]; then
   echo "Repaired $changes link(s)."
   echo "If git now shows these as modified, your checkout had no symlink support."
   echo "Enable it with: git config --global core.symlinks true"
