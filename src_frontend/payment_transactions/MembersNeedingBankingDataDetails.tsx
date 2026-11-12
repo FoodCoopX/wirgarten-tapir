@@ -51,8 +51,8 @@ const MembersNeedingBankingDataDetails: React.FC<
                 </tr>
               </thead>
               <tbody>
-                {members.map((member, index) => (
-                  <tr key={index}>
+                {members.map((member) => (
+                  <tr key={member.memberUrl}>
                     <td>
                       <a href={member.memberUrl}>{member.memberNo}</a>
                     </td>

@@ -112,11 +112,11 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
               </li>
             );
           })}
-          {memberDataToConfirm.subscriptionChanges.map((change, index) => {
+          {memberDataToConfirm.subscriptionChanges.map((change) => {
             return (
-              <li key={index}>
+              <li key={change.productType.id}>
                 {change.productType.name}:{" "}
-                {change.subscriptionCancellations.map((cancellation) => (
+                {change.subscriptionCancellations.map((cancellation, index) => (
                   <span key={cancellation.id}>
                     {cancellation.quantity} {"×"} {cancellation.product.name}
                     {index !== change.subscriptionCancellations.length - 1 &&
