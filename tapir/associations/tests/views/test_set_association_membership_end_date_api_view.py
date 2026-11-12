@@ -112,6 +112,7 @@ class SetAssociationMembershipEndDateApiView(TapirIntegrationTest):
                     "end_date_before": "31.12.2000",
                     "end_date_after": "01.01.2021",
                     "membership_type_name": "test type name",
+                    "association_deposit_amount": "",
                 },
                 recipient_id_in_base_queryset=member.id,
             )

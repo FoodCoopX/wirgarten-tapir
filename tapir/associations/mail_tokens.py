@@ -1,0 +1,4 @@
+ASSOCIATION_DEPOSIT_AMOUNT_TOKEN = "association_deposit_amount"
+ASSOCIATION_DEPOSIT_MAIL_TOKENS = {
+    "Vereinseinlage (Betrag)": ASSOCIATION_DEPOSIT_AMOUNT_TOKEN,
+}

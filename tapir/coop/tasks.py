@@ -10,6 +10,9 @@ from tapir_mail.triggers.transactional_trigger import (
 )
 
 from tapir.associations.models import AssociationMembership
+from tapir.associations.services.association_deposit_mail_token_provider import (
+    AssociationDepositMailTokenProvider,
+)
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.coop_membership_cancellation_manager import (
     CoopMembershipCancellationManager,
@@ -184,7 +187,9 @@ def send_email_member_contract_end_reminder(member_id: str):
         )
 
 
-def _fire_membership_entry_trigger(member: Member, cache: dict):
+def _fire_membership_entry_trigger(
+    member: Member, cache: dict, membership: AssociationMembership | None = None
+):
     number_of_coop_shares = member.coop_shares_quantity
     price_of_a_share = get_parameter_value(
         key=ParameterKeys.COOP_SHARE_PRICE, cache=cache
@@ -202,7 +207,10 @@ def _fire_membership_entry_trigger(member: Member, cache: dict):
                 "membership_start_date": OrganisationEntryDateAnnotator.get_organisation_entry_date(
                     recipient=member, cache=cache
                 ),
-            },
+            }
+            | AssociationDepositMailTokenProvider.build_tokens(
+                member, cache, membership=membership
+            ),
         ),
     )
 
@@ -228,17 +236,21 @@ def send_membership_entry_mails():
                 if entry_date is not None and entry_date <= today:
                     should_send_mail = True
 
-            if (
-                legal_status_is_association(cache=cache)
-                and AssociationMembership.objects.filter(
-                    member=member, start_date__lte=today
+            membership = None
+            if legal_status_is_association(cache=cache):
+                membership = (
+                    AssociationMembership.objects.filter(
+                        member=member, start_date__lte=today
+                    )
+                    .filter(Q(end_date__isnull=True) | Q(end_date__gte=today))
+                    .order_by("-start_date", "-pk")
+                    .first()
                 )
-                .filter(Q(end_date__isnull=True) | Q(end_date__gte=today))
-                .exists()
-            ):
-                should_send_mail = True
+                should_send_mail = membership is not None
 
             if should_send_mail:
-                _fire_membership_entry_trigger(member=member, cache=cache)
+                _fire_membership_entry_trigger(
+                    member=member, cache=cache, membership=membership
+                )
                 member.has_received_membership_started_mail = True
                 member.save()
