@@ -45,7 +45,7 @@ WORKDIR /app
 
 # locales for the CSV export locales, pango/harfbuzz/fonts for weasyprint
 RUN apt-get update -y && apt-get install -y --no-install-recommends \
-    locales libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz-subset0 fonts-dejavu-core && \
+    fonts-dejavu-core libharfbuzz-subset0 libpango-1.0-0 libpangoft2-1.0-0 locales && \
     rm -rf /var/lib/apt/lists/* && \
     sed -i -e '/de_DE.UTF-8/s/^# //g' -e '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
 
