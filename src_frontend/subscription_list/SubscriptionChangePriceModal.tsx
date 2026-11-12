@@ -114,7 +114,16 @@ const SubscriptionChangePriceModal: React.FC<
       return;
     }
 
-    coopApi.coopMembersRetrieve({ id: memberId }).then(setMemberData);
+    coopApi
+      .coopMembersRetrieve({ id: memberId })
+      .then(setMemberData)
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Laden des Mitglieds",
+          setToastDatas,
+        ),
+      );
   }, [memberId, show]);
 
   function onConfirmChange() {

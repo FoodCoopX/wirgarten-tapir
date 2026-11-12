@@ -409,6 +409,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
       productTypesInWaitingList,
       setMinimumNumberOfShares,
       setSelectedNumberOfCoopShares,
+      setToastDatas,
     );
   }, [shoppingCart, selectedGrowingPeriod]);
 

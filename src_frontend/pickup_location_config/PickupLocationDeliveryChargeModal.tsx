@@ -103,7 +103,7 @@ const PickupLocationDeliveryChargeModal: React.FC<
     if (!show) return;
 
     resetForm();
-    loadEntries();
+    void loadEntries();
   }, [show]);
 
   function getCurrentEntry(): PickupLocationDeliveryChargeEntry | undefined {
