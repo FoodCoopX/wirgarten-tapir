@@ -246,7 +246,7 @@ const PickupLocationDeliveryChargeModal: React.FC<
                 <Form.Control
                   type={"text"}
                   inputMode={"decimal"}
-                  pattern={"^\\d+([.,]\\d{1,2})?$"}
+                  pattern={String.raw`^\d+([.,]\d{1,2})?$`}
                   placeholder={"Betrag"}
                   value={amountInput}
                   required={true}

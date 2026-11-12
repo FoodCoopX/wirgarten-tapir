@@ -113,9 +113,9 @@ export const BreadModal: React.FC<BreadModalProps> = ({
   };
 
   const addPiecesPerLayer = () => {
-    const value = parseInt(piecesInput);
+    const value = Number.parseInt(piecesInput);
     if (
-      !isNaN(value) &&
+      !Number.isNaN(value) &&
       value > 0 &&
       !formData.piecesPerStoveLayer?.includes(value)
     ) {
@@ -382,7 +382,7 @@ export const BreadModal: React.FC<BreadModalProps> = ({
                   className="form-check-label small"
                   htmlFor="oneBatchCanBeBakedInMoreThanOneStove"
                 >
-                  Ein Teig kann in mehreren Ofengängen gebacken werden
+                  Ein Teig kann in mehreren Ofengängen gebacken werden{" "}
                   <span
                     className="text-muted d-block"
                     style={{ fontSize: "0.75rem" }}
@@ -445,7 +445,7 @@ export const BreadModal: React.FC<BreadModalProps> = ({
                         setFormData({
                           ...formData,
                           minPieces: e.target.value
-                            ? parseInt(e.target.value)
+                            ? Number.parseInt(e.target.value)
                             : undefined,
                         })
                       }
@@ -477,7 +477,7 @@ export const BreadModal: React.FC<BreadModalProps> = ({
                         setFormData({
                           ...formData,
                           maxPieces: e.target.value
-                            ? parseInt(e.target.value)
+                            ? Number.parseInt(e.target.value)
                             : undefined,
                         })
                       }
@@ -509,7 +509,7 @@ export const BreadModal: React.FC<BreadModalProps> = ({
                         setFormData({
                           ...formData,
                           minRemainingPieces: e.target.value
-                            ? parseInt(e.target.value)
+                            ? Number.parseInt(e.target.value)
                             : undefined,
                         })
                       }

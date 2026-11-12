@@ -13,9 +13,9 @@ const PlaceholderTableRows: React.FC<PlaceholderTableRowsProps> = ({
   nbColumns,
   size,
 }) => {
-  return [...new Array(nbRows)].map((_, indexTr) => (
+  return Array.from({ length: nbRows }, (_, indexTr) => (
     <tr key={indexTr}>
-      {[...new Array(nbColumns)].map((_, indexTd) => (
+      {Array.from({ length: nbColumns }, (_, indexTd) => (
         <td key={indexTd}>
           <Placeholder animation={"wave"} size={size}>
             <Placeholder xs={2} size={size} />

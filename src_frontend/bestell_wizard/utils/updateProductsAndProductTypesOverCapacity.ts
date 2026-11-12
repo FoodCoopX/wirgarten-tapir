@@ -45,7 +45,7 @@ export function updateProductsAndProductTypesOverCapacity(
       setCheckingCapacities(false);
     })
     .catch((error) => {
-      if (error.cause && error.cause.name === "AbortError") return;
+      if (error.cause?.name === "AbortError") return;
 
       setCheckingCapacities(false);
       handleRequestError(

@@ -10,7 +10,6 @@ interface ColumnInputProps {
   ) => void;
   selectedColumnIds: string[];
   columnNames: string[];
-  autoFocus?: boolean;
   availableColumns: ExportSegmentColumn[];
 }
 
@@ -40,9 +39,7 @@ const ColumnInput: React.FC<ColumnInputProps> = ({
   }
 
   function removeExportColumnFromSelection(columnIdToRemove: string) {
-    const indexToRemove = selectedColumnIds.findIndex(
-      (columnId) => columnId === columnIdToRemove,
-    );
+    const indexToRemove = selectedColumnIds.indexOf(columnIdToRemove);
     const newSelectedColumns = [
       ...selectedColumnIds.slice(0, indexToRemove),
       ...selectedColumnIds.slice(indexToRemove + 1),

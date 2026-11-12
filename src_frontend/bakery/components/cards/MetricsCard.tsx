@@ -100,7 +100,7 @@ export const MetricsCard: React.FC<MetricsCardProps> = ({
     );
   }
 
-  if (!data || !data.locations || data.locations.length === 0) {
+  if (!data?.locations || data.locations.length === 0) {
     return (
       <div className="alert alert-info py-2 mb-0" role="alert">
         <small>

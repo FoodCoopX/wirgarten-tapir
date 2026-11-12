@@ -114,7 +114,7 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
   const handleCheckToggle = (day: number, memberId: string) => {
     setCheckedByDay((prev) => ({
       ...prev,
-      [day]: { ...(prev[day] || {}), [memberId]: !prev[day]?.[memberId] },
+      [day]: { ...prev[day], [memberId]: !prev[day]?.[memberId] },
     }));
   };
 
@@ -172,7 +172,7 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
           const pl = allPickupLocations.find(
             (p) => p.id === String(entry.pickupLocation),
           );
-          if (!pl || pl.deliveryDay == null) continue;
+          if (pl?.deliveryDay == null) continue;
           countsByDay[pl.deliveryDay] ??= [];
           countsByDay[pl.deliveryDay].push({
             breadId: String(entry.bread),
@@ -208,9 +208,9 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
                 const sorted = Object.values(grouped).sort(
                   (a, b) => a.session - b.session,
                 );
-                sorted.forEach((s) =>
-                  s.layers.sort((a, b) => a.layer - b.layer),
-                );
+                for (const s of sorted) {
+                  s.layers.sort((a, b) => a.layer - b.layer);
+                }
                 return { day, sessions: sorted };
               })
               .catch(() => ({ day, sessions: [] as StoveSessionGrouped[] })),

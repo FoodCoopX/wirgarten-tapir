@@ -1,9 +1,9 @@
-var initMap = (
+function initMap(
   data,
   productTypes = {},
   callback = false,
   selected = undefined,
-) => {
+) {
   const markerIcon = L.icon({
     iconRetinaUrl: "/static/wirgarten/images/leaflet/marker-icon-2x.png",
     iconUrl: "/static/wirgarten/images/leaflet/marker-icon.png",
@@ -26,12 +26,10 @@ var initMap = (
     map.setView([51.16, 10.45], 6);
   }
 
-  const possibleLocations = Object.entries(data)
-    .filter(([id, pl]) => true)
-    .map(([id, pl]) => id);
+  const possibleLocations = new Set(Object.keys(data));
 
   const setMarkerColor = (marker) => {
-    if (possibleLocations.includes(marker.locationId)) {
+    if (possibleLocations.has(marker.locationId)) {
       marker._icon.style.webkitFilter = "";
     } else {
       marker._icon.style.webkitFilter = "grayscale()";
@@ -87,4 +85,4 @@ var initMap = (
   }
 
   return (id) => select(id);
-};
+}

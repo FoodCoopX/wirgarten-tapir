@@ -83,7 +83,7 @@ export const PickupListSection: React.FC<PickupListSectionProps> = ({
             >
               picture_as_pdf
             </span>
-            Alle Abhollisten als ein PDF
+            <span>Alle Abhollisten als ein PDF</span>
           </a>
         </div>
 

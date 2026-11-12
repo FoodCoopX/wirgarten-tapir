@@ -4,7 +4,7 @@ import { Reports } from "../pages";
 const container = document.getElementById("reports-root");
 
 if (container) {
-  const csrfToken = container.getAttribute("data-csrf-token") || "";
+  const csrfToken = container.dataset.csrfToken ?? "";
   const root = createRoot(container);
   root.render(<Reports csrfToken={csrfToken} />);
 }

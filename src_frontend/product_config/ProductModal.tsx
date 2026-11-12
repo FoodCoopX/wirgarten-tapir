@@ -288,7 +288,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
                     type={"text"}
                     value={solidarityChoices}
                     maxLength={512}
-                    pattern={"[\\d\\s.,\\-]*"}
+                    pattern={String.raw`[\d\s.,\-]*`}
                     onChange={(e) => setSolidarityChoices(e.target.value)}
                   />
                   <Form.Text>

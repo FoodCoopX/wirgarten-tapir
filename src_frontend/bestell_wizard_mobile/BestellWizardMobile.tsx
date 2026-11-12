@@ -544,12 +544,11 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
         setSelectedNumberOfCoopShares(7);
         break;
       case "association":
-        const visibleMembershipTypes = getVisibleAssociationMembershipTypes(
-          settings.associationMembershipTypes,
+        setSelectedAssociationMembershipType(
+          getVisibleAssociationMembershipTypes(
+            settings.associationMembershipTypes,
+          )[0],
         );
-        if (visibleMembershipTypes.length > 0) {
-          setSelectedAssociationMembershipType(visibleMembershipTypes[0]);
-        }
     }
     setSepaAllowed(true);
     setContractAccepted(true);

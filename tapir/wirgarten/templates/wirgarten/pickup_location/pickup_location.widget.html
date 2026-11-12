@@ -16,7 +16,7 @@
     const items = pickupLocation.querySelectorAll('.list-group-item-action');
 
     items.forEach(function (item) {
-      const value = item.getAttribute('data-value');
+      const value = item.dataset.value;
       if (!value) {
         item.remove();
       }
@@ -31,7 +31,7 @@
       item.classList.add('active');
 
       // Set the value of the hidden input field to the selected option's value
-      const selectedValue = item.getAttribute('data-value');
+      const selectedValue = item.dataset.value;
       document.querySelector('#hidden_pickup_location').value = selectedValue;
 
     }
@@ -62,7 +62,7 @@
       item.addEventListener('click', function (e) {
         e.preventDefault();
         handleItemClick(item);
-        PickupLocationMap.selectLocation(item.getAttribute('data-value'));
+        PickupLocationMap.selectLocation(item.dataset.value);
       });
     });
 

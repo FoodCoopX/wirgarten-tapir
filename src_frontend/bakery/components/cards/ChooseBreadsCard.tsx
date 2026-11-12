@@ -64,7 +64,7 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
   useEffect(() => {
     selectionRef.current = `${memberId}/${selectedYear}/${selectedWeek}`;
     loadData();
-    // eslint-disable-next-line
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [memberId, selectedWeek, selectedYear]);
 
   const firstDelivery = deliveries[0];
@@ -163,7 +163,7 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
 
   const handleBreadSelected = (deliveryId: string, breadId: string) => {
     const delivery = deliveries.find((d) => d.id === deliveryId);
-    if (!delivery || !delivery.pickupLocation) return;
+    if (!delivery?.pickupLocation) return;
 
     setSaving(deliveryId);
     bakeryApi
@@ -223,8 +223,6 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
     return breads.find((b) => b.id === breadId);
   };
 
-  const maxBreads = deliveries.length;
-
   return (
     <div>
       <YearWeekSelectorCard
@@ -248,10 +246,6 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
         <div className="row g-3" style={{ marginTop: "0.5rem" }}>
           {deliveries.map((delivery, index) => {
             const isFirstSlot = index === 0;
-            const hasBreadSelected = !!delivery.bread;
-
-            const canEditThisLocation =
-              (chooseStationPerBread || isFirstSlot) && canChangePickupLocation;
             const selectedBread = getBreadDetails(delivery.bread || null);
             const breadLabels = selectedBread
               ? (selectedBread.labels || [])

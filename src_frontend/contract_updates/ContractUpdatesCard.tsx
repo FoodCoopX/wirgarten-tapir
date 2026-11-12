@@ -143,7 +143,10 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
             );
           })}
           {memberDataToConfirm.sharePurchases.map((purchase) => (
-            <li className={purchase.autoConfirmed ? "text-warning" : ""}>
+            <li
+              key={purchase.id}
+              className={purchase.autoConfirmed ? "text-warning" : ""}
+            >
               {purchase.quantity}{" "}
               {purchase.quantity === 1
                 ? "Genossenschaftsanteil"
@@ -179,12 +182,10 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
     }
 
     if ("subscriptionsDeleted" in data) {
-      {
-        dates = [
-          ...dates,
-          ...data.subscriptionsDeleted.map((deleted) => deleted.createdDate),
-        ];
-      }
+      dates = [
+        ...dates,
+        ...data.subscriptionsDeleted.map((deleted) => deleted.createdDate),
+      ];
     }
 
     if (dates.length === 0) {
@@ -316,9 +317,7 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
   }
 
   function getFilteredChanges(filter?: ContractFilter) {
-    if (filter === undefined) {
-      filter = selectedFilter;
-    }
+    filter ??= selectedFilter;
     switch (filter) {
       case "all":
         return changesToConfirm;
@@ -487,6 +486,7 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
                         if (confirmedChanges.has(change)) {
                           return (
                             <PlaceholderTableRows
+                              key={change.member.id}
                               nbRows={1}
                               nbColumns={6}
                               size={"lg"}

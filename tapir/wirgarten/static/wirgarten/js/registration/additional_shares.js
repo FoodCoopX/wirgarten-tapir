@@ -1,8 +1,8 @@
-var initAdditionalShareSummary = (
+function initAdditionalShareSummary(
   additional_share_prices,
   capacity_total,
   additional_share_sizes,
-) => {
+) {
   const calculatePrice = (chicken_share) => {
     const [key, price] = chicken_share.split(":");
     const elem = document.querySelector(`[name$='${key}']`);
@@ -83,4 +83,4 @@ var initAdditionalShareSummary = (
   });
 
   handleChange();
-};
+}
