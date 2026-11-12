@@ -9,6 +9,7 @@ from tapir_mail.service.token import register_tokens
 from tapir_mail.service.triggers import register_trigger
 from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
+from tapir.associations.mail_tokens import ASSOCIATION_DEPOSIT_MAIL_TOKENS
 from tapir.bakery.services.bread_mail_token_service import BreadMailTokenService
 from tapir.configuration.parameter import get_parameter_value
 from tapir.core.exceptions import TapirImproperlyConfigured
@@ -173,7 +174,8 @@ def _register_triggers():
         }
         | TOKENS_ORDER_PAYMENT
         | TOKENS_COOP_ENTRY
-        | TOKENS_SOLIDARITY_CONTRIBUTION,
+        | TOKENS_SOLIDARITY_CONTRIBUTION
+        | ASSOCIATION_DEPOSIT_MAIL_TOKENS,
         required=True,
     )
     register_transactional_trigger(
@@ -197,7 +199,8 @@ def _register_triggers():
         key=Events.REGISTER_MEMBERSHIP_ONLY,
         tokens=TOKENS_ORDER_PAYMENT
         | TOKENS_COOP_ENTRY
-        | TOKENS_SOLIDARITY_CONTRIBUTION,
+        | TOKENS_SOLIDARITY_CONTRIBUTION
+        | ASSOCIATION_DEPOSIT_MAIL_TOKENS,
         required=lambda: not legal_status_is_company(cache={}),
     )
     register_transactional_trigger(
@@ -330,7 +333,8 @@ def _register_triggers():
         }
         | TOKENS_ORDER_PAYMENT
         | TOKENS_COOP_ENTRY
-        | TOKENS_SOLIDARITY_CONTRIBUTION,
+        | TOKENS_SOLIDARITY_CONTRIBUTION
+        | ASSOCIATION_DEPOSIT_MAIL_TOKENS,
         required=True,
     )
 
