@@ -1,4 +1,5 @@
 import json
+from unittest.mock import patch
 
 from django.urls import reverse
 
@@ -18,8 +19,8 @@ class TestGetExportSegmentsView(TapirIntegrationTest):
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
+    @patch.object(ExportSegmentManager, "registered_export_segments", {})
     def test_getExportSegmentsView_default_returnsCorrectData(self):
-        ExportSegmentManager.registered_export_segments = {}
         for segment in self.get_test_segments():
             ExportSegmentManager.register_segment(segment)
 

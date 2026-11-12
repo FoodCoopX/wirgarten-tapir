@@ -68,6 +68,7 @@ from tapir.wirgarten.service.products import (
 from tapir.wirgarten.utils import format_date, get_now, get_today
 
 BASE_PRODUCT_FIELD_PREFIX = "base_product_"
+MONTHLY_PRICE_HELP_TEXT = "{:.2f} € inkl. MwSt / Monat"
 
 
 def clean_home_delivery_pickup_location(
@@ -232,9 +233,7 @@ class BaseProductForm(forms.Form):
                     min_value=0,
                     initial=0,
                     label=prod_field.name,
-                    help_text="""{:.2f} € inkl. MwSt / Monat""".format(
-                        prices[prod_field.id]
-                    ),
+                    help_text=MONTHLY_PRICE_HELP_TEXT.format(prices[prod_field.id]),
                 )
             )
 
@@ -653,9 +652,7 @@ class AdditionalProductForm(forms.Form):
                     required=False,
                     initial=False,
                     label=product.name,
-                    help_text="""{:.2f} € inkl. MwSt / Monat""".format(
-                        prices[product.id]
-                    ),
+                    help_text=MONTHLY_PRICE_HELP_TEXT.format(prices[product.id]),
                 )
         else:
             for field_key, product in self.products.items():
@@ -664,9 +661,7 @@ class AdditionalProductForm(forms.Form):
                     min_value=0,
                     initial=0,
                     label=product.name,
-                    help_text="""{:.2f} € inkl. MwSt / Monat""".format(
-                        prices[product.id]
-                    ),
+                    help_text=MONTHLY_PRICE_HELP_TEXT.format(prices[product.id]),
                 )
 
         if self.product_type.contract_link:

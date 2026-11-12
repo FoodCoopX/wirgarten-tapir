@@ -10,6 +10,8 @@ from tapir.wirgarten.models import (
     LogEntry,
 )
 
+DELETED_PREFIX = "Deleted:"
+
 
 class Command(BaseCommand):
     help = "Delete member/shares/subscription data from database"
@@ -70,7 +72,7 @@ class Command(BaseCommand):
                     print("DRY-RUN: Would delete shares: ", shares_list)
                 else:
                     res = shares_list.delete()
-                    print("Deleted:", res)
+                    print(DELETED_PREFIX, res)
             except Exception as e:
                 print(e)
 
@@ -81,7 +83,7 @@ class Command(BaseCommand):
                     print("DRY-RUN: Would delete subscriptions: ", subs_list)
                 else:
                     res = subs_list.delete()
-                    print("Deleted:", res)
+                    print(DELETED_PREFIX, res)
             except Exception as e:
                 print(e)
 
@@ -100,7 +102,7 @@ class Command(BaseCommand):
                         p.delete()
                         print("Deleted payment.", p)
                     res = ref_list.delete()
-                    print("Deleted:", res)
+                    print(DELETED_PREFIX, res)
             except Exception as e:
                 print(e)
                 return
@@ -111,7 +113,7 @@ class Command(BaseCommand):
                     print("DRY-RUN: Would delete log entries: ", log_entries)
                 else:
                     res = log_entries.delete()
-                    print("Deleted:", res)
+                    print(DELETED_PREFIX, res)
             except Exception as e:
                 print(e)
                 return

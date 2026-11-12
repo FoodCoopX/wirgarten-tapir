@@ -12,6 +12,8 @@ from tapir.pickup_locations.models import PickupLocation
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import Permission
 
+INVALID_WEEK_MESSAGE = "Ungültige Kalenderwoche."
+
 DAY_LABELS = {
     0: "Montag",
     1: "Dienstag",
@@ -62,7 +64,7 @@ def baking_list_pdf(request, year: int, week: int, day: int):
     try:
         context = _build_base_context(year, week, day, "Backliste")
     except InvalidWeek:
-        return HttpResponse("Ungültige Kalenderwoche.", status=400)
+        return HttpResponse(INVALID_WEEK_MESSAGE, status=400)
     context.update(BakingListService.get_baking_list(year, week, day))
 
     filename = f"Backliste_KW{week}_{year}_{context['day_label']}.pdf"
@@ -75,7 +77,7 @@ def distribution_list_pdf(request, year: int, week: int, day: int):
     try:
         context = _build_base_context(year, week, day, "Verteilliste")
     except InvalidWeek:
-        return HttpResponse("Ungültige Kalenderwoche.", status=400)
+        return HttpResponse(INVALID_WEEK_MESSAGE, status=400)
     context.update(DistributionListService.get_distribution_list(year, week, day))
 
     filename = f"Verteilliste_KW{week}_{year}_{context['day_label']}.pdf"
@@ -88,7 +90,7 @@ def pickup_list_pdf(request, year: int, week: int, day: int, pickup_location_id:
     try:
         context = _build_base_context(year, week, day, "Abholliste")
     except InvalidWeek:
-        return HttpResponse("Ungültige Kalenderwoche.", status=400)
+        return HttpResponse(INVALID_WEEK_MESSAGE, status=400)
 
     try:
         pickup_location = PickupLocation.objects.get(id=pickup_location_id)
@@ -112,7 +114,7 @@ def pickup_lists_all_pdf(request, year: int, week: int, day: int):
             year, week, day, "Abhollisten – Alle Abholstationen"
         )
     except InvalidWeek:
-        return HttpResponse("Ungültige Kalenderwoche.", status=400)
+        return HttpResponse(INVALID_WEEK_MESSAGE, status=400)
 
     cache = {}
     delivery_days = TapirCache.get_delivery_day_by_pickup_location_id(cache=cache)

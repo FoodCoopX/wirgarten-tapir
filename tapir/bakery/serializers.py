@@ -51,6 +51,9 @@ def _get_pickup_location_delivery_day(serializer, obj) -> int | None:
     )
 
 
+BREAD_NAME_SOURCE = "bread.name"
+
+
 class BreadLabelSerializer(serializers.ModelSerializer):
     class Meta:
         model = BreadLabel
@@ -180,7 +183,7 @@ class BreadDetailSerializer(serializers.ModelSerializer):
 
 
 class BreadDeliverySerializer(serializers.ModelSerializer):
-    bread_name = serializers.CharField(source="bread.name", read_only=True)
+    bread_name = serializers.CharField(source=BREAD_NAME_SOURCE, read_only=True)
     pickup_location = serializers.SerializerMethodField()
     pickup_location_name = serializers.SerializerMethodField()
     pickup_location_street = serializers.SerializerMethodField()
@@ -493,7 +496,7 @@ class SolverApplyResponseSerializer(serializers.Serializer):
 
 
 class StoveSessionSerializer(serializers.ModelSerializer):
-    bread_name = serializers.CharField(source="bread.name", read_only=True)
+    bread_name = serializers.CharField(source=BREAD_NAME_SOURCE, read_only=True)
 
     class Meta:
         model = StoveSession
@@ -502,7 +505,7 @@ class StoveSessionSerializer(serializers.ModelSerializer):
 
 
 class BreadsToBakePerWeekSerializer(serializers.ModelSerializer):
-    bread_name = serializers.CharField(source="bread.name", read_only=True)
+    bread_name = serializers.CharField(source=BREAD_NAME_SOURCE, read_only=True)
 
     class Meta:
         model = BreadsToBakePerWeek
@@ -511,7 +514,7 @@ class BreadsToBakePerWeekSerializer(serializers.ModelSerializer):
 
 
 class BreadsPerPickupLocationPerWeekSerializer(serializers.ModelSerializer):
-    bread_name = serializers.CharField(source="bread.name", read_only=True)
+    bread_name = serializers.CharField(source=BREAD_NAME_SOURCE, read_only=True)
     pickup_location_name = serializers.CharField(
         source="pickup_location.name", read_only=True
     )
@@ -567,7 +570,7 @@ class PreferenceSatisfactionResponseSerializer(serializers.Serializer):
 
 
 class BreadSpecificsPerDeliveryDaySerializer(serializers.ModelSerializer):
-    bread_name = serializers.CharField(source="bread.name", read_only=True)
+    bread_name = serializers.CharField(source=BREAD_NAME_SOURCE, read_only=True)
 
     class Meta:
         model = BreadSpecificsPerDeliveryDay
