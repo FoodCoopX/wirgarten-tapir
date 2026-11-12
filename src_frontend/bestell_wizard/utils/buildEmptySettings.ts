@@ -2,6 +2,16 @@ import { BestellWizardSettings } from "../types/BestellWizardSettings.ts";
 
 export function buildEmptySettings(): BestellWizardSettings {
   return {
+    associationDeposit: {
+      enabled: false,
+      name: "Vereinseinlage",
+      minimum: 200,
+      increment: 50,
+      supportingMembersRequired: true,
+      allowLargerSignup: false,
+      allowSignupWithoutDeposit: false,
+      signupWithoutDepositLabel: "",
+    },
     theme: "biotop",
     pickupLocations: [],
     productTypes: [],

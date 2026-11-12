@@ -14,6 +14,9 @@ from rest_framework.views import APIView
 from tapir_mail.triggers.transactional_trigger import TransactionalTriggerData
 
 from tapir.accounts.services.email_normaliser import EmailNormaliser
+from tapir.associations.services.association_deposit_policy import (
+    AssociationDepositPolicy,
+)
 from tapir.associations.models import AssociationMembershipType
 from tapir.bestell_wizard.serializers import (
     BestellWizardConfirmOrderRequestSerializer,
@@ -335,6 +338,19 @@ class BestellWizardConfirmOrderApiView(APIView):
             cache=cache,
         )
 
+        AssociationDepositPolicy.validate_signup_selection(
+            validated_serializer_data.get("association_deposit_amount"),
+            any(
+                quantity > 0
+                for quantity in validated_serializer_data[
+                    "shopping_cart_order"
+                ].values()
+            ),
+            cache,
+            payment_option=validated_serializer_data.get(
+                "association_deposit_payment_option", "once"
+            ),
+        )
         return BestellWizardOrderFulfiller.create_member_and_fulfill_order(
             validated_serializer_data=validated_serializer_data,
             delivery_address_input=delivery_address_input,
@@ -548,6 +564,9 @@ class BestellWizardBaseDataApiView(APIView):
         )
 
         response_data = self.build_simple_response_fields(self.cache)
+        response_data["association_deposit"] = AssociationDepositPolicy.get_settings(
+            self.cache
+        )
 
         trial_period_length_in_weeks = 0
         if get_parameter_value(

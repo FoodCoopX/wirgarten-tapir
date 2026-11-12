@@ -12,12 +12,30 @@
  * Do not edit the class manually.
  */
 
+import type { AssociationDepositPaymentOptionEnum } from "./AssociationDepositPaymentOptionEnum";
+import {
+  AssociationDepositPaymentOptionEnumFromJSON,
+  AssociationDepositPaymentOptionEnumToJSON,
+} from "./AssociationDepositPaymentOptionEnum";
+
 /**
  *
  * @export
  * @interface PublicConfirmWaitingListEntryRequestRequest
  */
 export interface PublicConfirmWaitingListEntryRequestRequest {
+  /**
+   *
+   * @type {number}
+   * @memberof PublicConfirmWaitingListEntryRequestRequest
+   */
+  associationDepositAmount?: number | null;
+  /**
+   *
+   * @type {AssociationDepositPaymentOptionEnum}
+   * @memberof PublicConfirmWaitingListEntryRequestRequest
+   */
+  associationDepositPaymentOption?: AssociationDepositPaymentOptionEnum;
   /**
    *
    * @type {string}
@@ -135,6 +153,16 @@ export function PublicConfirmWaitingListEntryRequestRequestFromJSONTyped(
     return json;
   }
   return {
+    associationDepositAmount:
+      json["association_deposit_amount"] == null
+        ? undefined
+        : json["association_deposit_amount"],
+    associationDepositPaymentOption:
+      json["association_deposit_payment_option"] == null
+        ? undefined
+        : AssociationDepositPaymentOptionEnumFromJSON(
+            json["association_deposit_payment_option"],
+          ),
     entryId: json["entry_id"],
     linkKey: json["link_key"],
     accountOwner: json["account_owner"],
@@ -167,6 +195,11 @@ export function PublicConfirmWaitingListEntryRequestRequestToJSONTyped(
   }
 
   return {
+    association_deposit_amount: value["associationDepositAmount"],
+    association_deposit_payment_option:
+      AssociationDepositPaymentOptionEnumToJSON(
+        value["associationDepositPaymentOption"],
+      ),
     entry_id: value["entryId"],
     link_key: value["linkKey"],
     account_owner: value["accountOwner"],
