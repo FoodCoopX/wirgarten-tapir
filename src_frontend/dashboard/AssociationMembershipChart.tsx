@@ -108,9 +108,9 @@ export default function AssociationMembershipChart({
         });
       })
       .catch((error) => {
-        if (!controller.signal.aborted) {
-          handleRequestError(error, errorMessage, setToastDatas);
-        }
+        if (controller.signal.aborted) return;
+
+        return handleRequestError(error, errorMessage, setToastDatas);
       })
       .finally(() => {
         if (!controller.signal.aborted) setLoading(false);
