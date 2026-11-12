@@ -1,9 +1,7 @@
 import React, { useId, useState } from "react";
 import { Modal } from "react-bootstrap";
 import TapirButton from "../components/TapirButton.tsx";
-import AdminDashboardNumberOfAssociationCancellations from "./AdminDashboardNumberOfAssociationCancellations.tsx";
-import AdminDashboardNumberOfAssociationCancellationsRelativeToCancellationDate from "./AdminDashboardNumberOfAssociationCancellationsRelativeToCancellationDate.tsx";
-import AdminDashboardNumberOfAssociationMembers from "./AdminDashboardNumberOfAssociationMembers.tsx";
+import AssociationMembershipChart from "./AssociationMembershipChart.tsx";
 
 interface AdminDashboardAssociationDataBaseProps {
   csrfToken: string;
@@ -38,12 +36,26 @@ const AdminDashboardAssociationDataBase: React.FC<
           </Modal.Header>
           <Modal.Body>
             <div className={"d-flex gap-2 flex-column"}>
-              <AdminDashboardNumberOfAssociationMembers csrfToken={csrfToken} />
-              <AdminDashboardNumberOfAssociationCancellations
+              <AssociationMembershipChart
                 csrfToken={csrfToken}
+                title="Aktive Vereinsmitgliedschaften"
+                chartType="line"
+                loadData="associationsApiNumberOfAssociationMembersPerMonthRetrieve"
+                errorMessage="Fehler beim Laden der Mitgliederzahlen"
               />
-              <AdminDashboardNumberOfAssociationCancellationsRelativeToCancellationDate
+              <AssociationMembershipChart
                 csrfToken={csrfToken}
+                title="Mitgliedschaftsenden nach Monat"
+                chartType="bar"
+                loadData="associationsApiNumberOfAssociationMembershipCancellationsPerMonthRetrieve"
+                errorMessage="Fehler beim Laden der Mitgliedschaftsenden"
+              />
+              <AssociationMembershipChart
+                csrfToken={csrfToken}
+                title="Erfasste Kündigungen nach Monat"
+                chartType="bar"
+                loadData="associationsApiNumberOfAssociationMembershipCancellationsPerMonthRelativeToCancellationRetrieve"
+                errorMessage="Fehler beim Laden der erfassten Kündigungen"
               />
             </div>
           </Modal.Body>
