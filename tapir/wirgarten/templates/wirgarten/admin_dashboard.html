@@ -67,7 +67,10 @@
                 </div>
             </div>
             <div class="dashboard-tile card harvest-share-variants-tile clickable"
+                 role="button"
+                 tabindex="0"
                  onclick="showOtherCancellationReasons()"
+                 onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); showOtherCancellationReasons(); }"
                  style="cursor:pointer">
                 <div class="card-body">
                     <h4>Kündigungsgründe</h4>

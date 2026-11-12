@@ -107,7 +107,7 @@ export const LabelsModal: React.FC<BreadLabelsModalProps> = ({
                 {availableLabels.map((label) => {
                   const isAssigned = assignedLabelIds.includes(label.id!);
                   return (
-                    <div
+                    <label
                       key={label.id}
                       className="list-group-item d-flex justify-content-between align-items-center"
                       style={{
@@ -116,19 +116,17 @@ export const LabelsModal: React.FC<BreadLabelsModalProps> = ({
                           ? "var(--bakery-table-header)"
                           : "white",
                       }}
-                      onClick={() => handleToggleLabel(label.id!)}
                     >
-                      <div className="flex-grow-1">
+                      <span className="flex-grow-1">
                         <strong>{label.name}</strong>
-                      </div>
-                      <div className="form-check form-switch">
+                      </span>
+                      <span className="form-check form-switch">
                         <input
                           className="form-check-input"
                           type="checkbox"
                           role="switch"
                           checked={isAssigned}
                           onChange={() => handleToggleLabel(label.id!)}
-                          onClick={(e) => e.stopPropagation()}
                           style={{
                             backgroundColor: isAssigned
                               ? "var(--bakery-primary-dark)"
@@ -139,8 +137,8 @@ export const LabelsModal: React.FC<BreadLabelsModalProps> = ({
                             cursor: "pointer",
                           }}
                         />
-                      </div>
-                    </div>
+                      </span>
+                    </label>
                   );
                 })}
               </div>

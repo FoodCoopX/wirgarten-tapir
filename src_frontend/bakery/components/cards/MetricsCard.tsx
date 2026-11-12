@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { BakeryApi } from "../../../api-client";
 import type { PreferenceSatisfactionResponse } from "../../../api-client/models";
 import { useApi } from "../../../hooks/useApi";
+import { onEnterOrSpace } from "../../../utils/onEnterOrSpace";
 import "../../styles/bakery_styles.css";
 
 interface MetricsCardProps {
@@ -128,7 +129,13 @@ export const MetricsCard: React.FC<MetricsCardProps> = ({
           <div key={metric.pickupLocationId} className="card">
             <div
               className="card-header py-2 metrics-card-header"
+              role="button"
+              tabIndex={0}
+              aria-expanded={isExpanded}
               onClick={() => toggleLocation(metric.pickupLocationId)}
+              onKeyDown={onEnterOrSpace(() =>
+                toggleLocation(metric.pickupLocationId),
+              )}
             >
               <div className="d-flex justify-content-between align-items-center">
                 <small className="fw-bold">{metric.pickupLocationName}</small>

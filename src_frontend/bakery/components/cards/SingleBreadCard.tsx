@@ -5,6 +5,7 @@ import type {
   BreadLabel,
   BreadList,
 } from "../../../api-client/models";
+import { onEnterOrSpace } from "../../../utils/onEnterOrSpace";
 import "../../styles/bakery_styles.css";
 
 interface SingleBreadCardProps {
@@ -42,7 +43,12 @@ export const SingleBreadCard: React.FC<SingleBreadCardProps> = ({
       <div
         className={`card h-100 shadow-sm position-relative ${isSelected ? "bread-selected" : isPreferred ? "bread-preferred" : ""}`}
         style={{ cursor: onClick ? "pointer" : "default" }}
-        onClick={onClick}
+        {...(onClick && {
+          role: "button",
+          tabIndex: 0,
+          onClick,
+          onKeyDown: onEnterOrSpace(onClick),
+        })}
       >
         {(isSelected || isPreferred) && (
           <div

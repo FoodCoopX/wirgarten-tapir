@@ -235,22 +235,24 @@ export const BreadsCard: React.FC<BreadsCardProps> = ({
                   className="list-group-item px-0 d-flex justify-content-between align-items-start border-0 list-item-transparent"
                 >
                   <div className="d-flex gap-3 flex-grow-1">
-                    <div
+                    <button
+                      type="button"
                       className="bread-list-image"
                       onClick={() => handleImageClick(bread.id!)}
                       title="Bild ändern"
+                      aria-label="Bild ändern"
                     >
                       {bread.picture ? (
                         <img src={bread.picture} alt={bread.name} />
                       ) : (
-                        <div className="bread-list-placeholder">
+                        <span className="bread-list-placeholder">
                           <EggFried
                             size={28}
                             className="icon-bakery-primary-darker"
                           />
-                        </div>
+                        </span>
                       )}
-                      <div
+                      <span
                         className="bread-image-overlay"
                         style={{
                           position: "absolute",
@@ -290,8 +292,8 @@ export const BreadsCard: React.FC<BreadsCardProps> = ({
                             transition: "opacity 0.2s",
                           }}
                         />
-                      </div>
-                    </div>
+                      </span>
+                    </button>
                     <input
                       type="file"
                       accept="image/*"
