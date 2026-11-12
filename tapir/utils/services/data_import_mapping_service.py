@@ -14,8 +14,7 @@ from dataclasses import dataclass, field
 
 from django.db import transaction
 
-from tapir.utils.exceptions import DryRunException
-from tapir.utils.services.data_import_service import IMPORT_TYPES
+from tapir.utils.services.data_import_service import IMPORT_TYPES, discarded_stdout
 from tapir.utils.services.data_import_utils import DataImportUtils
 
 # Sentinel used in <select> options and posted mapping values for "do not import this column".
@@ -476,13 +475,14 @@ class DataImportMappingService:
                         import_type.importer(
                             row=mapped_rows_by_type[type_key],
                             update_existing=update_existing,
+                            dry_run=True,
+                            stdout=discarded_stdout(),
                         )
                     except Exception as error:
                         raise RuntimeError(
                             f"{import_type.name}: {str(error) or error.__class__.__name__}"
                         ) from error
-                raise DryRunException()
-        except DryRunException:
+                transaction.set_rollback(True)
             return True, messages
         except RuntimeError as error:
             return False, [str(error)]
@@ -566,7 +566,10 @@ class DataImportMappingService:
             import_type = IMPORT_TYPES[type_key]
             try:
                 import_type.importer(
-                    row=mapped_rows_by_type[type_key], update_existing=update_existing
+                    row=mapped_rows_by_type[type_key],
+                    update_existing=update_existing,
+                    dry_run=False,
+                    stdout=discarded_stdout(),
                 )
             except Exception as error:
                 raise RuntimeError(
@@ -585,23 +588,14 @@ class DataImportMappingService:
     ) -> int:
         """Applies the given rows for real, all in one transaction: if any of them fails the
         whole batch is rolled back, nothing is saved (requirement: no partial apply)."""
-        from tapir.utils.services.member_importer import MemberImporter
-
-        keycloak_updates_before = MemberImporter.keycloak_updates_enabled
-        MemberImporter.keycloak_updates_enabled = True
-        try:
-            with transaction.atomic():
-                for index in row_indices:
-                    raw_row = raw_rows[index]
-                    mapped_rows_by_type = {
-                        type_key: cls.build_mapped_row(
-                            raw_row, mapping, semantic_fields, type_key
-                        )
-                        for type_key in selected_type_keys
-                    }
-                    cls.apply_row(
-                        selected_type_keys, mapped_rows_by_type, update_existing
+        with transaction.atomic():
+            for index in row_indices:
+                raw_row = raw_rows[index]
+                mapped_rows_by_type = {
+                    type_key: cls.build_mapped_row(
+                        raw_row, mapping, semantic_fields, type_key
                     )
-        finally:
-            MemberImporter.keycloak_updates_enabled = keycloak_updates_before
+                    for type_key in selected_type_keys
+                }
+                cls.apply_row(selected_type_keys, mapped_rows_by_type, update_existing)
         return len(row_indices)
