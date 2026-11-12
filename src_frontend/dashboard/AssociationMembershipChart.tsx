@@ -89,7 +89,7 @@ export default function AssociationMembershipChart({
     const controller = new AbortController();
     setLoading(true);
     setInputError("");
-    api[loadData](
+    void api[loadData](
       { startDate: start, endDate: end },
       { signal: controller.signal },
     )
@@ -151,11 +151,9 @@ export default function AssociationMembershipChart({
           </div>
         </Card.Header>
         <Card.Body>
-          {inputError ? (
-            <Alert variant="warning">{inputError}</Alert>
-          ) : loading ? (
-            <Spinner />
-          ) : (
+          {inputError && <Alert variant="warning">{inputError}</Alert>}
+          {!inputError && loading && <Spinner />}
+          {!inputError && !loading && (
             <div
               className="position-relative w-100"
               style={{ height: "18rem" }}
