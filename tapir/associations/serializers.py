@@ -118,3 +118,25 @@ class AssociationDepositSettingsSerializer(Serializer):
     allow_larger_signup = serializers.BooleanField()
     allow_signup_without_deposit = serializers.BooleanField()
     signup_without_deposit_label = CharField()
+
+
+class AssociationDepositDetailsSerializer(Serializer):
+    visible = serializers.BooleanField()
+    name = CharField()
+    amount = serializers.DecimalField(
+        max_digits=10, decimal_places=2, coerce_to_string=False
+    )
+    agreement_requested = serializers.BooleanField()
+    can_increase = serializers.BooleanField()
+    minimum = serializers.DecimalField(
+        max_digits=8, decimal_places=2, coerce_to_string=False
+    )
+    increment = serializers.DecimalField(
+        max_digits=8, decimal_places=2, coerce_to_string=False
+    )
+
+
+class IncreaseAssociationDepositRequestSerializer(Serializer):
+    total_amount = serializers.DecimalField(max_digits=8, decimal_places=2)
+    previous_amount = serializers.DecimalField(max_digits=10, decimal_places=2)
+    confirmation = serializers.BooleanField()

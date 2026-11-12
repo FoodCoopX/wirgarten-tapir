@@ -45,6 +45,17 @@ class AssociationDepositPaymentCreator:
                 )
             return existing.payment
 
+        return AssociationDepositPaymentCreator.create_agreed_debit(
+            membership, amount, actor, cache
+        )
+
+    @staticmethod
+    def create_agreed_debit(
+        membership: AssociationMembership,
+        amount: Decimal,
+        actor: TapirUser | None,
+        cache: dict,
+    ) -> Payment:
         if not association_deposits_enabled(cache):
             raise ValidationError("Vereinseinlagen sind nicht aktiviert.")
         AssociationDepositAmountValidator.validate_positive_amount(amount)

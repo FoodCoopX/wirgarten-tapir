@@ -52,11 +52,11 @@ class AssociationMembership(TapirModel):
 
 
 class AssociationDeposit(TapirModel):
-    membership = models.OneToOneField(
+    membership = models.ForeignKey(
         AssociationMembership,
         null=True,
         on_delete=models.SET_NULL,
-        related_name="deposit",
+        related_name="deposits",
     )
     payment = models.OneToOneField(
         Payment, null=True, on_delete=models.CASCADE, related_name="association_deposit"

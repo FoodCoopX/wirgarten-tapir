@@ -101,6 +101,61 @@ paths:
               schema:
                 $ref: '#/components/schemas/OrderConfirmationResponse'
           description: ''
+  /associations/api/member_association_deposit/{member_id}:
+    get:
+      operationId: associations_api_member_association_deposit_retrieve
+      parameters:
+      - in: path
+        name: member_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - associations
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssociationDepositDetails'
+          description: ''
+    post:
+      operationId: associations_api_member_association_deposit_create
+      parameters:
+      - in: path
+        name: member_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - associations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IncreaseAssociationDepositRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/IncreaseAssociationDepositRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/IncreaseAssociationDepositRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssociationDepositDetails'
+          description: ''
   /associations/api/member_association_memberships:
     get:
       operationId: associations_api_member_association_memberships_retrieve
@@ -8896,6 +8951,46 @@ components:
         * `no_favorites` - no_favorites
         * `got_favorite` - got_favorite
         * `no_match` - no_match
+    AssociationDepositDetails:
+      type: object
+      properties:
+        visible:
+          type: boolean
+        name:
+          type: string
+        amount:
+          type: number
+          format: double
+          maximum: 100000000
+          minimum: -100000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+        agreement_requested:
+          type: boolean
+        can_increase:
+          type: boolean
+        minimum:
+          type: number
+          format: double
+          maximum: 1000000
+          minimum: -1000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+        increment:
+          type: number
+          format: double
+          maximum: 1000000
+          minimum: -1000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+      required:
+      - agreement_requested
+      - amount
+      - can_increase
+      - increment
+      - minimum
+      - name
+      - visible
     AssociationDepositPaymentOptionEnum:
       enum:
       - once
@@ -13040,6 +13135,23 @@ components:
       - joker_restrictions
       - jokers_enabled
       - max_jokers_per_member
+    IncreaseAssociationDepositRequestRequest:
+      type: object
+      properties:
+        total_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
+        previous_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        confirmation:
+          type: boolean
+      required:
+      - confirmation
+      - previous_amount
+      - total_amount
     Ingredient:
       type: object
       properties:
