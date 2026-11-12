@@ -10,7 +10,7 @@ import {
   Tooltip,
 } from "chart.js";
 import dayjs from "dayjs";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useId, useState } from "react";
 import { Alert, Card, Form, Spinner } from "react-bootstrap";
 import { Line } from "react-chartjs-2";
 import { AssociationsApi, type GraphDataset } from "../api-client";
@@ -26,6 +26,7 @@ interface AdminDashboardNumberOfAssociationMembersProps {
 const AdminDashboardNumberOfAssociationMembers: React.FC<
   AdminDashboardNumberOfAssociationMembersProps
 > = ({ csrfToken }) => {
+  const dateFieldId = useId();
   const api = useApi(AssociationsApi, csrfToken);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,13 +54,13 @@ const AdminDashboardNumberOfAssociationMembers: React.FC<
 
     const startDate = new Date(startDateAsString);
     if (Number.isNaN(startDate.valueOf())) {
-      setInputError("Ungültiges Start-Datum: " + startDateAsString);
+      setInputError("Ungültiges Startdatum: " + startDateAsString);
       return;
     }
 
     const endDate = new Date(endDateAsString);
     if (Number.isNaN(endDate.valueOf())) {
-      setInputError("Ungültiges End-Datum: " + endDateAsString);
+      setInputError("Ungültiges Enddatum: " + endDateAsString);
       return;
     }
 
@@ -75,7 +76,7 @@ const AdminDashboardNumberOfAssociationMembers: React.FC<
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der Anzahl an Mitglieder",
+          "Fehler beim Laden der Mitgliederzahlen",
           setToastDatas,
         ),
       )
@@ -114,19 +115,36 @@ const AdminDashboardNumberOfAssociationMembers: React.FC<
     <>
       <Card>
         <Card.Header>
-          <div className={"d-flex justify-content-between align-items-center"}>
-            <Card.Title className={"mb-0"}>Anzahl an Mitglieder</Card.Title>
-            <div className={"d-flex gap-2"}>
-              <Form.Control
-                type={"date"}
-                value={startDateAsString}
-                onChange={(event) => setStartDateAsString(event.target.value)}
-              />
-              <Form.Control
-                type={"date"}
-                value={endDateAsString}
-                onChange={(event) => setEndDateAsString(event.target.value)}
-              />
+          <div
+            className={
+              "d-flex flex-wrap justify-content-between align-items-end gap-2"
+            }
+          >
+            <Card.Title className={"mb-0"}>
+              Aktive Vereinsmitgliedschaften
+            </Card.Title>
+            <div
+              className={"d-grid gap-2 mw-100"}
+              style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }}
+            >
+              <Form.Group controlId={dateFieldId + "-start"}>
+                <Form.Label>Von</Form.Label>
+                <Form.Control
+                  type={"date"}
+                  size={"sm"}
+                  value={startDateAsString}
+                  onChange={(event) => setStartDateAsString(event.target.value)}
+                />
+              </Form.Group>
+              <Form.Group controlId={dateFieldId + "-end"}>
+                <Form.Label>Bis</Form.Label>
+                <Form.Control
+                  type={"date"}
+                  size={"sm"}
+                  value={endDateAsString}
+                  onChange={(event) => setEndDateAsString(event.target.value)}
+                />
+              </Form.Group>
             </div>
           </div>
         </Card.Header>
@@ -135,12 +153,16 @@ const AdminDashboardNumberOfAssociationMembers: React.FC<
           {loading ? (
             <Spinner />
           ) : (
-            <div style={{ width: "833px" }}>
+            <div
+              className={"position-relative w-100"}
+              style={{ height: "18rem" }}
+            >
               <Line
                 data={buildDataNumberOfMembers()}
                 options={{
                   responsive: true,
-                  scales: { y: { suggestedMin: 0 } },
+                  maintainAspectRatio: false,
+                  scales: { y: { min: 0, ticks: { precision: 0 } } },
                 }}
               />
             </div>
