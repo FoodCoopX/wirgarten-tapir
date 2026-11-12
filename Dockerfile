@@ -1,5 +1,5 @@
 FROM node:26-trixie-slim AS mjml
-RUN npm install -g mjml@4.14.1
+RUN npm install -g --ignore-scripts mjml@4.14.1
 
 FROM python:3.14.10 AS python-base
 ENV PYTHONUNBUFFERED=1
