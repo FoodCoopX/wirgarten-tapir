@@ -8,6 +8,7 @@ import TapirToastContainer from "../../components/TapirToastContainer.tsx";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
+import { AssociationDeposit } from "./AssociationDeposit";
 import { getCurrentMembership } from "./getCurrentMembership.tsx";
 import { getFutureMemberships } from "./getFutureMemberships.tsx";
 import { getPastMemberships } from "./getPastMemberships.tsx";
@@ -88,6 +89,7 @@ const AssociationMembershipCard: React.FC<AssociationMembershipCardProps> = ({
               )}
             </>
           )}
+          <AssociationDeposit memberId={memberId} csrfToken={csrfToken} />
         </Card.Body>
         {orderWizardUrl && (
           <Card.Footer>

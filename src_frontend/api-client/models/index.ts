@@ -3,6 +3,7 @@
 export * from "./AdminSetAssociationMembershipRequestRequest";
 export * from "./AssignmentLogEntry";
 export * from "./AssignmentLogEntryStatusEnum";
+export * from "./AssociationDepositDetails";
 export * from "./AssociationDepositPaymentOptionEnum";
 export * from "./AssociationDepositSettings";
 export * from "./AssociationMembership";
@@ -103,6 +104,7 @@ export * from "./GroupedEmailDispatch";
 export * from "./GrowingPeriod";
 export * from "./GrowingPeriodRequest";
 export * from "./GrowingPeriodWithDeliveryDayAdjustments";
+export * from "./IncreaseAssociationDepositRequestRequest";
 export * from "./Ingredient";
 export * from "./IngredientRequest";
 export * from "./Joker";
