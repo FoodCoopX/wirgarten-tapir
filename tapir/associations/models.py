@@ -52,6 +52,10 @@ class AssociationMembership(TapirModel):
 
 
 class AssociationDeposit(TapirModel):
+    imported_outstanding_amount = models.DecimalField(
+        max_digits=8, decimal_places=2, null=True
+    )
+    opening_balance = models.DecimalField(max_digits=8, decimal_places=2, null=True)
     membership = models.ForeignKey(
         AssociationMembership,
         null=True,

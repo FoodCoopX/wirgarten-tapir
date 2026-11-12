@@ -339,7 +339,11 @@ class ExportMembersView(PermissionRequiredMixin, View):
                 "Solidarbeitrag",
             ]
             + (
-                ["Vereinseinlage vereinbart (€)", "Vereinseinlage exportiert (€)"]
+                [
+                    "Vereinseinlage vereinbart (€)",
+                    "Vereinseinlage exportiert oder erhalten (€)",
+                    "Importierter Restbetrag (€)",
+                ]
                 if show_deposits
                 else []
             )
@@ -384,6 +388,7 @@ class ExportMembersView(PermissionRequiredMixin, View):
                     [
                         format_currency(member.deposit_agreed),
                         format_currency(member.deposit_exported),
+                        format_currency(member.deposit_imported_outstanding),
                     ]
                     if show_deposits
                     else []

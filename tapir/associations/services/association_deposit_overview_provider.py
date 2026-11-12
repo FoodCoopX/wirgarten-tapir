@@ -48,28 +48,49 @@ class AssociationDepositOverviewProvider:
 
     @staticmethod
     def agreed_amount():
-        return Sum("payment__amount", default=0)
+        return (
+            Sum("payment__amount", default=0)
+            + Sum("opening_balance", default=0)
+            + Sum("imported_outstanding_amount", default=0)
+        )
 
     @classmethod
     def _annotate(cls, queryset, membership_id):
         deposits = AssociationDeposit.objects.filter(membership_id=membership_id)
-        exported = deposits.filter(payment__transaction__isnull=False)
         return queryset.annotate(
-            deposit_agreement_requested=Exists(deposits.filter(payment=None)),
+            deposit_imported_outstanding=Coalesce(
+                Subquery(
+                    deposits.order_by()
+                    .values("membership_id")
+                    .annotate(total=Sum("imported_outstanding_amount"))
+                    .values("total")
+                ),
+                Decimal("0"),
+            ),
+            deposit_agreement_requested=Exists(
+                deposits.filter(payment=None, opening_balance=None)
+            ),
             deposit_agreed=Coalesce(
                 Subquery(
                     deposits.order_by()
                     .values("membership_id")
-                    .annotate(total=Sum("payment__amount"))
+                    .annotate(total=cls.agreed_amount())
                     .values("total")
                 ),
                 Decimal("0"),
             ),
             deposit_exported=Coalesce(
                 Subquery(
-                    exported.order_by()
+                    deposits.order_by()
                     .values("membership_id")
-                    .annotate(total=Sum("payment__amount"))
+                    .annotate(
+                        total=Sum(
+                            "payment__amount",
+                            filter=Q(payment__transaction__isnull=False),
+                            default=0,
+                        )
+                        + Sum("opening_balance", default=0)
+                    )
                     .values("total")
                 ),
                 Decimal("0"),

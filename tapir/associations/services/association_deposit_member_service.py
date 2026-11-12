@@ -2,11 +2,12 @@ from decimal import Decimal
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Q, Sum
 
-from tapir.associations.models import AssociationMembership
 from tapir.associations.services.association_deposit_amount_validator import (
     AssociationDepositAmountValidator,
+)
+from tapir.associations.services.association_deposit_overview_provider import (
+    AssociationDepositOverviewProvider,
 )
 from tapir.associations.services.association_deposit_payment_creator import (
     AssociationDepositPaymentCreator,
@@ -15,26 +16,24 @@ from tapir.associations.services.association_deposit_policy import (
     AssociationDepositPolicy,
 )
 from tapir.wirgarten.models import Member
-from tapir.wirgarten.utils import get_today, legal_status_is_association
+from tapir.wirgarten.utils import legal_status_is_association
 
 
 class AssociationDepositMemberService:
     @staticmethod
     def _get_membership(member, cache: dict):
-        today = get_today(cache=cache)
-        return (
-            AssociationMembership.objects.filter(member=member, deposits__isnull=False)
-            .filter(Q(end_date=None) | Q(end_date__gte=today))
-            .order_by("-start_date", "-pk")
-            .first()
-        )
+        return AssociationDepositOverviewProvider.annotate_memberships(
+            AssociationDepositOverviewProvider.memberships_with_deposits(
+                member.pk, cache
+            )
+        ).first()
 
     @staticmethod
     def _get_amount(membership) -> Decimal:
         if membership is None:
             return Decimal("0")
         return membership.deposits.aggregate(
-            amount=Sum("payment__amount", default=Decimal("0"))
+            amount=AssociationDepositOverviewProvider.agreed_amount()
         )["amount"]
 
     @classmethod
@@ -51,16 +50,19 @@ class AssociationDepositMemberService:
                 "increment": settings["increment"],
             }
         membership = cls._get_membership(member, cache)
-        amount = cls._get_amount(membership)
+        amount = membership.deposit_agreed if membership else Decimal("0")
         return {
             "visible": settings["enabled"] or membership is not None,
             "name": settings["name"],
             "amount": amount,
             "agreement_requested": bool(
-                membership and membership.deposits.filter(payment=None).exists()
+                membership and membership.deposit_agreement_requested
             ),
             "can_increase": bool(
-                amount and settings["enabled"] and settings["allow_member_increase"]
+                amount
+                and settings["enabled"]
+                and settings["allow_member_increase"]
+                and not membership.deposit_imported_outstanding
             ),
             "minimum": settings["minimum"],
             "increment": settings["increment"],
@@ -76,10 +78,14 @@ class AssociationDepositMemberService:
         if not settings["enabled"] or not settings["allow_member_increase"]:
             raise ValidationError("Einlagenerhöhungen sind nicht aktiviert.")
         membership = cls._get_membership(member, cache)
-        current = cls._get_amount(membership)
+        current = membership.deposit_agreed if membership else Decimal("0")
         if current <= 0 or total_amount < current:
             raise ValidationError(
                 "Eine bestehende Einlage kann hier nur erhöht werden."
+            )
+        if membership.deposit_imported_outstanding:
+            raise ValidationError(
+                "Bitte kläre den importierten offenen Betrag mit der Verwaltung."
             )
         if total_amount == current:
             return
