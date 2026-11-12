@@ -696,7 +696,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     if (!selectedProductTypes.includes(productType)) {
       setSelectedProductTypes([...selectedProductTypes, productType]);
     }
-    setCurrentStep(productType.id! + "_order");
+    setCurrentStep(`${productType.id!}_order`);
   }
 
   function getStepComponent(step: Step) {

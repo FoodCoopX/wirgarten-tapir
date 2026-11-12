@@ -24,4 +24,5 @@ export type Step =
   | "14_confirmation"
   | "14b_confirmation_waiting_list"
   | "loading"
-  | string;
+  | `${string}_intro`
+  | `${string}_order`;

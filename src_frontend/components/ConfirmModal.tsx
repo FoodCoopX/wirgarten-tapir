@@ -1,5 +1,5 @@
 import React, { ReactNode } from "react";
-import { Modal } from "react-bootstrap";
+import { Modal, ModalProps } from "react-bootstrap";
 import { ButtonVariant } from "react-bootstrap/types";
 import TapirButton from "./TapirButton";
 
@@ -14,14 +14,7 @@ interface ConfirmDeleteModalProps {
   onCancel: () => void;
   loading?: boolean;
   size?: "sm" | "lg" | "xl";
-  fullscreen?:
-    | "sm-down"
-    | "md-down"
-    | "lg-down"
-    | "xl-down"
-    | "xxl-down"
-    | string
-    | true;
+  fullscreen?: ModalProps["fullscreen"];
 }
 
 const ConfirmModal: React.FC<ConfirmDeleteModalProps> = ({

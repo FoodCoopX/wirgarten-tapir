@@ -263,7 +263,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
   }
 
   function buildStepsFor(deliveryMode: DeliveryMode) {
-    const newSteps = [];
+    const newSteps: Step[] = [];
     if (
       !memberAlreadyHasASubscriptionForThisProductType &&
       shouldIncludeStepGrowingPeriodChoice(settings.growingPeriodChoices)
@@ -271,7 +271,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
       newSteps.push("3b_growing_period_choice");
     }
 
-    newSteps.push(productTypeId + "_intro", productTypeId + "_order");
+    newSteps.push(`${productTypeId}_intro`, `${productTypeId}_order`);
 
     if (mustAddPickupLocation) {
       newSteps.push("5a_pickup_location_intro");
@@ -615,7 +615,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
             confirmOrder={onConfirm}
             goToNextStep={goToNextStep}
             goToProductTypeStep={() => {
-              setCurrentStep(productTypeId + "_order");
+              setCurrentStep(`${productTypeId}_order`);
             }}
             selectedPickupLocations={selectedPickupLocations}
             becomeMemberNow={false}
@@ -731,7 +731,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
       hideFooterButtonsOnLastStep={false}
       selectedNumberOfCoopShares={0}
       goToProductTypeStep={() => {
-        setCurrentStep(productTypeId + "_order");
+        setCurrentStep(`${productTypeId}_order`);
       }}
       contractStartDate={selectedGrowingPeriod?.contractStartDate!}
       selectedGrowingPeriod={selectedGrowingPeriod}

@@ -48,7 +48,7 @@ export function buildSteps(
 
   for (const productType of selectedProductTypes) {
     if (!productType.noDelivery) {
-      newSteps.push(productType.id! + "_intro", productType.id! + "_order");
+      newSteps.push(`${productType.id!}_intro`, `${productType.id!}_order`);
     }
   }
 
@@ -96,7 +96,7 @@ export function buildSteps(
 
   for (const productType of selectedProductTypes) {
     if (productType.noDelivery) {
-      newSteps.push(productType.id! + "_intro", productType.id! + "_order");
+      newSteps.push(`${productType.id!}_intro`, `${productType.id!}_order`);
     }
   }
 

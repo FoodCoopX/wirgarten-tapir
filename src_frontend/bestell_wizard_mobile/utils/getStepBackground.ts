@@ -8,7 +8,7 @@ export function getStepBackground(
 ): string | undefined {
   switch (step) {
     case "1a_welcome":
-    case "1b_welcome":
+    case "1b_welcome_waiting_list":
       return settings.images.step1BackgroundImage;
     case "2_first_name":
       return settings.images.step2BackgroundImage;

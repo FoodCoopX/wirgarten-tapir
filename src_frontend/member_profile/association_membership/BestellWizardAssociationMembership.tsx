@@ -81,7 +81,7 @@ const BestellWizardAssociationMembership: React.FC<
 
   useEffect(() => {
     if (settingsLoaded) {
-      const newSteps = ["6a_coop_intro", "6b_association_membership"];
+      const newSteps: Step[] = ["6a_coop_intro", "6b_association_membership"];
       if (needsBankingData) {
         newSteps.push("9_banking_data");
       }

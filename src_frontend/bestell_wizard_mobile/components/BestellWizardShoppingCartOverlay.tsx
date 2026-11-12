@@ -70,7 +70,7 @@ const BestellWizardShoppingCartOverlay: React.FC<
 
   function canEditProductTypeOrder(productType: PublicProductType) {
     return (
-      steps.indexOf(productType.id! + "_intro") < steps.indexOf(currentStep)
+      steps.indexOf(`${productType.id!}_intro`) < steps.indexOf(currentStep)
     );
   }
 
