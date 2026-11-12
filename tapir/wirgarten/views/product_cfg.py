@@ -50,16 +50,13 @@ class ProductCfgView(PermissionRequiredMixin, generic.TemplateView):
         super().__init__(*args, **kwargs)
         self.cache = {}
 
-    def get_growing_period_status(self, period) -> str:
+    def get_growing_period_status(self, period: GrowingPeriod) -> str:
         today = get_today(cache=self.cache)
         if period.end_date < today:
             return "old"
-        elif period.start_date <= today <= period.end_date:
+        if period.start_date <= today:
             return "active"
-        elif period.start_date > today:
-            return "upcoming"
-        else:
-            return ""
+        return "upcoming"
 
     @classmethod
     def build_product_object_for_context(cls, product, product_prices):
