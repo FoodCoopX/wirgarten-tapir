@@ -10,7 +10,7 @@ interface PersonalDataFormControlProps {
   type: string;
   showValidation: boolean;
   isValid: boolean;
-  extraText?: string;
+  extraText?: React.ReactNode;
   style?: CSSProperties;
   disabled?: boolean;
   maxLength?: number;
