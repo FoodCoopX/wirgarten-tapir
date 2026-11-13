@@ -16,19 +16,24 @@ class PaymentDataForm(forms.Form):
         super(PaymentDataForm, self).__init__(*args, **kwargs)
 
         self.instance = instance
-        coop_shares_part = ""
-        if legal_status_is_cooperative(cache={}):
-            coop_shares_part = "die gezeichneten Geschäftsanteile sowie "
         self.fields["sepa_consent"] = forms.BooleanField(
-            label=_(
-                """Ich ermächtige die {site_name} {coop_shares_part}die monatlichen Beträge für den 
-                Ernteanteil und ggf. weitere Produkte mittels Lastschrift von meinem Bankkonto einzuziehen. Zugleich 
-                weise ich mein Kreditinstitut an, die gezogene Lastschrift einzulösen. """
-            ).format(
-                site_name=get_parameter_value(ParameterKeys.SITE_NAME),
-                coop_shares_part=coop_shares_part,
-            ),
+            label=self.get_sepa_consent_label(cache={}),
             required=True,
+        )
+
+    @staticmethod
+    def get_sepa_consent_label(cache: dict):
+        coop_shares_part = ""
+        if legal_status_is_cooperative(cache=cache):
+            coop_shares_part = "die gezeichneten Geschäftsanteile sowie "
+        return _(
+            "Ich ermächtige die {site_name}, {coop_shares_part}die monatlichen "
+            "Beträge für den Ernteanteil und ggf. weitere Produkte mittels "
+            "Lastschrift von meinem Bankkonto einzuziehen. Zugleich weise ich "
+            "mein Kreditinstitut an, die gezogene Lastschrift einzulösen."
+        ).format(
+            site_name=get_parameter_value(ParameterKeys.SITE_NAME, cache=cache),
+            coop_shares_part=coop_shares_part,
         )
 
     colspans = {"sepa_consent": 2}

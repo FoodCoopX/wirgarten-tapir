@@ -237,7 +237,9 @@
       <div id="member-payment-data" class="card">
         <h5 class="card-header d-flex justify-content-between align-items-center">
           {% translate "Bankverbindung" %}
-          <span id="bank_data_button" data-member-id="{{ object.id }}"></span>
+          <span id="bank_data_button"
+                data-member-id="{{ object.id }}"
+                data-sepa-consent-label="{{ sepa_consent_label }}"></span>
         </h5>
         <div class="card-body">
           <dl class="mb-0">
