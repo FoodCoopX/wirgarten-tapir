@@ -85,3 +85,44 @@ class MemberMailingListDataResponseSerializer(serializers.Serializer):
     waiting_for_confirmation_lists = serializers.ListField(
         child=serializers.CharField()
     )
+
+
+class MemberDataFieldSerializer(serializers.Serializer):
+    name = serializers.CharField()
+    label = serializers.CharField()
+    value = serializers.CharField(allow_null=True)
+
+
+class MemberDataSectionSerializer(serializers.Serializer):
+    key = serializers.CharField()
+    title = serializers.CharField()
+    purpose = serializers.CharField()
+    retention = serializers.CharField()
+    records = serializers.ListField(child=MemberDataFieldSerializer(many=True))
+
+
+class MemberDataLogOverviewSerializer(serializers.Serializer):
+    type = serializers.CharField()
+    count = serializers.IntegerField()
+    first = serializers.DateTimeField()
+    last = serializers.DateTimeField()
+
+
+class MemberDataMailOverviewSerializer(serializers.Serializer):
+    count = serializers.IntegerField()
+    first = serializers.DateTimeField(allow_null=True)
+    last = serializers.DateTimeField(allow_null=True)
+
+
+class MemberDataMemberSerializer(serializers.Serializer):
+    id = serializers.CharField()
+    member_no = serializers.IntegerField(allow_null=True)
+    name = serializers.CharField()
+
+
+class MemberDataDisclosureSerializer(serializers.Serializer):
+    generated_at = serializers.DateTimeField()
+    member = MemberDataMemberSerializer()
+    sections = MemberDataSectionSerializer(many=True)
+    log_overview = MemberDataLogOverviewSerializer(many=True)
+    mail_overview = MemberDataMailOverviewSerializer()

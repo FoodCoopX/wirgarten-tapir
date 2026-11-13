@@ -3224,6 +3224,56 @@ paths:
               schema:
                 type: string
           description: ''
+  /core/api/member_data_disclosure:
+    get:
+      operationId: core_api_member_data_disclosure_retrieve
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - core
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberDataDisclosure'
+          description: ''
+  /core/api/member_data_disclosure_download:
+    get:
+      operationId: core_api_member_data_disclosure_download_retrieve
+      parameters:
+      - in: query
+        name: file_type
+        schema:
+          type: string
+          enum:
+          - json
+          - pdf
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - core
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+                format: binary
+          description: ''
   /core/api/member_extra_emails:
     get:
       operationId: core_api_member_extra_emails_retrieve
@@ -13781,6 +13831,116 @@ components:
             minLength: 1
       required:
       - credit_ids
+    MemberDataDisclosure:
+      type: object
+      properties:
+        generated_at:
+          type: string
+          format: date-time
+        member:
+          $ref: '#/components/schemas/MemberDataMember'
+        sections:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemberDataSection'
+        log_overview:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemberDataLogOverview'
+        mail_overview:
+          $ref: '#/components/schemas/MemberDataMailOverview'
+      required:
+      - generated_at
+      - log_overview
+      - mail_overview
+      - member
+      - sections
+    MemberDataField:
+      type: object
+      properties:
+        name:
+          type: string
+        label:
+          type: string
+        value:
+          type: string
+          nullable: true
+      required:
+      - label
+      - name
+      - value
+    MemberDataLogOverview:
+      type: object
+      properties:
+        type:
+          type: string
+        count:
+          type: integer
+        first:
+          type: string
+          format: date-time
+        last:
+          type: string
+          format: date-time
+      required:
+      - count
+      - first
+      - last
+      - type
+    MemberDataMailOverview:
+      type: object
+      properties:
+        count:
+          type: integer
+        first:
+          type: string
+          format: date-time
+          nullable: true
+        last:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - count
+      - first
+      - last
+    MemberDataMember:
+      type: object
+      properties:
+        id:
+          type: string
+        member_no:
+          type: integer
+          nullable: true
+        name:
+          type: string
+      required:
+      - id
+      - member_no
+      - name
+    MemberDataSection:
+      type: object
+      properties:
+        key:
+          type: string
+        title:
+          type: string
+        purpose:
+          type: string
+        retention:
+          type: string
+        records:
+          type: array
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/MemberDataField'
+      required:
+      - key
+      - purpose
+      - records
+      - retention
+      - title
     MemberDataToConfirm:
       type: object
       properties:

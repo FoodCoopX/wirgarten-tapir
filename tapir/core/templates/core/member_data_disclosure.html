@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <title>Gespeicherte Daten - {{ member.name }}</title>
+    <style>
+      @page { size: A4; margin: 18mm 16mm; @bottom-right { content: "Seite " counter(page) " von " counter(pages); font-size: 8pt; color: #666; } }
+      body { font-family: sans-serif; font-size: 9.5pt; color: #222; }
+      h1 { font-size: 18pt; margin: 0 0 4pt; }
+      h2 { font-size: 12pt; margin: 16pt 0 2pt; border-bottom: 1px solid #999; padding-bottom: 2pt; page-break-after: avoid; }
+      .meta, .note { color: #555; font-size: 8.5pt; }
+      .note { margin: 0 0 6pt; }
+      table { width: 100%; border-collapse: collapse; margin-bottom: 6pt; page-break-inside: avoid; }
+      th, td { text-align: left; vertical-align: top; padding: 2pt 4pt; border-bottom: 1px solid #ddd; }
+      th { width: 38%; font-weight: normal; color: #444; }
+      .empty { color: #777; font-style: italic; }
+    </style>
+  </head>
+  <body>
+    <h1>Gespeicherte Daten</h1>
+    <p class="meta">
+      {{ member.name }}{% if member.member_no %}, Mitgliedsnummer {{ member.member_no }}{% endif %}<br>
+      Stand: {{ generated_at|date:"d.m.Y H:i" }}
+    </p>
+
+    {% for section in sections %}
+      <h2>{{ section.title }}</h2>
+      <p class="note">Zweck: {{ section.purpose }} Aufbewahrung: {{ section.retention }}</p>
+      {% for record in section.records %}
+        <table>
+          {% for field in record %}
+            <tr>
+              <th>{{ field.label }}</th>
+              <td>{{ field.value|default_if_none:"–" }}</td>
+            </tr>
+          {% endfor %}
+        </table>
+      {% empty %}
+        <p class="empty">Keine Daten gespeichert.</p>
+      {% endfor %}
+    {% endfor %}
+
+    <h2>Protokoll</h2>
+    <p class="note">Änderungen und Vorgänge zu deinem Konto. Hier steht nur die Übersicht, nicht der Inhalt der einzelnen Einträge.</p>
+    {% if log_overview %}
+      <table>
+        {% for entry in log_overview %}
+          <tr>
+            <th>{{ entry.type }}</th>
+            <td>{{ entry.count }}x, {{ entry.first|date:"d.m.Y" }} bis {{ entry.last|date:"d.m.Y" }}</td>
+          </tr>
+        {% endfor %}
+      </table>
+    {% else %}
+      <p class="empty">Keine Einträge.</p>
+    {% endif %}
+
+    <h2>Versendete E-Mails</h2>
+    <p class="note">Nur die Übersicht, nicht der Inhalt der Mails.</p>
+    {% if mail_overview.count %}
+      <p>{{ mail_overview.count }} E-Mails, {{ mail_overview.first|date:"d.m.Y" }} bis {{ mail_overview.last|date:"d.m.Y" }}</p>
+    {% else %}
+      <p class="empty">Keine E-Mails gespeichert.</p>
+    {% endif %}
+  </body>
+</html>
