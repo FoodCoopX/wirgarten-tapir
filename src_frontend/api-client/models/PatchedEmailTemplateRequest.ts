@@ -12,6 +12,12 @@
  * Do not edit the class manually.
  */
 
+import type { TemplateTypeEnum } from "./TemplateTypeEnum";
+import {
+  TemplateTypeEnumFromJSON,
+  TemplateTypeEnumToJSON,
+} from "./TemplateTypeEnum";
+
 /**
  *
  * @export
@@ -26,6 +32,12 @@ export interface PatchedEmailTemplateRequest {
   id?: string;
   /**
    *
+   * @type {boolean}
+   * @memberof PatchedEmailTemplateRequest
+   */
+  isDefaultLayout?: boolean;
+  /**
+   *
    * @type {string}
    * @memberof PatchedEmailTemplateRequest
    */
@@ -36,6 +48,12 @@ export interface PatchedEmailTemplateRequest {
    * @memberof PatchedEmailTemplateRequest
    */
   content?: string;
+  /**
+   *
+   * @type {TemplateTypeEnum}
+   * @memberof PatchedEmailTemplateRequest
+   */
+  templateType?: TemplateTypeEnum;
 }
 
 /**
@@ -62,8 +80,14 @@ export function PatchedEmailTemplateRequestFromJSONTyped(
   }
   return {
     id: json["id"] == null ? undefined : json["id"],
+    isDefaultLayout:
+      json["is_default_layout"] == null ? undefined : json["is_default_layout"],
     name: json["name"] == null ? undefined : json["name"],
     content: json["content"] == null ? undefined : json["content"],
+    templateType:
+      json["template_type"] == null
+        ? undefined
+        : TemplateTypeEnumFromJSON(json["template_type"]),
   };
 }
 
@@ -83,7 +107,9 @@ export function PatchedEmailTemplateRequestToJSONTyped(
 
   return {
     id: value["id"],
+    is_default_layout: value["isDefaultLayout"],
     name: value["name"],
     content: value["content"],
+    template_type: TemplateTypeEnumToJSON(value["templateType"]),
   };
 }

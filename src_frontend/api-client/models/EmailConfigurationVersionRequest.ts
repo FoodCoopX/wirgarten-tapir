@@ -84,6 +84,18 @@ export interface EmailConfigurationVersionRequest {
   dynamicSegmentsSubtractive?: Array<string>;
   /**
    *
+   * @type {boolean}
+   * @memberof EmailConfigurationVersionRequest
+   */
+  layoutEnabled?: boolean;
+  /**
+   *
+   * @type {string}
+   * @memberof EmailConfigurationVersionRequest
+   */
+  layoutTemplate?: string | null;
+  /**
+   *
    * @type {Array<string>}
    * @memberof EmailConfigurationVersionRequest
    */
@@ -167,6 +179,10 @@ export function EmailConfigurationVersionRequestFromJSONTyped(
       json["dynamic_segments_subtractive"] == null
         ? undefined
         : json["dynamic_segments_subtractive"],
+    layoutEnabled:
+      json["layout_enabled"] == null ? undefined : json["layout_enabled"],
+    layoutTemplate:
+      json["layout_template"] == null ? undefined : json["layout_template"],
     staticSegmentsAdditive: json["static_segments_additive"],
     staticSegmentsSubtractive: json["static_segments_subtractive"],
     mailCategoriesAdditive: json["mail_categories_additive"],
@@ -201,6 +217,8 @@ export function EmailConfigurationVersionRequestToJSONTyped(
     status: EmailConfigurationVersionStatusEnumToJSON(value["status"]),
     dynamic_segments_additive: value["dynamicSegmentsAdditive"],
     dynamic_segments_subtractive: value["dynamicSegmentsSubtractive"],
+    layout_enabled: value["layoutEnabled"],
+    layout_template: value["layoutTemplate"],
     static_segments_additive: value["staticSegmentsAdditive"],
     static_segments_subtractive: value["staticSegmentsSubtractive"],
     mail_categories_additive: value["mailCategoriesAdditive"],

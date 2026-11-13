@@ -3,6 +3,43 @@ info:
   title: ''
   version: 0.0.0
 paths:
+  /accounts/api/unverified_members:
+    get:
+      operationId: accounts_api_unverified_members_retrieve
+      tags:
+      - accounts
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnverifiedMembersResponse'
+          description: ''
+    post:
+      operationId: accounts_api_unverified_members_create
+      tags:
+      - accounts
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SendVerificationEmailsResponse'
+          description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
   /associations/api/admin_create_membership:
     post:
       operationId: associations_api_admin_create_membership_create
@@ -6570,23 +6607,6 @@ paths:
                 $ref: '#/components/schemas/PaginatedEmailConfigurationDispatchList'
           description: ''
   /tapirmail/api/email_configuration_version/:
-    get:
-      operationId: tapirmail_api_email_configuration_version_list
-      tags:
-      - tapirmail
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/BundledEmailConfiguration'
-          description: ''
     post:
       operationId: tapirmail_api_email_configuration_version_create
       tags:
@@ -6616,28 +6636,6 @@ paths:
                 additionalProperties: {}
           description: ''
   /tapirmail/api/email_configuration_version/{id}/:
-    get:
-      operationId: tapirmail_api_email_configuration_version_retrieve
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: string
-        description: Ein eindeutiger Wert, der email configuration version identifiziert.
-        required: true
-      tags:
-      - tapirmail
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BundledEmailConfiguration'
-          description: ''
     put:
       operationId: tapirmail_api_email_configuration_version_update
       parameters:
@@ -6853,6 +6851,34 @@ paths:
               schema:
                 type: object
                 additionalProperties: {}
+          description: ''
+  /tapirmail/api/email_configuration_version/preview/:
+    post:
+      operationId: email_configuration_version_preview
+      tags:
+      - tapirmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PreviewRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PreviewRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PreviewRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreviewResponse'
           description: ''
   /tapirmail/api/email_dispatch/:
     get:
@@ -7610,6 +7636,26 @@ paths:
   /tapirmail/api/media_library/stored_upload/:
     get:
       operationId: storeduploads_list
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Anzahl der pro Seite zurückzugebenden Ergebnisse.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: Der initiale Index, von dem die Ergebnisse zurückgegeben werden
+          sollen.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: Ein Suchbegriff.
+        schema:
+          type: string
       tags:
       - tapirmail
       security:
@@ -7621,9 +7667,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/StoredUpload'
+                $ref: '#/components/schemas/PaginatedStoredUploadList'
           description: ''
     post:
       operationId: storeduploads_create
@@ -7763,6 +7807,20 @@ paths:
   /tapirmail/api/media_library/temporary_upload/:
     get:
       operationId: temporaryuploads_list
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Anzahl der pro Seite zurückzugebenden Ergebnisse.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: Der initiale Index, von dem die Ergebnisse zurückgegeben werden
+          sollen.
+        schema:
+          type: integer
       tags:
       - tapirmail
       security:
@@ -7774,9 +7832,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/TemporaryUpload'
+                $ref: '#/components/schemas/PaginatedTemporaryUploadList'
           description: ''
     post:
       operationId: temporaryuploads_create
@@ -10421,6 +10477,11 @@ components:
           nullable: true
         segment_data:
           $ref: '#/components/schemas/SegmentData'
+        layout_template_id:
+          type: string
+          nullable: true
+        layout_enabled:
+          type: boolean
       required:
       - content
       - name
@@ -10454,6 +10515,11 @@ components:
           nullable: true
         segment_data:
           $ref: '#/components/schemas/SegmentDataRequest'
+        layout_template_id:
+          type: string
+          nullable: true
+        layout_enabled:
+          type: boolean
       required:
       - content
       - name
@@ -12100,6 +12166,11 @@ components:
           items:
             type: string
             maxLength: 100
+        layout_enabled:
+          type: boolean
+        layout_template:
+          type: string
+          nullable: true
         static_segments_additive:
           type: array
           items:
@@ -12155,6 +12226,12 @@ components:
             type: string
             minLength: 1
             maxLength: 100
+        layout_enabled:
+          type: boolean
+        layout_template:
+          type: string
+          minLength: 1
+          nullable: true
         static_segments_additive:
           type: array
           items:
@@ -12409,6 +12486,8 @@ components:
         id:
           type: string
           maxLength: 10
+        is_default_layout:
+          type: boolean
         created_at:
           type: string
           format: date-time
@@ -12422,6 +12501,8 @@ components:
           maxLength: 255
         content:
           type: string
+        template_type:
+          $ref: '#/components/schemas/TemplateTypeEnum'
       required:
       - content
       - created_at
@@ -12434,6 +12515,8 @@ components:
           type: string
           minLength: 1
           maxLength: 10
+        is_default_layout:
+          type: boolean
         name:
           type: string
           minLength: 1
@@ -12441,6 +12524,8 @@ components:
         content:
           type: string
           minLength: 1
+        template_type:
+          $ref: '#/components/schemas/TemplateTypeEnum'
       required:
       - content
       - name
@@ -14367,6 +14452,52 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PaymentTransaction'
+    PaginatedStoredUploadList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/StoredUpload'
+    PaginatedTemporaryUploadList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/TemporaryUpload'
     PaginatedWaitingListEntryDetailsList:
       type: object
       required:
@@ -14606,6 +14737,11 @@ components:
           nullable: true
         segment_data:
           $ref: '#/components/schemas/SegmentDataRequest'
+        layout_template_id:
+          type: string
+          nullable: true
+        layout_enabled:
+          type: boolean
     PatchedCsvExportModelRequest:
       type: object
       properties:
@@ -14693,6 +14829,8 @@ components:
           type: string
           minLength: 1
           maxLength: 10
+        is_default_layout:
+          type: boolean
         name:
           type: string
           minLength: 1
@@ -14700,6 +14838,8 @@ components:
         content:
           type: string
           minLength: 1
+        template_type:
+          $ref: '#/components/schemas/TemplateTypeEnum'
     PatchedExtendedProductRequest:
       type: object
       properties:
@@ -16056,6 +16196,26 @@ components:
       type: string
       description: "* `de` - \U0001F1E9\U0001F1EA Deutsch\n* `en` - \U0001F1EC\U0001F1E7
         English"
+    PreviewRequest:
+      type: object
+      properties:
+        content:
+          type: string
+          minLength: 1
+        layout_template_id:
+          type: string
+          nullable: true
+        layout_enabled:
+          type: boolean
+      required:
+      - content
+    PreviewResponse:
+      type: object
+      properties:
+        html:
+          type: string
+      required:
+      - html
     Product:
       type: object
       properties:
@@ -16789,6 +16949,16 @@ components:
       - id
       - label
       - type
+    SendVerificationEmailsResponse:
+      type: object
+      properties:
+        member_count:
+          type: integer
+        estimated_duration_seconds:
+          type: integer
+      required:
+      - estimated_duration_seconds
+      - member_count
     SetAssociationMembershipEndDateRequestRequest:
       type: object
       properties:
@@ -17586,6 +17756,14 @@ components:
       - quantity
       - start_date
       - updated_at
+    TemplateTypeEnum:
+      enum:
+      - start
+      - layout
+      type: string
+      description: |-
+        * `start` - Start-Vorlage
+        * `layout` - Layout-Vorlage
     TemporaryUpload:
       type: object
       properties:
@@ -17767,6 +17945,54 @@ components:
         * `dynamic` - dynamic
         * `static` - static
         * `category` - category
+    UnverifiedMember:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        member_no:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
+          title: Mitgliedsnummer
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        email:
+          type: string
+          title: E-Mail-Adresse
+          maxLength: 150
+        has_keycloak_account:
+          type: boolean
+          readOnly: true
+        profile_url:
+          type: string
+          readOnly: true
+      required:
+      - first_name
+      - has_keycloak_account
+      - last_name
+      - profile_url
+    UnverifiedMembersResponse:
+      type: object
+      properties:
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/UnverifiedMember'
+        estimated_duration_seconds:
+          type: integer
+        sending_in_progress:
+          type: boolean
+      required:
+      - estimated_duration_seconds
+      - members
+      - sending_in_progress
     UpdateMemberSolidarityContributionRequestRequest:
       type: object
       properties:

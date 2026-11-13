@@ -60,6 +60,7 @@
             </div>
         {% endif %}
         {% include 'wirgarten/generic/action-button.html' with onclick='handleResendVerifyEmail()' disabled=True title='Email Verifizierungslink erneut senden (z. B. wenn die erste Mail nicht angekommen ist)' type='primary' icon='mark_email_read' class='needs-member' %}
+        <span id="send_verification_emails_button"></span>
         <div style="width: 1em"></div>
         <div class="d-flex gap-2">
             <span id="subscription_cancellation_button"></span>

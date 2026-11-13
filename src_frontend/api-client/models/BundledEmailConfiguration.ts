@@ -71,6 +71,18 @@ export interface BundledEmailConfiguration {
    * @memberof BundledEmailConfiguration
    */
   segmentData: SegmentData;
+  /**
+   *
+   * @type {string}
+   * @memberof BundledEmailConfiguration
+   */
+  layoutTemplateId?: string | null;
+  /**
+   *
+   * @type {boolean}
+   * @memberof BundledEmailConfiguration
+   */
+  layoutEnabled?: boolean;
 }
 
 /**
@@ -114,6 +126,12 @@ export function BundledEmailConfigurationFromJSONTyped(
     updatedAt:
       json["updated_at"] == null ? undefined : new Date(json["updated_at"]),
     segmentData: SegmentDataFromJSON(json["segment_data"]),
+    layoutTemplateId:
+      json["layout_template_id"] == null
+        ? undefined
+        : json["layout_template_id"],
+    layoutEnabled:
+      json["layout_enabled"] == null ? undefined : json["layout_enabled"],
   };
 }
 
@@ -146,5 +164,7 @@ export function BundledEmailConfigurationToJSONTyped(
         ? undefined
         : (value["updatedAt"] as any).toISOString(),
     segment_data: SegmentDataToJSON(value["segmentData"]),
+    layout_template_id: value["layoutTemplateId"],
+    layout_enabled: value["layoutEnabled"],
   };
 }

@@ -244,12 +244,15 @@ class MemberSegmentProvider:
 
     @classmethod
     def get_queryset_active_members(
-        cls, reference_datetime: datetime.datetime | None = None
+        cls,
+        reference_datetime: datetime.datetime | None = None,
+        cache: dict | None = None,
     ):
         from tapir.wirgarten.models import CoopShareTransaction, Member
         from tapir.associations.models import AssociationMembership
 
-        cache = {}
+        if cache is None:
+            cache = {}
         if reference_datetime is None:
             reference_datetime = get_now(cache=cache)
 

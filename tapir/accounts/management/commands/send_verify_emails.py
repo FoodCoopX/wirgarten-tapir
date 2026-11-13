@@ -1,10 +1,10 @@
-import time
-
 from django.core.management import BaseCommand
 from django.db.models import QuerySet, Count, Q
 
-from tapir.accounts.services.email_verification_service import EmailVerificationService
-from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
+from tapir.accounts.exceptions import VerificationEmailsAlreadySendingException
+from tapir.accounts.services.unverified_members_service import (
+    UnverifiedMembersService,
+)
 from tapir.generic_exports.services.member_segment_provider import (
     MemberSegmentProvider,
 )
@@ -13,8 +13,6 @@ from tapir.wirgarten.utils import get_today
 
 
 class Command(BaseCommand):
-    THROTTLE_MAILS_PER_MINUTE = 20
-
     help = (
         "Sends the keycloak verification mails to all members that don't have a keycloak account yet. "
         "Only active members (as in the 'active users' mail segment) are considered."
@@ -36,14 +34,10 @@ class Command(BaseCommand):
             help="Don't apply any permanent change (mails won't be sent)",
             action="store_true",
         )
-        parser.add_argument(
-            "--throttle",
-            help=f"Send at most {self.THROTTLE_MAILS_PER_MINUTE} mails per minute",
-            action="store_true",
-        )
 
     def handle(self, *args, **options):
-        members = self.get_active_members_without_keycloak_account()
+        cache = {}
+        members = self.get_active_members_without_keycloak_account(cache=cache)
 
         if not members.exists():
             self.stdout.write(
@@ -74,9 +68,7 @@ class Command(BaseCommand):
         members = list(members.distinct().order_by("member_no", "last_name"))
         self.stdout.write(f"Sending emails to {len(members)} members:")
 
-        self.send_emails(
-            members=members, dry_run=options["dry_run"], throttle=options["throttle"]
-        )
+        self.send_emails(members=members, dry_run=options["dry_run"])
 
     def confirm_member_group(self, members):
         if len(members) == 0:
@@ -102,24 +94,25 @@ class Command(BaseCommand):
 
     @staticmethod
     def annotate_member_queryset_with_number_of_current_and_future_subscriptions(
-        queryset: QuerySet[Member],
+        queryset: QuerySet[Member], cache: dict
     ):
         return queryset.annotate(
             num_subscriptions=Count(
-                "subscription", filter=Q(subscription__end_date__gte=get_today())
+                "subscription",
+                filter=Q(subscription__end_date__gte=get_today(cache=cache)),
             )
         )
 
     @classmethod
-    def get_active_members_without_keycloak_account(cls):
-        members = MemberSegmentProvider.get_queryset_active_members().filter(
+    def get_active_members_without_keycloak_account(cls, cache: dict):
+        members = MemberSegmentProvider.get_queryset_active_members(cache=cache).filter(
             keycloak_id=None
         )
         return cls.annotate_member_queryset_with_number_of_current_and_future_subscriptions(
-            members
+            queryset=members, cache=cache
         )
 
-    def send_emails(self, members, dry_run: bool, throttle: bool):
+    def send_emails(self, members, dry_run: bool):
         if not self.confirm_member_group(members):
             return
 
@@ -127,16 +120,11 @@ class Command(BaseCommand):
             self.stdout.write("Dry run enabled, aborting")
             return
 
-        for index, member in enumerate(members):
-            if throttle and index > 0:
-                time.sleep(60 / self.THROTTLE_MAILS_PER_MINUTE)
-            try:
-                KeycloakUserManager.create_keycloak_user_if_necessary(
-                    user=member, initial_password=None
-                )
-                EmailVerificationService.send_verification_email(
-                    user=member, actor=None
-                )
-            except Exception as e:
-                self.stderr.write(f"Error when saving member {member}: {e}")
-                continue
+        try:
+            UnverifiedMembersService.send_verification_emails(
+                members=members, actor=None
+            )
+        except VerificationEmailsAlreadySendingException:
+            self.stderr.write(
+                "Verification emails are already being sent, try again later"
+            )

@@ -1,3 +1,4 @@
+apis/AccountsApi.ts
 apis/AssociationsApi.ts
 apis/BakeryApi.ts
 apis/BestellWizardApi.ts
@@ -182,6 +183,8 @@ models/PaginatedEmailDispatchWithRetriesList.ts
 models/PaginatedEmailTemplateList.ts
 models/PaginatedGroupedEmailDispatchList.ts
 models/PaginatedPaymentTransactionList.ts
+models/PaginatedStoredUploadList.ts
+models/PaginatedTemporaryUploadList.ts
 models/PaginatedWaitingListEntryDetailsList.ts
 models/PatchedAssociationMembershipTypePriceRequest.ts
 models/PatchedAssociationMembershipTypeRequest.ts
@@ -251,6 +254,8 @@ models/PreferredBreadStatistics.ts
 models/PreferredBreadsBulkUpdate.ts
 models/PreferredBreadsBulkUpdateRequest.ts
 models/PreferredLanguageEnum.ts
+models/PreviewRequest.ts
+models/PreviewResponse.ts
 models/Product.ts
 models/ProductBasketSizeEquivalence.ts
 models/ProductBasketSizeEquivalenceRequest.ts
@@ -276,6 +281,7 @@ models/SegmentData.ts
 models/SegmentDataRequest.ts
 models/SegmentOption.ts
 models/SendLinkSerializerRequest.ts
+models/SendVerificationEmailsResponse.ts
 models/SetAssociationMembershipEndDateRequestRequest.ts
 models/SolidarityContribution.ts
 models/SolidarityContributionCancellationData.ts
@@ -309,6 +315,7 @@ models/SubscriptionTrialChangeRequestRequest.ts
 models/SubscriptionTrialFields.ts
 models/TapirmailApiSegmentCombineCreate200Response.ts
 models/TapirmailApiSegmentCombineCreate200ResponseRecipientsInner.ts
+models/TemplateTypeEnum.ts
 models/TemporaryUpload.ts
 models/TemporaryUploadRequest.ts
 models/ToggleBreadRequestRequest.ts
@@ -319,6 +326,8 @@ models/TriggerDataRequest.ts
 models/TriggerDefinition.ts
 models/TriggerFieldDefinition.ts
 models/TypeEnum.ts
+models/UnverifiedMember.ts
+models/UnverifiedMembersResponse.ts
 models/UpdateMemberSolidarityContributionRequestRequest.ts
 models/UpdateMemberSolidarityContributionResponse.ts
 models/UpdateSubscriptionsRequestRequest.ts

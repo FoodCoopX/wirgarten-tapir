@@ -1,0 +1,2 @@
+class VerificationEmailsAlreadySendingException(Exception):
+    pass

@@ -6,6 +6,7 @@ import DeliveriesButton from "./DeliveriesButton.tsx";
 import MemberDeleteButton from "./MemberDeleteButton.tsx";
 import MemberSearchHelpButton from "./MemberSearchHelpButton.tsx";
 import PaymentsButton from "./PaymentsButton.tsx";
+import SendVerificationEmailsButton from "./SendVerificationEmailsButton.tsx";
 import SubscriptionCancellationButton from "./SubscriptionCancellationButton.tsx";
 
 const domNodeSubscriptionCancellationButton = document.getElementById(
@@ -73,4 +74,12 @@ const domNodeMemberSearchHelpButton = document.getElementById(
 if (domNodeMemberSearchHelpButton) {
   const root = createRoot(domNodeMemberSearchHelpButton);
   root.render(<MemberSearchHelpButton />);
+}
+
+const domNodeSendVerificationEmailsButton = document.getElementById(
+  "send_verification_emails_button",
+);
+if (domNodeSendVerificationEmailsButton) {
+  const root = createRoot(domNodeSendVerificationEmailsButton);
+  root.render(<SendVerificationEmailsButton csrfToken={getCsrfToken()} />);
 }
