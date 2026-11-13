@@ -12,6 +12,9 @@ from tapir.associations.models import (
     AssociationMembershipUpdatedLogEntry,
     AssociationMembershipCreatedLogEntry,
 )
+from tapir.associations.services.association_deposit_membership_end_handler import (
+    iter_continuous_memberships,
+)
 from tapir.log.util import freeze_for_log
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.utils import get_now
@@ -31,7 +34,7 @@ class AssociationMembershipChangeHandler:
         Member.objects.select_for_update(no_key=True).get(pk=member.pk)
         member_memberships = AssociationMembership.objects.filter(member=member)
         previous_day = start_date - datetime.timedelta(days=1)
-        deposit = cls._get_deposit_for_membership_change(
+        deposits = cls._get_deposits_for_membership_change(
             member_memberships, previous_day
         )
 
@@ -60,7 +63,7 @@ class AssociationMembershipChangeHandler:
         membership = AssociationMembership.objects.create(
             type=association_membership_type, member=member, start_date=start_date
         )
-        if deposit is not None:
+        for deposit in deposits:
             deposit.membership = membership
             deposit.save(update_fields=["membership", "updated_at"])
         AssociationMembershipCreatedLogEntry().populate_membership(
@@ -70,21 +73,16 @@ class AssociationMembershipChangeHandler:
         return membership
 
     @staticmethod
-    def _get_deposit_for_membership_change(
+    def _get_deposits_for_membership_change(
         memberships: QuerySet[AssociationMembership], previous_day: datetime.date
-    ) -> AssociationDeposit | None:
-        covered_until = previous_day
-        for membership in (
+    ) -> list[AssociationDeposit]:
+        for membership in iter_continuous_memberships(
             memberships.filter(Q(end_date=None) | Q(end_date__gte=previous_day))
-            .select_related("deposit")
-            .order_by("start_date")
+            .prefetch_related("deposits")
+            .order_by("start_date"),
+            previous_day,
         ):
-            if (membership.start_date - covered_until).days > 1:
-                break
-            deposit = getattr(membership, "deposit", None)
-            if deposit is not None:
-                return deposit
-            if membership.end_date is None:
-                break
-            covered_until = max(covered_until, membership.end_date)
-        return None
+            deposits = list(membership.deposits.all())
+            if deposits:
+                return deposits
+        return []

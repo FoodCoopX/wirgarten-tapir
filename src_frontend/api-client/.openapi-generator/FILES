@@ -18,6 +18,7 @@ index.ts
 models/AdminSetAssociationMembershipRequestRequest.ts
 models/AssignmentLogEntry.ts
 models/AssignmentLogEntryStatusEnum.ts
+models/AssociationDepositDetails.ts
 models/AssociationDepositPaymentOptionEnum.ts
 models/AssociationDepositSettings.ts
 models/AssociationMembership.ts
@@ -118,6 +119,7 @@ models/GroupedEmailDispatch.ts
 models/GrowingPeriod.ts
 models/GrowingPeriodRequest.ts
 models/GrowingPeriodWithDeliveryDayAdjustments.ts
+models/IncreaseAssociationDepositRequestRequest.ts
 models/Ingredient.ts
 models/IngredientRequest.ts
 models/Joker.ts

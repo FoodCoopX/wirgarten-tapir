@@ -1,5 +1,7 @@
 from decimal import Decimal
 
+from django.db import transaction
+
 from tapir.accounts.models import TapirUser
 from tapir.associations.models import AssociationDeposit, AssociationMembership
 from tapir.associations.services.association_deposit_payment_creator import (
@@ -8,10 +10,12 @@ from tapir.associations.services.association_deposit_payment_creator import (
 from tapir.associations.services.association_deposit_policy import (
     AssociationDepositPolicy,
 )
+from tapir.wirgarten.models import Member
 
 
 class AssociationDepositSignupHandler:
     @staticmethod
+    @transaction.atomic
     def create_signup_deposit(
         *,
         membership: AssociationMembership,
@@ -25,7 +29,9 @@ class AssociationDepositSignupHandler:
             amount, has_products, cache, payment_option=payment_option
         )
         if payment_option == "individual_agreement":
-            AssociationDeposit.objects.get_or_create(membership=membership)
+            Member.objects.select_for_update(no_key=True).get(pk=membership.member_id)
+            if not AssociationDeposit.objects.filter(membership=membership).exists():
+                AssociationDeposit.objects.create(membership=membership)
         elif amount:
             AssociationDepositPaymentCreator.create_payment(
                 membership, amount, actor, cache
