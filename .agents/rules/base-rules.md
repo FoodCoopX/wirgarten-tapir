@@ -87,6 +87,7 @@ All tasks are `make` targets ([Makefile](Makefile)); on the host they always run
 | `make schema`                            | regenerate `schema.yml` **and** TS client after a DRF change |
 | `make populate` / `make populate-bakery` | fresh test data                                              |
 | `make manage ARGS="migrate"`             | any other management command                                 |
+| `make keycloak ARGS="user list"`         | Keycloak users, groups, passwords (`scripts/tapir_kcadm.sh`) |
 
 **Host vs. Docker**: check whether `.env.local` exists in the repository root.
 

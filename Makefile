@@ -22,7 +22,7 @@ ARGS ?=
 .DEFAULT_GOAL := help
 
 .PHONY: help up down reset lint test-lint test test-fast test-app \
-	manage migrate parameters populate populate-bakery schema frontend-build \
+	manage migrate parameters populate populate-bakery keycloak schema frontend-build \
 	publish-docker-image
 
 help: ## Show this help
@@ -84,6 +84,10 @@ parameters: ## Import the TapirParameter definitions
 
 populate: ## Drop the data and generate a fresh test dataset
 	$(IN_WEB) poetry run python manage.py populate --reset_all
+
+keycloak: ## Keycloak users on the command line, e.g. make keycloak ARGS="user list"
+	@test -n "$(ARGS)" || { ./scripts/tapir_kcadm.sh --help; exit 1; }
+	./scripts/tapir_kcadm.sh $(ARGS)
 
 populate-bakery: ## Same as populate, with the bakery organisation switched on
 	$(IN_WEB) poetry run python manage.py populate --reset_all --org=bakery
