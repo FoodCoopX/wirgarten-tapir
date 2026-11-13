@@ -64,6 +64,12 @@ Routing: [tapir/urls.py](tapir/urls.py) includes per-app `urls.py`; apps mix DRF
 - `src_frontend/api-client/` is generated from `schema.yml` — never hand-edit.
 - Fetch through [src_frontend/hooks/useApi.ts](src_frontend/hooks/useApi.ts) (CSRF token + base path from `env.ts`).
   React hooks only, no Redux/Zustand, no path aliases.
+- Button variants by what the button does:
+    - `outline-secondary`: no effect (close a modal, cancel, go back, navigate to another page).
+    - `outline-primary`: no effect yet, but leads to a button that has one (open a form, go to a confirmation step).
+    - `primary`: does something permanent (save, send a mail).
+    - `danger` / `outline-danger`: only for deletions, instead of `primary` / `outline-primary` with the same
+      rules (`outline-danger` opens the delete confirmation, `danger` deletes).
 
 ## Commands
 
