@@ -54,6 +54,7 @@ import { isSubscriptionActive } from "../../utils/isSubscriptionActive.ts";
 interface BestellWizardProductTypeProps {
   csrfToken: string;
   memberId: string;
+  memberUrl: string;
   firstName: string;
   lastName: string;
   needsBankingData: boolean;
@@ -63,6 +64,7 @@ interface BestellWizardProductTypeProps {
 const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
   csrfToken,
   memberId,
+  memberUrl,
   firstName,
   lastName,
   needsBankingData,
@@ -642,6 +644,9 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
             waitingListEntryDetails={undefined}
             contractStartDate={selectedGrowingPeriod?.contractStartDate!}
             singleProductType={productType}
+            bankingDataUrl={
+              needsBankingData ? undefined : `${memberUrl}#member-payment-data`
+            }
             selectedGrowingPeriod={selectedGrowingPeriod}
             hideTrialPeriod={memberAlreadyHasASubscriptionForThisProductType}
             stepActive={step === currentStep}

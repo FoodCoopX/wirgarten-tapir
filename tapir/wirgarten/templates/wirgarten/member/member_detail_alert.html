@@ -215,7 +215,7 @@
             passwordChangedConfirmationElem.style.display = 'block';
         }
 
-        Tapir.replaceUrlParams({})
+        history.replaceState({}, "", window.location.pathname + window.location.hash);
     };
 
     const handleCancellation = () => {
