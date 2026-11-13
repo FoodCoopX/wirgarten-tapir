@@ -54,7 +54,11 @@ class SubscriptionUpdateViewValidator:
         payment_rhythm: str | None,
         cache: dict,
     ):
-        if not sepa_allowed:
+        if not sepa_allowed and (
+            account_owner
+            or iban
+            or MemberNeedsBankingDataChecker.does_member_need_banking_data(member)
+        ):
             raise ValidationError("Das SEPA-Mandat muss ermächtigt sein.")
 
         if not cancellation_policy_read:
