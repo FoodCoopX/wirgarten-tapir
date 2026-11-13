@@ -218,7 +218,7 @@ const SendVerificationEmailsButton: React.FC<
           disabled={loading}
         />
         <TapirButton
-          variant={"danger"}
+          variant={"primary"}
           text={"Ja, jetzt senden"}
           icon={"send"}
           onClick={send}
@@ -241,7 +241,7 @@ const SendVerificationEmailsButton: React.FC<
             onClick={() => setShowModal(false)}
           />
           <TapirButton
-            variant={"primary"}
+            variant={"outline-primary"}
             text={`An ${members.length} Mitglieder senden`}
             icon={"arrow_forward"}
             onClick={() => setStep("confirm")}
