@@ -19,6 +19,9 @@ from tapir_mail.triggers.transactional_trigger import (
     TransactionalTriggerData,
 )
 
+from tapir.associations.services.association_deposit_policy import (
+    AssociationDepositPolicy,
+)
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.coop_membership_cancellation_manager import (
     CoopMembershipCancellationManager,
@@ -893,6 +896,15 @@ class PublicConfirmWaitingListEntryView(APIView):
             waiting_list_entry = WaitingListEntryConfirmationValidator.validate_request_and_get_waiting_list_entry(
                 serializer.validated_data, cache=self.cache
             )
+            if waiting_list_entry.member_id is None:
+                AssociationDepositPolicy.validate_signup_selection(
+                    serializer.validated_data.get("association_deposit_amount"),
+                    waiting_list_entry.product_wishes.filter(quantity__gt=0).exists(),
+                    self.cache,
+                    payment_option=serializer.validated_data[
+                        "association_deposit_payment_option"
+                    ],
+                )
         except ValidationError as error:
             return Response(
                 OrderConfirmationResponseSerializer(

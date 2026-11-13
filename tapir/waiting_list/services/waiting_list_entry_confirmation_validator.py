@@ -46,12 +46,14 @@ class WaitingListEntryConfirmationValidator:
                 cache=cache,
             )
 
-        if waiting_list_entry.product_wishes.exists():
-            if not validated_data["sepa_allowed"]:
-                raise ValidationError("SEPA-Mandat muss erlaubt sein")
-
-            if not validated_data["contract_accepted"]:
-                raise ValidationError("Vertragsgrundsätze müssen akzeptiert sein")
+        has_product_wishes = waiting_list_entry.product_wishes.exists()
+        has_deposit = waiting_list_entry.member_id is None and bool(
+            validated_data.get("association_deposit_amount")
+        )
+        if (has_product_wishes or has_deposit) and not validated_data["sepa_allowed"]:
+            raise ValidationError("SEPA-Mandat muss erlaubt sein")
+        if has_product_wishes and not validated_data["contract_accepted"]:
+            raise ValidationError("Vertragsgrundsätze müssen akzeptiert sein")
 
         cls.validate_home_delivery_address(waiting_list_entry=waiting_list_entry)
 
