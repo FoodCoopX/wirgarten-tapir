@@ -6,13 +6,16 @@ import unicodedata
 from csv import DictReader
 from typing import Literal
 
-from django.core.management import BaseCommand
+from django.core.management import BaseCommand, CommandError
 from django.db import transaction
 from icecream import ic
 
 from tapir.accounts.models import EmailChangeRequest
 from tapir.accounts.services.keycloak_user_delete_service import (
     KeycloakUserDeleteService,
+)
+from tapir.associations.services.association_deposit_importer import (
+    AssociationDepositImporter,
 )
 from tapir.deliveries.models import Joker
 from tapir.payments.config import ONE_OFF_TRANSACTION_TYPES, PAYMENT_TYPE_COOP_SHARES
@@ -55,7 +58,9 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "--type", nargs=1, choices=["members", "shares", "subscriptions"]
+            "--type",
+            nargs=1,
+            choices=["members", "shares", "subscriptions", "deposits"],
         )
         parser.add_argument("--file", nargs=1)
         parser.add_argument("--delete-all", action="store_true")
@@ -172,6 +177,9 @@ class Command(BaseCommand):
                 self.verify_csv(cleaned_headers, raw_headers, reader)
                 return
 
+            if import_type == "deposits" and delete_all:
+                raise CommandError("Der Einlagenimport unterstützt kein --delete-all.")
+
             with transaction.atomic():
                 if delete_all:
                     if import_type == "members":
@@ -252,7 +260,7 @@ class Command(BaseCommand):
         self,
         reader: DictReader[str],
         update_existing: bool,
-        import_type: Literal["members", "shares", "subscriptions"],
+        import_type: Literal["members", "shares", "subscriptions", "deposits"],
         print_stacktrace: bool,
         dry_run: bool,
     ):
@@ -260,13 +268,18 @@ class Command(BaseCommand):
         created = 0
         updated = 0
 
-        if import_type not in ["members", "shares", "subscriptions"]:
+        if import_type not in ["members", "shares", "subscriptions", "deposits"]:
             raise TapirDataImportException(f"Unknown import type: {import_type}")
 
+        cache = {}
         for row_index, row in enumerate(reader):
             try:
                 with transaction.atomic():
                     match import_type:
+                        case "deposits":
+                            import_status = AssociationDepositImporter.import_deposit(
+                                row, cache
+                            )
                         case "members":
                             import_status = MemberImporter.import_member(
                                 row=row,
