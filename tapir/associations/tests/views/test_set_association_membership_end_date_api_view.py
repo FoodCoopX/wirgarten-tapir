@@ -9,10 +9,11 @@ from tapir_mail.triggers.transactional_trigger import (
 )
 
 from tapir.associations.apps import AssociationsConfig
+from tapir.associations.models import AssociationDeposit
 from tapir.associations.models import AssociationMembershipUpdatedLogEntry
 from tapir.associations.tests.factories import AssociationMembershipFactory
 from tapir.wirgarten.parameters import ParameterDefinitions
-from tapir.wirgarten.tests.factories import MemberFactory
+from tapir.wirgarten.tests.factories import MemberFactory, PaymentFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
@@ -41,6 +42,31 @@ class SetAssociationMembershipEndDateApiView(TapirIntegrationTest):
             datetime.date(year=2000, month=12, day=31), membership.end_date
         )
         self.assertFalse(AssociationMembershipUpdatedLogEntry.objects.exists())
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_gapBeforeScheduledChange_keepsDepositWithDepartingMembership(
+        self, mock_fire_action
+    ):
+        member = MemberFactory(is_superuser=True)
+        self.client.force_login(member)
+        departing = AssociationMembershipFactory(
+            member=member,
+            start_date=datetime.date(2020, 1, 1),
+            end_date=datetime.date(2020, 11, 30),
+        )
+        future = AssociationMembershipFactory(
+            member=member, start_date=datetime.date(2020, 12, 1)
+        )
+        deposit = AssociationDeposit.objects.create(
+            membership=future, payment=PaymentFactory()
+        )
+        response = self.client.post(
+            reverse("associations:set_membership_end_date"),
+            data={"membership_id": departing.pk, "end_date": "2020-11-20"},
+        )
+        self.assert_order_confirmed(response.json())
+        deposit.refresh_from_db()
+        self.assertEqual(departing, deposit.membership)
 
     @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_adminSetsEndDate_endDateSetAndLogEntryCreated(

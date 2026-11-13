@@ -600,7 +600,9 @@ class TapirCache:
         cls, cache: dict, payment_type: str, mandate_ref: MandateReference
     ) -> set[Payment]:
         def compute():
-            payments = Payment.objects.select_related("mandate_ref")
+            payments = Payment.objects.filter(
+                association_deposit__isnull=True
+            ).select_related("mandate_ref")
             result = {}
             for payment in payments:
                 if payment.mandate_ref not in result:

@@ -4,7 +4,7 @@ from django.db.models import UniqueConstraint
 from tapir.accounts.models import TapirUser
 from tapir.core.models import TapirModel
 from tapir.log.models import LogEntry, UpdateModelLogEntry, ModelLogEntry
-from tapir.wirgarten.models import Member
+from tapir.wirgarten.models import Member, Payment
 
 ASSOCIATION_MEMBERSHIP_TYPE_NAME_MAX_LENGTH = 100
 
@@ -49,6 +49,24 @@ class AssociationMembership(TapirModel):
 
     def __str__(self):
         return f"{self.member.get_display_name()} {self.type.name} {self.start_date} -> {self.end_date}"
+
+
+class AssociationDeposit(TapirModel):
+    membership = models.OneToOneField(
+        AssociationMembership,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="deposit",
+    )
+    payment = models.OneToOneField(
+        Payment, on_delete=models.CASCADE, related_name="association_deposit"
+    )
+
+
+class AssociationDepositAgreedLogEntry(LogEntry):
+    template_name = "associations/log/deposit_agreed.html"
+
+    amount = models.DecimalField(max_digits=8, decimal_places=2)
 
 
 class AssociationMembershipDeletedLogEntry(LogEntry):

@@ -65,7 +65,9 @@ class ProductTypeChangeApplier:
         )
 
         if old_name != new_name:
-            Payment.objects.filter(type=old_name).update(type=new_name)
+            Payment.objects.filter(
+                type=old_name, association_deposit__isnull=True
+            ).update(type=new_name)
 
     @classmethod
     def apply_custom_cycle_delivery_week_changes(

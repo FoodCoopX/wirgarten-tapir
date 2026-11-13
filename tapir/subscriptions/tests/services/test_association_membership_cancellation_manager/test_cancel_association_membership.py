@@ -2,14 +2,30 @@ import datetime
 from unittest.mock import patch, Mock, ANY
 
 from tapir.associations.models import AssociationMembershipDeletedLogEntry
+from tapir.associations.services.association_deposit_membership_end_handler import (
+    AssociationDepositMembershipEndHandler,
+)
 from tapir.associations.services.association_membership_cancellation_manager import (
     AssociationMembershipCancellationManager,
 )
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
+from tapir.wirgarten.models import Member
+from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
-class TestCancelAssociationMembership(TapirUnitTest):
+class TestCancelAssociationMembership(TapirIntegrationTest):
+    def setUp(self):
+        super().setUp()
+        self.enterContext(
+            patch.object(Member.objects, "select_for_update", autospec=True)
+        )
+        self.enterContext(
+            patch.object(
+                AssociationDepositMembershipEndHandler,
+                "preserve_deposits",
+                autospec=True,
+            )
+        )
 
     @patch.object(
         TapirCache,
@@ -49,13 +65,13 @@ class TestCancelAssociationMembership(TapirUnitTest):
         )
 
         mock_get_member_association_membership_at_date.assert_called_once_with(
-            cache=cache, member=member, reference_date=end_date
+            cache={}, member=member, reference_date=end_date
         )
         mock_set_membership_end_date.assert_called_once_with(
             membership=current_membership, end_date=end_date, actor=actor, cache=cache
         )
         mock_get_member_association_memberships.assert_called_once_with(
-            member=member, cache=cache
+            member=member, cache={}
         )
         current_membership.delete.assert_not_called()
 
@@ -106,11 +122,11 @@ class TestCancelAssociationMembership(TapirUnitTest):
         )
 
         mock_get_member_association_membership_at_date.assert_called_once_with(
-            cache=cache, member=member, reference_date=end_date
+            cache={}, member=member, reference_date=end_date
         )
         mock_set_membership_end_date.assert_not_called()
         mock_get_member_association_memberships.assert_called_once_with(
-            member=member, cache=cache
+            member=member, cache={}
         )
         past_membership.delete.assert_not_called()
         future_membership.delete.assert_called_once_with()

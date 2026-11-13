@@ -4,6 +4,7 @@ from decimal import Decimal
 from pathlib import Path
 
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 from localflavor.generic.validators import IBANValidator
 from lxml import etree
 from lxml.etree import Element
@@ -12,7 +13,10 @@ from unidecode import unidecode
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.core.models import ID_LENGTH
-from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES
+from tapir.payments.config import (
+    PAYMENT_TYPE_COOP_SHARES,
+    PAYMENT_TYPE_ASSOCIATION_DEPOSIT,
+)
 from tapir.payments.services.month_payment_builder_utils import MonthPaymentBuilderUtils
 from tapir.payments.services.payment_export_intended_use_builder import (
     PaymentExportIntendedUseBuilder,
@@ -144,6 +148,17 @@ class Pain008XmlStringGenerator:
             raise Pain008XmlSinglePaymentException(
                 f"Mitglied {member_display_name} hat das SEPA-Verfahren nicht zugestimmt"
             )
+
+        if payment.type == PAYMENT_TYPE_ASSOCIATION_DEPOSIT and hasattr(
+            payment, "association_deposit"
+        ):
+            if (
+                member.sepa_consent > get_now(cache=cache)
+                or timezone.localdate(payment.mandate_ref.start_ts) > collection_date
+            ):
+                raise Pain008XmlSinglePaymentException(
+                    f"Mitglied {member_display_name} hat kein gültiges SEPA-Mandat für den Einzugstermin"
+                )
 
         if payment.amount < Decimal(0):
             raise Pain008XmlSinglePaymentException(
@@ -282,9 +297,16 @@ class Pain008XmlStringGenerator:
         requested_collection_date = cls._append_element(
             payments_container, "ReqdColltnDt"
         )
-        due_date = MonthPaymentBuilderUtils.get_payment_due_date_on_month(
-            collection_date, cache
-        )
+        if (
+            payments
+            and payments[0].type == PAYMENT_TYPE_ASSOCIATION_DEPOSIT
+            and hasattr(payments[0], "association_deposit")
+        ):
+            due_date = collection_date
+        else:
+            due_date = MonthPaymentBuilderUtils.get_payment_due_date_on_month(
+                collection_date, cache
+            )
         requested_collection_date.text = cls._format_date(due_date)
 
         creditor = cls._append_element(payments_container, "Cdtr")
