@@ -5,10 +5,10 @@ from django.db.models import QuerySet, Count, Q
 
 from tapir.accounts.services.email_verification_service import EmailVerificationService
 from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
-from tapir.wirgarten.models import Member
-from tapir.wirgarten.service.member import (
-    annotate_member_queryset_with_coop_shares_total_value,
+from tapir.generic_exports.services.member_segment_provider import (
+    MemberSegmentProvider,
 )
+from tapir.wirgarten.models import Member
 from tapir.wirgarten.utils import get_today
 
 
@@ -17,7 +17,7 @@ class Command(BaseCommand):
 
     help = (
         "Sends the keycloak verification mails to all members that don't have a keycloak account yet. "
-        "Members that have neither coop shares nor subscriptions are ignored."
+        "Only active members (as in the 'active users' mail segment) are considered."
     )
 
     def add_arguments(self, parser):
@@ -43,9 +43,7 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        members = (
-            self.get_members_with_at_least_one_share_or_one_relevant_subscription()
-        )
+        members = self.get_active_members_without_keycloak_account()
 
         if not members.exists():
             self.stdout.write(
@@ -113,16 +111,12 @@ class Command(BaseCommand):
         )
 
     @classmethod
-    def get_members_with_at_least_one_share_or_one_relevant_subscription(cls):
-        members = Member.objects.filter(keycloak_id=None)
-        members = annotate_member_queryset_with_coop_shares_total_value(
-            queryset=members
-        ).filter()
-        members = cls.annotate_member_queryset_with_number_of_current_and_future_subscriptions(
-            members
+    def get_active_members_without_keycloak_account(cls):
+        members = MemberSegmentProvider.get_queryset_active_members().filter(
+            keycloak_id=None
         )
-        return members.filter(
-            Q(coop_shares_total_value__gt=0) | Q(num_subscriptions__gt=0)
+        return cls.annotate_member_queryset_with_number_of_current_and_future_subscriptions(
+            members
         )
 
     def send_emails(self, members, dry_run: bool, throttle: bool):
