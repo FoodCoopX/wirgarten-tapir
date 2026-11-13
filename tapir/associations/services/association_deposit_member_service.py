@@ -29,7 +29,7 @@ class AssociationDepositMemberService:
         ).first()
 
     @staticmethod
-    def _get_amount(membership) -> Decimal:
+    def get_amount(membership) -> Decimal:
         if membership is None:
             return Decimal("0")
         return membership.deposits.aggregate(

@@ -22,6 +22,9 @@ from tapir_mail.triggers.transactional_trigger import (
 
 from tapir.accounts.models import UpdateTapirUserLogEntry
 from tapir.associations.apps import AssociationsConfig
+from tapir.associations.services.association_deposit_mail_token_provider import (
+    AssociationDepositMailTokenProvider,
+)
 from tapir.associations.models import (
     AssociationMembershipType,
     AssociationMembershipTypePrice,
@@ -421,7 +424,10 @@ class SetAssociationMembershipEndDateApiView(APIView):
                         "end_date_before": format_date(end_date_before),
                         "end_date_after": format_date(membership.end_date),
                         "membership_type_name": membership.type.name,
-                    },
+                    }
+                    | AssociationDepositMailTokenProvider.build_tokens(
+                        membership.member, cache, membership=membership
+                    ),
                 ),
             )
 

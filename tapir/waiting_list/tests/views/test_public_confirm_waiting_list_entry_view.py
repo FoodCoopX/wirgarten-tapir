@@ -315,6 +315,7 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
                 "solidarity_contribution_start_date": "11.05.2026",
                 "monthly_total": "22,00",
                 "payment_rhythm": "Halbjährlich",
+                "association_deposit_amount": "",
             },
             trigger_data.token_data,
         )
