@@ -2,11 +2,13 @@ from unittest.mock import patch, Mock
 
 from tapir.generic_exports.services.csv_export_builder import CsvExportBuilder
 from tapir.generic_exports.services.pdf_export_builder import PdfExportBuilder
+from tapir.generic_exports.services.export_segment_manager import ExportSegmentManager
 from tapir.wirgarten.models import ExportedFile
 from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestCreateSingleFile(TapirUnitTest):
+    @patch.object(ExportSegmentManager, "get_segment_by_id", autospec=True)
     @patch.object(PdfExportBuilder, "render_pdf", autospec=True)
     @patch.object(CsvExportBuilder, "build_file_name", autospec=True)
     @patch.object(ExportedFile, "objects")
@@ -17,7 +19,9 @@ class TestCreateSingleFile(TapirUnitTest):
         mock_exported_file_objects: Mock,
         mock_build_file_name: Mock,
         mock_render_pdf: Mock,
+        mock_get_segment_by_id: Mock,
     ):
+        mock_get_segment_by_id.return_value.requires_coop_manage = False
         mock_export = Mock()
         mock_export.file_name = "test file name"
         mock_export.template = "test template"
@@ -45,4 +49,5 @@ class TestCreateSingleFile(TapirUnitTest):
             name="test build file name",
             type=ExportedFile.FileType.PDF,
             file=mock_pdf_bytes,
+            requires_coop_manage=False,
         )

@@ -77,6 +77,7 @@
         {% if show_cooperative_content %}
             <th class="sort-header" data-sort="coop_shares_total_value">{% translate "Geschäftsguthaben" %}</th>
         {% endif %}
+        {% if show_deposits %}<th scope="col">Vereinseinlage</th>{% endif %}
         <th class="sort-header" data-sort="monthly_payment">{% translate "Umsatz/Monat" %}</th>
         <th class="sort-header" data-sort="current_member_contribution">{% translate "Solidarbeitrag" %}</th>
         <th>{% translate "Abholort" %}</th>
@@ -107,6 +108,7 @@
             {% if show_cooperative_content %}
                 <td class="text-end">{{ member.coop_shares_total_value|format_currency }} €&nbsp;&nbsp;</td>
             {% endif %}
+            {% if show_deposits %}<td class="text-end">Vereinbart: {{ member.deposit_agreed|format_currency }} €<br/>Exportiert: {{ member.deposit_exported|format_currency }} €</td>{% endif %}
             <td class="text-end">{{ member.monthly_payment|format_currency }} €&nbsp;&nbsp;</td>
             <td class="text-end">
                 {% if not member.current_member_contribution and not member.future_member_contribution_amount %}
