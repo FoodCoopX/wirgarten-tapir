@@ -157,6 +157,9 @@ class ParameterKeys:
     )
     BESTELLWIZARD_FORCE_WAITING_LIST = f"{PREFIX}.bestellwizard.force_waiting_list"
     BESTELLWIZARD_SHOW_INTRO = f"{PREFIX}.bestellwizard.show_intro"
+    BESTELLWIZARD_COMBINE_SHARE_SELECTION = (
+        f"{PREFIX}.bestellwizard.combine_share_selection"
+    )
     BESTELL_WIZARD_SOLIDARITY_STEP_POSITION = (
         f"{PREFIX}.bestellwizard.solidarity_step_position"
     )

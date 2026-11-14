@@ -110,6 +110,11 @@ class BestellWizardMobileView(TemplateView):
         context_data = super().get_context_data(**kwargs)
         cache = {}
         self.add_body_style_context(context_data, cache)
+        context_data["combine_share_selection"] = legal_status_is_association(
+            cache=cache
+        ) and get_parameter_value(
+            ParameterKeys.BESTELLWIZARD_COMBINE_SHARE_SELECTION, cache=cache
+        )
         return context_data
 
     @classmethod

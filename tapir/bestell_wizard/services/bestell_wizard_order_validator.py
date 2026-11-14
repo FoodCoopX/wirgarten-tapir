@@ -104,6 +104,9 @@ class BestellWizardOrderValidator:
             pickup_location_ids=validated_serializer_data["pickup_location_ids"],
             contract_start_date=contract_start_date,
             order=order,
+            waiting_list_order=validated_serializer_data.get(
+                "shopping_cart_waiting_list", {}
+            ),
             cache=cache,
         )
 
@@ -188,6 +191,7 @@ class BestellWizardOrderValidator:
         pickup_location_ids: list[str],
         contract_start_date: datetime.date,
         order: TapirOrder,
+        waiting_list_order: dict,
         cache: dict,
     ):
         pickup_location = None
@@ -217,8 +221,26 @@ class BestellWizardOrderValidator:
             pickup_location=pickup_location,
         )
 
+        if not order and legal_status_is_association(cache=cache):
+            return
+
+        required_products_order = order
+        if (
+            waiting_list_order
+            and legal_status_is_association(cache=cache)
+            and get_parameter_value(
+                ParameterKeys.BESTELLWIZARD_COMBINE_SHARE_SELECTION, cache=cache
+            )
+        ):
+            required_products_order = (
+                order
+                | TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
+                    shopping_cart=waiting_list_order, cache=cache
+                )
+            )
+
         if not RequiredProductTypesValidator.does_order_contain_all_required_product_types(
-            order=order
+            order=required_products_order
         ):
             raise ValidationError("Manche Pflichtprodukte fehlen in der Bestellung")
 
