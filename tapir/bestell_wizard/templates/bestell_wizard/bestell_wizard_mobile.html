@@ -27,6 +27,8 @@
     </head>
     <body style="{{ body_style }}; width: 100dvw; height: 100dvh;">
         {% csrf_token %}
-        <div id="bestell_wizard_mobile" style="width: 100dvw; height: 100dvh"></div>
+        <div id="bestell_wizard_mobile"
+             data-combine-share-selection="{{ 'wirgarten.bestellwizard.combine_share_selection'|parameter|yesno:'true,false,false' }}"
+             style="width: 100dvw; height: 100dvh"></div>
     </body>
 </html>

@@ -365,6 +365,29 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
             growing_period=self.growing_period,
         )
 
+    def test_post_requiredShareOnWaitingList_createsOrderForAvailableShare(self):
+        self._set_parameter(ParameterKeys.BESTELLWIZARD_COMBINE_SHARE_SELECTION, True)
+        product_type = self.product_1.type
+        product_type.must_be_subscribed_to = True
+        product_type.save(update_fields=["must_be_subscribed_to"])
+        data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        data["shopping_cart_waiting_list"][self.product_1.id] = data[
+            "shopping_cart_order"
+        ].pop(self.product_1.id)
+
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        self.assert_order_confirmed(response.json())
+        self.assertEqual(self.product_2, Subscription.objects.get().product)
+        entry = WaitingListEntry.objects.get()
+        self.assertEqual(self.product_1, entry.product_wishes.get().product)
+        self.assertIsNone(entry.desired_start_date)
+
     @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_waitingListEntryAndBecomeMemberNow_createsEntryAndCreatesMember(
         self, mock_fire_action: Mock
