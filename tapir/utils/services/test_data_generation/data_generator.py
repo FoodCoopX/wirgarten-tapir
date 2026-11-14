@@ -90,6 +90,7 @@ class DataGenerator:
             WaitingListEntry,
             MemberPickupLocation,
             LocationRoute,
+            MemberCredit,
             PickupLocation,
             Subscription,
             ProductCapacity,
@@ -103,7 +104,6 @@ class DataGenerator:
             MandateReference,
             EmailChangeRequest,
             OrderFeedback,
-            MemberCredit,
             AssociationMembership,
             AssociationMembershipType,
         ]
