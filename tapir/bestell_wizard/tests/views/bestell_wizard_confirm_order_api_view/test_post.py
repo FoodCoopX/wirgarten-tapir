@@ -1487,6 +1487,39 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         )
         self.assertEqual(2, mock_on_subscription_updated.call_count)
 
+    def test_post_associationSupportingMembershipWithRequiredProduct_createsMembershipWithoutShares(
+        self,
+    ):
+        self._set_parameter(
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS, value=LEGAL_STATUS_ASSOCIATION
+        )
+        self._set_parameter(
+            key=ParameterKeys.ASSOCIATIONS_ALLOW_SUPPORTING_MEMBERSHIP, value=True
+        )
+        product_type = self.product_1.type
+        product_type.must_be_subscribed_to = True
+        product_type.save(update_fields=["must_be_subscribed_to"])
+        membership_type = AssociationMembershipTypeFactory.create()
+        post_data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        post_data.update(
+            association_membership_type_id=membership_type.id,
+            shopping_cart_order={},
+            pickup_location_ids=[],
+            become_member_now=True,
+        )
+
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(post_data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        self.assert_order_confirmed(response.json())
+        self.assertEqual(membership_type, AssociationMembership.objects.get().type)
+        self.assertFalse(Subscription.objects.exists())
+        self.assertFalse(MemberPickupLocation.objects.exists())
+
     @patch.object(OnboardingTrigger, "on_subscription_updated", autospec=True)
     @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_legalStatusIsAssociationButNoMembershipTypeSelected_orderNotConfirmed(

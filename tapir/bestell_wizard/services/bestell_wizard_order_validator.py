@@ -217,6 +217,19 @@ class BestellWizardOrderValidator:
             pickup_location=pickup_location,
         )
 
+        membership_without_shares = not order and (
+            legal_status_is_association(cache=cache)
+            or (
+                legal_status_is_cooperative(cache=cache)
+                and get_parameter_value(
+                    ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES,
+                    cache=cache,
+                )
+            )
+        )
+        if membership_without_shares:
+            return
+
         if not RequiredProductTypesValidator.does_order_contain_all_required_product_types(
             order=order
         ):
