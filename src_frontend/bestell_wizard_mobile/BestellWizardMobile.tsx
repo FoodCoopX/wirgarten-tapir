@@ -182,14 +182,10 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
 
   const combinedShareSelection =
     combineShareSelection && canCombineShareSelection(selectedGrowingPeriod);
-  const allSharesWaiting =
-    combinedShareSelection &&
-    areAllOrderedProductsInWaitingList(shoppingCart, productTypesInWaitingList);
   const becomeMemberNow =
-    allSharesWaiting &&
-    ((settings.legalStatus === "association" &&
-      !settings.associationsAllowInvestingMembership) ||
-      (settings.showCoopContent && !settings.allowInvestingMembership))
+    combinedShareSelection &&
+    !settings.associationsAllowInvestingMembership &&
+    areAllOrderedProductsInWaitingList(shoppingCart, productTypesInWaitingList)
       ? false
       : memberNowChoice;
 
@@ -444,18 +440,16 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
         selectedGrowingPeriod,
       );
     }
-  }, [shoppingCart, selectedGrowingPeriod]);
 
-  useEffect(() => {
     updateMinimumNumberOfShares(
       coopApi,
       shoppingCart,
-      allSharesWaiting ? new Set() : productTypesInWaitingList,
+      productTypesInWaitingList,
       setMinimumNumberOfShares,
       setSelectedNumberOfCoopShares,
       setToastDatas,
     );
-  }, [shoppingCart, productTypesInWaitingList, allSharesWaiting]);
+  }, [shoppingCart, selectedGrowingPeriod]);
 
   useEffect(() => {
     if (!selectedGrowingPeriod) {

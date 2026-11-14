@@ -59,6 +59,7 @@ class ParameterDefinitionsBestellwizard:
         importer.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_COMBINE_SHARE_SELECTION,
             label="Anteile auf einer Seite auswählen",
+            meta=ParameterMeta(show_only_when=legal_status_is_association),
             datatype=TapirParameterDatatype.BOOLEAN,
             initial_value=False,
             description="Fasst die Auswahl im öffentlichen Bestellformular zusammen, wenn für alle Produktarten der Vertragsperiode nur ein Einzelabonnement möglich ist. Mit «Ist Pflicht» lässt sich festlegen, welche Produktarten ausgewählt werden müssen.",

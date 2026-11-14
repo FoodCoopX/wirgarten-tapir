@@ -367,10 +367,16 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
 
     def test_post_requiredShareOnWaitingList_createsOrderForAvailableShare(self):
         self._set_parameter(ParameterKeys.BESTELLWIZARD_COMBINE_SHARE_SELECTION, True)
+        self._set_parameter(
+            ParameterKeys.ORGANISATION_LEGAL_STATUS, LEGAL_STATUS_ASSOCIATION
+        )
         product_type = self.product_1.type
         product_type.must_be_subscribed_to = True
         product_type.save(update_fields=["must_be_subscribed_to"])
         data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        data["association_membership_type_id"] = (
+            AssociationMembershipTypeFactory.create().id
+        )
         data["shopping_cart_waiting_list"][self.product_1.id] = data[
             "shopping_cart_order"
         ].pop(self.product_1.id)
