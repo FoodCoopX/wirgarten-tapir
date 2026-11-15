@@ -15,7 +15,9 @@ from keycloak.exceptions import (
 def build_keycloak_admin(client_id: str, client_secret: str) -> KeycloakAdmin:
     config = settings.KEYCLOAK_ADMIN_CONFIG
     connection = KeycloakOpenIDConnection(
-        server_url=config["SERVER_URL"],
+        # python-keycloak joins relative API paths onto this base URL. The
+        # trailing slash makes urljoin keep an optional path prefix such as /auth.
+        server_url=config["SERVER_URL"].rstrip("/") + "/",
         realm_name=config["REALM_NAME"],
         client_id=client_id,
         client_secret_key=client_secret,

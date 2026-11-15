@@ -30,19 +30,28 @@ def _matches(actual, expected) -> bool:
 
 
 AUTH_ERROR_MESSAGE = (
-    "The Keycloak provisioning client could not authenticate. "
-    "Import docker/keycloak/import/tapir-realm.json or set "
-    "KEYCLOAK_PROVISIONER_CLIENT_SECRET_KEY."
+    "The Keycloak provisioning client could not authenticate against "
+    f"{settings.KEYCLOAK_ADMIN_CONFIG['SERVER_URL']} in realm "
+    f"{settings.KEYCLOAK_ADMIN_CONFIG['REALM_NAME']!r}. Check "
+    "KEYCLOAK_PROVISIONER_CLIENT_ID and "
+    "KEYCLOAK_PROVISIONER_CLIENT_SECRET_KEY. For the local stack, import "
+    "docker/keycloak/import/tapir-realm.json; for other servers see "
+    "docs/admins/keycloak.md."
 )
 CONNECTION_ERROR_MESSAGE = (
-    "Keycloak is not reachable at " f"{settings.KEYCLOAK_ADMIN_CONFIG['SERVER_URL']}."
+    "Keycloak is not reachable at KEYCLOAK_ADMIN_SERVER_URL="
+    f"{settings.KEYCLOAK_ADMIN_CONFIG['SERVER_URL']}. Check DNS, network "
+    "access and TLS trust; see docs/admins/keycloak.md."
 )
 RIGHTS_ERROR_MESSAGE = (
-    "The Keycloak provisioning client lacks realm-management/realm-admin."
+    "The Keycloak provisioning client lacks realm-management/realm-admin. "
+    "Assign that role to its service account and add the client scope mapping; "
+    "see docs/admins/keycloak.md."
 )
 REALM_MISSING_MESSAGE = (
-    "The Keycloak realm does not exist. Import "
-    "docker/keycloak/import/tapir-realm.json first."
+    "The Keycloak realm does not exist. Check KEYCLOAK_REALM_NAME or create "
+    "the realm first; for the local stack import "
+    "docker/keycloak/import/tapir-realm.json. See docs/admins/keycloak.md."
 )
 
 

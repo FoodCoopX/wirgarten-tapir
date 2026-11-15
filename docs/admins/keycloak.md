@@ -1,0 +1,246 @@
+# Keycloak setup
+
+Tapir delegates login to Keycloak through `django-allauth`. The management command
+
+```sh
+python manage.py keycloak check
+python manage.py keycloak sync
+```
+
+reconciles the Keycloak realm with the state Tapir expects. This page describes what the command
+manages, which environment variables configure it, and how to connect Tapir to a new or existing
+Keycloak server.
+
+## What Tapir manages
+
+`keycloak sync` creates missing settings and repairs drift. It never deletes roles, groups or clients.
+Extra roles in the `superuser` group and extra role scope mappings are reported as warnings only.
+
+### Realm settings
+
+| Setting                        | Value   |
+| ------------------------------ | ------- |
+| `enabled`                      | `true`  |
+| `registrationAllowed`          | `false` |
+| `registrationEmailAsUsername`  | `true`  |
+| `loginWithEmailAllowed`        | `true`  |
+| `duplicateEmailsAllowed`       | `false` |
+| `editUsernameAllowed`          | `false` |
+| `resetPasswordAllowed`         | `true`  |
+| `verifyEmail`                  | `true`  |
+
+### Realm roles and the superuser group
+
+Tapir creates the nine realm roles defined by `Permission.all()` in
+`tapir/wirgarten/constants.py`:
+
+```text
+coop.view
+coop.manage
+accounts.view
+accounts.manage
+payments.view
+payments.manage
+products.view
+products.manage
+email.manage
+```
+
+It also creates the `superuser` group and assigns all nine roles to it. Tapir puts superusers into
+that group when it creates their Keycloak user.
+
+### Clients and role mappings
+
+| Client            | Type         | Service account | Standard flow | Direct grants | Secret variable                     |
+| ----------------- | ------------ | --------------- | ------------- | ------------- | ----------------------------------- |
+| `tapir-backend`   | confidential | yes             | yes           | no            | `KEYCLOAK_ADMIN_CLIENT_SECRET_KEY`   |
+| `tapir-frontend`  | public       | no              | yes           | no            | none                                |
+| `tapir-provisioner` | confidential | yes           | no            | no            | `KEYCLOAK_PROVISIONER_CLIENT_SECRET_KEY` |
+
+All three clients have `fullScopeAllowed=false`. Redirect URIs and web origins are derived from
+`SITE_URL` for the backend and frontend clients; the provisioner has none.
+
+The service accounts and client scope mappings are managed as well:
+
+| Client            | Role                                         |
+| ----------------- | -------------------------------------------- |
+| `tapir-backend`   | `realm-management/manage-users`              |
+| `tapir-provisioner` | `realm-management/realm-admin`             |
+| `tapir-frontend`  | none                                          |
+
+Both the service-account role and the client's role scope mapping are required. With
+`fullScopeAllowed=false`, a token only contains roles that are included in the client's role scope
+mappings. The service-account role is what lets the client call the admin API; the scope mapping makes
+the role available to the token.
+
+### What the command does not manage
+
+Users, SMTP settings, themes, client scopes, optional protocol mappers, authentication flows,
+identity providers and the user profile are not managed. Configure those in the Keycloak admin
+console. A missing `smtpServer` is reported as a warning, not as an error.
+
+Export the realm from the Keycloak admin console, or with `kc.sh export`, before the first `sync` if
+you want a backup.
+
+## Configuration
+
+All settings are read through `django-environ` from the process environment or the `.env.local` file
+in the repository root.
+
+| Variable                             | Default                  | Purpose |
+| ------------------------------------ | ------------------------ | ------- |
+| `KEYCLOAK_ADMIN_SERVER_URL`          | `http://keycloak:8080`   | Base URL of the Keycloak server as reachable from Tapir. Used by `check`/`sync` and for OIDC discovery. |
+| `KEYCLOAK_PUBLIC_URL`                | `http://localhost:8080`  | Browser-facing base URL. Used for the password-change redirect and the CSP `frame-src`. |
+| `KEYCLOAK_REALM_NAME`                | `tapir`                  | Realm to manage. The realm must already exist. |
+| `KEYCLOAK_CLIENT_ID`                 | `tapir-backend`          | Confidential backend client used for login and user management. |
+| `KEYCLOAK_ADMIN_CLIENT_SECRET_KEY`   | `**********`             | Secret for the backend client. `sync` creates the client or repairs its secret. |
+| `KEYCLOAK_FRONTEND_CLIENT_ID`        | `tapir-frontend`         | Public client used by the frontend. |
+| `KEYCLOAK_PROVISIONER_CLIENT_ID`     | `tapir-provisioner`      | Client used by `manage.py keycloak`. Must exist before the first `sync`. |
+| `KEYCLOAK_PROVISIONER_CLIENT_SECRET_KEY` | `**********`         | Secret for the provisioner client. Must match Keycloak before `sync`. |
+| `KEYCLOAK_SKIP_VERIFICATION_EMAIL`   | `false`                  | Skip the verification email Tapir sends through Keycloak. |
+| `SITE_URL`                           | `http://localhost:8000`  | Public URL of Tapir. Redirect URIs and web origins are derived from it. |
+| `DEBUG`                              | `false`                  | Adds localhost redirect URIs and disables the local-default warnings. |
+
+`KEYCLOAK_ADMIN_SERVER_URL` is the base URL only. It may include a path prefix such as
+`https://auth.example.org/auth`, but it must not include `/realms/<realm>`. A trailing slash is
+ignored.
+
+`KEYCLOAK_ADMIN_SERVER_URL` must be reachable from the Tapir backend, because the OpenID Connect
+discovery document and the admin API are fetched server-side. `KEYCLOAK_PUBLIC_URL` is what browsers
+see. In a simple deployment both are the same; behind split DNS or a reverse proxy they can differ.
+Set both explicitly, and make sure `SITE_URL` is the canonical browser URL.
+
+### TLS and private CAs
+
+Certificate verification is always on. If Keycloak uses a certificate from a private CA, add that CA
+to the container trust store or point `REQUESTS_CA_BUNDLE` at the CA bundle. There is deliberately no
+insecure verification toggle.
+
+## Bootstrapping a new Keycloak server
+
+The only thing Tapir needs before the first `sync` is a realm and a provisioner client with
+`realm-management/realm-admin`. Everything else is created by the command.
+
+### 1. Create the realm
+
+Create a dedicated realm (for example `tapir`) or choose an existing one and set
+`KEYCLOAK_REALM_NAME` accordingly. `sync` cannot create a realm.
+
+### 2. Create the provisioner client
+
+In the Keycloak admin console, create a client in that realm:
+
+- Client ID: `tapir-provisioner` (or the value of `KEYCLOAK_PROVISIONER_CLIENT_ID`)
+- Client authentication: on (confidential)
+- Service accounts roles: on
+- Standard flow: off
+- Direct access grants: off
+- Implicit flow: off
+- Valid redirect URIs and web origins: empty
+- Full scope allowed: off
+- Client secret: generate one and copy it
+
+The local bootstrap file `docker/keycloak/import/tapir-realm.json` is a minimal reference for these
+settings.
+
+### 3. Give the provisioner client realm-admin
+
+The provisioner needs `realm-management/realm-admin` in two places:
+
+1. **Service account role:** open the client, go to *Service accounts roles*, select
+   `realm-management`, and assign `realm-admin`.
+2. **Client scope mapping:** open the client, go to *Client scopes*, open the `realm-management`
+   scope, and assign `realm-admin` there as well.
+
+With `fullScopeAllowed=false`, missing either mapping leaves the command unable to read or change the
+realm. `sync` verifies both and reports what is missing.
+
+### 4. Configure Tapir
+
+Create `.env.local` from `.env.local.disabled` for the local Docker stack, or set the variables
+directly in the environment of the `web` and Celery containers in production. A production example:
+
+```dotenv
+DEBUG=0
+SITE_URL=https://tapir.example.org
+KEYCLOAK_ADMIN_SERVER_URL=https://auth.example.org
+KEYCLOAK_PUBLIC_URL=https://auth.example.org
+KEYCLOAK_REALM_NAME=tapir
+KEYCLOAK_CLIENT_ID=tapir-backend
+KEYCLOAK_ADMIN_CLIENT_SECRET_KEY=<generated-secret>
+KEYCLOAK_FRONTEND_CLIENT_ID=tapir-frontend
+KEYCLOAK_PROVISIONER_CLIENT_ID=tapir-provisioner
+KEYCLOAK_PROVISIONER_CLIENT_SECRET_KEY=<secret-from-keycloak>
+```
+
+For a one-off run against a different server, pass the values to `docker compose exec`:
+
+```sh
+docker compose exec \
+  -e KEYCLOAK_ADMIN_SERVER_URL=https://auth.example.org \
+  -e KEYCLOAK_PUBLIC_URL=https://auth.example.org \
+  -e KEYCLOAK_REALM_NAME=tapir \
+  -e KEYCLOAK_PROVISIONER_CLIENT_ID=tapir-provisioner \
+  -e KEYCLOAK_PROVISIONER_CLIENT_SECRET_KEY='<secret-from-keycloak>' \
+  -e KEYCLOAK_CLIENT_ID=tapir-backend \
+  -e KEYCLOAK_ADMIN_CLIENT_SECRET_KEY='<generated-secret>' \
+  -e SITE_URL=https://tapir.example.org \
+  web poetry run python manage.py keycloak check
+```
+
+The same command can run on a host installation with `poetry run python manage.py keycloak check`.
+
+### 5. Check, then sync
+
+```sh
+docker compose exec web poetry run python manage.py keycloak check
+docker compose exec web poetry run python manage.py keycloak sync
+```
+
+`check` is read-only and exits `1` when the realm drifts. `sync` creates missing settings and then
+verifies the result; it exits `0` when the realm is converged and `2` on a configuration or setup
+error. Both commands accept `--json` for automation. The JSON contains a `config` block with the
+effective server URL, public URL, realm, site URL and client IDs, but never secrets.
+
+`sync` is idempotent. Running it twice reports no changes the second time.
+
+### Rotating secrets
+
+- **Backend secret:** change `KEYCLOAK_ADMIN_CLIENT_SECRET_KEY` and run `sync`. The command updates
+  the `tapir-backend` client to the configured secret.
+- **Provisioner secret:** change the secret in Keycloak and in
+  `KEYCLOAK_PROVISIONER_CLIENT_SECRET_KEY` together. `sync` cannot repair this secret because it needs
+  a working secret to authenticate in the first place.
+
+## Local development stack
+
+The `docker-compose.yml` stack imports `docker/keycloak/import/tapir-realm.json` into a fresh
+Keycloak database. That import intentionally contains only the realm, the `tapir-provisioner` client
+and the `realm-management/realm-admin` mappings. `tapir-backend`, `tapir-frontend`, the Tapir roles
+and the `superuser` group are created by `make keycloak-sync`.
+
+Keycloak reads the import only when its database is empty. After changing the import, recreate the
+container and its volume:
+
+```sh
+docker compose down -v
+docker compose up -d --wait
+```
+
+The local stack uses different URLs on purpose: Tapir reaches Keycloak at `http://keycloak:8080`
+inside the Docker network, while browsers use `http://localhost:8080`. If the host ports are remapped
+in `docker-compose.override.yml`, set `KEYCLOAK_PUBLIC_URL` (and Keycloak's `KC_HOSTNAME`) to the
+remapped public URL.
+
+## Troubleshooting
+
+| Message | Fix |
+| ------- | --- |
+| `Keycloak is not reachable at KEYCLOAK_ADMIN_SERVER_URL=...` | Check the URL, DNS and network access from the Tapir container, and the TLS trust chain. |
+| `The Keycloak provisioning client could not authenticate ...` | Check `KEYCLOAK_PROVISIONER_CLIENT_ID`, its secret and `KEYCLOAK_REALM_NAME`. |
+| `The Keycloak realm does not exist.` | Create the realm or correct `KEYCLOAK_REALM_NAME`. |
+| `The Keycloak provisioning client lacks realm-management/realm-admin.` | Assign `realm-admin` to the service account and add the client scope mapping. |
+| `client tapir-backend cannot authenticate with the configured secret` | `sync` repairs it. Also check `KEYCLOAK_ADMIN_CLIENT_SECRET_KEY` and `KEYCLOAK_CLIENT_ID`. |
+| `KEYCLOAK_PROVISIONER_CLIENT_SECRET_KEY is still the placeholder value` | Set a real secret in Keycloak and in the environment. |
+| `Invalid redirect URI` in the browser | Make `SITE_URL` match the canonical browser URL, and proxy other hostnames to that URL. |
+| `SSL: CERTIFICATE_VERIFY_FAILED` | Add the private CA to the trust store or set `REQUESTS_CA_BUNDLE`. |

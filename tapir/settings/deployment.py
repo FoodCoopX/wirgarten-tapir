@@ -179,8 +179,17 @@ SERVER_EMAIL = env("SERVER_EMAIL", default="tapir@foodcoopx.de")
 SITE_URL = env("SITE_URL", default="http://localhost:8000")
 
 KEYCLOAK_ADMIN_CONFIG = {
-    "SERVER_URL": env.str("KEYCLOAK_ADMIN_SERVER_URL", default="http://keycloak:8080"),
-    "PUBLIC_URL": env.str("KEYCLOAK_PUBLIC_URL", default="http://localhost:8080"),
+    # Base URL of the Keycloak server as reachable from Tapir (scheme, host and
+    # an optional path prefix such as /auth, but no /realms/<realm>).
+    "SERVER_URL": env.str(
+        "KEYCLOAK_ADMIN_SERVER_URL", default="http://keycloak:8080"
+    ).rstrip("/"),
+    # Browser-facing base URL, used for the password-change redirect and as the
+    # CSP frame-src. This is often the same as SERVER_URL, but may differ behind
+    # a reverse proxy or split DNS.
+    "PUBLIC_URL": env.str(
+        "KEYCLOAK_PUBLIC_URL", default="http://localhost:8080"
+    ).rstrip("/"),
     "CLIENT_ID": env.str("KEYCLOAK_CLIENT_ID", default="tapir-backend"),
     "FRONTEND_CLIENT_ID": env.str(
         "KEYCLOAK_FRONTEND_CLIENT_ID", default="tapir-frontend"
@@ -190,6 +199,8 @@ KEYCLOAK_ADMIN_CONFIG = {
         "KEYCLOAK_ADMIN_CLIENT_SECRET_KEY", default="**********"
     ),
 }
+# The provisioner client is the only Keycloak dependency that must exist before
+# `manage.py keycloak sync` can run. It needs realm-management/realm-admin.
 KEYCLOAK_PROVISIONER_CONFIG = {
     "CLIENT_ID": env.str("KEYCLOAK_PROVISIONER_CLIENT_ID", default="tapir-provisioner"),
     "CLIENT_SECRET_KEY": env.str(
@@ -263,7 +274,11 @@ SOCIALACCOUNT_PROVIDERS = {
                 "client_id": KEYCLOAK_ADMIN_CONFIG["CLIENT_ID"],
                 "secret": KEYCLOAK_ADMIN_CONFIG["CLIENT_SECRET_KEY"],
                 "settings": {
-                    "server_url": f"{KEYCLOAK_ADMIN_CONFIG["SERVER_URL"]}/realms/{KEYCLOAK_ADMIN_CONFIG["REALM_NAME"]}/.well-known/openid-configuration",
+                    "server_url": (
+                        f"{KEYCLOAK_ADMIN_CONFIG['SERVER_URL'].rstrip('/')}"
+                        f"/realms/{KEYCLOAK_ADMIN_CONFIG['REALM_NAME']}"
+                        "/.well-known/openid-configuration"
+                    ),
                 },
             }
         ]

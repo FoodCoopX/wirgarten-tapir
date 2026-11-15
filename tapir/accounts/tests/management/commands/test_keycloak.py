@@ -63,6 +63,79 @@ class TestKeycloakCommand(TapirUnitTest):
         self.assertEqual(code, context.exception.code)
         return out.getvalue(), err.getvalue()
 
+    def test_check_invalidConfig_exits2AndNamesEnvVar(self, _can_authenticate):
+        out = StringIO()
+        err = StringIO()
+        with override_settings(
+            KEYCLOAK_ADMIN_CONFIG={**ADMIN_CONFIG, "SERVER_URL": "keycloak:8080"}
+        ):
+            with patch(
+                "tapir.accounts.management.commands.keycloak.get_provisioner_client"
+            ) as get_client:
+                with self.assertRaises(SystemExit) as context:
+                    call_command("keycloak", "check", stdout=out, stderr=err)
+
+        self.assertEqual(2, context.exception.code)
+        self.assertIn("KEYCLOAK_ADMIN_SERVER_URL", err.getvalue())
+        get_client.assert_not_called()
+
+    def test_check_jsonInvalidConfig_exits2AndReturnsConfig(self, _can_authenticate):
+        out = StringIO()
+        err = StringIO()
+        with override_settings(
+            KEYCLOAK_ADMIN_CONFIG={**ADMIN_CONFIG, "SERVER_URL": "keycloak:8080"}
+        ):
+            with patch(
+                "tapir.accounts.management.commands.keycloak.get_provisioner_client"
+            ):
+                with self.assertRaises(SystemExit) as context:
+                    call_command("keycloak", "check", "--json", stdout=out, stderr=err)
+
+        payload = json.loads(out.getvalue())
+        self.assertEqual(2, context.exception.code)
+        self.assertFalse(payload["ok"])
+        self.assertIn("KEYCLOAK_ADMIN_SERVER_URL", payload["error"])
+        self.assertEqual("keycloak:8080", payload["config"]["server_url"])
+
+    def test_check_json_includesConfigWithoutSecrets(self, _can_authenticate):
+        desired = build_desired_state()
+        fake = FakeKeycloakAdmin.converged(desired)
+
+        output, _ = self._run("check", "--json", fake=fake)
+        payload = json.loads(output)
+
+        self.assertEqual("http://keycloak:8080", payload["config"]["server_url"])
+        self.assertEqual(
+            "tapir-provisioner", payload["config"]["provisioner_client_id"]
+        )
+        self.assertTrue(
+            any(
+                "KEYCLOAK_ADMIN_SERVER_URL" in warning
+                for warning in payload["warnings"]
+            )
+        )
+        self.assertNotIn("backend-secret", output)
+        self.assertNotIn("provisioner-secret", output)
+
+    def test_check_localDefaults_reportsConfigWarnings(self, _can_authenticate):
+        desired = build_desired_state()
+        fake = FakeKeycloakAdmin.converged(desired)
+
+        output, _ = self._run("check", fake=fake)
+
+        self.assertIn("[warning] KEYCLOAK_ADMIN_SERVER_URL", output)
+        self.assertIn("[warning] KEYCLOAK_PUBLIC_URL", output)
+
+    def test_check_printsTargetAndProvisionerClientId(self, _can_authenticate):
+        desired = build_desired_state()
+        fake = FakeKeycloakAdmin.converged(desired)
+
+        output, _ = self._run("check", fake=fake)
+
+        self.assertIn("target:", output)
+        self.assertIn("public=http://localhost:8080", output)
+        self.assertIn("tapir-provisioner", output)
+
     def test_check_converged_exits0(self, _can_authenticate):
         desired = build_desired_state()
         fake = FakeKeycloakAdmin.converged(desired)

@@ -3,11 +3,15 @@ from __future__ import annotations
 import json
 import sys
 
-from django.conf import settings
 from django.core.management import BaseCommand
 from keycloak.exceptions import KeycloakError
 
 from tapir.accounts.services.keycloak_client_factory import get_provisioner_client
+from tapir.accounts.services.keycloak_config import (
+    KeycloakConfigCheck,
+    build_keycloak_config_summary,
+    check_keycloak_config,
+)
 from tapir.accounts.services.keycloak_desired_state import build_desired_state
 from tapir.accounts.services.keycloak_reconciler import (
     KeycloakReconciler,
@@ -19,7 +23,9 @@ from tapir.accounts.services.keycloak_reconciler import (
 class Command(BaseCommand):
     help = (
         "Checks or synchronizes the Keycloak realm settings Tapir needs "
-        "(clients, realm roles, the superuser group and service accounts)."
+        "(clients, realm roles, the superuser group and service accounts). "
+        "The target is configured with KEYCLOAK_ADMIN_SERVER_URL, "
+        "KEYCLOAK_REALM_NAME and the provisioner client settings."
     )
 
     def add_arguments(self, parser):
@@ -44,6 +50,11 @@ class Command(BaseCommand):
         action = options["action"]
         as_json = options.get("json", False)
         dry_run = action == "check" or options.get("dry_run", False)
+        config = build_keycloak_config_summary()
+        config_check = check_keycloak_config()
+
+        if config_check.has_errors:
+            self._fail_config(config_check, config, as_json)
 
         try:
             desired = build_desired_state()
@@ -62,26 +73,69 @@ class Command(BaseCommand):
         except (KeycloakSetupError, ValueError, KeycloakError) as error:
             if as_json:
                 self.stdout.write(
-                    json.dumps({"ok": False, "error": str(error)}, indent=2)
+                    json.dumps(
+                        {"ok": False, "error": str(error), "config": config},
+                        indent=2,
+                    )
                 )
             else:
                 self.stderr.write(self.style.ERROR(str(error)))
             sys.exit(2)
 
+        result.warnings = list(
+            dict.fromkeys(
+                result.warnings + [issue.format() for issue in config_check.warnings]
+            )
+        )
+
         if as_json:
             self.stdout.write(
-                json.dumps(self._as_dict(result), indent=2, sort_keys=True)
+                json.dumps(self._as_dict(result, config), indent=2, sort_keys=True)
             )
         else:
-            self._print_result(result, action, dry_run)
+            self._print_result(result, action, dry_run, config)
 
         if result.has_errors:
             sys.exit(1)
 
-    def _as_dict(self, result: ReconcileResult) -> dict:
+    def _fail_config(
+        self,
+        config_check: KeycloakConfigCheck,
+        config: dict,
+        as_json: bool,
+    ) -> None:
+        message = "Invalid Keycloak configuration:\n" + "\n".join(
+            issue.format() for issue in config_check.errors
+        )
+        if as_json:
+            self.stdout.write(
+                json.dumps(
+                    {
+                        "ok": False,
+                        "error": message,
+                        "config": config,
+                        "config_issues": [
+                            {
+                                "level": issue.level,
+                                "variable": issue.variable,
+                                "message": issue.message,
+                            }
+                            for issue in config_check.errors
+                        ],
+                    },
+                    indent=2,
+                    sort_keys=True,
+                )
+            )
+        else:
+            self.stderr.write(self.style.ERROR(message))
+        sys.exit(2)
+
+    def _as_dict(self, result: ReconcileResult, config: dict) -> dict:
         return {
-            "realm": settings.KEYCLOAK_ADMIN_CONFIG["REALM_NAME"],
-            "server_url": settings.KEYCLOAK_ADMIN_CONFIG["SERVER_URL"],
+            "config": config,
+            "realm": config["realm"],
+            "server_url": config["server_url"],
             "ok": not result.has_errors,
             "roles": {
                 "present": result.role_present,
@@ -108,13 +162,23 @@ class Command(BaseCommand):
         }
 
     def _print_result(
-        self, result: ReconcileResult, action: str, dry_run: bool
+        self,
+        result: ReconcileResult,
+        action: str,
+        dry_run: bool,
+        config: dict,
     ) -> None:
-        realm = settings.KEYCLOAK_ADMIN_CONFIG["REALM_NAME"]
-        server_url = settings.KEYCLOAK_ADMIN_CONFIG["SERVER_URL"]
+        realm = config["realm"]
+        server_url = config["server_url"]
         verb = "Checking" if action == "check" else "Synchronizing"
         suffix = " (dry run)" if dry_run and action == "sync" else ""
         self.stdout.write(f"{verb} Keycloak realm {realm!r} at {server_url}{suffix}")
+        self.stdout.write(
+            "  target: "
+            f"public={config['public_url']}, site={config['site_url']}, "
+            f"clients={config['client_id']}, {config['frontend_client_id']}, "
+            f"{config['provisioner_client_id']}"
+        )
 
         for change in result.changes:
             if change.level == "warning":
