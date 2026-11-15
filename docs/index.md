@@ -10,3 +10,11 @@ This documentation is split into two parts:
 
 !!! note
     The user documentation is being expanded. More guides will be added over time.
+
+## Admin guides
+
+- [Adding new members](admins/member_lists/adding_new_members.md)
+
+## Developer guides
+
+- [Local instance without test data](dev/first-setup.md)

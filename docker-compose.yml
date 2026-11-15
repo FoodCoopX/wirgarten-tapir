@@ -33,6 +33,7 @@ services:
       - "8080:8080"
     volumes:
       - ./docker/keycloak/themes:/opt/keycloak/themes
+      - keycloak-data:/opt/keycloak/data/h2
     environment:
       KC_HEALTH_ENABLED: true
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
@@ -81,8 +82,8 @@ services:
       start_interval: 1s
       timeout: 5s
       retries: 30
-    # volumes:
-    #   - tapir-db:/var/lib/postgresql
+    volumes:
+      - tapir-db:/var/lib/postgresql
     environment:
       - POSTGRES_DB=tapir
       - POSTGRES_PASSWORD=tapir
@@ -160,8 +161,9 @@ services:
           - list.example.com
 
 volumes:
+  tapir-db:
+  keycloak-data:
   media-volume:
-  # tapir-db:
   # web-static:
   # web-uploads:
   vite_node_modules:

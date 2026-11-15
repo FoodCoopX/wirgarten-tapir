@@ -117,7 +117,7 @@ class DataImportView(
         context_data["page_title"] = "Datenübernahme"
         context_data["import_types"] = IMPORT_TYPES.values()
         context_data["members_without_login"] = (
-            ActivationMailService.get_members_without_login().count()
+            ActivationMailService.get_members_without_login(cache={}).count()
         )
         context_data.setdefault("stage", "upload")
         return context_data

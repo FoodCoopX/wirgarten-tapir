@@ -309,17 +309,18 @@ class DataImportService:
 
 class ActivationMailService:
     """Keycloak logins and activation mails for imported members (like the command
-    send_verify_emails): members without login that have coop shares or a current or future
-    subscription."""
+    send_verify_emails): active members without login."""
 
     @staticmethod
-    def get_members_without_login():
-        from tapir.wirgarten.management.commands.send_verify_emails import (
+    def get_members_without_login(cache: dict):
+        from tapir.accounts.management.commands.send_verify_emails import (
             Command as SendVerifyEmailsCommand,
         )
 
         return (
-            SendVerifyEmailsCommand.get_members_with_at_least_one_share_or_one_relevant_subscription()
+            SendVerifyEmailsCommand.get_active_members_without_keycloak_account(
+                cache=cache
+            )
             .distinct()
             .order_by("member_no", "last_name")
         )
@@ -334,13 +335,13 @@ class ActivationMailService:
         cache = {}
         sent = 0
         errors = []
-        for member in cls.get_members_without_login():
+        for member in cls.get_members_without_login(cache=cache):
             try:
                 KeycloakUserManager.create_keycloak_user_if_necessary(
-                    user=member, initial_password=None, cache=cache
+                    user=member, initial_password=None
                 )
                 EmailVerificationService.send_verification_email(
-                    user=member, actor=actor, cache=cache
+                    user=member, actor=actor
                 )
                 sent += 1
             except Exception as error:

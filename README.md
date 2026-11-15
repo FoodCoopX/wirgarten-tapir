@@ -33,7 +33,8 @@ Use docker to quickly get a development server running on your machine. Run the 
 
 ```sh
 make up
-# Create tables, define the configuration parameters, generate test data
+# Create tables, define the configuration parameters, and generate test data
+# This creates a test-data instance; for an empty instance, see below.
 make migrate parameters populate
 ```
 
@@ -48,6 +49,20 @@ You should now have a local instance accessible at http://localhost:8000/. You c
 `roberto.cortes@example.com` and password `roberto.cortes`.
 
 You can log in as any user using the same pattern: `[name]@example.come` as username and `[name]` as password
+
+### Fresh instance without test data
+
+For a fresh instance for evaluation or data preparation, run:
+
+```sh
+make up
+TAPIR_ADMIN_EMAIL=me@example.org TAPIR_ADMIN_PASSWORD=secret make init
+```
+
+The admin defaults are `admin@example.com` / `admin`; first and last names default to
+`Admin` / `Tapir`. Data persists in Docker volumes. To wipe the database and Keycloak data
+together, run `docker compose down -v`. See the [first-setup guide](docs/dev/first-setup.md)
+for configuration and data-import steps.
 
 ### Django outside of Docker
 

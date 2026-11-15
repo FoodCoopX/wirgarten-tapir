@@ -8,11 +8,16 @@
 # sent to the running container; inside a container (CI runs
 # `docker compose run web make test`) they execute directly.
 
+ADMIN_VARS := TAPIR_ADMIN_FIRST_NAME TAPIR_ADMIN_LAST_NAME TAPIR_ADMIN_EMAIL TAPIR_ADMIN_PASSWORD
+export TAPIR_ADMIN_FIRST_NAME TAPIR_ADMIN_LAST_NAME TAPIR_ADMIN_EMAIL TAPIR_ADMIN_PASSWORD
+
 ifeq (,$(wildcard /.dockerenv))
   IN_WEB := docker compose exec web
+  IN_WEB_ADMIN := docker compose exec $(foreach var,$(ADMIN_VARS),$(if $($(var)),-e $(var))) web
   IN_VITE := docker compose exec vite
 else
   IN_WEB :=
+  IN_WEB_ADMIN :=
   IN_VITE :=
 endif
 
@@ -22,7 +27,7 @@ ARGS ?=
 .DEFAULT_GOAL := help
 
 .PHONY: help up down reset lint test-lint test test-fast test-app \
-	manage migrate parameters populate populate-bakery schema frontend-build \
+	manage migrate parameters init populate populate-bakery schema frontend-build \
 	publish-docker-image
 
 help: ## Show this help
@@ -81,6 +86,11 @@ migrate: ## Apply database migrations
 
 parameters: ## Import the TapirParameter definitions
 	$(IN_WEB) poetry run python manage.py parameter_definitions
+
+init: ## Prepare an empty instance without test data: migrations, parameters and one admin account
+	$(IN_WEB) poetry run python manage.py migrate
+	$(IN_WEB) poetry run python manage.py parameter_definitions
+	$(IN_WEB_ADMIN) poetry run python manage.py create_admin
 
 populate: ## Drop the data and generate a fresh test dataset
 	$(IN_WEB) poetry run python manage.py populate --reset_all
