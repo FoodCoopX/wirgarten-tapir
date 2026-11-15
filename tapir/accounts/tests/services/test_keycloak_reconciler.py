@@ -1,0 +1,429 @@
+from unittest.mock import patch
+
+from django.test import override_settings
+
+from tapir.accounts.services.keycloak_desired_state import build_desired_state
+from tapir.accounts.services.keycloak_reconciler import (
+    KeycloakReconciler,
+    KeycloakSetupError,
+)
+from tapir.accounts.tests.services.keycloak_fake import FakeKeycloakAdmin
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
+
+ADMIN_CONFIG = {
+    "SERVER_URL": "http://keycloak:8080",
+    "PUBLIC_URL": "http://localhost:8080",
+    "CLIENT_ID": "tapir-backend",
+    "FRONTEND_CLIENT_ID": "tapir-frontend",
+    "REALM_NAME": "tapir",
+    "CLIENT_SECRET_KEY": "backend-secret",
+}
+PROVISIONER_CONFIG = {
+    "CLIENT_ID": "tapir-provisioner",
+    "CLIENT_SECRET_KEY": "provisioner-secret",
+}
+SETTINGS = dict(
+    DEBUG=False,
+    SITE_URL="https://tapir.example.org",
+    KEYCLOAK_ADMIN_CONFIG=ADMIN_CONFIG,
+    KEYCLOAK_PROVISIONER_CONFIG=PROVISIONER_CONFIG,
+)
+
+MUTATING_CALL_PREFIXES = ("create_", "update_", "assign_", "delete_")
+
+
+def mutating_calls(fake: FakeKeycloakAdmin) -> list:
+    return [call for call in fake.calls if call[0].startswith(MUTATING_CALL_PREFIXES)]
+
+
+@override_settings(**SETTINGS)
+@patch(
+    "tapir.accounts.services.keycloak_reconciler.can_authenticate",
+    return_value=(True, None),
+)
+class TestKeycloakReconciler(TapirUnitTest):
+    def test_reconcile_converged_isClean(self, _can_authenticate):
+        desired = build_desired_state()
+        fake = FakeKeycloakAdmin.converged(desired)
+
+        result = KeycloakReconciler(fake, desired).reconcile(dry_run=True)
+
+        self.assertFalse(result.has_errors)
+        self.assertEqual(9, result.role_count)
+        self.assertEqual(9, result.role_present)
+        self.assertEqual(9, result.group_role_count)
+        self.assertEqual(9, result.group_role_present)
+        self.assertFalse(mutating_calls(fake))
+
+    def test_reconcile_reorderedClientLists_isClean(self, _can_authenticate):
+        desired = build_desired_state()
+        fake = FakeKeycloakAdmin.converged(desired)
+        for client in fake.clients:
+            for key in ("redirectUris", "webOrigins"):
+                if key in client:
+                    client[key] = list(reversed(client[key]))
+
+        result = KeycloakReconciler(fake, desired).reconcile(dry_run=True)
+
+        self.assertFalse(result.has_errors)
+        self.assertFalse(mutating_calls(fake))
+
+    def test_reconcile_missingRoles_reportsEveryMissingRole(self, _can_authenticate):
+        desired = build_desired_state()
+        fake = FakeKeycloakAdmin.converged(desired)
+        fake.roles = {}
+
+        result = KeycloakReconciler(fake, desired).reconcile(dry_run=True)
+
+        role_errors = [
+            change
+            for change in result.changes
+            if change.section == "roles" and change.level == "error"
+        ]
+        self.assertEqual(9, len(role_errors))
+        messages = " ".join(change.message for change in role_errors)
+        for role in desired.realm_roles:
+            self.assertIn(role.name, messages)
+        self.assertIn("coop.manage", messages)
+        self.assertFalse(mutating_calls(fake))
+
+    def test_reconcile_syncCreatesAllMissingRoles(self, _can_authenticate):
+        desired = build_desired_state()
+        fake = FakeKeycloakAdmin.converged(desired)
+        fake.roles = {}
+
+        KeycloakReconciler(fake, desired).reconcile(dry_run=False)
+
+        create_calls = fake.calls_of("create_realm_role")
+        self.assertEqual(9, len(create_calls))
+        for role in desired.realm_roles:
+            self.assertIn(role.name, fake.roles)
+        self.assertFalse(fake.calls_of("delete_realm_role"))
+
+    def test_reconcile_missingGroup_createsItAndAssignsAllRoles(
+        self, _can_authenticate
+    ):
+        desired = build_desired_state()
+        fake = FakeKeycloakAdmin.converged(desired)
+        fake.groups = []
+
+        KeycloakReconciler(fake, desired).reconcile(dry_run=False)
+
+        self.assertEqual(1, len(fake.calls_of("create_group")))
+        assign_calls = fake.calls_of("assign_group_realm_roles")
+        self.assertEqual(1, len(assign_calls))
+        assigned_names = {role["name"] for role in assign_calls[0][2]}
+        self.assertEqual({role.name for role in desired.realm_roles}, assigned_names)
+
+    def test_reconcile_groupWithSomeRoles_assignsOnlyMissingRoles(
+        self, _can_authenticate
+    ):
+        desired = build_desired_state()
+        fake = FakeKeycloakAdmin.converged(desired)
+        fake.groups[0]["realmRoles"] = ["coop.view", "coop.manage"]
+
+        KeycloakReconciler(fake, desired).reconcile(dry_run=False)
+
+        assign_calls = fake.calls_of("assign_group_realm_roles")
+        self.assertEqual(1, len(assign_calls))
+        assigned_names = {role["name"] for role in assign_calls[0][2]}
+        self.assertEqual(7, len(assigned_names))
+        self.assertNotIn("coop.view", assigned_names)
+        self.assertNotIn("coop.manage", assigned_names)
+
+    def test_reconcile_convergedSecondRun_mutatesNothing(self, _can_authenticate):
+        desired = build_desired_state()
+        fake = FakeKeycloakAdmin.converged(desired)
+        reconciler = KeycloakReconciler(fake, desired)
+
+        reconciler.reconcile(dry_run=False)
+        fake.calls.clear()
+        result = reconciler.reconcile(dry_run=False)
+
+        self.assertFalse(result.has_errors)
+        self.assertFalse(mutating_calls(fake))
+
+    def test_reconcile_checkWithDrift_doesNotMutate(self, _can_authenticate):
+        desired = build_desired_state()
+        fake = FakeKeycloakAdmin.converged(desired)
+        fake.roles = {}
+        fake.groups = []
+        fake.clients = []
+
+        result = KeycloakReconciler(fake, desired).reconcile(dry_run=True)
+
+        self.assertTrue(result.has_errors)
+        self.assertFalse(mutating_calls(fake))
+
+    def test_reconcile_wrongRoleFlags_reportsAndFixes(self, _can_authenticate):
+        desired = build_desired_state()
+        fake = FakeKeycloakAdmin.converged(desired)
+        fake.roles["coop.manage"]["composite"] = True
+
+        check = KeycloakReconciler(fake, desired).reconcile(dry_run=True)
+        self.assertTrue(
+            any(
+                change.section == "roles" and "coop.manage" in change.message
+                for change in check.changes
+            )
+        )
+        self.assertTrue(fake.roles["coop.manage"]["composite"])
+
+        KeycloakReconciler(fake, desired).reconcile(dry_run=False)
+        self.assertFalse(fake.roles["coop.manage"]["composite"])
+        self.assertEqual(1, len(fake.calls_of("update_realm_role")))
+
+    def test_reconcile_extraGroupRole_warnsAndDoesNotDelete(self, _can_authenticate):
+        desired = build_desired_state()
+        fake = FakeKeycloakAdmin.converged(desired)
+        fake.roles["extra.role"] = {
+            "id": "role-extra.role",
+            "name": "extra.role",
+            "clientRole": False,
+            "composite": False,
+        }
+        fake.groups[0]["realmRoles"].append("extra.role")
+
+        result = KeycloakReconciler(fake, desired).reconcile(dry_run=True)
+
+        self.assertTrue(
+            any(
+                change.level == "warning" and "extra.role" in change.message
+                for change in result.changes
+            )
+        )
+        self.assertFalse(fake.calls_of("delete_group_realm_roles"))
+
+    def test_reconcile_realmDrift_updatesOnlyTheManagedKeys(self, _can_authenticate):
+        desired = build_desired_state()
+        fake = FakeKeycloakAdmin.converged(desired)
+        fake.realm["enabled"] = False
+
+        KeycloakReconciler(fake, desired).reconcile(dry_run=False)
+
+        update_calls = fake.calls_of("update_realm")
+        self.assertEqual(1, len(update_calls))
+        self.assertEqual({"enabled": True}, update_calls[0][2])
+        self.assertTrue(fake.realm["enabled"])
+
+    def test_reconcile_clientDrift_updatesTheClient(self, _can_authenticate):
+        desired = build_desired_state()
+        fake = FakeKeycloakAdmin.converged(desired)
+        backend = next(
+            client for client in fake.clients if client["clientId"] == "tapir-backend"
+        )
+        backend["directAccessGrantsEnabled"] = True
+
+        KeycloakReconciler(fake, desired).reconcile(dry_run=False)
+
+        update_calls = fake.calls_of("update_client")
+        self.assertEqual(1, len(update_calls))
+        self.assertFalse(update_calls[0][2]["directAccessGrantsEnabled"])
+
+    def test_reconcile_clientFullScopeAllowedDrift_updatesTheClient(
+        self, _can_authenticate
+    ):
+        desired = build_desired_state()
+        fake = FakeKeycloakAdmin.converged(desired)
+        frontend = next(
+            client for client in fake.clients if client["clientId"] == "tapir-frontend"
+        )
+        frontend["fullScopeAllowed"] = True
+
+        check = KeycloakReconciler(fake, desired).reconcile(dry_run=True)
+        self.assertTrue(
+            any(
+                change.section == "clients" and "fullScopeAllowed" in change.message
+                for change in check.changes
+            )
+        )
+        self.assertTrue(frontend["fullScopeAllowed"])
+
+        KeycloakReconciler(fake, desired).reconcile(dry_run=False)
+        self.assertFalse(frontend["fullScopeAllowed"])
+
+    def test_reconcile_missingRoleScopeMapping_reportsAndAdds(self, _can_authenticate):
+        desired = build_desired_state()
+        fake = FakeKeycloakAdmin.converged(desired)
+        fake.client_scope_roles = {}
+
+        check = KeycloakReconciler(fake, desired).reconcile(dry_run=True)
+        mapping_errors = [
+            change
+            for change in check.changes
+            if change.section == "clients" and "role scope mapping" in change.message
+        ]
+        self.assertEqual(2, len(mapping_errors))
+        messages = " ".join(change.message for change in mapping_errors)
+        self.assertIn("manage-users", messages)
+        self.assertIn("realm-admin", messages)
+        self.assertFalse(fake.calls_of("assign_client_roles_to_client_scope"))
+
+        KeycloakReconciler(fake, desired).reconcile(dry_run=False)
+
+        assign_calls = fake.calls_of("assign_client_roles_to_client_scope")
+        self.assertEqual(2, len(assign_calls))
+        assigned = {
+            (call[1], call[2]): {role["name"] for role in call[3]}
+            for call in assign_calls
+        }
+        self.assertEqual(
+            {"manage-users"},
+            assigned[("client-tapir-backend", "client-realm-management")],
+        )
+        self.assertEqual(
+            {"realm-admin"},
+            assigned[("client-tapir-provisioner", "client-realm-management")],
+        )
+
+    def test_reconcile_extraRoleScopeMapping_warnsAndDoesNotDelete(
+        self, _can_authenticate
+    ):
+        desired = build_desired_state()
+        fake = FakeKeycloakAdmin.converged(desired)
+        fake.client_scope_roles[
+            ("client-tapir-backend", "client-realm-management")
+        ].add("extra.role")
+
+        result = KeycloakReconciler(fake, desired).reconcile(dry_run=True)
+
+        self.assertTrue(
+            any(
+                change.level == "warning" and "extra.role" in change.message
+                for change in result.changes
+            )
+        )
+        self.assertFalse([call for call in fake.calls if call[0].startswith("delete_")])
+
+    def test_reconcile_roleScopeMappingBeforeFullScopeUpdate(self, _can_authenticate):
+        desired = build_desired_state()
+        fake = FakeKeycloakAdmin.converged(desired)
+        fake.client_scope_roles = {}
+        provisioner = next(
+            client
+            for client in fake.clients
+            if client["clientId"] == "tapir-provisioner"
+        )
+        provisioner["fullScopeAllowed"] = True
+
+        KeycloakReconciler(fake, desired).reconcile(dry_run=False)
+
+        assign_index = next(
+            index
+            for index, call in enumerate(fake.calls)
+            if call[0] == "assign_client_roles_to_client_scope"
+            and call[1] == "client-tapir-provisioner"
+        )
+        update_index = next(
+            index
+            for index, call in enumerate(fake.calls)
+            if call[0] == "update_client" and call[1] == "client-tapir-provisioner"
+        )
+        self.assertLess(assign_index, update_index)
+
+    def test_reconcile_missingClient_createsIt(self, _can_authenticate):
+        desired = build_desired_state()
+        fake = FakeKeycloakAdmin.converged(desired)
+        fake.clients = [
+            client for client in fake.clients if client["clientId"] != "tapir-backend"
+        ]
+
+        KeycloakReconciler(fake, desired).reconcile(dry_run=False)
+
+        create_calls = fake.calls_of("create_client")
+        self.assertEqual(1, len(create_calls))
+        self.assertEqual("tapir-backend", create_calls[0][1]["clientId"])
+
+    def test_reconcile_missingServiceAccountRole_assignsIt(self, _can_authenticate):
+        desired = build_desired_state()
+        fake = FakeKeycloakAdmin.converged(desired)
+        fake.service_account_roles["tapir-backend"] = {"realm-management": set()}
+
+        KeycloakReconciler(fake, desired).reconcile(dry_run=False)
+
+        assign_calls = fake.calls_of("assign_client_role")
+        self.assertEqual(1, len(assign_calls))
+        self.assertEqual(
+            {"manage-users"}, {role["name"] for role in assign_calls[0][3]}
+        )
+
+    def test_reconcile_missingSmtp_warnsWithoutFailing(self, _can_authenticate):
+        desired = build_desired_state()
+        fake = FakeKeycloakAdmin.converged(desired)
+        fake.realm.pop("smtpServer")
+
+        result = KeycloakReconciler(fake, desired).reconcile(dry_run=True)
+
+        self.assertFalse(result.has_errors)
+        self.assertTrue(
+            any(
+                change.level == "warning" and "smtpServer" in change.message
+                for change in result.changes
+            )
+        )
+
+    def test_reconcile_neverDeletesAnything(self, _can_authenticate):
+        desired = build_desired_state()
+        fake = FakeKeycloakAdmin.converged(desired)
+        fake.roles = {}
+        fake.groups = []
+
+        KeycloakReconciler(fake, desired).reconcile(dry_run=False)
+
+        self.assertFalse([call for call in fake.calls if call[0].startswith("delete_")])
+
+    def test_reconcile_missingRealm_raisesSetupError(self, _can_authenticate):
+        desired = build_desired_state()
+        fake = FakeKeycloakAdmin(realm_error_code=404)
+
+        with self.assertRaises(KeycloakSetupError) as context:
+            KeycloakReconciler(fake, desired).reconcile(dry_run=True)
+
+        self.assertIn("realm does not exist", str(context.exception))
+
+    def test_reconcile_unauthorized_raisesSetupError(self, _can_authenticate):
+        desired = build_desired_state()
+        fake = FakeKeycloakAdmin(realm_error_code=401)
+
+        with self.assertRaises(KeycloakSetupError) as context:
+            KeycloakReconciler(fake, desired).reconcile(dry_run=True)
+
+        self.assertIn("could not authenticate", str(context.exception))
+
+    def test_reconcile_forbidden_raisesSetupError(self, _can_authenticate):
+        desired = build_desired_state()
+        fake = FakeKeycloakAdmin(realm_error_code=403)
+
+        with self.assertRaises(KeycloakSetupError) as context:
+            KeycloakReconciler(fake, desired).reconcile(dry_run=True)
+
+        self.assertIn("realm-admin", str(context.exception))
+
+    def test_reconcile_connectionError_raisesSetupError(self, _can_authenticate):
+        desired = build_desired_state()
+        fake = FakeKeycloakAdmin(connection_error=True)
+
+        with self.assertRaises(KeycloakSetupError) as context:
+            KeycloakReconciler(fake, desired).reconcile(dry_run=True)
+
+        self.assertIn("not reachable", str(context.exception))
+
+
+@override_settings(**SETTINGS)
+class TestKeycloakReconcilerRuntimeSecret(TapirUnitTest):
+    @patch(
+        "tapir.accounts.services.keycloak_reconciler.can_authenticate",
+        side_effect=[(False, "authentication failed"), (True, None)],
+    )
+    def test_reconcile_runtimeClientCannotAuthenticate_repairsSecret(
+        self, _can_authenticate
+    ):
+        desired = build_desired_state()
+        fake = FakeKeycloakAdmin.converged(desired)
+
+        KeycloakReconciler(fake, desired).reconcile(dry_run=False)
+
+        update_calls = fake.calls_of("update_client")
+        self.assertEqual(1, len(update_calls))
+        self.assertEqual({"secret": "backend-secret"}, update_calls[0][2])
+        self.assertEqual(2, _can_authenticate.call_count)

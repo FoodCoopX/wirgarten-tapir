@@ -190,6 +190,12 @@ KEYCLOAK_ADMIN_CONFIG = {
         "KEYCLOAK_ADMIN_CLIENT_SECRET_KEY", default="**********"
     ),
 }
+KEYCLOAK_PROVISIONER_CONFIG = {
+    "CLIENT_ID": env.str("KEYCLOAK_PROVISIONER_CLIENT_ID", default="tapir-provisioner"),
+    "CLIENT_SECRET_KEY": env.str(
+        "KEYCLOAK_PROVISIONER_CLIENT_SECRET_KEY", default="**********"
+    ),
+}
 KEYCLOAK_SKIP_VERIFICATION_EMAIL = env.bool(
     "KEYCLOAK_SKIP_VERIFICATION_EMAIL", default=False
 )

@@ -33,8 +33,8 @@ Use docker to quickly get a development server running on your machine. Run the 
 
 ```sh
 make up
-# Create tables, define the configuration parameters, generate test data
-make migrate parameters populate
+# Create tables, define the configuration parameters, create the Keycloak setup and generate test data
+make migrate parameters keycloak-sync populate
 ```
 
 Alternatively, run the reset script: `./scripts/reset_all_containers.sh` (or `make reset`).
@@ -63,6 +63,47 @@ to run tests from your IDE. To do that:
 
 If you want a fresh setup, for example after switching branches, the equivalent of `./scripts/reset_all_containers.sh`
 is `./scripts/reset_and_start_local_server.sh`
+
+## Keycloak setup
+
+Tapir needs a handful of realm settings in Keycloak: two runtime clients, the nine Tapir realm roles, the `superuser`
+group and the service-account roles behind the clients. The repository ships only a small bootstrap realm
+(`docker/keycloak/import/tapir-realm.json`) with one client, `tapir-provisioner`, whose service account has
+`realm-management/realm-admin`. That client is what the management command uses; `tapir-backend` and `tapir-frontend`
+are created by the command, not by the import.
+
+The import is read only when Keycloak starts with an empty database. After changing it, recreate the Keycloak
+container and its volume:
+
+```sh
+docker compose down -v
+docker compose up -d --wait
+```
+
+Check the realm and repair it:
+
+```sh
+make keycloak-check   # read-only, exits 1 on drift
+make keycloak-sync    # creates missing roles, the superuser group, clients and service-account roles
+```
+
+`make keycloak-sync` is idempotent. It never deletes roles, groups or clients; extra roles in the `superuser` group are
+reported as warnings only. It also creates the nine Tapir roles (`coop.view`, `coop.manage`, `accounts.view`,
+`accounts.manage`, `payments.view`, `payments.manage`, `products.view`, `products.manage`, `email.manage`), so the
+import JSON does not need to list them.
+
+What the command does **not** manage: users, SMTP, themes, client scopes and optional mappers. Configure those in the
+Keycloak admin console. The command does manage `fullScopeAllowed` and the role scope mappings of the three clients:
+all three have `fullScopeAllowed=false`; `tapir-backend` gets a role scope mapping to `realm-management/manage-users`,
+`tapir-provisioner` to `realm-management/realm-admin`, and `tapir-frontend` needs none. Protocol mappers alone are not
+enough: with full scope off, a token only contains roles that are in the client's role scope mappings. For production,
+set `KEYCLOAK_PROVISIONER_CLIENT_SECRET_KEY` to a real secret (the placeholder
+`**********` triggers a warning outside `DEBUG`), keep the matching secret in the import or the deployment secret store,
+and run `keycloak check` before `keycloak sync`. A realm export is a sensible backup before the first sync.
+
+Redirect URIs and web origins are derived from `SITE_URL`. In `DEBUG`, localhost and the Vite ports are added. If the
+instance is reachable via another hostname, redirect it to `SITE_URL` at the proxy; Keycloak only accepts the canonical
+host.
 
 ## Contributing & GitHub issues
 

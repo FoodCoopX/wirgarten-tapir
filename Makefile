@@ -22,8 +22,8 @@ ARGS ?=
 .DEFAULT_GOAL := help
 
 .PHONY: help up down reset lint test-lint test test-fast test-app \
-	manage migrate parameters populate populate-bakery schema frontend-build \
-	publish-docker-image
+	manage migrate parameters populate populate-bakery keycloak-check keycloak-sync \
+	schema frontend-build publish-docker-image
 
 help: ## Show this help
 	@grep -hE '^[a-z][a-z-]*:.*## ' $(MAKEFILE_LIST) \
@@ -87,6 +87,12 @@ populate: ## Drop the data and generate a fresh test dataset
 
 populate-bakery: ## Same as populate, with the bakery organisation switched on
 	$(IN_WEB) poetry run python manage.py populate --reset_all --org=bakery
+
+keycloak-check: ## Check the Keycloak realm against what Tapir needs
+	$(IN_WEB) poetry run python manage.py keycloak check
+
+keycloak-sync: ## Create or fix missing Keycloak roles, group and clients
+	$(IN_WEB) poetry run python manage.py keycloak sync
 
 ## --- Generated artifacts --------------------------------------------------
 

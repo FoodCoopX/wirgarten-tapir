@@ -5,7 +5,9 @@ from typing import TYPE_CHECKING
 
 from allauth.socialaccount.models import SocialAccount
 from django.conf import settings
-from keycloak import KeycloakOpenIDConnection, KeycloakAdmin
+from keycloak import KeycloakAdmin
+
+from tapir.accounts.services.keycloak_client_factory import get_runtime_client
 
 if TYPE_CHECKING:
     from tapir.accounts.models import KeycloakUser
@@ -58,15 +60,7 @@ class KeycloakUserManager:
     @classmethod
     @functools.cache
     def get_keycloak_client(cls) -> KeycloakAdmin:
-        config = settings.KEYCLOAK_ADMIN_CONFIG
-        connection = KeycloakOpenIDConnection(
-            server_url=config["SERVER_URL"],
-            realm_name=config["REALM_NAME"],
-            client_id=config["CLIENT_ID"],
-            client_secret_key=config["CLIENT_SECRET_KEY"],
-            verify=True,
-        )
-        return KeycloakAdmin(connection=connection)
+        return get_runtime_client()
 
     @classmethod
     def get_user_roles(cls, keycloak_id):
@@ -76,8 +70,15 @@ class KeycloakUserManager:
             keycloak_id,
         )
 
+        realm_name = settings.KEYCLOAK_ADMIN_CONFIG["REALM_NAME"]
+        non_tapir_roles = {
+            *settings.KEYCLOAK_NON_TAPIR_ROLES,
+            "offline_access",
+            "uma_authorization",
+            f"default-roles-{realm_name}",
+        }
         return [
             raw_role["name"]
             for raw_role in raw_roles
-            if raw_role["name"] not in settings.KEYCLOAK_NON_TAPIR_ROLES
+            if raw_role["name"] not in non_tapir_roles
         ]
