@@ -109,4 +109,9 @@ urlpatterns = [
         views.StandardPriceView.as_view(),
         name="align_standard_prices",
     ),
+    path(
+        "api/<str:round_id>/rollback_members",
+        views.RoundRollbackMembersView.as_view(),
+        name="rollback_members",
+    ),
 ]

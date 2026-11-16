@@ -17,6 +17,8 @@ interface BidsTableCardProps {
   onToggle: () => void;
   roundId: string;
   members: BiddingRoundMemberRow[];
+  rollbackAvailable: boolean;
+  onRollbackAll: () => void;
   autoRenewedEnabled: boolean;
   unconfirmedBidCount: number;
   isBidRange: boolean;
@@ -52,6 +54,8 @@ const BidsTableCard: React.FC<BidsTableCardProps> = ({
   onToggle,
   roundId,
   members,
+  rollbackAvailable,
+  onRollbackAll,
   autoRenewedEnabled,
   unconfirmedBidCount,
   isBidRange,
@@ -401,6 +405,11 @@ const BidsTableCard: React.FC<BidsTableCardProps> = ({
       >
         {"CSV"}
       </a>
+      {rollbackAvailable && (
+        <Button variant="outline-danger" onClick={onRollbackAll}>
+          {"Alle zurücknehmen"}
+        </Button>
+      )}
     </CollapsibleCard>
   );
 };

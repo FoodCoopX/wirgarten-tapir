@@ -1,0 +1,5 @@
+Beitragsrunde „{{ entry.round_name }}“ für dieses Mitglied zurückgenommen.<br/>
+Verträge gelöscht: {{ entry.subscriptions_deleted }}, wiederhergestellt: {{ entry.subscriptions_restored }}<br/>
+Solidaritätsbeiträge wiederhergestellt: {{ entry.contributions_restored }}<br/>
+{% if entry.reason %}Begründung: {{ entry.reason }}<br/>{% endif %}
+{% if entry.forced %}Trotz nachträglicher Änderungen erzwungen (force).{% endif %}
