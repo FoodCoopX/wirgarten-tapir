@@ -5,7 +5,7 @@ from django.db import models
 from tapir.accounts.models import TapirUser
 from tapir.core.models import TapirModel
 from tapir.deliveries.models import Joker
-from tapir.log.models import LogEntry, ModelLogEntry
+from tapir.log.models import LogEntry, ModelLogEntry, UpdateModelLogEntry
 from tapir.wirgarten.models import Member, PickupLocation
 from tapir.wirgarten.utils import format_date
 
@@ -110,3 +110,10 @@ class PaymentExportExclusionPeriodDeletedLogEntry(ModelLogEntry):
     template_name = (
         "payments/log/payment_export_exclusion_period_deleted_log_entry.html"
     )
+
+
+class PaymentExportExclusionPeriodUpdatedLogEntry(UpdateModelLogEntry):
+    template_name = (
+        "payments/log/payment_export_exclusion_period_updated_log_entry.html"
+    )
+    excluded_fields = ["updated_at"]

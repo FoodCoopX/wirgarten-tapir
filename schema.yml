@@ -4665,6 +4665,103 @@ paths:
                 items:
                   $ref: '#/components/schemas/MemberNeedingBankingData'
           description: ''
+  /payments/api/payment_export_exclusion_periods:
+    get:
+      operationId: payments_api_payment_export_exclusion_periods_list
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - payments
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PaymentExportExclusionPeriod'
+          description: ''
+    post:
+      operationId: payments_api_payment_export_exclusion_periods_create
+      tags:
+      - payments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentExportExclusionPeriodCreateRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PaymentExportExclusionPeriodCreateRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PaymentExportExclusionPeriodCreateRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderConfirmationResponse'
+          description: ''
+    put:
+      operationId: payments_api_payment_export_exclusion_periods_update
+      tags:
+      - payments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentExportExclusionPeriodUpdateRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PaymentExportExclusionPeriodUpdateRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PaymentExportExclusionPeriodUpdateRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderConfirmationResponse'
+          description: ''
+    delete:
+      operationId: payments_api_payment_export_exclusion_periods_destroy
+      parameters:
+      - in: query
+        name: period_id
+        schema:
+          type: string
+      tags:
+      - payments
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
   /payments/api/payment_transaction_details:
     get:
       operationId: payments_api_payment_transaction_details_retrieve
@@ -15344,6 +15441,63 @@ components:
       - mandate_ref
       - type
       - updated_at
+    PaymentExportExclusionPeriod:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        comment:
+          type: string
+      required:
+      - start_date
+    PaymentExportExclusionPeriodCreateRequestRequest:
+      type: object
+      properties:
+        member_id:
+          type: string
+          minLength: 1
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        comment:
+          type: string
+      required:
+      - comment
+      - end_date
+      - member_id
+      - start_date
+    PaymentExportExclusionPeriodUpdateRequestRequest:
+      type: object
+      properties:
+        period_id:
+          type: string
+          minLength: 1
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        comment:
+          type: string
+      required:
+      - comment
+      - end_date
+      - period_id
+      - start_date
     PaymentIntendedUsePreviewResponse:
       type: object
       properties:
@@ -16297,7 +16451,7 @@ components:
         cancellation_date:
           type: string
           format: date
-        last_day_of_notice_period:
+        last_day_to_give_notice:
           type: string
           format: date
         date_limit_for_trial_cancellation:
@@ -16307,17 +16461,17 @@ components:
           type: integer
         notice_period_unit:
           $ref: '#/components/schemas/NoticePeriodUnitEnum'
-        subscription_end_date:
+        post_trial_subscription_end_date:
           type: string
           format: date
       required:
       - cancellation_date
       - is_in_trial
-      - last_day_of_notice_period
+      - last_day_to_give_notice
       - notice_period_duration
       - notice_period_unit
+      - post_trial_subscription_end_date
       - product
-      - subscription_end_date
     ProductType:
       type: object
       properties:

@@ -4,7 +4,11 @@ from rest_framework import serializers
 
 from tapir.associations.serializers import AssociationMembershipSerializer
 from tapir.deliveries.serializers import SubscriptionSerializer
-from tapir.payments.models import MemberPaymentRhythm, MemberCredit
+from tapir.payments.models import (
+    MemberPaymentRhythm,
+    MemberCredit,
+    PaymentExportExclusionPeriod,
+)
 from tapir.pickup_locations.serializers import PublicPickupLocationSerializer
 from tapir.solidarity_contribution.serializers import SolidarityContributionSerializer
 from tapir.subscriptions.serializers import (
@@ -179,3 +183,23 @@ class MemberNeedingBankingDataSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_member_url(member: Member) -> str:
         return member.get_absolute_url()
+
+
+class PaymentExportExclusionPeriodSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PaymentExportExclusionPeriod
+        fields = ["id", "start_date", "end_date", "comment"]
+
+
+class PaymentExportExclusionPeriodCreateRequestSerializer(serializers.Serializer):
+    member_id = serializers.CharField()
+    start_date = serializers.DateField()
+    end_date = serializers.DateField(allow_null=True)
+    comment = serializers.CharField(allow_blank=True)
+
+
+class PaymentExportExclusionPeriodUpdateRequestSerializer(serializers.Serializer):
+    period_id = serializers.CharField()
+    start_date = serializers.DateField()
+    end_date = serializers.DateField(allow_null=True)
+    comment = serializers.CharField(allow_blank=True)

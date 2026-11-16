@@ -217,6 +217,9 @@ models/PatchedTemporaryUploadRequest.ts
 models/PatchedUpdateMemberBankDataRequestRequest.ts
 models/PatchedWaitingListEntryRequest.ts
 models/Payment.ts
+models/PaymentExportExclusionPeriod.ts
+models/PaymentExportExclusionPeriodCreateRequestRequest.ts
+models/PaymentExportExclusionPeriodUpdateRequestRequest.ts
 models/PaymentIntendedUsePreviewResponse.ts
 models/PaymentList.ts
 models/PaymentRhythmSerializerRequest.ts

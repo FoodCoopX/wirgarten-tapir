@@ -17,7 +17,7 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
 )
 class TestIsMemberExcluded(TapirUnitTest):
     def test_isMemberExcluded_memberHasNoPeriod_returnsFalse(
-        self, mock_get_periods: MagicMock
+        self, mock_get_payment_export_exclusion_periods_for_member: MagicMock
     ):
         cache = {}
 
@@ -28,12 +28,14 @@ class TestIsMemberExcluded(TapirUnitTest):
         )
 
         self.assertFalse(result)
-        mock_get_periods.assert_called_once_with(member_id="member_id", cache=cache)
+        mock_get_payment_export_exclusion_periods_for_member.assert_called_once_with(
+            member_id="member_id", cache=cache
+        )
 
     def test_isMemberExcluded_dateBeforePeriod_returnsFalse(
-        self, mock_get_periods: MagicMock
+        self, mock_get_payment_export_exclusion_periods_for_member: MagicMock
     ):
-        mock_get_periods.return_value = [
+        mock_get_payment_export_exclusion_periods_for_member.return_value = [
             self._build_period(
                 start_date=datetime.date(year=2026, month=6, day=1),
                 end_date=datetime.date(year=2026, month=8, day=31),
@@ -49,9 +51,9 @@ class TestIsMemberExcluded(TapirUnitTest):
         self.assertFalse(result)
 
     def test_isMemberExcluded_dateAfterPeriod_returnsFalse(
-        self, mock_get_periods: MagicMock
+        self, mock_get_payment_export_exclusion_periods_for_member: MagicMock
     ):
-        mock_get_periods.return_value = [
+        mock_get_payment_export_exclusion_periods_for_member.return_value = [
             self._build_period(
                 start_date=datetime.date(year=2026, month=6, day=1),
                 end_date=datetime.date(year=2026, month=8, day=31),
@@ -67,9 +69,9 @@ class TestIsMemberExcluded(TapirUnitTest):
         self.assertFalse(result)
 
     def test_isMemberExcluded_dateOnStartOfPeriod_returnsTrue(
-        self, mock_get_periods: MagicMock
+        self, mock_get_payment_export_exclusion_periods_for_member: MagicMock
     ):
-        mock_get_periods.return_value = [
+        mock_get_payment_export_exclusion_periods_for_member.return_value = [
             self._build_period(
                 start_date=datetime.date(year=2026, month=6, day=1),
                 end_date=datetime.date(year=2026, month=8, day=31),
@@ -85,9 +87,9 @@ class TestIsMemberExcluded(TapirUnitTest):
         self.assertTrue(result)
 
     def test_isMemberExcluded_dateOnEndOfPeriod_returnsTrue(
-        self, mock_get_periods: MagicMock
+        self, mock_get_payment_export_exclusion_periods_for_member: MagicMock
     ):
-        mock_get_periods.return_value = [
+        mock_get_payment_export_exclusion_periods_for_member.return_value = [
             self._build_period(
                 start_date=datetime.date(year=2026, month=6, day=1),
                 end_date=datetime.date(year=2026, month=8, day=31),
@@ -103,9 +105,9 @@ class TestIsMemberExcluded(TapirUnitTest):
         self.assertTrue(result)
 
     def test_isMemberExcluded_periodWithoutEndDate_returnsTrue(
-        self, mock_get_periods: MagicMock
+        self, mock_get_payment_export_exclusion_periods_for_member: MagicMock
     ):
-        mock_get_periods.return_value = [
+        mock_get_payment_export_exclusion_periods_for_member.return_value = [
             self._build_period(
                 start_date=datetime.date(year=2026, month=6, day=1), end_date=None
             )
@@ -120,9 +122,9 @@ class TestIsMemberExcluded(TapirUnitTest):
         self.assertTrue(result)
 
     def test_isMemberExcluded_dateWithinSecondPeriod_returnsTrue(
-        self, mock_get_periods: MagicMock
+        self, mock_get_payment_export_exclusion_periods_for_member: MagicMock
     ):
-        mock_get_periods.return_value = [
+        mock_get_payment_export_exclusion_periods_for_member.return_value = [
             self._build_period(
                 start_date=datetime.date(year=2025, month=1, day=1),
                 end_date=datetime.date(year=2025, month=3, day=31),
