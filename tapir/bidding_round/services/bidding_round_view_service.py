@@ -3,6 +3,7 @@ from decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext
 
+from tapir.bidding_round.config import BIDDING_ROUND_PROCEDURE_BID_RANGE
 from tapir.bidding_round.models import BiddingRoundProductPrice
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
@@ -44,6 +45,8 @@ class BiddingRoundViewService:
             "name": bidding_round.name,
             "display_name": display_name,
             "status": bidding_round.status,
+            "bidding_procedure": bidding_round.bidding_procedure,
+            "bid_levels": bidding_round.bid_levels,
             "start_at": (
                 bidding_round.start_at.isoformat() if bidding_round.start_at else None
             ),
@@ -127,6 +130,7 @@ class BiddingRoundViewService:
 
     @classmethod
     def serialize_bid_item(cls, bid_item) -> dict:
+        counting_amount = cls._counting_amount(bid_item)
         return {
             "round_product_type_id": bid_item.round_product_type_id,
             "product_type_name": bid_item.round_product_type.product_type.name,
@@ -136,10 +140,26 @@ class BiddingRoundViewService:
             "amount_1": (
                 str(bid_item.amount_1) if bid_item.amount_1 is not None else None
             ),
-            "amount_per_year": str(
-                (bid_item.amount_1 or Decimal("0")) * bid_item.quantity * 12
+            "amount_2": (
+                str(bid_item.amount_2) if bid_item.amount_2 is not None else None
             ),
+            "amount_3": (
+                str(bid_item.amount_3) if bid_item.amount_3 is not None else None
+            ),
+            "amount_per_year": str(counting_amount * bid_item.quantity * 12),
         }
+
+    @staticmethod
+    def _counting_amount(bid_item, bidding_round=None) -> Decimal:
+        if bidding_round is None:
+            bidding_round = bid_item.bid.round
+        if bidding_round.bidding_procedure == BIDDING_ROUND_PROCEDURE_BID_RANGE:
+            green = bid_item.amount_1 or bid_item.amount_2 or Decimal("0")
+            red = bid_item.amount_2 or bid_item.amount_1 or Decimal("0")
+            return (green + red) / Decimal("2")
+        return (
+            bid_item.amount_2 or bid_item.amount_1 or bid_item.amount_3 or Decimal("0")
+        )
 
     @classmethod
     def serialize_bid(cls, bid, cache: dict) -> dict | None:
@@ -164,10 +184,7 @@ class BiddingRoundViewService:
             "updated_at": bid.updated_at.isoformat() if bid.updated_at else None,
             "total_per_year": str(
                 sum(
-                    (
-                        (item.amount_1 or Decimal("0")) * item.quantity * 12
-                        for item in items
-                    ),
+                    (cls._counting_amount(item) * item.quantity * 12 for item in items),
                     Decimal("0"),
                 )
             ),
@@ -189,6 +206,12 @@ class BiddingRoundViewService:
             "amount_label": ParameterKeys.BIDDING_ROUND_BID_AMOUNT_LABEL,
             "reference_value_hint": ParameterKeys.BIDDING_ROUND_BID_REFERENCE_VALUE_HINT,
             "simple_explanation": ParameterKeys.BIDDING_ROUND_BID_SIMPLE_EXPLANATION,
+            "bid_range_explanation": (
+                ParameterKeys.BIDDING_ROUND_BID_RANGE_EXPLANATION
+            ),
+            "green_label": ParameterKeys.BIDDING_ROUND_BID_GREEN_LABEL,
+            "yellow_label": ParameterKeys.BIDDING_ROUND_BID_YELLOW_LABEL,
+            "red_label": ParameterKeys.BIDDING_ROUND_BID_RED_LABEL,
             "live_yearly_label": ParameterKeys.BIDDING_ROUND_BID_LIVE_YEARLY_LABEL,
             "monthly_hint": ParameterKeys.BIDDING_ROUND_BID_MONTHLY_HINT,
             "monthly_unit": ParameterKeys.BIDDING_ROUND_BID_MONTHLY_UNIT,

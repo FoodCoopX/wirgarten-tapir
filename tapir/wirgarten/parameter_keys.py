@@ -154,6 +154,12 @@ class ParameterKeys:
     BIDDING_ROUND_BID_SIMPLE_EXPLANATION = (
         f"{PREFIX}.bidding_round.bid.simple_explanation"
     )
+    BIDDING_ROUND_BID_RANGE_EXPLANATION = (
+        f"{PREFIX}.bidding_round.bid.bid_range_explanation"
+    )
+    BIDDING_ROUND_BID_GREEN_LABEL = f"{PREFIX}.bidding_round.bid.green_label"
+    BIDDING_ROUND_BID_YELLOW_LABEL = f"{PREFIX}.bidding_round.bid.yellow_label"
+    BIDDING_ROUND_BID_RED_LABEL = f"{PREFIX}.bidding_round.bid.red_label"
     BIDDING_ROUND_BID_LIVE_YEARLY_LABEL = (
         f"{PREFIX}.bidding_round.bid.live_yearly_label"
     )

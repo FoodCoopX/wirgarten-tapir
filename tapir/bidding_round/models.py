@@ -1,9 +1,14 @@
+from decimal import Decimal
+
 from django.db import models
 
 from tapir.bidding_round.config import (
     BIDDING_ROUND_MAX_SHARES,
     BIDDING_ROUND_MIN_SHARES,
+    BIDDING_ROUND_PROCEDURE_BID_RANGE,
+    BIDDING_ROUND_PROCEDURE_SIMPLE,
     BIDDING_ROUND_STATUS_CONFIGURATION,
+    OPTIONS_BIDDING_ROUND_PROCEDURE,
     OPTIONS_BIDDING_ROUND_STATUS,
 )
 from tapir.core.models import TapirModel
@@ -19,8 +24,10 @@ from tapir.wirgarten.models import (
 class BiddingRound(TapirModel):
     """One bidding round for a growing period.
 
-    Members submit one amount per share and the number of shares they bid for the
-    round's single biddable product type. ``contracts_created_at`` marks the round as
+    Members submit one amount per share (``BIDDING_ROUND_PROCEDURE_SIMPLE``) or a
+    range of two amounts (``BIDDING_ROUND_PROCEDURE_BID_RANGE``: green/wish and
+    red/pain threshold) together with the number of shares they bid for the round's
+    single biddable product type. ``contracts_created_at`` marks the round as
     evaluated: from then on the round is read-only.
     """
 
@@ -31,10 +38,31 @@ class BiddingRound(TapirModel):
         choices=OPTIONS_BIDDING_ROUND_STATUS,
         default=BIDDING_ROUND_STATUS_CONFIGURATION,
     )
+    bidding_procedure = models.CharField(
+        max_length=20,
+        choices=OPTIONS_BIDDING_ROUND_PROCEDURE,
+        default=BIDDING_ROUND_PROCEDURE_SIMPLE,
+    )
+    bid_levels = models.PositiveSmallIntegerField(default=1)
     start_at = models.DateTimeField(null=True)
     end_at = models.DateTimeField(null=False)
     contracts_created_at = models.DateTimeField(null=True)
     comment = models.TextField(blank=True)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(bid_levels__gte=1) & models.Q(bid_levels__lte=3),
+                name="bidding_round_bid_levels_between_1_and_3",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    ~models.Q(bidding_procedure=BIDDING_ROUND_PROCEDURE_BID_RANGE)
+                    | models.Q(bid_levels=2)
+                ),
+                name="bidding_round_bid_range_requires_two_levels",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.name} ({self.get_status_display()})"
@@ -121,7 +149,9 @@ class BidItem(TapirModel):
     )
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveSmallIntegerField(default=1)
-    amount_1 = models.DecimalField(max_digits=8, decimal_places=2)
+    amount_1 = models.DecimalField(max_digits=8, decimal_places=2, null=True)
+    amount_2 = models.DecimalField(max_digits=8, decimal_places=2, null=True)
+    amount_3 = models.DecimalField(max_digits=8, decimal_places=2, null=True)
 
     class Meta:
         constraints = [
@@ -137,7 +167,8 @@ class BidItem(TapirModel):
         ]
 
     def __str__(self):
-        return f"{self.bid} - {self.product} ({self.quantity} x {self.amount_1})"
+        amount = self.amount_1 or self.amount_2 or self.amount_3 or Decimal("0")
+        return f"{self.bid} - {self.product} ({self.quantity} x {amount})"
 
 
 class BiddingRoundCreatedSubscription(TapirModel):

@@ -33,7 +33,7 @@ class BiddingRoundSubscriptionPriceService:
         )
         if subscription.price_mode == Subscription.PriceMode.BIDDING_ROUND_BID:
             rate = BiddingRoundStatsService.get_bidder_average_per_share_per_month(
-                link.round, cache
+                link.round, cache=cache
             )
         else:
             return None

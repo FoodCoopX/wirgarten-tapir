@@ -15,6 +15,7 @@ from rest_framework.views import APIView
 from tapir.bestell_wizard.services.bestell_wizard_style_service import (
     BestellWizardStyleService,
 )
+from tapir.bidding_round.config import BIDDING_ROUND_PROCEDURE_SIMPLE
 from tapir.bidding_round.models import Bid, BiddingRound
 from tapir.bidding_round.permissions import (
     BiddingRoundFeatureFlagMixin,
@@ -191,6 +192,10 @@ class RoundListCreateView(BiddingRoundFeatureFlagMixin, APIView):
                 product_type_id=validated.get("product_type_id"),
                 target_amount_per_year=validated.get("target_amount_per_year"),
                 prices=validated.get("prices"),
+                bidding_procedure=validated.get(
+                    "bidding_procedure", BIDDING_ROUND_PROCEDURE_SIMPLE
+                ),
+                bid_levels=validated.get("bid_levels", 1),
                 cache=cache,
             )
         except ValidationError as error:
@@ -390,8 +395,11 @@ class RoundResultsView(BiddingRoundFeatureFlagMixin, APIView):
     def get(self, request, round_id):
         cache = {}
         bidding_round = get_object_or_404(BiddingRound, id=round_id)
+        position = request.query_params.get("position")
         return Response(
-            BiddingRoundStatsService.build_admin_evaluation(bidding_round, cache),
+            BiddingRoundStatsService.build_admin_evaluation(
+                bidding_round, cache, position=position
+            ),
             status=status.HTTP_200_OK,
         )
 
@@ -469,6 +477,7 @@ class CreateContractsView(BiddingRoundFeatureFlagMixin, APIView):
             result = ContractCreator.create_contracts_from_bids(
                 bidding_round,
                 bid_ids=serializer.validated_data.get("bid_ids"),
+                bid_level=serializer.validated_data.get("bid_level"),
                 actor=request.user,
                 cache=cache,
             )

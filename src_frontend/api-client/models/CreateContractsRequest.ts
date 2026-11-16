@@ -24,6 +24,12 @@ export interface CreateContractsRequest {
    * @memberof CreateContractsRequest
    */
   bidIds?: Array<string>;
+  /**
+   *
+   * @type {number}
+   * @memberof CreateContractsRequest
+   */
+  bidLevel?: number;
 }
 
 /**
@@ -50,6 +56,7 @@ export function CreateContractsRequestFromJSONTyped(
   }
   return {
     bidIds: json["bid_ids"] == null ? undefined : json["bid_ids"],
+    bidLevel: json["bid_level"] == null ? undefined : json["bid_level"],
   };
 }
 
@@ -69,5 +76,6 @@ export function CreateContractsRequestToJSONTyped(
 
   return {
     bid_ids: value["bidIds"],
+    bid_level: value["bidLevel"],
   };
 }

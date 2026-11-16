@@ -162,6 +162,55 @@ class ParameterDefinitionsBiddingRound:
         )
 
         importer.parameter_definition(
+            key=ParameterKeys.BIDDING_ROUND_BID_RANGE_EXPLANATION,
+            label=gettext_noop("Beitragsrunde: Erklärung Gebotsspanne"),
+            description=gettext_noop(
+                "Erklärungstext für das Gebot mit Gebotsspanne (zwei Beträge)."
+            ),
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Du gibst zwei Beträge an: Grün ist dein Wunsch, Rot ist deine Schmerzgrenze. Der tatsächliche Betrag wird gleichmäßig zwischen beiden ermittelt. Je höher die Deckung, desto näher liegt er an Rot.",
+            category=ParameterCategory.BIDDING_ROUND,
+            order_priority=5,
+            meta=ParameterMeta(textarea=True),
+        )
+
+        importer.parameter_definition(
+            key=ParameterKeys.BIDDING_ROUND_BID_GREEN_LABEL,
+            label=gettext_noop("Beitragsrunde: Beschriftung Grün"),
+            description=gettext_noop(
+                "Beschriftung des grünen Betrags (Wunsch) im Gebot mit Gebotsspanne."
+            ),
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Gebot Grün (Wunsch)",
+            category=ParameterCategory.BIDDING_ROUND,
+            order_priority=5,
+        )
+
+        importer.parameter_definition(
+            key=ParameterKeys.BIDDING_ROUND_BID_YELLOW_LABEL,
+            label=gettext_noop("Beitragsrunde: Beschriftung Gelb"),
+            description=gettext_noop(
+                "Beschriftung des gelben Betrags (Zufrieden); nur für einfache Runden mit drei Stufen."
+            ),
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Gelb (Zufrieden)",
+            category=ParameterCategory.BIDDING_ROUND,
+            order_priority=5,
+        )
+
+        importer.parameter_definition(
+            key=ParameterKeys.BIDDING_ROUND_BID_RED_LABEL,
+            label=gettext_noop("Beitragsrunde: Beschriftung Rot"),
+            description=gettext_noop(
+                "Beschriftung des roten Betrags (Schmerzgrenze) im Gebot mit Gebotsspanne."
+            ),
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Rot (Schmerzgrenze)",
+            category=ParameterCategory.BIDDING_ROUND,
+            order_priority=5,
+        )
+
+        importer.parameter_definition(
             key=ParameterKeys.BIDDING_ROUND_BID_LIVE_YEARLY_LABEL,
             label=gettext_noop("Beitragsrunde: Beschriftung Jahresbeitrag"),
             description=gettext_noop(
