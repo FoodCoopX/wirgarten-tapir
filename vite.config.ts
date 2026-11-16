@@ -51,6 +51,18 @@ export default defineConfig(() => {
             INPUT_DIR,
             "bestell_wizard_mobile/bestell_wizard_mobile_entry.tsx",
           ),
+          bidding_round: resolve(
+            INPUT_DIR,
+            "bidding_round/bidding_round_entry.tsx",
+          ),
+          bidding_round_config: resolve(
+            INPUT_DIR,
+            "bidding_round_config/bidding_round_config_entry.tsx",
+          ),
+          bidding_round_results: resolve(
+            INPUT_DIR,
+            "bidding_round_results/bidding_round_results_entry.tsx",
+          ),
           bestell_wizard_coop_shares: resolve(
             INPUT_DIR,
             "member_profile/coop_shares/bestell_wizard_coop_shares.tsx",

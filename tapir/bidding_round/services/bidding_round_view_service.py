@@ -1,0 +1,257 @@
+from decimal import Decimal
+
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext
+
+from tapir.bidding_round.models import BiddingRoundProductPrice
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
+)
+from tapir.configuration.parameter import get_parameter_value
+from tapir.wirgarten.models import Product, Subscription
+from tapir.wirgarten.parameter_keys import ParameterKeys
+
+
+class BiddingRoundViewService:
+    @classmethod
+    def is_feature_flag_enabled(cls, cache) -> bool:
+        try:
+            return get_parameter_value(ParameterKeys.BIDDING_ROUND_ENABLED, cache=cache)
+        except KeyError:
+            return False
+
+    @classmethod
+    def is_public_url_enabled(cls, cache) -> bool:
+        try:
+            return get_parameter_value(
+                ParameterKeys.BIDDING_ROUND_URL_ENABLED, cache=cache
+            )
+        except KeyError:
+            return True
+
+    @classmethod
+    def get_display_name(cls, cache) -> str:
+        return gettext("Beitragsrunde")
+
+    @classmethod
+    def serialize_round(
+        cls, bidding_round, cache, display_name: str | None = None
+    ) -> dict:
+        if display_name is None:
+            display_name = cls.get_display_name(cache)
+        return {
+            "id": bidding_round.id,
+            "name": bidding_round.name,
+            "display_name": display_name,
+            "status": bidding_round.status,
+            "start_at": (
+                bidding_round.start_at.isoformat() if bidding_round.start_at else None
+            ),
+            "end_at": bidding_round.end_at.isoformat(),
+            "contracts_created_at": (
+                bidding_round.contracts_created_at.isoformat()
+                if bidding_round.contracts_created_at
+                else None
+            ),
+            "growing_period_id": bidding_round.growing_period_id,
+            "comment": bidding_round.comment,
+            "has_bids": (
+                bidding_round.has_bids
+                if hasattr(bidding_round, "has_bids")
+                else bidding_round.bids.exists()
+            ),
+            "product": cls._serialize_round_product(bidding_round),
+        }
+
+    @classmethod
+    def _serialize_round_product(cls, bidding_round) -> dict | None:
+        round_product_type = cls._get_round_product_type(bidding_round)
+        if round_product_type is None:
+            return None
+        return {
+            "product_type_id": round_product_type.product_type_id,
+            "product_type_name": round_product_type.product_type.name,
+            "target_amount_per_year": (
+                str(round_product_type.target_amount_per_year)
+                if round_product_type.target_amount_per_year is not None
+                else None
+            ),
+            "prices": [
+                {
+                    "product_id": product.id,
+                    "product_name": product.name,
+                    **cls._serialize_price_values(price),
+                }
+                for product, price in cls._get_products_with_prices(round_product_type)
+            ],
+        }
+
+    @classmethod
+    def _get_round_product_type(cls, bidding_round):
+        return bidding_round.product_types.select_related("product_type").first()
+
+    @classmethod
+    def _get_products_with_prices(cls, round_product_type) -> list[tuple]:
+        prices_by_product_id = {
+            price.product_id: price
+            for price in BiddingRoundProductPrice.objects.filter(
+                round_product_type=round_product_type
+            )
+        }
+        return [
+            (product, prices_by_product_id.get(product.id))
+            for product in Product.objects.filter(
+                type_id=round_product_type.product_type_id, deleted=False
+            )
+        ]
+
+    @classmethod
+    def _serialize_price_values(cls, price) -> dict:
+        return {
+            "reference_value": (
+                str(price.reference_value)
+                if price is not None and price.reference_value is not None
+                else None
+            ),
+            "min_amount": (
+                str(price.min_amount)
+                if price is not None and price.min_amount is not None
+                else None
+            ),
+            "size": (
+                str(price.size)
+                if price is not None and price.size is not None
+                else None
+            ),
+        }
+
+    @classmethod
+    def serialize_bid_item(cls, bid_item) -> dict:
+        return {
+            "round_product_type_id": bid_item.round_product_type_id,
+            "product_type_name": bid_item.round_product_type.product_type.name,
+            "product_id": bid_item.product_id,
+            "product_name": bid_item.product.name,
+            "quantity": bid_item.quantity,
+            "amount_1": (
+                str(bid_item.amount_1) if bid_item.amount_1 is not None else None
+            ),
+            "amount_per_year": str(
+                (bid_item.amount_1 or Decimal("0")) * bid_item.quantity * 12
+            ),
+        }
+
+    @classmethod
+    def serialize_bid(cls, bid, cache: dict) -> dict:
+        if bid is None:
+            return None
+        pickup_location_id = (
+            MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
+                member_id=bid.member_id,
+                reference_date=bid.round.growing_period.start_date,
+                cache=cache,
+            )
+        )
+        items = list(
+            bid.items.select_related(
+                "round_product_type__product_type", "product"
+            ).all()
+        )
+        return {
+            "id": bid.id,
+            "member_id": bid.member_id,
+            "pickup_location_id": pickup_location_id,
+            "updated_at": bid.updated_at.isoformat() if bid.updated_at else None,
+            "total_per_year": str(
+                sum(
+                    (
+                        (item.amount_1 or Decimal("0")) * item.quantity * 12
+                        for item in items
+                    ),
+                    Decimal("0"),
+                )
+            ),
+            "items": [cls.serialize_bid_item(item) for item in items],
+        }
+
+    @classmethod
+    def build_texts(cls, cache) -> dict:
+        public_string_id_to_parameter_key_map = {
+            "intro_title": ParameterKeys.BIDDING_ROUND_PUBLIC_INTRO_TITLE,
+            "intro_text": ParameterKeys.BIDDING_ROUND_PUBLIC_INTRO_TEXT,
+            "ended_text": ParameterKeys.BIDDING_ROUND_PUBLIC_ENDED_TEXT,
+            "login_title": ParameterKeys.BIDDING_ROUND_PUBLIC_LOGIN_TITLE,
+            "login_text": ParameterKeys.BIDDING_ROUND_PUBLIC_LOGIN_TEXT,
+            "summary_title": ParameterKeys.BIDDING_ROUND_PUBLIC_SUMMARY_TITLE,
+            "submit_label": ParameterKeys.BIDDING_ROUND_PUBLIC_SUBMIT_LABEL,
+        }
+        bid_string_id_to_parameter_key_map = {
+            "amount_label": ParameterKeys.BIDDING_ROUND_BID_AMOUNT_LABEL,
+            "reference_value_hint": ParameterKeys.BIDDING_ROUND_BID_REFERENCE_VALUE_HINT,
+            "simple_explanation": ParameterKeys.BIDDING_ROUND_BID_SIMPLE_EXPLANATION,
+            "live_yearly_label": ParameterKeys.BIDDING_ROUND_BID_LIVE_YEARLY_LABEL,
+            "monthly_hint": ParameterKeys.BIDDING_ROUND_BID_MONTHLY_HINT,
+            "monthly_unit": ParameterKeys.BIDDING_ROUND_BID_MONTHLY_UNIT,
+            "yearly_unit": ParameterKeys.BIDDING_ROUND_BID_YEARLY_UNIT,
+            "confirm_text": ParameterKeys.BIDDING_ROUND_BID_CONFIRM_TEXT,
+            "success_text": ParameterKeys.BIDDING_ROUND_BID_SUCCESS_TEXT,
+            "error_text": ParameterKeys.BIDDING_ROUND_BID_ERROR_TEXT,
+        }
+
+        return {
+            **{
+                string_id: get_parameter_value(parameter_key, cache=cache)
+                for string_id, parameter_key in (
+                    public_string_id_to_parameter_key_map.items()
+                )
+            },
+            "bid": {
+                string_id: get_parameter_value(parameter_key, cache=cache)
+                for string_id, parameter_key in (
+                    bid_string_id_to_parameter_key_map.items()
+                )
+            },
+        }
+
+    @classmethod
+    def build_biddable_product(cls, bidding_round, cache, member=None) -> dict | None:
+        round_product_type = cls._get_round_product_type(bidding_round)
+        if round_product_type is None:
+            return None
+
+        products_with_prices = cls._get_products_with_prices(round_product_type)
+        current_quantities = cls._get_current_quantities(
+            member, [product for product, _price in products_with_prices]
+        )
+        return {
+            "id": round_product_type.id,
+            "product_type_id": round_product_type.product_type_id,
+            "product_type_name": round_product_type.product_type.name,
+            "products": [
+                {
+                    "id": product.id,
+                    "name": product.name,
+                    **cls._serialize_price_values(price),
+                    "current_quantity": current_quantities.get(product.id),
+                }
+                for product, price in products_with_prices
+            ],
+        }
+
+    @classmethod
+    def _get_current_quantities(cls, member, products) -> dict:
+        if member is None:
+            return {}
+        subscriptions = Subscription.objects.filter(
+            member=member,
+            product__in=products,
+            cancellation_ts__isnull=True,
+        ).order_by("product_id", "-period__start_date")
+        quantities = {}
+        for subscription in subscriptions.only("product_id", "quantity"):
+            quantities.setdefault(subscription.product_id, subscription.quantity)
+        return quantities
+
+    @classmethod
+    def serialize_validation_error(cls, error: ValidationError) -> str:
+        return "; ".join(error.messages)
