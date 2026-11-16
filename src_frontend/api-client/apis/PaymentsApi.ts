@@ -23,6 +23,7 @@ import type {
   MemberNeedingBankingData,
   MemberPaymentRhythmData,
   OrderConfirmationResponse,
+  PaginatedPaymentExportExclusionPeriodOverviewList,
   PaginatedPaymentTransactionList,
   PaymentExportExclusionPeriod,
   PaymentExportExclusionPeriodCreateRequestRequest,
@@ -43,6 +44,7 @@ import {
   MemberNeedingBankingDataFromJSON,
   MemberPaymentRhythmDataFromJSON,
   OrderConfirmationResponseFromJSON,
+  PaginatedPaymentExportExclusionPeriodOverviewListFromJSON,
   PaginatedPaymentTransactionListFromJSON,
   PaymentExportExclusionPeriodCreateRequestRequestToJSON,
   PaymentExportExclusionPeriodFromJSON,
@@ -118,6 +120,12 @@ export interface PaymentsApiPaymentExportExclusionPeriodsDestroyRequest {
 
 export interface PaymentsApiPaymentExportExclusionPeriodsListRequest {
   memberId?: string;
+}
+
+export interface PaymentsApiPaymentExportExclusionPeriodsOverviewListRequest {
+  includeExpired?: boolean;
+  limit: number;
+  offset: number;
 }
 
 export interface PaymentsApiPaymentExportExclusionPeriodsUpdateRequest {
@@ -1150,6 +1158,87 @@ export class PaymentsApi extends runtime.BaseAPI {
       requestParameters,
       initOverrides,
     );
+    return await response.value();
+  }
+
+  /**
+   */
+  async paymentsApiPaymentExportExclusionPeriodsOverviewListRaw(
+    requestParameters: PaymentsApiPaymentExportExclusionPeriodsOverviewListRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<
+    runtime.ApiResponse<PaginatedPaymentExportExclusionPeriodOverviewList>
+  > {
+    if (requestParameters["limit"] == null) {
+      throw new runtime.RequiredError(
+        "limit",
+        'Required parameter "limit" was null or undefined when calling paymentsApiPaymentExportExclusionPeriodsOverviewList().',
+      );
+    }
+
+    if (requestParameters["offset"] == null) {
+      throw new runtime.RequiredError(
+        "offset",
+        'Required parameter "offset" was null or undefined when calling paymentsApiPaymentExportExclusionPeriodsOverviewList().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    if (requestParameters["includeExpired"] != null) {
+      queryParameters["include_expired"] = requestParameters["includeExpired"];
+    }
+
+    if (requestParameters["limit"] != null) {
+      queryParameters["limit"] = requestParameters["limit"];
+    }
+
+    if (requestParameters["offset"] != null) {
+      queryParameters["offset"] = requestParameters["offset"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/payments/api/payment_export_exclusion_periods_overview`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      PaginatedPaymentExportExclusionPeriodOverviewListFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async paymentsApiPaymentExportExclusionPeriodsOverviewList(
+    requestParameters: PaymentsApiPaymentExportExclusionPeriodsOverviewListRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<PaginatedPaymentExportExclusionPeriodOverviewList> {
+    const response =
+      await this.paymentsApiPaymentExportExclusionPeriodsOverviewListRaw(
+        requestParameters,
+        initOverrides,
+      );
     return await response.value();
   }
 

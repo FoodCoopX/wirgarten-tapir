@@ -9,6 +9,9 @@ from tapir.payments.models import (
     MemberCredit,
     PaymentExportExclusionPeriod,
 )
+from tapir.payments.services.payment_export_exclusion_period_service import (
+    PaymentExportExclusionPeriodService,
+)
 from tapir.pickup_locations.serializers import PublicPickupLocationSerializer
 from tapir.solidarity_contribution.serializers import SolidarityContributionSerializer
 from tapir.subscriptions.serializers import (
@@ -204,3 +207,34 @@ class PaymentExportExclusionPeriodUpdateRequestSerializer(serializers.Serializer
     start_date = serializers.DateField()
     end_date = serializers.DateField(allow_null=True)
     comment = serializers.CharField(allow_blank=True)
+
+
+class PaymentExportExclusionPeriodOverviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PaymentExportExclusionPeriod
+        fields = [
+            "id",
+            "start_date",
+            "end_date",
+            "comment",
+            "member_no",
+            "first_name",
+            "last_name",
+            "member_url",
+            "is_active",
+        ]
+
+    member_no = serializers.IntegerField(source="member.member_no", allow_null=True)
+    first_name = serializers.CharField(source="member.first_name")
+    last_name = serializers.CharField(source="member.last_name")
+    member_url = serializers.SerializerMethodField()
+    is_active = serializers.SerializerMethodField()
+
+    @staticmethod
+    def get_member_url(period: PaymentExportExclusionPeriod) -> str:
+        return period.member.get_absolute_url()
+
+    def get_is_active(self, period: PaymentExportExclusionPeriod) -> bool:
+        return PaymentExportExclusionPeriodService.is_date_within_period(
+            period=period, reference_date=self.context["today"]
+        )

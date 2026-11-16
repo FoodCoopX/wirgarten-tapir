@@ -96,6 +96,11 @@ urlpatterns = [
         views.PaymentExportExclusionPeriodApiView.as_view(),
         name="payment_export_exclusion_periods",
     ),
+    path(
+        "api/payment_export_exclusion_periods_overview",
+        views.PaymentExportExclusionPeriodOverviewApiView.as_view(),
+        name="payment_export_exclusion_periods_overview",
+    ),
 ]
 
 router = DefaultRouter()

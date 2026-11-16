@@ -10,6 +10,7 @@ import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
 import { formatDateMonthAndYear } from "../../utils/formatDateMonthAndYear.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
+import PaymentExportExclusionExplanation from "./PaymentExportExclusionExplanation.tsx";
 
 interface PaymentExportExclusionPeriodModalProps {
   memberId: string;
@@ -345,23 +346,7 @@ const PaymentExportExclusionPeriodModal: React.FC<
           style={{ width: "100%" }}
         >
           <h5 className={"mb-0"}>Ausschluss vom Zahlungsexport</h5>
-          <TapirHelpButton
-            text={
-              <>
-                <p>
-                  In den eingetragenen Monaten werden die regelmäßigen Zahlungen
-                  des Mitglieds (Verträge, Solidarbeitrag, Vereinsbeitrag,
-                  Liefergebühren) nicht in die SEPA-Exporte übernommen, z. B.
-                  weil das Mitglied einen Kredit über seinen Anteil
-                  zurückbezahlt.
-                </p>
-                <p className={"mb-0"}>
-                  Die Zahlungen werden trotzdem erzeugt und als bezahlt
-                  markiert. Genossenschaftsanteile werden weiterhin eingezogen.
-                </p>
-              </>
-            }
-          />
+          <TapirHelpButton text={<PaymentExportExclusionExplanation />} />
         </div>
       </Modal.Header>
       <Modal.Body>{buildBody()}</Modal.Body>

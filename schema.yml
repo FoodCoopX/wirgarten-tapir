@@ -4762,6 +4762,37 @@ paths:
               schema:
                 type: string
           description: ''
+  /payments/api/payment_export_exclusion_periods_overview:
+    get:
+      operationId: payments_api_payment_export_exclusion_periods_overview_list
+      parameters:
+      - in: query
+        name: include_expired
+        schema:
+          type: boolean
+      - in: query
+        name: limit
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: offset
+        schema:
+          type: integer
+        required: true
+      tags:
+      - payments
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPaymentExportExclusionPeriodOverviewList'
+          description: ''
   /payments/api/payment_transaction_details:
     get:
       operationId: payments_api_payment_transaction_details_retrieve
@@ -14529,6 +14560,29 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/GroupedEmailDispatch'
+    PaginatedPaymentExportExclusionPeriodOverviewList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentExportExclusionPeriodOverview'
     PaginatedPaymentTransactionList:
       type: object
       required:
@@ -15480,6 +15534,41 @@ components:
       - comment
       - end_date
       - member_id
+      - start_date
+    PaymentExportExclusionPeriodOverview:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        comment:
+          type: string
+        member_no:
+          type: integer
+          nullable: true
+        first_name:
+          type: string
+        last_name:
+          type: string
+        member_url:
+          type: string
+          readOnly: true
+        is_active:
+          type: boolean
+          readOnly: true
+      required:
+      - first_name
+      - is_active
+      - last_name
+      - member_no
+      - member_url
       - start_date
     PaymentExportExclusionPeriodUpdateRequestRequest:
       type: object

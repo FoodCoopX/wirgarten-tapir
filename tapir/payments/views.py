@@ -50,6 +50,7 @@ from tapir.payments.serializers import (
     JokerCreditIntendedUsePreviewResponseSerializer,
     MemberNeedingBankingDataSerializer,
     PaymentExportExclusionPeriodSerializer,
+    PaymentExportExclusionPeriodOverviewSerializer,
     PaymentExportExclusionPeriodCreateRequestSerializer,
     PaymentExportExclusionPeriodUpdateRequestSerializer,
 )
@@ -1228,6 +1229,13 @@ class PaymentTransactionsListView(PermissionRequiredMixin, TemplateView):
     permission_required = Permission.Coop.MANAGE
     template_name = "payments/payment_transactions_list_view.html"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["payment_export_exclusion_enabled"] = get_parameter_value(
+            key=ParameterKeys.PAYMENT_EXPORT_EXCLUSION_ENABLED, cache={}
+        )
+        return context
+
 
 class PaymentTransactionViewSet(ReadOnlyModelViewSet):
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
@@ -1526,3 +1534,40 @@ class PaymentExportExclusionPeriodApiView(APIView):
             period.delete()
 
         return Response("OK")
+
+
+class PaymentExportExclusionPeriodOverviewApiView(APIView):
+    permission_classes = [
+        permissions.IsAuthenticated,
+        HasCoopManagePermission,
+        IsPaymentExportExclusionEnabled,
+    ]
+    pagination_class = LimitOffsetPagination
+
+    def __init__(self):
+        super().__init__()
+        self.cache = {}
+
+    @extend_schema(
+        responses={200: PaymentExportExclusionPeriodOverviewSerializer(many=True)},
+        parameters=[
+            OpenApiParameter(name="limit", type=int, required=True),
+            OpenApiParameter(name="offset", type=int, required=True),
+            OpenApiParameter(name="include_expired", type=bool, required=False),
+        ],
+    )
+    def get(self, request):
+        today = get_today(cache=self.cache)
+        periods = PaymentExportExclusionPeriod.objects.select_related(
+            "member"
+        ).order_by("start_date", "member__last_name", "member__first_name", "id")
+        if request.query_params.get("include_expired") != "true":
+            periods = periods.filter(Q(end_date__isnull=True) | Q(end_date__gte=today))
+
+        pagination = self.pagination_class()
+        page = pagination.paginate_queryset(periods, request)
+        return pagination.get_paginated_response(
+            PaymentExportExclusionPeriodOverviewSerializer(
+                page, many=True, context={"today": today}
+            ).data
+        )

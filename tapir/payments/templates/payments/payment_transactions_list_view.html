@@ -8,5 +8,6 @@
 {% endblock title %}
 {% block content %}
   {% csrf_token %}
-  <span id="payment_transactions"></span>
+  <span id="payment_transactions"
+        data-payment-export-exclusion-enabled="{{ payment_export_exclusion_enabled }}"></span>
 {% endblock content %}

@@ -10,16 +10,19 @@ import { ToastData } from "../types/ToastData.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import { DEFAULT_PAGE_SIZE } from "../utils/pagination.ts";
 import MembersNeedingBankingDataButton from "./MembersNeedingBankingDataButton.tsx";
+import PaymentExportExclusionOverviewButton from "./PaymentExportExclusionOverviewButton.tsx";
 import PaymentTransactionDetailsModal from "./PaymentTransactionDetailsModal.tsx";
 import PaymentTransactionTable from "./PaymentTransactionTable.tsx";
 import RebuildSubscriptionPaymentsModal from "./RebuildSubscriptionPaymentsModal.tsx";
 
 interface PaymentTransactionsBaseProps {
   csrfToken: string;
+  paymentExportExclusionEnabled: boolean;
 }
 
 const PaymentTransactionsBase: React.FC<PaymentTransactionsBaseProps> = ({
   csrfToken,
+  paymentExportExclusionEnabled,
 }) => {
   const api = useApi(PaymentsApi, csrfToken);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
@@ -66,6 +69,11 @@ const PaymentTransactionsBase: React.FC<PaymentTransactionsBaseProps> = ({
             <h5 className={"mb-0"}>Zahlungseingang</h5>
             <div className={"d-flex gap-2"}>
               <MembersNeedingBankingDataButton setToastDatas={setToastDatas} />
+              {paymentExportExclusionEnabled && (
+                <PaymentExportExclusionOverviewButton
+                  setToastDatas={setToastDatas}
+                />
+              )}
               <TapirButton
                 variant={"outline-primary"}
                 text={"Lastschriften neu erzeugen"}
