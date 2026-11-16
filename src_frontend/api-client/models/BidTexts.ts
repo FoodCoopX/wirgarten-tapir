@@ -23,6 +23,24 @@ export interface BidTexts {
    * @type {string}
    * @memberof BidTexts
    */
+  level1Label: string;
+  /**
+   *
+   * @type {string}
+   * @memberof BidTexts
+   */
+  level2Label: string;
+  /**
+   *
+   * @type {string}
+   * @memberof BidTexts
+   */
+  level3Label: string;
+  /**
+   *
+   * @type {string}
+   * @memberof BidTexts
+   */
   amountLabel: string;
   /**
    *
@@ -108,6 +126,12 @@ export interface BidTexts {
  * Check if a given object implements the BidTexts interface.
  */
 export function instanceOfBidTexts(value: object): value is BidTexts {
+  if (!("level1Label" in value) || value["level1Label"] === undefined)
+    return false;
+  if (!("level2Label" in value) || value["level2Label"] === undefined)
+    return false;
+  if (!("level3Label" in value) || value["level3Label"] === undefined)
+    return false;
   if (!("amountLabel" in value) || value["amountLabel"] === undefined)
     return false;
   if (
@@ -158,6 +182,9 @@ export function BidTextsFromJSONTyped(
     return json;
   }
   return {
+    level1Label: json["level_1_label"],
+    level2Label: json["level_2_label"],
+    level3Label: json["level_3_label"],
     amountLabel: json["amount_label"],
     referenceValueHint: json["reference_value_hint"],
     simpleExplanation: json["simple_explanation"],
@@ -188,6 +215,9 @@ export function BidTextsToJSONTyped(
   }
 
   return {
+    level_1_label: value["level1Label"],
+    level_2_label: value["level2Label"],
+    level_3_label: value["level3Label"],
     amount_label: value["amountLabel"],
     reference_value_hint: value["referenceValueHint"],
     simple_explanation: value["simpleExplanation"],

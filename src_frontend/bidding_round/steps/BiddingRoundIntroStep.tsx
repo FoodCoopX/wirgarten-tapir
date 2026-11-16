@@ -27,6 +27,49 @@ interface BiddingRoundIntroStepProps {
   stepActive: boolean;
 }
 
+const LiveEvaluationCard: React.FC<{
+  liveEvaluation: PublicEvaluationResponse;
+}> = ({ liveEvaluation }) => {
+  const coverageStatusVariant =
+    COVERAGE_STATUS_VARIANT[liveEvaluation.coverageStatus] ?? "secondary";
+
+  return (
+    <Card className={"mb-4 w-100"}>
+      <Card.Header>
+        <strong>Zwischenstand</strong>
+        <Badge bg={coverageStatusVariant} className={"ms-2"}>
+          {COVERAGE_STATUS_LABEL[liveEvaluation.coverageStatus] ??
+            liveEvaluation.coverageStatus}
+        </Badge>
+      </Card.Header>
+      <Card.Body>
+        <div className={"d-flex justify-content-between mb-1"}>
+          <span>Deckung</span>
+          <strong>{liveEvaluation.coveragePercent.toFixed(1)} %</strong>
+        </div>
+        <ProgressBar
+          now={Math.min(liveEvaluation.coveragePercent, 100)}
+          variant={coverageStatusVariant}
+          className={"mb-3"}
+        />
+        <div className={"d-flex justify-content-between mb-1"}>
+          <span>Auslastung</span>
+          <strong>{liveEvaluation.utilizationPercent.toFixed(1)} %</strong>
+        </div>
+        <ProgressBar
+          now={Math.min(liveEvaluation.utilizationPercent, 100)}
+          variant={"info"}
+          className={"mb-3"}
+        />
+        <div className={"text-muted small"}>
+          Bietende Ø{" "}
+          {formatCurrency(Number(liveEvaluation.bidderAveragePerMonth))} / Monat
+        </div>
+      </Card.Body>
+    </Card>
+  );
+};
+
 const BiddingRoundIntroStep: React.FC<BiddingRoundIntroStepProps> = ({
   texts,
   isAuthenticated,
@@ -50,6 +93,9 @@ const BiddingRoundIntroStep: React.FC<BiddingRoundIntroStepProps> = ({
         <Card className={"mb-4"}>
           <Card.Body dangerouslySetInnerHTML={{ __html: texts.introText }} />
         </Card>
+        {liveEvaluation && (
+          <LiveEvaluationCard liveEvaluation={liveEvaluation} />
+        )}
         <Card>
           <Card.Body className={"text-center"}>
             {texts.loginTitle && <strong>{texts.loginTitle}</strong>}
@@ -68,9 +114,6 @@ const BiddingRoundIntroStep: React.FC<BiddingRoundIntroStepProps> = ({
     );
   }
 
-  const coverageStatusVariant = liveEvaluation
-    ? (COVERAGE_STATUS_VARIANT[liveEvaluation.coverageStatus] ?? "secondary")
-    : "secondary";
 
   return (
     <>
@@ -78,42 +121,7 @@ const BiddingRoundIntroStep: React.FC<BiddingRoundIntroStepProps> = ({
         className={"text-center"}
         dangerouslySetInnerHTML={{ __html: texts.introText }}
       />
-      {liveEvaluation && (
-        <Card className={"mb-4"}>
-          <Card.Header>
-            <strong>Zwischenstand</strong>
-            <Badge bg={coverageStatusVariant} className={"ms-2"}>
-              {COVERAGE_STATUS_LABEL[liveEvaluation.coverageStatus] ??
-                liveEvaluation.coverageStatus}
-            </Badge>
-          </Card.Header>
-          <Card.Body>
-            <div className={"d-flex justify-content-between mb-1"}>
-              <span>Deckung</span>
-              <strong>{liveEvaluation.coveragePercent.toFixed(1)} %</strong>
-            </div>
-            <ProgressBar
-              now={Math.min(liveEvaluation.coveragePercent, 100)}
-              variant={coverageStatusVariant}
-              className={"mb-3"}
-            />
-            <div className={"d-flex justify-content-between mb-1"}>
-              <span>Auslastung</span>
-              <strong>{liveEvaluation.utilizationPercent.toFixed(1)} %</strong>
-            </div>
-            <ProgressBar
-              now={Math.min(liveEvaluation.utilizationPercent, 100)}
-              variant={"info"}
-              className={"mb-3"}
-            />
-            <div className={"text-muted small"}>
-              Bietende Ø{" "}
-              {formatCurrency(Number(liveEvaluation.bidderAveragePerMonth))} /
-              Monat
-            </div>
-          </Card.Body>
-        </Card>
-      )}
+      {liveEvaluation && <LiveEvaluationCard liveEvaluation={liveEvaluation} />}
       <NextStepButton onClick={goToNextStep} stepActive={stepActive} />
     </>
   );

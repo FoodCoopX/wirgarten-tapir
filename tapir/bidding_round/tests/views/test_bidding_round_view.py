@@ -1,3 +1,5 @@
+from urllib.parse import unquote
+
 from django.urls import reverse
 from rest_framework import status
 
@@ -19,11 +21,20 @@ class TestBiddingRoundView(BiddingRoundPageViewTestBase):
         response = self.client.get(reverse("bidding_rounds:bidding_rounds"))
         self.assertStatusCode(response, status.HTTP_404_NOT_FOUND)
 
-    def test_page_urlFlagOff_returns404(self):
+    def test_page_urlFlagOff_anonymous_redirectsToLogin(self):
         self._set_parameter(ParameterKeys.BIDDING_ROUND_ENABLED, True)
         self._set_parameter(ParameterKeys.BIDDING_ROUND_URL_ENABLED, False)
         response = self.client.get(reverse("bidding_rounds:bidding_rounds"))
-        self.assertStatusCode(response, status.HTTP_404_NOT_FOUND)
+        self.assertStatusCode(response, status.HTTP_302_FOUND)
+        self.assertTrue(response.url.startswith("/accounts/login/?next="))
+        self.assertIn("/bidding_rounds/", unquote(response.url))
+
+    def test_page_urlFlagOff_authenticated_returns200(self):
+        self._set_parameter(ParameterKeys.BIDDING_ROUND_ENABLED, True)
+        self._set_parameter(ParameterKeys.BIDDING_ROUND_URL_ENABLED, False)
+        self.client.force_login(MemberFactory.create())
+        response = self.client.get(reverse("bidding_rounds:bidding_rounds"))
+        self.assertStatusCode(response, status.HTTP_200_OK)
 
     def test_pageEnabled_returns200(self):
         self._set_parameter(ParameterKeys.BIDDING_ROUND_ENABLED, True)

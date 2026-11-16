@@ -3,10 +3,15 @@ import datetime
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.db.models import F, Sum
+from django.utils.translation import gettext
 from django.views import generic
 from tapir_mail.models import MailCategory
 
 from tapir.accounts.models import EmailChangeRequest
+from tapir.bidding_round.services.bidding_round_service import BiddingRoundService
+from tapir.bidding_round.services.bidding_round_view_service import (
+    BiddingRoundViewService,
+)
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.coop_membership_cancellation_manager import (
     CoopMembershipCancellationManager,
@@ -83,6 +88,13 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             self.object, today, include_future_subscriptions=True, cache=cache
         )
         context["bakery_enabled"] = settings.BAKERY_ENABLED
+        bidding_round_enabled = BiddingRoundViewService.is_feature_flag_enabled(cache)
+        context["open_bidding_round"] = (
+            BiddingRoundService.get_current_open_round(cache=cache)
+            if bidding_round_enabled
+            else None
+        )
+        context["bidding_round_display_name"] = gettext("Beitragsrunde")
         next_growing_period = TapirCache.get_first_growing_period_starting_after(
             reference_date=get_today(cache=cache), cache=cache
         )

@@ -6,7 +6,12 @@ from decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.utils.translation import gettext_lazy as _
+from tapir_mail.triggers.transactional_trigger import (
+    TransactionalTrigger,
+    TransactionalTriggerData,
+)
 
+from tapir.bidding_round.services.amount_parser import AmountParser
 from tapir.bidding_round.config import (
     BIDDING_ROUND_PROCEDURE_SIMPLE,
     BIDDING_ROUND_PROCEDURE_BID_RANGE,
@@ -19,15 +24,15 @@ from tapir.bidding_round.models import (
     BiddingRound,
     BiddingRoundProductPrice,
 )
-from tapir.bidding_round.services.amount_parser import AmountParser
 from tapir.bidding_round.services.bid_input import BidInput
-from tapir.bidding_round.services.bidding_round_stats_service import (
-    BiddingRoundStatsService,
-)
 from tapir.bidding_round.services.bid_validator import BidValidator
+from tapir.bidding_round.services.bidding_round_mail_token_builder import (
+    BiddingRoundMailTokenBuilder,
+)
 from tapir.bidding_round.services.bidding_round_stats_service import (
     BiddingRoundStatsService,
 )
+from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import GrowingPeriod, Member, Product, ProductType
 from tapir.wirgarten.utils import get_now
 
@@ -642,6 +647,7 @@ class BiddingRoundService:
         bidding_round: BiddingRound,
         bid_input: BidInput,
         cache: dict,
+        send_mail: bool = True,
     ) -> Bid:
         """Writes one bid per member and round.
 
@@ -686,4 +692,19 @@ class BiddingRoundService:
                         "updated_at",
                     ]
                 )
+
+        if send_mail:
+            TransactionalTrigger.fire_action(
+                trigger_data=TransactionalTriggerData(
+                    key=(
+                        Events.BIDDING_ROUND_BID_RECEIVED
+                        if created
+                        else Events.BIDDING_ROUND_BID_UPDATED
+                    ),
+                    recipient_id_in_base_queryset=member.id,
+                    token_data=BiddingRoundMailTokenBuilder.build_bid_tokens(
+                        bid, cache=cache
+                    ),
+                )
+            )
         return bid

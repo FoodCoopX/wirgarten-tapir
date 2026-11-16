@@ -120,6 +120,7 @@ class TestPublicDataView(BiddingRoundApiTestBase):
         self.assertEqual(
             "90.00", response.data["biddable_product"]["products"][0]["reference_value"]
         )
+        self.assertEqual("Gebot 1", response.data["texts"]["bid"]["level_1_label"])
 
 
 class TestMemberBidView(BiddingRoundApiTestBase):

@@ -28,6 +28,30 @@ class BiddingRoundViewService:
         return get_parameter_value(ParameterKeys.BIDDING_ROUND_URL_ENABLED, cache=cache)
 
     @classmethod
+    def public_access_allowed(cls, user, cache: dict) -> bool:
+        """Whether the public bidding-round pages may serve this user.
+
+        Anonymous visitors only get access while the public URL switch is on;
+        authenticated members always do. The master switch is checked separately
+        because it hides the pages entirely.
+        """
+        return cls.is_public_url_enabled(cache) or (
+            user is not None and user.is_authenticated
+        )
+
+    @classmethod
+    def is_status_enabled(cls, cache: dict) -> bool:
+        return get_parameter_value(
+            ParameterKeys.BIDDING_ROUND_STATUS_ENABLED, cache=cache
+        )
+
+    @classmethod
+    def is_status_public_enabled(cls, cache: dict) -> bool:
+        return get_parameter_value(
+            ParameterKeys.BIDDING_ROUND_STATUS_PUBLIC_ENABLED, cache=cache
+        )
+
+    @classmethod
     def serialize_round(cls, bidding_round: BiddingRound, cache: dict) -> dict:
         return RoundSerializer(bidding_round, context={"cache": cache}).data
 
@@ -93,6 +117,9 @@ class BiddingRoundViewService:
             "bid_range_explanation": (
                 ParameterKeys.BIDDING_ROUND_BID_RANGE_EXPLANATION
             ),
+            "level_1_label": ParameterKeys.BIDDING_ROUND_BID_LEVEL_1_LABEL,
+            "level_2_label": ParameterKeys.BIDDING_ROUND_BID_LEVEL_2_LABEL,
+            "level_3_label": ParameterKeys.BIDDING_ROUND_BID_LEVEL_3_LABEL,
             "green_label": ParameterKeys.BIDDING_ROUND_BID_GREEN_LABEL,
             "yellow_label": ParameterKeys.BIDDING_ROUND_BID_YELLOW_LABEL,
             "red_label": ParameterKeys.BIDDING_ROUND_BID_RED_LABEL,
