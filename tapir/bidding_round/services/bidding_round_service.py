@@ -37,7 +37,13 @@ from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
 from tapir.wirgarten.mail_events import Events
-from tapir.wirgarten.models import GrowingPeriod, Member, Product, ProductType
+from tapir.wirgarten.models import (
+    GrowingPeriod,
+    Member,
+    OrderFeedback,
+    Product,
+    ProductType,
+)
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import get_now
 
@@ -589,6 +595,7 @@ class BiddingRoundService:
         cancellation_policy_read: bool = False,
         contract_accepted: bool = False,
         enforce_consents: bool = False,
+        feedback: str | None = None,
     ) -> Bid:
         if not isinstance(member, Member):
             raise ValidationError(_("Nur Mitglieder können ein Gebot abgeben."))
@@ -628,6 +635,12 @@ class BiddingRoundService:
                 bidding_round=bidding_round,
                 cache=cache,
             )
+            if feedback:
+                OrderFeedback.objects.update_or_create(
+                    member=member,
+                    bidding_round=bidding_round,
+                    defaults={"feedback_text": feedback},
+                )
 
         if send_mail:
             TransactionalTrigger.fire_action(

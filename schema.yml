@@ -10790,6 +10790,8 @@ components:
         contract_accepted:
           type: boolean
           default: false
+        feedback:
+          type: string
       required:
       - items
     BidTexts:
@@ -18073,6 +18075,18 @@ components:
       - product_types_without_capacity
       - show_jokers
       - show_notice_period
+    PublicAssociationMembership:
+      type: object
+      properties:
+        name:
+          type: string
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
+      required:
+      - name
+      - price
     PublicConfirmWaitingListEntryRequestRequest:
       type: object
       properties:
@@ -18148,6 +18162,15 @@ components:
           type: boolean
         sepa_enabled:
           type: boolean
+        feedback_enabled:
+          type: boolean
+        first_name:
+          type: string
+          nullable: true
+        association_membership:
+          allOf:
+          - $ref: '#/components/schemas/PublicAssociationMembership'
+          nullable: true
         account_owner:
           type: string
           nullable: true
@@ -18903,11 +18926,14 @@ components:
           type: string
         submit_label:
           type: string
+        final_submit_label:
+          type: string
         bid:
           $ref: '#/components/schemas/BidTexts'
       required:
       - bid
       - ended_text
+      - final_submit_label
       - intro_text
       - intro_title
       - login_text

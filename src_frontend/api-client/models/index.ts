@@ -284,6 +284,7 @@ export * from "./ProductTypeAccordionInBestellWizard";
 export * from "./ProductTypeAccordionInBestellWizardRequest";
 export * from "./ProductTypeOption";
 export * from "./ProductTypesAndConfig";
+export * from "./PublicAssociationMembership";
 export * from "./PublicConfirmWaitingListEntryRequestRequest";
 export * from "./PublicDataResponse";
 export * from "./PublicEvaluationResponse";

@@ -12,12 +12,14 @@ interface PickupLocationRowProps {
   currentPickupLocation: CurrentPickupLocation | null;
   texts: RoundTexts;
   variant: "stacked" | "inline";
+  showDeliveryCharge?: boolean;
 }
 
 const PickupLocationRow: React.FC<PickupLocationRowProps> = ({
   currentPickupLocation,
   texts,
   variant,
+  showDeliveryCharge = true,
 }) => {
   if (!currentPickupLocation) {
     return null;
@@ -36,7 +38,8 @@ const PickupLocationRow: React.FC<PickupLocationRowProps> = ({
         <span className={"d-inline-flex align-items-center"}>
           <strong>
             {currentPickupLocation.name}
-            {monthlyDeliveryCharge > 0 &&
+            {showDeliveryCharge &&
+              monthlyDeliveryCharge > 0 &&
               ` (+ ${formatCurrency(monthlyDeliveryCharge)} ${DELIVERY_CHARGE_LABEL})`}
           </strong>
           <PickupLocationHint />
@@ -54,7 +57,7 @@ const PickupLocationRow: React.FC<PickupLocationRowProps> = ({
           <PickupLocationHint />
         </span>
       </div>
-      {monthlyDeliveryCharge > 0 && (
+      {showDeliveryCharge && monthlyDeliveryCharge > 0 && (
         <div className={"d-flex justify-content-between"}>
           <span className={"text-muted"}>{DELIVERY_CHARGE_LABEL}</span>
           <strong>{formatCurrency(monthlyDeliveryCharge)}</strong>
