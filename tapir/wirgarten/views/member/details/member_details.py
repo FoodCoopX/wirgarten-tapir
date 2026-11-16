@@ -23,6 +23,9 @@ from tapir.pickup_locations.services.member_delivery_address_getter import (
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
+from tapir.payments.services.payment_export_exclusion_period_service import (
+    PaymentExportExclusionPeriodService,
+)
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
@@ -215,6 +218,12 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             context["payment_rhythm"] = (
                 f"Aktuell: {context["payment_rhythm"]}. Ab dem {format_date(future_rhythm.valid_from)}: {MemberPaymentRhythmService.get_rhythm_display_name(future_rhythm.rhythm)}"
             )
+
+        context["payment_export_exclusion_period"] = (
+            PaymentExportExclusionPeriodService.get_current_or_next_period(
+                member_id=self.object.id, reference_date=today, cache=cache
+            )
+        )
 
         context["show_mail_category_content"] = MailCategory.objects.exists()
         context["extra_email_addresses_enabled"] = get_parameter_value(

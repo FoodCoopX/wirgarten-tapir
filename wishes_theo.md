@@ -58,3 +58,5 @@ through the matrix channel or by tagging me in issues or PRs.
   where they shortly show an error before closing even if the operation succeeded.
 - The media library of the mail module should show where each media is used, and have the option to filter by unused
   medias.
+- In the mail module, I added a custom picker for the mail segments, so that we avoid a very long dropdown, and so that
+  we can show a description for each segment. We need the same thing for mail triggers.
