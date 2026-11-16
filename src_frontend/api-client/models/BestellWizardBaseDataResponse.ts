@@ -154,7 +154,19 @@ export interface BestellWizardBaseDataResponse {
    * @type {string}
    * @memberof BestellWizardBaseDataResponse
    */
+  explanationCheckboxSepaMandat: string;
+  /**
+   *
+   * @type {string}
+   * @memberof BestellWizardBaseDataResponse
+   */
   labelCheckboxContractPolicy: string;
+  /**
+   *
+   * @type {string}
+   * @memberof BestellWizardBaseDataResponse
+   */
+  explanationCheckboxContractPolicy: string;
   /**
    *
    * @type {number}
@@ -346,8 +358,18 @@ export function instanceOfBestellWizardBaseDataResponse(
   )
     return false;
   if (
+    !("explanationCheckboxSepaMandat" in value) ||
+    value["explanationCheckboxSepaMandat"] === undefined
+  )
+    return false;
+  if (
     !("labelCheckboxContractPolicy" in value) ||
     value["labelCheckboxContractPolicy"] === undefined
+  )
+    return false;
+  if (
+    !("explanationCheckboxContractPolicy" in value) ||
+    value["explanationCheckboxContractPolicy"] === undefined
   )
     return false;
   if (
@@ -470,7 +492,10 @@ export function BestellWizardBaseDataResponseFromJSONTyped(
     pseudonymEnabled: json["pseudonym_enabled"],
     showCoopContent: json["show_coop_content"],
     labelCheckboxSepaMandat: json["label_checkbox_sepa_mandat"],
+    explanationCheckboxSepaMandat: json["explanation_checkbox_sepa_mandat"],
     labelCheckboxContractPolicy: json["label_checkbox_contract_policy"],
+    explanationCheckboxContractPolicy:
+      json["explanation_checkbox_contract_policy"],
     trialPeriodLengthInWeeks: json["trial_period_length_in_weeks"],
     paymentRhythmChoices: json["payment_rhythm_choices"],
     defaultPaymentRhythm: json["default_payment_rhythm"],
@@ -539,7 +564,10 @@ export function BestellWizardBaseDataResponseToJSONTyped(
     pseudonym_enabled: value["pseudonymEnabled"],
     show_coop_content: value["showCoopContent"],
     label_checkbox_sepa_mandat: value["labelCheckboxSepaMandat"],
+    explanation_checkbox_sepa_mandat: value["explanationCheckboxSepaMandat"],
     label_checkbox_contract_policy: value["labelCheckboxContractPolicy"],
+    explanation_checkbox_contract_policy:
+      value["explanationCheckboxContractPolicy"],
     trial_period_length_in_weeks: value["trialPeriodLengthInWeeks"],
     payment_rhythm_choices: value["paymentRhythmChoices"],
     default_payment_rhythm: value["defaultPaymentRhythm"],

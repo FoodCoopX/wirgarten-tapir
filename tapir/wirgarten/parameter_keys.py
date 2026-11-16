@@ -144,6 +144,7 @@ class ParameterKeys:
     BIDDING_ROUND_STATUS_PUBLIC_ENABLED = (
         f"{PREFIX}.bidding_round.status_public_enabled"
     )
+    BIDDING_ROUND_SEPA_ENABLED = f"{PREFIX}.bidding_round.sepa_enabled"
     BIDDING_ROUND_PUBLIC_INTRO_TITLE = f"{PREFIX}.bidding_round.public.intro_title"
     BIDDING_ROUND_PUBLIC_INTRO_TEXT = f"{PREFIX}.bidding_round.public.intro_text"
     BIDDING_ROUND_PUBLIC_ENDED_TEXT = f"{PREFIX}.bidding_round.public.ended_text"
@@ -154,6 +155,7 @@ class ParameterKeys:
         f"{PREFIX}.bidding_round.public.pickup_location_title"
     )
     BIDDING_ROUND_PUBLIC_SUBMIT_LABEL = f"{PREFIX}.bidding_round.public.submit_label"
+    BIDDING_ROUND_PUBLIC_PRIVACY_TITLE = f"{PREFIX}.bidding_round.public.privacy_title"
     BIDDING_ROUND_BID_AMOUNT_LABEL = f"{PREFIX}.bidding_round.bid.amount_label"
     BIDDING_ROUND_BID_REFERENCE_VALUE_HINT = (
         f"{PREFIX}.bidding_round.bid.reference_value_hint"
@@ -208,8 +210,14 @@ class ParameterKeys:
     BESTELL_WIZARD_SOLIDARITY_STEP_POSITION = (
         f"{PREFIX}.bestellwizard.solidarity_step_position"
     )
+    BESTELLWIZARD_SEPA_MANDAT_CHECKBOX_LABEL = (
+        f"{PREFIX}.bestellwizard.sepa_mandat_checkbox_label"
+    )
     BESTELLWIZARD_SEPA_MANDAT_CHECKBOX_TEXT = (
         f"{PREFIX}.bestellwizard.sepa_mandat_checkbox_text"
+    )
+    BESTELLWIZARD_CONTRACT_POLICY_CHECKBOX_LABEL = (
+        f"{PREFIX}.bestellwizard.contract_policy_checkbox_label"
     )
     BESTELLWIZARD_CONTRACT_POLICY_CHECKBOX_TEXT = (
         f"{PREFIX}.bestellwizard.contract_policy_checkbox_text"

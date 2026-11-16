@@ -59,13 +59,23 @@ class TestBuildSimpleResponseFields(TapirUnitTest):
             cache=cache,
         )
         mock_parameter_value(
+            key=ParameterKeys.BESTELLWIZARD_SEPA_MANDAT_CHECKBOX_LABEL,
+            value="test_sepa_mandat_label",
+            cache=cache,
+        )
+        mock_parameter_value(
             key=ParameterKeys.BESTELLWIZARD_SEPA_MANDAT_CHECKBOX_TEXT,
-            value="test_sepa_mandat",
+            value="test_sepa_mandat_explanation",
+            cache=cache,
+        )
+        mock_parameter_value(
+            key=ParameterKeys.BESTELLWIZARD_CONTRACT_POLICY_CHECKBOX_LABEL,
+            value="test_contract_policy_label",
             cache=cache,
         )
         mock_parameter_value(
             key=ParameterKeys.BESTELLWIZARD_CONTRACT_POLICY_CHECKBOX_TEXT,
-            value="test_contract_policy",
+            value="test_contract_policy_explanation",
             cache=cache,
         )
         mock_parameter_value(
@@ -127,8 +137,10 @@ class TestBuildSimpleResponseFields(TapirUnitTest):
                 "student_status_allowed": "test_allow_student",
                 "phone_number_required": "test_phone_number_required",
                 "pseudonym_enabled": True,
-                "label_checkbox_sepa_mandat": "test_sepa_mandat",
-                "label_checkbox_contract_policy": "test_contract_policy",
+                "label_checkbox_sepa_mandat": "test_sepa_mandat_label",
+                "explanation_checkbox_sepa_mandat": "test_sepa_mandat_explanation",
+                "label_checkbox_contract_policy": "test_contract_policy_label",
+                "explanation_checkbox_contract_policy": "test_contract_policy_explanation",
                 "default_payment_rhythm": "test_default_rhythm",
                 "coop_statute_link": "test_statute_link",
                 "organization_name": "test_site_name",

@@ -105,6 +105,30 @@ export interface PublicDataResponse {
   statusPublicEnabled?: boolean;
   /**
    *
+   * @type {boolean}
+   * @memberof PublicDataResponse
+   */
+  sepaEnabled?: boolean;
+  /**
+   *
+   * @type {string}
+   * @memberof PublicDataResponse
+   */
+  accountOwner?: string | null;
+  /**
+   *
+   * @type {string}
+   * @memberof PublicDataResponse
+   */
+  iban?: string | null;
+  /**
+   *
+   * @type {string}
+   * @memberof PublicDataResponse
+   */
+  paymentRhythm?: string | null;
+  /**
+   *
    * @type {CurrentPickupLocation}
    * @memberof PublicDataResponse
    */
@@ -167,6 +191,13 @@ export function PublicDataResponseFromJSONTyped(
       json["status_public_enabled"] == null
         ? undefined
         : json["status_public_enabled"],
+    sepaEnabled:
+      json["sepa_enabled"] == null ? undefined : json["sepa_enabled"],
+    accountOwner:
+      json["account_owner"] == null ? undefined : json["account_owner"],
+    iban: json["iban"] == null ? undefined : json["iban"],
+    paymentRhythm:
+      json["payment_rhythm"] == null ? undefined : json["payment_rhythm"],
     currentPickupLocation:
       json["current_pickup_location"] == null
         ? undefined
@@ -203,6 +234,10 @@ export function PublicDataResponseToJSONTyped(
     is_authenticated: value["isAuthenticated"],
     status_enabled: value["statusEnabled"],
     status_public_enabled: value["statusPublicEnabled"],
+    sepa_enabled: value["sepaEnabled"],
+    account_owner: value["accountOwner"],
+    iban: value["iban"],
+    payment_rhythm: value["paymentRhythm"],
     current_pickup_location: CurrentPickupLocationToJSON(
       value["currentPickupLocation"],
     ),

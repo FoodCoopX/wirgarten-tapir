@@ -30,6 +30,48 @@ export interface BidSubmitRequest {
    * @memberof BidSubmitRequest
    */
   items: Array<BidSubmitItemRequest>;
+  /**
+   *
+   * @type {boolean}
+   * @memberof BidSubmitRequest
+   */
+  sepaAllowed?: boolean;
+  /**
+   *
+   * @type {string}
+   * @memberof BidSubmitRequest
+   */
+  accountOwner?: string | null;
+  /**
+   *
+   * @type {string}
+   * @memberof BidSubmitRequest
+   */
+  iban?: string | null;
+  /**
+   *
+   * @type {string}
+   * @memberof BidSubmitRequest
+   */
+  paymentRhythm?: string | null;
+  /**
+   *
+   * @type {boolean}
+   * @memberof BidSubmitRequest
+   */
+  privacyPolicyRead?: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof BidSubmitRequest
+   */
+  cancellationPolicyRead?: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof BidSubmitRequest
+   */
+  contractAccepted?: boolean;
 }
 
 /**
@@ -55,6 +97,23 @@ export function BidSubmitRequestFromJSONTyped(
   }
   return {
     items: (json["items"] as Array<any>).map(BidSubmitItemRequestFromJSON),
+    sepaAllowed:
+      json["sepa_allowed"] == null ? undefined : json["sepa_allowed"],
+    accountOwner:
+      json["account_owner"] == null ? undefined : json["account_owner"],
+    iban: json["iban"] == null ? undefined : json["iban"],
+    paymentRhythm:
+      json["payment_rhythm"] == null ? undefined : json["payment_rhythm"],
+    privacyPolicyRead:
+      json["privacy_policy_read"] == null
+        ? undefined
+        : json["privacy_policy_read"],
+    cancellationPolicyRead:
+      json["cancellation_policy_read"] == null
+        ? undefined
+        : json["cancellation_policy_read"],
+    contractAccepted:
+      json["contract_accepted"] == null ? undefined : json["contract_accepted"],
   };
 }
 
@@ -72,5 +131,12 @@ export function BidSubmitRequestToJSONTyped(
 
   return {
     items: (value["items"] as Array<any>).map(BidSubmitItemRequestToJSON),
+    sepa_allowed: value["sepaAllowed"],
+    account_owner: value["accountOwner"],
+    iban: value["iban"],
+    payment_rhythm: value["paymentRhythm"],
+    privacy_policy_read: value["privacyPolicyRead"],
+    cancellation_policy_read: value["cancellationPolicyRead"],
+    contract_accepted: value["contractAccepted"],
   };
 }
