@@ -72,6 +72,7 @@ class ContractCreator:
         actor=None,
         bid_level=None,
         create_auto_renewed_contracts=False,
+        auto_renewed_member_ids=None,
     ):
         cls._validate_can_create_contracts(bidding_round)
 
@@ -88,6 +89,11 @@ class ContractCreator:
                 )
                 % {"names": ", ".join(str(bid.member) for bid in unconfirmed_bids)}
             )
+        capacity_errors = BiddingRoundStatsService.get_capacity_exceeded_errors(
+            bidding_round, cache
+        )
+        if capacity_errors:
+            raise ValidationError(" ".join(capacity_errors))
 
         is_locked = bidding_round.average_bid_locked_at is not None
         if (
@@ -124,12 +130,17 @@ class ContractCreator:
                         "bid_id": bid.id,
                         "member": bid.member,
                         "error": str(error),
+                        "product_name": cls._get_bid_product_type_names(bid),
                     }
                 )
 
         if create_auto_renewed_contracts:
             created_subscriptions.extend(
-                cls._create_auto_renewed_contracts(bidding_round, cache=cache)
+                cls._create_auto_renewed_contracts(
+                    bidding_round,
+                    cache=cache,
+                    member_ids=auto_renewed_member_ids,
+                )
             )
 
         if created_subscriptions:
@@ -149,7 +160,65 @@ class ContractCreator:
         return {"errors": errors, "subscriptions": created_subscriptions}
 
     @classmethod
-    def _create_auto_renewed_contracts(cls, bidding_round, cache) -> list:
+    def check_contracts_from_bids(cls, bidding_round, cache, bid_ids=None) -> list:
+        """Pre-check: returns one entry per bid that cannot be turned into a
+        contract, without writing anything.
+
+        A bid is rejected when it is not confirmed yet or when the round's bids
+        and auto-renewals exceed the share or pickup location capacity.
+        """
+        bids = list(bidding_round.bids.select_related("member").all())
+        if bid_ids:
+            selected_ids = {str(bid_id) for bid_id in bid_ids}
+            bids = [bid for bid in bids if str(bid.id) in selected_ids]
+
+        capacity_errors = BiddingRoundStatsService.get_capacity_exceeded_errors(
+            bidding_round, cache
+        )
+        if capacity_errors and bids:
+            first_bid = bids[0]
+            errors = [
+                {
+                    "bid_id": first_bid.id,
+                    "member": first_bid.member,
+                    "error": " ".join(capacity_errors),
+                    "product_name": cls._get_bid_product_type_names(first_bid),
+                }
+            ]
+        else:
+            errors = []
+
+        for bid in bids:
+            if bid.admin_confirmed is None:
+                errors.append(
+                    {
+                        "bid_id": bid.id,
+                        "member": bid.member,
+                        "error": str(
+                            _(
+                                "Das Gebot ist noch nicht bestätigt und kann noch nicht in einen Vertrag überführt werden."
+                            )
+                        ),
+                        "product_name": cls._get_bid_product_type_names(bid),
+                    }
+                )
+        return errors
+
+    @classmethod
+    def _get_bid_product_type_names(cls, bid) -> str:
+        return ", ".join(
+            sorted(
+                {
+                    item.product.type.name
+                    for item in bid.items.select_related("product__type").all()
+                }
+            )
+        )
+
+    @classmethod
+    def _create_auto_renewed_contracts(
+        cls, bidding_round, cache, member_ids=None
+    ) -> list:
         bid_member_ids = set(bidding_round.bids.values_list("member_id", flat=True))
         product_type_ids = set(
             bidding_round.product_types.values_list("product_type_id", flat=True)
@@ -162,11 +231,21 @@ class ContractCreator:
         except KeyError:
             return []
 
+        selected_member_ids = (
+            {str(member_id) for member_id in member_ids}
+            if member_ids is not None
+            else None
+        )
         created = []
         for subscription in renewing_subscriptions:
             if subscription.member_id in bid_member_ids:
                 continue
             if subscription.product.type_id not in product_type_ids:
+                continue
+            if (
+                selected_member_ids is not None
+                and subscription.member_id not in selected_member_ids
+            ):
                 continue
             if Subscription.objects.filter(
                 member_id=subscription.member_id,
@@ -182,10 +261,18 @@ class ContractCreator:
             )
             if renewed_subscription.period_id != bidding_round.growing_period_id:
                 continue
+            if subscription.price_override == 0:
+                renewed_subscription.price_override = Decimal("0")
+            else:
+                renewed_subscription.price_override = None
+            renewed_subscription.price_mode = (
+                Subscription.PriceMode.BIDDING_ROUND_AUTO_RENEWED
+            )
             renewed_subscription.save()
             BiddingRoundCreatedSubscription.objects.create(
                 round=bidding_round,
                 subscription=renewed_subscription,
+                is_bidder_contract=False,
             )
             created.append(renewed_subscription)
         return created
@@ -197,6 +284,8 @@ class ContractCreator:
         new_subscriptions = []
         for item in bid.items.select_related("product").all():
             subscription = cls._get_existing_subscription(bid.member, item, period)
+            was_reused = subscription is not None
+            original_quantity = subscription.quantity if was_reused else None
             if subscription is None:
                 subscription = cls._build_subscription(bid, item, period, cache)
                 subscription.save()
@@ -216,6 +305,9 @@ class ContractCreator:
             BiddingRoundCreatedSubscription.objects.create(
                 round=bidding_round,
                 subscription=subscription,
+                is_bidder_contract=True,
+                was_reused=was_reused,
+                original_quantity=original_quantity,
             )
             new_subscriptions.append(subscription)
 

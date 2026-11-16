@@ -99,4 +99,14 @@ urlpatterns = [
         views.CreateContractsView.as_view(),
         name="create_contracts",
     ),
+    path(
+        "api/<str:round_id>/check_contracts",
+        views.RoundCheckContractsView.as_view(),
+        name="check_contracts",
+    ),
+    path(
+        "api/<str:round_id>/align_standard_prices",
+        views.StandardPriceView.as_view(),
+        name="align_standard_prices",
+    ),
 ]

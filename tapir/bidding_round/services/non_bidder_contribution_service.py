@@ -17,7 +17,11 @@ from tapir.subscriptions.services.subscription_price_calculator import (
 )
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import Member, Subscription
-from tapir.wirgarten.service.products import get_product_price
+
+
+from tapir.bidding_round.services.bidding_round_previous_amount_service import (
+    BiddingRoundPreviousAmountService,
+)
 
 
 class NonBidderContributionService:
@@ -29,13 +33,10 @@ class NonBidderContributionService:
     """
 
     @classmethod
-    def _get_size(cls, subscription, reference_date, cache) -> Decimal:
-        price = get_product_price(
-            product=subscription.product,
-            reference_date=reference_date,
-            cache=cache,
+    def _get_size(cls, subscription, bidding_round, cache) -> Decimal:
+        return BiddingRoundStatsService.get_product_size(
+            subscription.product, bidding_round, cache
         )
-        return Decimal(price.size) if price is not None and price.size else Decimal("1")
 
     @classmethod
     def _get_product_type_ids(cls, bidding_round) -> set[str]:
@@ -160,32 +161,47 @@ class NonBidderContributionService:
         if not basis_subscriptions:
             return None
 
-        shares = Decimal("0")
-        standard_monthly_total = Decimal("0")
-        for subscription in basis_subscriptions:
-            shares += cls._get_size(subscription, reference_date, cache) * (
-                subscription.quantity
-            )
-            standard_monthly_total += SubscriptionPriceCalculator.get_monthly_price(
-                subscription, reference_date=reference_date, cache=cache
-            )
-        if shares <= 0:
+        free_auto_renewed = [
+            subscription
+            for subscription in basis_subscriptions
+            if subscription.price_override == 0
+            and subscription.price_mode
+            == Subscription.PriceMode.BIDDING_ROUND_AUTO_RENEWED
+        ]
+        basis_subscriptions = [
+            subscription
+            for subscription in basis_subscriptions
+            if subscription not in free_auto_renewed
+        ]
+        if not basis_subscriptions:
             return None
 
-        target_monthly_total = rate * shares
+        contract_monthly_total = Decimal("0")
+        floor_monthly_total = Decimal("0")
+        for subscription in basis_subscriptions:
+            size = cls._get_size(subscription, bidding_round, cache)
+            contract_monthly_total += SubscriptionPriceCalculator.get_monthly_price(
+                subscription, reference_date=reference_date, cache=cache
+            )
+            floor_monthly_total += size * subscription.quantity * rate
+
+        previous_monthly_total = BiddingRoundPreviousAmountService.get_previous_amount(
+            member.id, bidding_round, product_type_ids, cache
+        ) or Decimal("0")
+        target_monthly_total = max(floor_monthly_total, previous_monthly_total)
         current_contribution = (
             MemberSolidarityContributionService.get_member_contribution(
                 member_id=member.id, reference_date=reference_date, cache=cache
             )
             or Decimal("0")
         )
-        if standard_monthly_total + current_contribution >= target_monthly_total:
+        if contract_monthly_total + current_contribution >= target_monthly_total:
             return None
 
         return MemberSolidarityContributionService.assign_contribution_to_member(
             member=member,
             change_date=reference_date,
-            amount=target_monthly_total - standard_monthly_total,
+            amount=target_monthly_total - contract_monthly_total,
             cache=cache,
             actor=actor,
         )
