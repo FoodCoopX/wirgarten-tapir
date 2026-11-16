@@ -533,39 +533,6 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
                     />
                     <hr />
 
-                    <div className="mb-3">
-                      <SectionToggle
-                        isOpen={isSectionOpen(`metrics-${day}`)}
-                        onToggle={() => toggleSection(`metrics-${day}`)}
-                        title="Präferenz-Zufriedenheit"
-                        icon="favorite"
-                      />
-                      <p className="text-muted small mb-2">
-                        Wie gut entspricht der Backplan den Mitgliederwünschen?
-                      </p>
-                      {isSectionOpen(`metrics-${day}`) &&
-                        (d.displaySessions.length > 0 ? (
-                          <MetricsCard
-                            year={year}
-                            week={week}
-                            deliveryDay={day}
-                            csrfToken={csrfToken}
-                          />
-                        ) : (
-                          <p className="text-muted small text-center py-2">
-                            Noch kein Backplan berechnet.
-                          </p>
-                        ))}
-                    </div>
-                    <hr />
-
-                    <OvenPlanSection
-                      isOpen={isSectionOpen(`oven-plan-${day}`)}
-                      onToggle={() => toggleSection(`oven-plan-${day}`)}
-                      displaySessions={d.displaySessions}
-                    />
-                    <hr />
-
                     <DistributionListSection
                       isOpen={isSectionOpen(`distribution-list-${day}`)}
                       onToggle={() => toggleSection(`distribution-list-${day}`)}
@@ -605,6 +572,39 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
                       }
                       allPdfUrl={`/bakery/pdf/pickup-lists-all/${year}/${week}/${day}/`}
                       onEmail={() => {}}
+                    />
+                    <hr />
+
+                    <div className="mb-3">
+                      <SectionToggle
+                        isOpen={isSectionOpen(`metrics-${day}`)}
+                        onToggle={() => toggleSection(`metrics-${day}`)}
+                        title="Präferenz-Zufriedenheit"
+                        icon="favorite"
+                      />
+                      <p className="text-muted small mb-2">
+                        Wie gut entspricht der Backplan den Mitgliederwünschen?
+                      </p>
+                      {isSectionOpen(`metrics-${day}`) &&
+                        (d.displaySessions.length > 0 ? (
+                          <MetricsCard
+                            year={year}
+                            week={week}
+                            deliveryDay={day}
+                            csrfToken={csrfToken}
+                          />
+                        ) : (
+                          <p className="text-muted small text-center py-2">
+                            Noch kein Backplan berechnet.
+                          </p>
+                        ))}
+                    </div>
+                    <hr />
+
+                    <OvenPlanSection
+                      isOpen={isSectionOpen(`oven-plan-${day}`)}
+                      onToggle={() => toggleSection(`oven-plan-${day}`)}
+                      displaySessions={d.displaySessions}
                     />
                   </div>
                 </div>
