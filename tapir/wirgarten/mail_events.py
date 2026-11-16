@@ -24,6 +24,8 @@ class Events:
     # Mitglied tritt der Genossenschaft bei (nach Ablauf der Probezeit)
     MEMBERSHIP_ENTRY = "membership_entry"
 
+    ASSOCIATION_MEMBERSHIP_ENTRY = "associations.membership_entry"
+
     # Letzte Abholung (es gibt keine weiteren Verträge mehr)
     FINAL_PICKUP = "final_pickup"
 

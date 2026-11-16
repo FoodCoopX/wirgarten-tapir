@@ -12,6 +12,7 @@ class AssociationsConfig(AppConfig):
     )
 
     def ready(self):
+        from tapir.wirgarten.mail_events import Events
         from tapir.wirgarten.tapirmail import register_transactional_trigger
         from tapir.wirgarten.utils import legal_status_is_association
 
@@ -22,6 +23,16 @@ class AssociationsConfig(AppConfig):
                 "End-Datum vorher": "end_date_before",
                 "End-Datum nachher": "end_date_after",
                 "Mitgliedschaft-Typ": "membership_type_name",
+            },
+            required=lambda: legal_status_is_association(cache={}),
+        )
+
+        register_transactional_trigger(
+            name="Verein: Beitrittsbestätigung für Vereine",
+            key=Events.ASSOCIATION_MEMBERSHIP_ENTRY,
+            tokens={
+                "Mitgliedschaft-Typ": "membership_type_name",
+                "Beitrittsdatum": "membership_start_date",
             },
             required=lambda: legal_status_is_association(cache={}),
         )

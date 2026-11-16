@@ -165,7 +165,12 @@ class TestSendMembershipEntryMail(TapirIntegrationTest):
         mock_fire_action.assert_called_once()
         self.assert_mail_event_has_been_triggered(
             mock_fire_action=mock_fire_action,
-            key=Events.MEMBERSHIP_ENTRY,
+            key=Events.ASSOCIATION_MEMBERSHIP_ENTRY,
+        )
+        trigger_data = mock_fire_action.call_args.kwargs["trigger_data"]
+        self.assertEqual(
+            datetime.date(year=2010, month=1, day=1),
+            trigger_data.token_data["membership_start_date"],
         )
         member.refresh_from_db()
         self.assertTrue(member.has_received_membership_started_mail)
@@ -186,7 +191,7 @@ class TestSendMembershipEntryMail(TapirIntegrationTest):
         mock_fire_action.assert_called_once()
         self.assert_mail_event_has_been_triggered(
             mock_fire_action=mock_fire_action,
-            key=Events.MEMBERSHIP_ENTRY,
+            key=Events.ASSOCIATION_MEMBERSHIP_ENTRY,
         )
         member.refresh_from_db()
         self.assertTrue(member.has_received_membership_started_mail)
@@ -249,7 +254,7 @@ class TestSendMembershipEntryMail(TapirIntegrationTest):
         mock_fire_action.assert_called_once()
         self.assert_mail_event_has_been_triggered(
             mock_fire_action=mock_fire_action,
-            key=Events.MEMBERSHIP_ENTRY,
+            key=Events.ASSOCIATION_MEMBERSHIP_ENTRY,
         )
         mock_fire_action.assert_called_once()
         trigger_data: TransactionalTriggerData = mock_fire_action.mock_calls[0].kwargs[
@@ -303,7 +308,7 @@ class TestSendMembershipEntryMail(TapirIntegrationTest):
         mock_fire_action.assert_called_once()
         self.assert_mail_event_has_been_triggered(
             mock_fire_action=mock_fire_action,
-            key=Events.MEMBERSHIP_ENTRY,
+            key=Events.ASSOCIATION_MEMBERSHIP_ENTRY,
         )
         member.refresh_from_db()
         self.assertTrue(member.has_received_membership_started_mail)
