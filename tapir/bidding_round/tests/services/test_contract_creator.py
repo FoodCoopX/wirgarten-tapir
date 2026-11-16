@@ -545,12 +545,10 @@ class TestContractCreator(TapirIntegrationTest):
             bidding_round, cache={}, actor=bid.member
         )
 
-        self.assertEqual(
-            Decimal("16.50"),
-            SolidarityContribution.objects.get(
-                member=bid.member, start_date=period.start_date
-            ).amount,
+        contribution = SolidarityContribution.objects.get(
+            member=bid.member, start_date=period.start_date
         )
+        self.assertEqual(Decimal("16.50"), contribution.amount)
 
     def test_createContracts_lockedPositionIgnoresBidLevel(self):
         period = GrowingPeriodFactory.create(
@@ -698,6 +696,125 @@ class TestContractCreator(TapirIntegrationTest):
         bidding_round.refresh_from_db()
         self.assertIsNone(bidding_round.contracts_created_at)
 
+    def test_createContracts_bidderContract_setsBidderContractTrue(self):
+        bidding_round, bid, product, _period = self._create_closed_round_with_bid(
+            bid_amount=Decimal("80.00"), standard_price=Decimal("50.00")
+        )
+
+        ContractCreator.create_contracts_from_bids(
+            bidding_round, cache={}, actor=bid.member
+        )
+
+        link = BiddingRoundCreatedSubscription.objects.get(
+            round=bidding_round, subscription__member=bid.member
+        )
+        self.assertTrue(link.is_bidder_contract)
+
+    def test_createContracts_autoRenewedContract_setsBidderContractFalse(self):
+        bidding_round, bid, product, period = self._create_closed_round_with_bid(
+            bid_amount=Decimal("80.00"), standard_price=Decimal("50.00")
+        )
+        non_bidder = MemberFactory.create()
+        current_subscription, renewed_subscription = self._create_renewing_subscription(
+            member=non_bidder, product=product, period=period
+        )
+
+        with (
+            patch.object(
+                AutomaticSubscriptionRenewalService,
+                "get_subscriptions_that_will_be_renewed",
+                return_value={current_subscription},
+            ),
+            patch.object(
+                AutomaticSubscriptionRenewalService,
+                "build_renewed_subscription",
+                return_value=renewed_subscription,
+            ),
+        ):
+            ContractCreator.create_contracts_from_bids(
+                bidding_round,
+                cache={},
+                actor=bid.member,
+                create_auto_renewed_contracts=True,
+            )
+
+        link = BiddingRoundCreatedSubscription.objects.get(
+            round=bidding_round, subscription=renewed_subscription
+        )
+        self.assertFalse(link.is_bidder_contract)
+
+    def test_createContracts_withAutoRenewedMemberIds_createsOnlySelectedMember(
+        self,
+    ):
+        bidding_round, bid, product, period = self._create_closed_round_with_bid(
+            bid_amount=Decimal("80.00"), standard_price=Decimal("50.00")
+        )
+        selected_member = MemberFactory.create()
+        other_member = MemberFactory.create()
+        selected_current, selected_renewed = self._create_renewing_subscription(
+            member=selected_member, product=product, period=period
+        )
+        other_current, other_renewed = self._create_renewing_subscription(
+            member=other_member, product=product, period=period
+        )
+
+        def build_renewed(subscription, cache):
+            if subscription.member_id == selected_member.id:
+                return selected_renewed
+            return other_renewed
+
+        with (
+            patch.object(
+                AutomaticSubscriptionRenewalService,
+                "get_subscriptions_that_will_be_renewed",
+                return_value={selected_current, other_current},
+            ),
+            patch.object(
+                AutomaticSubscriptionRenewalService,
+                "build_renewed_subscription",
+                side_effect=build_renewed,
+            ),
+        ):
+            result = ContractCreator.create_contracts_from_bids(
+                bidding_round,
+                cache={},
+                actor=bid.member,
+                create_auto_renewed_contracts=True,
+                auto_renewed_member_ids=[selected_member.id],
+            )
+
+        created_member_ids = {
+            subscription.member_id for subscription in result.subscriptions
+        }
+        self.assertIn(selected_member.id, created_member_ids)
+        self.assertNotIn(other_member.id, created_member_ids)
+        self.assertFalse(
+            Subscription.objects.filter(
+                member=other_member, period=period, cancellation_ts__isnull=True
+            ).exists()
+        )
+
+    def test_checkContracts_withUnconfirmedBid_returnsErrorWithoutWriting(self):
+        bidding_round, bid, product, _period = self._create_closed_round_with_bid(
+            bid_amount=Decimal("80.00"), standard_price=Decimal("50.00")
+        )
+        bid.admin_confirmed = None
+        bid.save()
+
+        errors = ContractCreator.check_contracts_from_bids(
+            bidding_round, cache={}, bid_ids=[bid.id]
+        )
+
+        self.assertEqual(1, len(errors))
+        self.assertEqual(bid.id, errors[0]["bid_id"])
+        self.assertEqual(bid.member, errors[0]["member"])
+        self.assertEqual(product.type.name, errors[0]["product_name"])
+        self.assertFalse(
+            BiddingRoundCreatedSubscription.objects.filter(round=bidding_round).exists()
+        )
+        bidding_round.refresh_from_db()
+        self.assertIsNone(bidding_round.contracts_created_at)
+
     def _create_round_with_two_share_sizes(self):
         period = GrowingPeriodFactory.create(
             start_date=get_now(cache={}).date() + datetime.timedelta(days=30)
@@ -722,3 +839,39 @@ class TestContractCreator(TapirIntegrationTest):
             product=new_product,
         )
         return period, bidding_round, old_product, new_product
+
+    def test_checkContracts_withConfirmedBid_returnsEmpty(self):
+        bidding_round, bid, _product, _period = self._create_closed_round_with_bid(
+            bid_amount=Decimal("80.00"), standard_price=Decimal("50.00")
+        )
+
+        errors = ContractCreator.check_contracts_from_bids(
+            bidding_round, cache={}, bid_ids=[bid.id]
+        )
+
+        self.assertEqual([], errors)
+
+    @staticmethod
+    def _create_renewing_subscription(member, product, period):
+        previous_period = GrowingPeriodFactory.create(
+            start_date=period.start_date - datetime.timedelta(days=365),
+            end_date=period.start_date - datetime.timedelta(days=1),
+        )
+        current_subscription = SubscriptionFactory.create(
+            member=member,
+            product=product,
+            period=previous_period,
+            quantity=1,
+            start_date=previous_period.start_date,
+            end_date=previous_period.end_date,
+        )
+        renewed_subscription = SubscriptionFactory.build(
+            member=member,
+            product=product,
+            period=period,
+            quantity=1,
+            start_date=period.start_date,
+            end_date=period.end_date,
+            mandate_ref=MandateReferenceFactory.create(member=member),
+        )
+        return current_subscription, renewed_subscription

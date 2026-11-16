@@ -50,6 +50,12 @@ export interface Bid {
   readonly pickupLocationId: string | null;
   /**
    *
+   * @type {string}
+   * @memberof Bid
+   */
+  readonly pickupLocationName: string;
+  /**
+   *
    * @type {Date}
    * @memberof Bid
    */
@@ -95,6 +101,12 @@ export interface Bid {
    * @type {string}
    * @memberof Bid
    */
+  readonly effectiveAmount: string;
+  /**
+   *
+   * @type {string}
+   * @memberof Bid
+   */
   readonly amountPerYear: string;
   /**
    *
@@ -116,6 +128,11 @@ export function instanceOfBid(value: object): value is Bid {
     return false;
   if (!("pickupLocationId" in value) || value["pickupLocationId"] === undefined)
     return false;
+  if (
+    !("pickupLocationName" in value) ||
+    value["pickupLocationName"] === undefined
+  )
+    return false;
   if (!("updatedAt" in value) || value["updatedAt"] === undefined) return false;
   if (!("productId" in value) || value["productId"] === undefined) return false;
   if (!("productName" in value) || value["productName"] === undefined)
@@ -124,6 +141,8 @@ export function instanceOfBid(value: object): value is Bid {
   if (!("amount1" in value) || value["amount1"] === undefined) return false;
   if (!("amount2" in value) || value["amount2"] === undefined) return false;
   if (!("amount3" in value) || value["amount3"] === undefined) return false;
+  if (!("effectiveAmount" in value) || value["effectiveAmount"] === undefined)
+    return false;
   if (!("amountPerYear" in value) || value["amountPerYear"] === undefined)
     return false;
   if (!("totalPerYear" in value) || value["totalPerYear"] === undefined)
@@ -148,6 +167,7 @@ export function BidFromJSONTyped(json: any, ignoreDiscriminator: boolean): Bid {
         ? null
         : new Date(json["admin_confirmed"]),
     pickupLocationId: json["pickup_location_id"],
+    pickupLocationName: json["pickup_location_name"],
     updatedAt: json["updated_at"] == null ? null : new Date(json["updated_at"]),
     productId: json["product_id"],
     productName: json["product_name"],
@@ -155,6 +175,7 @@ export function BidFromJSONTyped(json: any, ignoreDiscriminator: boolean): Bid {
     amount1: json["amount_1"],
     amount2: json["amount_2"],
     amount3: json["amount_3"],
+    effectiveAmount: json["effective_amount"],
     amountPerYear: json["amount_per_year"],
     totalPerYear: json["total_per_year"],
   };
@@ -167,7 +188,11 @@ export function BidToJSON(json: any): Bid {
 export function BidToJSONTyped(
   value?: Omit<
     Bid,
-    "pickup_location_id" | "amount_per_year" | "total_per_year"
+    | "pickup_location_id"
+    | "pickup_location_name"
+    | "effective_amount"
+    | "amount_per_year"
+    | "total_per_year"
   > | null,
   ignoreDiscriminator: boolean = false,
 ): any {

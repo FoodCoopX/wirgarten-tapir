@@ -41,6 +41,12 @@ export interface CreateContractsError {
    * @type {string}
    * @memberof CreateContractsError
    */
+  productName: string;
+  /**
+   *
+   * @type {string}
+   * @memberof CreateContractsError
+   */
   error: string;
 }
 
@@ -53,6 +59,8 @@ export function instanceOfCreateContractsError(
   if (!("bidId" in value) || value["bidId"] === undefined) return false;
   if (!("memberId" in value) || value["memberId"] === undefined) return false;
   if (!("memberName" in value) || value["memberName"] === undefined)
+    return false;
+  if (!("productName" in value) || value["productName"] === undefined)
     return false;
   if (!("error" in value) || value["error"] === undefined) return false;
   return true;
@@ -73,6 +81,7 @@ export function CreateContractsErrorFromJSONTyped(
     bidId: json["bid_id"],
     memberId: json["member_id"],
     memberName: json["member_name"],
+    productName: json["product_name"],
     error: json["error"],
   };
 }
@@ -93,6 +102,7 @@ export function CreateContractsErrorToJSONTyped(
     bid_id: value["bidId"],
     member_id: value["memberId"],
     member_name: value["memberName"],
+    product_name: value["productName"],
     error: value["error"],
   };
 }

@@ -47,6 +47,12 @@ export interface BidProductVariant {
    * @type {string}
    * @memberof BidProductVariant
    */
+  standardPrice: string | null;
+  /**
+   *
+   * @type {string}
+   * @memberof BidProductVariant
+   */
   size: string | null;
   /**
    *
@@ -73,6 +79,8 @@ export function instanceOfBidProductVariant(
   if (!("referenceValue" in value) || value["referenceValue"] === undefined)
     return false;
   if (!("minAmount" in value) || value["minAmount"] === undefined) return false;
+  if (!("standardPrice" in value) || value["standardPrice"] === undefined)
+    return false;
   if (!("size" in value) || value["size"] === undefined) return false;
   if (!("currentQuantity" in value) || value["currentQuantity"] === undefined)
     return false;
@@ -96,6 +104,7 @@ export function BidProductVariantFromJSONTyped(
     name: json["name"],
     referenceValue: json["reference_value"],
     minAmount: json["min_amount"],
+    standardPrice: json["standard_price"],
     size: json["size"],
     currentQuantity: json["current_quantity"],
     imageUrl: json["image_url"],
@@ -119,6 +128,7 @@ export function BidProductVariantToJSONTyped(
     name: value["name"],
     reference_value: value["referenceValue"],
     min_amount: value["minAmount"],
+    standard_price: value["standardPrice"],
     size: value["size"],
     current_quantity: value["currentQuantity"],
     image_url: value["imageUrl"],

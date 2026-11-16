@@ -12,6 +12,12 @@
  * Do not edit the class manually.
  */
 
+import type { AutoRenewedItem } from "./AutoRenewedItem";
+import {
+  AutoRenewedItemFromJSON,
+  AutoRenewedItemToJSON,
+} from "./AutoRenewedItem";
+
 /**
  *
  * @export
@@ -35,6 +41,48 @@ export interface AutoRenewedMember {
    * @type {string}
    * @memberof AutoRenewedMember
    */
+  memberEmail: string;
+  /**
+   *
+   * @type {Array<AutoRenewedItem>}
+   * @memberof AutoRenewedMember
+   */
+  items: Array<AutoRenewedItem>;
+  /**
+   *
+   * @type {string}
+   * @memberof AutoRenewedMember
+   */
+  pickupLocationId: string | null;
+  /**
+   *
+   * @type {string}
+   * @memberof AutoRenewedMember
+   */
+  pickupLocationName: string | null;
+  /**
+   *
+   * @type {string}
+   * @memberof AutoRenewedMember
+   */
+  shares: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AutoRenewedMember
+   */
+  euroPerYear: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AutoRenewedMember
+   */
+  euroPerMonth: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AutoRenewedMember
+   */
   monthlyReference: string;
   /**
    *
@@ -52,6 +100,21 @@ export function instanceOfAutoRenewedMember(
 ): value is AutoRenewedMember {
   if (!("memberId" in value) || value["memberId"] === undefined) return false;
   if (!("memberName" in value) || value["memberName"] === undefined)
+    return false;
+  if (!("memberEmail" in value) || value["memberEmail"] === undefined)
+    return false;
+  if (!("items" in value) || value["items"] === undefined) return false;
+  if (!("pickupLocationId" in value) || value["pickupLocationId"] === undefined)
+    return false;
+  if (
+    !("pickupLocationName" in value) ||
+    value["pickupLocationName"] === undefined
+  )
+    return false;
+  if (!("shares" in value) || value["shares"] === undefined) return false;
+  if (!("euroPerYear" in value) || value["euroPerYear"] === undefined)
+    return false;
+  if (!("euroPerMonth" in value) || value["euroPerMonth"] === undefined)
     return false;
   if (!("monthlyReference" in value) || value["monthlyReference"] === undefined)
     return false;
@@ -74,6 +137,13 @@ export function AutoRenewedMemberFromJSONTyped(
   return {
     memberId: json["member_id"],
     memberName: json["member_name"],
+    memberEmail: json["member_email"],
+    items: (json["items"] as Array<any>).map(AutoRenewedItemFromJSON),
+    pickupLocationId: json["pickup_location_id"],
+    pickupLocationName: json["pickup_location_name"],
+    shares: json["shares"],
+    euroPerYear: json["euro_per_year"],
+    euroPerMonth: json["euro_per_month"],
     monthlyReference: json["monthly_reference"],
     yearlyReference: json["yearly_reference"],
   };
@@ -94,6 +164,13 @@ export function AutoRenewedMemberToJSONTyped(
   return {
     member_id: value["memberId"],
     member_name: value["memberName"],
+    member_email: value["memberEmail"],
+    items: (value["items"] as Array<any>).map(AutoRenewedItemToJSON),
+    pickup_location_id: value["pickupLocationId"],
+    pickup_location_name: value["pickupLocationName"],
+    shares: value["shares"],
+    euro_per_year: value["euroPerYear"],
+    euro_per_month: value["euroPerMonth"],
     monthly_reference: value["monthlyReference"],
     yearly_reference: value["yearlyReference"],
   };

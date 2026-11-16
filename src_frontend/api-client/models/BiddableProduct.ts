@@ -44,6 +44,12 @@ export interface BiddableProduct {
   productTypeName: string;
   /**
    *
+   * @type {string}
+   * @memberof BiddableProduct
+   */
+  capacityId: string | null;
+  /**
+   *
    * @type {Array<BidProductVariant>}
    * @memberof BiddableProduct
    */
@@ -60,6 +66,8 @@ export function instanceOfBiddableProduct(
   if (!("productTypeId" in value) || value["productTypeId"] === undefined)
     return false;
   if (!("productTypeName" in value) || value["productTypeName"] === undefined)
+    return false;
+  if (!("capacityId" in value) || value["capacityId"] === undefined)
     return false;
   if (!("products" in value) || value["products"] === undefined) return false;
   return true;
@@ -80,6 +88,7 @@ export function BiddableProductFromJSONTyped(
     id: json["id"],
     productTypeId: json["product_type_id"],
     productTypeName: json["product_type_name"],
+    capacityId: json["capacity_id"],
     products: (json["products"] as Array<any>).map(BidProductVariantFromJSON),
   };
 }
@@ -100,6 +109,7 @@ export function BiddableProductToJSONTyped(
     id: value["id"],
     product_type_id: value["productTypeId"],
     product_type_name: value["productTypeName"],
+    capacity_id: value["capacityId"],
     products: (value["products"] as Array<any>).map(BidProductVariantToJSON),
   };
 }

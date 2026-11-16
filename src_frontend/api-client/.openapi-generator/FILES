@@ -36,10 +36,12 @@ models/AssociationMembershipType.ts
 models/AssociationMembershipTypePrice.ts
 models/AssociationMembershipTypePriceRequest.ts
 models/AssociationMembershipTypeRequest.ts
+models/AutoRenewedItem.ts
 models/AutoRenewedMember.ts
 models/AutomatedExportCycleEnum.ts
 models/AvailableBreadsForDeliveryListResponse.ts
 models/AvailableSegmentsResponse.ts
+models/AverageBid.ts
 models/BestellWizardBaseDataResponse.ts
 models/BestellWizardCapacityCheckResponse.ts
 models/BestellWizardConfirmOrderRequestRequest.ts
@@ -87,8 +89,11 @@ models/CancelSubscriptionsViewResponse.ts
 models/CancellationData.ts
 models/ChangeMemberPickupLocationRequestRequest.ts
 models/ChangeTypeEnum.ts
+models/CheckContractsRequest.ts
 models/ConfirmBidsRequest.ts
 models/ConfirmSubscriptionChangesRequestRequest.ts
+models/ContractItem.ts
+models/ContractRow.ts
 models/ConvertWeekToDateForSubscriptionChangesResponse.ts
 models/CoopShareTransaction.ts
 models/CountryEnum.ts
@@ -140,6 +145,9 @@ models/ExtendedProductTypeAndConfig.ts
 models/ExtendedProductTypeRequest.ts
 models/ExtraPosition.ts
 models/ExtraPositions.ts
+models/FinancingProjection.ts
+models/FinancingProjectionLevel.ts
+models/FinancingProjectionLevels.ts
 models/FuturePaymentsResponse.ts
 models/GetCoopShareTransactionsResponse.ts
 models/GetDatesFromCustomCycleDeliveryWeeksResponse.ts
@@ -293,6 +301,8 @@ models/PickupLocationDeliveryDay.ts
 models/PickupLocationOpeningTime.ts
 models/PickupLocationOpeningTimeInputRequest.ts
 models/PickupLocationSaveRequestRequest.ts
+models/PickupLocationUtilization.ts
+models/PickupLocationWithCharge.ts
 models/PickupLocationsByDeliveryDayResponse.ts
 models/PreferenceSatisfactionResponse.ts
 models/PreferredBread.ts
@@ -328,6 +338,9 @@ models/PublicWaitingListEntryDetails.ts
 models/PublicWaitingListEntryExistingMemberCreateRequest.ts
 models/PublicWaitingListProductWish.ts
 models/RecipientRequest.ts
+models/ResultsTable.ts
+models/ResultsTableMember.ts
+models/ResultsTablePickupLocation.ts
 models/RhythmEnum.ts
 models/Round.ts
 models/RoundCreateRequest.ts
@@ -336,6 +349,8 @@ models/RoundProductPrice.ts
 models/RoundProductPriceInputRequest.ts
 models/RoundResultsResponse.ts
 models/RoundStatsBid.ts
+models/RoundStatsEntry.ts
+models/RoundStatsTotals.ts
 models/RoundTexts.ts
 models/SaveExtendedProductTypeRequest.ts
 models/SegmentData.ts
@@ -359,6 +374,8 @@ models/SolverPreviewDetailStoveSession.ts
 models/SolverPreviewRequestRequest.ts
 models/SolverPreviewResponse.ts
 models/SolverPreviewSolutionSummary.ts
+models/StandardPriceAlignResponse.ts
+models/StandardPriceAlignResult.ts
 models/StaticSegment.ts
 models/StaticSegmentRecipient.ts
 models/StaticSegmentRecipientRequest.ts

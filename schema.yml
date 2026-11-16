@@ -2742,6 +2742,36 @@ paths:
       responses:
         '204':
           description: No response body
+  /bidding_rounds/api/{round_id}/align_standard_prices:
+    post:
+      operationId: bidding_rounds_api_align_standard_prices_create
+      description: |-
+        Applies the feature-flag gate to a DRF view via ``initial``.
+
+        This keeps the view's own ``permission_classes`` (and therefore the global
+        ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
+        the public (member-facing) endpoints, which require authentication while the public
+        URL flag is off. The per-request cache lives on ``self.cache`` so the handlers reuse
+        it instead of building their own.
+      parameters:
+      - in: path
+        name: round_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - bidding_rounds
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardPriceAlignResponse'
+          description: ''
   /bidding_rounds/api/{round_id}/bid:
     get:
       operationId: bidding_rounds_api_bid_retrieve
@@ -2927,6 +2957,47 @@ paths:
       responses:
         '204':
           description: No response body
+  /bidding_rounds/api/{round_id}/check_contracts:
+    post:
+      operationId: bidding_rounds_api_check_contracts_create
+      description: |-
+        Applies the feature-flag gate to a DRF view via ``initial``.
+
+        This keeps the view's own ``permission_classes`` (and therefore the global
+        ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
+        the public (member-facing) endpoints, which require authentication while the public
+        URL flag is off. The per-request cache lives on ``self.cache`` so the handlers reuse
+        it instead of building their own.
+      parameters:
+      - in: path
+        name: round_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - bidding_rounds
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckContractsRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CheckContractsRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CheckContractsRequest'
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateContractsResponse'
+          description: ''
   /bidding_rounds/api/{round_id}/close:
     post:
       operationId: bidding_rounds_api_close_create
@@ -3217,15 +3288,34 @@ paths:
         it instead of building their own.
       parameters:
       - in: query
+        name: bid_range_position
+        schema:
+          type: number
+          format: double
+      - in: query
+        name: filter
+        schema:
+          type: string
+      - in: query
+        name: include_auto_renewed
+        schema:
+          type: boolean
+      - in: query
         name: position
         schema:
           type: number
           format: double
+        description: 'Position auf der Solidaritätsachse: 0 (grün) … 50 (zufrieden)
+          … 100 (rot).'
       - in: path
         name: round_id
         schema:
           type: string
         required: true
+      - in: query
+        name: sort
+        schema:
+          type: string
       tags:
       - bidding_rounds
       security:
@@ -10378,6 +10468,19 @@ components:
       - description_in_bestell_wizard
       - name
       - order_in_bestell_wizard
+    AutoRenewedItem:
+      type: object
+      properties:
+        product_type_name:
+          type: string
+        product_name:
+          type: string
+        quantity:
+          type: integer
+      required:
+      - product_name
+      - product_type_name
+      - quantity
     AutoRenewedMember:
       type: object
       properties:
@@ -10385,14 +10488,39 @@ components:
           type: string
         member_name:
           type: string
+        member_email:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AutoRenewedItem'
+        pickup_location_id:
+          type: string
+          nullable: true
+        pickup_location_name:
+          type: string
+          nullable: true
+        shares:
+          type: string
+        euro_per_year:
+          type: string
+        euro_per_month:
+          type: string
         monthly_reference:
           type: string
         yearly_reference:
           type: string
       required:
+      - euro_per_month
+      - euro_per_year
+      - items
+      - member_email
       - member_id
       - member_name
       - monthly_reference
+      - pickup_location_id
+      - pickup_location_name
+      - shares
       - yearly_reference
     AutomatedExportCycleEnum:
       enum:
@@ -10437,6 +10565,24 @@ components:
             $ref: '#/components/schemas/SegmentOption'
       required:
       - segments
+    AverageBid:
+      type: object
+      properties:
+        target_per_year:
+          type: string
+        capacity_shares:
+          type: string
+        amount_per_share_per_month:
+          type: string
+          nullable: true
+        amount_per_share_per_year:
+          type: string
+          nullable: true
+      required:
+      - amount_per_share_per_month
+      - amount_per_share_per_year
+      - capacity_shares
+      - target_per_year
     BestellWizardBaseDataResponse:
       type: object
       properties:
@@ -10987,6 +11133,9 @@ components:
           type: string
           nullable: true
           readOnly: true
+        pickup_location_name:
+          type: string
+          readOnly: true
         updated_at:
           type: string
           format: date-time
@@ -11012,6 +11161,9 @@ components:
           format: decimal
           pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
           nullable: true
+        effective_amount:
+          type: string
+          readOnly: true
         amount_per_year:
           type: string
           readOnly: true
@@ -11024,10 +11176,12 @@ components:
       - amount_2
       - amount_3
       - amount_per_year
+      - effective_amount
       - entered_by_admin
       - id
       - member_id
       - pickup_location_id
+      - pickup_location_name
       - product_id
       - product_name
       - quantity
@@ -11085,6 +11239,9 @@ components:
         min_amount:
           type: string
           nullable: true
+        standard_price:
+          type: string
+          nullable: true
         size:
           type: string
           nullable: true
@@ -11102,6 +11259,7 @@ components:
       - name
       - reference_value
       - size
+      - standard_price
     BidSubmitRequest:
       type: object
       properties:
@@ -11211,11 +11369,15 @@ components:
           type: string
         product_type_name:
           type: string
+        capacity_id:
+          type: string
+          nullable: true
         products:
           type: array
           items:
             $ref: '#/components/schemas/BidProductVariant'
       required:
+      - capacity_id
       - id
       - product_type_id
       - product_type_name
@@ -12204,6 +12366,14 @@ components:
         * `CANCELLED` - Kündigung
         * `RENEWED` - Verlängerung
         * `NOT_RENEWED` - Keine Verlängerung
+    CheckContractsRequest:
+      type: object
+      properties:
+        bid_ids:
+          type: array
+          items:
+            type: string
+            minLength: 1
     ConfirmBidsRequest:
       type: object
       properties:
@@ -12239,6 +12409,80 @@ components:
       - confirm_creation_ids
       - confirm_deletion_ids
       - confirm_purchase_ids
+    ContractItem:
+      type: object
+      properties:
+        product_type_name:
+          type: string
+        product_name:
+          type: string
+        quantity:
+          type: integer
+      required:
+      - product_name
+      - product_type_name
+      - quantity
+    ContractRow:
+      type: object
+      properties:
+        member_id:
+          type: string
+        member_name:
+          type: string
+        member_email:
+          type: string
+        type:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContractItem'
+        pickup_location_name:
+          type: string
+        standard_amount_per_month:
+          type: string
+        standard_amount_per_year:
+          type: string
+        contribution_amount_per_month:
+          type: string
+        contribution_amount_per_year:
+          type: string
+        amount_per_month:
+          type: string
+        amount_per_year:
+          type: string
+        bid_amounts:
+          type: array
+          items:
+            type: string
+        bid_effective_amount:
+          type: string
+          nullable: true
+        non_bidder_floor_per_month:
+          type: string
+          nullable: true
+        previous_amount_per_month:
+          type: string
+          nullable: true
+        is_created:
+          type: boolean
+      required:
+      - amount_per_month
+      - amount_per_year
+      - bid_effective_amount
+      - contribution_amount_per_month
+      - contribution_amount_per_year
+      - is_created
+      - items
+      - member_email
+      - member_id
+      - member_name
+      - non_bidder_floor_per_month
+      - pickup_location_name
+      - previous_amount_per_month
+      - standard_amount_per_month
+      - standard_amount_per_year
+      - type
     ConvertWeekToDateForSubscriptionChangesResponse:
       type: object
       properties:
@@ -12796,6 +13040,8 @@ components:
           type: string
         member_name:
           type: string
+        product_name:
+          type: string
         error:
           type: string
       required:
@@ -12803,6 +13049,7 @@ components:
       - error
       - member_id
       - member_name
+      - product_name
     CreateContractsRequest:
       type: object
       properties:
@@ -12818,6 +13065,11 @@ components:
         create_auto_renewed_contracts:
           type: boolean
           default: false
+        auto_renewed_member_ids:
+          type: array
+          items:
+            type: string
+            minLength: 1
     CreateContractsResponse:
       type: object
       properties:
@@ -14580,6 +14832,66 @@ components:
       required:
       - delivery_charge
       - membership
+    FinancingProjection:
+      type: object
+      properties:
+        target_per_year:
+          type: string
+        capacity_shares:
+          type: string
+        bid_shares:
+          type: string
+        auto_shares:
+          type: string
+        remaining_shares:
+          type: string
+        fixed_per_year:
+          type: string
+        auto_renew_per_year:
+          type: string
+        membership_per_year:
+          type: string
+        delivery_charge_per_year:
+          type: string
+        membership_included_in_product_type:
+          type: boolean
+        levels:
+          $ref: '#/components/schemas/FinancingProjectionLevels'
+      required:
+      - auto_renew_per_year
+      - auto_shares
+      - bid_shares
+      - capacity_shares
+      - delivery_charge_per_year
+      - fixed_per_year
+      - levels
+      - membership_included_in_product_type
+      - membership_per_year
+      - remaining_shares
+      - target_per_year
+    FinancingProjectionLevel:
+      type: object
+      properties:
+        reached_per_year:
+          type: string
+        average_per_share_per_month:
+          type: string
+      required:
+      - average_per_share_per_month
+      - reached_per_year
+    FinancingProjectionLevels:
+      type: object
+      properties:
+        green:
+          $ref: '#/components/schemas/FinancingProjectionLevel'
+        yellow:
+          $ref: '#/components/schemas/FinancingProjectionLevel'
+        red:
+          $ref: '#/components/schemas/FinancingProjectionLevel'
+      required:
+      - green
+      - red
+      - yellow
     FuturePaymentsResponse:
       type: object
       properties:
@@ -18148,6 +18460,102 @@ components:
       - opening_times
       - postcode
       - street
+    PickupLocationUtilization:
+      type: object
+      properties:
+        capacity:
+          type: string
+        demand:
+          type: string
+        fill_percent:
+          type: number
+          format: double
+          nullable: true
+        is_full:
+          type: boolean
+      required:
+      - capacity
+      - demand
+      - fill_percent
+      - is_full
+    PickupLocationWithCharge:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+        latitude:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,2}(?:\.\d{0,10})?$
+          readOnly: true
+          nullable: true
+          title: Breitengrad
+        longitude:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,2}(?:\.\d{0,10})?$
+          readOnly: true
+          nullable: true
+          title: Längengrad
+        street:
+          type: string
+          readOnly: true
+          title: Straße und Hausnummer
+        street_2:
+          type: string
+          readOnly: true
+          title: Adresszusatz
+        postcode:
+          type: string
+          readOnly: true
+          title: Postleitzahl
+        city:
+          type: string
+          readOnly: true
+          title: Ort
+        opening_times:
+          type: array
+          items:
+            $ref: '#/components/schemas/PickupLocationOpeningTime'
+          readOnly: true
+        current_delivery_charge:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
+          readOnly: true
+        delivery_day:
+          type: integer
+          nullable: true
+          readOnly: true
+        is_home_delivery:
+          type: boolean
+          readOnly: true
+          title: Hauslieferung
+        yearly_delivery_charge:
+          type: string
+        utilization:
+          allOf:
+          - $ref: '#/components/schemas/PickupLocationUtilization'
+          nullable: true
+      required:
+      - city
+      - current_delivery_charge
+      - delivery_day
+      - id
+      - is_home_delivery
+      - latitude
+      - longitude
+      - name
+      - opening_times
+      - postcode
+      - street
+      - street_2
+      - utilization
+      - yearly_delivery_charge
     PickupLocationsByDeliveryDayResponse:
       type: object
       properties:
@@ -19057,6 +19465,85 @@ components:
             minLength: 1
       required:
       - recipients
+    ResultsTable:
+      type: object
+      properties:
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResultsTableMember'
+        pickup_locations:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResultsTablePickupLocation'
+      required:
+      - members
+      - pickup_locations
+    ResultsTableMember:
+      type: object
+      properties:
+        member_id:
+          type: string
+        member_name:
+          type: string
+        member_email:
+          type: string
+        has_bid:
+          type: boolean
+        is_active_in_contract_period:
+          type: boolean
+        is_auto_renewed:
+          type: boolean
+        auto_renewed_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AutoRenewedItem'
+        auto_renewed_pickup_location_name:
+          type: string
+          nullable: true
+        auto_renewed_amount_per_year:
+          type: string
+          nullable: true
+        auto_renewed_amount_per_month:
+          type: string
+          nullable: true
+        bid:
+          allOf:
+          - $ref: '#/components/schemas/Bid'
+          nullable: true
+      required:
+      - auto_renewed_amount_per_month
+      - auto_renewed_amount_per_year
+      - auto_renewed_items
+      - auto_renewed_pickup_location_name
+      - bid
+      - has_bid
+      - is_active_in_contract_period
+      - is_auto_renewed
+      - member_email
+      - member_id
+      - member_name
+    ResultsTablePickupLocation:
+      type: object
+      properties:
+        pickup_location_id:
+          type: string
+        pickup_location_name:
+          type: string
+        capacity:
+          type: string
+        demand:
+          type: string
+        fill_percent:
+          type: number
+          format: double
+          nullable: true
+      required:
+      - capacity
+      - demand
+      - fill_percent
+      - pickup_location_id
+      - pickup_location_name
     RhythmEnum:
       enum:
       - monthly
@@ -19076,6 +19563,9 @@ components:
           type: string
         name:
           type: string
+        display_name:
+          type: string
+          readOnly: true
         status:
           type: string
         bidding_procedure:
@@ -19129,6 +19619,7 @@ components:
       - bidding_procedure
       - comment
       - contracts_created_at
+      - display_name
       - end_at
       - growing_period_id
       - has_bids
@@ -19267,6 +19758,43 @@ components:
           type: string
         levels:
           $ref: '#/components/schemas/EvaluationLevels'
+        display_name:
+          type: string
+        stats:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoundStatsEntry'
+        totals:
+          $ref: '#/components/schemas/RoundStatsTotals'
+        average_bid:
+          $ref: '#/components/schemas/AverageBid'
+        auto_renewed_enabled:
+          type: boolean
+        financing_projection:
+          $ref: '#/components/schemas/FinancingProjection'
+        results_table:
+          $ref: '#/components/schemas/ResultsTable'
+        biddable_product:
+          allOf:
+          - $ref: '#/components/schemas/BiddableProduct'
+          nullable: true
+        pickup_locations:
+          type: array
+          items:
+            $ref: '#/components/schemas/PickupLocationWithCharge'
+        bid_options:
+          $ref: '#/components/schemas/BidOptions'
+        contracts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContractRow'
+        growing_period_id:
+          type: string
+          nullable: true
+        contracts_created_at:
+          type: string
+          format: date-time
+          nullable: true
         round_product_type_id:
           type: string
           nullable: true
@@ -19307,17 +19835,26 @@ components:
             $ref: '#/components/schemas/RoundStatsBid'
       required:
       - auto_renewed
+      - auto_renewed_enabled
       - auto_renewed_per_year
+      - average_bid
       - average_bid_locked_at
       - bid_levels
+      - bid_options
       - bid_range_position
+      - biddable_product
       - bidder_average_per_month
       - bidder_count
       - bidding_procedure
       - bids
+      - contracts
+      - contracts_created_at
       - coverage_percent
       - coverage_status
+      - display_name
       - extra_positions
+      - financing_projection
+      - growing_period_id
       - include_auto_renewed
       - levels
       - locked_bid_range_position
@@ -19325,10 +19862,14 @@ components:
       - locked_surcharge_on_bids
       - locked_surcharge_percent
       - non_bidder_rate_per_share
+      - pickup_locations
       - reached_per_year
       - recommended_level
+      - results_table
       - round_product_type_id
+      - stats
       - target_per_year
+      - totals
       - unconfirmed_bid_count
     RoundStatsBid:
       type: object
@@ -19341,6 +19882,9 @@ components:
           type: string
         email:
           type: string
+        pickup_location_name:
+          type: string
+          readOnly: true
         product_id:
           type: string
         product_name:
@@ -19372,6 +19916,9 @@ components:
           type: string
           format: date-time
           nullable: true
+        effective_amount:
+          type: string
+          readOnly: true
         amount_per_month:
           type: string
           readOnly: true
@@ -19386,14 +19933,114 @@ components:
       - amount_per_month
       - amount_per_year
       - bid_id
+      - effective_amount
       - email
       - entered_by_admin
       - member_id
       - member_name
+      - pickup_location_name
       - product_id
       - product_name
       - quantity
       - updated_at
+    RoundStatsEntry:
+      type: object
+      properties:
+        target_per_year:
+          type: string
+          nullable: true
+        reached_per_year:
+          type: string
+          nullable: true
+        percent:
+          type: number
+          format: double
+          nullable: true
+        deficit:
+          type: string
+          nullable: true
+        coverage_status:
+          type: string
+          nullable: true
+        target_shares:
+          type: string
+          nullable: true
+        reached_shares:
+          type: string
+          nullable: true
+        shares_percent:
+          type: number
+          format: double
+          nullable: true
+        shares_deficit:
+          type: string
+          nullable: true
+        shares_coverage_status:
+          type: string
+          nullable: true
+        product_type_id:
+          type: string
+        product_type_name:
+          type: string
+      required:
+      - coverage_status
+      - deficit
+      - percent
+      - product_type_id
+      - product_type_name
+      - reached_per_year
+      - reached_shares
+      - shares_coverage_status
+      - shares_deficit
+      - shares_percent
+      - target_per_year
+      - target_shares
+    RoundStatsTotals:
+      type: object
+      properties:
+        target_per_year:
+          type: string
+          nullable: true
+        reached_per_year:
+          type: string
+          nullable: true
+        percent:
+          type: number
+          format: double
+          nullable: true
+        deficit:
+          type: string
+          nullable: true
+        coverage_status:
+          type: string
+          nullable: true
+        target_shares:
+          type: string
+          nullable: true
+        reached_shares:
+          type: string
+          nullable: true
+        shares_percent:
+          type: number
+          format: double
+          nullable: true
+        shares_deficit:
+          type: string
+          nullable: true
+        shares_coverage_status:
+          type: string
+          nullable: true
+      required:
+      - coverage_status
+      - deficit
+      - percent
+      - reached_per_year
+      - reached_shares
+      - shares_coverage_status
+      - shares_deficit
+      - shares_percent
+      - target_per_year
+      - target_shares
     RoundTexts:
       type: object
       properties:
@@ -19822,6 +20469,32 @@ components:
       - sessions_used
       - total_baked
       - total_remaining
+    StandardPriceAlignResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/StandardPriceAlignResult'
+      required:
+      - results
+    StandardPriceAlignResult:
+      type: object
+      properties:
+        product_id:
+          type: string
+        product_name:
+          type: string
+        price:
+          type: string
+        valid_from:
+          type: string
+          format: date
+      required:
+      - price
+      - product_id
+      - product_name
+      - valid_from
     StaticSegment:
       type: object
       properties:

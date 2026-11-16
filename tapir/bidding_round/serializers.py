@@ -5,6 +5,7 @@ from rest_framework import serializers
 
 from tapir.bidding_round.config import OPTIONS_BIDDING_ROUND_PROCEDURE
 from tapir.bidding_round.models import Bid, BiddingRound
+from tapir.pickup_locations.serializers import PublicPickupLocationSerializer
 from tapir.wirgarten.models import Product
 
 
@@ -116,6 +117,24 @@ class CreateContractsSerializer(serializers.Serializer):
     create_auto_renewed_contracts = serializers.BooleanField(
         required=False, default=False
     )
+    auto_renewed_member_ids = serializers.ListField(
+        child=serializers.CharField(), required=False
+    )
+
+
+class CheckContractsSerializer(serializers.Serializer):
+    bid_ids = serializers.ListField(child=serializers.CharField(), required=False)
+
+
+class StandardPriceAlignResultSerializer(serializers.Serializer):
+    product_id = serializers.CharField()
+    product_name = serializers.CharField()
+    price = serializers.CharField()
+    valid_from = serializers.DateField()
+
+
+class StandardPriceAlignResponseSerializer(serializers.Serializer):
+    results = StandardPriceAlignResultSerializer(many=True)
 
 
 class RoundProductPriceSerializer(serializers.Serializer):
@@ -179,6 +198,7 @@ class RoundProductSerializer(serializers.ModelSerializer):
 class RoundSerializer(serializers.ModelSerializer):
     id = serializers.CharField()
     name = serializers.CharField()
+    display_name = serializers.SerializerMethodField()
     status = serializers.CharField()
     bidding_procedure = serializers.CharField()
     bid_levels = serializers.IntegerField()
@@ -202,6 +222,7 @@ class RoundSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "name",
+            "display_name",
             "status",
             "bidding_procedure",
             "bid_levels",
@@ -221,6 +242,9 @@ class RoundSerializer(serializers.ModelSerializer):
             "product",
         ]
 
+    def get_display_name(self, bidding_round):
+        return self.context.get("display_name")
+
     @extend_schema_field(serializers.BooleanField())
     def get_has_bids(self, bidding_round):
         if hasattr(bidding_round, "has_bids"):
@@ -234,6 +258,7 @@ class BidSerializer(serializers.ModelSerializer):
     entered_by_admin = serializers.BooleanField()
     admin_confirmed = serializers.DateTimeField(allow_null=True)
     pickup_location_id = serializers.SerializerMethodField()
+    pickup_location_name = serializers.SerializerMethodField()
     product_id = serializers.CharField()
     product_name = serializers.CharField(source="product.name")
     amount_1 = serializers.DecimalField(max_digits=8, decimal_places=2, allow_null=True)
@@ -241,6 +266,7 @@ class BidSerializer(serializers.ModelSerializer):
     quantity = serializers.IntegerField()
     amount_2 = serializers.DecimalField(max_digits=8, decimal_places=2, allow_null=True)
     amount_3 = serializers.DecimalField(max_digits=8, decimal_places=2, allow_null=True)
+    effective_amount = serializers.SerializerMethodField()
     amount_per_year = serializers.SerializerMethodField()
     total_per_year = serializers.SerializerMethodField()
 
@@ -252,6 +278,7 @@ class BidSerializer(serializers.ModelSerializer):
             "entered_by_admin",
             "admin_confirmed",
             "pickup_location_id",
+            "pickup_location_name",
             "updated_at",
             "product_id",
             "product_name",
@@ -259,6 +286,7 @@ class BidSerializer(serializers.ModelSerializer):
             "amount_1",
             "amount_2",
             "amount_3",
+            "effective_amount",
             "amount_per_year",
             "total_per_year",
         ]
@@ -275,14 +303,31 @@ class BidSerializer(serializers.ModelSerializer):
             cache=self.context.get("cache", {}),
         )
 
-    def get_amount_per_year(self, bid):
+    def get_pickup_location_name(self, bid):
+        from tapir.pickup_locations.services.member_pickup_location_getter import (
+            MemberPickupLocationGetter,
+        )
+
+        pickup_location = MemberPickupLocationGetter.get_member_pickup_location(
+            member=bid.member,
+            reference_date=bid.round.growing_period.start_date,
+            cache=self.context.get("cache", {}),
+        )
+        return pickup_location.name if pickup_location is not None else None
+
+    def get_effective_amount(self, bid):
         from tapir.bidding_round.services.bidding_round_stats_service import (
             BiddingRoundStatsService,
         )
 
         return str(
-            BiddingRoundStatsService.get_counting_amount(bid) * bid.quantity * 12
+            BiddingRoundStatsService.get_bid_monthly_amount(
+                bid, self.context.get("position"), bid.round
+            )
         )
+
+    def get_amount_per_year(self, bid):
+        return str(Decimal(self.get_effective_amount(bid)) * 12)
 
     def get_total_per_year(self, bid):
         return self.get_amount_per_year(bid)
@@ -293,6 +338,7 @@ class BidProductVariantSerializer(serializers.Serializer):
     name = serializers.CharField()
     reference_value = serializers.CharField(allow_null=True)
     min_amount = serializers.CharField(allow_null=True)
+    standard_price = serializers.CharField(allow_null=True)
     size = serializers.CharField(allow_null=True)
     current_quantity = serializers.IntegerField(allow_null=True)
     image_url = serializers.CharField(allow_null=True)
@@ -302,6 +348,7 @@ class BiddableProductSerializer(serializers.Serializer):
     id = serializers.CharField()
     product_type_id = serializers.CharField()
     product_type_name = serializers.CharField()
+    capacity_id = serializers.CharField(allow_null=True)
     products = BidProductVariantSerializer(many=True)
 
 
@@ -405,6 +452,7 @@ class RoundStatsBidSerializer(serializers.ModelSerializer):
     member_id = serializers.CharField()
     member_name = serializers.CharField(source="member")
     email = serializers.CharField(source="member.email")
+    pickup_location_name = serializers.SerializerMethodField()
     product_id = serializers.CharField()
     product_name = serializers.CharField(source="product.name")
     quantity = serializers.IntegerField()
@@ -414,6 +462,7 @@ class RoundStatsBidSerializer(serializers.ModelSerializer):
     entered_by_admin = serializers.BooleanField()
     admin_confirmed = serializers.DateTimeField(allow_null=True)
     updated_at = serializers.DateTimeField(allow_null=True)
+    effective_amount = serializers.SerializerMethodField()
     amount_per_month = serializers.SerializerMethodField()
     amount_per_year = serializers.SerializerMethodField()
 
@@ -424,6 +473,7 @@ class RoundStatsBidSerializer(serializers.ModelSerializer):
             "member_id",
             "member_name",
             "email",
+            "pickup_location_name",
             "product_id",
             "product_name",
             "quantity",
@@ -433,9 +483,25 @@ class RoundStatsBidSerializer(serializers.ModelSerializer):
             "entered_by_admin",
             "admin_confirmed",
             "updated_at",
+            "effective_amount",
             "amount_per_month",
             "amount_per_year",
         ]
+
+    def get_pickup_location_name(self, bid):
+        from tapir.pickup_locations.services.member_pickup_location_getter import (
+            MemberPickupLocationGetter,
+        )
+
+        pickup_location = MemberPickupLocationGetter.get_member_pickup_location(
+            member=bid.member,
+            reference_date=bid.round.growing_period.start_date,
+            cache=self.context.get("cache", {}),
+        )
+        return pickup_location.name if pickup_location is not None else None
+
+    def get_effective_amount(self, bid):
+        return self.get_amount_per_month(bid)
 
     def get_amount_per_month(self, bid):
         from tapir.bidding_round.services.bidding_round_stats_service import (
@@ -449,16 +515,7 @@ class RoundStatsBidSerializer(serializers.ModelSerializer):
         )
 
     def get_amount_per_year(self, bid):
-        from tapir.bidding_round.services.bidding_round_stats_service import (
-            BiddingRoundStatsService,
-        )
-
-        return str(
-            BiddingRoundStatsService.get_bid_monthly_amount(
-                bid, self.context.get("position"), bid.round
-            )
-            * 12
-        )
+        return str(Decimal(self.get_amount_per_month(bid)) * 12)
 
 
 class EvaluationLevelSerializer(serializers.Serializer):
@@ -492,9 +549,22 @@ class PublicEvaluationResponseSerializer(EvaluationAggregatesSerializer):
     utilization_percent = serializers.FloatField()
 
 
+class AutoRenewedItemSerializer(serializers.Serializer):
+    product_type_name = serializers.CharField()
+    product_name = serializers.CharField()
+    quantity = serializers.IntegerField()
+
+
 class AutoRenewedMemberSerializer(serializers.Serializer):
     member_id = serializers.CharField()
     member_name = serializers.CharField()
+    member_email = serializers.CharField()
+    items = AutoRenewedItemSerializer(many=True)
+    pickup_location_id = serializers.CharField(allow_null=True)
+    pickup_location_name = serializers.CharField(allow_null=True)
+    shares = serializers.CharField()
+    euro_per_year = serializers.CharField()
+    euro_per_month = serializers.CharField()
     monthly_reference = serializers.CharField()
     yearly_reference = serializers.CharField()
 
@@ -510,7 +580,141 @@ class ExtraPositionsSerializer(serializers.Serializer):
     delivery_charge = ExtraPositionSerializer()
 
 
+class RoundStatsTotalsSerializer(serializers.Serializer):
+    target_per_year = serializers.CharField(allow_null=True)
+    reached_per_year = serializers.CharField(allow_null=True)
+    percent = serializers.FloatField(allow_null=True)
+    deficit = serializers.CharField(allow_null=True)
+    coverage_status = serializers.CharField(allow_null=True)
+    target_shares = serializers.CharField(allow_null=True)
+    reached_shares = serializers.CharField(allow_null=True)
+    shares_percent = serializers.FloatField(allow_null=True)
+    shares_deficit = serializers.CharField(allow_null=True)
+    shares_coverage_status = serializers.CharField(allow_null=True)
+
+
+class RoundStatsEntrySerializer(RoundStatsTotalsSerializer):
+    product_type_id = serializers.CharField()
+    product_type_name = serializers.CharField()
+
+
+class AverageBidSerializer(serializers.Serializer):
+    target_per_year = serializers.CharField()
+    capacity_shares = serializers.CharField()
+    amount_per_share_per_month = serializers.CharField(allow_null=True)
+    amount_per_share_per_year = serializers.CharField(allow_null=True)
+
+
+class FinancingProjectionLevelSerializer(serializers.Serializer):
+    reached_per_year = serializers.CharField()
+    average_per_share_per_month = serializers.CharField()
+
+
+class FinancingProjectionLevelsSerializer(serializers.Serializer):
+    green = FinancingProjectionLevelSerializer()
+    yellow = FinancingProjectionLevelSerializer()
+    red = FinancingProjectionLevelSerializer()
+
+
+class FinancingProjectionSerializer(serializers.Serializer):
+    target_per_year = serializers.CharField()
+    capacity_shares = serializers.CharField()
+    bid_shares = serializers.CharField()
+    auto_shares = serializers.CharField()
+    remaining_shares = serializers.CharField()
+    fixed_per_year = serializers.CharField()
+    auto_renew_per_year = serializers.CharField()
+    membership_per_year = serializers.CharField()
+    delivery_charge_per_year = serializers.CharField()
+    membership_included_in_product_type = serializers.BooleanField()
+    levels = FinancingProjectionLevelsSerializer()
+
+
+class ResultsTableMemberSerializer(serializers.Serializer):
+    member_id = serializers.CharField()
+    member_name = serializers.CharField()
+    member_email = serializers.CharField()
+    has_bid = serializers.BooleanField()
+    is_active_in_contract_period = serializers.BooleanField()
+    is_auto_renewed = serializers.BooleanField()
+    auto_renewed_items = AutoRenewedItemSerializer(many=True)
+    auto_renewed_pickup_location_name = serializers.CharField(allow_null=True)
+    auto_renewed_amount_per_year = serializers.CharField(allow_null=True)
+    auto_renewed_amount_per_month = serializers.CharField(allow_null=True)
+    bid = BidSerializer(allow_null=True)
+
+
+class ResultsTablePickupLocationSerializer(serializers.Serializer):
+    pickup_location_id = serializers.CharField()
+    pickup_location_name = serializers.CharField()
+    capacity = serializers.CharField()
+    demand = serializers.CharField()
+    fill_percent = serializers.FloatField(allow_null=True)
+
+
+class ResultsTableSerializer(serializers.Serializer):
+    members = ResultsTableMemberSerializer(many=True)
+    pickup_locations = ResultsTablePickupLocationSerializer(many=True)
+
+
+class ContractItemSerializer(serializers.Serializer):
+    product_type_name = serializers.CharField()
+    product_name = serializers.CharField()
+    quantity = serializers.IntegerField()
+
+
+class ContractRowSerializer(serializers.Serializer):
+    member_id = serializers.CharField()
+    member_name = serializers.CharField()
+    member_email = serializers.CharField()
+    type = serializers.CharField()
+    items = ContractItemSerializer(many=True)
+    pickup_location_name = serializers.CharField(allow_blank=True)
+    standard_amount_per_month = serializers.CharField()
+    standard_amount_per_year = serializers.CharField()
+    contribution_amount_per_month = serializers.CharField()
+    contribution_amount_per_year = serializers.CharField()
+    amount_per_month = serializers.CharField()
+    amount_per_year = serializers.CharField()
+    bid_amounts = serializers.ListField(child=serializers.CharField(), required=False)
+    bid_effective_amount = serializers.CharField(allow_null=True)
+    non_bidder_floor_per_month = serializers.CharField(allow_null=True)
+    previous_amount_per_month = serializers.CharField(allow_null=True)
+    is_created = serializers.BooleanField()
+
+
+class PickupLocationUtilizationSerializer(serializers.Serializer):
+    capacity = serializers.CharField()
+    demand = serializers.CharField()
+    fill_percent = serializers.FloatField(allow_null=True)
+    is_full = serializers.BooleanField()
+
+
+class PickupLocationWithChargeSerializer(PublicPickupLocationSerializer):
+    yearly_delivery_charge = serializers.CharField()
+    utilization = PickupLocationUtilizationSerializer(allow_null=True)
+
+    class Meta(PublicPickupLocationSerializer.Meta):
+        fields = PublicPickupLocationSerializer.Meta.fields + [
+            "yearly_delivery_charge",
+            "utilization",
+        ]
+
+
 class RoundResultsResponseSerializer(EvaluationAggregatesSerializer):
+    display_name = serializers.CharField()
+    stats = RoundStatsEntrySerializer(many=True)
+    totals = RoundStatsTotalsSerializer()
+    average_bid = AverageBidSerializer()
+    auto_renewed_enabled = serializers.BooleanField()
+    financing_projection = FinancingProjectionSerializer()
+    results_table = ResultsTableSerializer()
+    biddable_product = BiddableProductSerializer(allow_null=True)
+    pickup_locations = PickupLocationWithChargeSerializer(many=True)
+    bid_options = BidOptionsSerializer()
+    contracts = ContractRowSerializer(many=True)
+    growing_period_id = serializers.CharField(allow_null=True)
+    contracts_created_at = serializers.DateTimeField(allow_null=True)
     round_product_type_id = serializers.CharField(allow_null=True)
     include_auto_renewed = serializers.BooleanField()
     auto_renewed_per_year = serializers.CharField()
@@ -539,6 +743,7 @@ class CreateContractsErrorSerializer(serializers.Serializer):
     bid_id = serializers.CharField()
     member_id = serializers.CharField()
     member_name = serializers.CharField()
+    product_name = serializers.CharField(allow_blank=True)
     error = serializers.CharField()
 
 
