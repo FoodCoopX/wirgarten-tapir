@@ -68,6 +68,18 @@ class ParameterDefinitionsBiddingRound:
         )
 
         importer.parameter_definition(
+            key=ParameterKeys.BIDDING_ROUND_SEPA_ENABLED,
+            label=gettext_noop("SEPA-Lastschrift in der Beitragsrunde anbieten"),
+            description=gettext_noop(
+                "Wenn aktiviert, können Mitglieder ihre Bankdaten direkt in der Beitragsrunde hinterlegen. Das SEPA-Mandat muss dabei immer neu bestätigt werden."
+            ),
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=True,
+            category=ParameterCategory.BIDDING_ROUND,
+            order_priority=9,
+        )
+
+        importer.parameter_definition(
             key=ParameterKeys.BIDDING_ROUND_PUBLIC_INTRO_TITLE,
             label=gettext_noop("Beitragsrunden-Seite: Titel"),
             description=gettext_noop("Titel der Beitragsrunden-Seite."),
@@ -160,6 +172,19 @@ class ParameterDefinitionsBiddingRound:
             initial_value="Gebot abgeben",
             category=ParameterCategory.BIDDING_ROUND,
             order_priority=6,
+        )
+
+        importer.parameter_definition(
+            key=ParameterKeys.BIDDING_ROUND_PUBLIC_PRIVACY_TITLE,
+            label=gettext_noop("Beitragsrunden-Seite: Titel Datenschutz"),
+            description=gettext_noop(
+                "Titel des Datenschutz-Schritts in der Beitragsrunde."
+            ),
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Du musst uns noch deine Zustimmung geben, damit wir dein Gebot annehmen können.",
+            category=ParameterCategory.BIDDING_ROUND,
+            order_priority=6,
+            meta=ParameterMeta(textarea=True),
         )
 
         importer.parameter_definition(

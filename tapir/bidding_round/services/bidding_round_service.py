@@ -32,8 +32,13 @@ from tapir.bidding_round.services.bidding_round_mail_token_builder import (
 from tapir.bidding_round.services.bidding_round_stats_service import (
     BiddingRoundStatsService,
 )
+from tapir.configuration.parameter import get_parameter_value
+from tapir.payments.services.member_payment_rhythm_service import (
+    MemberPaymentRhythmService,
+)
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import GrowingPeriod, Member, Product, ProductType
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import get_now
 
 
@@ -576,6 +581,14 @@ class BiddingRoundService:
         items: list[dict],
         cache: dict,
         send_mail: bool = True,
+        sepa_allowed: bool = False,
+        account_owner: str | None = None,
+        iban: str | None = None,
+        payment_rhythm: str | None = None,
+        privacy_policy_read: bool = False,
+        cancellation_policy_read: bool = False,
+        contract_accepted: bool = False,
+        enforce_consents: bool = False,
     ) -> Bid:
         if not isinstance(member, Member):
             raise ValidationError(_("Nur Mitglieder können ein Gebot abgeben."))
@@ -591,9 +604,30 @@ class BiddingRoundService:
                     )
                 )
             BidValidator.validate(bidding_round, items, cache=cache)
+            if enforce_consents:
+                cls._validate_member_consents(
+                    member=member,
+                    privacy_policy_read=privacy_policy_read,
+                    cancellation_policy_read=cancellation_policy_read,
+                    contract_accepted=contract_accepted,
+                    sepa_allowed=sepa_allowed,
+                    iban=iban,
+                    cache=cache,
+                )
             bid, created = Bid.objects.get_or_create(member=member, round=bidding_round)
 
             cls._replace_bid_items(bid, items)
+            cls._apply_member_consents(
+                member=member,
+                sepa_allowed=sepa_allowed,
+                account_owner=account_owner,
+                iban=iban,
+                payment_rhythm=payment_rhythm,
+                privacy_policy_read=privacy_policy_read,
+                cancellation_policy_read=cancellation_policy_read,
+                bidding_round=bidding_round,
+                cache=cache,
+            )
 
         if send_mail:
             TransactionalTrigger.fire_action(
@@ -610,3 +644,72 @@ class BiddingRoundService:
                 )
             )
         return bid
+
+    @classmethod
+    def _validate_member_consents(
+        cls,
+        member,
+        privacy_policy_read: bool,
+        cancellation_policy_read: bool,
+        contract_accepted: bool,
+        sepa_allowed: bool,
+        iban: str | None,
+        cache: dict,
+    ) -> None:
+        if not privacy_policy_read:
+            raise ValidationError(_("Die Datenschutzerklärung muss akzeptiert sein."))
+        if not cancellation_policy_read:
+            raise ValidationError(_("Die Widerrufsbelehrung muss akzeptiert sein."))
+        policy_text = get_parameter_value(
+            key=ParameterKeys.BESTELLWIZARD_CONTRACT_POLICY_CHECKBOX_TEXT, cache=cache
+        )
+        if policy_text.strip() and not contract_accepted:
+            raise ValidationError(_("Vertragsgrundsätze müssen akzeptiert sein."))
+        if sepa_allowed and not (iban or member.iban):
+            raise ValidationError(_("Für die SEPA-Zustimmung wird eine IBAN benötigt."))
+
+    @classmethod
+    def _apply_member_consents(
+        cls,
+        member: Member,
+        sepa_allowed: bool,
+        account_owner: str | None,
+        iban: str | None,
+        payment_rhythm: str | None,
+        privacy_policy_read: bool,
+        cancellation_policy_read: bool,
+        bidding_round: BiddingRound,
+        cache: dict,
+    ) -> None:
+        now = get_now(cache=cache)
+        update_fields = []
+        if sepa_allowed:
+            if account_owner:
+                member.account_owner = account_owner
+                update_fields.append("account_owner")
+            if iban:
+                member.iban = iban
+                update_fields.append("iban")
+            member.sepa_consent = now
+            update_fields.append("sepa_consent")
+        if privacy_policy_read:
+            member.privacy_consent = now
+            update_fields.append("privacy_consent")
+        if cancellation_policy_read:
+            member.withdrawal_consent = now
+            update_fields.append("withdrawal_consent")
+        if update_fields:
+            member.save(update_fields=update_fields)
+
+        if payment_rhythm:
+            if not MemberPaymentRhythmService.is_payment_rhythm_allowed(
+                rhythm=payment_rhythm, cache=cache
+            ):
+                raise ValidationError(_("Ungültiger Zahlungsrhythmus."))
+            MemberPaymentRhythmService.assign_payment_rhythm_to_member(
+                member=member,
+                rhythm=payment_rhythm,
+                valid_from=bidding_round.growing_period.start_date,
+                cache=cache,
+                actor=None,
+            )

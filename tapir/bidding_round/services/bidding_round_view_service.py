@@ -13,6 +13,9 @@ from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
 from tapir.configuration.parameter import get_parameter_value
+from tapir.payments.services.member_payment_rhythm_service import (
+    MemberPaymentRhythmService,
+)
 from tapir.wirgarten.models import Product, Subscription
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
@@ -82,6 +85,26 @@ class BiddingRoundViewService:
         return cls._get_boolean_parameter(
             ParameterKeys.BIDDING_ROUND_BID_CAROUSEL_ENABLED, False, cache
         )
+
+    @classmethod
+    def is_sepa_enabled(cls, cache) -> bool:
+        return cls._get_boolean_parameter(
+            ParameterKeys.BIDDING_ROUND_SEPA_ENABLED, True, cache
+        )
+
+    @classmethod
+    def build_member_data(cls, member, bidding_round, cache) -> dict:
+        if member is None:
+            return {}
+        return {
+            "account_owner": member.account_owner,
+            "iban": member.iban,
+            "payment_rhythm": MemberPaymentRhythmService.get_member_payment_rhythm(
+                member=member,
+                reference_date=bidding_round.growing_period.start_date,
+                cache=cache,
+            ),
+        }
 
     @classmethod
     def get_display_name(cls, cache) -> str:
@@ -280,6 +303,7 @@ class BiddingRoundViewService:
             "login_title": ParameterKeys.BIDDING_ROUND_PUBLIC_LOGIN_TITLE,
             "login_text": ParameterKeys.BIDDING_ROUND_PUBLIC_LOGIN_TEXT,
             "summary_title": ParameterKeys.BIDDING_ROUND_PUBLIC_SUMMARY_TITLE,
+            "privacy_title": ParameterKeys.BIDDING_ROUND_PUBLIC_PRIVACY_TITLE,
             "pickup_location_title": (
                 ParameterKeys.BIDDING_ROUND_PUBLIC_PICKUP_LOCATION_TITLE
             ),
