@@ -32,6 +32,7 @@ from tapir.bidding_round.serializers import (
     BidSerializer,
     BidSubmitSerializer,
     ConfirmBidsSerializer,
+    CheckContractsSerializer,
     CreateContractsResponseSerializer,
     CreateContractsSerializer,
     GrowingPeriodOptionSerializer,
@@ -45,11 +46,15 @@ from tapir.bidding_round.serializers import (
     RoundCreateSerializer,
     RoundResultsResponseSerializer,
     RoundSerializer,
+    StandardPriceAlignResponseSerializer,
 )
 from tapir.bidding_round.services.bidding_round_csv_export_service import (
     BiddingRoundCsvExportService,
 )
 from tapir.bidding_round.services.bidding_round_service import BiddingRoundService
+from tapir.bidding_round.services.bidding_round_standard_price_service import (
+    BiddingRoundStandardPriceService,
+)
 from tapir.bidding_round.services.bidding_round_stats_service import (
     BiddingRoundStatsService,
 )
@@ -455,19 +460,52 @@ class RoundResultsView(BiddingRoundFeatureFlagMixin, APIView):
                 type=float,
                 required=False,
                 location=OpenApiParameter.QUERY,
-            )
+                description="Position auf der Solidaritätsachse: 0 (grün) … 50 (zufrieden) … 100 (rot).",
+            ),
+            OpenApiParameter(
+                name="include_auto_renewed",
+                type=bool,
+                required=False,
+                location=OpenApiParameter.QUERY,
+            ),
+            OpenApiParameter(
+                name="bid_range_position",
+                type=float,
+                required=False,
+                location=OpenApiParameter.QUERY,
+            ),
+            OpenApiParameter(
+                name="filter",
+                type=str,
+                required=False,
+                location=OpenApiParameter.QUERY,
+            ),
+            OpenApiParameter(
+                name="sort",
+                type=str,
+                required=False,
+                location=OpenApiParameter.QUERY,
+            ),
         ],
     )
     def get(self, request, round_id):
         cache = {}
         bidding_round = get_object_or_404(BiddingRound, id=round_id)
-        position = request.query_params.get("position")
-        return Response(
-            BiddingRoundStatsService.build_admin_evaluation(
-                bidding_round, cache, position=position
-            ),
-            status=status.HTTP_200_OK,
+        include_auto_renewed = BiddingRoundViewService.parse_bool(
+            request.query_params.get("include_auto_renewed")
         )
+        filter_ = request.query_params.get("filter", "all")
+        sort = request.query_params.get("sort", "name")
+        results = BiddingRoundStatsService.build_admin_evaluation(
+            bidding_round,
+            cache,
+            position=request.query_params.get("position"),
+            include_auto_renewed=include_auto_renewed,
+            bid_range_position=request.query_params.get("bid_range_position"),
+            filter_=filter_,
+            sort=sort,
+        )
+        return Response(results, status=status.HTTP_200_OK)
 
 
 class MemberBidView(BiddingRoundFeatureFlagMixin, APIView):
@@ -777,6 +815,9 @@ class CreateContractsView(BiddingRoundFeatureFlagMixin, APIView):
                 create_auto_renewed_contracts=serializer.validated_data.get(
                     "create_auto_renewed_contracts", False
                 ),
+                auto_renewed_member_ids=serializer.validated_data.get(
+                    "auto_renewed_member_ids"
+                ),
                 actor=request.user,
                 cache=cache,
             )
@@ -792,6 +833,7 @@ class CreateContractsView(BiddingRoundFeatureFlagMixin, APIView):
                         "bid_id": entry["bid_id"],
                         "member_id": entry["member"].id,
                         "member_name": str(entry["member"]),
+                        "product_name": entry.get("product_name", ""),
                         "error": entry["error"],
                     }
                     for entry in result["errors"]
@@ -807,3 +849,60 @@ class CreateContractsView(BiddingRoundFeatureFlagMixin, APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+class RoundCheckContractsView(BiddingRoundFeatureFlagMixin, APIView):
+    permission_classes = [BiddingRoundManagePermission]
+
+    @extend_schema(
+        responses={200: CreateContractsResponseSerializer},
+        request=CheckContractsSerializer(),
+    )
+    def post(self, request, round_id):
+        cache = {}
+        bidding_round = get_object_or_404(BiddingRound, id=round_id)
+        serializer = CheckContractsSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        errors = ContractCreator.check_contracts_from_bids(
+            bidding_round,
+            cache=cache,
+            bid_ids=serializer.validated_data.get("bid_ids"),
+        )
+        return Response(
+            {
+                "errors": [
+                    {
+                        "bid_id": entry["bid_id"],
+                        "member_id": entry["member"].id,
+                        "member_name": str(entry["member"]),
+                        "product_name": entry.get("product_name", ""),
+                        "error": entry["error"],
+                    }
+                    for entry in errors
+                ],
+                "subscriptions": [],
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class StandardPriceView(BiddingRoundFeatureFlagMixin, APIView):
+    permission_classes = [BiddingRoundManagePermission]
+
+    @extend_schema(
+        request=None,
+        responses={200: StandardPriceAlignResponseSerializer},
+    )
+    def post(self, request, round_id):
+        cache = {}
+        bidding_round = get_object_or_404(BiddingRound, id=round_id)
+        try:
+            results = BiddingRoundStandardPriceService.align_standard_prices(
+                bidding_round, cache=cache
+            )
+        except ValidationError as error:
+            return Response(
+                {"error": BiddingRoundViewService.serialize_validation_error(error)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return Response({"results": results}, status=status.HTTP_200_OK)

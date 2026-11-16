@@ -16,6 +16,7 @@ import type {
   Bid,
   BidAdminCreateRequest,
   BidSubmitRequest,
+  CheckContractsRequest,
   ConfirmBidsRequest,
   CreateContractsRequest,
   CreateContractsResponse,
@@ -31,11 +32,13 @@ import type {
   Round,
   RoundCreateRequest,
   RoundResultsResponse,
+  StandardPriceAlignResponse,
 } from "../models/index";
 import {
   BidAdminCreateRequestToJSON,
   BidFromJSON,
   BidSubmitRequestToJSON,
+  CheckContractsRequestToJSON,
   ConfirmBidsRequestToJSON,
   CreateContractsRequestToJSON,
   CreateContractsResponseFromJSON,
@@ -51,8 +54,13 @@ import {
   RoundCreateRequestToJSON,
   RoundFromJSON,
   RoundResultsResponseFromJSON,
+  StandardPriceAlignResponseFromJSON,
 } from "../models/index";
 import * as runtime from "../runtime";
+
+export interface BiddingRoundsApiAlignStandardPricesCreateRequest {
+  roundId: string;
+}
 
 export interface BiddingRoundsApiAvailableProductTypesListRequest {
   growingPeriodId?: string;
@@ -81,6 +89,11 @@ export interface BiddingRoundsApiBidsPartialUpdateRequest {
   bidId: string;
   roundId: string;
   patchedBidAdminRequest?: PatchedBidAdminRequest;
+}
+
+export interface BiddingRoundsApiCheckContractsCreateRequest {
+  roundId: string;
+  checkContractsRequest?: CheckContractsRequest;
 }
 
 export interface BiddingRoundsApiCloseCreateRequest {
@@ -132,8 +145,12 @@ export interface BiddingRoundsApiReopenCreateRequest {
 }
 
 export interface BiddingRoundsApiResultsRetrieveRequest {
+  bidRangePosition?: number;
+  filter?: string;
+  includeAutoRenewed?: boolean;
   position?: number;
   roundId: string;
+  sort?: string;
 }
 
 export interface BiddingRoundsApiRetrieveRequest {
@@ -152,6 +169,70 @@ export interface BiddingRoundsApiUnlockAverageBidCreateRequest {
  *
  */
 export class BiddingRoundsApi extends runtime.BaseAPI {
+  /**
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
+   */
+  async biddingRoundsApiAlignStandardPricesCreateRaw(
+    requestParameters: BiddingRoundsApiAlignStandardPricesCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<StandardPriceAlignResponse>> {
+    if (requestParameters["roundId"] == null) {
+      throw new runtime.RequiredError(
+        "roundId",
+        'Required parameter "roundId" was null or undefined when calling biddingRoundsApiAlignStandardPricesCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/bidding_rounds/api/{round_id}/align_standard_prices`.replace(
+          `{${"round_id"}}`,
+          encodeURIComponent(String(requestParameters["roundId"])),
+        ),
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      StandardPriceAlignResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
+   */
+  async biddingRoundsApiAlignStandardPricesCreate(
+    requestParameters: BiddingRoundsApiAlignStandardPricesCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<StandardPriceAlignResponse> {
+    const response = await this.biddingRoundsApiAlignStandardPricesCreateRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
   /**
    * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
@@ -564,6 +645,75 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<Bid> {
     const response = await this.biddingRoundsApiBidsPartialUpdateRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
+   */
+  async biddingRoundsApiCheckContractsCreateRaw(
+    requestParameters: BiddingRoundsApiCheckContractsCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<CreateContractsResponse>> {
+    if (requestParameters["roundId"] == null) {
+      throw new runtime.RequiredError(
+        "roundId",
+        'Required parameter "roundId" was null or undefined when calling biddingRoundsApiCheckContractsCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/bidding_rounds/api/{round_id}/check_contracts`.replace(
+          `{${"round_id"}}`,
+          encodeURIComponent(String(requestParameters["roundId"])),
+        ),
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: CheckContractsRequestToJSON(
+          requestParameters["checkContractsRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      CreateContractsResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
+   */
+  async biddingRoundsApiCheckContractsCreate(
+    requestParameters: BiddingRoundsApiCheckContractsCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<CreateContractsResponse> {
+    const response = await this.biddingRoundsApiCheckContractsCreateRaw(
       requestParameters,
       initOverrides,
     );
@@ -1460,8 +1610,26 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
 
     const queryParameters: any = {};
 
+    if (requestParameters["bidRangePosition"] != null) {
+      queryParameters["bid_range_position"] =
+        requestParameters["bidRangePosition"];
+    }
+
+    if (requestParameters["filter"] != null) {
+      queryParameters["filter"] = requestParameters["filter"];
+    }
+
+    if (requestParameters["includeAutoRenewed"] != null) {
+      queryParameters["include_auto_renewed"] =
+        requestParameters["includeAutoRenewed"];
+    }
+
     if (requestParameters["position"] != null) {
       queryParameters["position"] = requestParameters["position"];
+    }
+
+    if (requestParameters["sort"] != null) {
+      queryParameters["sort"] = requestParameters["sort"];
     }
 
     const headerParameters: runtime.HTTPHeaders = {};

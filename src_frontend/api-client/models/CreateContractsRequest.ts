@@ -36,6 +36,12 @@ export interface CreateContractsRequest {
    * @memberof CreateContractsRequest
    */
   createAutoRenewedContracts?: boolean;
+  /**
+   *
+   * @type {Array<string>}
+   * @memberof CreateContractsRequest
+   */
+  autoRenewedMemberIds?: Array<string>;
 }
 
 /**
@@ -67,6 +73,10 @@ export function CreateContractsRequestFromJSONTyped(
       json["create_auto_renewed_contracts"] == null
         ? undefined
         : json["create_auto_renewed_contracts"],
+    autoRenewedMemberIds:
+      json["auto_renewed_member_ids"] == null
+        ? undefined
+        : json["auto_renewed_member_ids"],
   };
 }
 
@@ -88,5 +98,6 @@ export function CreateContractsRequestToJSONTyped(
     bid_ids: value["bidIds"],
     bid_level: value["bidLevel"],
     create_auto_renewed_contracts: value["createAutoRenewedContracts"],
+    auto_renewed_member_ids: value["autoRenewedMemberIds"],
   };
 }

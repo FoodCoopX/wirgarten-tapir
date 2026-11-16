@@ -53,6 +53,12 @@ export interface Bid {
   pickupLocationId: string | null;
   /**
    *
+   * @type {string}
+   * @memberof Bid
+   */
+  pickupLocationName: string | null;
+  /**
+   *
    * @type {Date}
    * @memberof Bid
    */
@@ -62,7 +68,19 @@ export interface Bid {
    * @type {string}
    * @memberof Bid
    */
+  effectiveAmount: string;
+  /**
+   *
+   * @type {string}
+   * @memberof Bid
+   */
   totalPerYear: string;
+  /**
+   *
+   * @type {string}
+   * @memberof Bid
+   */
+  amountPerYear: string;
   /**
    *
    * @type {Array<BidItem>}
@@ -83,8 +101,17 @@ export function instanceOfBid(value: object): value is Bid {
     return false;
   if (!("pickupLocationId" in value) || value["pickupLocationId"] === undefined)
     return false;
+  if (
+    !("pickupLocationName" in value) ||
+    value["pickupLocationName"] === undefined
+  )
+    return false;
   if (!("updatedAt" in value) || value["updatedAt"] === undefined) return false;
+  if (!("effectiveAmount" in value) || value["effectiveAmount"] === undefined)
+    return false;
   if (!("totalPerYear" in value) || value["totalPerYear"] === undefined)
+    return false;
+  if (!("amountPerYear" in value) || value["amountPerYear"] === undefined)
     return false;
   if (!("items" in value) || value["items"] === undefined) return false;
   return true;
@@ -107,8 +134,11 @@ export function BidFromJSONTyped(json: any, ignoreDiscriminator: boolean): Bid {
         ? null
         : new Date(json["admin_confirmed"]),
     pickupLocationId: json["pickup_location_id"],
+    pickupLocationName: json["pickup_location_name"],
     updatedAt: json["updated_at"] == null ? null : new Date(json["updated_at"]),
+    effectiveAmount: json["effective_amount"],
     totalPerYear: json["total_per_year"],
+    amountPerYear: json["amount_per_year"],
     items: (json["items"] as Array<any>).map(BidItemFromJSON),
   };
 }
@@ -134,11 +164,14 @@ export function BidToJSONTyped(
         ? null
         : (value["adminConfirmed"] as any).toISOString(),
     pickup_location_id: value["pickupLocationId"],
+    pickup_location_name: value["pickupLocationName"],
     updated_at:
       value["updatedAt"] == null
         ? null
         : (value["updatedAt"] as any).toISOString(),
+    effective_amount: value["effectiveAmount"],
     total_per_year: value["totalPerYear"],
+    amount_per_year: value["amountPerYear"],
     items: (value["items"] as Array<any>).map(BidItemToJSON),
   };
 }

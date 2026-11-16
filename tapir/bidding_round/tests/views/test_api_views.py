@@ -686,7 +686,7 @@ class TestPublicResultsView(BiddingRoundApiTestBase):
         self.assertEqual(96.0, response.data["coverage_percent"])
         self.assertEqual("yellow", response.data["coverage_status"])
         self.assertEqual("100.00", response.data["capacity_shares"])
-        self.assertEqual(1.0, float(response.data["current_shares"]))
+        self.assertEqual(Decimal("1"), Decimal(response.data["current_shares"]))
         self.assertEqual(1.0, response.data["utilization_percent"])
         self.assertEqual(96.0, response.data["levels"]["yellow"]["coverage_percent"])
 

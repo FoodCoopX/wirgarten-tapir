@@ -16,6 +16,7 @@ from tapir.bidding_round.services.bidding_round_delivery_charge_service import (
 from tapir.bidding_round.services.bidding_round_stats_service import (
     BiddingRoundStatsService,
 )
+from tapir.bidding_round.models import BiddingRoundCreatedSubscription
 from tapir.bidding_round.tests.factories import (
     BidFactory,
     BidItemFactory,
@@ -29,13 +30,14 @@ from tapir.subscriptions.services.automatic_subscription_renewal_service import 
 from tapir.core.config import LEGAL_STATUS_ASSOCIATION
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
-    MemberPickupLocationFactory,
     MemberFactory,
+    MemberPickupLocationFactory,
+    PickupLocationCapabilityFactory,
+    PickupLocationFactory,
     ProductCapacityFactory,
     ProductFactory,
     ProductPriceFactory,
     SubscriptionFactory,
-    PickupLocationFactory,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
@@ -361,7 +363,9 @@ class TestBiddingRoundStatsService(TapirIntegrationTest):
                 bidding_round, cache={}
             )
 
-        self.assertEqual("960.00", evaluation["auto_renewed_per_year"])
+        self.assertEqual(
+            Decimal("960.00"), Decimal(evaluation["auto_renewed_per_year"])
+        )
         self.assertEqual(1, len(evaluation["auto_renewed"]))
         self.assertEqual(192.0, evaluation["coverage_percent"])
         self.assertEqual("80.00", evaluation["non_bidder_rate_per_share"])
@@ -574,3 +578,410 @@ class TestBiddingRoundStatsService(TapirIntegrationTest):
         )
 
         self.assertEqual(Decimal("90.00"), locked["bidder_amount_per_share_per_month"])
+
+    def test_getAutoRenewedSubscriptions_withRenewingAndCreatedLinks_returnsOnlyNonBidders(
+        self,
+    ):
+        bidding_round = BiddingRoundFactory.create()
+        round_product_type = BiddingRoundProductTypeFactory.create(round=bidding_round)
+        product = ProductFactory.create(type=round_product_type.product_type)
+        renewing = self._create_subscription(
+            member=MemberFactory.create(), product=product, round=bidding_round
+        )
+        created_non_bidder = self._create_subscription(
+            member=MemberFactory.create(), product=product, round=bidding_round
+        )
+        BiddingRoundCreatedSubscription.objects.create(
+            round=bidding_round,
+            subscription=created_non_bidder,
+            is_bidder_contract=False,
+        )
+        created_bidder = self._create_subscription(
+            member=MemberFactory.create(), product=product, round=bidding_round
+        )
+        BiddingRoundCreatedSubscription.objects.create(
+            round=bidding_round,
+            subscription=created_bidder,
+            is_bidder_contract=True,
+        )
+
+        with patch.object(
+            AutomaticSubscriptionRenewalService,
+            "get_subscriptions_that_will_be_renewed",
+            return_value={renewing},
+        ):
+            subscriptions = BiddingRoundStatsService.get_auto_renewed_subscriptions(
+                bidding_round, cache={}
+            )
+
+        subscription_ids = {subscription.id for subscription in subscriptions}
+        self.assertIn(renewing.id, subscription_ids)
+        self.assertIn(created_non_bidder.id, subscription_ids)
+        self.assertNotIn(created_bidder.id, subscription_ids)
+
+    def test_getAutoRenewedByMember_withRenewingSubscription_returnsFullDetails(
+        self,
+    ):
+        bidding_round = BiddingRoundFactory.create()
+        round_product_type = BiddingRoundProductTypeFactory.create(round=bidding_round)
+        product = ProductFactory.create(type=round_product_type.product_type)
+        self._create_product_price(product, bidding_round, size=1)
+        BiddingRoundProductPriceFactory.create(
+            round_product_type=round_product_type,
+            product=product,
+            reference_value=Decimal("90.00"),
+        )
+        pickup_location = PickupLocationFactory.create(name="Hof Nord")
+        auto_member = MemberFactory.create(email="auto@example.com")
+        MemberPickupLocationFactory.create(
+            member=auto_member,
+            pickup_location=pickup_location,
+            valid_from=bidding_round.growing_period.start_date
+            - datetime.timedelta(days=1),
+        )
+        renewing = self._create_subscription(
+            member=auto_member,
+            product=product,
+            round=bidding_round,
+            quantity=2,
+        )
+        bidder = MemberFactory.create()
+        bidder_renewing = self._create_subscription(
+            member=bidder, product=product, round=bidding_round
+        )
+        BidFactory.create(round=bidding_round, member=bidder)
+
+        with patch.object(
+            AutomaticSubscriptionRenewalService,
+            "get_subscriptions_that_will_be_renewed",
+            return_value={renewing, bidder_renewing},
+        ):
+            result = BiddingRoundStatsService.get_auto_renewed_by_member(
+                bidding_round, cache={}
+            )
+
+        self.assertNotIn(bidder.id, result)
+        entry = result[auto_member.id]
+        self.assertEqual("auto@example.com", entry["member_email"])
+        self.assertEqual(pickup_location.id, entry["pickup_location_id"])
+        self.assertEqual("Hof Nord", entry["pickup_location_name"])
+        self.assertEqual(Decimal("2"), entry["shares"])
+        self.assertEqual(Decimal("2160.00"), entry["euro_per_year"])
+        self.assertEqual(Decimal("180"), entry["euro_per_month"])
+        self.assertEqual(
+            [
+                {
+                    "product_type_name": product.type.name,
+                    "product_name": product.name,
+                    "quantity": 2,
+                }
+            ],
+            entry["items"],
+        )
+        self.assertEqual(entry["euro_per_month"], entry["monthly_reference"])
+        self.assertEqual(entry["euro_per_year"], entry["yearly_reference"])
+
+    def test_buildFinancingProjection_withBidAndCapacity_returnsSharesAndLevels(
+        self,
+    ):
+        bidding_round = BiddingRoundFactory.create()
+        round_product_type = BiddingRoundProductTypeFactory.create(
+            round=bidding_round, target_amount_per_year=Decimal("1000.00")
+        )
+        product = ProductFactory.create(type=round_product_type.product_type)
+        self._create_product_price(product, bidding_round, size=1)
+        ProductCapacityFactory.create(
+            period=bidding_round.growing_period,
+            product_type=round_product_type.product_type,
+            capacity=10,
+        )
+        self._create_item_for(
+            bidding_round=bidding_round,
+            round_product_type=round_product_type,
+            product=product,
+            quantity=1,
+            amount_1=Decimal("80.00"),
+        )
+
+        projection = BiddingRoundStatsService.build_financing_projection(
+            bidding_round, cache={}
+        )
+
+        self.assertEqual(Decimal("1000.00"), projection["target_per_year"])
+        self.assertEqual(Decimal("10.00"), projection["capacity_shares"])
+        self.assertEqual(Decimal("1"), projection["bid_shares"])
+        self.assertEqual(Decimal("9"), projection["remaining_shares"])
+        self.assertEqual(Decimal("0"), projection["fixed_per_year"])
+        self.assertEqual(
+            Decimal("960.00"), projection["levels"]["green"]["reached_per_year"]
+        )
+        self.assertEqual(
+            Decimal("80.00"),
+            projection["levels"]["green"]["average_per_share_per_month"],
+        )
+        self.assertFalse(projection["membership_included_in_product_type"])
+
+    def test_buildStatsAndTotals_withBid_returnsCoverageAndShares(self):
+        bidding_round = BiddingRoundFactory.create()
+        round_product_type = BiddingRoundProductTypeFactory.create(
+            round=bidding_round, target_amount_per_year=Decimal("1000.00")
+        )
+        product = ProductFactory.create(type=round_product_type.product_type)
+        self._create_product_price(product, bidding_round, size=1)
+        ProductCapacityFactory.create(
+            period=bidding_round.growing_period,
+            product_type=round_product_type.product_type,
+            capacity=10,
+        )
+        self._create_item_for(
+            bidding_round=bidding_round,
+            round_product_type=round_product_type,
+            product=product,
+            quantity=1,
+            amount_1=Decimal("80.00"),
+        )
+
+        stats = BiddingRoundStatsService.build_stats(bidding_round, cache={})
+
+        self.assertEqual(1, len(stats))
+        entry = stats[0]
+        self.assertEqual(Decimal("1000.00"), entry["target_per_year"])
+        self.assertEqual(Decimal("960.00"), entry["reached_per_year"])
+        self.assertEqual(96.0, entry["percent"])
+        self.assertEqual(Decimal("40.00"), entry["deficit"])
+        self.assertEqual("yellow", entry["coverage_status"])
+        self.assertEqual(Decimal("10.00"), entry["target_shares"])
+        self.assertEqual(Decimal("1"), entry["reached_shares"])
+        self.assertEqual(10.0, entry["shares_percent"])
+        self.assertEqual(Decimal("9.00"), entry["shares_deficit"])
+        self.assertEqual("red", entry["shares_coverage_status"])
+
+        totals = BiddingRoundStatsService.build_totals(
+            stats, extra_reached_per_year=Decimal("40.00")
+        )
+
+        self.assertEqual(Decimal("1000.00"), totals["reached_per_year"])
+        self.assertEqual(100.0, totals["percent"])
+        self.assertIsNone(totals["deficit"])
+        self.assertEqual("green", totals["coverage_status"])
+
+        average_bid = BiddingRoundStatsService.build_average_bid(
+            bidding_round, cache={}
+        )
+
+        self.assertEqual(Decimal("1000.00"), average_bid["target_per_year"])
+        self.assertEqual(Decimal("10.00"), average_bid["capacity_shares"])
+        self.assertEqual(Decimal("80.00"), average_bid["amount_per_share_per_month"])
+        self.assertEqual(Decimal("960.00"), average_bid["amount_per_share_per_year"])
+
+    def test_buildResultsTable_withBidAutoRenewedAndInactiveMember_marksEachMember(
+        self,
+    ):
+        bidding_round = BiddingRoundFactory.create()
+        round_product_type = BiddingRoundProductTypeFactory.create(round=bidding_round)
+        product = ProductFactory.create(type=round_product_type.product_type)
+        self._create_product_price(product, bidding_round, size=1)
+        BiddingRoundProductPriceFactory.create(
+            round_product_type=round_product_type,
+            product=product,
+            reference_value=Decimal("80.00"),
+        )
+        pickup_location = PickupLocationFactory.create(name="Hof Süd")
+        PickupLocationCapabilityFactory.create(
+            pickup_location=pickup_location,
+            product_type=round_product_type.product_type,
+            max_capacity=10,
+        )
+        bid_member = MemberFactory.create()
+        MemberPickupLocationFactory.create(
+            member=bid_member,
+            pickup_location=pickup_location,
+            valid_from=bidding_round.growing_period.start_date
+            - datetime.timedelta(days=1),
+        )
+        bid = BidFactory.create(round=bidding_round, member=bid_member)
+        self._create_item_for(
+            bidding_round=bidding_round,
+            round_product_type=round_product_type,
+            product=product,
+            bid=bid,
+            quantity=2,
+            amount_1=Decimal("80.00"),
+        )
+        active_member = MemberFactory.create()
+        self._create_subscription(
+            member=active_member, product=product, round=bidding_round
+        )
+        auto_member = MemberFactory.create()
+        auto_subscription = self._create_subscription(
+            member=auto_member, product=product, round=bidding_round
+        )
+        inactive_member = MemberFactory.create()
+
+        with patch.object(
+            AutomaticSubscriptionRenewalService,
+            "get_subscriptions_that_will_be_renewed",
+            return_value={auto_subscription},
+        ):
+            table = BiddingRoundStatsService.build_results_table(
+                bidding_round, cache={}
+            )
+
+        members_by_id = {entry["member"].id: entry for entry in table["members"]}
+        self.assertTrue(members_by_id[bid_member.id]["has_bid"])
+        self.assertTrue(members_by_id[bid_member.id]["is_active_in_contract_period"])
+        self.assertTrue(members_by_id[active_member.id]["is_active_in_contract_period"])
+        self.assertFalse(members_by_id[inactive_member.id]["has_bid"])
+        self.assertFalse(
+            members_by_id[inactive_member.id]["is_active_in_contract_period"]
+        )
+        self.assertTrue(members_by_id[auto_member.id]["is_auto_renewed"])
+        self.assertEqual(
+            [
+                {
+                    "product_type_name": product.type.name,
+                    "product_name": product.name,
+                    "quantity": 1,
+                }
+            ],
+            members_by_id[auto_member.id]["auto_renewed_items"],
+        )
+        self.assertEqual(
+            Decimal("960.00"),
+            members_by_id[auto_member.id]["auto_renewed_amount_per_year"],
+        )
+        self.assertEqual(
+            Decimal("80.00"),
+            members_by_id[auto_member.id]["auto_renewed_amount_per_month"],
+        )
+
+        pickup_entries = {
+            entry["pickup_location"].id: entry for entry in table["pickup_locations"]
+        }
+        self.assertEqual(Decimal("10"), pickup_entries[pickup_location.id]["capacity"])
+        self.assertEqual(Decimal("2"), pickup_entries[pickup_location.id]["demand"])
+        self.assertEqual(20.0, pickup_entries[pickup_location.id]["fill_percent"])
+
+    def test_buildAdminEvaluation_returnsAcceptanceFieldsAndEffectiveBidAmounts(
+        self,
+    ):
+        bidding_round = BiddingRoundFactory.create(
+            bidding_procedure=BIDDING_ROUND_PROCEDURE_BID_RANGE, bid_levels=2
+        )
+        round_product_type = BiddingRoundProductTypeFactory.create(
+            round=bidding_round, target_amount_per_year=Decimal("1000.00")
+        )
+        product = ProductFactory.create(type=round_product_type.product_type)
+        self._create_product_price(product, bidding_round, size=1)
+        BiddingRoundProductPriceFactory.create(
+            round_product_type=round_product_type,
+            product=product,
+            reference_value=Decimal("80.00"),
+        )
+        bid_member = MemberFactory.create()
+        self._create_item_for(
+            bidding_round=bidding_round,
+            round_product_type=round_product_type,
+            product=product,
+            amount_1=Decimal("70.00"),
+            amount_2=Decimal("90.00"),
+        )
+        auto_member = MemberFactory.create()
+        auto_subscription = self._create_subscription(
+            member=auto_member, product=product, round=bidding_round
+        )
+
+        with patch.object(
+            AutomaticSubscriptionRenewalService,
+            "get_subscriptions_that_will_be_renewed",
+            return_value={auto_subscription},
+        ):
+            evaluation = BiddingRoundStatsService.build_admin_evaluation(
+                bidding_round, cache={}, bid_range_position=100
+            )
+
+        self.assertTrue(
+            {
+                "display_name",
+                "stats",
+                "totals",
+                "average_bid",
+                "auto_renewed_enabled",
+                "financing_projection",
+                "results_table",
+                "biddable_product",
+                "pickup_locations",
+                "bid_options",
+                "contracts_created_at",
+                "growing_period_id",
+                "contracts",
+            }.issubset(set(evaluation))
+        )
+        self.assertEqual(100.0, evaluation["bid_range_position"])
+        self.assertEqual("90.00", evaluation["bids"][0]["effective_amount"])
+        self.assertEqual("1080.00", evaluation["bids"][0]["amount_per_year"])
+        self.assertIsNone(evaluation["bids"][0]["pickup_location_name"])
+        auto_entry = evaluation["auto_renewed"][0]
+        self.assertTrue(
+            {
+                "items",
+                "pickup_location_id",
+                "pickup_location_name",
+                "shares",
+                "euro_per_year",
+                "euro_per_month",
+                "member_email",
+            }.issubset(set(auto_entry))
+        )
+
+        with patch.object(
+            AutomaticSubscriptionRenewalService,
+            "get_subscriptions_that_will_be_renewed",
+            return_value={auto_subscription},
+        ):
+            evaluation_without_auto_renewed = (
+                BiddingRoundStatsService.build_admin_evaluation(
+                    bidding_round, cache={}, include_auto_renewed=False
+                )
+            )
+
+        self.assertEqual([], evaluation_without_auto_renewed["auto_renewed"])
+        self.assertEqual("0", evaluation_without_auto_renewed["auto_renewed_per_year"])
+
+    @staticmethod
+    def _create_product_price(product, bidding_round, size=1):
+        ProductPriceFactory.create(
+            product=product,
+            size=size,
+            valid_from=bidding_round.growing_period.start_date
+            - datetime.timedelta(days=1),
+        )
+
+    @staticmethod
+    def _create_subscription(member, product, round, quantity=1):
+        return SubscriptionFactory.create(
+            member=member,
+            product=product,
+            period=round.growing_period,
+            quantity=quantity,
+            start_date=round.growing_period.start_date,
+            end_date=round.growing_period.end_date,
+        )
+
+    @staticmethod
+    def _create_item_for(
+        bidding_round,
+        round_product_type,
+        product,
+        bid=None,
+        quantity=1,
+        **amounts,
+    ):
+        bid = bid or BidFactory.create(round=bidding_round)
+        return BidItemFactory.create(
+            bid=bid,
+            round_product_type=round_product_type,
+            product=product,
+            quantity=quantity,
+            **amounts,
+        )

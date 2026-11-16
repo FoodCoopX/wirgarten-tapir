@@ -71,6 +71,12 @@ export interface BidItem {
    * @type {string}
    * @memberof BidItem
    */
+  effectiveAmount: string;
+  /**
+   *
+   * @type {string}
+   * @memberof BidItem
+   */
   amountPerYear: string;
 }
 
@@ -92,6 +98,8 @@ export function instanceOfBidItem(value: object): value is BidItem {
   if (!("amount1" in value) || value["amount1"] === undefined) return false;
   if (!("amount2" in value) || value["amount2"] === undefined) return false;
   if (!("amount3" in value) || value["amount3"] === undefined) return false;
+  if (!("effectiveAmount" in value) || value["effectiveAmount"] === undefined)
+    return false;
   if (!("amountPerYear" in value) || value["amountPerYear"] === undefined)
     return false;
   return true;
@@ -117,6 +125,7 @@ export function BidItemFromJSONTyped(
     amount1: json["amount_1"],
     amount2: json["amount_2"],
     amount3: json["amount_3"],
+    effectiveAmount: json["effective_amount"],
     amountPerYear: json["amount_per_year"],
   };
 }
@@ -142,6 +151,7 @@ export function BidItemToJSONTyped(
     amount_1: value["amount1"],
     amount_2: value["amount2"],
     amount_3: value["amount3"],
+    effective_amount: value["effectiveAmount"],
     amount_per_year: value["amountPerYear"],
   };
 }

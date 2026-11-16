@@ -11,6 +11,9 @@ from django.views.generic import TemplateView, View
 from django_filters import BooleanFilter, FilterSet, ModelChoiceFilter, ChoiceFilter
 from django_filters.views import FilterView
 
+from tapir.bidding_round.services.bidding_round_subscription_price_service import (
+    BiddingRoundSubscriptionPriceService,
+)
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.german_name_sort_service import GermanNameSortService
 from tapir.coop.services.member_number_service import MemberNumberService
@@ -259,6 +262,9 @@ class SubscriptionListView(PermissionRequiredMixin, FilterView):
             ParameterKeys.TRIAL_PERIOD_ENABLED, cache=self.cache
         )
         context["cache"] = self.cache
+        BiddingRoundSubscriptionPriceService.attach_monthly_prices(
+            context["object_list"], cache=self.cache
+        )
 
         return context
 
