@@ -7,6 +7,7 @@ import {
   Col,
   Container,
   Form,
+  Modal,
   ProgressBar,
   Row,
   Spinner,
@@ -14,8 +15,10 @@ import {
 } from "react-bootstrap";
 
 import { BiddingRoundsApi } from "../api-client/apis/BiddingRoundsApi.ts";
+import { MemberOption } from "../api-client/models/MemberOption.ts";
 import { Round } from "../api-client/models/Round.ts";
 import { RoundResultsResponse } from "../api-client/models/RoundResultsResponse.ts";
+import { RoundStatsBid } from "../api-client/models/RoundStatsBid.ts";
 import TapirToastContainer from "../components/TapirToastContainer.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
@@ -55,6 +58,25 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
   const [results, setResults] = useState<RoundResultsResponse | null>(null);
   const [selectedLevel, setSelectedLevel] = useState<number>(1);
   const [createAutoRenewed, setCreateAutoRenewed] = useState<boolean>(true);
+  const [filter, setFilter] = useState<string>("all");
+  const [sort, setSort] = useState<string>("name");
+  const [lockPosition, setLockPosition] = useState<number>(50);
+  const [surchargePercent, setSurchargePercent] = useState<string>("0");
+  const [surchargeOnBids, setSurchargeOnBids] = useState<boolean>(false);
+  const [surchargeOnAverage, setSurchargeOnAverage] = useState<boolean>(false);
+  const [editingBid, setEditingBid] = useState<RoundStatsBid | null>(null);
+  const [editAmounts, setEditAmounts] = useState<string[]>(["", "", ""]);
+  const [editQuantity, setEditQuantity] = useState<number>(1);
+  const [editConfirmed, setEditConfirmed] = useState<boolean>(true);
+  const [showManualBid, setShowManualBid] = useState<boolean>(false);
+  const [membersWithoutBid, setMembersWithoutBid] = useState<MemberOption[]>(
+    [],
+  );
+  const [manualMemberId, setManualMemberId] = useState<string>("");
+  const [manualProductId, setManualProductId] = useState<string>("");
+  const [manualAmounts, setManualAmounts] = useState<string[]>(["", "", ""]);
+  const [manualQuantity, setManualQuantity] = useState<number>(1);
+  const [manualConfirmed, setManualConfirmed] = useState<boolean>(true);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
@@ -73,6 +95,14 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
       setResults(loadedResults);
       if (position === undefined) {
         setSelectedLevel(loadedResults.recommendedLevel);
+      }
+      if (loadedRound.averageBidLockedAt) {
+        setLockPosition(Number(loadedRound.lockedBidRangePosition ?? 50));
+        setSurchargePercent(String(loadedRound.lockedSurchargePercent ?? "0"));
+        setSurchargeOnBids(loadedRound.lockedSurchargeOnBids);
+        setSurchargeOnAverage(loadedRound.lockedSurchargeOnAverage);
+      } else {
+        setLockPosition((loadedResults.recommendedLevel - 1) * 50);
       }
     } catch (error) {
       handleRequestError(
@@ -114,6 +144,53 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
     }
   }
 
+  async function openManualBid() {
+    try {
+      const members = await api.biddingRoundsApiMembersWithoutBidList({
+        roundId,
+      });
+      setMembersWithoutBid(members);
+      setManualMemberId(members[0]?.id ?? "");
+      setManualProductId(round?.product?.prices?.[0]?.productId ?? "");
+      setManualAmounts(["", "", ""]);
+      setManualQuantity(1);
+      setShowManualBid(true);
+    } catch (error) {
+      await handleRequestError(
+        error,
+        "Die Mitglieder konnten nicht geladen werden.",
+        setToastDatas,
+      );
+    }
+  }
+
+  function openEditBid(bid: RoundStatsBid) {
+    setEditingBid(bid);
+    setEditAmounts([
+      bid.items[0]?.amount1 ?? "",
+      bid.items[0]?.amount2 ?? "",
+      bid.items[0]?.amount3 ?? "",
+    ]);
+    setEditQuantity(bid.items[0]?.quantity ?? 1);
+    setEditConfirmed(!!bid.adminConfirmed);
+  }
+
+  function buildItem(
+    roundProductTypeId: string,
+    productId: string,
+    quantity: number,
+    amounts: string[],
+  ) {
+    return {
+      roundProductTypeId,
+      productId,
+      quantity,
+      amount1: amounts[0] || null,
+      amount2: amounts[1] || null,
+      amount3: amounts[2] || null,
+    };
+  }
+
   if (loading) {
     return (
       <Container className={"py-5 text-center"}>
@@ -149,6 +226,24 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
   const coverageStatusLabel =
     COVERAGE_STATUS_LABELS[coverageStatus] ?? coverageStatus;
   const selectedLevelLabel = levelLabels[selectedLevel - 1];
+  const isLocked = !!round.averageBidLockedAt;
+
+  const visibleBids = [...results.bids]
+    .filter((bid) => {
+      if (filter === "confirmed") {
+        return !!bid.adminConfirmed;
+      }
+      if (filter === "unconfirmed") {
+        return !bid.adminConfirmed;
+      }
+      return true;
+    })
+    .sort((first, second) => {
+      if (sort === "date") {
+        return String(second.updatedAt).localeCompare(String(first.updatedAt));
+      }
+      return first.memberName.localeCompare(second.memberName, "de");
+    });
 
   function renderContractsSection() {
     if (round.contractsCreatedAt) {
@@ -166,6 +261,20 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
         <Alert variant={"info"}>
           Verträge können erst erstellt werden, wenn die Beitragsrunde
           geschlossen ist.
+        </Alert>
+      );
+    }
+    if (!isLocked) {
+      return (
+        <Alert variant={"warning"}>
+          Bitte zuerst das Durchschnittsgebot fixieren.
+        </Alert>
+      );
+    }
+    if (results.unconfirmedBidCount > 0) {
+      return (
+        <Alert variant={"warning"}>
+          Es gibt noch {results.unconfirmedBidCount} unbestätigte Gebote.
         </Alert>
       );
     }
@@ -238,6 +347,11 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
           <Badge bg={round.status === "active" ? "success" : "secondary"}>
             {round.status}
           </Badge>
+          {isLocked && (
+            <Badge bg={"dark"} className={"ms-2"}>
+              Gebot fixiert
+            </Badge>
+          )}
         </div>
       </div>
 
@@ -359,6 +473,105 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
 
       <Card className={"mb-4"}>
         <Card.Header>
+          <strong>Durchschnittsgebot fixieren</strong>
+        </Card.Header>
+        <Card.Body>
+          {isLocked ? (
+            <>
+              <p className={"mb-2"}>
+                Fixiert bei Position{" "}
+                <strong>{Number(round.lockedBidRangePosition)}</strong>,
+                Aufschlag{" "}
+                <strong>{String(round.lockedSurchargePercent)} %</strong>
+                {round.lockedSurchargeOnBids ? " auf die Gebote" : ""}
+                {round.lockedSurchargeOnAverage ? " auf den Durchschnitt" : ""}.
+              </p>
+              <Button
+                variant={"outline-dark"}
+                disabled={busy}
+                onClick={() =>
+                  runAction(
+                    () =>
+                      api.biddingRoundsApiUnlockAverageBidCreate({ roundId }),
+                    "Durchschnittsgebot freigegeben",
+                  )
+                }
+              >
+                Freigeben
+              </Button>
+            </>
+          ) : (
+            <>
+              <Row className={"g-3 align-items-end"}>
+                <Col md={6}>
+                  <Form.Label>Position: {lockPosition}</Form.Label>
+                  <Form.Range
+                    min={0}
+                    max={100}
+                    step={10}
+                    value={lockPosition}
+                    onChange={(event) =>
+                      setLockPosition(Number(event.target.value))
+                    }
+                  />
+                </Col>
+                <Col md={2}>
+                  <Form.Label>Aufschlag %</Form.Label>
+                  <Form.Control
+                    value={surchargePercent}
+                    onChange={(event) =>
+                      setSurchargePercent(event.target.value)
+                    }
+                  />
+                </Col>
+                <Col md={4}>
+                  <Form.Check
+                    type={"checkbox"}
+                    label={"Aufschlag auf die Gebote"}
+                    checked={surchargeOnBids}
+                    onChange={(event) =>
+                      setSurchargeOnBids(event.target.checked)
+                    }
+                  />
+                  <Form.Check
+                    type={"checkbox"}
+                    label={"Aufschlag auf den Durchschnitt"}
+                    checked={surchargeOnAverage}
+                    onChange={(event) =>
+                      setSurchargeOnAverage(event.target.checked)
+                    }
+                  />
+                </Col>
+              </Row>
+              <Button
+                variant={"dark"}
+                className={"mt-3"}
+                disabled={busy}
+                onClick={() =>
+                  runAction(
+                    () =>
+                      api.biddingRoundsApiLockAverageBidCreate({
+                        roundId,
+                        lockAverageBidRequest: {
+                          position: lockPosition,
+                          surchargePercent: Number(surchargePercent) || 0,
+                          surchargeOnBids,
+                          surchargeOnAverage,
+                        },
+                      }),
+                    "Durchschnittsgebot fixiert",
+                  )
+                }
+              >
+                Fixieren
+              </Button>
+            </>
+          )}
+        </Card.Body>
+      </Card>
+
+      <Card className={"mb-4"}>
+        <Card.Header>
           <strong>Zusatzposten</strong>
         </Card.Header>
         <Card.Body>
@@ -415,12 +628,67 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
 
       <Card className={"mb-4"}>
         <Card.Header>
-          <strong>Gebote</strong>
+          <div className={"d-flex flex-wrap gap-2 align-items-center"}>
+            <strong className={"me-auto"}>Gebote</strong>
+            <Form.Select
+              size={"sm"}
+              style={{ width: "auto" }}
+              value={filter}
+              onChange={(event) => setFilter(event.target.value)}
+            >
+              <option value={"all"}>Alle</option>
+              <option value={"confirmed"}>Bestätigt</option>
+              <option value={"unconfirmed"}>
+                Unbestätigt ({results.unconfirmedBidCount})
+              </option>
+            </Form.Select>
+            <Form.Select
+              size={"sm"}
+              style={{ width: "auto" }}
+              value={sort}
+              onChange={(event) => setSort(event.target.value)}
+            >
+              <option value={"name"}>Name</option>
+              <option value={"date"}>Datum</option>
+            </Form.Select>
+            <Button
+              size={"sm"}
+              variant={"outline-dark"}
+              disabled={busy || results.unconfirmedBidCount === 0}
+              onClick={() =>
+                runAction(
+                  () =>
+                    api.biddingRoundsApiConfirmBidsCreate({
+                      roundId,
+                      confirmBidsRequest: {},
+                    }),
+                  "Alle Gebote bestätigt",
+                )
+              }
+            >
+              Alle bestätigen
+            </Button>
+            <Button
+              size={"sm"}
+              variant={"dark"}
+              onClick={openManualBid}
+              disabled={busy}
+            >
+              Manuelles Gebot
+            </Button>
+            <Button
+              size={"sm"}
+              variant={"outline-dark"}
+              href={`/bidding_rounds/api/${roundId}/export.csv`}
+            >
+              CSV
+            </Button>
+          </div>
         </Card.Header>
         <Card.Body className={"p-0"}>
-          {results.bids.length === 0 ? (
+          {visibleBids.length === 0 ? (
             <Alert variant={"info"} className={"m-3"}>
-              Noch keine Gebote abgegeben.
+              Keine Gebote für diesen Filter.
             </Alert>
           ) : (
             <Table responsive hover className={"mb-0"}>
@@ -432,12 +700,13 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
                   {levelLabels.map((label) => (
                     <th key={label}>{label}</th>
                   ))}
-                  <th>Beitrag / Monat</th>
-                  <th>Beitrag / Jahr</th>
+                  <th>Gewählt / Monat</th>
+                  <th>Bestätigt</th>
+                  <th>Aktionen</th>
                 </tr>
               </thead>
               <tbody>
-                {results.bids.map((bid) => {
+                {visibleBids.map((bid) => {
                   const amounts = [
                     bid.items[0]?.amount1,
                     bid.items[0]?.amount2,
@@ -445,7 +714,14 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
                   ];
                   return (
                     <tr key={bid.bidId}>
-                      <td>{bid.memberName}</td>
+                      <td>
+                        {bid.memberName}
+                        {bid.enteredByAdmin && (
+                          <Badge bg={"secondary"} className={"ms-2"}>
+                            Admin
+                          </Badge>
+                        )}
+                      </td>
                       <td>{bid.email}</td>
                       <td>
                         {bid.items.reduce(
@@ -461,7 +737,41 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
                         </td>
                       ))}
                       <td>{formatCurrency(Number(bid.amountPerMonth))}</td>
-                      <td>{formatCurrency(Number(bid.amountPerYear))}</td>
+                      <td>
+                        {bid.adminConfirmed ? (
+                          <Badge bg={"success"}>ja</Badge>
+                        ) : (
+                          <Badge bg={"warning"}>nein</Badge>
+                        )}
+                      </td>
+                      <td>
+                        <div className={"d-flex gap-1"}>
+                          <Button
+                            size={"sm"}
+                            variant={"outline-dark"}
+                            onClick={() => openEditBid(bid)}
+                          >
+                            Bearbeiten
+                          </Button>
+                          <Button
+                            size={"sm"}
+                            variant={"outline-danger"}
+                            disabled={busy}
+                            onClick={() =>
+                              runAction(
+                                () =>
+                                  api.biddingRoundsApiBidsDestroy({
+                                    roundId,
+                                    bidId: bid.bidId,
+                                  }),
+                                "Gebot gelöscht",
+                              )
+                            }
+                          >
+                            Löschen
+                          </Button>
+                        </div>
+                      </td>
                     </tr>
                   );
                 })}
@@ -479,6 +789,183 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
           {renderContractsSection()}
         </Card.Body>
       </Card>
+
+      <Modal show={!!editingBid} onHide={() => setEditingBid(null)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Gebot bearbeiten</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {editingBid && (
+            <>
+              <p className={"text-muted"}>{editingBid.memberName}</p>
+              <Form.Group className={"mb-3"}>
+                <Form.Label>Anteile</Form.Label>
+                <Form.Control
+                  type={"number"}
+                  min={1}
+                  max={5}
+                  value={editQuantity}
+                  onChange={(event) =>
+                    setEditQuantity(Number(event.target.value))
+                  }
+                />
+              </Form.Group>
+              {levelLabels.map((label, index) => (
+                <Form.Group key={label} className={"mb-3"}>
+                  <Form.Label>{label}</Form.Label>
+                  <Form.Control
+                    value={editAmounts[index]}
+                    onChange={(event) => {
+                      const next = [...editAmounts];
+                      next[index] = event.target.value;
+                      setEditAmounts(next);
+                    }}
+                  />
+                </Form.Group>
+              ))}
+              <Form.Check
+                type={"checkbox"}
+                label={"Bestätigt"}
+                checked={editConfirmed}
+                onChange={(event) => setEditConfirmed(event.target.checked)}
+              />
+            </>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant={"outline-dark"} onClick={() => setEditingBid(null)}>
+            Abbrechen
+          </Button>
+          <Button
+            variant={"dark"}
+            disabled={busy || !results.roundProductTypeId}
+            onClick={() =>
+              runAction(
+                () =>
+                  api.biddingRoundsApiBidsPartialUpdate({
+                    roundId,
+                    bidId: editingBid!.bidId,
+                    patchedBidAdminRequest: {
+                      items: [
+                        buildItem(
+                          results.roundProductTypeId!,
+                          editingBid!.items[0].productId,
+                          editQuantity,
+                          editAmounts,
+                        ),
+                      ],
+                      adminConfirmed: editConfirmed,
+                    },
+                  }),
+                "Gebot gespeichert",
+              ).then(() => setEditingBid(null))
+            }
+          >
+            Speichern
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal show={showManualBid} onHide={() => setShowManualBid(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Manuelles Gebot</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form.Group className={"mb-3"}>
+            <Form.Label>Mitglied</Form.Label>
+            <Form.Select
+              value={manualMemberId}
+              onChange={(event) => setManualMemberId(event.target.value)}
+            >
+              {membersWithoutBid.map((member) => (
+                <option key={member.id} value={member.id}>
+                  {member.name} ({member.email})
+                </option>
+              ))}
+            </Form.Select>
+          </Form.Group>
+          <Form.Group className={"mb-3"}>
+            <Form.Label>Produkt</Form.Label>
+            <Form.Select
+              value={manualProductId}
+              onChange={(event) => setManualProductId(event.target.value)}
+            >
+              {(round.product?.prices ?? []).map((price) => (
+                <option key={price.productId} value={price.productId}>
+                  {price.productName}
+                </option>
+              ))}
+            </Form.Select>
+          </Form.Group>
+          <Form.Group className={"mb-3"}>
+            <Form.Label>Anteile</Form.Label>
+            <Form.Control
+              type={"number"}
+              min={1}
+              max={5}
+              value={manualQuantity}
+              onChange={(event) =>
+                setManualQuantity(Number(event.target.value))
+              }
+            />
+          </Form.Group>
+          {levelLabels.map((label, index) => (
+            <Form.Group key={label} className={"mb-3"}>
+              <Form.Label>{label}</Form.Label>
+              <Form.Control
+                value={manualAmounts[index]}
+                onChange={(event) => {
+                  const next = [...manualAmounts];
+                  next[index] = event.target.value;
+                  setManualAmounts(next);
+                }}
+              />
+            </Form.Group>
+          ))}
+          <Form.Check
+            type={"checkbox"}
+            label={"Bestätigt"}
+            checked={manualConfirmed}
+            onChange={(event) => setManualConfirmed(event.target.checked)}
+          />
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant={"outline-dark"}
+            onClick={() => setShowManualBid(false)}
+          >
+            Abbrechen
+          </Button>
+          <Button
+            variant={"dark"}
+            disabled={busy || !manualMemberId || !results.roundProductTypeId}
+            onClick={() =>
+              runAction(
+                () =>
+                  api.biddingRoundsApiBidsCreate({
+                    roundId,
+                    bidAdminCreateRequest: {
+                      memberId: manualMemberId,
+                      items: [
+                        buildItem(
+                          results.roundProductTypeId!,
+                          manualProductId,
+                          manualQuantity,
+                          manualAmounts,
+                        ),
+                      ],
+                      enteredByAdmin: true,
+                      adminConfirmed: manualConfirmed,
+                    },
+                  }),
+                "Gebot angelegt",
+              ).then(() => setShowManualBid(false))
+            }
+          >
+            Speichern
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Container>
   );
 };

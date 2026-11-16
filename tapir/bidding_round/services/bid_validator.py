@@ -32,6 +32,21 @@ class BidValidator:
             seen_products.add(product_id)
 
     @classmethod
+    def validate_admin_edit(cls, bidding_round, items, cache):
+        if not items:
+            raise ValidationError(_("Bitte gib einen Betrag für deinen Anteil an."))
+        if len(items) != 1:
+            raise ValidationError(_("Ein Gebot hat genau eine Position."))
+        seen_products = set()
+        for item in items:
+            product_id = cls._validate_item(bidding_round, item)
+            if product_id in seen_products:
+                raise ValidationError(
+                    _("Jedes Produkt darf nur einmal im Gebot vorkommen.")
+                )
+            seen_products.add(product_id)
+
+    @classmethod
     def _validate_round_is_open(cls, bidding_round, cache):
         if bidding_round.status != BIDDING_ROUND_STATUS_ACTIVE:
             raise ValidationError(_("Die Beitragsrunde ist nicht aktiv."))

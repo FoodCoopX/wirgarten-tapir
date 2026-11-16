@@ -1,4 +1,6 @@
 import datetime
+from decimal import Decimal
+
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Q
@@ -20,6 +22,9 @@ from tapir.bidding_round.models import (
 )
 from tapir.bidding_round.services.amount_parser import AmountParser
 from tapir.bidding_round.services.bid_validator import BidValidator
+from tapir.bidding_round.services.bidding_round_stats_service import (
+    BiddingRoundStatsService,
+)
 from tapir.wirgarten.models import GrowingPeriod, Member, Product, ProductType
 from tapir.wirgarten.utils import get_now
 
@@ -251,6 +256,130 @@ class BiddingRoundService:
         return bidding_round
 
     @classmethod
+    def lock_average_bid(
+        cls,
+        bidding_round: BiddingRound,
+        position,
+        surcharge_percent,
+        surcharge_on_bids,
+        surcharge_on_average,
+        cache: dict,
+    ) -> BiddingRound:
+        if bidding_round.status != BIDDING_ROUND_STATUS_CLOSED:
+            raise ValidationError(
+                _(
+                    "Das durchschnittliche Gebot kann erst nach Ende der Beitragsrunde fixiert werden."
+                )
+            )
+
+        surcharge = Decimal(str(surcharge_percent or 0))
+        if surcharge < 0 or surcharge > 100:
+            raise ValidationError(
+                _("Der Aufschlag muss zwischen 0 und 100 Prozent liegen.")
+            )
+        position = BiddingRoundStatsService.clamp_position(position)
+        with transaction.atomic():
+            locked = BiddingRound.objects.select_for_update().get(pk=bidding_round.pk)
+            if locked.average_bid_locked_at is not None:
+                raise ValidationError(
+                    _("Das durchschnittliche Gebot ist bereits fixiert.")
+                )
+            amounts = BiddingRoundStatsService.build_locked_average_bid(
+                bidding_round=locked,
+                position=position,
+                surcharge_percent=surcharge,
+                surcharge_on_bids=bool(surcharge_on_bids),
+                surcharge_on_average=bool(surcharge_on_average),
+                cache=cache,
+            )
+            locked.average_bid_locked_at = get_now(cache=cache)
+            locked.locked_bid_range_position = position
+            locked.locked_surcharge_percent = surcharge
+            locked.locked_surcharge_on_bids = bool(surcharge_on_bids)
+            locked.locked_surcharge_on_average = bool(surcharge_on_average)
+            locked.locked_bidder_average_per_share_per_month = amounts[
+                "bidder_amount_per_share_per_month"
+            ]
+            locked.save()
+        bidding_round.refresh_from_db()
+        return bidding_round
+
+    @classmethod
+    def unlock_average_bid(
+        cls, bidding_round: BiddingRound, cache: dict
+    ) -> BiddingRound:
+        with transaction.atomic():
+            locked = BiddingRound.objects.select_for_update().get(pk=bidding_round.pk)
+            if locked.average_bid_locked_at is None:
+                raise ValidationError(
+                    _("Das durchschnittliche Gebot ist nicht fixiert.")
+                )
+            if locked.contracts_created_at is not None:
+                raise ValidationError(
+                    _(
+                        "Das durchschnittliche Gebot kann nach der Vertragserzeugung nicht mehr freigegeben werden."
+                    )
+                )
+            locked.average_bid_locked_at = None
+            locked.locked_bid_range_position = None
+            locked.locked_surcharge_percent = Decimal("0")
+            locked.locked_surcharge_on_bids = False
+            locked.locked_surcharge_on_average = False
+            locked.locked_bidder_average_per_share_per_month = None
+            locked.save()
+        bidding_round.refresh_from_db()
+        return bidding_round
+
+    @classmethod
+    def confirm_bids(cls, bidding_round: BiddingRound, bid_ids, cache: dict) -> int:
+        bids = bidding_round.bids.all()
+        if bid_ids:
+            bids = bids.filter(id__in=bid_ids)
+        return bids.update(admin_confirmed=get_now(cache=cache))
+
+    @classmethod
+    def save_admin_bid(
+        cls,
+        bidding_round: BiddingRound,
+        member: Member,
+        cache: dict,
+        items: list[dict] | None = None,
+        entered_by_admin: bool | None = None,
+        admin_confirmed: bool | None = None,
+    ) -> Bid:
+        """Legt ein Gebot an oder aktualisiert es."""
+        with transaction.atomic():
+            locked_round = BiddingRound.objects.select_for_update().get(
+                pk=bidding_round.pk
+            )
+            if locked_round.average_bid_locked_at is not None:
+                raise ValidationError(
+                    _(
+                        "Gebote können nach dem Fixieren des Durchschnittsgebots nicht mehr geändert werden."
+                    )
+                )
+            if items is not None:
+                BidValidator.validate_admin_edit(locked_round, items, cache=cache)
+
+            bid, _created = Bid.objects.get_or_create(member=member, round=locked_round)
+            if locked_round.contracts_created_at is not None and items is not None:
+                raise ValidationError(
+                    _(
+                        "Gebote können nach der Vertragserzeugung nicht mehr geändert werden."
+                    )
+                )
+
+            if entered_by_admin is not None:
+                bid.entered_by_admin = entered_by_admin
+            if admin_confirmed is not None:
+                bid.admin_confirmed = get_now(cache=cache) if admin_confirmed else None
+            bid.save()
+
+            if items is not None:
+                cls._replace_bid_items(bid, items)
+        return bid
+
+    @classmethod
     def delete_round(cls, bidding_round: BiddingRound, cache: dict) -> None:
         if bidding_round.status not in (
             BIDDING_ROUND_STATUS_CONFIGURATION,
@@ -421,6 +550,24 @@ class BiddingRoundService:
         )
 
     @classmethod
+    def _replace_bid_items(cls, bid: Bid, items: list[dict]) -> None:
+        bid.items.all().delete()
+        BidItem.objects.bulk_create(
+            [
+                BidItem(
+                    bid=bid,
+                    round_product_type_id=item["round_product_type_id"],
+                    product_id=item["product_id"],
+                    quantity=item.get("quantity", 1),
+                    amount_1=AmountParser.parse_optional(item.get("amount_1")),
+                    amount_2=AmountParser.parse_optional(item.get("amount_2")),
+                    amount_3=AmountParser.parse_optional(item.get("amount_3")),
+                )
+                for item in items
+            ]
+        )
+
+    @classmethod
     def save_bid(
         cls,
         member: Member,
@@ -435,25 +582,16 @@ class BiddingRoundService:
             bidding_round = BiddingRound.objects.select_for_update().get(
                 pk=bidding_round.pk
             )
+            if bidding_round.average_bid_locked_at is not None:
+                raise ValidationError(
+                    _(
+                        "Gebote können nach dem Fixieren des Durchschnittsgebots nicht mehr geändert werden."
+                    )
+                )
             BidValidator.validate(bidding_round, items, cache=cache)
-
             bid, _created = Bid.objects.get_or_create(
                 member=member, round=bidding_round
             )
 
-            bid.items.all().delete()
-            BidItem.objects.bulk_create(
-                [
-                    BidItem(
-                        bid=bid,
-                        round_product_type_id=item["round_product_type_id"],
-                        product_id=item["product_id"],
-                        quantity=item["quantity"],
-                        amount_1=AmountParser.parse_optional(item.get("amount_1")),
-                        amount_2=AmountParser.parse_optional(item.get("amount_2")),
-                        amount_3=AmountParser.parse_optional(item.get("amount_3")),
-                    )
-                    for item in items
-                ]
-            )
+            cls._replace_bid_items(bid, items)
         return bid

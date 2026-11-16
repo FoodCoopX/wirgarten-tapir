@@ -38,6 +38,8 @@ models/BestellWizardDeliveryDatesForOrderResponse.ts
 models/BestellWizardImages.ts
 models/BestellWizardStrings.ts
 models/Bid.ts
+models/BidAdminCreateRequest.ts
+models/BidAdminItemRequest.ts
 models/BidItem.ts
 models/BidProductVariant.ts
 models/BidSubmitItemRequest.ts
@@ -76,6 +78,7 @@ models/CancelSubscriptionsViewResponse.ts
 models/CancellationData.ts
 models/ChangeMemberPickupLocationRequestRequest.ts
 models/ChangeTypeEnum.ts
+models/ConfirmBidsRequest.ts
 models/ConfirmSubscriptionChangesRequestRequest.ts
 models/ConvertWeekToDateForSubscriptionChangesResponse.ts
 models/CoopShareTransaction.ts
@@ -149,6 +152,7 @@ models/LocaleEnum.ts
 models/LocationMetrics.ts
 models/LocationRoute.ts
 models/LocationRouteRequest.ts
+models/LockAverageBidRequest.ts
 models/MailCategory.ts
 models/MailCategoryRequest.ts
 models/MailingList.ts
@@ -180,6 +184,7 @@ models/MemberMailCategoryData.ts
 models/MemberMailCategoryRequestRequest.ts
 models/MemberMailingListDataResponse.ts
 models/MemberNeedingBankingData.ts
+models/MemberOption.ts
 models/MemberPaymentRhythm.ts
 models/MemberPaymentRhythmData.ts
 models/MemberProfileCapacityCheckRequestRequest.ts
@@ -209,6 +214,7 @@ models/PaginatedTemporaryUploadList.ts
 models/PaginatedWaitingListEntryDetailsList.ts
 models/PatchedAssociationMembershipTypePriceRequest.ts
 models/PatchedAssociationMembershipTypeRequest.ts
+models/PatchedBidAdminRequest.ts
 models/PatchedBreadContentRequest.ts
 models/PatchedBreadDeliveryRequest.ts
 models/PatchedBreadGroupRequest.ts

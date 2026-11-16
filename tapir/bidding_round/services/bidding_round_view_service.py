@@ -48,6 +48,24 @@ class BiddingRoundViewService:
             "bidding_procedure": bidding_round.bidding_procedure,
             "bid_levels": bidding_round.bid_levels,
             "include_auto_renewed": bidding_round.include_auto_renewed,
+            "average_bid_locked_at": (
+                bidding_round.average_bid_locked_at.isoformat()
+                if bidding_round.average_bid_locked_at
+                else None
+            ),
+            "locked_bid_range_position": (
+                str(bidding_round.locked_bid_range_position)
+                if bidding_round.locked_bid_range_position is not None
+                else None
+            ),
+            "locked_bidder_average_per_share_per_month": (
+                str(bidding_round.locked_bidder_average_per_share_per_month)
+                if bidding_round.locked_bidder_average_per_share_per_month is not None
+                else None
+            ),
+            "locked_surcharge_percent": str(bidding_round.locked_surcharge_percent),
+            "locked_surcharge_on_bids": bidding_round.locked_surcharge_on_bids,
+            "locked_surcharge_on_average": bidding_round.locked_surcharge_on_average,
             "start_at": (
                 bidding_round.start_at.isoformat() if bidding_round.start_at else None
             ),
@@ -181,6 +199,10 @@ class BiddingRoundViewService:
         return {
             "id": bid.id,
             "member_id": bid.member_id,
+            "entered_by_admin": bid.entered_by_admin,
+            "admin_confirmed": (
+                bid.admin_confirmed.isoformat() if bid.admin_confirmed else None
+            ),
             "pickup_location_id": pickup_location_id,
             "updated_at": bid.updated_at.isoformat() if bid.updated_at else None,
             "total_per_year": str(
