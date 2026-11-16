@@ -17,6 +17,17 @@
 {% block card_header %}
     <h4 class="mb-0">{{ number_of_contracts }} {% translate 'Verträge' %}, {{ quantity_sum }} Anteile</h4>
     <span style="display: flex; flex-direction:row;">
+        {% if admin_contract_prototype_enabled %}
+            <button type="button"
+                    class="btn btn-outline-success d-flex mx-1"
+                    title="Vertrag hinzufügen oder bearbeiten"
+                    aria-label="Vertrag hinzufügen oder bearbeiten"
+                    data-bs-toggle="tooltip"
+                    data-bs-placement="bottom"
+                    onclick="bootstrap.Modal.getOrCreateInstance(document.getElementById('admin-contract-modal')).show()">
+                <span class="material-icons" aria-hidden="true">post_add</span>
+            </button>
+        {% endif %}
         <span id="subscription_change_dates_button" class="mx-1 p-0"></span>
         {% if trial_period_enabled %}
             <span id="subscription_trial_period_button" class="mx-1 p-0"></span>
@@ -94,6 +105,9 @@
     {% endfor %}
 {% endblock %}
 {% block script %}
+    {% if admin_contract_prototype_enabled %}
+        {% include 'subscriptions/admin_contract_prototype.html' %}
+    {% endif %}
     <script>
         const handleExport = () => {
             const params = Tapir.getUrlParams();
