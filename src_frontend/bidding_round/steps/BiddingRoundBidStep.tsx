@@ -1,12 +1,17 @@
 import React from "react";
 import { Col, Form, Row } from "react-bootstrap";
 
-import { BiddableProduct, RoundTexts } from "../../api-client";
+import {
+  BiddableProduct,
+  CurrentPickupLocation,
+  RoundTexts,
+} from "../../api-client";
 import NextStepButton from "../../components/mobile_wizard/NextStepButton.tsx";
 import ProductCard from "../../components/mobile_wizard/ProductCard.tsx";
 import { BUTTON_VARIANT } from "../../components/mobile_wizard/utils/BUTTON_VARIANT.ts";
 import TapirButton from "../../components/TapirButton.tsx";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
+import PickupLocationRow from "../components/PickupLocationRow.tsx";
 import {
   formatAmountNumber,
   getYearlyAmount,
@@ -25,6 +30,7 @@ interface BiddingRoundBidStepProps {
   onQuantityChange: (quantity: number) => void;
   amounts: string[];
   onAmountChange: (levelIndex: number, value: string) => void;
+  currentPickupLocation: CurrentPickupLocation | null;
   goToNextStep: () => void;
   stepActive: boolean;
 }
@@ -43,6 +49,7 @@ const BiddingRoundBidStep: React.FC<BiddingRoundBidStepProps> = ({
   onQuantityChange,
   amounts,
   onAmountChange,
+  currentPickupLocation,
   goToNextStep,
   stepActive,
 }) => {
@@ -112,6 +119,12 @@ const BiddingRoundBidStep: React.FC<BiddingRoundBidStepProps> = ({
             />
           </div>
         </Form.Group>
+
+        <PickupLocationRow
+          currentPickupLocation={currentPickupLocation}
+          texts={texts}
+          variant={"stacked"}
+        />
 
         {isBidRange && texts.bid.bidRangeExplanation && (
           <p

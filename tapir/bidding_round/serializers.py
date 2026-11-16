@@ -215,8 +215,15 @@ class RoundTextsSerializer(serializers.Serializer):
     login_title = serializers.CharField()
     login_text = serializers.CharField()
     summary_title = serializers.CharField()
+    pickup_location_title = serializers.CharField()
     submit_label = serializers.CharField()
     bid = BidTextsSerializer()
+
+
+class CurrentPickupLocationSerializer(serializers.Serializer):
+    id = serializers.CharField()
+    name = serializers.CharField()
+    yearly_delivery_charge = serializers.CharField()
 
 
 class PublicDataResponseSerializer(serializers.Serializer):
@@ -229,6 +236,9 @@ class PublicDataResponseSerializer(serializers.Serializer):
     texts = RoundTextsSerializer(required=False)
     biddable_product = BiddableProductSerializer(allow_null=True, required=False)
     is_authenticated = serializers.BooleanField(required=False)
+    current_pickup_location = CurrentPickupLocationSerializer(
+        allow_null=True, required=False
+    )
     bid = BidSerializer(allow_null=True, required=False)
 
 
