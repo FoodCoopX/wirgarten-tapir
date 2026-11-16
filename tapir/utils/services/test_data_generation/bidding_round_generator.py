@@ -2,7 +2,10 @@ import datetime
 import random
 from decimal import Decimal
 
-from tapir.bidding_round.config import BIDDING_ROUND_PROCEDURE_BID_RANGE
+from tapir.bidding_round.config import (
+    BIDDING_ROUND_PROCEDURE_BID_RANGE,
+    BIDDING_ROUND_PROCEDURE_SIMPLE,
+)
 from tapir.bidding_round.services.bid_input import BidInput
 from tapir.bidding_round.services.bidding_round_service import (
     BiddingRoundService,
@@ -30,6 +33,11 @@ BID_RANGE_TARGET_RATIOS = {
     1: Decimal("0.81"),
     2: Decimal("1.01"),
 }
+SIMPLE_LEVEL_TARGET_RATIOS = {
+    1: Decimal("0.81"),
+    2: Decimal("0.91"),
+    3: Decimal("1.09"),
+}
 BIDDER_RATIO = 0.6
 BID_FACTOR_RANGE = (0.85, 1.15)
 
@@ -40,10 +48,9 @@ class BiddingRoundGenerator:
     An active BIDDING_ROUND_PROCEDURE_SIMPLE round shows the reference value scaled by
     the share size; about 60 % of the members with an active harvest share
     subscription bid, with a small random factor, and the target is derived so the
-    evaluation shows about 91 % coverage. A closed
-    BIDDING_ROUND_PROCEDURE_BID_RANGE round reuses the same bidders with two amounts
-    calibrated to 81 % (green) and 101 % (red), so the middle position stays at
-    91 %.
+    evaluation shows about 91 % coverage. Two closed rounds reuse the same bidders:
+    a bid range with two amounts (81 % green, 101 % red) and a simple round with
+    three levels (81/91/109 %).
     """
 
     @classmethod
@@ -126,17 +133,23 @@ class BiddingRoundGenerator:
                 )
             )
 
-        cls._create_closed_bid_range_round(
-            growing_period=growing_period,
-            name=f"Beitragsrunde {growing_period.start_date.year} - Gebotsspanne",
-            start_at=now - datetime.timedelta(days=1),
-            end_at=now + datetime.timedelta(days=30),
-            product_type_id=product_type.id,
-            target_amount_per_year=target_amount_per_year,
-            prices=prices,
-            assignments=assignments,
-            cache=cache,
-        )
+        for suffix, procedure, bid_levels in (
+            ("Gebotsspanne", BIDDING_ROUND_PROCEDURE_BID_RANGE, 2),
+            ("Stufen", BIDDING_ROUND_PROCEDURE_SIMPLE, 3),
+        ):
+            cls._create_closed_round(
+                growing_period=growing_period,
+                name=f"Beitragsrunde {growing_period.start_date.year} - {suffix}",
+                start_at=now - datetime.timedelta(days=1),
+                end_at=now + datetime.timedelta(days=30),
+                product_type_id=product_type.id,
+                target_amount_per_year=target_amount_per_year,
+                prices=prices,
+                assignments=assignments,
+                bidding_procedure=procedure,
+                bid_levels=bid_levels,
+                cache=cache,
+            )
 
         bidding_round = BiddingRoundService.create_round(
             growing_period=growing_period,
@@ -170,7 +183,20 @@ class BiddingRoundGenerator:
         return size if size is not None else Decimal("1")
 
     @classmethod
-    def _create_closed_bid_range_round(
+    def _level_amounts(cls, amount: Decimal, bidding_procedure: str) -> list:
+        if bidding_procedure == BIDDING_ROUND_PROCEDURE_BID_RANGE:
+            ratios = BID_RANGE_TARGET_RATIOS
+            levels = (1, 2)
+        else:
+            ratios = SIMPLE_LEVEL_TARGET_RATIOS
+            levels = (1, 2, 3)
+        return [
+            (amount * ratios[level] / TARGET_COVERAGE_RATIO).quantize(Decimal("0.01"))
+            for level in levels
+        ]
+
+    @classmethod
+    def _create_closed_round(
         cls,
         *,
         growing_period,
@@ -181,6 +207,8 @@ class BiddingRoundGenerator:
         target_amount_per_year,
         prices,
         assignments,
+        bidding_procedure,
+        bid_levels,
         cache,
     ):
         bidding_round = BiddingRoundService.create_round(
@@ -191,28 +219,23 @@ class BiddingRoundGenerator:
             product_type_id=product_type_id,
             target_amount_per_year=target_amount_per_year,
             prices=prices,
-            bidding_procedure=BIDDING_ROUND_PROCEDURE_BID_RANGE,
-            bid_levels=2,
+            bidding_procedure=bidding_procedure,
+            bid_levels=bid_levels,
             cache=cache,
         )
         BiddingRoundService.start_round(bidding_round, cache=cache)
 
-        middle_ratio = TARGET_COVERAGE_RATIO
         for member, product, quantity, amount in assignments:
-            green = (amount * BID_RANGE_TARGET_RATIOS[1] / middle_ratio).quantize(
-                Decimal("0.01")
-            )
-            red = (amount * BID_RANGE_TARGET_RATIOS[2] / middle_ratio).quantize(
-                Decimal("0.01")
-            )
+            level_amounts = cls._level_amounts(amount, bidding_procedure)
             BiddingRoundService.save_bid(
                 member,
                 bidding_round,
                 BidInput(
                     product_id=product.id,
                     quantity=quantity,
-                    amount_1=green,
-                    amount_2=red,
+                    amount_1=level_amounts[0],
+                    amount_2=level_amounts[1],
+                    amount_3=(level_amounts[2] if len(level_amounts) > 2 else None),
                 ),
                 cache=cache,
             )

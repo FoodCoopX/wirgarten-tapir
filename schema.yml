@@ -2911,6 +2911,11 @@ paths:
         the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
         so the handlers reuse it instead of building their own.
       parameters:
+      - in: query
+        name: position
+        schema:
+          type: number
+          format: double
       - in: path
         name: round_id
         schema:
