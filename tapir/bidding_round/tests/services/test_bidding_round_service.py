@@ -365,6 +365,24 @@ class TestBiddingRoundService(TapirIntegrationTest):
                 cache={},
             )
 
+    def test_saveBid_withEnforceConsentsAndMissingPrivacy_raisesValidationError(self):
+        bidding_round, product = self._create_active_round()
+        member = MemberFactory.create()
+
+        with pytest.raises(ValidationError):
+            BiddingRoundService.save_bid(
+                member,
+                bidding_round,
+                BidInput(
+                    product_id=product.id,
+                    quantity=1,
+                    amount_1=Decimal("80.00"),
+                ),
+                cache={},
+                enforce_consents=True,
+                privacy_policy_read=False,
+            )
+
     def _create_active_round(self):
         bidding_round = BiddingRoundFactory.create(
             status=BIDDING_ROUND_STATUS_ACTIVE,

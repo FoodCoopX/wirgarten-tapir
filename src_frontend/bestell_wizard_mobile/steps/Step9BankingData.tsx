@@ -10,7 +10,7 @@ import TapirButton from "../../components/TapirButton.tsx";
 import NextStepButton from "../../components/mobile_wizard/NextStepButton.tsx";
 import { BUTTON_VARIANT } from "../../components/mobile_wizard/utils/BUTTON_VARIANT.ts";
 import PersonalDataFormControl from "../components/PersonalDataFormControl.tsx";
-import TapirCheckbox from "../components/TapirCheckbox.tsx";
+import CheckboxWithExplanation from "../components/CheckboxWithExplanation.tsx";
 import { atLeastOneMonthlyPayment } from "../utils/atLeastOneMonthlyPayment.ts";
 
 interface Step9BankingDataProps {
@@ -111,7 +111,7 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
 
   function mustShowCheckboxContractAccepted() {
     return (
-      settings.labelCheckboxContractPolicy.trim() !== "" &&
+      settings.explanationCheckboxContractPolicy.trim() !== "" &&
       isAtLeastOneProductOrdered(shoppingCart)
     );
   }
@@ -180,19 +180,21 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
               />
             </div>
           )}
-        <div className={"d-flex flex-column gap-2 mx-2"}>
-          <TapirCheckbox
+        <div className={"d-flex flex-column gap-2"}>
+          <CheckboxWithExplanation
             onChange={setSepaAllowed}
             checked={sepaAllowed}
             label={settings.labelCheckboxSepaMandat}
+            explanation={settings.explanationCheckboxSepaMandat}
             controlId={"sepa"}
             showError={showValidation && !sepaAllowed}
           />
           {mustShowCheckboxContractAccepted() && (
-            <TapirCheckbox
+            <CheckboxWithExplanation
               onChange={setContractAccepted}
               checked={contractAccepted}
               label={settings.labelCheckboxContractPolicy}
+              explanation={settings.explanationCheckboxContractPolicy}
               controlId={"contract"}
               showError={showValidation && !contractAccepted}
             />

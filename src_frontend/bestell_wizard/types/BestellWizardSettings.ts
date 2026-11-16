@@ -24,7 +24,9 @@ export type BestellWizardSettings = {
   forceWaitingList: boolean;
   showCoopContent: boolean;
   labelCheckboxSepaMandat: string;
+  explanationCheckboxSepaMandat: string;
   labelCheckboxContractPolicy: string;
+  explanationCheckboxContractPolicy: string;
   trialPeriodLengthInWeeks: number;
   paymentRhythmChoices: { [key: string]: string };
   studentStatusAllowed: boolean;

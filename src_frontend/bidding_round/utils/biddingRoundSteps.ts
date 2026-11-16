@@ -10,6 +10,7 @@ interface BuildBiddingRoundStepsParams {
   isAuthenticated: boolean;
   productTypeId?: string | null;
   hasProductIntro: boolean;
+  sepaEnabled: boolean;
 }
 
 export function buildBiddingRoundSteps({
@@ -17,6 +18,7 @@ export function buildBiddingRoundSteps({
   isAuthenticated,
   productTypeId,
   hasProductIntro,
+  sepaEnabled,
 }: BuildBiddingRoundStepsParams): MobileWizardStep[] {
   if (!hasActiveRound || !isAuthenticated || !productTypeId) {
     return ["bidding_round_intro"];
@@ -26,7 +28,11 @@ export function buildBiddingRoundSteps({
   if (hasProductIntro) {
     steps.push(productTypeId + "_intro");
   }
-  steps.push(productTypeId + "_bid", "bidding_round_summary");
+  steps.push(productTypeId + "_bid");
+  if (sepaEnabled) {
+    steps.push("bidding_round_sepa");
+  }
+  steps.push("bidding_round_privacy", "bidding_round_summary");
   steps.push("bidding_round_confirmation");
   return steps;
 }
@@ -51,6 +57,9 @@ export function getBiddingRoundPhase(
   switch (step) {
     case "bidding_round_intro":
       return "intro";
+    case "bidding_round_sepa":
+    case "bidding_round_privacy":
+      return "personal_data";
     case "bidding_round_confirmation":
       return "confirmation";
   }
@@ -61,6 +70,8 @@ export function getBiddingRoundPhaseLabel(phase: MobileWizardPhase): string {
   switch (phase) {
     case "intro":
       return "Intro";
+    case "personal_data":
+      return "Persönliche Daten";
     case "confirmation":
       return "Bestätigung";
   }
@@ -75,6 +86,10 @@ export function getBiddingRoundStepTitle(
   switch (step) {
     case "bidding_round_intro":
       return texts.introTitle;
+    case "bidding_round_sepa":
+      return "SEPA-Lastschrift";
+    case "bidding_round_privacy":
+      return texts.privacyTitle;
     case "bidding_round_summary":
       return texts.summaryTitle;
     case "bidding_round_confirmation":
@@ -98,6 +113,10 @@ export function getBiddingRoundStepBackground(
   switch (step) {
     case "bidding_round_intro":
       return settings.images?.step1BackgroundImage;
+    case "bidding_round_sepa":
+      return settings.images?.step9BackgroundImage;
+    case "bidding_round_privacy":
+      return settings.images?.step11BackgroundImage;
     case "bidding_round_summary":
       return settings.images?.step10BackgroundImage;
     case "bidding_round_confirmation":
@@ -114,6 +133,10 @@ export function getBiddingRoundStepName(
   switch (step) {
     case "bidding_round_intro":
       return "Intro";
+    case "bidding_round_sepa":
+      return "SEPA";
+    case "bidding_round_privacy":
+      return "Datenschutz";
     case "bidding_round_summary":
       return "Zusammenfassung";
     case "bidding_round_confirmation":

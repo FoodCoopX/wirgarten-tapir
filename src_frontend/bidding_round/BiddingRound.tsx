@@ -22,6 +22,8 @@ import { handleRequestError } from "../utils/handleRequestError.ts";
 import BiddingRoundBidStep from "./steps/BiddingRoundBidStep.tsx";
 import BiddingRoundConfirmationStep from "./steps/BiddingRoundConfirmationStep.tsx";
 import BiddingRoundIntroStep from "./steps/BiddingRoundIntroStep.tsx";
+import BiddingRoundLegalStep from "./steps/BiddingRoundLegalStep.tsx";
+import BiddingRoundSepaStep from "./steps/BiddingRoundSepaStep.tsx";
 import BiddingRoundSummaryStep from "./steps/BiddingRoundSummaryStep.tsx";
 import {
   parseEuroAmount,
@@ -52,6 +54,7 @@ const EMPTY_TEXTS: RoundTexts = {
   loginTitle: "",
   loginText: "",
   summaryTitle: "",
+  privacyTitle: "",
   pickupLocationTitle: "",
   submitLabel: "",
   bid: {
@@ -96,6 +99,13 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({
   );
   const [quantity, setQuantity] = useState(1);
   const [amounts, setAmounts] = useState<string[]>(["", "", ""]);
+  const [sepaAllowed, setSepaAllowed] = useState(false);
+  const [accountOwner, setAccountOwner] = useState("");
+  const [iban, setIban] = useState("");
+  const [paymentRhythm, setPaymentRhythm] = useState("");
+  const [cancellationPolicyRead, setCancellationPolicyRead] = useState(false);
+  const [contractAccepted, setContractAccepted] = useState(false);
+  const [privacyPolicyRead, setPrivacyPolicyRead] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [confirmationHtml, setConfirmationHtml] = useState("");
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
@@ -159,6 +169,7 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({
     setSettings(wizardSettings);
     setData(publicData);
     applyDefaultBid(publicData);
+    applyMemberData(publicData);
     setLoading(false);
   }
 
@@ -177,6 +188,16 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({
       existingBid?.amount2 ?? "",
       isBidRange ? "" : (existingBid?.amount3 ?? ""),
     ]);
+  }
+
+  function applyMemberData(publicData: PublicDataResponse | null) {
+    setAccountOwner(publicData?.accountOwner ?? "");
+    setIban(publicData?.iban ?? "");
+    setPaymentRhythm(publicData?.paymentRhythm ?? "");
+    setSepaAllowed(false);
+    setCancellationPolicyRead(false);
+    setContractAccepted(false);
+    setPrivacyPolicyRead(false);
   }
 
   useEffect(() => {
@@ -201,6 +222,7 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({
       isAuthenticated,
       productTypeId,
       hasProductIntro,
+      sepaEnabled: Boolean(data?.sepaEnabled),
     });
     setSteps(newSteps);
     setCurrentStep((current) => {
@@ -263,7 +285,7 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({
       .filter((value): value is number => value !== null);
   }
 
-  function goToSummary() {
+  function goToNextStepAfterBid() {
     const variant = getSelectedVariant();
     if (!variant) {
       addToast(
@@ -346,7 +368,7 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({
       return;
     }
 
-    setCurrentStep("bidding_round_summary");
+    goToNextStep();
   }
 
   async function submitBid() {
@@ -364,6 +386,13 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({
           amount1: toDotDecimal(amounts[0]),
           amount2: toDotDecimal(amounts[1]),
           amount3: isBidRange ? null : toDotDecimal(amounts[2]),
+          sepaAllowed: sepaAllowed,
+          accountOwner: accountOwner,
+          iban: iban,
+          paymentRhythm: paymentRhythm,
+          cancellationPolicyRead: cancellationPolicyRead,
+          contractAccepted: contractAccepted,
+          privacyPolicyRead: privacyPolicyRead,
         },
       });
       setConfirmationHtml(texts.bid.successText);
@@ -426,6 +455,40 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({
           isAuthenticated={isAuthenticated}
           hasActiveRound={hasActiveRound}
           liveEvaluation={liveEvaluation}
+          goToNextStep={goToNextStep}
+          stepActive={step === currentStep}
+        />
+      );
+    }
+
+    if (step === "bidding_round_sepa") {
+      return (
+        <BiddingRoundSepaStep
+          settings={settings}
+          accountOwner={accountOwner}
+          setAccountOwner={setAccountOwner}
+          iban={iban}
+          setIban={setIban}
+          paymentRhythm={paymentRhythm}
+          setPaymentRhythm={setPaymentRhythm}
+          sepaAllowed={sepaAllowed}
+          setSepaAllowed={setSepaAllowed}
+          goToNextStep={goToNextStep}
+          stepActive={step === currentStep}
+        />
+      );
+    }
+
+    if (step === "bidding_round_privacy") {
+      return (
+        <BiddingRoundLegalStep
+          settings={settings}
+          cancellationPolicyRead={cancellationPolicyRead}
+          setCancellationPolicyRead={setCancellationPolicyRead}
+          contractAccepted={contractAccepted}
+          setContractAccepted={setContractAccepted}
+          privacyPolicyRead={privacyPolicyRead}
+          setPrivacyPolicyRead={setPrivacyPolicyRead}
           goToNextStep={goToNextStep}
           stepActive={step === currentStep}
         />
@@ -495,7 +558,7 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({
         currentPickupLocation={data.currentPickupLocation ?? null}
         sharesEnabled={data?.bidOptions?.quantityEnabled ?? false}
         carouselEnabled={data?.bidOptions?.carouselEnabled ?? false}
-        goToNextStep={goToSummary}
+        goToNextStep={goToNextStepAfterBid}
         stepActive={step === currentStep}
       />
     );
