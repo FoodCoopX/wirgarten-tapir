@@ -7,7 +7,13 @@ from tapir.bidding_round.serializers import (
     RoundSerializer,
     RoundTextsSerializer,
 )
+from tapir.bidding_round.services.bidding_round_delivery_charge_service import (
+    BiddingRoundDeliveryChargeService,
+)
 from tapir.configuration.parameter import get_parameter_value
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
+)
 from tapir.wirgarten.models import Member, Product, Subscription
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
@@ -75,6 +81,9 @@ class BiddingRoundViewService:
             "login_title": ParameterKeys.BIDDING_ROUND_PUBLIC_LOGIN_TITLE,
             "login_text": ParameterKeys.BIDDING_ROUND_PUBLIC_LOGIN_TEXT,
             "summary_title": ParameterKeys.BIDDING_ROUND_PUBLIC_SUMMARY_TITLE,
+            "pickup_location_title": (
+                ParameterKeys.BIDDING_ROUND_PUBLIC_PICKUP_LOCATION_TITLE
+            ),
             "submit_label": ParameterKeys.BIDDING_ROUND_PUBLIC_SUBMIT_LABEL,
         }
         bid_string_id_to_parameter_key_map = {
@@ -157,5 +166,31 @@ class BiddingRoundViewService:
         return quantities
 
     @classmethod
+    def build_current_pickup_location(cls, bidding_round, member, cache):
+        pickup_location = MemberPickupLocationGetter.get_member_pickup_location(
+            member=member,
+            reference_date=bidding_round.growing_period.start_date,
+            cache=cache,
+        )
+        if pickup_location is None:
+            return None
+        round_product_type = cls._get_round_product_type(bidding_round)
+        product_type = (
+            round_product_type.product_type if round_product_type is not None else None
+        )
+        yearly_delivery_charge = (
+            BiddingRoundDeliveryChargeService.get_yearly_delivery_charge(
+                pickup_location_id=pickup_location.id,
+                product_type=product_type,
+                growing_period=bidding_round.growing_period,
+                cache=cache,
+            )
+        )
+        return {
+            "id": pickup_location.id,
+            "name": pickup_location.name,
+            "yearly_delivery_charge": str(yearly_delivery_charge),
+        }
+
     def serialize_validation_error(cls, error: ValidationError) -> str:
         return "; ".join(error.messages)
