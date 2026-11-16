@@ -32,6 +32,7 @@ class BiddingRoundService:
         "end_at",
         "bidding_procedure",
         "bid_levels",
+        "include_auto_renewed",
     )
     SENSITIVE_FIELDS = (
         "product_type_id",
@@ -39,6 +40,7 @@ class BiddingRoundService:
         "prices",
         "bidding_procedure",
         "bid_levels",
+        "include_auto_renewed",
     )
 
     @classmethod
@@ -56,6 +58,7 @@ class BiddingRoundService:
         prices: list[dict] | None = None,
         bidding_procedure: str = BIDDING_ROUND_PROCEDURE_SIMPLE,
         bid_levels: int = 1,
+        include_auto_renewed: bool = True,
     ) -> BiddingRound:
         if end_at is None:
             raise ValidationError(_("Die Beitragsrunde braucht ein Enddatum."))
@@ -82,6 +85,7 @@ class BiddingRoundService:
             comment=comment,
             bidding_procedure=bidding_procedure,
             bid_levels=bid_levels,
+            include_auto_renewed=include_auto_renewed,
         )
 
         round_product_type, _created = BiddingRoundProductType.objects.get_or_create(

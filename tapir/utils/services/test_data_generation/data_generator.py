@@ -158,6 +158,7 @@ class DataGenerator:
         if generate_bakery_data:
             BakeryGenerator.generate_masterdata()
         UserGenerator.generate_users_and_subscriptions(generate_test_data_for)
+        ProductGenerator.update_harvest_share_capacities(generate_test_data_for)
         if generate_bakery_data:
             BakeryGenerator.generate_week_data()
         print("Creating jokers...")
@@ -167,7 +168,9 @@ class DataGenerator:
         print("Creating Solidarity contributions...")
         SolidarityContributionGenerator.generate_solidarity_contributions()
         print("Creating bidding round...")
-        BiddingRoundGenerator.generate_bidding_round()
+        BiddingRoundGenerator.generate_bidding_round(
+            organization=generate_test_data_for
+        )
         print("Creating member credits...")
         MemberCreditGenerator.generate_member_credits()
         print("Creating payment history...")

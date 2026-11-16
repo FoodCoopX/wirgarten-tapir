@@ -130,7 +130,6 @@ class UserGenerator:
                 products_from_base_type=products_from_required_types,
                 additional_products=products_from_optional_types,
                 members_that_need_a_pickup_location=members_that_need_a_pickup_location,
-                required_products=products_from_required_types,
             )
             CoopShareTransaction.objects.filter(
                 valid_at__lte=get_today(cache=cache) - datetime.timedelta(days=60)
@@ -187,7 +186,6 @@ class UserGenerator:
         products_from_base_type,
         additional_products,
         members_that_need_a_pickup_location,
-        required_products,
     ):
         member = cls.create_member(parsed_user=parsed_user, cache=cache, fake=fake)
 
@@ -216,10 +214,6 @@ class UserGenerator:
                 )
             if needs_pickup_location:
                 members_that_need_a_pickup_location.add(member)
-            if len(required_products) > 0:
-                cls.create_subscription_to_required_products(
-                    member=member, products=required_products, cache=cache
-                )
 
         if not member_without_subscriptions and random.random() < 0.3:
             cls.generate_feedback_for_member(member)
@@ -399,35 +393,6 @@ class UserGenerator:
                 )
 
         return min_shares, needs_pickup_location
-
-    @classmethod
-    def create_subscription_to_required_products(
-        cls, member: Member, products: List[Product], cache: dict
-    ):
-        growing_period = TapirCache.get_growing_period_at_date(
-            reference_date=get_today(cache=cache), cache=cache
-        )
-
-        Subscription.objects.create(
-            member=member,
-            product=random.choice(products),
-            start_date=growing_period.start_date,
-            end_date=growing_period.end_date,
-            period=None,
-            quantity=1,
-            mandate_ref=MandateReferenceProvider.get_or_create_mandate_reference(
-                member, cache=cache
-            ),
-            admin_confirmed=cls.get_confirmation_datetime(
-                growing_period.start_date, cache=cache
-            ),
-            notice_period_duration=get_parameter_value(
-                ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD, cache=cache
-            ),
-            notice_period_unit=get_parameter_value(
-                ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD_UNIT, cache=cache
-            ),
-        )
 
     @classmethod
     def create_coop_shares_for_user(cls, member: Member, min_shares: int, cache: dict):

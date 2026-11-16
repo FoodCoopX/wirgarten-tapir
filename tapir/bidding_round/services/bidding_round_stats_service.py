@@ -1,11 +1,25 @@
 from decimal import Decimal, InvalidOperation
 
+from tapir.associations.models import AssociationMembershipType
+from tapir.associations.services.association_membership_price_type_getter import (
+    AssociationMembershipTypePriceGetter,
+)
 from tapir.bidding_round.config import BIDDING_ROUND_PROCEDURE_BID_RANGE
 from tapir.bidding_round.models import BidItem, BiddingRoundProductPrice
+from tapir.bidding_round.services.bidding_round_delivery_charge_service import (
+    BiddingRoundDeliveryChargeService,
+)
 from tapir.bidding_round.services.bidding_round_view_service import (
     BiddingRoundViewService,
 )
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
+)
+from tapir.subscriptions.services.automatic_subscription_renewal_service import (
+    AutomaticSubscriptionRenewalService,
+)
 from tapir.utils.services.tapir_cache import TapirCache
+from tapir.wirgarten.utils import legal_status_is_association
 
 BID_RANGE_POSITION_MIN = Decimal("0")
 BID_RANGE_POSITION_MAX = Decimal("100")
@@ -44,11 +58,11 @@ class BiddingRoundStatsService:
         return min(max(value, BID_RANGE_POSITION_MIN), BID_RANGE_POSITION_MAX)
 
     @classmethod
-    def get_default_position(cls, bidding_round) -> Decimal:
+    def get_default_position(cls, bidding_round, cache: dict) -> Decimal:
         if bidding_round.bidding_procedure == BIDDING_ROUND_PROCEDURE_BID_RANGE:
             return Decimal("50")
         return cls.get_level_position(
-            cls.get_recommended_level(bidding_round), bidding_round
+            cls.get_recommended_level(bidding_round, cache), bidding_round
         )
 
     @staticmethod
@@ -88,23 +102,306 @@ class BiddingRoundStatsService:
         return cls.get_amount_for_position(bid_item, position, bidding_round)
 
     @classmethod
-    def get_reached_per_year(cls, bidding_round, position=None) -> Decimal:
+    def get_reached_per_year(
+        cls, bidding_round, position=None, *, cache: dict
+    ) -> Decimal:
         if position is None:
-            position = cls.get_default_position(bidding_round)
-        return sum(
+            position = cls.get_default_position(bidding_round, cache)
+        total = sum(
             (
                 cls.get_item_monthly_amount(item, position, bidding_round) * 12
-                for item in cls._items(bidding_round)
+                for item in cls._items(bidding_round, cache)
+            ),
+            Decimal("0"),
+        )
+        if cls.are_auto_renewed_included(bidding_round, cache):
+            total += cls.get_auto_renewed_per_year(bidding_round, cache)
+        return total
+
+    @classmethod
+    def are_auto_renewed_included(cls, bidding_round, cache) -> bool:
+        return bidding_round.include_auto_renewed
+
+    @classmethod
+    def _get_size(cls, product, bidding_round, cache) -> Decimal:
+        return cls.get_product_size(product, bidding_round, cache)
+
+    @classmethod
+    def get_auto_renewed_by_member(cls, bidding_round, cache) -> dict:
+        cache_key = ("bidding_round_auto_renewed", bidding_round.id)
+        if cache_key in cache:
+            return cache[cache_key]
+
+        bid_member_ids = set(bidding_round.bids.values_list("member_id", flat=True))
+        product_type_ids = set(
+            bidding_round.product_types.values_list("product_type_id", flat=True)
+        )
+        prices_by_product_id = {
+            price.product_id: price
+            for price in BiddingRoundProductPrice.objects.filter(
+                round_product_type__round=bidding_round
+            )
+        }
+        try:
+            renewing_subscriptions = AutomaticSubscriptionRenewalService.get_subscriptions_that_will_be_renewed(
+                reference_date=bidding_round.growing_period.start_date,
+                cache=cache,
+            )
+        except KeyError:
+            renewing_subscriptions = []
+
+        result = {}
+        for subscription in renewing_subscriptions:
+            if subscription.member_id in bid_member_ids:
+                continue
+            if subscription.product.type_id not in product_type_ids:
+                continue
+            price = prices_by_product_id.get(subscription.product_id)
+            reference_value = (
+                price.reference_value if price is not None else Decimal("0")
+            )
+            monthly = (reference_value or Decimal("0")) * subscription.quantity
+            entry = result.setdefault(
+                subscription.member_id,
+                {
+                    "member_id": subscription.member_id,
+                    "member_name": str(subscription.member),
+                    "monthly_reference": Decimal("0"),
+                    "yearly_reference": Decimal("0"),
+                },
+            )
+            entry["monthly_reference"] += monthly
+            entry["yearly_reference"] += monthly * 12
+
+        cache[cache_key] = result
+        return result
+
+    @classmethod
+    def get_auto_renewed_per_year(cls, bidding_round, cache) -> Decimal:
+        return sum(
+            (
+                entry["yearly_reference"]
+                for entry in cls.get_auto_renewed_by_member(
+                    bidding_round, cache
+                ).values()
             ),
             Decimal("0"),
         )
 
     @classmethod
-    def get_coverage_percent(cls, bidding_round, position=None) -> float:
+    def _get_auto_renewed_shares(cls, bidding_round, cache) -> Decimal:
+        product_type_ids = set(
+            bidding_round.product_types.values_list("product_type_id", flat=True)
+        )
+        bid_member_ids = set(bidding_round.bids.values_list("member_id", flat=True))
+        try:
+            subscriptions = AutomaticSubscriptionRenewalService.get_subscriptions_that_will_be_renewed(
+                reference_date=bidding_round.growing_period.start_date,
+                cache=cache,
+            )
+        except KeyError:
+            subscriptions = []
+
+        total = Decimal("0")
+        for subscription in subscriptions:
+            if subscription.member_id in bid_member_ids:
+                continue
+            if subscription.product.type_id not in product_type_ids:
+                continue
+            total += (
+                cls._get_size(subscription.product, bidding_round, cache)
+                * subscription.quantity
+            )
+        return total
+
+    @classmethod
+    def build_financing_projection(
+        cls, bidding_round, cache, include_auto_renewed=True
+    ) -> dict:
+        target_per_year = cls.get_target_per_year(bidding_round)
+        capacity_shares = cls.get_capacity_shares(bidding_round, cache)
+        bid_shares = cls.get_current_shares(bidding_round, cache)
+
+        auto_renewed = (
+            cls.get_auto_renewed_by_member(bidding_round, cache)
+            if include_auto_renewed
+            else {}
+        )
+        auto_euro = sum(
+            (entry["yearly_reference"] for entry in auto_renewed.values()),
+            Decimal("0"),
+        )
+        auto_shares = (
+            cls._get_auto_renewed_shares(bidding_round, cache)
+            if include_auto_renewed
+            else Decimal("0")
+        )
+
+        extra_positions = cls.build_extra_positions(bidding_round, cache=cache)
+        membership_per_year = (
+            extra_positions["membership"]["reached_per_year"]
+            if extra_positions["membership"]["applicable"]
+            else Decimal("0")
+        )
+        delivery_charge_per_year = (
+            extra_positions["delivery_charge"]["reached_per_year"]
+            if extra_positions["delivery_charge"]["applicable"]
+            else Decimal("0")
+        )
+        fixed_per_year = auto_euro + membership_per_year + delivery_charge_per_year
+
+        def build_level(position):
+            reached_per_year = cls.get_reached_per_year(
+                bidding_round, position, cache=cache
+            )
+            average_per_share_per_month = (
+                reached_per_year / (bid_shares * 12) if bid_shares else Decimal("0")
+            )
+            return {
+                "reached_per_year": reached_per_year,
+                "average_per_share_per_month": average_per_share_per_month.quantize(
+                    Decimal("0.01")
+                ),
+            }
+
+        return {
+            "target_per_year": target_per_year,
+            "capacity_shares": capacity_shares,
+            "bid_shares": bid_shares,
+            "auto_shares": auto_shares,
+            "remaining_shares": max(
+                capacity_shares - bid_shares - auto_shares, Decimal("0")
+            ),
+            "fixed_per_year": fixed_per_year,
+            "auto_renew_per_year": auto_euro,
+            "membership_per_year": membership_per_year,
+            "delivery_charge_per_year": delivery_charge_per_year,
+            "membership_included_in_product_type": False,
+            "levels": {
+                "green": build_level(Decimal("0")),
+                "yellow": build_level(Decimal("50")),
+                "red": build_level(Decimal("100")),
+            },
+        }
+
+    @classmethod
+    def build_non_bidder_rate_per_share(cls, bidding_round, cache) -> Decimal:
+        position = cls.get_default_position(bidding_round, cache)
+        total_amount = Decimal("0")
+        total_shares = Decimal("0")
+        for item in cls._items(bidding_round, cache):
+            total_amount += cls.get_effective_amount(item, position, bidding_round)
+            total_shares += cls._get_size(item.product, bidding_round, cache)
+        if total_shares == 0:
+            return Decimal("0")
+        return (total_amount / total_shares).quantize(Decimal("0.01"))
+
+    @classmethod
+    def build_extra_positions(cls, bidding_round, cache) -> dict:
+        round_product_type = bidding_round.product_types.select_related(
+            "product_type"
+        ).first()
+        product_type = (
+            round_product_type.product_type if round_product_type is not None else None
+        )
+        return {
+            "membership": cls._get_membership_position(bidding_round, cache),
+            "delivery_charge": cls._get_delivery_charge_position(
+                bidding_round, product_type, cache
+            ),
+        }
+
+    @classmethod
+    def _get_membership_position(cls, bidding_round, cache) -> dict:
+        position = {
+            "label": "Mitgliedschaft",
+            "reached_per_year": Decimal("0"),
+            "applicable": False,
+        }
+        try:
+            is_association = legal_status_is_association(cache)
+        except KeyError:
+            is_association = False
+        if not is_association:
+            return position
+
+        membership_type = (
+            AssociationMembershipType.objects.filter(
+                deleted=False, hidden_in_bestell_wizard=False
+            )
+            .order_by("order_in_bestell_wizard")
+            .first()
+        )
+        if membership_type is None:
+            return position
+        price = AssociationMembershipTypePriceGetter.get_price(
+            membership_type=membership_type,
+            reference_date=bidding_round.growing_period.start_date,
+            cache=cache,
+        )
+        if not price:
+            return position
+        position["reached_per_year"] = price * 12 * bidding_round.bids.count()
+        position["applicable"] = True
+        return position
+
+    @classmethod
+    def _get_delivery_charge_position(cls, bidding_round, product_type, cache) -> dict:
+        position = {
+            "label": "Lieferzuschlag",
+            "reached_per_year": Decimal("0"),
+            "applicable": False,
+        }
+        if product_type is None:
+            return position
+
+        reference_date = bidding_round.growing_period.start_date
+        bids_per_pickup_location = {}
+        for bid in bidding_round.bids.all():
+            pickup_location_id = (
+                MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
+                    member_id=bid.member_id,
+                    reference_date=reference_date,
+                    cache=cache,
+                )
+            )
+            if pickup_location_id is None:
+                continue
+            bids_per_pickup_location[pickup_location_id] = (
+                bids_per_pickup_location.get(pickup_location_id, 0) + 1
+            )
+
+        charge_by_location = {
+            pickup_location_id: BiddingRoundDeliveryChargeService.get_yearly_delivery_charge(
+                pickup_location_id=pickup_location_id,
+                product_type=product_type,
+                growing_period=bidding_round.growing_period,
+                cache=cache,
+            )
+            for pickup_location_id in bids_per_pickup_location
+        }
+        position["reached_per_year"] = sum(
+            (
+                charge_by_location.get(pickup_location_id, Decimal("0")) * count
+                for pickup_location_id, count in bids_per_pickup_location.items()
+            ),
+            Decimal("0"),
+        )
+        position["applicable"] = position["reached_per_year"] > 0
+        return position
+
+    @classmethod
+    def get_coverage_percent(
+        cls, bidding_round, position=None, *, cache: dict
+    ) -> float:
         target = cls.get_target_per_year(bidding_round)
         if target == 0:
             return 0.0
-        return float(cls.get_reached_per_year(bidding_round, position) / target * 100)
+        return float(
+            cls.get_reached_per_year(bidding_round, position, cache=cache)
+            / target
+            * 100
+        )
 
     @classmethod
     def get_bidder_count(cls, bidding_round) -> int:
@@ -125,10 +422,10 @@ class BiddingRoundStatsService:
         cls, bidding_round, position=None, *, cache: dict
     ) -> Decimal:
         if position is None:
-            position = cls.get_default_position(bidding_round)
+            position = cls.get_default_position(bidding_round, cache)
         total_amount = Decimal("0")
         total_shares = Decimal("0")
-        for item in cls._items(bidding_round):
+        for item in cls._items(bidding_round, cache):
             total_amount += (
                 cls.get_effective_amount(item, position, bidding_round) * item.quantity
             )
@@ -140,12 +437,14 @@ class BiddingRoundStatsService:
         return total_amount / total_shares
 
     @classmethod
-    def get_bidder_average_per_month(cls, bidding_round, position=None) -> Decimal:
+    def get_bidder_average_per_month(
+        cls, bidding_round, position=None, *, cache: dict
+    ) -> Decimal:
         if position is None:
-            position = cls.get_default_position(bidding_round)
+            position = cls.get_default_position(bidding_round, cache)
         amounts = [
             cls.get_item_monthly_amount(item, position, bidding_round)
-            for item in cls._items(bidding_round)
+            for item in cls._items(bidding_round, cache)
         ]
         if not amounts:
             return Decimal("0")
@@ -158,7 +457,7 @@ class BiddingRoundStatsService:
         return cls.get_effective_amount(item, position, bidding_round) * item.quantity
 
     @classmethod
-    def get_recommended_level(cls, bidding_round) -> int:
+    def get_recommended_level(cls, bidding_round, cache: dict) -> int:
         if bidding_round.bidding_procedure == BIDDING_ROUND_PROCEDURE_BID_RANGE:
             return 2
         levels = max(1, min(3, bidding_round.bid_levels))
@@ -167,6 +466,7 @@ class BiddingRoundStatsService:
                 cls.get_coverage_percent(
                     bidding_round,
                     cls.get_level_position(level, bidding_round),
+                    cache=cache,
                 )
                 >= RECOMMENDED_COVERAGE_PERCENT
             ):
@@ -174,8 +474,8 @@ class BiddingRoundStatsService:
         return levels
 
     @classmethod
-    def get_coverage_status(cls, bidding_round, position=None) -> str:
-        coverage = cls.get_coverage_percent(bidding_round, position)
+    def get_coverage_status(cls, bidding_round, position=None, *, cache: dict) -> str:
+        coverage = cls.get_coverage_percent(bidding_round, position, cache=cache)
         if coverage >= COVERAGE_STATUS_GREEN_PERCENT:
             return "green"
         if coverage >= COVERAGE_STATUS_YELLOW_PERCENT:
@@ -183,7 +483,7 @@ class BiddingRoundStatsService:
         return "red"
 
     @classmethod
-    def build_levels_evaluation(cls, bidding_round) -> dict:
+    def build_levels_evaluation(cls, bidding_round, cache: dict) -> dict:
         if bidding_round.bidding_procedure == BIDDING_ROUND_PROCEDURE_BID_RANGE:
             level_keys = BID_RANGE_LEVEL_KEYS
         else:
@@ -194,20 +494,24 @@ class BiddingRoundStatsService:
                     cls.get_reached_per_year(
                         bidding_round,
                         cls.get_level_position(level, bidding_round),
+                        cache=cache,
                     )
                 ),
                 "coverage_percent": cls.get_coverage_percent(
                     bidding_round,
                     cls.get_level_position(level, bidding_round),
+                    cache=cache,
                 ),
                 "coverage_status": cls.get_coverage_status(
                     bidding_round,
                     cls.get_level_position(level, bidding_round),
+                    cache=cache,
                 ),
                 "bidder_average_per_month": str(
                     cls.get_bidder_average_per_month(
                         bidding_round,
                         cls.get_level_position(level, bidding_round),
+                        cache=cache,
                     )
                 ),
             }
@@ -231,7 +535,7 @@ class BiddingRoundStatsService:
     @classmethod
     def get_current_shares(cls, bidding_round, cache) -> Decimal:
         total = Decimal("0")
-        for item in cls._items(bidding_round).select_related("product"):
+        for item in cls._items(bidding_round, cache):
             total += (
                 cls.get_product_size(item.product, bidding_round, cache) * item.quantity
             )
@@ -245,32 +549,36 @@ class BiddingRoundStatsService:
 
     @classmethod
     def build_public_evaluation(cls, bidding_round, cache) -> dict:
-        position = cls.get_default_position(bidding_round)
+        position = cls.get_default_position(bidding_round, cache)
         capacity_shares = cls.get_capacity_shares(bidding_round, cache)
         current_shares = cls.get_current_shares(bidding_round, cache)
         return {
             "bidding_procedure": bidding_round.bidding_procedure,
             "bid_levels": bidding_round.bid_levels,
-            "recommended_level": cls.get_recommended_level(bidding_round),
+            "recommended_level": cls.get_recommended_level(bidding_round, cache),
             "bid_range_position": float(position),
-            "coverage_status": cls.get_coverage_status(bidding_round, position),
+            "coverage_status": cls.get_coverage_status(
+                bidding_round, position, cache=cache
+            ),
             "target_per_year": str(cls.get_target_per_year(bidding_round)),
             "capacity_shares": str(capacity_shares),
             "current_shares": str(current_shares),
             "utilization_percent": cls.get_utilization_percent(
                 capacity_shares, current_shares
             ),
-            "coverage_percent": cls.get_coverage_percent(bidding_round, position),
-            "bidder_average_per_month": str(
-                cls.get_bidder_average_per_month(bidding_round, position)
+            "coverage_percent": cls.get_coverage_percent(
+                bidding_round, position, cache=cache
             ),
-            "levels": cls.build_levels_evaluation(bidding_round),
+            "bidder_average_per_month": str(
+                cls.get_bidder_average_per_month(bidding_round, position, cache=cache)
+            ),
+            "levels": cls.build_levels_evaluation(bidding_round, cache),
         }
 
     @classmethod
     def build_admin_evaluation(cls, bidding_round, cache, position=None) -> dict:
         if position is None:
-            position = cls.get_default_position(bidding_round)
+            position = cls.get_default_position(bidding_round, cache)
         position = cls.clamp_position(position)
         rows = []
         for bid in bidding_round.bids.select_related("member").prefetch_related(
@@ -299,25 +607,52 @@ class BiddingRoundStatsService:
                 }
             )
 
+        auto_renewed = (
+            cls.get_auto_renewed_by_member(bidding_round, cache)
+            if cls.are_auto_renewed_included(bidding_round, cache)
+            else {}
+        )
         return {
             "bidding_procedure": bidding_round.bidding_procedure,
             "bid_levels": bidding_round.bid_levels,
+            "include_auto_renewed": bidding_round.include_auto_renewed,
+            "auto_renewed_per_year": str(
+                sum(
+                    (entry["yearly_reference"] for entry in auto_renewed.values()),
+                    Decimal("0"),
+                )
+            ),
+            "auto_renewed": list(auto_renewed.values()),
+            "extra_positions": cls.build_extra_positions(bidding_round, cache),
+            "non_bidder_rate_per_share": str(
+                cls.build_non_bidder_rate_per_share(bidding_round, cache)
+            ),
             "bid_range_position": float(position),
-            "recommended_level": cls.get_recommended_level(bidding_round),
-            "coverage_status": cls.get_coverage_status(bidding_round, position),
-            "levels": cls.build_levels_evaluation(bidding_round),
+            "recommended_level": cls.get_recommended_level(bidding_round, cache),
+            "coverage_status": cls.get_coverage_status(
+                bidding_round, position, cache=cache
+            ),
+            "levels": cls.build_levels_evaluation(bidding_round, cache),
             "target_per_year": str(cls.get_target_per_year(bidding_round)),
-            "reached_per_year": str(cls.get_reached_per_year(bidding_round, position)),
-            "coverage_percent": cls.get_coverage_percent(bidding_round, position),
+            "reached_per_year": str(
+                cls.get_reached_per_year(bidding_round, position, cache=cache)
+            ),
+            "coverage_percent": cls.get_coverage_percent(
+                bidding_round, position, cache=cache
+            ),
             "bidder_count": cls.get_bidder_count(bidding_round),
             "bidder_average_per_month": str(
-                cls.get_bidder_average_per_month(bidding_round, position)
+                cls.get_bidder_average_per_month(bidding_round, position, cache=cache)
             ),
             "bids": rows,
         }
 
     @classmethod
-    def _items(cls, bidding_round):
-        return BidItem.objects.filter(bid__round=bidding_round).select_related(
+    def _items(cls, bidding_round, cache: dict):
+        queryset = BidItem.objects.filter(bid__round=bidding_round).select_related(
             "product"
         )
+        key = ("bidding_round_items", bidding_round.id)
+        if key not in cache:
+            cache[key] = list(queryset)
+        return cache[key]

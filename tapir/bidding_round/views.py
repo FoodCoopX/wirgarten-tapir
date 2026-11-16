@@ -216,6 +216,7 @@ class RoundListCreateView(BiddingRoundFeatureFlagMixin, APIView):
                     "bidding_procedure", BIDDING_ROUND_PROCEDURE_SIMPLE
                 ),
                 bid_levels=validated.get("bid_levels", 1),
+                include_auto_renewed=validated.get("include_auto_renewed", True),
                 cache=cache,
             )
         except ValidationError as error:
@@ -508,6 +509,9 @@ class CreateContractsView(BiddingRoundFeatureFlagMixin, APIView):
                 bidding_round,
                 bid_ids=serializer.validated_data.get("bid_ids"),
                 bid_level=serializer.validated_data.get("bid_level"),
+                create_auto_renewed_contracts=serializer.validated_data.get(
+                    "create_auto_renewed_contracts", False
+                ),
                 actor=request.user,
                 cache=cache,
             )
