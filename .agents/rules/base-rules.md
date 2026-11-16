@@ -122,6 +122,7 @@ Services: `web` (8000), `vite` (5173), `keycloak` (8080), `db` (5432), `redis` (
   `mock_<name_of_the_function>`, e.g. `mock_get_payment_export_exclusion_periods_for_member` for
   `@patch.object(TapirCache, "get_payment_export_exclusion_periods_for_member", ...)`.
 - **Annotate API views** with `@extend_schema(...)` and run `make schema`.
+- **Admin docs**: when adding a new feature, ask whether the admin documentation in `docs/admins/` should be updated.
 - **Formatting**: Black / Prettier / DjHTML, enforced by pre-commit (`poetry run pre-commit install`).
 - **Commits**: [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/), referencing the GitHub issue ID
   when applicable.
