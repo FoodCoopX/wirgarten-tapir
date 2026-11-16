@@ -10,6 +10,7 @@ import {
   getYearlyAmount,
   parseEuroAmount,
 } from "../utils/amounts.ts";
+import { getLevelLabels } from "../utils/getLevelLabels.ts";
 
 interface BiddingRoundSummaryStepProps {
   variantName: string;
@@ -19,6 +20,7 @@ interface BiddingRoundSummaryStepProps {
   isBidRange: boolean;
   texts: RoundTexts;
   currentPickupLocation: CurrentPickupLocation | null;
+  sharesEnabled: boolean;
   submitting: boolean;
   onSubmit: () => void;
 }
@@ -31,17 +33,15 @@ const BiddingRoundSummaryStep: React.FC<BiddingRoundSummaryStepProps> = ({
   isBidRange,
   texts,
   currentPickupLocation,
+  sharesEnabled,
   submitting,
   onSubmit,
 }) => {
-  const levelLabels = isBidRange
-    ? [texts.bid.greenLabel, texts.bid.redLabel]
-    : requiredAmountLevels === 1
-      ? [texts.bid.amountLabel]
-      : [texts.bid.level1Label, texts.bid.level2Label, texts.bid.level3Label].slice(
-          0,
-          requiredAmountLevels,
-        );
+  const levelLabels = getLevelLabels(
+    texts,
+    isBidRange,
+    requiredAmountLevels,
+  );
 
   const levelRows = Array.from({ length: requiredAmountLevels }, (_, index) => {
     const amount = parseEuroAmount(amounts[index]);
@@ -64,10 +64,12 @@ const BiddingRoundSummaryStep: React.FC<BiddingRoundSummaryStepProps> = ({
             <span className={"text-muted"}>Produkt</span>
             <strong>{variantName}</strong>
           </div>
-          <div className={"d-flex justify-content-between"}>
-            <span className={"text-muted"}>Anteile</span>
-            <strong>{quantity}</strong>
-          </div>
+          {sharesEnabled && (
+            <div className={"d-flex justify-content-between"}>
+              <span className={"text-muted"}>Anteile</span>
+              <strong>{quantity}</strong>
+            </div>
+          )}
           <PickupLocationRow
             currentPickupLocation={currentPickupLocation}
             texts={texts}

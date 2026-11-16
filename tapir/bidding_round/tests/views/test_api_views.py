@@ -44,6 +44,8 @@ class BiddingRoundApiTestBase(TapirIntegrationTest):
     def _enable(self):
         self._set_parameter(ParameterKeys.BIDDING_ROUND_ENABLED, True)
         self._set_parameter(ParameterKeys.BIDDING_ROUND_URL_ENABLED, True)
+        self._set_parameter(ParameterKeys.BIDDING_ROUND_BID_SHARES_ENABLED, True)
+        self._set_parameter(ParameterKeys.BIDDING_ROUND_BID_CAROUSEL_ENABLED, True)
 
 
 class TestPublicDataView(BiddingRoundApiTestBase):
@@ -55,6 +57,24 @@ class TestPublicDataView(BiddingRoundApiTestBase):
         self.assertStatusCode(response, status.HTTP_200_OK)
         self.assertEqual("ended", response.data["round_status"])
         self.assertIsNone(response.data["round"])
+
+    def test_publicData_withBidSwitches_returnsTheirValues(self):
+        self._enable()
+
+        response = self.client.get(reverse("bidding_rounds:public_data"))
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assertTrue(response.data["bid_options"]["quantity_enabled"])
+        self.assertTrue(response.data["bid_options"]["carousel_enabled"])
+
+        self._set_parameter(ParameterKeys.BIDDING_ROUND_BID_SHARES_ENABLED, False)
+        self._set_parameter(ParameterKeys.BIDDING_ROUND_BID_CAROUSEL_ENABLED, False)
+
+        response = self.client.get(reverse("bidding_rounds:public_data"))
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assertFalse(response.data["bid_options"]["quantity_enabled"])
+        self.assertFalse(response.data["bid_options"]["carousel_enabled"])
 
     def test_publicData_withMemberPickupLocation_returnsLocationAndCharge(self):
         self._enable()
@@ -110,6 +130,42 @@ class TestPublicDataView(BiddingRoundApiTestBase):
             "90.00", response.data["biddable_product"]["products"][0]["reference_value"]
         )
         self.assertEqual("Gebot 1", response.data["texts"]["bid"]["level_1_label"])
+
+    def test_publicData_includesProductImage(self):
+        self._enable()
+        bidding_round = create_open_round()
+        product = get_product_for_round(bidding_round)
+        product.url_of_image_in_bestellwizard = "https://example.com/share.png"
+        product.save(update_fields=["url_of_image_in_bestellwizard"])
+
+        response = self.client.get(reverse("bidding_rounds:public_data"))
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assertEqual(
+            "https://example.com/share.png",
+            response.data["biddable_product"]["products"][0]["image_url"],
+        )
+
+    def test_publicData_bidOptionsDefaultToOff(self):
+        self._set_parameter(ParameterKeys.BIDDING_ROUND_ENABLED, True)
+        self._set_parameter(ParameterKeys.BIDDING_ROUND_URL_ENABLED, True)
+        create_open_round()
+
+        response = self.client.get(reverse("bidding_rounds:public_data"))
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assertFalse(response.data["bid_options"]["quantity_enabled"])
+        self.assertFalse(response.data["bid_options"]["carousel_enabled"])
+
+    def test_publicData_bidOptionsEnabled_returnsTrue(self):
+        self._enable()
+        create_open_round()
+
+        response = self.client.get(reverse("bidding_rounds:public_data"))
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assertTrue(response.data["bid_options"]["quantity_enabled"])
+        self.assertTrue(response.data["bid_options"]["carousel_enabled"])
 
 
 class TestMemberBidView(BiddingRoundApiTestBase):
