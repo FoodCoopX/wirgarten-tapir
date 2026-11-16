@@ -5,6 +5,7 @@ import pytest
 from django.core.exceptions import ValidationError
 
 from tapir.bidding_round.config import (
+    BIDDING_ROUND_PROCEDURE_BID_RANGE,
     BIDDING_ROUND_STATUS_ACTIVE,
     BIDDING_ROUND_STATUS_CLOSED,
     BIDDING_ROUND_STATUS_CONFIGURATION,
@@ -77,6 +78,24 @@ class TestBiddingRoundService(TapirIntegrationTest):
         with pytest.raises(ValidationError):
             BiddingRoundService.validate_round_creation(
                 end_at=end_at, start_at=end_at + datetime.timedelta(hours=1)
+            )
+
+    def test_validateRoundCreation_bidRangeWithThreeLevels_raisesValidationError(
+        self,
+    ):
+        with pytest.raises(ValidationError):
+            BiddingRoundService.validate_round_creation(
+                end_at=get_now(cache={}),
+                bidding_procedure=BIDDING_ROUND_PROCEDURE_BID_RANGE,
+                bid_levels=3,
+            )
+
+    def test_validateRoundCreation_unknownProcedure_raisesValidationError(self):
+        with pytest.raises(ValidationError):
+            BiddingRoundService.validate_round_creation(
+                end_at=get_now(cache={}),
+                bidding_procedure="unknown",
+                bid_levels=1,
             )
 
     def test_startRound_withoutTargetAmount_raisesValidationError(self):

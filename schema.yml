@@ -10630,6 +10630,12 @@ components:
           format: decimal
           pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
           nullable: true
+        amount_2:
+          type: string
+          nullable: true
+        amount_3:
+          type: string
+          nullable: true
         amount_per_year:
           type: string
           readOnly: true
@@ -10638,6 +10644,8 @@ components:
           readOnly: true
       required:
       - amount_1
+      - amount_2
+      - amount_3
       - amount_per_year
       - id
       - member_id
@@ -10687,6 +10695,12 @@ components:
         amount_1:
           type: string
           nullable: true
+        amount_2:
+          type: string
+          nullable: true
+        amount_3:
+          type: string
+          nullable: true
       required:
       - product_id
     BidTexts:
@@ -10697,6 +10711,14 @@ components:
         reference_value_hint:
           type: string
         simple_explanation:
+          type: string
+        bid_range_explanation:
+          type: string
+        green_label:
+          type: string
+        yellow_label:
+          type: string
+        red_label:
           type: string
         live_yearly_label:
           type: string
@@ -10714,15 +10736,19 @@ components:
           type: string
       required:
       - amount_label
+      - bid_range_explanation
       - confirm_text
       - error_text
+      - green_label
       - live_yearly_label
       - monthly_hint
       - monthly_unit
+      - red_label
       - reference_value_hint
       - simple_explanation
       - success_text
       - yearly_unit
+      - yellow_label
     BiddableProduct:
       type: object
       properties:
@@ -10741,6 +10767,14 @@ components:
       - product_type_id
       - product_type_name
       - products
+    BiddingProcedureEnum:
+      enum:
+      - simple
+      - bid_range
+      type: string
+      description: |-
+        * `simple` - Einfaches Verfahren
+        * `bid_range` - Gebotsspanne
     BlankEnum:
       enum:
       - ''
@@ -12316,6 +12350,10 @@ components:
           items:
             type: string
             minLength: 1
+        bid_level:
+          type: integer
+          maximum: 3
+          minimum: 1
     CreateContractsResponse:
       type: object
       properties:
@@ -13659,6 +13697,35 @@ components:
       required:
       - content
       - name
+    EvaluationLevel:
+      type: object
+      properties:
+        reached_per_year:
+          type: string
+        coverage_percent:
+          type: number
+          format: double
+        coverage_status:
+          type: string
+        bidder_average_per_month:
+          type: string
+      required:
+      - bidder_average_per_month
+      - coverage_percent
+      - coverage_status
+      - reached_per_year
+    EvaluationLevels:
+      type: object
+      properties:
+        green:
+          $ref: '#/components/schemas/EvaluationLevel'
+        yellow:
+          $ref: '#/components/schemas/EvaluationLevel'
+        red:
+          $ref: '#/components/schemas/EvaluationLevel'
+      required:
+      - green
+      - red
     ExistingMemberPurchasesSharesRequestRequest:
       type: object
       properties:
@@ -16400,6 +16467,12 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/RoundProductPriceInputRequest'
+        bidding_procedure:
+          $ref: '#/components/schemas/BiddingProcedureEnum'
+        bid_levels:
+          type: integer
+          maximum: 3
+          minimum: 1
     PatchedSaveExtendedProductTypeRequest:
       type: object
       properties:
@@ -18360,6 +18433,10 @@ components:
           type: string
         status:
           type: string
+        bidding_procedure:
+          type: string
+        bid_levels:
+          type: integer
         start_at:
           type: string
           format: date-time
@@ -18384,6 +18461,8 @@ components:
           - $ref: '#/components/schemas/RoundProduct'
           nullable: true
       required:
+      - bid_levels
+      - bidding_procedure
       - comment
       - contracts_created_at
       - end_at
@@ -18424,6 +18503,12 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/RoundProductPriceInputRequest'
+        bidding_procedure:
+          $ref: '#/components/schemas/BiddingProcedureEnum'
+        bid_levels:
+          type: integer
+          maximum: 3
+          minimum: 1
       required:
       - end_at
       - name
@@ -18490,6 +18575,19 @@ components:
     RoundResultsResponse:
       type: object
       properties:
+        bidding_procedure:
+          type: string
+        bid_levels:
+          type: integer
+        bid_range_position:
+          type: number
+          format: double
+        recommended_level:
+          type: integer
+        coverage_status:
+          type: string
+        levels:
+          $ref: '#/components/schemas/EvaluationLevels'
         target_per_year:
           type: string
         reached_per_year:
@@ -18506,11 +18604,17 @@ components:
           items:
             $ref: '#/components/schemas/RoundStatsBid'
       required:
+      - bid_levels
+      - bid_range_position
       - bidder_average_per_month
       - bidder_count
+      - bidding_procedure
       - bids
       - coverage_percent
+      - coverage_status
+      - levels
       - reached_per_year
+      - recommended_level
       - target_per_year
     RoundStatsBid:
       type: object
@@ -18534,6 +18638,12 @@ components:
           format: decimal
           pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
           nullable: true
+        amount_2:
+          type: string
+          nullable: true
+        amount_3:
+          type: string
+          nullable: true
         amount_per_month:
           type: string
           readOnly: true
@@ -18542,6 +18652,8 @@ components:
           readOnly: true
       required:
       - amount_1
+      - amount_2
+      - amount_3
       - amount_per_month
       - amount_per_year
       - bid_id

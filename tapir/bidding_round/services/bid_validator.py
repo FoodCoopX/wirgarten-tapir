@@ -6,6 +6,7 @@ from django.utils.translation import gettext_lazy as _
 from tapir.bidding_round.config import (
     BIDDING_ROUND_MAX_SHARES,
     BIDDING_ROUND_MIN_SHARES,
+    BIDDING_ROUND_PROCEDURE_BID_RANGE,
     BIDDING_ROUND_STATUS_ACTIVE,
 )
 from tapir.bidding_round.models import BiddingRound, BiddingRoundProductPrice
@@ -21,6 +22,8 @@ class BidValidator:
     checks without a serializer in between.
     """
 
+    AMOUNT_LEVELS = (1, 2, 3)
+
     @classmethod
     def validate(
         cls, bidding_round: BiddingRound, bid_input: BidInput, cache: dict
@@ -29,9 +32,14 @@ class BidValidator:
         product = cls._get_product(bidding_round, bid_input.product_id)
         price = cls._get_price_row(bidding_round, product)
         quantity = cls._validate_quantity(bid_input.quantity)
-        amount = cls._validate_amount(bid_input.amount_1)
-        cls._validate_min_amount(product, price, amount)
-        return BidInput(product_id=product.id, quantity=quantity, amount_1=amount)
+        amounts = cls._validate_amounts(bidding_round, bid_input, price, product)
+        return BidInput(
+            product_id=product.id,
+            quantity=quantity,
+            amount_1=amounts[1],
+            amount_2=amounts[2],
+            amount_3=amounts[3],
+        )
 
     @classmethod
     def _validate_round_is_open(cls, bidding_round: BiddingRound, cache: dict) -> None:
@@ -57,25 +65,6 @@ class BidValidator:
         return product
 
     @classmethod
-    def _validate_quantity(cls, quantity: int) -> int:
-        if not BIDDING_ROUND_MIN_SHARES <= quantity <= BIDDING_ROUND_MAX_SHARES:
-            raise ValidationError(cls._quantity_error())
-        return quantity
-
-    @classmethod
-    def _quantity_error(cls) -> str:
-        return _("Bitte gib zwischen %(min)s und %(max)s Anteile an.") % {
-            "min": BIDDING_ROUND_MIN_SHARES,
-            "max": BIDDING_ROUND_MAX_SHARES,
-        }
-
-    @classmethod
-    def _validate_amount(cls, amount: Decimal) -> Decimal:
-        if not isinstance(amount, Decimal) or not amount.is_finite() or amount <= 0:
-            raise ValidationError(_("Der Betrag muss größer als 0 sein."))
-        return amount
-
-    @classmethod
     def _get_price_row(
         cls, bidding_round: BiddingRound, product: Product
     ) -> BiddingRoundProductPrice:
@@ -89,18 +78,63 @@ class BidValidator:
         return price
 
     @classmethod
-    def _validate_min_amount(
+    def _validate_quantity(cls, quantity: int) -> int:
+        if not BIDDING_ROUND_MIN_SHARES <= quantity <= BIDDING_ROUND_MAX_SHARES:
+            raise ValidationError(cls._quantity_error())
+        return quantity
+
+    @classmethod
+    def _quantity_error(cls) -> str:
+        return _("Bitte gib zwischen %(min)s und %(max)s Anteile an.") % {
+            "min": BIDDING_ROUND_MIN_SHARES,
+            "max": BIDDING_ROUND_MAX_SHARES,
+        }
+
+    @classmethod
+    def _validate_amounts(
         cls,
-        product: Product,
+        bidding_round: BiddingRound,
+        bid_input: BidInput,
         price: BiddingRoundProductPrice,
-        amount: Decimal,
-    ) -> None:
-        if price.min_amount is None:
-            return
-        if amount < price.min_amount:
-            raise ValidationError(
-                _(
-                    "Der Betrag für %(product)s muss mindestens %(min_amount)s € betragen."
+        product: Product,
+    ) -> dict:
+        amounts = {
+            1: bid_input.amount_1,
+            2: bid_input.amount_2,
+            3: bid_input.amount_3,
+        }
+        cls._validate_levels(bidding_round, amounts)
+
+        for amount in amounts.values():
+            if amount is None:
+                continue
+            if not amount.is_finite() or amount <= 0:
+                raise ValidationError(_("Der Betrag muss größer als 0 sein."))
+            if price.min_amount is not None and amount < price.min_amount:
+                raise ValidationError(
+                    _(
+                        "Der Betrag für %(product)s muss mindestens %(min_amount)s € betragen."
+                    )
+                    % {"product": product.name, "min_amount": price.min_amount}
                 )
-                % {"product": product.name, "min_amount": price.min_amount}
-            )
+        return amounts
+
+    @classmethod
+    def _validate_levels(cls, bidding_round: BiddingRound, amounts: dict) -> None:
+        if bidding_round.bidding_procedure == BIDDING_ROUND_PROCEDURE_BID_RANGE:
+            if amounts[1] is None or amounts[2] is None:
+                raise ValidationError(_("Bitte den Grün- und den Rot-Betrag angeben."))
+            if amounts[3] is not None:
+                raise ValidationError(_("Es wurden zu viele Gebote angegeben."))
+        else:
+            if amounts[1] is None:
+                raise ValidationError(_("Bitte gib einen Betrag an."))
+            if amounts[2] is not None or amounts[3] is not None:
+                raise ValidationError(_("Es wurden zu viele Gebote angegeben."))
+
+        provided = [
+            amounts[level] for level in cls.AMOUNT_LEVELS if amounts[level] is not None
+        ]
+        for first, second in zip(provided, provided[1:]):
+            if first > second:
+                raise ValidationError(_("Die Gebote müssen aufsteigend sein."))

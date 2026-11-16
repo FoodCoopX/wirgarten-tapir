@@ -5,10 +5,13 @@ import pytest
 from django.core.exceptions import ValidationError
 
 from tapir.bidding_round.config import (
+    BIDDING_ROUND_PROCEDURE_BID_RANGE,
     BIDDING_ROUND_STATUS_ACTIVE,
     BIDDING_ROUND_STATUS_CLOSED,
 )
 from tapir.bidding_round.models import BiddingRoundCreatedSubscription
+from tapir.bidding_round.services.bidding_round_service import BiddingRoundService
+from tapir.bidding_round.services.bid_input import BidInput
 from tapir.bidding_round.services.contract_creator import ContractCreator
 from tapir.bidding_round.tests.factories import (
     BidFactory,
@@ -280,6 +283,41 @@ class TestContractCreator(TapirIntegrationTest):
             ).exists()
         )
 
+    def test_createContracts_withBidRangeBidAtRed_usesTheRedAmount(self):
+        bidding_round, bid, product, period = (
+            self._create_closed_bid_range_round_with_bid(Decimal("50.00"))
+        )
+
+        result = ContractCreator.create_contracts_from_bids(
+            bidding_round, cache={}, bid_level=2, actor=bid.member
+        )
+
+        self.assertEqual([], result["errors"])
+        subscription = Subscription.objects.get(member=bid.member, product=product)
+        self.assertEqual(
+            Decimal("90.00"),
+            SubscriptionPriceCalculator.get_monthly_price(
+                subscription, reference_date=period.start_date, cache={}
+            ),
+        )
+
+    def test_createContracts_withBidRangeBidAtGreen_usesTheGreenAmount(self):
+        bidding_round, bid, product, period = (
+            self._create_closed_bid_range_round_with_bid(Decimal("50.00"))
+        )
+
+        ContractCreator.create_contracts_from_bids(
+            bidding_round, cache={}, bid_level=1, actor=bid.member
+        )
+
+        subscription = Subscription.objects.get(member=bid.member, product=product)
+        self.assertEqual(
+            Decimal("70.00"),
+            SubscriptionPriceCalculator.get_monthly_price(
+                subscription, reference_date=period.start_date, cache={}
+            ),
+        )
+
     def _create_round_with_two_share_sizes(self):
         period = GrowingPeriodFactory.create(
             start_date=get_now(cache={}).date() + datetime.timedelta(days=30)
@@ -329,4 +367,42 @@ class TestContractCreator(TapirIntegrationTest):
             quantity=quantity,
             amount_1=bid_amount,
         )
+        return bidding_round, bid, product, period
+
+    def _create_closed_bid_range_round_with_bid(self, standard_price):
+        period = GrowingPeriodFactory.create(
+            start_date=get_now(cache={}).date() + datetime.timedelta(days=30)
+        )
+        bidding_round = BiddingRoundFactory.create(
+            growing_period=period,
+            status=BIDDING_ROUND_STATUS_ACTIVE,
+            bidding_procedure=BIDDING_ROUND_PROCEDURE_BID_RANGE,
+            bid_levels=2,
+            start_at=get_now(cache={}) - datetime.timedelta(hours=1),
+            end_at=get_now(cache={}) + datetime.timedelta(days=1),
+        )
+        product = ProductFactory.create(type=bidding_round.product_type)
+        ProductPriceFactory.create(
+            product=product,
+            price=standard_price,
+            size=1,
+            valid_from=period.start_date - datetime.timedelta(days=1),
+        )
+        BiddingRoundProductPriceFactory.create(
+            round=bidding_round,
+            product=product,
+        )
+        member = MemberFactory.create()
+        bid = BiddingRoundService.save_bid(
+            member,
+            bidding_round,
+            BidInput(
+                product_id=product.id,
+                quantity=1,
+                amount_1=Decimal("70.00"),
+                amount_2=Decimal("90.00"),
+            ),
+            cache={},
+        )
+        BiddingRoundService.close_round(bidding_round, cache={})
         return bidding_round, bid, product, period

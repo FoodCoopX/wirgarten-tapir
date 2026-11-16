@@ -41,6 +41,18 @@ export interface Round {
   status: string;
   /**
    *
+   * @type {string}
+   * @memberof Round
+   */
+  biddingProcedure: string;
+  /**
+   *
+   * @type {number}
+   * @memberof Round
+   */
+  bidLevels: number;
+  /**
+   *
    * @type {Date}
    * @memberof Round
    */
@@ -90,6 +102,9 @@ export function instanceOfRound(value: object): value is Round {
   if (!("id" in value) || value["id"] === undefined) return false;
   if (!("name" in value) || value["name"] === undefined) return false;
   if (!("status" in value) || value["status"] === undefined) return false;
+  if (!("biddingProcedure" in value) || value["biddingProcedure"] === undefined)
+    return false;
+  if (!("bidLevels" in value) || value["bidLevels"] === undefined) return false;
   if (!("startAt" in value) || value["startAt"] === undefined) return false;
   if (!("endAt" in value) || value["endAt"] === undefined) return false;
   if (
@@ -120,6 +135,8 @@ export function RoundFromJSONTyped(
     id: json["id"],
     name: json["name"],
     status: json["status"],
+    biddingProcedure: json["bidding_procedure"],
+    bidLevels: json["bid_levels"],
     startAt: json["start_at"] == null ? null : new Date(json["start_at"]),
     endAt: new Date(json["end_at"]),
     contractsCreatedAt:
@@ -149,6 +166,8 @@ export function RoundToJSONTyped(
     id: value["id"],
     name: value["name"],
     status: value["status"],
+    bidding_procedure: value["biddingProcedure"],
+    bid_levels: value["bidLevels"],
     start_at:
       value["startAt"] == null ? null : (value["startAt"] as any).toISOString(),
     end_at: value["endAt"].toISOString(),

@@ -2,6 +2,7 @@ import datetime
 import random
 from decimal import Decimal
 
+from tapir.bidding_round.config import BIDDING_ROUND_PROCEDURE_BID_RANGE
 from tapir.bidding_round.services.bid_input import BidInput
 from tapir.bidding_round.services.bidding_round_service import (
     BiddingRoundService,
@@ -25,17 +26,24 @@ from tapir.wirgarten.utils import get_now, get_today
 REFERENCE_VALUE_PER_SIZE = Decimal("80.00")
 MIN_AMOUNT_PER_SIZE = Decimal("60.00")
 TARGET_COVERAGE_RATIO = Decimal("0.91")
+BID_RANGE_TARGET_RATIOS = {
+    1: Decimal("0.81"),
+    2: Decimal("1.01"),
+}
 BIDDER_RATIO = 0.6
 BID_FACTOR_RANGE = (0.85, 1.15)
 
 
 class BiddingRoundGenerator:
-    """Creates one active bidding round for the next growing period.
+    """Creates the demo rounds for the next growing period.
 
-    About 60 % of the members with an active harvest share subscription bid the
-    reference value scaled by their share size, with a small random factor. The target
-    amount is derived from the resulting total so the evaluation shows about 91 %
-    coverage.
+    An active BIDDING_ROUND_PROCEDURE_SIMPLE round shows the reference value scaled by
+    the share size; about 60 % of the members with an active harvest share
+    subscription bid, with a small random factor, and the target is derived so the
+    evaluation shows about 91 % coverage. A closed
+    BIDDING_ROUND_PROCEDURE_BID_RANGE round reuses the same bidders with two amounts
+    calibrated to 81 % (green) and 101 % (red), so the middle position stays at
+    91 %.
     """
 
     @classmethod
@@ -118,6 +126,18 @@ class BiddingRoundGenerator:
                 )
             )
 
+        cls._create_closed_bid_range_round(
+            growing_period=growing_period,
+            name=f"Beitragsrunde {growing_period.start_date.year} - Gebotsspanne",
+            start_at=now - datetime.timedelta(days=1),
+            end_at=now + datetime.timedelta(days=30),
+            product_type_id=product_type.id,
+            target_amount_per_year=target_amount_per_year,
+            prices=prices,
+            assignments=assignments,
+            cache=cache,
+        )
+
         bidding_round = BiddingRoundService.create_round(
             growing_period=growing_period,
             name=f"Beitragsrunde {growing_period.start_date.year}",
@@ -148,3 +168,54 @@ class BiddingRoundGenerator:
     def _get_size_or_one(cls, product, growing_period, cache) -> Decimal:
         size = ProductSizeService.get_size(product, growing_period, cache)
         return size if size is not None else Decimal("1")
+
+    @classmethod
+    def _create_closed_bid_range_round(
+        cls,
+        *,
+        growing_period,
+        name,
+        start_at,
+        end_at,
+        product_type_id,
+        target_amount_per_year,
+        prices,
+        assignments,
+        cache,
+    ):
+        bidding_round = BiddingRoundService.create_round(
+            growing_period=growing_period,
+            name=name,
+            start_at=start_at,
+            end_at=end_at,
+            product_type_id=product_type_id,
+            target_amount_per_year=target_amount_per_year,
+            prices=prices,
+            bidding_procedure=BIDDING_ROUND_PROCEDURE_BID_RANGE,
+            bid_levels=2,
+            cache=cache,
+        )
+        BiddingRoundService.start_round(bidding_round, cache=cache)
+
+        middle_ratio = TARGET_COVERAGE_RATIO
+        for member, product, quantity, amount in assignments:
+            green = (amount * BID_RANGE_TARGET_RATIOS[1] / middle_ratio).quantize(
+                Decimal("0.01")
+            )
+            red = (amount * BID_RANGE_TARGET_RATIOS[2] / middle_ratio).quantize(
+                Decimal("0.01")
+            )
+            BiddingRoundService.save_bid(
+                member,
+                bidding_round,
+                BidInput(
+                    product_id=product.id,
+                    quantity=quantity,
+                    amount_1=green,
+                    amount_2=red,
+                ),
+                cache=cache,
+            )
+
+        BiddingRoundService.close_round(bidding_round, cache=cache)
+        return bidding_round
