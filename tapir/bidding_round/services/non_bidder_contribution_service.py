@@ -66,8 +66,10 @@ class NonBidderContributionService:
         ]
 
     @classmethod
-    def apply_non_bidder_contributions(cls, bidding_round, actor, cache) -> list[str]:
-        rate = cls._get_rate(bidding_round, cache)
+    def apply_non_bidder_contributions(
+        cls, bidding_round, actor, cache, exclude_member_ids=None
+    ) -> list[str]:
+        from tapir.bidding_round.services.contract_creator import ContractCreator
 
         product_type_ids = cls._get_product_type_ids(bidding_round)
         bid_member_ids = cls._get_bid_member_ids(bidding_round)
@@ -96,18 +98,13 @@ class NonBidderContributionService:
                 bid_member_ids,
             )
         )
+        member_ids -= {str(member_id) for member_id in (exclude_member_ids or [])}
 
         members = Member.objects.in_bulk(list(member_ids))
         applied = []
         for member_id, member in members.items():
-            if cls.apply_floor_to_member(
-                member=member,
-                bidding_round=bidding_round,
-                actor=actor,
-                cache=cache,
-                rate=rate,
-                product_type_ids=product_type_ids,
-                bid_member_ids=bid_member_ids,
+            if ContractCreator.apply_non_bidder_floor(
+                bidding_round, member, actor, cache
             ):
                 applied.append(member_id)
         return applied

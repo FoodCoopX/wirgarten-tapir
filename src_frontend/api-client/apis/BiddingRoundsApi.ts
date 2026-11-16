@@ -29,6 +29,8 @@ import type {
   ProductTypeOption,
   PublicDataResponse,
   PublicEvaluationResponse,
+  RollbackMembersRequest,
+  RollbackMembersResponse,
   Round,
   RoundCreateRequest,
   RoundResultsResponse,
@@ -51,6 +53,8 @@ import {
   ProductTypeOptionFromJSON,
   PublicDataResponseFromJSON,
   PublicEvaluationResponseFromJSON,
+  RollbackMembersRequestToJSON,
+  RollbackMembersResponseFromJSON,
   RoundCreateRequestToJSON,
   RoundFromJSON,
   RoundResultsResponseFromJSON,
@@ -155,6 +159,11 @@ export interface BiddingRoundsApiResultsRetrieveRequest {
 
 export interface BiddingRoundsApiRetrieveRequest {
   roundId: string;
+}
+
+export interface BiddingRoundsApiRollbackMembersCreateRequest {
+  roundId: string;
+  rollbackMembersRequest?: RollbackMembersRequest;
 }
 
 export interface BiddingRoundsApiStartCreateRequest {
@@ -1738,6 +1747,75 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<Round> {
     const response = await this.biddingRoundsApiRetrieveRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off. The per-request cache lives on ``self.cache`` so the handlers reuse it instead of building their own.
+   */
+  async biddingRoundsApiRollbackMembersCreateRaw(
+    requestParameters: BiddingRoundsApiRollbackMembersCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<RollbackMembersResponse>> {
+    if (requestParameters["roundId"] == null) {
+      throw new runtime.RequiredError(
+        "roundId",
+        'Required parameter "roundId" was null or undefined when calling biddingRoundsApiRollbackMembersCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/bidding_rounds/api/{round_id}/rollback_members`.replace(
+          `{${"round_id"}}`,
+          encodeURIComponent(String(requestParameters["roundId"])),
+        ),
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: RollbackMembersRequestToJSON(
+          requestParameters["rollbackMembersRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      RollbackMembersResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off. The per-request cache lives on ``self.cache`` so the handlers reuse it instead of building their own.
+   */
+  async biddingRoundsApiRollbackMembersCreate(
+    requestParameters: BiddingRoundsApiRollbackMembersCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<RollbackMembersResponse> {
+    const response = await this.biddingRoundsApiRollbackMembersCreateRaw(
       requestParameters,
       initOverrides,
     );

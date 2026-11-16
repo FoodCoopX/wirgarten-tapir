@@ -74,3 +74,19 @@ export interface TwelveMonthProjection {
   saldoAfterTwelveMonths: number;
   chartData: ChartData<"bar">;
 }
+
+/** Member selection for a rollback (null memberIds = all members). */
+export interface RollbackTarget {
+  memberIds: string[] | null;
+  memberNames: string[];
+}
+
+/** One conflict reported by the rollback API. */
+export interface RollbackConflict {
+  kind?: string;
+  member_name?: string;
+  memberName?: string;
+  round_name?: string;
+  roundName?: string;
+  detail?: string;
+}

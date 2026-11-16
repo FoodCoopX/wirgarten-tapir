@@ -5,7 +5,11 @@ from tapir.associations.services.association_membership_price_type_getter import
     AssociationMembershipTypePriceGetter,
 )
 from tapir.bidding_round.config import BIDDING_ROUND_PROCEDURE_BID_RANGE
-from tapir.bidding_round.models import BiddingRound, BiddingRoundProductPrice
+from tapir.bidding_round.models import (
+    BiddingRound,
+    BiddingRoundMemberEffect,
+    BiddingRoundProductPrice,
+)
 from tapir.bidding_round.serializers import (
     BiddableProductSerializer,
     BidSerializer,
@@ -164,8 +168,24 @@ class BiddingRoundViewService:
             display_name = cls.get_display_name(cache)
         return RoundSerializer(
             bidding_round,
-            context={"cache": cache, "display_name": display_name},
+            context={
+                "cache": cache,
+                "display_name": display_name,
+                **cls.serialize_rollback_flags(bidding_round),
+            },
         ).data
+
+    @classmethod
+    def serialize_rollback_flags(cls, bidding_round) -> dict:
+        effects = BiddingRoundMemberEffect.objects.filter(round=bidding_round)
+        return {
+            "rollback_available": effects.filter(
+                state=BiddingRoundMemberEffect.State.APPLIED
+            ).exists(),
+            "rollback_untracked": (
+                bidding_round.contracts_created_at is not None and not effects.exists()
+            ),
+        }
 
     @classmethod
     def _get_products_with_prices(

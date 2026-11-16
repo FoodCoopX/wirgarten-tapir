@@ -24,6 +24,7 @@ from tapir.bidding_round.tests.factories import (
 from tapir.subscriptions.services.automatic_subscription_renewal_service import (
     AutomaticSubscriptionRenewalService,
 )
+from tapir.wirgarten.models import Subscription
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
@@ -458,7 +459,7 @@ class TestContractSelectionViews(EvaluationApiTestBase):
 
         with patch.object(
             ContractCreator,
-            "_create_contracts_for_bid",
+            "apply_bid_contracts",
             side_effect=ValidationError("Kein Vertrag möglich."),
         ):
             response = self.client.post(
@@ -471,3 +472,169 @@ class TestContractSelectionViews(EvaluationApiTestBase):
         self.assertEqual(1, len(response.data["errors"]))
         self.assertEqual(product.type.name, response.data["errors"][0]["product_name"])
         self.assertEqual([], response.data["subscriptions"])
+
+    def test_rollbackMembers_withCreatedContracts_revertsIdempotently(self):
+        bidding_round, bid, product, _period, _round_product_type = (
+            self._create_closed_round_with_bid()
+        )
+        ContractCreator.create_contracts_from_bids(
+            bidding_round, cache={}, actor=self.admin
+        )
+        subscription = Subscription.objects.get(member=bid.member, product=product)
+        url = reverse("bidding_rounds:rollback_members", args=[bidding_round.id])
+
+        response = self.client.post(url, {"all": True}, content_type="application/json")
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assertIsNone(response.data["contracts_created_at"])
+        self.assertFalse(Subscription.objects.filter(id=subscription.id).exists())
+        self.assertEqual("reverted", response.data["results"][0]["state"])
+        self.assertFalse(response.data["rollback_available"])
+
+        second_response = self.client.post(
+            url, {"all": True}, content_type="application/json"
+        )
+        self.assertStatusCode(second_response, status.HTTP_200_OK)
+        self.assertEqual("skipped", second_response.data["results"][0]["state"])
+
+    def test_rollbackMembers_withoutSelection_returnsBadRequest(self):
+        bidding_round, _bid, _product, _period, _round_product_type = (
+            self._create_closed_round_with_bid()
+        )
+
+        response = self.client.post(
+            reverse("bidding_rounds:rollback_members", args=[bidding_round.id]),
+            {},
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, status.HTTP_400_BAD_REQUEST)
+
+    def test_rollbackMembers_withAllAndSelection_returnsBadRequest(self):
+        bidding_round, bid, _product, _period, _round_product_type = (
+            self._create_closed_round_with_bid()
+        )
+
+        response = self.client.post(
+            reverse("bidding_rounds:rollback_members", args=[bidding_round.id]),
+            {"all": True, "member_ids": [bid.member_id]},
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, status.HTTP_400_BAD_REQUEST)
+
+    def test_rollbackMembers_withForceWithoutReason_returnsBadRequest(self):
+        bidding_round, _bid, _product, _period, _round_product_type = (
+            self._create_closed_round_with_bid()
+        )
+
+        response = self.client.post(
+            reverse("bidding_rounds:rollback_members", args=[bidding_round.id]),
+            {"all": True, "force": True},
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, status.HTTP_400_BAD_REQUEST)
+
+    def test_rollbackMembers_withoutPermission_returnsForbidden(self):
+        bidding_round, _bid, _product, _period, _round_product_type = (
+            self._create_closed_round_with_bid()
+        )
+        self.client.force_login(MemberFactory.create())
+
+        response = self.client.post(
+            reverse("bidding_rounds:rollback_members", args=[bidding_round.id]),
+            {"all": True},
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, status.HTTP_403_FORBIDDEN)
+
+    def test_rollbackMembers_withUntrackedRound_returnsConflict(self):
+        bidding_round = BiddingRoundFactory.create(
+            growing_period=GrowingPeriodFactory.create(),
+            status=BIDDING_ROUND_STATUS_CLOSED,
+            contracts_created_at=get_now(cache={}),
+        )
+
+        response = self.client.post(
+            reverse("bidding_rounds:rollback_members", args=[bidding_round.id]),
+            {"all": True},
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, status.HTTP_409_CONFLICT)
+        self.assertEqual("untracked", response.data["code"])
+
+    def test_rollbackMembers_withDivergence_returnsConflict(self):
+        bidding_round, bid, product, _period, _round_product_type = (
+            self._create_closed_round_with_bid()
+        )
+        ContractCreator.create_contracts_from_bids(
+            bidding_round, cache={}, actor=self.admin
+        )
+        subscription = Subscription.objects.get(member=bid.member, product=product)
+        subscription.quantity = 5
+        subscription.save(update_fields=["quantity", "updated_at"])
+
+        response = self.client.post(
+            reverse("bidding_rounds:rollback_members", args=[bidding_round.id]),
+            {"all": True},
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, status.HTTP_409_CONFLICT)
+        self.assertEqual("diverged", response.data["code"])
+        self.assertEqual("diverged", response.data["conflicts"][0]["kind"])
+
+    def test_rollbackMembers_withMemberIds_revertsOnlyTheSelection(self):
+        bidding_round, bid, product, _period, _round_product_type = (
+            self._create_closed_round_with_bid()
+        )
+        other_bid = BidFactory.create(
+            round=bidding_round,
+            product=product,
+            amount_1=Decimal("90.00"),
+            admin_confirmed=get_now(cache={}),
+        )
+        ContractCreator.create_contracts_from_bids(
+            bidding_round, cache={}, actor=self.admin
+        )
+
+        response = self.client.post(
+            reverse("bidding_rounds:rollback_members", args=[bidding_round.id]),
+            {"member_ids": [bid.member_id]},
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assertFalse(
+            Subscription.objects.filter(member=bid.member, product=product).exists()
+        )
+        self.assertTrue(
+            Subscription.objects.filter(
+                member=other_bid.member, product=product
+            ).exists()
+        )
+        self.assertTrue(response.data["rollback_available"])
+
+    def test_roundResults_includeRollbackState(self):
+        bidding_round, bid, product, _period, _round_product_type = (
+            self._create_closed_round_with_bid()
+        )
+        ContractCreator.create_contracts_from_bids(
+            bidding_round, cache={}, actor=self.admin
+        )
+
+        response = self.client.get(
+            reverse("bidding_rounds:round_results", args=[bidding_round.id])
+        )
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assertTrue(response.data["rollback_available"])
+        self.assertFalse(response.data["rollback_untracked"])
+        row = next(
+            row
+            for row in response.data["contracts"]
+            if row["member_id"] == bid.member_id
+        )
+        self.assertEqual("applied", row["rollback_state"])

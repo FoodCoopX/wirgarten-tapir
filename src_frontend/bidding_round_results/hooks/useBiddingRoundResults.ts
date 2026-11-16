@@ -481,6 +481,9 @@ export function useBiddingRoundResults(csrfToken: string) {
   );
 
   return {
+    api,
+    reload: loadResults,
+    setResultMessage,
     roundId,
     data,
     loading,
