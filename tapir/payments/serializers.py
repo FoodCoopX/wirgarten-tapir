@@ -35,6 +35,7 @@ class ExtendedPaymentSerializer(serializers.Serializer):
     delivery_dates = serializers.ListField(child=serializers.DateField())
     association_memberships = AssociationMembershipSerializer(many=True)
     number_of_instalments = serializers.IntegerField(allow_null=True)
+    excluded_from_export = serializers.BooleanField()
 
 
 class MemberCreditSerializer(serializers.ModelSerializer):

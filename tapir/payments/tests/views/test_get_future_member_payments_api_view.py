@@ -9,10 +9,15 @@ from tapir.associations.tests.factories import (
     AssociationMembershipTypePriceFactory,
 )
 from tapir.configuration.models import TapirParameter
+from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES
 from tapir.payments.models import MemberPaymentRhythm
-from tapir.payments.tests.factories import MemberCreditFactory
+from tapir.payments.tests.factories import (
+    MemberCreditFactory,
+    PaymentExportExclusionPeriodFactory,
+)
 from tapir.utils.shortcuts import get_last_day_of_month
 from tapir.wirgarten.constants import WEEKLY
+from tapir.wirgarten.models import Member, Payment
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
@@ -921,3 +926,80 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         self.assertStatusCode(response, 200)
         returned_credit_ids = {credit["id"] for credit in response.json()["credits"]}
         self.assertEqual({str(unsettled_credit.id)}, returned_credit_ids)
+
+    def test_get_memberHasExclusionPeriod_onlyPaymentsInsidePeriodAreFlagged(self):
+        mock_timezone(self, now=datetime.datetime(year=2020, month=1, day=1))
+        self._set_parameter(
+            key=ParameterKeys.PAYMENT_EXPORT_EXCLUSION_ENABLED, value=True
+        )
+        member = self._create_member_with_payments()
+        PaymentExportExclusionPeriodFactory.create(
+            member=member,
+            start_date=datetime.date(year=2020, month=3, day=1),
+            end_date=datetime.date(year=2020, month=5, day=31),
+        )
+
+        self.assertEqual(
+            {
+                ("2020-02-15", "Gemüse"): False,
+                ("2020-03-15", "Gemüse"): True,
+                ("2020-03-15", PAYMENT_TYPE_COOP_SHARES): False,
+                ("2020-06-15", "Gemüse"): False,
+            },
+            self._get_excluded_flags(member=member),
+        )
+
+    def test_get_featureDisabled_noPaymentIsFlagged(self):
+        mock_timezone(self, now=datetime.datetime(year=2020, month=1, day=1))
+        self._set_parameter(
+            key=ParameterKeys.PAYMENT_EXPORT_EXCLUSION_ENABLED, value=False
+        )
+        member = self._create_member_with_payments()
+        PaymentExportExclusionPeriodFactory.create(
+            member=member,
+            start_date=datetime.date(year=2020, month=1, day=1),
+            end_date=None,
+        )
+
+        self.assertEqual(
+            {
+                ("2020-02-15", "Gemüse"): False,
+                ("2020-03-15", "Gemüse"): False,
+                ("2020-03-15", PAYMENT_TYPE_COOP_SHARES): False,
+                ("2020-06-15", "Gemüse"): False,
+            },
+            self._get_excluded_flags(member=member),
+        )
+
+    @staticmethod
+    def _create_member_with_payments() -> Member:
+        mandate_ref = MandateReferenceFactory.create()
+        for due_date, payment_type in [
+            (datetime.date(year=2020, month=2, day=15), "Gemüse"),
+            (datetime.date(year=2020, month=3, day=15), "Gemüse"),
+            (datetime.date(year=2020, month=3, day=15), PAYMENT_TYPE_COOP_SHARES),
+            (datetime.date(year=2020, month=6, day=15), "Gemüse"),
+        ]:
+            PaymentFactory.create(
+                mandate_ref=mandate_ref,
+                due_date=due_date,
+                type=payment_type,
+                status=Payment.PaymentStatus.DUE,
+                transaction=None,
+            )
+        return mandate_ref.member
+
+    def _get_excluded_flags(self, member: Member) -> dict[tuple[str, str], bool]:
+        self._login_as_admin()
+        response = self.client.get(
+            reverse("payments:member_future_payments"),
+            query_params={"member_id": member.id},
+        )
+        self.assertStatusCode(response, 200)
+        return {
+            (
+                extended_payment["payment"]["due_date"],
+                extended_payment["payment"]["type"],
+            ): extended_payment["excluded_from_export"]
+            for extended_payment in response.json()["payments"]
+        }

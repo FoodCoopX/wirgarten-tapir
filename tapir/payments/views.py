@@ -53,6 +53,9 @@ from tapir.payments.serializers import (
     PaymentExportExclusionPeriodCreateRequestSerializer,
     PaymentExportExclusionPeriodUpdateRequestSerializer,
 )
+from tapir.payments.services.payment_export_exclusion_period_service import (
+    PaymentExportExclusionPeriodService,
+)
 from tapir.payments.services.payment_export_exclusion_period_validator import (
     PaymentExportExclusionPeriodValidator,
 )
@@ -218,6 +221,9 @@ class GetFutureMemberPaymentsApiView(APIView):
             for membership in TapirCache.get_all_association_memberships(cache=cache)
             if membership.member_id == member_id
         ]
+        exclusion_enabled = get_parameter_value(
+            key=ParameterKeys.PAYMENT_EXPORT_EXCLUSION_ENABLED, cache=cache
+        )
         for payment in member_payments:
             subscriptions = []
             coop_share_transactions = []
@@ -298,6 +304,13 @@ class GetFutureMemberPaymentsApiView(APIView):
                     ),
                     "delivery_dates": delivery_dates,
                     "number_of_instalments": number_of_instalments,
+                    "excluded_from_export": exclusion_enabled
+                    and payment.type != payments_config.PAYMENT_TYPE_COOP_SHARES
+                    and PaymentExportExclusionPeriodService.is_member_excluded(
+                        member_id=member_id,
+                        reference_date=payment.due_date,
+                        cache=cache,
+                    ),
                 }
             )
         return extended_payments
