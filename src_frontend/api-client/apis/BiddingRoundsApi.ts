@@ -80,6 +80,7 @@ export interface BiddingRoundsApiReopenCreateRequest {
 }
 
 export interface BiddingRoundsApiResultsRetrieveRequest {
+  position?: number;
   roundId: string;
 }
 
@@ -838,6 +839,10 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
     }
 
     const queryParameters: any = {};
+
+    if (requestParameters["position"] != null) {
+      queryParameters["position"] = requestParameters["position"];
+    }
 
     const headerParameters: runtime.HTTPHeaders = {};
 
