@@ -192,6 +192,9 @@ class BiddableProductSerializer(serializers.Serializer):
 
 
 class BidTextsSerializer(serializers.Serializer):
+    level_1_label = serializers.CharField()
+    level_2_label = serializers.CharField()
+    level_3_label = serializers.CharField()
     amount_label = serializers.CharField()
     reference_value_hint = serializers.CharField()
     simple_explanation = serializers.CharField()
@@ -236,6 +239,8 @@ class PublicDataResponseSerializer(serializers.Serializer):
     texts = RoundTextsSerializer(required=False)
     biddable_product = BiddableProductSerializer(allow_null=True, required=False)
     is_authenticated = serializers.BooleanField(required=False)
+    status_enabled = serializers.BooleanField(required=False)
+    status_public_enabled = serializers.BooleanField(required=False)
     current_pickup_location = CurrentPickupLocationSerializer(
         allow_null=True, required=False
     )

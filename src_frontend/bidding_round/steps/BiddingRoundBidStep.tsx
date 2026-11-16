@@ -61,9 +61,9 @@ const BiddingRoundBidStep: React.FC<BiddingRoundBidStepProps> = ({
     ? [texts.bid.greenLabel, texts.bid.redLabel]
     : requiredAmountLevels === 1
       ? [texts.bid.amountLabel]
-      : Array.from(
-          { length: requiredAmountLevels },
-          (_, index) => `Stufe ${index + 1}`,
+      : [texts.bid.level1Label, texts.bid.level2Label, texts.bid.level3Label].slice(
+          0,
+          requiredAmountLevels,
         );
 
   function getLevelYearlyAmount(levelIndex: number): number | null {

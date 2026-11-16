@@ -153,7 +153,7 @@ export interface BiddingRoundsApiUnlockAverageBidCreateRequest {
  */
 export class BiddingRoundsApi extends runtime.BaseAPI {
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiAvailableProductTypesListRaw(
     requestParameters: BiddingRoundsApiAvailableProductTypesListRequest,
@@ -198,7 +198,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiAvailableProductTypesList(
     requestParameters: BiddingRoundsApiAvailableProductTypesListRequest = {},
@@ -212,7 +212,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiBidCreateRaw(
     requestParameters: BiddingRoundsApiBidCreateRequest,
@@ -270,7 +270,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiBidCreate(
     requestParameters: BiddingRoundsApiBidCreateRequest,
@@ -280,7 +280,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiBidRetrieveRaw(
     requestParameters: BiddingRoundsApiBidRetrieveRequest,
@@ -330,7 +330,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiBidRetrieve(
     requestParameters: BiddingRoundsApiBidRetrieveRequest,
@@ -344,7 +344,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiBidsCreateRaw(
     requestParameters: BiddingRoundsApiBidsCreateRequest,
@@ -406,7 +406,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiBidsCreate(
     requestParameters: BiddingRoundsApiBidsCreateRequest,
@@ -420,7 +420,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiBidsDestroyRaw(
     requestParameters: BiddingRoundsApiBidsDestroyRequest,
@@ -480,7 +480,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiBidsDestroy(
     requestParameters: BiddingRoundsApiBidsDestroyRequest,
@@ -490,7 +490,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiBidsPartialUpdateRaw(
     requestParameters: BiddingRoundsApiBidsPartialUpdateRequest,
@@ -557,7 +557,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiBidsPartialUpdate(
     requestParameters: BiddingRoundsApiBidsPartialUpdateRequest,
@@ -571,7 +571,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiCloseCreateRaw(
     requestParameters: BiddingRoundsApiCloseCreateRequest,
@@ -621,7 +621,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiCloseCreate(
     requestParameters: BiddingRoundsApiCloseCreateRequest,
@@ -635,7 +635,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiConfirmBidsCreateRaw(
     requestParameters: BiddingRoundsApiConfirmBidsCreateRequest,
@@ -688,7 +688,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiConfirmBidsCreate(
     requestParameters: BiddingRoundsApiConfirmBidsCreateRequest,
@@ -702,7 +702,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiCreateRaw(
     requestParameters: BiddingRoundsApiCreateRequest,
@@ -752,7 +752,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiCreate(
     requestParameters: BiddingRoundsApiCreateRequest,
@@ -766,7 +766,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiCreateContractsCreateRaw(
     requestParameters: BiddingRoundsApiCreateContractsCreateRequest,
@@ -821,7 +821,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiCreateContractsCreate(
     requestParameters: BiddingRoundsApiCreateContractsCreateRequest,
@@ -835,7 +835,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiDestroyRaw(
     requestParameters: BiddingRoundsApiDestroyRequest,
@@ -883,7 +883,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiDestroy(
     requestParameters: BiddingRoundsApiDestroyRequest,
@@ -893,7 +893,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiExportCsvRetrieveRaw(
     requestParameters: BiddingRoundsApiExportCsvRetrieveRequest,
@@ -945,7 +945,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiExportCsvRetrieve(
     requestParameters: BiddingRoundsApiExportCsvRetrieveRequest,
@@ -959,7 +959,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiGrowingPeriodsListRaw(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
@@ -998,7 +998,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiGrowingPeriodsList(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
@@ -1009,7 +1009,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiListRaw(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
@@ -1048,7 +1048,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiList(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
@@ -1058,7 +1058,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiLockAverageBidCreateRaw(
     requestParameters: BiddingRoundsApiLockAverageBidCreateRequest,
@@ -1120,7 +1120,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiLockAverageBidCreate(
     requestParameters: BiddingRoundsApiLockAverageBidCreateRequest,
@@ -1134,7 +1134,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiMembersWithoutBidListRaw(
     requestParameters: BiddingRoundsApiMembersWithoutBidListRequest,
@@ -1184,7 +1184,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiMembersWithoutBidList(
     requestParameters: BiddingRoundsApiMembersWithoutBidListRequest,
@@ -1198,7 +1198,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiPartialUpdateRaw(
     requestParameters: BiddingRoundsApiPartialUpdateRequest,
@@ -1253,7 +1253,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiPartialUpdate(
     requestParameters: BiddingRoundsApiPartialUpdateRequest,
@@ -1267,7 +1267,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiPublicDataRetrieveRaw(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
@@ -1306,7 +1306,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiPublicDataRetrieve(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
@@ -1317,7 +1317,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiPublicResultsRetrieveRaw(
     requestParameters: BiddingRoundsApiPublicResultsRetrieveRequest,
@@ -1367,7 +1367,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiPublicResultsRetrieve(
     requestParameters: BiddingRoundsApiPublicResultsRetrieveRequest,
@@ -1381,7 +1381,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiReopenCreateRaw(
     requestParameters: BiddingRoundsApiReopenCreateRequest,
@@ -1431,7 +1431,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiReopenCreate(
     requestParameters: BiddingRoundsApiReopenCreateRequest,
@@ -1445,7 +1445,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiResultsRetrieveRaw(
     requestParameters: BiddingRoundsApiResultsRetrieveRequest,
@@ -1499,7 +1499,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiResultsRetrieve(
     requestParameters: BiddingRoundsApiResultsRetrieveRequest,
@@ -1513,7 +1513,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiRetrieveRaw(
     requestParameters: BiddingRoundsApiRetrieveRequest,
@@ -1563,7 +1563,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiRetrieve(
     requestParameters: BiddingRoundsApiRetrieveRequest,
@@ -1577,7 +1577,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiStartCreateRaw(
     requestParameters: BiddingRoundsApiStartCreateRequest,
@@ -1627,7 +1627,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiStartCreate(
     requestParameters: BiddingRoundsApiStartCreateRequest,
@@ -1641,7 +1641,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiUnlockAverageBidCreateRaw(
     requestParameters: BiddingRoundsApiUnlockAverageBidCreateRequest,
@@ -1691,7 +1691,7 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   }
 
   /**
-   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints.
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints, which require authentication while the public URL flag is off.
    */
   async biddingRoundsApiUnlockAverageBidCreate(
     requestParameters: BiddingRoundsApiUnlockAverageBidCreateRequest,

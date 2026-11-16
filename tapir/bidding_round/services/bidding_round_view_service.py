@@ -19,20 +19,47 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 
 class BiddingRoundViewService:
     @classmethod
-    def is_feature_flag_enabled(cls, cache) -> bool:
+    def _get_boolean_parameter(cls, key, default: bool, cache) -> bool:
         try:
-            return get_parameter_value(ParameterKeys.BIDDING_ROUND_ENABLED, cache=cache)
+            return get_parameter_value(key, cache=cache)
         except KeyError:
-            return False
+            return default
+
+    @classmethod
+    def is_feature_flag_enabled(cls, cache) -> bool:
+        return cls._get_boolean_parameter(
+            ParameterKeys.BIDDING_ROUND_ENABLED, False, cache
+        )
 
     @classmethod
     def is_public_url_enabled(cls, cache) -> bool:
-        try:
-            return get_parameter_value(
-                ParameterKeys.BIDDING_ROUND_URL_ENABLED, cache=cache
-            )
-        except KeyError:
-            return True
+        return cls._get_boolean_parameter(
+            ParameterKeys.BIDDING_ROUND_URL_ENABLED, True, cache
+        )
+
+    @classmethod
+    def public_access_allowed(cls, user, cache) -> bool:
+        """Whether the public bidding-round pages may serve this user.
+
+        Anonymous visitors only get access while the public URL switch is on;
+        authenticated members always do. The master switch is checked separately
+        because it hides the pages entirely.
+        """
+        return cls.is_public_url_enabled(cache) or (
+            user is not None and user.is_authenticated
+        )
+
+    @classmethod
+    def is_status_enabled(cls, cache) -> bool:
+        return cls._get_boolean_parameter(
+            ParameterKeys.BIDDING_ROUND_STATUS_ENABLED, True, cache
+        )
+
+    @classmethod
+    def is_status_public_enabled(cls, cache) -> bool:
+        return cls._get_boolean_parameter(
+            ParameterKeys.BIDDING_ROUND_STATUS_PUBLIC_ENABLED, True, cache
+        )
 
     @classmethod
     def get_display_name(cls, cache) -> str:
@@ -243,6 +270,9 @@ class BiddingRoundViewService:
             "bid_range_explanation": (
                 ParameterKeys.BIDDING_ROUND_BID_RANGE_EXPLANATION
             ),
+            "level_1_label": ParameterKeys.BIDDING_ROUND_BID_LEVEL_1_LABEL,
+            "level_2_label": ParameterKeys.BIDDING_ROUND_BID_LEVEL_2_LABEL,
+            "level_3_label": ParameterKeys.BIDDING_ROUND_BID_LEVEL_3_LABEL,
             "green_label": ParameterKeys.BIDDING_ROUND_BID_GREEN_LABEL,
             "yellow_label": ParameterKeys.BIDDING_ROUND_BID_YELLOW_LABEL,
             "red_label": ParameterKeys.BIDDING_ROUND_BID_RED_LABEL,

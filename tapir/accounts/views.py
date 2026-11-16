@@ -35,6 +35,14 @@ from tapir.accounts.tasks import send_verification_emails
 from tapir.wirgarten.constants import Permission
 
 
+def keycloak_login_redirect(request):
+    next_url = request.GET.get("next")
+    url = "/accounts/oidc/keycloak/login"
+    if next_url:
+        url += "?" + urlencode({"next": next_url})
+    return HttpResponseRedirect(url)
+
+
 @transaction.atomic
 def change_email(request, **kwargs):
     data = json.loads(base64.b64decode(kwargs["token"]))

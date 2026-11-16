@@ -91,6 +91,18 @@ export interface PublicDataResponse {
   isAuthenticated?: boolean;
   /**
    *
+   * @type {boolean}
+   * @memberof PublicDataResponse
+   */
+  statusEnabled?: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof PublicDataResponse
+   */
+  statusPublicEnabled?: boolean;
+  /**
+   *
    * @type {CurrentPickupLocation}
    * @memberof PublicDataResponse
    */
@@ -141,6 +153,12 @@ export function PublicDataResponseFromJSONTyped(
         : BiddableProductFromJSON(json["biddable_product"]),
     isAuthenticated:
       json["is_authenticated"] == null ? undefined : json["is_authenticated"],
+    statusEnabled:
+      json["status_enabled"] == null ? undefined : json["status_enabled"],
+    statusPublicEnabled:
+      json["status_public_enabled"] == null
+        ? undefined
+        : json["status_public_enabled"],
     currentPickupLocation:
       json["current_pickup_location"] == null
         ? undefined
@@ -171,6 +189,8 @@ export function PublicDataResponseToJSONTyped(
     texts: RoundTextsToJSON(value["texts"]),
     biddable_product: BiddableProductToJSON(value["biddableProduct"]),
     is_authenticated: value["isAuthenticated"],
+    status_enabled: value["statusEnabled"],
+    status_public_enabled: value["statusPublicEnabled"],
     current_pickup_location: CurrentPickupLocationToJSON(
       value["currentPickupLocation"],
     ),
