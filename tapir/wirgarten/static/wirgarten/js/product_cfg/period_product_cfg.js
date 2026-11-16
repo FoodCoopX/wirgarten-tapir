@@ -150,7 +150,7 @@ const getProductEditForm = () => {
     const url = `/tapir/product/${params.periodId}/${params.capacityId}/${
       params.prodId
     }/edit${Tapir.stringifyUrlParams(params)}`;
-    FormModal.load(url, "Produkt editieren");
+    FormModal.load(url, "Anteilsgröße bearbeiten");
   }
 };
 
