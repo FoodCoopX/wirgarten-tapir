@@ -466,6 +466,39 @@ class TestBiddingRoundStatsService(TapirIntegrationTest):
         self.assertTrue(positions["membership"]["applicable"])
         self.assertEqual(Decimal("60.00"), positions["membership"]["reached_per_year"])
 
+    def test_buildExtraPositions_membershipFeeWaivedWithProducts_isNotApplicable(
+        self,
+    ):
+        ParameterDefinitions().import_definitions(bulk_create=True)
+        self._set_parameter(
+            ParameterKeys.ORGANISATION_LEGAL_STATUS, LEGAL_STATUS_ASSOCIATION
+        )
+        self._set_parameter(
+            ParameterKeys.ASSOCIATIONS_MEMBERSHIP_FEE_WAIVED_WITH_PRODUCTS, True
+        )
+        bidding_round = BiddingRoundFactory.create()
+        BiddingRoundProductTypeFactory.create(round=bidding_round)
+        membership_type = AssociationMembershipTypeFactory.create(
+            order_in_bestell_wizard=-1
+        )
+        AssociationMembershipTypePriceFactory.create(
+            type=membership_type,
+            valid_from=bidding_round.growing_period.start_date,
+            price=Decimal("5.00"),
+        )
+        BidFactory.create(round=bidding_round)
+
+        positions = BiddingRoundStatsService.build_extra_positions(
+            bidding_round, cache={}
+        )
+        projection = BiddingRoundStatsService.build_financing_projection(
+            bidding_round, cache={}
+        )
+
+        self.assertFalse(positions["membership"]["applicable"])
+        self.assertEqual(Decimal("0"), positions["membership"]["reached_per_year"])
+        self.assertEqual(Decimal("0"), projection["membership_per_year"])
+
     def test_buildExtraPositions_deliveryCharge_sumsTheBids(self):
         bidding_round = BiddingRoundFactory.create()
         BiddingRoundProductTypeFactory.create(round=bidding_round)

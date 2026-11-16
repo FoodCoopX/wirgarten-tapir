@@ -170,3 +170,18 @@ class ParameterDefinitionsBusiness:
             order_priority=order_priority,
         )
         order_priority -= 1
+
+        importer.parameter_definition(
+            key=ParameterKeys.ASSOCIATIONS_MEMBERSHIP_FEE_WAIVED_WITH_PRODUCTS,
+            label="Vereinsbeiträge mit Produkten verrechnen",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=False,
+            description=(
+                "Wenn aktiv, zahlen Mitglieder mit Produkten keine Vereinsbeiträge. "
+                "Es werden keine Zahlungen erzeugt."
+            ),
+            category=ParameterCategory.BUSINESS,
+            meta=ParameterMeta(show_only_when=legal_status_is_association),
+            order_priority=order_priority,
+        )
+        order_priority -= 1
