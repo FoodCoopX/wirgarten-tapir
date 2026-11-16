@@ -73,6 +73,7 @@ class BidSubmitSerializer(serializers.Serializer):
     privacy_policy_read = serializers.BooleanField(required=False, default=False)
     cancellation_policy_read = serializers.BooleanField(required=False, default=False)
     contract_accepted = serializers.BooleanField(required=False, default=False)
+    feedback = serializers.CharField(allow_blank=True, required=False)
 
 
 class BidAdminItemSerializer(serializers.Serializer):
@@ -233,6 +234,7 @@ class RoundTextsSerializer(serializers.Serializer):
     privacy_title = serializers.CharField()
     pickup_location_title = serializers.CharField()
     submit_label = serializers.CharField()
+    final_submit_label = serializers.CharField()
     bid = BidTextsSerializer()
 
 
@@ -245,6 +247,11 @@ class CurrentPickupLocationSerializer(serializers.Serializer):
 class BidOptionsSerializer(serializers.Serializer):
     quantity_enabled = serializers.BooleanField()
     carousel_enabled = serializers.BooleanField()
+
+
+class PublicAssociationMembershipSerializer(serializers.Serializer):
+    name = serializers.CharField()
+    price = serializers.DecimalField(max_digits=8, decimal_places=2)
 
 
 class PublicDataResponseSerializer(serializers.Serializer):
@@ -260,6 +267,11 @@ class PublicDataResponseSerializer(serializers.Serializer):
     status_enabled = serializers.BooleanField(required=False)
     status_public_enabled = serializers.BooleanField(required=False)
     sepa_enabled = serializers.BooleanField(required=False)
+    feedback_enabled = serializers.BooleanField(required=False)
+    first_name = serializers.CharField(required=False, allow_null=True)
+    association_membership = PublicAssociationMembershipSerializer(
+        allow_null=True, required=False
+    )
     account_owner = serializers.CharField(required=False, allow_null=True)
     iban = serializers.CharField(required=False, allow_null=True)
     payment_rhythm = serializers.CharField(required=False, allow_null=True)

@@ -26,6 +26,11 @@ import {
   CurrentPickupLocationFromJSON,
   CurrentPickupLocationToJSON,
 } from "./CurrentPickupLocation";
+import type { PublicAssociationMembership } from "./PublicAssociationMembership";
+import {
+  PublicAssociationMembershipFromJSON,
+  PublicAssociationMembershipToJSON,
+} from "./PublicAssociationMembership";
 import type { Round } from "./Round";
 import { RoundFromJSON, RoundToJSON } from "./Round";
 import type { RoundTexts } from "./RoundTexts";
@@ -111,6 +116,24 @@ export interface PublicDataResponse {
   sepaEnabled?: boolean;
   /**
    *
+   * @type {boolean}
+   * @memberof PublicDataResponse
+   */
+  feedbackEnabled?: boolean;
+  /**
+   *
+   * @type {string}
+   * @memberof PublicDataResponse
+   */
+  firstName?: string | null;
+  /**
+   *
+   * @type {PublicAssociationMembership}
+   * @memberof PublicDataResponse
+   */
+  associationMembership?: PublicAssociationMembership | null;
+  /**
+   *
    * @type {string}
    * @memberof PublicDataResponse
    */
@@ -193,6 +216,13 @@ export function PublicDataResponseFromJSONTyped(
         : json["status_public_enabled"],
     sepaEnabled:
       json["sepa_enabled"] == null ? undefined : json["sepa_enabled"],
+    feedbackEnabled:
+      json["feedback_enabled"] == null ? undefined : json["feedback_enabled"],
+    firstName: json["first_name"] == null ? undefined : json["first_name"],
+    associationMembership:
+      json["association_membership"] == null
+        ? undefined
+        : PublicAssociationMembershipFromJSON(json["association_membership"]),
     accountOwner:
       json["account_owner"] == null ? undefined : json["account_owner"],
     iban: json["iban"] == null ? undefined : json["iban"],
@@ -235,6 +265,11 @@ export function PublicDataResponseToJSONTyped(
     status_enabled: value["statusEnabled"],
     status_public_enabled: value["statusPublicEnabled"],
     sepa_enabled: value["sepaEnabled"],
+    feedback_enabled: value["feedbackEnabled"],
+    first_name: value["firstName"],
+    association_membership: PublicAssociationMembershipToJSON(
+      value["associationMembership"],
+    ),
     account_owner: value["accountOwner"],
     iban: value["iban"],
     payment_rhythm: value["paymentRhythm"],
