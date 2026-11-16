@@ -32,6 +32,9 @@ from tapir.utils.config import Organization
 from tapir.utils.json_user import JsonUser
 from tapir.utils.models import copy_user_info
 from tapir.utils.services.tapir_cache import TapirCache
+from tapir.utils.services.test_data_generation.vierlande_generator import (
+    VierlandeGenerator,
+)
 from tapir.utils.shortcuts import get_timezone_aware_datetime, get_from_cache_or_compute
 from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.models import (
@@ -92,10 +95,16 @@ class UserGenerator:
             return 250
         if organization == Organization.BAKERY:
             return 60
+        if organization == Organization.VIERLANDE:
+            return VierlandeGenerator.TOTAL_MEMBER_COUNT
         return 200
 
     @classmethod
     def generate_users_and_subscriptions(cls, organization: Organization):
+        if organization == Organization.VIERLANDE:
+            VierlandeGenerator.generate_users_and_subscriptions(user_generator=cls)
+            return
+
         user_count = cls.get_user_count(organization)
         # Users generated with https://randomuser.me
         print(f"Creating {user_count} users, this may take a while")
@@ -146,27 +155,13 @@ class UserGenerator:
         AutomaticSubscriptionRenewalService.renew_subscriptions_if_necessary()
 
     @classmethod
-    def generate_user(
-        cls,
-        parsed_user,
-        cache,
-        fake,
-        products_from_base_type,
-        additional_products,
-        members_that_need_a_pickup_location,
-    ):
+    def create_member(cls, parsed_user, cache, fake, created_by_admin: bool = False):
         json_user = JsonUser.from_parsed_user(parsed_user)
         json_user.date_joined = get_timezone_aware_datetime(
             cls.get_random_date_in_range_biased_towards_lower_end(
                 cls.get_past_growing_period(cache).start_date, get_today(cache)
             ),
             datetime.time(hour=random.randint(0, 23), minute=random.randint(0, 59)),
-        )
-
-        member_without_subscriptions = random.random() < 0.20
-        created_by_admin = (
-            member_without_subscriptions
-            and random.random() < cls.CREATED_BY_ADMIN_PROBABILITY
         )
 
         is_superuser = json_user.get_username() == "roberto.cortes"
@@ -189,6 +184,30 @@ class UserGenerator:
         KeycloakUserManager.create_keycloak_user_if_necessary(
             user=member,
             initial_password=member.email.split("@")[0],
+        )
+
+        return member
+
+    @classmethod
+    def generate_user(
+        cls,
+        parsed_user,
+        cache,
+        fake,
+        products_from_base_type,
+        additional_products,
+        members_that_need_a_pickup_location,
+    ):
+        member_without_subscriptions = random.random() < 0.20
+        created_by_admin = (
+            member_without_subscriptions
+            and random.random() < cls.CREATED_BY_ADMIN_PROBABILITY
+        )
+        member = cls.create_member(
+            parsed_user=parsed_user,
+            cache=cache,
+            fake=fake,
+            created_by_admin=created_by_admin,
         )
 
         min_coop_shares = 0
@@ -221,23 +240,35 @@ class UserGenerator:
         ):
             return
 
+        cls.assign_random_payment_rhythm(member=member, cache=cache, actor=None)
+
+    @classmethod
+    def assign_random_payment_rhythm(
+        cls, member: Member, cache: dict, actor, random_generator=None
+    ):
+        random_generator = random_generator or random
         MemberPaymentRhythmService.assign_payment_rhythm_to_member(
             member=member,
-            rhythm=random.choice(MemberPaymentRhythm.Rhythm.choices)[0],
+            rhythm=random_generator.choice(MemberPaymentRhythm.Rhythm.choices)[0],
             valid_from=cls.get_random_date_in_range_biased_towards_lower_end(
                 lower_boundary=member.date_joined.date(),
                 upper_boundary=get_today(cache=cache),
+                random_generator=random_generator,
             ),
             cache=cache,
-            actor=None,
+            actor=actor,
         )
 
     @classmethod
     def get_random_date_in_range_biased_towards_lower_end(
-        cls, lower_boundary: datetime.date, upper_boundary: datetime.date
+        cls,
+        lower_boundary: datetime.date,
+        upper_boundary: datetime.date,
+        random_generator=None,
     ):
+        random_generator = random_generator or random
         nb_days_range = (upper_boundary - lower_boundary).days
-        nb_days = min([random.randint(0, nb_days_range) for _ in range(3)])
+        nb_days = min([random_generator.randint(0, nb_days_range) for _ in range(3)])
         return lower_boundary + datetime.timedelta(days=nb_days)
 
     @classmethod
