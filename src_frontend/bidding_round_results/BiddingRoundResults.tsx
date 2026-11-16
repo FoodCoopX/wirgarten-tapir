@@ -53,7 +53,8 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
   const roundId = getRoundIdFromPath();
   const [round, setRound] = useState<Round | null>(null);
   const [results, setResults] = useState<RoundResultsResponse | null>(null);
-  const [selectedLevel, setSelectedLevel] = useState(1);
+  const [selectedLevel, setSelectedLevel] = useState<number>(1);
+  const [createAutoRenewed, setCreateAutoRenewed] = useState<boolean>(true);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
@@ -189,6 +190,15 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
             </Form.Text>
           </Form.Group>
         )}
+        <Form.Check
+          type={"checkbox"}
+          className={"mb-3"}
+          label={
+            "Verträge für automatisch verlängerte Mitglieder mit erzeugen"
+          }
+          checked={createAutoRenewed}
+          onChange={(event) => setCreateAutoRenewed(event.target.checked)}
+        />
         <Button
           variant={"dark"}
           disabled={busy || results.bids.length === 0}
@@ -197,8 +207,10 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
               () =>
                 api.biddingRoundsApiCreateContractsCreate({
                   roundId,
-                  createContractsRequest:
-                    levelCount > 1 ? { bidLevel: selectedLevel } : {},
+                  createContractsRequest: {
+                    ...(levelCount > 1 ? { bidLevel: selectedLevel } : {}),
+                    createAutoRenewedContracts: createAutoRenewed,
+                  },
                 }),
               "Verträge erstellt",
             )
@@ -344,6 +356,62 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
           </Card.Body>
         </Card>
       )}
+
+      <Card className={"mb-4"}>
+        <Card.Header>
+          <strong>Zusatzposten</strong>
+        </Card.Header>
+        <Card.Body>
+          {Object.values(results.extraPositions).map((position) => (
+            <div
+              key={position.label}
+              className={"d-flex justify-content-between"}
+            >
+              <span>{position.label}</span>
+              <strong>
+                {position.applicable
+                  ? formatCurrency(Number(position.reachedPerYear))
+                  : "–"}
+              </strong>
+            </div>
+          ))}
+        </Card.Body>
+      </Card>
+
+      <Card className={"mb-4"}>
+        <Card.Header>
+          <strong>
+            Auto-Verlängerte ({results.autoRenewed.length}),{" "}
+            {formatCurrency(Number(results.autoRenewedPerYear))} pro Jahr
+          </strong>
+        </Card.Header>
+        <Card.Body className={"p-0"}>
+          {results.autoRenewed.length === 0 ? (
+            <Alert variant={"info"} className={"m-3"}>
+              Keine automatisch verlängerten Mitglieder einbezogen.
+            </Alert>
+          ) : (
+            <Table responsive hover className={"mb-0"}>
+              <thead>
+                <tr>
+                  <th>Mitglied</th>
+                  <th>Referenz / Monat</th>
+                  <th>Referenz / Jahr</th>
+                </tr>
+              </thead>
+              <tbody>
+                {results.autoRenewed.map((entry) => (
+                  <tr key={entry.memberId}>
+                    <td>{entry.memberName}</td>
+                    <td>{formatCurrency(Number(entry.monthlyReference))}</td>
+                    <td>{formatCurrency(Number(entry.yearlyReference))}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          )}
+        </Card.Body>
+      </Card>
 
       <Card className={"mb-4"}>
         <Card.Header>

@@ -25,6 +25,7 @@ models/AssociationMembershipType.ts
 models/AssociationMembershipTypePrice.ts
 models/AssociationMembershipTypePriceRequest.ts
 models/AssociationMembershipTypeRequest.ts
+models/AutoRenewedMember.ts
 models/AutomatedExportCycleEnum.ts
 models/AvailableBreadsForDeliveryListResponse.ts
 models/AvailableSegmentsResponse.ts
@@ -124,6 +125,8 @@ models/ExtendedProduct.ts
 models/ExtendedProductType.ts
 models/ExtendedProductTypeAndConfig.ts
 models/ExtendedProductTypeRequest.ts
+models/ExtraPosition.ts
+models/ExtraPositions.ts
 models/FuturePaymentsResponse.ts
 models/GetCoopShareTransactionsResponse.ts
 models/GetDatesFromCustomCycleDeliveryWeeksResponse.ts

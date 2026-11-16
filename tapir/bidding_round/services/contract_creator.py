@@ -13,11 +13,17 @@ from tapir.bidding_round.models import (
 from tapir.bidding_round.services.bidding_round_stats_service import (
     BiddingRoundStatsService,
 )
+from tapir.bidding_round.services.non_bidder_contribution_service import (
+    NonBidderContributionService,
+)
 from tapir.payments.services.mandate_reference_provider import (
     MandateReferenceProvider,
 )
 from tapir.solidarity_contribution.services.member_solidarity_contribution_service import (
     MemberSolidarityContributionService,
+)
+from tapir.subscriptions.services.automatic_subscription_renewal_service import (
+    AutomaticSubscriptionRenewalService,
 )
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
 from tapir.subscriptions.services.subscription_price_calculator import (
@@ -32,7 +38,13 @@ logger = logging.getLogger(__name__)
 class ContractCreator:
     @classmethod
     def create_contracts_from_bids(
-        cls, bidding_round, cache, bid_ids=None, actor=None, bid_level=None
+        cls,
+        bidding_round,
+        cache,
+        bid_ids=None,
+        actor=None,
+        bid_level=None,
+        create_auto_renewed_contracts=False,
     ):
         if bidding_round.status != BIDDING_ROUND_STATUS_CLOSED:
             raise ValidationError(
@@ -65,7 +77,9 @@ class ContractCreator:
         position = (
             BiddingRoundStatsService.get_level_position(bid_level, bidding_round)
             if bid_level is not None
-            else BiddingRoundStatsService.get_default_position(bidding_round)
+            else BiddingRoundStatsService.get_default_position(
+                bidding_round, cache=cache
+            )
         )
 
         errors = []
@@ -91,7 +105,15 @@ class ContractCreator:
                     }
                 )
 
+        if create_auto_renewed_contracts:
+            created_subscriptions.extend(
+                cls._create_auto_renewed_contracts(bidding_round, cache=cache)
+            )
+
         if created_subscriptions:
+            NonBidderContributionService.apply_non_bidder_contributions(
+                bidding_round, actor=actor, cache=cache
+            )
             bidding_round.contracts_created_at = get_now(cache=cache)
             bidding_round.save(update_fields=["contracts_created_at", "updated_at"])
 
@@ -103,6 +125,48 @@ class ContractCreator:
             len(errors),
         )
         return {"errors": errors, "subscriptions": created_subscriptions}
+
+    @classmethod
+    def _create_auto_renewed_contracts(cls, bidding_round, cache) -> list:
+        bid_member_ids = set(bidding_round.bids.values_list("member_id", flat=True))
+        product_type_ids = set(
+            bidding_round.product_types.values_list("product_type_id", flat=True)
+        )
+        try:
+            renewing_subscriptions = AutomaticSubscriptionRenewalService.get_subscriptions_that_will_be_renewed(
+                reference_date=bidding_round.growing_period.start_date,
+                cache=cache,
+            )
+        except KeyError:
+            return []
+
+        created = []
+        for subscription in renewing_subscriptions:
+            if subscription.member_id in bid_member_ids:
+                continue
+            if subscription.product.type_id not in product_type_ids:
+                continue
+            if Subscription.objects.filter(
+                member_id=subscription.member_id,
+                period=bidding_round.growing_period,
+                product_id=subscription.product_id,
+                cancellation_ts__isnull=True,
+            ).exists():
+                continue
+            renewed_subscription = (
+                AutomaticSubscriptionRenewalService.build_renewed_subscription(
+                    subscription, cache=cache
+                )
+            )
+            if renewed_subscription.period_id != bidding_round.growing_period_id:
+                continue
+            renewed_subscription.save()
+            BiddingRoundCreatedSubscription.objects.create(
+                round=bidding_round,
+                subscription=renewed_subscription,
+            )
+            created.append(renewed_subscription)
+        return created
 
     @classmethod
     def _create_contracts_for_bid(cls, bid, bidding_round, actor, cache, position):

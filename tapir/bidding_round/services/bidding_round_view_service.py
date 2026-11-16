@@ -47,6 +47,7 @@ class BiddingRoundViewService:
             "status": bidding_round.status,
             "bidding_procedure": bidding_round.bidding_procedure,
             "bid_levels": bidding_round.bid_levels,
+            "include_auto_renewed": bidding_round.include_auto_renewed,
             "start_at": (
                 bidding_round.start_at.isoformat() if bidding_round.start_at else None
             ),
