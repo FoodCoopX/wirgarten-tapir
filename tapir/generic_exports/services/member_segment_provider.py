@@ -39,8 +39,7 @@ class MemberSegmentProvider:
             ExportSegment(
                 id=cls.SEGMENT_ID_ALL_MEMBERS,
                 display_name="Alle Mitglieder",
-                description="Alle Mitglieder, "
-                "egal ob mit Abo oder nicht, solange sie Genossenschaftsanteile haben",
+                description="Alle Mitglieder zum Stichtag, mit oder ohne Abo.",
                 get_queryset=cls.get_queryset_all_members_with_shares,
                 get_available_columns=MemberColumnProvider.get_member_columns,
             ),
@@ -64,6 +63,7 @@ class MemberSegmentProvider:
                 display_name="Mitglieder die ein Vertrag seit über einem Jahr haben aber noch kein Geno-Anteil",
                 description="",
                 get_queryset=cls.get_queryset_members_with_contract_since_more_than_one_year_but_no_coop_share,
+                cooperative_only=True,
                 get_available_columns=MemberColumnProvider.get_member_columns,
             ),
             ExportSegment(
@@ -71,6 +71,7 @@ class MemberSegmentProvider:
                 display_name="Mitglieder mit gekündigte Anteile im Vorjahr",
                 description="",
                 get_queryset=cls.get_queryset_members_with_cancelled_shares_in_previous_year,
+                cooperative_only=True,
                 get_available_columns=MemberColumnProvider.get_member_columns,
             ),
             ExportSegment(

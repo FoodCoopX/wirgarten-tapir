@@ -111,7 +111,7 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der Geno-Daten",
+          "Fehler beim Laden der Einstellungen für die Warteliste",
           setToastDatas,
         ),
       );
@@ -202,11 +202,17 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
               </div>
               <Tabs
                 defaultActiveKey={"all"}
-                onSelect={(memberType) =>
+                onSelect={(memberType) => {
                   setFilterMemberType(
                     memberType as WaitingListApiListListMemberTypeEnum,
-                  )
-                }
+                  );
+                  if (
+                    memberType === "new_members" &&
+                    orderBy.endsWith("member_since")
+                  ) {
+                    setOrderBy("-created_at");
+                  }
+                }}
               >
                 <Tab
                   eventKey={"all"}
@@ -359,6 +365,7 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
                     <Form.Group>
                       <Form.Label>Sortieren nach:</Form.Label>
                       <Form.Select
+                        value={orderBy}
                         onChange={(event) =>
                           setOrderBy(
                             event.target
@@ -375,10 +382,10 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
                         {filterMemberType !== "new_members" && (
                           <>
                             <option value="-member_since">
-                              Eintrittsdatum zur Geno (absteigend)
+                              Eintrittsdatum (absteigend)
                             </option>
                             <option value="member_since">
-                              Eintrittsdatum zur Geno (aufsteigend)
+                              Eintrittsdatum (aufsteigend)
                             </option>
                           </>
                         )}

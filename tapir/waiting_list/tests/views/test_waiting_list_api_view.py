@@ -3,12 +3,15 @@ import datetime
 from django.urls import reverse
 from tapir_mail.service.shortcuts import make_timezone_aware
 
+from tapir.associations.tests.factories import AssociationMembershipFactory
+from tapir.core.config import LEGAL_STATUS_ASSOCIATION
 from tapir.waiting_list.tests.factories import WaitingListEntryFactory
 from tapir.wirgarten.models import (
     MemberPickupLocation,
     WaitingListProductWish,
     WaitingListPickupLocationWish,
 )
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
@@ -204,3 +207,53 @@ class TestWaitingListAPIView(TapirIntegrationTest):
             response_content["results"][1]["url_to_member_profile"],
         )
         self.assertTrue(response_content["results"][1]["can_be_fulfilled"])
+
+    def test_get_association_sortsByFirstMembershipStart(self):
+        self._login_as_admin()
+        self._set_parameter(
+            ParameterKeys.ORGANISATION_LEGAL_STATUS, LEGAL_STATUS_ASSOCIATION
+        )
+        returning_member = MemberFactory.create()
+        newer_member = MemberFactory.create()
+        AssociationMembershipFactory.create(
+            member=returning_member,
+            start_date=datetime.date(2021, 3, 1),
+            end_date=datetime.date(2022, 2, 28),
+        )
+        AssociationMembershipFactory.create(
+            member=returning_member, start_date=datetime.date(2024, 3, 1)
+        )
+        AssociationMembershipFactory.create(
+            member=newer_member, start_date=datetime.date(2023, 3, 1)
+        )
+        returning = WaitingListEntryFactory.create(member=returning_member)
+        newer = WaitingListEntryFactory.create(member=newer_member)
+        without_membership = WaitingListEntryFactory.create(
+            member=MemberFactory.create()
+        )
+        interested = WaitingListEntryFactory.create()
+        url = reverse("waiting_list:api_list")
+
+        for order_by, expected in (
+            ("member_since", [returning.id, newer.id, without_membership.id]),
+            ("-member_since", [newer.id, returning.id, without_membership.id]),
+        ):
+            with self.subTest(order_by=order_by):
+                response = self.client.get(
+                    url,
+                    {
+                        "order_by": order_by,
+                        "member_type": "existing_members",
+                        "limit": 10,
+                    },
+                )
+                self.assertStatusCode(response, 200)
+                self.assertEqual(
+                    expected, [entry["id"] for entry in response.json()["results"]]
+                )
+
+        response = self.client.get(url, {"member_type": "new_members", "limit": 10})
+        self.assertStatusCode(response, 200)
+        self.assertEqual(
+            [interested.id], [entry["id"] for entry in response.json()["results"]]
+        )

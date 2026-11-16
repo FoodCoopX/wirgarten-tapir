@@ -13,9 +13,8 @@ class PaymentSegmentProvider:
         return [
             ExportSegment(
                 id="payments.this_month",
-                display_name="Alle Zahlungen für diese Monat",
-                description="Alle Zahlungen in diesem Monat fällig, "
-                "egal ob von Geno-Anteile oder Produkt-Anteile",
+                display_name="Alle Zahlungen für diesen Monat",
+                description="Alle Zahlungen, die in diesem Monat fällig sind.",
                 get_queryset=cls.get_queryset_all_payments_this_month,
                 get_available_columns=PaymentColumnProvider.get_payment_columns,
             ),

@@ -14,16 +14,19 @@ from tapir.generic_exports.services.csv_templates.template_payments_by_income_so
 )
 from tapir.generic_exports.services.pdf_export_template_manager import TemplateData
 from tapir.utils.services.tapir_cache import TapirCache
+from tapir.wirgarten.utils import legal_status_is_cooperative
 
 
 class CsvExportTemplateManager:
     @classmethod
     def get_templates(cls, cache: dict) -> dict[str, TemplateData]:
         template_list = [
-            TemplateMemberListGeng,
             TemplateJokerOverview,
             TemplatePaymentsByIncomeSource,
         ]
+        if legal_status_is_cooperative(cache=cache):
+            template_list.insert(0, TemplateMemberListGeng)
+
         if any(
             pickup_location.is_home_delivery
             for pickup_location in TapirCache.get_all_pickup_locations(cache=cache)

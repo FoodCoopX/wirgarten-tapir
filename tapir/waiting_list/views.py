@@ -5,7 +5,7 @@ from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import QuerySet, Subquery, OuterRef
+from django.db.models import F, QuerySet, Subquery, OuterRef
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.generic import TemplateView
@@ -19,6 +19,7 @@ from tapir_mail.triggers.transactional_trigger import (
     TransactionalTriggerData,
 )
 
+from tapir.associations.models import AssociationMembership
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.coop_membership_cancellation_manager import (
     CoopMembershipCancellationManager,
@@ -93,6 +94,7 @@ from tapir.wirgarten.utils import (
     get_today,
     get_now,
     check_permission_or_self,
+    legal_status_is_association,
 )
 
 
@@ -176,10 +178,14 @@ class WaitingListApiView(APIView):
             entries = filter_method(parameter, entries)
 
         order_by = request.query_params.get("order_by", "-created_at")
-        if "created_at" in order_by:
-            entries = entries.order_by(order_by)
+        if order_by in ("member_since", "-member_since"):
+            entries = self.order_by_member_entry_date(
+                entries, descending=order_by == "-member_since"
+            )
         else:
-            entries = self.order_by_coop_entry_date(entries, descending="-" in order_by)
+            entries = entries.order_by(
+                order_by if order_by in ("created_at", "-created_at") else "-created_at"
+            )
 
         entries = entries.distinct()
 
@@ -192,10 +198,16 @@ class WaitingListApiView(APIView):
 
         return pagination.get_paginated_response(serializer.data)
 
-    @classmethod
     def filter_by_member_type(
-        cls, member_type: str, entries: QuerySet[WaitingListEntry]
+        self, member_type: str, entries: QuerySet[WaitingListEntry]
     ):
+        if legal_status_is_association(cache=self.cache):
+            if member_type == "new_members":
+                return entries.filter(member__isnull=True)
+            if member_type == "existing_members":
+                return entries.filter(member__isnull=False)
+            return entries
+
         member_ids_with_at_least_one_transaction = (
             CoopShareTransaction.objects.values_list("member_id", flat=True).distinct()
         )
@@ -285,12 +297,17 @@ class WaitingListApiView(APIView):
 
         return entries.filter(id__in=filtered_entries)
 
-    @classmethod
-    def order_by_coop_entry_date(
-        cls, entries: QuerySet[WaitingListEntry], descending: bool
+    def order_by_member_entry_date(
+        self, entries: QuerySet[WaitingListEntry], descending: bool
     ):
-        entries = entries.annotate(
-            coop_entry_date=Subquery(
+        if legal_status_is_association(cache=self.cache):
+            entry_dates = (
+                AssociationMembership.objects.filter(member_id=OuterRef("member_id"))
+                .order_by("start_date")
+                .values("start_date")
+            )
+        else:
+            entry_dates = (
                 CoopShareTransaction.objects.filter(
                     transaction_type__in=[
                         CoopShareTransaction.CoopShareTransactionType.PURCHASE,
@@ -299,14 +316,17 @@ class WaitingListApiView(APIView):
                     member_id=OuterRef("member_id"),
                 )
                 .order_by("valid_at")
-                .values("valid_at")[:1]
+                .values("valid_at")
             )
-        )
 
-        order_by = "coop_entry_date"
-        if descending:
-            order_by = "-" + order_by
-        return entries.order_by(order_by)
+        entries = entries.annotate(member_entry_date=Subquery(entry_dates[:1]))
+        entry_date = F("member_entry_date")
+        ordering = (
+            entry_date.desc(nulls_last=True)
+            if descending
+            else entry_date.asc(nulls_last=True)
+        )
+        return entries.order_by(ordering, "id")
 
     @classmethod
     def build_entry_data(cls, entry: WaitingListEntry, cache: dict):

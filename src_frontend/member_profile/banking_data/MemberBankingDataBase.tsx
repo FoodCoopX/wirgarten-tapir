@@ -1,17 +1,19 @@
-import React, { useState } from "react";
 import "dayjs/locale/de";
+import React, { useState } from "react";
+import TapirButton from "../../components/TapirButton.tsx";
 import TapirToastContainer from "../../components/TapirToastContainer.tsx";
 import { ToastData } from "../../types/ToastData.ts";
-import TapirButton from "../../components/TapirButton.tsx";
 import MemberBankingDataModal from "./MemberBankingDataModal.tsx";
 
 interface MemberBankingDataBaseProps {
   memberId: string;
+  sepaConsentLabel: string;
   csrfToken: string;
 }
 
 const MemberBankingDataBase: React.FC<MemberBankingDataBaseProps> = ({
   memberId,
+  sepaConsentLabel,
   csrfToken,
 }) => {
   const [showModal, setShowModal] = useState(false);
@@ -27,6 +29,7 @@ const MemberBankingDataBase: React.FC<MemberBankingDataBaseProps> = ({
       />
       <MemberBankingDataModal
         memberId={memberId}
+        sepaConsentLabel={sepaConsentLabel}
         csrfToken={csrfToken}
         setToastDatas={setToastDatas}
         show={showModal}

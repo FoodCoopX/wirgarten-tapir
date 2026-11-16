@@ -18,6 +18,7 @@ class ExportSegment:
     description: str
     get_queryset: Callable[[datetime.datetime], Iterable]
     get_available_columns: Callable[[], List[ExportSegmentColumn]]
+    cooperative_only: bool = False
 
 
 class ExportSegmentManager:

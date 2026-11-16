@@ -33,6 +33,7 @@ from tapir.generic_exports.services.pdf_export_template_manager import (
 )
 from tapir.subscriptions.serializers import OrderConfirmationResponseSerializer
 from tapir.wirgarten.constants import Permission
+from tapir.wirgarten.utils import legal_status_is_cooperative
 
 
 class CsvExportEditorView(PermissionRequiredMixin, TemplateView):
@@ -48,8 +49,25 @@ class GetExportSegmentsView(APIView):
         if not request.user.has_perm(Permission.Coop.MANAGE):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
+        show_cooperative_segments = legal_status_is_cooperative(cache={})
+        saved_segment_ids = set()
+        if not show_cooperative_segments:
+            # Keep the data source available when editing an existing export.
+            saved_segment_ids.update(
+                CsvExport.objects.values_list("export_segment_id", flat=True)
+            )
+            saved_segment_ids.update(
+                PdfExport.objects.values_list("export_segment_id", flat=True)
+            )
+
         segment_datas = []
         for segment in ExportSegmentManager.registered_export_segments.values():
+            if (
+                segment.cooperative_only
+                and not show_cooperative_segments
+                and segment.id not in saved_segment_ids
+            ):
+                continue
             segment_datas.append(
                 {
                     "id": segment.id,
