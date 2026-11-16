@@ -50,6 +50,7 @@ models/BestellWizardOrderEvaluationResponse.ts
 models/BestellWizardStrings.ts
 models/Bid.ts
 models/BidAdminCreateRequest.ts
+models/BidOptions.ts
 models/BidProductVariant.ts
 models/BidSubmitRequest.ts
 models/BidTexts.ts

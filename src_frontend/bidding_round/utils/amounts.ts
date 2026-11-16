@@ -32,3 +32,22 @@ export function getMonthlyTotal(amount: number, quantity: number): number {
 export function getYearlyAmount(amount: number, quantity: number): number {
   return getMonthlyTotal(amount, quantity) * 12;
 }
+
+export function scaleAmountsForVariant(
+  amounts: string[],
+  previousReference: number,
+  nextReference: number,
+): string[] {
+  if (
+    previousReference <= 0 ||
+    nextReference <= 0 ||
+    previousReference === nextReference
+  ) {
+    return amounts;
+  }
+  const factor = nextReference / previousReference;
+  return amounts.map((value) => {
+    const amount = parseEuroAmount(value);
+    return amount === null ? value : (amount * factor).toFixed(2);
+  });
+}

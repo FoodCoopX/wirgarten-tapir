@@ -7,6 +7,11 @@ from tapir.configuration.parameter import ParameterMeta, get_parameter_value
 from tapir.wirgarten.constants import ParameterCategory
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
+BIDDING_ROUND_NO_CAPACITY_CHECK_WARNING = gettext_noop(
+    "Achtung: In der Beitragsrunde findet keine Kapazitätsprüfung statt. "
+    "Aktivierte Optionen können zu Geboten führen, die die verfügbare Kapazität übersteigen."
+)
+
 if typing.TYPE_CHECKING:
     from tapir.wirgarten.parameters import ParameterDefinitions
 
@@ -388,4 +393,36 @@ class ParameterDefinitionsBiddingRound:
             category=ParameterCategory.BIDDING_ROUND,
             order_priority=1,
             meta=ParameterMeta(textarea=True, show_only_when=_show_only_when_enabled),
+        )
+
+        importer.parameter_definition(
+            key=ParameterKeys.BIDDING_ROUND_BID_SHARES_ENABLED,
+            label=gettext_noop("Anzahl der Anteile änderbar"),
+            description=gettext_noop(
+                "Wenn aktiviert, können Mitglieder im Schritt „Ernteanteile & Gebot“ die Anzahl der Anteile mit Plus- und Minus-Schaltflächen ändern. Wenn deaktiviert, wird die Mengenwahl ausgeblendet. Nur Darstellung: serverseitig wird die Eingabe nicht eingeschränkt, ein Umschalten macht bestehende Gebote nicht ungültig."
+            ),
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=False,
+            category=ParameterCategory.BIDDING_ROUND,
+            order_priority=0,
+            meta=ParameterMeta(
+                warning=BIDDING_ROUND_NO_CAPACITY_CHECK_WARNING,
+                show_only_when=_show_only_when_enabled,
+            ),
+        )
+
+        importer.parameter_definition(
+            key=ParameterKeys.BIDDING_ROUND_BID_CAROUSEL_ENABLED,
+            label=gettext_noop("Produkt-Karussell anzeigen"),
+            description=gettext_noop(
+                "Wenn aktiviert, können Mitglieder im Schritt „Ernteanteile & Gebot“ die Produktvariante über das Karussell wechseln. Wenn deaktiviert, wird das Karussell ausgeblendet. Nur Darstellung: serverseitig wird die Eingabe nicht eingeschränkt, ein Umschalten macht bestehende Gebote nicht ungültig."
+            ),
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=False,
+            category=ParameterCategory.BIDDING_ROUND,
+            order_priority=-1,
+            meta=ParameterMeta(
+                warning=BIDDING_ROUND_NO_CAPACITY_CHECK_WARNING,
+                show_only_when=_show_only_when_enabled,
+            ),
         )

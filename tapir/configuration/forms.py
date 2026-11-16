@@ -24,6 +24,11 @@ def create_field(param: TapirParameter, cache: dict):
     param_value = param.get_value()
 
     help_text = description
+    if param_meta.warning:
+        help_text += (
+            '<div class="alert alert-warning fw-bold fs-6 mt-2 mb-0" role="alert">'
+            f"{_(param_meta.warning)}</div>"
+        )
     if param_meta.vars_hint:
         vars_sorted = ["{" + x + "}" for x in sorted(param_meta.vars_hint)]
         if param.description != "":

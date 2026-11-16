@@ -19,6 +19,8 @@ import {
   BiddableProductFromJSON,
   BiddableProductToJSON,
 } from "./BiddableProduct";
+import type { BidOptions } from "./BidOptions";
+import { BidOptionsFromJSON, BidOptionsToJSON } from "./BidOptions";
 import type { CurrentPickupLocation } from "./CurrentPickupLocation";
 import {
   CurrentPickupLocationFromJSON,
@@ -107,6 +109,12 @@ export interface PublicDataResponse {
    * @memberof PublicDataResponse
    */
   bid?: Bid | null;
+  /**
+   *
+   * @type {BidOptions}
+   * @memberof PublicDataResponse
+   */
+  bidOptions?: BidOptions;
 }
 
 /**
@@ -156,6 +164,10 @@ export function PublicDataResponseFromJSONTyped(
         ? undefined
         : CurrentPickupLocationFromJSON(json["current_pickup_location"]),
     bid: json["bid"] == null ? undefined : BidFromJSON(json["bid"]),
+    bidOptions:
+      json["bid_options"] == null
+        ? undefined
+        : BidOptionsFromJSON(json["bid_options"]),
   };
 }
 
@@ -186,5 +198,6 @@ export function PublicDataResponseToJSONTyped(
       value["currentPickupLocation"],
     ),
     bid: BidToJSON(value["bid"]),
+    bid_options: BidOptionsToJSON(value["bidOptions"]),
   };
 }

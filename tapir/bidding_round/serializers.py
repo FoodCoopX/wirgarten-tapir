@@ -283,6 +283,7 @@ class BidProductVariantSerializer(serializers.Serializer):
     min_amount = serializers.CharField(allow_null=True)
     size = serializers.CharField(allow_null=True)
     current_quantity = serializers.IntegerField(allow_null=True)
+    image_url = serializers.CharField(allow_null=True)
 
 
 class BiddableProductSerializer(serializers.Serializer):
@@ -330,6 +331,11 @@ class CurrentPickupLocationSerializer(serializers.Serializer):
     yearly_delivery_charge = serializers.CharField()
 
 
+class BidOptionsSerializer(serializers.Serializer):
+    quantity_enabled = serializers.BooleanField()
+    carousel_enabled = serializers.BooleanField()
+
+
 class PublicDataResponseSerializer(serializers.Serializer):
     enabled = serializers.BooleanField()
     url_enabled = serializers.BooleanField(required=False)
@@ -345,6 +351,7 @@ class PublicDataResponseSerializer(serializers.Serializer):
         allow_null=True, required=False
     )
     bid = BidSerializer(allow_null=True, required=False)
+    bid_options = BidOptionsSerializer(required=False)
 
 
 class GrowingPeriodOptionSerializer(serializers.Serializer):
