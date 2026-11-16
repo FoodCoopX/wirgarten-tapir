@@ -17,7 +17,10 @@ from rest_framework.views import APIView
 from tapir.bestell_wizard.services.bestell_wizard_style_service import (
     BestellWizardStyleService,
 )
-from tapir.bidding_round.config import BIDDING_ROUND_PROCEDURE_SIMPLE
+from tapir.bidding_round.config import (
+    BIDDING_ROUND_PROCEDURE_SIMPLE,
+    BIDDING_ROUND_STATUS_ACTIVE,
+)
 from tapir.bidding_round.models import Bid, BiddingRound
 from tapir.bidding_round.permissions import (
     BiddingRoundCacheMixin,
@@ -32,6 +35,7 @@ from tapir.bidding_round.serializers import (
     MemberBidResponseSerializer,
     ProductTypeOptionSerializer,
     PublicDataResponseSerializer,
+    PublicEvaluationResponseSerializer,
     RoundConfigSerializer,
     RoundCreateSerializer,
     RoundResultsResponseSerializer,
@@ -144,6 +148,22 @@ class PublicDataView(BiddingRoundFeatureFlagMixin, APIView):
                 )
 
         return Response(response_data, status=status.HTTP_200_OK)
+
+
+class PublicResultsView(BiddingRoundFeatureFlagMixin, APIView):
+    require_public_url = True
+    permission_classes = [AllowAny]
+
+    @extend_schema(responses={200: PublicEvaluationResponseSerializer})
+    def get(self, request, round_id):
+        cache = {}
+        bidding_round = get_object_or_404(BiddingRound, id=round_id)
+        if bidding_round.status != BIDDING_ROUND_STATUS_ACTIVE:
+            raise Http404
+        return Response(
+            BiddingRoundStatsService.build_public_evaluation(bidding_round, cache),
+            status=status.HTTP_200_OK,
+        )
 
 
 class RoundListCreateView(BiddingRoundFeatureFlagMixin, APIView):

@@ -5,6 +5,7 @@ import {
   BestellWizardApi,
   BiddingRoundsApi,
   PublicDataResponse,
+  PublicEvaluationResponse,
   RoundTexts,
 } from "../api-client";
 import { BestellWizardSettings } from "../bestell_wizard/types/BestellWizardSettings.ts";
@@ -70,6 +71,8 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({ csrfToken }) => {
   const bestellWizardApi = useApi(BestellWizardApi, csrfToken);
 
   const [data, setData] = useState<PublicDataResponse | null>(null);
+  const [liveEvaluation, setLiveEvaluation] =
+    useState<PublicEvaluationResponse | null>(null);
   const [settings, setSettings] =
     useState<BestellWizardSettings>(buildEmptySettings());
   const [loading, setLoading] = useState(true);
@@ -109,6 +112,18 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({ csrfToken }) => {
         "Die Beitragsrunde konnte nicht geladen werden.",
         setToastDatas,
       );
+    }
+
+    if (publicData?.round && publicData.roundStatus === "active") {
+      try {
+        setLiveEvaluation(
+          await api.biddingRoundsApiPublicResultsRetrieve({
+            roundId: publicData.round.id,
+          }),
+        );
+      } catch {
+        setLiveEvaluation(null);
+      }
     }
 
     let wizardSettings = buildEmptySettings();
@@ -363,6 +378,7 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({ csrfToken }) => {
           texts={texts}
           isAuthenticated={isAuthenticated}
           hasActiveRound={hasActiveRound}
+          liveEvaluation={liveEvaluation}
           goToNextStep={goToNextStep}
           stepActive={step === currentStep}
         />

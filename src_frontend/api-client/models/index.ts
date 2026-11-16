@@ -289,6 +289,7 @@ export * from "./ProductTypeOption";
 export * from "./ProductTypesAndConfig";
 export * from "./PublicConfirmWaitingListEntryRequestRequest";
 export * from "./PublicDataResponse";
+export * from "./PublicEvaluationResponse";
 export * from "./PublicGrowingPeriod";
 export * from "./PublicPickupLocation";
 export * from "./PublicProduct";

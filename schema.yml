@@ -2871,6 +2871,36 @@ paths:
               schema:
                 $ref: '#/components/schemas/CreateContractsResponse'
           description: ''
+  /bidding_rounds/api/{round_id}/public_results:
+    get:
+      operationId: bidding_rounds_api_public_results_retrieve
+      description: |-
+        Applies the feature-flag gate to a DRF view via ``initial``.
+
+        This keeps the view's own ``permission_classes`` (and therefore the global
+        ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
+        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
+        so the handlers reuse it instead of building their own.
+      parameters:
+      - in: path
+        name: round_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - bidding_rounds
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicEvaluationResponse'
+          description: ''
   /bidding_rounds/api/{round_id}/reopen:
     post:
       operationId: bidding_rounds_api_reopen_create
@@ -18071,6 +18101,49 @@ components:
           nullable: true
       required:
       - enabled
+    PublicEvaluationResponse:
+      type: object
+      properties:
+        bidding_procedure:
+          type: string
+        bid_levels:
+          type: integer
+        recommended_level:
+          type: integer
+        bid_range_position:
+          type: number
+          format: double
+        coverage_status:
+          type: string
+        target_per_year:
+          type: string
+        coverage_percent:
+          type: number
+          format: double
+        bidder_average_per_month:
+          type: string
+        levels:
+          $ref: '#/components/schemas/EvaluationLevels'
+        capacity_shares:
+          type: string
+        current_shares:
+          type: string
+        utilization_percent:
+          type: number
+          format: double
+      required:
+      - bid_levels
+      - bid_range_position
+      - bidder_average_per_month
+      - bidding_procedure
+      - capacity_shares
+      - coverage_percent
+      - coverage_status
+      - current_shares
+      - levels
+      - recommended_level
+      - target_per_year
+      - utilization_percent
     PublicGrowingPeriod:
       type: object
       properties:
@@ -18588,26 +18661,26 @@ components:
           type: string
         bid_levels:
           type: integer
+        recommended_level:
+          type: integer
         bid_range_position:
           type: number
           format: double
-        recommended_level:
-          type: integer
         coverage_status:
           type: string
-        levels:
-          $ref: '#/components/schemas/EvaluationLevels'
         target_per_year:
-          type: string
-        reached_per_year:
           type: string
         coverage_percent:
           type: number
           format: double
-        bidder_count:
-          type: integer
         bidder_average_per_month:
           type: string
+        levels:
+          $ref: '#/components/schemas/EvaluationLevels'
+        reached_per_year:
+          type: string
+        bidder_count:
+          type: integer
         bids:
           type: array
           items:
