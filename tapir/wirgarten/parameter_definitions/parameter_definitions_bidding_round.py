@@ -88,6 +88,18 @@ class ParameterDefinitionsBiddingRound:
         )
 
         importer.parameter_definition(
+            key=ParameterKeys.BIDDING_ROUND_FEEDBACK_ENABLED,
+            label=gettext_noop("Feedback-Seite in der Beitragsrunde anbieten"),
+            description=gettext_noop(
+                "Wenn aktiviert, können Mitglieder nach dem Datenschutz-Schritt ein Feedback abgeben, bevor sie ihr Gebot abschicken."
+            ),
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=True,
+            category=ParameterCategory.BIDDING_ROUND,
+            order_priority=9,
+        )
+
+        importer.parameter_definition(
             key=ParameterKeys.BIDDING_ROUND_PUBLIC_INTRO_TITLE,
             label=gettext_noop("Beitragsrunden-Seite: Titel"),
             description=gettext_noop("Titel der Beitragsrunden-Seite."),
@@ -157,7 +169,7 @@ class ParameterDefinitionsBiddingRound:
                 "Titel des Schritts, in dem das Gebot zusammengefasst und abgeschickt wird."
             ),
             datatype=TapirParameterDatatype.STRING,
-            initial_value="Dein Gebot",
+            initial_value="{vorname}, hier nochmal dein Gebot auf einen Blick",
             category=ParameterCategory.BIDDING_ROUND,
             order_priority=23,
             meta=ParameterMeta(show_only_when=_show_only_when_enabled),
@@ -185,6 +197,20 @@ class ParameterDefinitionsBiddingRound:
             category=ParameterCategory.BIDDING_ROUND,
             order_priority=21,
             meta=ParameterMeta(show_only_when=_show_only_when_enabled),
+        )
+
+        importer.parameter_definition(
+            key=ParameterKeys.BIDDING_ROUND_PUBLIC_FINAL_SUBMIT_LABEL,
+            label=gettext_noop(
+                "Beitragsrunden-Seite: Beschriftung Gebot kostenpflichtig abgeben"
+            ),
+            description=gettext_noop(
+                "Beschriftung der Schaltfläche auf der letzten Übersicht, die das Gebot verbindlich abschickt."
+            ),
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Gebot kostenpflichtig abgeben",
+            category=ParameterCategory.BIDDING_ROUND,
+            order_priority=6,
         )
 
         importer.parameter_definition(

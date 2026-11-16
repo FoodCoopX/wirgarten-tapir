@@ -315,6 +315,7 @@ models/ProductTypeAccordionInBestellWizard.ts
 models/ProductTypeAccordionInBestellWizardRequest.ts
 models/ProductTypeOption.ts
 models/ProductTypesAndConfig.ts
+models/PublicAssociationMembership.ts
 models/PublicConfirmWaitingListEntryRequestRequest.ts
 models/PublicDataResponse.ts
 models/PublicEvaluationResponse.ts

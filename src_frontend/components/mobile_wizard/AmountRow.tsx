@@ -9,6 +9,7 @@ interface AmountRowProps {
   hint?: string;
   muted?: boolean;
   strong?: boolean;
+  labelStrong?: boolean;
 }
 
 const AmountRow: React.FC<AmountRowProps> = ({
@@ -18,6 +19,7 @@ const AmountRow: React.FC<AmountRowProps> = ({
   hint,
   muted = true,
   strong = false,
+  labelStrong = false,
 }) => {
   const display =
     amount === null ? "–" : `${formatAmountNumber(amount)} ${unit}`;
@@ -25,7 +27,7 @@ const AmountRow: React.FC<AmountRowProps> = ({
   return (
     <div className={"d-flex justify-content-between gap-3"}>
       <span className={muted ? "text-muted" : ""}>
-        {label}
+        {labelStrong ? <strong>{label}</strong> : label}
         {hint && <span className={"d-block small text-muted"}>{hint}</span>}
       </span>
       <span className={"text-nowrap"}>

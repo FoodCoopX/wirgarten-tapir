@@ -5,6 +5,11 @@ from unittest.mock import ANY, patch
 from django.urls import reverse
 from rest_framework import status
 
+from tapir.associations.tests.factories import (
+    AssociationMembershipFactory,
+    AssociationMembershipTypeFactory,
+    AssociationMembershipTypePriceFactory,
+)
 from tapir.bidding_round.config import (
     BIDDING_ROUND_PROCEDURE_BID_RANGE,
     BIDDING_ROUND_STATUS_CLOSED,
@@ -25,6 +30,7 @@ from tapir.payments.models import MemberPaymentRhythm
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
+from tapir.wirgarten.models import OrderFeedback
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.accounts.models import TapirUser
 from tapir.wirgarten.tests.factories import (
@@ -181,6 +187,109 @@ class TestPublicDataView(BiddingRoundApiTestBase):
         self.assertEqual("Test Owner", response.data["account_owner"])
         self.assertEqual("DE89370400440532013000", response.data["iban"])
         self.assertEqual("quarterly", response.data["payment_rhythm"])
+
+    def test_publicData_withMember_returnsFirstName(self):
+        self._enable()
+        create_open_round()
+        member = MemberFactory.create(first_name="Jana")
+        self.client.force_login(member)
+
+        response = self.client.get(reverse("bidding_rounds:public_data"))
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assertEqual("Jana", response.data["first_name"])
+
+    def test_publicData_anonymous_returnsNoFirstName(self):
+        self._enable()
+        create_open_round()
+
+        response = self.client.get(reverse("bidding_rounds:public_data"))
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assertIsNone(response.data["first_name"])
+
+    def test_publicData_withActiveAssociationMembership_returnsNameAndPrice(self):
+        self._enable()
+        bidding_round = create_open_round()
+        membership_type = AssociationMembershipTypeFactory.create(name="Fördermitglied")
+        AssociationMembershipTypePriceFactory.create(
+            type=membership_type,
+            valid_from=bidding_round.growing_period.start_date,
+            price=Decimal("12.00"),
+        )
+        member = MemberFactory.create()
+        AssociationMembershipFactory.create(
+            member=member,
+            type=membership_type,
+            start_date=bidding_round.growing_period.start_date,
+            end_date=None,
+        )
+        self.client.force_login(member)
+
+        response = self.client.get(reverse("bidding_rounds:public_data"))
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assertEqual(
+            {"name": "Fördermitglied", "price": "12.00"},
+            response.data["association_membership"],
+        )
+
+    def test_publicData_withoutActiveAssociationMembership_returnsNull(self):
+        self._enable()
+        bidding_round = create_open_round()
+        membership_type = AssociationMembershipTypeFactory.create()
+        member = MemberFactory.create()
+        AssociationMembershipFactory.create(
+            member=member,
+            type=membership_type,
+            start_date=bidding_round.growing_period.start_date
+            - datetime.timedelta(days=100),
+            end_date=bidding_round.growing_period.start_date
+            - datetime.timedelta(days=1),
+        )
+        self.client.force_login(member)
+
+        response = self.client.get(reverse("bidding_rounds:public_data"))
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assertIsNone(response.data["association_membership"])
+
+    def test_publicData_feedbackEnabledByDefault(self):
+        self._enable()
+        create_open_round()
+
+        response = self.client.get(reverse("bidding_rounds:public_data"))
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assertTrue(response.data["feedback_enabled"])
+
+    def test_publicData_feedbackDisabled_returnsFalse(self):
+        self._enable()
+        create_open_round()
+        self._set_parameter(ParameterKeys.BIDDING_ROUND_FEEDBACK_ENABLED, False)
+
+        response = self.client.get(reverse("bidding_rounds:public_data"))
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assertFalse(response.data["feedback_enabled"])
+
+    def test_publicData_textsContainPersonalizedSummaryTitleAndFinalSubmitLabel(
+        self,
+    ):
+        self._enable()
+        create_open_round()
+
+        response = self.client.get(reverse("bidding_rounds:public_data"))
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assertEqual(
+            "{vorname}, hier nochmal dein Gebot auf einen Blick",
+            response.data["texts"]["summary_title"],
+        )
+        self.assertEqual(
+            "Gebot kostenpflichtig abgeben",
+            response.data["texts"]["final_submit_label"],
+        )
 
     def test_publicData_bidOptionsDefaultToOff(self):
         self._set_parameter(ParameterKeys.BIDDING_ROUND_ENABLED, True)
@@ -446,6 +555,64 @@ class TestMemberBidView(BiddingRoundApiTestBase):
         self.assertEqual(
             "Für die SEPA-Zustimmung wird eine IBAN benötigt.", response.data["error"]
         )
+
+    def test_post_withFeedback_createsOrderFeedback(self):
+        self._enable()
+        bidding_round = create_open_round()
+        member = MemberFactory.create()
+        self.client.force_login(member)
+        payload = bid_payload(bidding_round, amount="80.00")
+        payload["feedback"] = "Tolles Angebot!"
+
+        response = self.client.post(
+            reverse("bidding_rounds:member_bid", args=[bidding_round.id]),
+            data=payload,
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        feedback_entries = OrderFeedback.objects.filter(member=member)
+        self.assertEqual(1, feedback_entries.count())
+        self.assertEqual("Tolles Angebot!", feedback_entries.first().feedback_text)
+
+    def test_post_withFeedbackTwice_updatesTheSameFeedback(self):
+        self._enable()
+        bidding_round = create_open_round()
+        member = MemberFactory.create()
+        self.client.force_login(member)
+        payload = bid_payload(bidding_round, amount="80.00")
+
+        for feedback in ("Erstes Feedback", "Zweites Feedback"):
+            payload["feedback"] = feedback
+            response = self.client.post(
+                reverse("bidding_rounds:member_bid", args=[bidding_round.id]),
+                data=payload,
+                content_type="application/json",
+            )
+            self.assertStatusCode(response, status.HTTP_200_OK)
+
+        feedback_entries = OrderFeedback.objects.filter(
+            member=member, bidding_round=bidding_round
+        )
+        self.assertEqual(1, feedback_entries.count())
+        self.assertEqual("Zweites Feedback", feedback_entries.get().feedback_text)
+
+    def test_post_withoutFeedback_createsNoOrderFeedback(self):
+        self._enable()
+        bidding_round = create_open_round()
+        member = MemberFactory.create()
+        self.client.force_login(member)
+        payload = bid_payload(bidding_round, amount="80.00")
+        payload["feedback"] = ""
+
+        response = self.client.post(
+            reverse("bidding_rounds:member_bid", args=[bidding_round.id]),
+            data=payload,
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assertFalse(OrderFeedback.objects.filter(member=member).exists())
 
 
 class TestRoundAdminViews(BiddingRoundApiTestBase):

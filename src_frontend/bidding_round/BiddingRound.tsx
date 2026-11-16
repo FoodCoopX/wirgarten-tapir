@@ -11,6 +11,7 @@ import {
 import { BestellWizardSettings } from "../bestell_wizard/types/BestellWizardSettings.ts";
 import { buildEmptySettings } from "../bestell_wizard/utils/buildEmptySettings.ts";
 import { buildSettings } from "../bestell_wizard/utils/buildSettings.ts";
+import Step13Feedback from "../bestell_wizard_mobile/steps/Step13Feedback.tsx";
 import StepGenericIntro from "../bestell_wizard_mobile/steps/StepGenericIntro.tsx";
 import MobileWizardBase from "../components/mobile_wizard/MobileWizardBase.tsx";
 import { MobileWizardStep } from "../components/mobile_wizard/types/MobileWizard.ts";
@@ -57,6 +58,7 @@ const EMPTY_TEXTS: RoundTexts = {
   privacyTitle: "",
   pickupLocationTitle: "",
   submitLabel: "",
+  finalSubmitLabel: "",
   bid: {
     amountLabel: "",
     referenceValueHint: "",
@@ -107,6 +109,7 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({
   const [contractAccepted, setContractAccepted] = useState(false);
   const [privacyPolicyRead, setPrivacyPolicyRead] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [feedback, setFeedback] = useState("");
   const [confirmationHtml, setConfirmationHtml] = useState("");
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
 
@@ -223,6 +226,7 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({
       productTypeId,
       hasProductIntro,
       sepaEnabled: Boolean(data?.sepaEnabled),
+      feedbackEnabled: Boolean(data?.feedbackEnabled),
     });
     setSteps(newSteps);
     setCurrentStep((current) => {
@@ -393,6 +397,7 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({
           cancellationPolicyRead: cancellationPolicyRead,
           contractAccepted: contractAccepted,
           privacyPolicyRead: privacyPolicyRead,
+          feedback: feedback,
         },
       });
       setConfirmationHtml(texts.bid.successText);
@@ -495,6 +500,20 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({
       );
     }
 
+    if (step === "bidding_round_feedback") {
+      return (
+        <Step13Feedback
+          settings={settings}
+          goToNextStep={goToNextStep}
+          confirmOrderLoading={false}
+          feedback={feedback}
+          setFeedback={setFeedback}
+          stepActive={step === currentStep}
+          isOrderStep={false}
+        />
+      );
+    }
+
     if (step === "bidding_round_summary") {
       const variant = getSelectedVariant();
       if (!variant) {
@@ -502,6 +521,7 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({
       }
       return (
         <BiddingRoundSummaryStep
+          productName={data.biddableProduct?.productTypeName ?? ""}
           variantName={variant.name}
           quantity={quantity}
           amounts={amounts}
@@ -509,9 +529,15 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({
           isBidRange={isBidRange}
           texts={texts}
           currentPickupLocation={data.currentPickupLocation ?? null}
+          associationMembership={data.associationMembership ?? null}
           sharesEnabled={data?.bidOptions?.quantityEnabled ?? false}
           submitting={submitting}
           onSubmit={submitBid}
+          onAdjustBid={() => {
+            if (data.biddableProduct) {
+              setCurrentStep(data.biddableProduct.productTypeId + "_bid");
+            }
+          }}
         />
       );
     }
@@ -578,7 +604,7 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({
       getPhaseLabel={(phase) => getBiddingRoundPhaseLabel(phase)}
       getStepName={(step) => getBiddingRoundStepName(step, settings)}
       logoUrl={settings.logoUrl}
-      firstName={""}
+      firstName={data?.firstName ?? ""}
       showProgress={hasActiveRound && isAuthenticated && steps.length > 1}
       hideFooterButtonsOnLastStep={true}
       showTestMenu={settings.debug}

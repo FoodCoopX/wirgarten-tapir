@@ -145,6 +145,7 @@ class ParameterKeys:
         f"{PREFIX}.bidding_round.status_public_enabled"
     )
     BIDDING_ROUND_SEPA_ENABLED = f"{PREFIX}.bidding_round.sepa_enabled"
+    BIDDING_ROUND_FEEDBACK_ENABLED = f"{PREFIX}.bidding_round.feedback_enabled"
     BIDDING_ROUND_PUBLIC_INTRO_TITLE = f"{PREFIX}.bidding_round.public.intro_title"
     BIDDING_ROUND_PUBLIC_INTRO_TEXT = f"{PREFIX}.bidding_round.public.intro_text"
     BIDDING_ROUND_PUBLIC_ENDED_TEXT = f"{PREFIX}.bidding_round.public.ended_text"
@@ -155,6 +156,9 @@ class ParameterKeys:
         f"{PREFIX}.bidding_round.public.pickup_location_title"
     )
     BIDDING_ROUND_PUBLIC_SUBMIT_LABEL = f"{PREFIX}.bidding_round.public.submit_label"
+    BIDDING_ROUND_PUBLIC_FINAL_SUBMIT_LABEL = (
+        f"{PREFIX}.bidding_round.public.final_submit_label"
+    )
     BIDDING_ROUND_PUBLIC_PRIVACY_TITLE = f"{PREFIX}.bidding_round.public.privacy_title"
     BIDDING_ROUND_BID_AMOUNT_LABEL = f"{PREFIX}.bidding_round.bid.amount_label"
     BIDDING_ROUND_BID_REFERENCE_VALUE_HINT = (

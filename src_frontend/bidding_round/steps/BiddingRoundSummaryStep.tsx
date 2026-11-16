@@ -1,13 +1,21 @@
 import React from "react";
-import { Card } from "react-bootstrap";
+import { Accordion, AccordionBody } from "react-bootstrap";
 
-import { CurrentPickupLocation, RoundTexts } from "../../api-client";
+import {
+  CurrentPickupLocation,
+  PublicAssociationMembership,
+  RoundTexts,
+} from "../../api-client";
+import { scrollIntoView } from "../../bestell_wizard_mobile/utils/scrollIntoView.ts";
 import TapirButton from "../../components/TapirButton.tsx";
 import AmountRow from "../../components/mobile_wizard/AmountRow.tsx";
+import { BUTTON_VARIANT } from "../../components/mobile_wizard/utils/BUTTON_VARIANT.ts";
+import { formatAmountNumber } from "../../utils/formatAmountNumber.ts";
 import PickupLocationRow from "../components/PickupLocationRow.tsx";
 import {
-  getMonthlyTotal,
-  getYearlyAmount,
+  BidLevelCost,
+  getBidLevelCost,
+  getBidTotalRange,
   parseEuroAmount,
 } from "../utils/amounts.ts";
 import {
@@ -16,6 +24,7 @@ import {
 } from "../utils/getLevelLabels.ts";
 
 interface BiddingRoundSummaryStepProps {
+  productName: string;
   variantName: string;
   quantity: number;
   amounts: string[];
@@ -23,12 +32,16 @@ interface BiddingRoundSummaryStepProps {
   isBidRange: boolean;
   texts: RoundTexts;
   currentPickupLocation: CurrentPickupLocation | null;
+  associationMembership: PublicAssociationMembership | null;
   sharesEnabled: boolean;
   submitting: boolean;
   onSubmit: () => void;
+  onAdjustBid: () => void;
 }
 
+type LevelRow = BidLevelCost & { label: string };
 const BiddingRoundSummaryStep: React.FC<BiddingRoundSummaryStepProps> = ({
+  productName,
   variantName,
   quantity,
   amounts,
@@ -36,77 +49,149 @@ const BiddingRoundSummaryStep: React.FC<BiddingRoundSummaryStepProps> = ({
   isBidRange,
   texts,
   currentPickupLocation,
+  associationMembership,
   sharesEnabled,
   submitting,
   onSubmit,
+  onAdjustBid,
 }) => {
   const levelLabels = isBidRange
     ? getBidRangeLabels(texts)
     : getAmountLevelLabels(texts, requiredAmountLevels);
+  const membershipPrice = associationMembership
+    ? Number(associationMembership.price)
+    : null;
+  const deliveryCharge = currentPickupLocation
+    ? Number(currentPickupLocation.yearlyDeliveryCharge)
+    : null;
 
-  const levelRows = Array.from({ length: requiredAmountLevels }, (_, index) => {
-    const amount = parseEuroAmount(amounts[index]);
-    return {
-      label: levelLabels[index] ?? "",
-      amount,
-      monthlyTotal: amount === null ? null : getMonthlyTotal(amount, quantity),
-      yearlyTotal: amount === null ? null : getYearlyAmount(amount, quantity),
-    };
-  });
+  const levelRows: LevelRow[] = levelLabels.map((label, index) => ({
+    label,
+    ...getBidLevelCost(
+      parseEuroAmount(amounts[index]),
+      quantity,
+      membershipPrice,
+      deliveryCharge,
+    ),
+  }));
+
+  const totalRange = getBidTotalRange(
+    amounts,
+    requiredAmountLevels,
+    quantity,
+    membershipPrice,
+    deliveryCharge,
+  );
+
+  const hasSingleTotal =
+    totalRange !== null && totalRange.min === totalRange.max;
+
+  const headerText =
+    totalRange === null
+      ? `${productName} ${variantName}`
+      : hasSingleTotal
+        ? `${productName} ${variantName} ${formatAmountNumber(totalRange.min)} ${texts.bid.monthlyUnit}`
+        : `${productName} ${variantName} ${formatAmountNumber(totalRange.min)}-${formatAmountNumber(totalRange.max)} ${texts.bid.monthlyUnit}`;
+
+  const [selectedRow, ...otherRows] = levelRows;
+
+  function renderLevelRow(row: LevelRow, key: string) {
+    return (
+      <div key={key} className={"mb-2"}>
+        <AmountRow
+          label={row.label}
+          amount={row.bidMonthly}
+          unit={texts.bid.monthlyUnit}
+          strong
+          labelStrong
+        />
+        {row.membershipMonthly !== null && (
+          <AmountRow
+            label={"Vereinsmitgliedschaft"}
+            amount={row.membershipMonthly}
+            unit={texts.bid.monthlyUnit}
+          />
+        )}
+        {row.deliveryMonthly !== null && (
+          <AmountRow
+            label={"Lieferkosten"}
+            amount={row.deliveryMonthly}
+            unit={texts.bid.monthlyUnit}
+          />
+        )}
+        <AmountRow
+          label={"Gesamt"}
+          amount={row.totalMonthly}
+          unit={texts.bid.monthlyUnit}
+          strong
+        />
+        <AmountRow
+          label={"Gebot pro Jahr"}
+          amount={row.bidYearly}
+          unit={texts.bid.yearlyUnit}
+        />
+        {row.deliveryYearly !== null && (
+          <AmountRow
+            label={"Lieferkosten"}
+            amount={row.deliveryYearly}
+            unit={texts.bid.yearlyUnit}
+          />
+        )}
+        <AmountRow
+          label={"Gesamt pro Jahr"}
+          amount={row.totalYearly}
+          unit={texts.bid.yearlyUnit}
+          strong
+        />
+      </div>
+    );
+  }
 
   return (
     <>
-      <Card>
-        <Card.Header>
-          <strong>{texts.summaryTitle}</strong>
-        </Card.Header>
-        <Card.Body className={"d-flex flex-column gap-2"}>
-          <div className={"d-flex justify-content-between"}>
-            <span className={"text-muted"}>Produkt</span>
-            <strong>{variantName}</strong>
-          </div>
-          {sharesEnabled && (
-            <div className={"d-flex justify-content-between"}>
-              <span className={"text-muted"}>Anteile</span>
-              <strong>{quantity}</strong>
-            </div>
-          )}
-          <PickupLocationRow
-            currentPickupLocation={currentPickupLocation}
-            texts={texts}
-            variant={"inline"}
-          />
-          {levelRows.map((row) => (
-            <div key={row.label} className={"border-top pt-2"}>
-              <AmountRow
-                label={row.label}
-                amount={row.amount}
-                unit={texts.bid.monthlyUnit}
-                hint={quantity > 1 ? "pro Anteil" : undefined}
-                strong
-              />
-              {row.monthlyTotal !== null && quantity > 1 && (
-                <AmountRow
-                  label={"Beitrag gesamt"}
-                  amount={row.monthlyTotal}
-                  unit={texts.bid.monthlyUnit}
-                  strong
-                />
-              )}
-              <AmountRow
-                label={"Beitrag pro Jahr"}
-                amount={row.yearlyTotal}
-                unit={texts.bid.yearlyUnit}
-                strong
-              />
-            </div>
-          ))}
-        </Card.Body>
-      </Card>
+      <Accordion style={{ width: "100%" }}>
+        <Accordion.Item eventKey={"product"} onClick={scrollIntoView}>
+          <Accordion.Header>{headerText}</Accordion.Header>
+          <AccordionBody>
+            {sharesEnabled && (
+              <div className={"d-flex justify-content-between"}>
+                <span className={"text-muted"}>Anteile</span>
+                <strong>{quantity}</strong>
+              </div>
+            )}
+            <PickupLocationRow
+              currentPickupLocation={currentPickupLocation}
+              texts={texts}
+              variant={"inline"}
+              showDeliveryCharge={false}
+            />
+            <hr />
+            {selectedRow && renderLevelRow(selectedRow, "selected")}
+            {otherRows.length > 0 && (
+              <>
+                <hr />
+                {otherRows.map((row, index) => (
+                  <React.Fragment key={row.label}>
+                    {renderLevelRow(row, row.label)}
+                    {index < otherRows.length - 1 && <hr />}
+                  </React.Fragment>
+                ))}
+              </>
+            )}
+            <hr />
+            <TapirButton
+              variant={BUTTON_VARIANT}
+              icon={"edit"}
+              text={"Gebot anpassen"}
+              onClick={onAdjustBid}
+            />
+          </AccordionBody>
+        </Accordion.Item>
+      </Accordion>
 
       {texts.bid.confirmText && (
         <p
-          className={"text-muted text-center"}
+          className={"text-muted"}
           dangerouslySetInnerHTML={{ __html: texts.bid.confirmText }}
         />
       )}
@@ -114,10 +199,9 @@ const BiddingRoundSummaryStep: React.FC<BiddingRoundSummaryStepProps> = ({
       <div className={"d-flex justify-content-center"}>
         <TapirButton
           variant={"dark"}
-          text={texts.submitLabel}
+          text={texts.finalSubmitLabel}
           onClick={onSubmit}
           loading={submitting}
-          disabled={submitting}
         />
       </div>
     </>

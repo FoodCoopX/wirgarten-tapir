@@ -1234,6 +1234,12 @@ class OrderFeedback(TapirModel):
     waiting_list_entry = models.ForeignKey(
         "WaitingListEntry", on_delete=models.CASCADE, null=True, blank=True
     )
+    bidding_round = models.ForeignKey(
+        "bidding_round.BiddingRound",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
     feedback_text = models.TextField()
 
     def clean(self):

@@ -90,6 +90,12 @@ export interface BidSubmitRequest {
    * @memberof BidSubmitRequest
    */
   contractAccepted?: boolean;
+  /**
+   *
+   * @type {string}
+   * @memberof BidSubmitRequest
+   */
+  feedback?: string;
 }
 
 /**
@@ -136,6 +142,7 @@ export function BidSubmitRequestFromJSONTyped(
         : json["cancellation_policy_read"],
     contractAccepted:
       json["contract_accepted"] == null ? undefined : json["contract_accepted"],
+    feedback: json["feedback"] == null ? undefined : json["feedback"],
   };
 }
 
@@ -164,5 +171,6 @@ export function BidSubmitRequestToJSONTyped(
     privacy_policy_read: value["privacyPolicyRead"],
     cancellation_policy_read: value["cancellationPolicyRead"],
     contract_accepted: value["contractAccepted"],
+    feedback: value["feedback"],
   };
 }
