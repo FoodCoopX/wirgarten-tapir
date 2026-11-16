@@ -1,9 +1,11 @@
 import "leaflet/dist/leaflet.css";
 import React from "react";
 import { Form } from "react-bootstrap";
-import { PublicPickupLocation } from "../../api-client";
+import { PublicPickupLocation, PublicProductType } from "../../api-client";
+import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
+import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import TapirButton from "../../components/TapirButton.tsx";
-import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
+import { BUTTON_VARIANT } from "../../components/mobile_wizard/utils/BUTTON_VARIANT.ts";
 import "./map.css";
 
 interface Step5CPickupLocationWishesProps {

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Form } from "react-bootstrap";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { PersonalData } from "../../bestell_wizard/types/PersonalData.ts";
-import NextStepButton from "../components/NextStepButton.tsx";
+import NextStepButton from "../../components/mobile_wizard/NextStepButton.tsx";
 
 interface Step2FirstNameProps {
   goToNextStep: () => void;

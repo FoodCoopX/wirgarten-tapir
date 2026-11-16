@@ -3,12 +3,12 @@ import { Accordion } from "react-bootstrap";
 import { AssociationMembershipType } from "../../api-client";
 import { getAssociationMembershipTypeCurrentPrice } from "../../association_memberships_config/getAssociationMembershipTypeCurrentPrice.ts";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
+import NextStepButton from "../../components/mobile_wizard/NextStepButton.tsx";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
-import NextStepButton from "../components/NextStepButton.tsx";
 import TapirCheckbox from "../components/TapirCheckbox.tsx";
 import "../utils/flexColOnSmallScreen.css";
-import { scrollIntoView } from "../utils/scrollIntoView.ts";
 import { getVisibleAssociationMembershipTypes } from "../utils/getVisibleAssociationMembershipTypes.ts";
+import { scrollIntoView } from "../utils/scrollIntoView.ts";
 
 interface Step6BAssociationMembershipsProps {
   goToNextStep: () => void;

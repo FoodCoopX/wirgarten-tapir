@@ -2,9 +2,9 @@ import React from "react";
 import { Form } from "react-bootstrap";
 import { PublicGrowingPeriod } from "../../api-client";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
+import NextStepButton from "../../components/mobile_wizard/NextStepButton.tsx";
+import { BUTTON_VARIANT } from "../../components/mobile_wizard/utils/BUTTON_VARIANT.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
-import NextStepButton from "../components/NextStepButton.tsx";
-import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 
 interface Step3BGrowingPeriodChoiceProps {
   settings: BestellWizardSettings;

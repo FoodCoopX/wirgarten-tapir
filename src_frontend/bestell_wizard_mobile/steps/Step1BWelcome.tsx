@@ -1,7 +1,7 @@
 import React from "react";
-import TapirButton from "../../components/TapirButton.tsx";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
-import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
+import { BUTTON_VARIANT } from "../../components/mobile_wizard/utils/BUTTON_VARIANT.ts";
+import TapirButton from "../../components/TapirButton.tsx";
 
 interface Step1AIntroProps {
   goToNextStep: () => void;

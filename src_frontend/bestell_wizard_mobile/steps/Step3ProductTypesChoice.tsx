@@ -6,11 +6,11 @@ import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { buildEmptyShoppingCart } from "../../bestell_wizard/utils/buildEmptyShoppingCart.ts";
 import { selectAllRequiredProductTypes } from "../../bestell_wizard/utils/selectAllRequiredProductTypes.ts";
 import { sortProductTypes } from "../../bestell_wizard/utils/sortProductTypes.ts";
+import NextStepButton from "../../components/mobile_wizard/NextStepButton.tsx";
+import { BUTTON_VARIANT } from "../../components/mobile_wizard/utils/BUTTON_VARIANT.ts";
+import { replaceTokens } from "../../components/mobile_wizard/utils/replaceTokens.ts";
 import TapirButton from "../../components/TapirButton.tsx";
 import { getHtmlDescription } from "../../utils/getHtmlDescription.ts";
-import NextStepButton from "../components/NextStepButton.tsx";
-import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
-import { replaceTokens } from "../utils/replaceTokens.ts";
 import "./Step3ProductTypesChoice.css";
 
 interface Step3ProductTypeChoiceProps {
