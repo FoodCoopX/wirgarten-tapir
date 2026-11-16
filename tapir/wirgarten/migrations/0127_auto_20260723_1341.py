@@ -36,6 +36,9 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("wirgarten", "0126_pickuplocation_route_info"),
+        # The RunPython below reads TapirParameter, so the configuration schema must
+        # exist at this point of the migration state.
+        ("configuration", "0007_tapirparameter_remove_field_required"),
     ]
 
     operations = [

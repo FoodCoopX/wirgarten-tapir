@@ -275,9 +275,19 @@ class SubscriptionPriceOverrideApiView(APIView):
                 ).data
             )
 
+        price_mode = serializer.validated_data.get("price_mode")
+        if price_mode is None:
+            if price_override is None:
+                price_mode = Subscription.PriceMode.STANDARD
+            elif price_override == 0:
+                price_mode = Subscription.PriceMode.FREE
+            else:
+                price_mode = Subscription.PriceMode.CUSTOM
+
         subscription_before = freeze_for_log(subscription)
         price_before = subscription.price_override
         subscription.price_override = price_override
+        subscription.price_mode = price_mode
 
         with transaction.atomic():
             subscription.save()
