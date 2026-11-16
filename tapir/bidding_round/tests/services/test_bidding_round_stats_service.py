@@ -1,8 +1,17 @@
+import datetime
 from decimal import Decimal
+from unittest.mock import patch
 
+from tapir.associations.tests.factories import (
+    AssociationMembershipTypeFactory,
+    AssociationMembershipTypePriceFactory,
+)
 from tapir.bidding_round.config import (
     BIDDING_ROUND_PROCEDURE_BID_RANGE,
     BIDDING_ROUND_PROCEDURE_SIMPLE,
+)
+from tapir.bidding_round.services.bidding_round_delivery_charge_service import (
+    BiddingRoundDeliveryChargeService,
 )
 from tapir.bidding_round.services.bidding_round_stats_service import (
     BiddingRoundStatsService,
@@ -12,11 +21,21 @@ from tapir.bidding_round.tests.factories import (
     BiddingRoundFactory,
     BiddingRoundProductPriceFactory,
 )
+from tapir.subscriptions.services.automatic_subscription_renewal_service import (
+    AutomaticSubscriptionRenewalService,
+)
+from tapir.core.config import LEGAL_STATUS_ASSOCIATION
+from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
+    MemberPickupLocationFactory,
+    MemberFactory,
     ProductCapacityFactory,
     ProductFactory,
     ProductPriceFactory,
+    SubscriptionFactory,
+    PickupLocationFactory,
 )
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
@@ -69,7 +88,7 @@ class TestBiddingRoundStatsService(TapirIntegrationTest):
         bidding_round = BiddingRoundFactory.create(target_amount_per_year=None)
 
         self.assertEqual(
-            0.0, BiddingRoundStatsService.get_coverage_percent(bidding_round)
+            0.0, BiddingRoundStatsService.get_coverage_percent(bidding_round, cache={})
         )
 
     def test_getBidderAveragePerMonth_withoutBids_returnsZero(self):
@@ -77,7 +96,9 @@ class TestBiddingRoundStatsService(TapirIntegrationTest):
 
         self.assertEqual(
             Decimal("0"),
-            BiddingRoundStatsService.get_bidder_average_per_month(bidding_round),
+            BiddingRoundStatsService.get_bidder_average_per_month(
+                bidding_round, cache={}
+            ),
         )
 
     def test_getProductSize_withoutRoundSize_usesTheProductPriceSize(self):
@@ -168,10 +189,11 @@ class TestBiddingRoundStatsService(TapirIntegrationTest):
         )
 
         self.assertEqual(
-            2, BiddingRoundStatsService.get_recommended_level(bidding_round)
+            2, BiddingRoundStatsService.get_recommended_level(bidding_round, cache={})
         )
         self.assertEqual(
-            Decimal("50"), BiddingRoundStatsService.get_default_position(bidding_round)
+            Decimal("50"),
+            BiddingRoundStatsService.get_default_position(bidding_round, cache={}),
         )
 
     def _create_three_level_round(self, amounts):
@@ -194,10 +216,11 @@ class TestBiddingRoundStatsService(TapirIntegrationTest):
         )
 
         self.assertEqual(
-            2, BiddingRoundStatsService.get_recommended_level(bidding_round)
+            2, BiddingRoundStatsService.get_recommended_level(bidding_round, cache={})
         )
         self.assertEqual(
-            Decimal("50"), BiddingRoundStatsService.get_default_position(bidding_round)
+            Decimal("50"),
+            BiddingRoundStatsService.get_default_position(bidding_round, cache={}),
         )
 
     def test_recommendedLevel_simpleWithThreeLevels_returnsThirdLevel(self):
@@ -206,10 +229,11 @@ class TestBiddingRoundStatsService(TapirIntegrationTest):
         )
 
         self.assertEqual(
-            3, BiddingRoundStatsService.get_recommended_level(bidding_round)
+            3, BiddingRoundStatsService.get_recommended_level(bidding_round, cache={})
         )
         self.assertEqual(
-            Decimal("100"), BiddingRoundStatsService.get_default_position(bidding_round)
+            Decimal("100"),
+            BiddingRoundStatsService.get_default_position(bidding_round, cache={}),
         )
 
     def test_recommendedLevel_simpleWithThreeLevels_returnsFirstLevel(self):
@@ -218,10 +242,11 @@ class TestBiddingRoundStatsService(TapirIntegrationTest):
         )
 
         self.assertEqual(
-            1, BiddingRoundStatsService.get_recommended_level(bidding_round)
+            1, BiddingRoundStatsService.get_recommended_level(bidding_round, cache={})
         )
         self.assertEqual(
-            Decimal("0"), BiddingRoundStatsService.get_default_position(bidding_round)
+            Decimal("0"),
+            BiddingRoundStatsService.get_default_position(bidding_round, cache={}),
         )
 
     def test_buildLevelsEvaluation_bidRange_includesGreenAndRed(self):
@@ -236,7 +261,9 @@ class TestBiddingRoundStatsService(TapirIntegrationTest):
             amount_2=Decimal("120.00"),
         )
 
-        levels = BiddingRoundStatsService.build_levels_evaluation(bidding_round)
+        levels = BiddingRoundStatsService.build_levels_evaluation(
+            bidding_round, cache={}
+        )
 
         self.assertEqual({"green", "red"}, set(levels))
         self.assertEqual("red", levels["green"]["coverage_status"])
@@ -247,7 +274,9 @@ class TestBiddingRoundStatsService(TapirIntegrationTest):
             (Decimal("60.00"), Decimal("90.00"), Decimal("120.00"))
         )
 
-        levels = BiddingRoundStatsService.build_levels_evaluation(bidding_round)
+        levels = BiddingRoundStatsService.build_levels_evaluation(
+            bidding_round, cache={}
+        )
 
         self.assertEqual(72.0, levels["green"]["coverage_percent"])
         self.assertEqual(108.0, levels["yellow"]["coverage_percent"])
@@ -278,3 +307,148 @@ class TestBiddingRoundStatsService(TapirIntegrationTest):
 
         self.assertEqual(Decimal("2"), Decimal(evaluation["current_shares"]))
         self.assertEqual(50.0, evaluation["utilization_percent"])
+
+    def test_autoRenewed_includedInCoverage(self):
+        bidding_round = BiddingRoundFactory.create()
+        product = ProductFactory.create(type=bidding_round.product_type)
+        BiddingRoundProductPriceFactory.create(
+            round=bidding_round,
+            product=product,
+            reference_value=Decimal("80.00"),
+            min_amount=Decimal("60.00"),
+        )
+        BidFactory.create(
+            round=bidding_round, product=product, amount_1=Decimal("80.00")
+        )
+        auto_renewed_subscription = SubscriptionFactory.create(
+            member=MemberFactory.create(),
+            product=product,
+            period=bidding_round.growing_period,
+            quantity=1,
+            start_date=bidding_round.growing_period.start_date,
+            end_date=bidding_round.growing_period.end_date,
+        )
+
+        with patch.object(
+            AutomaticSubscriptionRenewalService,
+            "get_subscriptions_that_will_be_renewed",
+            return_value={auto_renewed_subscription},
+        ):
+            evaluation = BiddingRoundStatsService.build_admin_evaluation(
+                bidding_round, cache={}
+            )
+
+        self.assertEqual("960.00", evaluation["auto_renewed_per_year"])
+        self.assertEqual(1, len(evaluation["auto_renewed"]))
+        self.assertEqual(192.0, evaluation["coverage_percent"])
+        self.assertEqual("80.00", evaluation["non_bidder_rate_per_share"])
+
+    def test_buildPublicEvaluation_containsOnlyAggregates(self):
+        bidding_round = BiddingRoundFactory.create()
+        product = ProductFactory.create(type=bidding_round.product_type)
+        member = MemberFactory.create()
+        BidFactory.create(
+            round=bidding_round,
+            member=member,
+            product=product,
+            amount_1=Decimal("80.00"),
+        )
+
+        public = BiddingRoundStatsService.build_public_evaluation(
+            bidding_round, cache={}
+        )
+
+        self.assertEqual(
+            {
+                "bidding_procedure",
+                "bid_levels",
+                "recommended_level",
+                "bid_range_position",
+                "coverage_status",
+                "target_per_year",
+                "capacity_shares",
+                "current_shares",
+                "utilization_percent",
+                "coverage_percent",
+                "bidder_average_per_month",
+                "levels",
+            },
+            set(public),
+        )
+        self.assertNotIn(str(member), str(public))
+
+    def test_includeAutoRenewedFalse_excludesAutoRenewedMembers(self):
+        bidding_round = BiddingRoundFactory.create(include_auto_renewed=False)
+        product = ProductFactory.create(type=bidding_round.product_type)
+        BidFactory.create(
+            round=bidding_round, product=product, amount_1=Decimal("80.00")
+        )
+        auto_renewed_subscription = SubscriptionFactory.create(
+            member=MemberFactory.create(),
+            product=product,
+            period=bidding_round.growing_period,
+            quantity=1,
+            start_date=bidding_round.growing_period.start_date,
+            end_date=bidding_round.growing_period.end_date,
+        )
+
+        with patch.object(
+            AutomaticSubscriptionRenewalService,
+            "get_subscriptions_that_will_be_renewed",
+            return_value={auto_renewed_subscription},
+        ):
+            evaluation = BiddingRoundStatsService.build_admin_evaluation(
+                bidding_round, cache={}
+            )
+
+        self.assertEqual("0", evaluation["auto_renewed_per_year"])
+        self.assertEqual([], evaluation["auto_renewed"])
+
+    def test_buildExtraPositions_membership_appliesAssociationPrice(self):
+        ParameterDefinitions().import_definitions(bulk_create=True)
+        self._set_parameter(
+            ParameterKeys.ORGANISATION_LEGAL_STATUS, LEGAL_STATUS_ASSOCIATION
+        )
+        bidding_round = BiddingRoundFactory.create()
+        membership_type = AssociationMembershipTypeFactory.create(
+            order_in_bestell_wizard=-1
+        )
+        AssociationMembershipTypePriceFactory.create(
+            type=membership_type,
+            valid_from=bidding_round.growing_period.start_date,
+            price=Decimal("5.00"),
+        )
+        BidFactory.create(round=bidding_round)
+
+        positions = BiddingRoundStatsService.build_extra_positions(
+            bidding_round, cache={}
+        )
+
+        self.assertTrue(positions["membership"]["applicable"])
+        self.assertEqual(Decimal("60.00"), positions["membership"]["reached_per_year"])
+
+    def test_buildExtraPositions_deliveryCharge_sumsTheBids(self):
+        bidding_round = BiddingRoundFactory.create()
+        pickup_location = PickupLocationFactory.create()
+        member = MemberFactory.create()
+        MemberPickupLocationFactory.create(
+            member=member,
+            pickup_location=pickup_location,
+            valid_from=bidding_round.growing_period.start_date
+            - datetime.timedelta(days=1),
+        )
+        BidFactory.create(round=bidding_round, member=member)
+
+        with patch.object(
+            BiddingRoundDeliveryChargeService,
+            "get_yearly_delivery_charge",
+            return_value=Decimal("12.00"),
+        ):
+            positions = BiddingRoundStatsService.build_extra_positions(
+                bidding_round, cache={}
+            )
+
+        self.assertTrue(positions["delivery_charge"]["applicable"])
+        self.assertEqual(
+            Decimal("12.00"), positions["delivery_charge"]["reached_per_year"]
+        )

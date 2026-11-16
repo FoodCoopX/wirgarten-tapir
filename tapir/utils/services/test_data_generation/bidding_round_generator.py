@@ -11,23 +11,31 @@ from tapir.bidding_round.services.bidding_round_service import (
     BiddingRoundService,
     RoundPriceInput,
 )
+from tapir.bidding_round.services.bidding_round_stats_service import (
+    BiddingRoundStatsService,
+)
 from tapir.bidding_round.services.product_size_service import ProductSizeService
 from tapir.configuration.models import TapirParameter
+from tapir.configuration.parameter import get_parameter_value
 from tapir.utils.services.test_data_generation.constants import (
     HARVEST_SHARE_PRODUCT_TYPE_NAME,
 )
 from tapir.wirgarten.models import (
     GrowingPeriod,
-    Member,
     Product,
     ProductType,
     Subscription,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.utils.config import Organization
+from tapir.utils.services.test_data_generation.vierlande_generator import (
+    VierlandeGenerator,
+)
 from tapir.wirgarten.utils import get_now, get_today
 
 REFERENCE_VALUE_PER_SIZE = Decimal("80.00")
-MIN_AMOUNT_PER_SIZE = Decimal("60.00")
+MIN_AMOUNT_PER_SIZE = Decimal("40.00")
+TARGET_AMOUNT_PER_YEAR = VierlandeGenerator.BIDDING_ROUND_TARGET_AMOUNT_PER_YEAR
 TARGET_COVERAGE_RATIO = Decimal("0.91")
 BID_RANGE_TARGET_RATIOS = {
     1: Decimal("0.81"),
@@ -39,22 +47,38 @@ SIMPLE_LEVEL_TARGET_RATIOS = {
     3: Decimal("1.09"),
 }
 BIDDER_RATIO = 0.6
+BIDDER_RATIO_WITHOUT_RENEWAL = 0.9
+AUTO_RENEW_RATIO = 0.3
 BID_FACTOR_RANGE = (0.85, 1.15)
+RANDOM_SEED = "bidding_round"
 
 
 class BiddingRoundGenerator:
     """Creates the demo rounds for the next growing period.
 
-    An active BIDDING_ROUND_PROCEDURE_SIMPLE round shows the reference value scaled by
-    the share size; about 60 % of the members with an active harvest share
-    subscription bid, with a small random factor, and the target is derived so the
-    evaluation shows about 91 % coverage. Two closed rounds reuse the same bidders:
-    a bid range with two amounts (81 % green, 101 % red) and a simple round with
-    three levels (81/91/109 %).
+    The member split follows the automatic renewal setting. With automatic renewal
+    60 % of the members bid, 30 % keep renewing automatically and the remaining
+    members are cancelled so their shares stay free. Without automatic renewal 90 %
+    bid and 10 % are cancelled. Every bidder bids on the product, size and quantity
+    of their existing subscription; the pickup location is derived from the member's
+    existing depot by the bid service.
+
+    One active BIDDING_ROUND_PROCEDURE_SIMPLE round shows the calibrated middle
+    amount. A closed BIDDING_ROUND_PROCEDURE_BID_RANGE round and a closed
+    BIDDING_ROUND_PROCEDURE_SIMPLE round with three levels reuse the same bidders and
+    amounts. The level amounts are calibrated so that bids plus auto-renewed
+    contributions plus the delivery charges and membership fees of the round reach
+    81/91/109 % of the target. The bid range reaches 81 % (green) and 101 % (red), so
+    its middle position is 91 % as well. Vierlande keeps the configured target
+    amount; every other organization derives the target from the reference bids plus
+    the fixed contributions so the amounts stay close to the reference value.
+
+    If the fixed contributions still exceed the target, the amounts fall back to the
+    reference value scaled by the ratios.
     """
 
     @classmethod
-    def generate_bidding_round(cls, cache=None):
+    def generate_bidding_round(cls, cache=None, organization=None):
         cache = cache or {}
 
         for key in (
@@ -86,94 +110,175 @@ class BiddingRoundGenerator:
         if not products:
             return None
 
-        subscriptions_by_member_id = {}
-        for subscription in Subscription.objects.filter(
-            period=current_period,
-            product__type=product_type,
-            cancellation_ts__isnull=True,
-        ).select_related("product"):
-            subscriptions_by_member_id.setdefault(subscription.member_id, subscription)
-        if not subscriptions_by_member_id:
+        subscriptions = list(
+            Subscription.objects.filter(
+                period=current_period,
+                product__type=product_type,
+                product__deleted=False,
+                cancellation_ts__isnull=True,
+            )
+            .select_related("product", "member")
+            .order_by("member_id", "id")
+        )
+        if not subscriptions:
             return None
 
-        random.seed("bidding_round")
-        bidders = [
-            Member.objects.get(id=member_id)
-            for member_id in subscriptions_by_member_id
-            if random.random() < BIDDER_RATIO
-        ]
+        subscriptions_by_member_id = {}
+        for subscription in subscriptions:
+            subscriptions_by_member_id.setdefault(subscription.member_id, subscription)
+
+        member_ids = sorted(subscriptions_by_member_id)
+        random_generator = random.Random(RANDOM_SEED)
+        random_generator.shuffle(member_ids)
+
+        automatic_renewal_enabled = cls._is_automatic_renewal_enabled(cache)
+        bidder_ratio = (
+            BIDDER_RATIO if automatic_renewal_enabled else BIDDER_RATIO_WITHOUT_RENEWAL
+        )
+        auto_renew_ratio = (
+            AUTO_RENEW_RATIO if automatic_renewal_enabled else Decimal("0")
+        )
+        bidder_count = int(len(member_ids) * bidder_ratio)
+        auto_renew_count = int(len(member_ids) * auto_renew_ratio)
+        bidder_ids = set(member_ids[:bidder_count])
+        free_ids = set(member_ids[bidder_count + auto_renew_count :])
+
+        if free_ids:
+            Subscription.objects.filter(
+                member_id__in=free_ids,
+                period=current_period,
+                product__type=product_type,
+                cancellation_ts__isnull=True,
+            ).update(cancellation_ts=now)
 
         assignments = []
-        for member in bidders:
-            subscription = subscriptions_by_member_id[member.id]
-            product = subscription.product
-            size = cls._get_size_or_one(product, growing_period, cache)
-            factor = Decimal(str(round(random.uniform(*BID_FACTOR_RANGE), 3)))
-            amount = (REFERENCE_VALUE_PER_SIZE * size * factor).quantize(
-                Decimal("0.01")
+        for member_id in member_ids:
+            if member_id not in bidder_ids:
+                continue
+            subscription = subscriptions_by_member_id[member_id]
+            assignments.append(
+                {
+                    "member": subscription.member,
+                    "product": subscription.product,
+                    "size": cls._get_size_or_one(
+                        subscription.product, growing_period, cache
+                    ),
+                    "quantity": subscription.quantity,
+                    "factor": Decimal(
+                        str(round(random_generator.uniform(*BID_FACTOR_RANGE), 3))
+                    ),
+                }
             )
-            assignments.append((member, product, subscription.quantity, amount))
+        if not assignments:
+            return None
 
-        reached_per_year = sum(
-            (amount * quantity * 12 for _, _, quantity, amount in assignments),
-            Decimal("0"),
-        )
-        target_amount_per_year = (reached_per_year / TARGET_COVERAGE_RATIO).quantize(
-            Decimal("0.01")
-        )
-        prices = []
-        for product in products:
-            size = cls._get_size_or_one(product, growing_period, cache)
-            prices.append(
-                RoundPriceInput(
-                    product_id=product.id,
-                    reference_value=REFERENCE_VALUE_PER_SIZE * size,
-                    min_amount=MIN_AMOUNT_PER_SIZE * size,
-                    size=size,
-                )
+        prices = [
+            RoundPriceInput(
+                product_id=product.id,
+                reference_value=(
+                    REFERENCE_VALUE_PER_SIZE
+                    * cls._get_size_or_one(product, growing_period, cache)
+                ).quantize(Decimal("0.01")),
+                min_amount=(
+                    MIN_AMOUNT_PER_SIZE
+                    * cls._get_size_or_one(product, growing_period, cache)
+                ).quantize(Decimal("0.01")),
+                size=cls._get_size_or_one(product, growing_period, cache),
             )
+            for product in products
+        ]
 
-        for suffix, procedure, bid_levels in (
-            ("Gebotsspanne", BIDDING_ROUND_PROCEDURE_BID_RANGE, 2),
-            ("Stufen", BIDDING_ROUND_PROCEDURE_SIMPLE, 3),
-        ):
-            cls._create_closed_round(
-                growing_period=growing_period,
-                name=f"Beitragsrunde {growing_period.start_date.year} - {suffix}",
-                start_at=now - datetime.timedelta(days=1),
-                end_at=now + datetime.timedelta(days=30),
-                product_type_id=product_type.id,
-                target_amount_per_year=target_amount_per_year,
-                prices=prices,
-                assignments=assignments,
-                bidding_procedure=procedure,
-                bid_levels=bid_levels,
-                cache=cache,
-            )
+        year = growing_period.start_date.year
+        start_at = now - datetime.timedelta(days=1)
+        end_at = now + datetime.timedelta(days=30)
 
-        bidding_round = BiddingRoundService.create_round(
+        bid_range_round = BiddingRoundService.create_round(
             growing_period=growing_period,
-            name=f"Beitragsrunde {growing_period.start_date.year}",
-            start_at=now - datetime.timedelta(days=1),
-            end_at=now + datetime.timedelta(days=30),
+            name=f"Beitragsrunde {year} - Gebotsspanne",
+            start_at=start_at,
+            end_at=end_at,
+            product_type_id=product_type.id,
+            target_amount_per_year=TARGET_AMOUNT_PER_YEAR,
+            prices=prices,
+            bidding_procedure=BIDDING_ROUND_PROCEDURE_BID_RANGE,
+            bid_levels=2,
+            include_auto_renewed=True,
+            cache=cache,
+        )
+        BiddingRoundService.start_round(bid_range_round, cache=cache)
+
+        cls._save_bids(
+            bid_range_round,
+            assignments,
+            cls._provisional_amounts(assignments),
+            cache=cache,
+        )
+
+        projection = BiddingRoundStatsService.build_financing_projection(
+            bid_range_round, cache={}, include_auto_renewed=True
+        )
+        fixed_per_year = (
+            projection["auto_renew_per_year"]
+            + projection["delivery_charge_per_year"]
+            + projection["membership_per_year"]
+        )
+        target_amount_per_year = cls._get_target_amount_per_year(
+            organization=organization,
+            assignments=assignments,
+            fixed_per_year=fixed_per_year,
+        )
+        if target_amount_per_year != TARGET_AMOUNT_PER_YEAR:
+            bid_range_round.target_amount_per_year = target_amount_per_year
+            bid_range_round.save(update_fields=["target_amount_per_year"])
+
+        bid_range_amounts = cls._calibrate_amounts(
+            assignments,
+            fixed_per_year,
+            target_amount_per_year,
+            BID_RANGE_TARGET_RATIOS,
+        )
+        simple_amounts = cls._calibrate_amounts(
+            assignments,
+            fixed_per_year,
+            target_amount_per_year,
+            SIMPLE_LEVEL_TARGET_RATIOS,
+        )
+
+        cls._save_bids(bid_range_round, assignments, bid_range_amounts, cache=cache)
+        BiddingRoundService.close_round(bid_range_round, cache=cache)
+
+        levels_round = BiddingRoundService.create_round(
+            growing_period=growing_period,
+            name=f"Beitragsrunde {year} - Stufen",
+            start_at=start_at,
+            end_at=end_at,
             product_type_id=product_type.id,
             target_amount_per_year=target_amount_per_year,
             prices=prices,
+            bidding_procedure=BIDDING_ROUND_PROCEDURE_SIMPLE,
+            bid_levels=3,
+            include_auto_renewed=True,
+            cache=cache,
+        )
+        BiddingRoundService.start_round(levels_round, cache=cache)
+        cls._save_bids(levels_round, assignments, simple_amounts, cache=cache)
+        BiddingRoundService.close_round(levels_round, cache=cache)
+
+        bidding_round = BiddingRoundService.create_round(
+            growing_period=growing_period,
+            name=f"Beitragsrunde {year}",
+            start_at=start_at,
+            end_at=end_at,
+            product_type_id=product_type.id,
+            target_amount_per_year=target_amount_per_year,
+            prices=prices,
+            bidding_procedure=BIDDING_ROUND_PROCEDURE_SIMPLE,
+            bid_levels=1,
+            include_auto_renewed=True,
             cache=cache,
         )
         BiddingRoundService.start_round(bidding_round, cache=cache)
-
-        for member, product, quantity, amount in assignments:
-            BiddingRoundService.save_bid(
-                member,
-                bidding_round,
-                BidInput(
-                    product_id=product.id,
-                    quantity=quantity,
-                    amount_1=amount,
-                ),
-                cache=cache,
-            )
+        cls._save_bids(bidding_round, assignments, simple_amounts, cache=cache)
 
         return bidding_round
 
@@ -183,62 +288,123 @@ class BiddingRoundGenerator:
         return size if size is not None else Decimal("1")
 
     @classmethod
-    def _level_amounts(cls, amount: Decimal, bidding_procedure: str) -> list:
-        if bidding_procedure == BIDDING_ROUND_PROCEDURE_BID_RANGE:
-            ratios = BID_RANGE_TARGET_RATIOS
-            levels = (1, 2)
-        else:
-            ratios = SIMPLE_LEVEL_TARGET_RATIOS
-            levels = (1, 2, 3)
+    def _is_automatic_renewal_enabled(cls, cache) -> bool:
+        try:
+            return bool(
+                get_parameter_value(
+                    ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
+                )
+            )
+        except KeyError:
+            return False
+
+    @classmethod
+    def _get_target_amount_per_year(
+        cls, organization, assignments, fixed_per_year
+    ) -> Decimal:
+        if organization is Organization.VIERLANDE:
+            return VierlandeGenerator.get_bidding_round_target_amount_per_year()
+        reference_per_year = sum(
+            (
+                REFERENCE_VALUE_PER_SIZE
+                * assignment["size"]
+                * assignment["quantity"]
+                * Decimal("12")
+                for assignment in assignments
+            ),
+            Decimal("0"),
+        )
+        return ((reference_per_year + fixed_per_year) / TARGET_COVERAGE_RATIO).quantize(
+            Decimal("0.01")
+        )
+
+    @classmethod
+    def _provisional_amounts(cls, assignments) -> list:
+        amounts = []
+        for assignment in assignments:
+            amount = (
+                REFERENCE_VALUE_PER_SIZE * assignment["size"] * assignment["factor"]
+            ).quantize(Decimal("0.01"))
+            amounts.append((amount, amount, amount))
+        return amounts
+
+    @classmethod
+    def _calibrate_amounts(
+        cls, assignments, fixed_per_year, target_amount_per_year, ratios
+    ) -> list:
+        weighted_shares = sum(
+            (
+                assignment["size"] * assignment["quantity"] * assignment["factor"]
+                for assignment in assignments
+            ),
+            Decimal("0"),
+        )
+        if weighted_shares == 0:
+            raise ValueError("Die Beitragsrunde braucht mindestens einen Anteil.")
+
+        per_share_by_level = {
+            level: (target_amount_per_year * ratio - fixed_per_year)
+            / (weighted_shares * Decimal("12"))
+            for level, ratio in ratios.items()
+        }
+        if any(amount <= 0 for amount in per_share_by_level.values()):
+            return cls._fallback_amounts(assignments, ratios)
+
         return [
-            (amount * ratios[level] / TARGET_COVERAGE_RATIO).quantize(Decimal("0.01"))
-            for level in levels
+            tuple(
+                (
+                    per_share_by_level[level]
+                    * assignment["size"]
+                    * assignment["factor"]
+                ).quantize(Decimal("0.01"))
+                for level in ratios
+            )
+            for assignment in assignments
         ]
 
     @classmethod
-    def _create_closed_round(
-        cls,
-        *,
-        growing_period,
-        name,
-        start_at,
-        end_at,
-        product_type_id,
-        target_amount_per_year,
-        prices,
-        assignments,
-        bidding_procedure,
-        bid_levels,
-        cache,
-    ):
-        bidding_round = BiddingRoundService.create_round(
-            growing_period=growing_period,
-            name=name,
-            start_at=start_at,
-            end_at=end_at,
-            product_type_id=product_type_id,
-            target_amount_per_year=target_amount_per_year,
-            prices=prices,
-            bidding_procedure=bidding_procedure,
-            bid_levels=bid_levels,
-            cache=cache,
-        )
-        BiddingRoundService.start_round(bidding_round, cache=cache)
+    def _fallback_amounts(cls, assignments, ratios) -> list:
+        """Use the reference value scaled by the target ratios when the target is
+        too small for the fixed contributions (e.g. large demo data sets). The
+        rounds then show plausible amounts instead of an exact coverage."""
+        amounts = []
+        for assignment in assignments:
+            base = (
+                REFERENCE_VALUE_PER_SIZE * assignment["size"] * assignment["factor"]
+            ).quantize(Decimal("0.01"))
+            amounts.append(
+                tuple(
+                    (base * ratio / TARGET_COVERAGE_RATIO).quantize(Decimal("0.01"))
+                    for ratio in ratios.values()
+                )
+            )
+        return amounts
 
-        for member, product, quantity, amount in assignments:
-            level_amounts = cls._level_amounts(amount, bidding_procedure)
-            BiddingRoundService.save_bid(
-                member,
-                bidding_round,
-                BidInput(
-                    product_id=product.id,
-                    quantity=quantity,
+    @classmethod
+    def _save_bids(cls, bidding_round, assignments, amounts, cache):
+        for assignment, level_amounts in zip(assignments, amounts):
+            bid_input = BidInput(
+                product_id=assignment["product"].id,
+                quantity=assignment["quantity"],
+                amount_1=(
+                    level_amounts[1]
+                    if bidding_round.bid_levels == 1 and len(level_amounts) > 1
+                    else level_amounts[0]
+                ),
+            )
+            if bidding_round.bid_levels > 1:
+                bid_input = BidInput(
+                    product_id=assignment["product"].id,
+                    quantity=assignment["quantity"],
                     amount_1=level_amounts[0],
                     amount_2=level_amounts[1],
-                    amount_3=(level_amounts[2] if len(level_amounts) > 2 else None),
-                ),
+                    amount_3=(
+                        level_amounts[2] if bidding_round.bid_levels > 2 else None
+                    ),
+                )
+            BiddingRoundService.save_bid(
+                assignment["member"],
+                bidding_round,
+                bid_input,
                 cache=cache,
             )
-
-        BiddingRoundService.close_round(bidding_round, cache=cache)
-        return bidding_round

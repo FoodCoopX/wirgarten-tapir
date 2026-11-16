@@ -53,6 +53,12 @@ export interface Round {
   bidLevels: number;
   /**
    *
+   * @type {boolean}
+   * @memberof Round
+   */
+  includeAutoRenewed: boolean;
+  /**
+   *
    * @type {Date}
    * @memberof Round
    */
@@ -105,6 +111,11 @@ export function instanceOfRound(value: object): value is Round {
   if (!("biddingProcedure" in value) || value["biddingProcedure"] === undefined)
     return false;
   if (!("bidLevels" in value) || value["bidLevels"] === undefined) return false;
+  if (
+    !("includeAutoRenewed" in value) ||
+    value["includeAutoRenewed"] === undefined
+  )
+    return false;
   if (!("startAt" in value) || value["startAt"] === undefined) return false;
   if (!("endAt" in value) || value["endAt"] === undefined) return false;
   if (
@@ -137,6 +148,7 @@ export function RoundFromJSONTyped(
     status: json["status"],
     biddingProcedure: json["bidding_procedure"],
     bidLevels: json["bid_levels"],
+    includeAutoRenewed: json["include_auto_renewed"],
     startAt: json["start_at"] == null ? null : new Date(json["start_at"]),
     endAt: new Date(json["end_at"]),
     contractsCreatedAt:
@@ -168,6 +180,7 @@ export function RoundToJSONTyped(
     status: value["status"],
     bidding_procedure: value["biddingProcedure"],
     bid_levels: value["bidLevels"],
+    include_auto_renewed: value["includeAutoRenewed"],
     start_at:
       value["startAt"] == null ? null : (value["startAt"] as any).toISOString(),
     end_at: value["endAt"].toISOString(),

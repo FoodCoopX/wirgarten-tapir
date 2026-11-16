@@ -12,11 +12,18 @@
  * Do not edit the class manually.
  */
 
+import type { AutoRenewedMember } from "./AutoRenewedMember";
+import {
+  AutoRenewedMemberFromJSON,
+  AutoRenewedMemberToJSON,
+} from "./AutoRenewedMember";
 import type { EvaluationLevels } from "./EvaluationLevels";
 import {
   EvaluationLevelsFromJSON,
   EvaluationLevelsToJSON,
 } from "./EvaluationLevels";
+import type { ExtraPositions } from "./ExtraPositions";
+import { ExtraPositionsFromJSON, ExtraPositionsToJSON } from "./ExtraPositions";
 import type { RoundStatsBid } from "./RoundStatsBid";
 import { RoundStatsBidFromJSON, RoundStatsBidToJSON } from "./RoundStatsBid";
 
@@ -82,6 +89,36 @@ export interface RoundResultsResponse {
   levels: EvaluationLevels;
   /**
    *
+   * @type {boolean}
+   * @memberof RoundResultsResponse
+   */
+  includeAutoRenewed: boolean;
+  /**
+   *
+   * @type {string}
+   * @memberof RoundResultsResponse
+   */
+  autoRenewedPerYear: string;
+  /**
+   *
+   * @type {Array<AutoRenewedMember>}
+   * @memberof RoundResultsResponse
+   */
+  autoRenewed: Array<AutoRenewedMember>;
+  /**
+   *
+   * @type {ExtraPositions}
+   * @memberof RoundResultsResponse
+   */
+  extraPositions: ExtraPositions;
+  /**
+   *
+   * @type {string}
+   * @memberof RoundResultsResponse
+   */
+  nonBidderRatePerShare: string;
+  /**
+   *
    * @type {string}
    * @memberof RoundResultsResponse
    */
@@ -125,6 +162,25 @@ export function instanceOfRoundResultsResponse(
   )
     return false;
   if (!("levels" in value) || value["levels"] === undefined) return false;
+  if (
+    !("includeAutoRenewed" in value) ||
+    value["includeAutoRenewed"] === undefined
+  )
+    return false;
+  if (
+    !("autoRenewedPerYear" in value) ||
+    value["autoRenewedPerYear"] === undefined
+  )
+    return false;
+  if (!("autoRenewed" in value) || value["autoRenewed"] === undefined)
+    return false;
+  if (!("extraPositions" in value) || value["extraPositions"] === undefined)
+    return false;
+  if (
+    !("nonBidderRatePerShare" in value) ||
+    value["nonBidderRatePerShare"] === undefined
+  )
+    return false;
   if (!("reachedPerYear" in value) || value["reachedPerYear"] === undefined)
     return false;
   if (!("bidderCount" in value) || value["bidderCount"] === undefined)
@@ -154,6 +210,13 @@ export function RoundResultsResponseFromJSONTyped(
     coveragePercent: json["coverage_percent"],
     bidderAveragePerMonth: json["bidder_average_per_month"],
     levels: EvaluationLevelsFromJSON(json["levels"]),
+    includeAutoRenewed: json["include_auto_renewed"],
+    autoRenewedPerYear: json["auto_renewed_per_year"],
+    autoRenewed: (json["auto_renewed"] as Array<any>).map(
+      AutoRenewedMemberFromJSON,
+    ),
+    extraPositions: ExtraPositionsFromJSON(json["extra_positions"]),
+    nonBidderRatePerShare: json["non_bidder_rate_per_share"],
     reachedPerYear: json["reached_per_year"],
     bidderCount: json["bidder_count"],
     bids: (json["bids"] as Array<any>).map(RoundStatsBidFromJSON),
@@ -182,6 +245,13 @@ export function RoundResultsResponseToJSONTyped(
     coverage_percent: value["coveragePercent"],
     bidder_average_per_month: value["bidderAveragePerMonth"],
     levels: EvaluationLevelsToJSON(value["levels"]),
+    include_auto_renewed: value["includeAutoRenewed"],
+    auto_renewed_per_year: value["autoRenewedPerYear"],
+    auto_renewed: (value["autoRenewed"] as Array<any>).map(
+      AutoRenewedMemberToJSON,
+    ),
+    extra_positions: ExtraPositionsToJSON(value["extraPositions"]),
+    non_bidder_rate_per_share: value["nonBidderRatePerShare"],
     reached_per_year: value["reachedPerYear"],
     bidder_count: value["bidderCount"],
     bids: (value["bids"] as Array<any>).map(RoundStatsBidToJSON),

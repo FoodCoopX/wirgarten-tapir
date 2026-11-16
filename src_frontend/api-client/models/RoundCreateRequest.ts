@@ -89,6 +89,12 @@ export interface RoundCreateRequest {
    * @memberof RoundCreateRequest
    */
   bidLevels?: number;
+  /**
+   *
+   * @type {boolean}
+   * @memberof RoundCreateRequest
+   */
+  includeAutoRenewed?: boolean;
 }
 
 /**
@@ -137,6 +143,10 @@ export function RoundCreateRequestFromJSONTyped(
         ? undefined
         : BiddingProcedureEnumFromJSON(json["bidding_procedure"]),
     bidLevels: json["bid_levels"] == null ? undefined : json["bid_levels"],
+    includeAutoRenewed:
+      json["include_auto_renewed"] == null
+        ? undefined
+        : json["include_auto_renewed"],
   };
 }
 
@@ -171,5 +181,6 @@ export function RoundCreateRequestToJSONTyped(
           ),
     bidding_procedure: BiddingProcedureEnumToJSON(value["biddingProcedure"]),
     bid_levels: value["bidLevels"],
+    include_auto_renewed: value["includeAutoRenewed"],
   };
 }

@@ -34,6 +34,7 @@ class RoundCreateSerializer(serializers.Serializer):
         choices=OPTIONS_BIDDING_ROUND_PROCEDURE, required=False
     )
     bid_levels = serializers.IntegerField(required=False, min_value=1, max_value=3)
+    include_auto_renewed = serializers.BooleanField(required=False)
 
 
 class RoundConfigSerializer(serializers.Serializer):
@@ -50,6 +51,7 @@ class RoundConfigSerializer(serializers.Serializer):
         choices=OPTIONS_BIDDING_ROUND_PROCEDURE, required=False
     )
     bid_levels = serializers.IntegerField(required=False, min_value=1, max_value=3)
+    include_auto_renewed = serializers.BooleanField(required=False)
 
 
 class BidSubmitSerializer(serializers.Serializer):
@@ -65,6 +67,9 @@ class BidSubmitSerializer(serializers.Serializer):
 class CreateContractsSerializer(serializers.Serializer):
     bid_ids = serializers.ListField(child=serializers.CharField(), required=False)
     bid_level = serializers.IntegerField(required=False, min_value=1, max_value=3)
+    create_auto_renewed_contracts = serializers.BooleanField(
+        required=False, default=False
+    )
 
 
 class RoundProductPriceSerializer(serializers.Serializer):
@@ -131,6 +136,7 @@ class RoundSerializer(serializers.ModelSerializer):
     status = serializers.CharField()
     bidding_procedure = serializers.CharField()
     bid_levels = serializers.IntegerField()
+    include_auto_renewed = serializers.BooleanField()
     start_at = serializers.DateTimeField(allow_null=True)
     end_at = serializers.DateTimeField()
     contracts_created_at = serializers.DateTimeField(allow_null=True)
@@ -147,6 +153,7 @@ class RoundSerializer(serializers.ModelSerializer):
             "status",
             "bidding_procedure",
             "bid_levels",
+            "include_auto_renewed",
             "start_at",
             "end_at",
             "contracts_created_at",
@@ -379,7 +386,30 @@ class PublicEvaluationResponseSerializer(EvaluationAggregatesSerializer):
     utilization_percent = serializers.FloatField()
 
 
+class AutoRenewedMemberSerializer(serializers.Serializer):
+    member_id = serializers.CharField()
+    member_name = serializers.CharField()
+    monthly_reference = serializers.CharField()
+    yearly_reference = serializers.CharField()
+
+
+class ExtraPositionSerializer(serializers.Serializer):
+    label = serializers.CharField()
+    reached_per_year = serializers.CharField()
+    applicable = serializers.BooleanField()
+
+
+class ExtraPositionsSerializer(serializers.Serializer):
+    membership = ExtraPositionSerializer()
+    delivery_charge = ExtraPositionSerializer()
+
+
 class RoundResultsResponseSerializer(EvaluationAggregatesSerializer):
+    include_auto_renewed = serializers.BooleanField()
+    auto_renewed_per_year = serializers.CharField()
+    auto_renewed = AutoRenewedMemberSerializer(many=True)
+    extra_positions = ExtraPositionsSerializer()
+    non_bidder_rate_per_share = serializers.CharField()
     reached_per_year = serializers.CharField()
     bidder_count = serializers.IntegerField()
     bids = RoundStatsBidSerializer(many=True)
