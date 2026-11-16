@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { FloatingLabel, Form } from "react-bootstrap";
 import { DeliveryAddressRequest } from "../../api-client";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
-import NextStepButton from "../components/NextStepButton.tsx";
+import NextStepButton from "../../components/mobile_wizard/NextStepButton.tsx";
 import TapirCheckbox from "../components/TapirCheckbox.tsx";
 import { isDeliveryAddressValid } from "../utils/isDeliveryAddressValid.ts";
 

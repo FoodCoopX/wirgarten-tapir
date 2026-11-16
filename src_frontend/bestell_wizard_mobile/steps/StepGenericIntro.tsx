@@ -1,8 +1,8 @@
 import React from "react";
 
 import { Accordion, AccordionBody } from "react-bootstrap";
+import NextStepButton from "../../components/mobile_wizard/NextStepButton.tsx";
 import { getHtmlDescription } from "../../utils/getHtmlDescription.ts";
-import NextStepButton from "../components/NextStepButton.tsx";
 import { GenericIntroContent } from "../types/GenericIntroContent.ts";
 import { scrollIntoView } from "../utils/scrollIntoView.ts";
 

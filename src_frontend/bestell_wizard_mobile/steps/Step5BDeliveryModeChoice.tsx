@@ -2,7 +2,7 @@ import React from "react";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import TapirButton from "../../components/TapirButton.tsx";
 import { DeliveryMode } from "../types/DeliveryMode.ts";
-import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
+import { BUTTON_VARIANT } from "../../components/mobile_wizard/utils/BUTTON_VARIANT.ts";
 import { buildDeliveryChargeBadge } from "../utils/buildDeliveryChargeBadge.tsx";
 import "../utils/flexColOnSmallScreen.css";
 import { getPickupLocationsForDeliveryMode } from "../utils/getPickupLocationsForDeliveryMode.ts";

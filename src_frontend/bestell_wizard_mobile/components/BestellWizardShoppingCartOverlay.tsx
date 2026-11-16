@@ -1,6 +1,4 @@
 import React, { useEffect } from "react";
-import "../../../tapir/core/static/core/bootstrap/5.3.8/css/bootstrap.min.css";
-import "../../../tapir/core/static/core/css/base.css";
 import {
   AssociationMembershipType,
   PublicGrowingPeriod,
@@ -12,10 +10,10 @@ import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardS
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { doesProductBelongsToProductType } from "../../bestell_wizard/utils/doesProductBelongToProductType.ts";
 import { isProductTypeOrdered } from "../../bestell_wizard/utils/isProductTypeOrdered.ts";
+import { BUTTON_VARIANT } from "../../components/mobile_wizard/utils/BUTTON_VARIANT.ts";
 import TapirButton from "../../components/TapirButton.tsx";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { Step } from "../types/Step.ts";
-import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import { getAssociationMembershipTypeMonthlyPriceFormatted } from "../utils/getAssociationMembershipTypeMonthlyPriceFormatted.ts";
 import { getTotalPriceForProductType } from "../utils/getTotalPriceForProductType.ts";
 import { getVisibleAssociationMembershipTypes } from "../utils/getVisibleAssociationMembershipTypes.ts";

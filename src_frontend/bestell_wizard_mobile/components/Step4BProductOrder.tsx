@@ -5,10 +5,10 @@ import { PublicProduct, PublicProductType } from "../../api-client";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { isProductTypeOrdered } from "../../bestell_wizard/utils/isProductTypeOrdered.ts";
+import { BUTTON_VARIANT } from "../../components/mobile_wizard/utils/BUTTON_VARIANT.ts";
 import TapirButton from "../../components/TapirButton.tsx";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { formatPercentage } from "../../utils/formatPercentage.ts";
-import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import { showCapacityWarning } from "../utils/showCapacityWarning.ts";
 import TapirCheckbox from "./TapirCheckbox.tsx";
 

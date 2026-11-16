@@ -10,23 +10,23 @@ import {
   PublicWaitingListEntryDetails,
 } from "../../api-client";
 import { getAssociationMembershipTypeCurrentPrice } from "../../association_memberships_config/getAssociationMembershipTypeCurrentPrice.ts";
+import { buildDeliveryChargeBadge } from "../utils/buildDeliveryChargeBadge.tsx";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { PersonalData } from "../../bestell_wizard/types/PersonalData.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { doesProductBelongsToProductType } from "../../bestell_wizard/utils/doesProductBelongToProductType.ts";
 import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
 import { isProductTypeOrdered } from "../../bestell_wizard/utils/isProductTypeOrdered.ts";
+import NextStepButton from "../../components/mobile_wizard/NextStepButton.tsx";
+import { BUTTON_VARIANT } from "../../components/mobile_wizard/utils/BUTTON_VARIANT.ts";
 import TapirButton from "../../components/TapirButton.tsx";
 import { toApiDate } from "../../utils/apiDate.ts";
 import formatAddress from "../../utils/formatAddress.ts";
 import { formatCoopShareLabel } from "../../utils/formatCoopShareLabel.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
-import NextStepButton from "../components/NextStepButton.tsx";
 import { Step } from "../types/Step.ts";
 import { atLeastOneMonthlyPayment } from "../utils/atLeastOneMonthlyPayment.ts";
-import { buildDeliveryChargeBadge } from "../utils/buildDeliveryChargeBadge.tsx";
-import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import { doesWaitingListHaveProductType } from "../utils/doesWaitingListHaveProductType.ts";
 import { getAssociationMembershipTypeMonthlyPriceFormatted } from "../utils/getAssociationMembershipTypeMonthlyPriceFormatted.ts";
 import { getFirstPickupLocationWithCapacity } from "../utils/getFirstPickupLocationWithCapacity.ts";
