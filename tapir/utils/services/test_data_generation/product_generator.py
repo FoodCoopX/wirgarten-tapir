@@ -4,6 +4,9 @@ from tapir.bestell_wizard.models import ProductTypeAccordionInBestellWizard
 from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.pickup_locations.models import ProductBasketSizeEquivalence
 from tapir.utils.config import Organization
+from tapir.utils.services.test_data_generation.vierlande_generator import (
+    VierlandeGenerator,
+)
 from tapir.wirgarten.constants import WEEKLY, EVEN_WEEKS, NO_DELIVERY, EVERY_FOUR_WEEKS
 from tapir.wirgarten.models import (
     ProductType,
@@ -129,6 +132,11 @@ class ProductGenerator:
                 cls.generate_products_biotop(product_type_ernteanteile=ernteanteile)
             case Organization.VEREIN:
                 cls.generate_products_verein(product_type_ernteanteile=ernteanteile)
+            case Organization.VIERLANDE:
+                VierlandeGenerator.generate_products(
+                    product_generator=cls,
+                    product_type_ernteanteile=ernteanteile,
+                )
             case Organization.L2G:
                 cls.generate_products_l2g(product_type_ernteanteile=ernteanteile)
             case Organization.MM:
@@ -517,6 +525,8 @@ class ProductGenerator:
     def generate_product_data(cls, organization: Organization):
         cls.generate_products(organization)
         cls.generate_product_capacities()
+        if organization is Organization.VIERLANDE:
+            VierlandeGenerator.update_product_capacities()
 
     @classmethod
     def generate_products_mm(cls, product_type_ernteanteile: ProductType):
