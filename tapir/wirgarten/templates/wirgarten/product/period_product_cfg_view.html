@@ -96,7 +96,7 @@
     <span style="margin: auto" class="material-icons">arrow_forward</span>
     <div class="card">
       <div style="display: flex;flex-direction: row" class="card-header">
-        <h5 style="margin: auto; width: 100%">{% translate 'Produkttypen' %}</h5>
+        <h5 style="margin: auto; width: 100%">{% translate 'Produktanteile' %}</h5>
         {% if perms.products.manage %}
           <div id="edit_product_type_button" class="mx-1">
             <span class="spinner-border"></span>
@@ -149,7 +149,7 @@
     <span style="margin: auto" class="material-icons">arrow_forward</span>
     <div class="card">
       <div class="d-flex flex-row justify-content-between card-header">
-        <h5 style="margin: auto; width: 100%">{% translate 'Produkte' %}</h5>
+        <h5 style="margin: auto; width: 100%">{% translate 'Anteilsgrößen' %}</h5>
         {% if perms.products.manage %}
           <div class="d-flex flex-row">
             {% include 'wirgarten/generic/action-button.html' with onclick='getProductAddForm()' title='Produkt hinzufügen' disabled=True class='need-product-type' type='success' icon='add' id='add-product-btn' %}
