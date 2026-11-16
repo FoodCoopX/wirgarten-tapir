@@ -18,6 +18,7 @@ import { doesProductBelongsToProductType } from "../../bestell_wizard/utils/does
 import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
 import { isProductTypeOrdered } from "../../bestell_wizard/utils/isProductTypeOrdered.ts";
 import NextStepButton from "../../components/mobile_wizard/NextStepButton.tsx";
+import AmountRow from "../../components/mobile_wizard/AmountRow.tsx";
 import { BUTTON_VARIANT } from "../../components/mobile_wizard/utils/BUTTON_VARIANT.ts";
 import TapirButton from "../../components/TapirButton.tsx";
 import { toApiDate } from "../../utils/apiDate.ts";
@@ -77,13 +78,12 @@ const PaymentRow: React.FC<{
   amount: number;
   perMonth?: boolean;
 }> = ({ label, amount, perMonth }) => (
-  <div className={"d-flex justify-content-between gap-3"}>
-    <span>{label}</span>
-    <span className={"text-nowrap"}>
-      {formatCurrency(amount)}
-      {perMonth && " / Monat"}
-    </span>
-  </div>
+  <AmountRow
+    label={label}
+    amount={amount}
+    unit={perMonth ? "€ / Monat" : "€"}
+    muted={false}
+  />
 );
 
 const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({

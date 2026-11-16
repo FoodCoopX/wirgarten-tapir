@@ -4,6 +4,9 @@ from decimal import Decimal
 from django.db.models import Subquery, OuterRef, F, QuerySet, Case, When, DecimalField
 
 from tapir.core.exceptions import TapirImproperlyConfigured
+from tapir.subscriptions.services.subscription_price_provider import (
+    SubscriptionPriceProvider,
+)
 from tapir.wirgarten.models import Subscription, ProductPrice
 from tapir.wirgarten.service.products import get_product_price
 
@@ -18,6 +21,10 @@ class SubscriptionPriceCalculator:
     ) -> Decimal:
         if subscription.price_override is not None:
             return subscription.price_override
+
+        provider_price = SubscriptionPriceProvider.get_price(subscription, cache)
+        if provider_price is not None:
+            return provider_price
 
         price_object = get_product_price(
             product=subscription.product, reference_date=reference_date, cache=cache

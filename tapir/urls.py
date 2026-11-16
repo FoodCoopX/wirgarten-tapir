@@ -40,6 +40,7 @@ urlpatterns = [
     path("bakery/", include("tapir.bakery.urls")),
     path("associations/", include("tapir.associations.urls")),
     path("bestell_wizard/", include("tapir.bestell_wizard.urls")),
+    path("bidding_rounds/", include("tapir.bidding_round.urls")),
     path("config/", include("tapir.configuration.urls")),
     path("coop/", include("tapir.coop.urls")),
     path("core/", include("tapir.core.urls")),

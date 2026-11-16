@@ -138,6 +138,32 @@ class ParameterKeys:
         f"{PREFIX}.subscriptions.days_before_growing_period_choice"
     )
 
+    BIDDING_ROUND_ENABLED = f"{PREFIX}.bidding_round.enabled"
+    BIDDING_ROUND_URL_ENABLED = f"{PREFIX}.bidding_round.url_enabled"
+    BIDDING_ROUND_PUBLIC_INTRO_TITLE = f"{PREFIX}.bidding_round.public.intro_title"
+    BIDDING_ROUND_PUBLIC_INTRO_TEXT = f"{PREFIX}.bidding_round.public.intro_text"
+    BIDDING_ROUND_PUBLIC_ENDED_TEXT = f"{PREFIX}.bidding_round.public.ended_text"
+    BIDDING_ROUND_PUBLIC_LOGIN_TITLE = f"{PREFIX}.bidding_round.public.login_title"
+    BIDDING_ROUND_PUBLIC_LOGIN_TEXT = f"{PREFIX}.bidding_round.public.login_text"
+    BIDDING_ROUND_PUBLIC_SUMMARY_TITLE = f"{PREFIX}.bidding_round.public.summary_title"
+    BIDDING_ROUND_PUBLIC_SUBMIT_LABEL = f"{PREFIX}.bidding_round.public.submit_label"
+    BIDDING_ROUND_BID_AMOUNT_LABEL = f"{PREFIX}.bidding_round.bid.amount_label"
+    BIDDING_ROUND_BID_REFERENCE_VALUE_HINT = (
+        f"{PREFIX}.bidding_round.bid.reference_value_hint"
+    )
+    BIDDING_ROUND_BID_SIMPLE_EXPLANATION = (
+        f"{PREFIX}.bidding_round.bid.simple_explanation"
+    )
+    BIDDING_ROUND_BID_LIVE_YEARLY_LABEL = (
+        f"{PREFIX}.bidding_round.bid.live_yearly_label"
+    )
+    BIDDING_ROUND_BID_MONTHLY_HINT = f"{PREFIX}.bidding_round.bid.monthly_hint"
+    BIDDING_ROUND_BID_MONTHLY_UNIT = f"{PREFIX}.bidding_round.bid.monthly_unit"
+    BIDDING_ROUND_BID_YEARLY_UNIT = f"{PREFIX}.bidding_round.bid.yearly_unit"
+    BIDDING_ROUND_BID_CONFIRM_TEXT = f"{PREFIX}.bidding_round.bid.confirm_text"
+    BIDDING_ROUND_BID_SUCCESS_TEXT = f"{PREFIX}.bidding_round.bid.success_text"
+    BIDDING_ROUND_BID_ERROR_TEXT = f"{PREFIX}.bidding_round.bid.error_text"
+
     TESTS_OVERRIDE_DATE_PRESET = f"{PREFIX}.tests.override_date_preset"
     TESTS_OVERRIDE_DATE = f"{PREFIX}.tests.override_date"
 
