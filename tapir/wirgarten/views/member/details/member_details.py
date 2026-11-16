@@ -219,10 +219,8 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
                 f"Aktuell: {context["payment_rhythm"]}. Ab dem {format_date(future_rhythm.valid_from)}: {MemberPaymentRhythmService.get_rhythm_display_name(future_rhythm.rhythm)}"
             )
 
-        context["payment_export_exclusion_period"] = (
-            PaymentExportExclusionPeriodService.get_current_or_next_period(
-                member_id=self.object.id, reference_date=today, cache=cache
-            )
+        self.add_payment_export_exclusion_context(
+            context=context, today=today, cache=cache
         )
 
         context["show_mail_category_content"] = MailCategory.objects.exists()
@@ -253,6 +251,21 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         context["cache"] = cache
 
         return context
+
+    def add_payment_export_exclusion_context(
+        self, context: dict, today: datetime.date, cache: dict
+    ):
+        context["payment_export_exclusion_enabled"] = get_parameter_value(
+            key=ParameterKeys.PAYMENT_EXPORT_EXCLUSION_ENABLED, cache=cache
+        )
+        if not context["payment_export_exclusion_enabled"]:
+            return
+
+        context["payment_export_exclusion_period"] = (
+            PaymentExportExclusionPeriodService.get_current_or_next_period(
+                member_id=self.object.id, reference_date=today, cache=cache
+            )
+        )
 
     def add_delivery_address_context(
         self, context: dict, today: datetime.date, cache: dict

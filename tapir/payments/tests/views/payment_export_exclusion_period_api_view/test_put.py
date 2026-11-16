@@ -7,6 +7,7 @@ from tapir.payments.models import (
     PaymentExportExclusionPeriodUpdatedLogEntry,
 )
 from tapir.payments.tests.factories import PaymentExportExclusionPeriodFactory
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
@@ -16,10 +17,28 @@ class TestPaymentExportExclusionPeriodApiViewPut(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
+        cls._set_parameter(
+            key=ParameterKeys.PAYMENT_EXPORT_EXCLUSION_ENABLED, value=True
+        )
 
     def test_put_loggedInAsNormalMember_returns403(self):
         member = MemberFactory.create(is_superuser=False)
         self.client.force_login(member)
+        period = self._create_period()
+
+        response = self._put(
+            period=period, start_date="2026-01-01", end_date="2027-12-31"
+        )
+
+        self.assertStatusCode(response, 403)
+        period.refresh_from_db()
+        self.assertEqual(datetime.date(year=2026, month=12, day=31), period.end_date)
+
+    def test_put_featureDisabled_returns403(self):
+        self._login_as_admin()
+        self._set_parameter(
+            key=ParameterKeys.PAYMENT_EXPORT_EXCLUSION_ENABLED, value=False
+        )
         period = self._create_period()
 
         response = self._put(

@@ -22,6 +22,9 @@ class TestExportAllUnexportedPayments(TapirIntegrationTest):
     def setUpTestData(cls) -> None:
         ParameterDefinitions().import_definitions(bulk_create=True)
         cls._set_parameter(
+            key=ParameterKeys.PAYMENT_EXPORT_EXCLUSION_ENABLED, value=True
+        )
+        cls._set_parameter(
             key=ParameterKeys.PAYMENT_ORGANISATION_IBAN, value="NL88ABNA2011060885"
         )
         cls._set_parameter(
@@ -58,6 +61,21 @@ class TestExportAllUnexportedPayments(TapirIntegrationTest):
         excluded_payment.refresh_from_db()
         self.assertEqual(Payment.PaymentStatus.PAID, excluded_payment.status)
         self.assertIsNotNone(excluded_payment.transaction)
+
+    def test_exportAllUnexportedPayments_featureDisabled_paymentIsExported(self):
+        self._set_parameter(
+            key=ParameterKeys.PAYMENT_EXPORT_EXCLUSION_ENABLED, value=False
+        )
+        PaymentExportExclusionPeriodFactory.create(
+            member=self.excluded_member,
+            start_date=datetime.date(year=2026, month=1, day=1),
+            end_date=None,
+        )
+        self._create_payment(member=self.excluded_member)
+
+        self._export()
+
+        self._assert_member_in_files(member=self.excluded_member)
 
     def test_exportAllUnexportedPayments_dueDateBeforePeriod_paymentIsExported(
         self,

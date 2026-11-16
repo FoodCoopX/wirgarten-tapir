@@ -6,6 +6,7 @@ from tapir.generic_exports.services.payment_segment_provider import (
 )
 from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES
 from tapir.payments.tests.factories import PaymentExportExclusionPeriodFactory
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import PaymentFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
@@ -15,6 +16,9 @@ class TestPaymentSegmentProvider(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
+        cls._set_parameter(
+            key=ParameterKeys.PAYMENT_EXPORT_EXCLUSION_ENABLED, value=True
+        )
 
     def test_getPaymentSegments_default_returnsCorrectSegment(self):
         result = PaymentSegmentProvider.get_payment_segments()
@@ -91,6 +95,25 @@ class TestPaymentSegmentProvider(TapirIntegrationTest):
         )
 
         self.assertEqual(0, result.count())
+
+    def test_getQuerysetAllPaymentsThisMonth_featureDisabled_paymentIncluded(self):
+        self._set_parameter(
+            key=ParameterKeys.PAYMENT_EXPORT_EXCLUSION_ENABLED, value=False
+        )
+        payment = PaymentFactory.create(
+            due_date=datetime.date(year=1997, month=7, day=15)
+        )
+        PaymentExportExclusionPeriodFactory.create(
+            member=payment.mandate_ref.member,
+            start_date=datetime.date(year=1990, month=1, day=1),
+            end_date=None,
+        )
+
+        result = PaymentSegmentProvider.get_queryset_all_payments_this_month(
+            reference_datetime=datetime.datetime(year=1997, month=7, day=15)
+        )
+
+        self.assertEqual([payment], list(result))
 
     def test_getQuerysetAllPaymentsThisMonth_coopSharePaymentOfExcludedMember_paymentIncluded(
         self,

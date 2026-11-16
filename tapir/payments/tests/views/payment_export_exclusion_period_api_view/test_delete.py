@@ -7,6 +7,7 @@ from tapir.payments.models import (
     PaymentExportExclusionPeriodDeletedLogEntry,
 )
 from tapir.payments.tests.factories import PaymentExportExclusionPeriodFactory
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
@@ -16,10 +17,28 @@ class TestPaymentExportExclusionPeriodApiViewDelete(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
+        cls._set_parameter(
+            key=ParameterKeys.PAYMENT_EXPORT_EXCLUSION_ENABLED, value=True
+        )
 
     def test_delete_loggedInAsNormalMember_returns403(self):
         member = MemberFactory.create(is_superuser=False)
         self.client.force_login(member)
+        period = PaymentExportExclusionPeriodFactory.create()
+
+        response = self.client.delete(
+            reverse("payments:payment_export_exclusion_periods"),
+            query_params={"period_id": period.id},
+        )
+
+        self.assertStatusCode(response, 403)
+        self.assertTrue(PaymentExportExclusionPeriod.objects.exists())
+
+    def test_delete_featureDisabled_returns403(self):
+        self._login_as_admin()
+        self._set_parameter(
+            key=ParameterKeys.PAYMENT_EXPORT_EXCLUSION_ENABLED, value=False
+        )
         period = PaymentExportExclusionPeriodFactory.create()
 
         response = self.client.delete(

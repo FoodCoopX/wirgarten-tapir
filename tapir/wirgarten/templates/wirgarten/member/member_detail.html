@@ -265,7 +265,7 @@
                                                     data-member-id="{{ object.id }}"></span>{% endif %}
               </div>
             </dd>
-            {% if perms.accounts.manage %}
+            {% if perms.accounts.manage and payment_export_exclusion_enabled %}
               <dt>{% translate "Vom Zahlungsexport ausgeschlossen" %}</dt>
               <dd id="tapir_user_payment_export_exclusion">
                 <div class="d-flex gap-2">

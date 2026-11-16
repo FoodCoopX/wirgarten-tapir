@@ -348,3 +348,17 @@ class ParameterDefinitionsPayments:
             order_priority=order_priority,
         )
         order_priority -= 1
+
+        importer.parameter_definition(
+            key=ParameterKeys.PAYMENT_EXPORT_EXCLUSION_ENABLED,
+            label="Mitglieder zeitweise vom Zahlungsexport ausschließen",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=False,
+            description="Wenn aktiviert, können Admins auf der Mitgliedsseite Zeiträume eintragen, in denen die regelmäßigen Zahlungen "
+            "des Mitglieds (Verträge, Solidarbeitrag, Vereinsbeitrag, Liefergebühren) nicht in die Lastschrift-Exporte übernommen werden, "
+            "z. B. weil das Mitglied einen Kredit über seinen Anteil zurückbezahlt. Genossenschaftsanteile werden weiterhin eingezogen. "
+            "Wenn deaktiviert, werden eingetragene Zeiträume ignoriert, bleiben aber gespeichert.",
+            category=ParameterCategory.PAYMENT,
+            order_priority=order_priority,
+        )
+        order_priority -= 1

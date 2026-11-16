@@ -50,8 +50,16 @@ class PaymentExportBuilder:
             cls.split_payments_by_contract_or_coop_shares(payments)
         )
 
+        exported_contract_payments = contract_payments
+        if get_parameter_value(
+            key=ParameterKeys.PAYMENT_EXPORT_EXCLUSION_ENABLED, cache=cache
+        ):
+            exported_contract_payments = cls._remove_excluded_payments(
+                payments=contract_payments, cache=cache
+            )
+
         combined_contract_payments = cls.combine_contract_payments_by_mandate_ref(
-            cls._remove_excluded_payments(payments=contract_payments, cache=cache)
+            exported_contract_payments
         ).values()
 
         errors_failed_payments_contracts = cls.export_payments_if_necessary(

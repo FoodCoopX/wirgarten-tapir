@@ -26,6 +26,7 @@ from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.log.util import freeze_for_log
 from tapir.payments import config as payments_config
 from tapir.payments.config import IntendedUseTokens
+from tapir.payments.permissions import IsPaymentExportExclusionEnabled
 from tapir.payments.models import (
     MemberPaymentRhythm,
     MemberCredit,
@@ -1380,7 +1381,11 @@ class MembersNeedingBankingDataForRebuildApiView(APIView):
 
 
 class PaymentExportExclusionPeriodApiView(APIView):
-    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+    permission_classes = [
+        permissions.IsAuthenticated,
+        HasCoopManagePermission,
+        IsPaymentExportExclusionEnabled,
+    ]
 
     def __init__(self):
         super().__init__()
