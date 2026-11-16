@@ -71,7 +71,8 @@ function buildNoticePeriodText(subscribedProduct: ProductForCancellation) {
       Beachte: Nach Ablauf der Probezeit kannst du erst wieder unter
       Berücksichtigung der regulären Kündigungsfrist (
       {subscribedProduct.noticePeriodDuration} {unit}) zum{" "}
-      {formatDateNumeric(subscribedProduct.subscriptionEndDate)} kündigen.
+      {formatDateNumeric(subscribedProduct.postTrialSubscriptionEndDate)}{" "}
+      kündigen.
     </p>
   );
 }
@@ -84,7 +85,7 @@ function buildHelpText(
     return (
       <p>
         Du kannst deinen Vertrag bis zum{" "}
-        {formatDateNumeric(subscribedProduct.lastDayOfNoticePeriod)} zum{" "}
+        {formatDateNumeric(subscribedProduct.lastDayToGiveNotice)} zum{" "}
         {formatDateNumeric(subscribedProduct.cancellationDate)} kündigen. Nach
         Ablauf der Kündigungsfrist verlängert sich dein Vertrag automatisch um
         ein weiteres Jahr.

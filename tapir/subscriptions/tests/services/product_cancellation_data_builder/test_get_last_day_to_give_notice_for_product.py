@@ -9,7 +9,7 @@ from tapir.subscriptions.services.product_cancellation_data_builder import (
 )
 
 
-class ProductCancellationDataBuilderGetLastDayOfNoticePeriodForProduct(
+class TestGetLastDayToGiveNoticeForProduct(
     TapirUnitTest,
 ):
     @patch.object(
@@ -17,7 +17,7 @@ class ProductCancellationDataBuilderGetLastDayOfNoticePeriodForProduct(
         "get_max_cancellation_date_subscription",
         autospec=True,
     )
-    def test_getLastDayOfNoticePeriodForProduct_singleSubscription_returnsNoticePeriodEnd(
+    def test_getLastDayToGiveNoticeForProduct_singleSubscription_returnsNoticePeriodEnd(
         self,
         mock_get_max_cancellation_date_subscription: Mock,
     ):
@@ -28,10 +28,8 @@ class ProductCancellationDataBuilderGetLastDayOfNoticePeriodForProduct(
             mock_notice_period_end
         )
 
-        result = (
-            ProductCancellationDataBuilder.get_last_day_of_notice_period_for_product(
-                product_subscriptions=[mock_subscription], cache=cache
-            )
+        result = ProductCancellationDataBuilder.get_last_day_to_give_notice_for_product(
+            product_subscriptions=[mock_subscription], cache=cache
         )
 
         self.assertEqual(mock_notice_period_end, result)
@@ -44,7 +42,7 @@ class ProductCancellationDataBuilderGetLastDayOfNoticePeriodForProduct(
         "get_max_cancellation_date_subscription",
         autospec=True,
     )
-    def test_getLastDayOfNoticePeriodForProduct_multipleSubscriptions_returnsLatestNoticePeriodEnd(
+    def test_getLastDayToGiveNoticeForProduct_multipleSubscriptions_returnsLatestNoticePeriodEnd(
         self,
         mock_get_max_cancellation_date_subscription: Mock,
     ):
@@ -58,11 +56,9 @@ class ProductCancellationDataBuilderGetLastDayOfNoticePeriodForProduct(
             mock_notice_period_end_late,
         ]
 
-        result = (
-            ProductCancellationDataBuilder.get_last_day_of_notice_period_for_product(
-                product_subscriptions=[mock_subscription_a, mock_subscription_b],
-                cache=cache,
-            )
+        result = ProductCancellationDataBuilder.get_last_day_to_give_notice_for_product(
+            product_subscriptions=[mock_subscription_a, mock_subscription_b],
+            cache=cache,
         )
 
         self.assertEqual(mock_notice_period_end_late, result)

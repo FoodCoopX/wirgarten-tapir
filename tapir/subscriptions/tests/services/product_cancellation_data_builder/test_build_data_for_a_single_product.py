@@ -18,7 +18,12 @@ from tapir.wirgarten.tests.factories import SubscriptionFactory
 class TestProductCancellationDataBuilderBuildDataForASingleProduct(TapirUnitTest):
     @patch.object(
         ProductCancellationDataBuilder,
-        "get_last_day_of_notice_period_for_product",
+        "get_post_trial_subscription_end_date",
+        autospec=True,
+    )
+    @patch.object(
+        ProductCancellationDataBuilder,
+        "get_last_day_to_give_notice_for_product",
         autospec=True,
     )
     @patch.object(
@@ -45,7 +50,8 @@ class TestProductCancellationDataBuilderBuildDataForASingleProduct(TapirUnitTest
         mock_is_product_in_trial: Mock,
         mock_get_date_limit_for_trial_cancellation: Mock,
         mock_get_earliest_possible_cancellation_date_for_product: Mock,
-        mock_get_last_day_of_notice_period_for_product: Mock,
+        mock_get_last_day_to_give_notice_for_product: Mock,
+        mock_get_post_trial_subscription_end_date: Mock,
     ):
         member = Mock()
         product = Mock()
@@ -80,9 +86,14 @@ class TestProductCancellationDataBuilderBuildDataForASingleProduct(TapirUnitTest
             mock_cancellation_date
         )
 
-        mock_last_day_of_notice_period = Mock()
-        mock_get_last_day_of_notice_period_for_product.return_value = (
-            mock_last_day_of_notice_period
+        mock_last_day_to_give_notice = Mock()
+        mock_get_last_day_to_give_notice_for_product.return_value = (
+            mock_last_day_to_give_notice
+        )
+
+        mock_subscription_end_date = Mock()
+        mock_get_post_trial_subscription_end_date.return_value = (
+            mock_subscription_end_date
         )
 
         result = ProductCancellationDataBuilder.build_data_for_a_single_product(
@@ -94,10 +105,10 @@ class TestProductCancellationDataBuilderBuildDataForASingleProduct(TapirUnitTest
             "is_in_trial": mock_is_in_trial,
             "date_limit_for_trial_cancellation": mock_date_limit_for_trial_cancellation,
             "cancellation_date": mock_cancellation_date,
-            "last_day_of_notice_period": mock_last_day_of_notice_period,
+            "last_day_to_give_notice": mock_last_day_to_give_notice,
             "notice_period_duration": mock_notice_period_duration,
             "notice_period_unit": mock_notice_period_unit,
-            "subscription_end_date": mock_end_date,
+            "post_trial_subscription_end_date": mock_subscription_end_date,
         }
 
         self.assertEqual(expected, result)
@@ -115,6 +126,13 @@ class TestProductCancellationDataBuilderBuildDataForASingleProduct(TapirUnitTest
         mock_get_earliest_possible_cancellation_date_for_product.assert_called_once_with(
             product=product, member=member, cache=cache
         )
-        mock_get_last_day_of_notice_period_for_product.assert_called_once_with(
+        mock_get_last_day_to_give_notice_for_product.assert_called_once_with(
             product_subscriptions=product_subscriptions, cache=cache
+        )
+        mock_get_post_trial_subscription_end_date.assert_called_once_with(
+            is_in_trial=mock_is_in_trial,
+            last_day_to_give_notice=mock_last_day_to_give_notice,
+            date_limit_for_trial_cancellation=mock_date_limit_for_trial_cancellation,
+            last_subscription_end_date=mock_end_date,
+            cache=cache,
         )

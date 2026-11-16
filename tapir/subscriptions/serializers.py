@@ -32,11 +32,11 @@ class ProductForCancellationSerializer(serializers.Serializer):
     product = ProductSerializer(read_only=True)
     is_in_trial = serializers.BooleanField()
     cancellation_date = serializers.DateField()
-    last_day_of_notice_period = serializers.DateField()
+    last_day_to_give_notice = serializers.DateField()
     date_limit_for_trial_cancellation = serializers.DateField(required=False)
     notice_period_duration = serializers.IntegerField()
     notice_period_unit = serializers.ChoiceField(choices=NOTICE_PERIOD_UNIT_OPTIONS)
-    subscription_end_date = serializers.DateField()
+    post_trial_subscription_end_date = serializers.DateField()
 
 
 class SolidarityContributionCancellationDataSerializer(serializers.Serializer):

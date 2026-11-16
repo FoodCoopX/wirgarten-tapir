@@ -49,7 +49,7 @@ export interface ProductForCancellation {
    * @type {Date}
    * @memberof ProductForCancellation
    */
-  lastDayOfNoticePeriod: Date;
+  lastDayToGiveNotice: Date;
   /**
    *
    * @type {Date}
@@ -73,7 +73,7 @@ export interface ProductForCancellation {
    * @type {Date}
    * @memberof ProductForCancellation
    */
-  subscriptionEndDate: Date;
+  postTrialSubscriptionEndDate: Date;
 }
 
 /**
@@ -87,8 +87,8 @@ export function instanceOfProductForCancellation(
   if (!("cancellationDate" in value) || value["cancellationDate"] === undefined)
     return false;
   if (
-    !("lastDayOfNoticePeriod" in value) ||
-    value["lastDayOfNoticePeriod"] === undefined
+    !("lastDayToGiveNotice" in value) ||
+    value["lastDayToGiveNotice"] === undefined
   )
     return false;
   if (
@@ -99,8 +99,8 @@ export function instanceOfProductForCancellation(
   if (!("noticePeriodUnit" in value) || value["noticePeriodUnit"] === undefined)
     return false;
   if (
-    !("subscriptionEndDate" in value) ||
-    value["subscriptionEndDate"] === undefined
+    !("postTrialSubscriptionEndDate" in value) ||
+    value["postTrialSubscriptionEndDate"] === undefined
   )
     return false;
   return true;
@@ -123,14 +123,16 @@ export function ProductForCancellationFromJSONTyped(
     product: ProductFromJSON(json["product"]),
     isInTrial: json["is_in_trial"],
     cancellationDate: new Date(json["cancellation_date"]),
-    lastDayOfNoticePeriod: new Date(json["last_day_of_notice_period"]),
+    lastDayToGiveNotice: new Date(json["last_day_to_give_notice"]),
     dateLimitForTrialCancellation:
       json["date_limit_for_trial_cancellation"] == null
         ? undefined
         : new Date(json["date_limit_for_trial_cancellation"]),
     noticePeriodDuration: json["notice_period_duration"],
     noticePeriodUnit: NoticePeriodUnitEnumFromJSON(json["notice_period_unit"]),
-    subscriptionEndDate: new Date(json["subscription_end_date"]),
+    postTrialSubscriptionEndDate: new Date(
+      json["post_trial_subscription_end_date"],
+    ),
   };
 }
 
@@ -151,7 +153,7 @@ export function ProductForCancellationToJSONTyped(
   return {
     is_in_trial: value["isInTrial"],
     cancellation_date: value["cancellationDate"].toISOString().substring(0, 10),
-    last_day_of_notice_period: value["lastDayOfNoticePeriod"]
+    last_day_to_give_notice: value["lastDayToGiveNotice"]
       .toISOString()
       .substring(0, 10),
     date_limit_for_trial_cancellation:
@@ -160,7 +162,7 @@ export function ProductForCancellationToJSONTyped(
         : value["dateLimitForTrialCancellation"].toISOString().substring(0, 10),
     notice_period_duration: value["noticePeriodDuration"],
     notice_period_unit: NoticePeriodUnitEnumToJSON(value["noticePeriodUnit"]),
-    subscription_end_date: value["subscriptionEndDate"]
+    post_trial_subscription_end_date: value["postTrialSubscriptionEndDate"]
       .toISOString()
       .substring(0, 10),
   };
