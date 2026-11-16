@@ -292,6 +292,7 @@ models/ProductTypeOption.ts
 models/ProductTypesAndConfig.ts
 models/PublicConfirmWaitingListEntryRequestRequest.ts
 models/PublicDataResponse.ts
+models/PublicEvaluationResponse.ts
 models/PublicGrowingPeriod.ts
 models/PublicPickupLocation.ts
 models/PublicProduct.ts

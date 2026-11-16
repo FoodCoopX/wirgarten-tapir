@@ -3,7 +3,10 @@ import datetime
 from django.urls import reverse
 from rest_framework import status
 
-from tapir.bidding_round.config import BIDDING_ROUND_PROCEDURE_BID_RANGE
+from tapir.bidding_round.config import (
+    BIDDING_ROUND_PROCEDURE_BID_RANGE,
+    BIDDING_ROUND_STATUS_CLOSED,
+)
 from tapir.bidding_round.services.bidding_round_service import BiddingRoundService
 from tapir.bidding_round.tests.factories import BiddingRoundProductPriceFactory
 from tapir.bidding_round.tests.helpers import (
@@ -17,6 +20,7 @@ from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     GrowingPeriodFactory,
     MemberFactory,
+    ProductCapacityFactory,
     ProductFactory,
     ProductTypeFactory,
     SubscriptionFactory,
@@ -226,3 +230,46 @@ class TestRoundAdminViews(BiddingRoundApiTestBase):
         self.assertStatusCode(results_response, status.HTTP_200_OK)
         self.assertEqual("1000.00", results_response.data["target_per_year"])
         self.assertEqual(0, results_response.data["bidder_count"])
+
+
+class TestPublicResultsView(BiddingRoundApiTestBase):
+    def test_inactiveRound_returns404(self):
+        self._enable()
+        bidding_round = create_open_round()
+        bidding_round.status = BIDDING_ROUND_STATUS_CLOSED
+        bidding_round.save()
+
+        response = self.client.get(
+            reverse("bidding_rounds:public_results", args=[bidding_round.id])
+        )
+
+        self.assertStatusCode(response, status.HTTP_404_NOT_FOUND)
+
+    def test_activeRound_returnsAggregates(self):
+        self._enable()
+        bidding_round = create_open_round()
+        ProductCapacityFactory.create(
+            period=bidding_round.growing_period,
+            product_type=bidding_round.product_types.first().product_type,
+            capacity=100,
+        )
+        member = MemberFactory.create()
+        self.client.force_login(member)
+        self.client.post(
+            reverse("bidding_rounds:member_bid", args=[bidding_round.id]),
+            data=bid_payload(bidding_round, amount="80.00"),
+            content_type="application/json",
+        )
+
+        response = self.client.get(
+            reverse("bidding_rounds:public_results", args=[bidding_round.id])
+        )
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assertEqual("1000.00", response.data["target_per_year"])
+        self.assertEqual(96.0, response.data["coverage_percent"])
+        self.assertEqual("yellow", response.data["coverage_status"])
+        self.assertEqual("100.00", response.data["capacity_shares"])
+        self.assertEqual(1.0, float(response.data["current_shares"]))
+        self.assertEqual(1.0, response.data["utilization_percent"])
+        self.assertEqual(96.0, response.data["levels"]["yellow"]["coverage_percent"])
