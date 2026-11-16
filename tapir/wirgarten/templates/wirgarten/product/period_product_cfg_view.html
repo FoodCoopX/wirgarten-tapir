@@ -38,7 +38,7 @@
   </style>
 {% endblock head %}
 {% block title %}
-  Vertragsperiode & Produkte - {{ block.super }}
+  Vertragsperiode & Produktanteile - {{ block.super }}
 {% endblock %}
 {% block content %}
   {% csrf_token %}
@@ -102,7 +102,7 @@
             <span class="spinner-border"></span>
           </div>
           <div style="width: 3em"></div>
-          {% include 'wirgarten/generic/action-button.html' with onclick='deleteCapacity()' title='Produkttyp/Kapazität löschen' disabled=True class='need-product-type delete-btn' type='danger' icon='delete' id='del-capacity-btn' %}
+          {% include 'wirgarten/generic/action-button.html' with onclick='deleteCapacity()' title='Produktanteil/Kapazität löschen' disabled=True class='need-product-type delete-btn' type='danger' icon='delete' id='del-capacity-btn' %}
         {% endif %}
       </div>
       <div style="overflow: auto" class="card-body">
@@ -126,7 +126,7 @@
                   {% if capacity.product_type.icon_link %}
                     <img width="28"
                          src="{{ capacity.product_type.icon_link }}"
-                         alt="Produkt-Typ Icon" />
+                         alt="Produktanteil Icon" />
                   {% endif %}
                   {% if capacity.product_type.force_waiting_list %}
                     <span class="material-icons"
@@ -152,11 +152,11 @@
         <h5 style="margin: auto; width: 100%">{% translate 'Anteilsgrößen' %}</h5>
         {% if perms.products.manage %}
           <div class="d-flex flex-row">
-            {% include 'wirgarten/generic/action-button.html' with onclick='getProductAddForm()' title='Produkt hinzufügen' disabled=True class='need-product-type' type='success' icon='add' id='add-product-btn' %}
+            {% include 'wirgarten/generic/action-button.html' with onclick='getProductAddForm()' title='Anteilsgröße hinzufügen' disabled=True class='need-product-type' type='success' icon='add' id='add-product-btn' %}
             <div id="edit_product_button" class="mx-1">
               <span class="spinner-border"></span>
             </div>
-            {% include 'wirgarten/generic/action-button.html' with onclick='deleteProduct()' title='Produkt löschen' disabled=True class='need-product delete-btn' type='danger' icon='delete' id='del-product-btn' %}
+            {% include 'wirgarten/generic/action-button.html' with onclick='deleteProduct()' title='Anteilsgröße löschen' disabled=True class='need-product delete-btn' type='danger' icon='delete' id='del-product-btn' %}
           </div>
         {% endif %}
       </div>
