@@ -89,6 +89,12 @@ export interface RoundResultsResponse {
   levels: EvaluationLevels;
   /**
    *
+   * @type {string}
+   * @memberof RoundResultsResponse
+   */
+  roundProductTypeId: string | null;
+  /**
+   *
    * @type {boolean}
    * @memberof RoundResultsResponse
    */
@@ -131,6 +137,42 @@ export interface RoundResultsResponse {
   bidderCount: number;
   /**
    *
+   * @type {number}
+   * @memberof RoundResultsResponse
+   */
+  unconfirmedBidCount: number;
+  /**
+   *
+   * @type {Date}
+   * @memberof RoundResultsResponse
+   */
+  averageBidLockedAt: Date | null;
+  /**
+   *
+   * @type {string}
+   * @memberof RoundResultsResponse
+   */
+  lockedBidRangePosition: string | null;
+  /**
+   *
+   * @type {string}
+   * @memberof RoundResultsResponse
+   */
+  lockedSurchargePercent: string;
+  /**
+   *
+   * @type {boolean}
+   * @memberof RoundResultsResponse
+   */
+  lockedSurchargeOnBids: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof RoundResultsResponse
+   */
+  lockedSurchargeOnAverage: boolean;
+  /**
+   *
    * @type {Array<RoundStatsBid>}
    * @memberof RoundResultsResponse
    */
@@ -163,6 +205,11 @@ export function instanceOfRoundResultsResponse(
     return false;
   if (!("levels" in value) || value["levels"] === undefined) return false;
   if (
+    !("roundProductTypeId" in value) ||
+    value["roundProductTypeId"] === undefined
+  )
+    return false;
+  if (
     !("includeAutoRenewed" in value) ||
     value["includeAutoRenewed"] === undefined
   )
@@ -184,6 +231,36 @@ export function instanceOfRoundResultsResponse(
   if (!("reachedPerYear" in value) || value["reachedPerYear"] === undefined)
     return false;
   if (!("bidderCount" in value) || value["bidderCount"] === undefined)
+    return false;
+  if (
+    !("unconfirmedBidCount" in value) ||
+    value["unconfirmedBidCount"] === undefined
+  )
+    return false;
+  if (
+    !("averageBidLockedAt" in value) ||
+    value["averageBidLockedAt"] === undefined
+  )
+    return false;
+  if (
+    !("lockedBidRangePosition" in value) ||
+    value["lockedBidRangePosition"] === undefined
+  )
+    return false;
+  if (
+    !("lockedSurchargePercent" in value) ||
+    value["lockedSurchargePercent"] === undefined
+  )
+    return false;
+  if (
+    !("lockedSurchargeOnBids" in value) ||
+    value["lockedSurchargeOnBids"] === undefined
+  )
+    return false;
+  if (
+    !("lockedSurchargeOnAverage" in value) ||
+    value["lockedSurchargeOnAverage"] === undefined
+  )
     return false;
   if (!("bids" in value) || value["bids"] === undefined) return false;
   return true;
@@ -210,6 +287,7 @@ export function RoundResultsResponseFromJSONTyped(
     coveragePercent: json["coverage_percent"],
     bidderAveragePerMonth: json["bidder_average_per_month"],
     levels: EvaluationLevelsFromJSON(json["levels"]),
+    roundProductTypeId: json["round_product_type_id"],
     includeAutoRenewed: json["include_auto_renewed"],
     autoRenewedPerYear: json["auto_renewed_per_year"],
     autoRenewed: (json["auto_renewed"] as Array<any>).map(
@@ -219,6 +297,15 @@ export function RoundResultsResponseFromJSONTyped(
     nonBidderRatePerShare: json["non_bidder_rate_per_share"],
     reachedPerYear: json["reached_per_year"],
     bidderCount: json["bidder_count"],
+    unconfirmedBidCount: json["unconfirmed_bid_count"],
+    averageBidLockedAt:
+      json["average_bid_locked_at"] == null
+        ? null
+        : new Date(json["average_bid_locked_at"]),
+    lockedBidRangePosition: json["locked_bid_range_position"],
+    lockedSurchargePercent: json["locked_surcharge_percent"],
+    lockedSurchargeOnBids: json["locked_surcharge_on_bids"],
+    lockedSurchargeOnAverage: json["locked_surcharge_on_average"],
     bids: (json["bids"] as Array<any>).map(RoundStatsBidFromJSON),
   };
 }
@@ -245,6 +332,7 @@ export function RoundResultsResponseToJSONTyped(
     coverage_percent: value["coveragePercent"],
     bidder_average_per_month: value["bidderAveragePerMonth"],
     levels: EvaluationLevelsToJSON(value["levels"]),
+    round_product_type_id: value["roundProductTypeId"],
     include_auto_renewed: value["includeAutoRenewed"],
     auto_renewed_per_year: value["autoRenewedPerYear"],
     auto_renewed: (value["autoRenewed"] as Array<any>).map(
@@ -254,6 +342,15 @@ export function RoundResultsResponseToJSONTyped(
     non_bidder_rate_per_share: value["nonBidderRatePerShare"],
     reached_per_year: value["reachedPerYear"],
     bidder_count: value["bidderCount"],
+    unconfirmed_bid_count: value["unconfirmedBidCount"],
+    average_bid_locked_at:
+      value["averageBidLockedAt"] == null
+        ? null
+        : (value["averageBidLockedAt"] as any).toISOString(),
+    locked_bid_range_position: value["lockedBidRangePosition"],
+    locked_surcharge_percent: value["lockedSurchargePercent"],
+    locked_surcharge_on_bids: value["lockedSurchargeOnBids"],
+    locked_surcharge_on_average: value["lockedSurchargeOnAverage"],
     bids: (value["bids"] as Array<any>).map(RoundStatsBidToJSON),
   };
 }

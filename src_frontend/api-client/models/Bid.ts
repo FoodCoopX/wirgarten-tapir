@@ -32,10 +32,22 @@ export interface Bid {
   memberId: string;
   /**
    *
+   * @type {boolean}
+   * @memberof Bid
+   */
+  enteredByAdmin: boolean;
+  /**
+   *
+   * @type {Date}
+   * @memberof Bid
+   */
+  adminConfirmed: Date | null;
+  /**
+   *
    * @type {string}
    * @memberof Bid
    */
-  readonly pickupLocationId: string | null;
+  pickupLocationId: string | null;
   /**
    *
    * @type {Date}
@@ -83,13 +95,13 @@ export interface Bid {
    * @type {string}
    * @memberof Bid
    */
-  readonly amountPerYear: string;
+  amountPerYear: string;
   /**
    *
    * @type {string}
    * @memberof Bid
    */
-  readonly totalPerYear: string;
+  totalPerYear: string;
 }
 
 /**
@@ -98,6 +110,10 @@ export interface Bid {
 export function instanceOfBid(value: object): value is Bid {
   if (!("id" in value) || value["id"] === undefined) return false;
   if (!("memberId" in value) || value["memberId"] === undefined) return false;
+  if (!("enteredByAdmin" in value) || value["enteredByAdmin"] === undefined)
+    return false;
+  if (!("adminConfirmed" in value) || value["adminConfirmed"] === undefined)
+    return false;
   if (!("pickupLocationId" in value) || value["pickupLocationId"] === undefined)
     return false;
   if (!("updatedAt" in value) || value["updatedAt"] === undefined) return false;
@@ -126,6 +142,11 @@ export function BidFromJSONTyped(json: any, ignoreDiscriminator: boolean): Bid {
   return {
     id: json["id"],
     memberId: json["member_id"],
+    enteredByAdmin: json["entered_by_admin"],
+    adminConfirmed:
+      json["admin_confirmed"] == null
+        ? null
+        : new Date(json["admin_confirmed"]),
     pickupLocationId: json["pickup_location_id"],
     updatedAt: json["updated_at"] == null ? null : new Date(json["updated_at"]),
     productId: json["product_id"],
@@ -144,10 +165,7 @@ export function BidToJSON(json: any): Bid {
 }
 
 export function BidToJSONTyped(
-  value?: Omit<
-    Bid,
-    "pickup_location_id" | "amount_per_year" | "total_per_year"
-  > | null,
+  value?: Bid | null,
   ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {
@@ -157,6 +175,12 @@ export function BidToJSONTyped(
   return {
     id: value["id"],
     member_id: value["memberId"],
+    entered_by_admin: value["enteredByAdmin"],
+    admin_confirmed:
+      value["adminConfirmed"] == null
+        ? null
+        : (value["adminConfirmed"] as any).toISOString(),
+    pickup_location_id: value["pickupLocationId"],
     updated_at:
       value["updatedAt"] == null
         ? null
@@ -167,5 +191,7 @@ export function BidToJSONTyped(
     amount_1: value["amount1"],
     amount_2: value["amount2"],
     amount_3: value["amount3"],
+    amount_per_year: value["amountPerYear"],
+    total_per_year: value["totalPerYear"],
   };
 }
