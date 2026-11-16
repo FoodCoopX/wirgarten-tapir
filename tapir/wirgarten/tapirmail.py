@@ -75,6 +75,8 @@ class Segments:
     MEMBERS_WITH_CONTRACT_SINCE_MORE_THAN_ONE_YEAR_BUT_NO = (
         "Mit Vertrag über einem Jahr aber kein Geno-Anteil"
     )
+    ASSOCIATION_MEMBERS = "Vereinsmitglieder"
+    NON_ASSOCIATION_MEMBERS = "Keine Vereinsmitglieder"
 
 
 def configure_mail_module():

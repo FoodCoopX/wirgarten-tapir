@@ -3,7 +3,6 @@ import logging
 from celery import shared_task
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
-from django.db.models import Q
 from tapir_mail.triggers.transactional_trigger import (
     TransactionalTrigger,
     TransactionalTriggerData,
@@ -249,10 +248,8 @@ def send_membership_entry_mails():
 
             if (
                 legal_status_is_association(cache=cache)
-                and AssociationMembership.objects.filter(
-                    member=member, start_date__lte=today
-                )
-                .filter(Q(end_date__isnull=True) | Q(end_date__gte=today))
+                and AssociationMembership.objects.filter(member=member)
+                .active_at(today)
                 .exists()
             ):
                 should_send_mail = True
