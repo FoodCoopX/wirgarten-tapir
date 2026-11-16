@@ -68,6 +68,42 @@ export interface Round {
    * @type {Date}
    * @memberof Round
    */
+  averageBidLockedAt: Date | null;
+  /**
+   *
+   * @type {string}
+   * @memberof Round
+   */
+  lockedBidRangePosition: string | null;
+  /**
+   *
+   * @type {string}
+   * @memberof Round
+   */
+  lockedBidderAveragePerSharePerMonth: string | null;
+  /**
+   *
+   * @type {string}
+   * @memberof Round
+   */
+  lockedSurchargePercent: string;
+  /**
+   *
+   * @type {boolean}
+   * @memberof Round
+   */
+  lockedSurchargeOnBids: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof Round
+   */
+  lockedSurchargeOnAverage: boolean;
+  /**
+   *
+   * @type {Date}
+   * @memberof Round
+   */
   startAt: Date | null;
   /**
    *
@@ -124,6 +160,36 @@ export function instanceOfRound(value: object): value is Round {
     value["includeAutoRenewed"] === undefined
   )
     return false;
+  if (
+    !("averageBidLockedAt" in value) ||
+    value["averageBidLockedAt"] === undefined
+  )
+    return false;
+  if (
+    !("lockedBidRangePosition" in value) ||
+    value["lockedBidRangePosition"] === undefined
+  )
+    return false;
+  if (
+    !("lockedBidderAveragePerSharePerMonth" in value) ||
+    value["lockedBidderAveragePerSharePerMonth"] === undefined
+  )
+    return false;
+  if (
+    !("lockedSurchargePercent" in value) ||
+    value["lockedSurchargePercent"] === undefined
+  )
+    return false;
+  if (
+    !("lockedSurchargeOnBids" in value) ||
+    value["lockedSurchargeOnBids"] === undefined
+  )
+    return false;
+  if (
+    !("lockedSurchargeOnAverage" in value) ||
+    value["lockedSurchargeOnAverage"] === undefined
+  )
+    return false;
   if (!("startAt" in value) || value["startAt"] === undefined) return false;
   if (!("endAt" in value) || value["endAt"] === undefined) return false;
   if (
@@ -158,6 +224,16 @@ export function RoundFromJSONTyped(
     biddingProcedure: json["bidding_procedure"],
     bidLevels: json["bid_levels"],
     includeAutoRenewed: json["include_auto_renewed"],
+    averageBidLockedAt:
+      json["average_bid_locked_at"] == null
+        ? null
+        : new Date(json["average_bid_locked_at"]),
+    lockedBidRangePosition: json["locked_bid_range_position"],
+    lockedBidderAveragePerSharePerMonth:
+      json["locked_bidder_average_per_share_per_month"],
+    lockedSurchargePercent: json["locked_surcharge_percent"],
+    lockedSurchargeOnBids: json["locked_surcharge_on_bids"],
+    lockedSurchargeOnAverage: json["locked_surcharge_on_average"],
     startAt: json["start_at"] == null ? null : new Date(json["start_at"]),
     endAt: new Date(json["end_at"]),
     contractsCreatedAt:
@@ -191,6 +267,16 @@ export function RoundToJSONTyped(
     bidding_procedure: value["biddingProcedure"],
     bid_levels: value["bidLevels"],
     include_auto_renewed: value["includeAutoRenewed"],
+    average_bid_locked_at:
+      value["averageBidLockedAt"] == null
+        ? null
+        : (value["averageBidLockedAt"] as any).toISOString(),
+    locked_bid_range_position: value["lockedBidRangePosition"],
+    locked_bidder_average_per_share_per_month:
+      value["lockedBidderAveragePerSharePerMonth"],
+    locked_surcharge_percent: value["lockedSurchargePercent"],
+    locked_surcharge_on_bids: value["lockedSurchargeOnBids"],
+    locked_surcharge_on_average: value["lockedSurchargeOnAverage"],
     start_at:
       value["startAt"] == null ? null : (value["startAt"] as any).toISOString(),
     end_at: value["endAt"].toISOString(),

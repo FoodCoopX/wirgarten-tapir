@@ -24,11 +24,22 @@ from tapir.wirgarten.models import (
 class BiddingRound(TapirModel):
     """One bidding round for a growing period.
 
-    Members submit one amount per share (``BIDDING_ROUND_PROCEDURE_SIMPLE``) or a
-    range of two amounts (``BIDDING_ROUND_PROCEDURE_BID_RANGE``: green/wish and
-    red/pain threshold) together with the number of shares they bid for the round's
-    single biddable product type. ``contracts_created_at`` marks the round as
-    evaluated: from then on the round is read-only.
+    ``bidding_procedure`` selects how many amounts a member submits per share:
+    ``BIDDING_ROUND_PROCEDURE_SIMPLE`` uses one to three amounts (``bid_levels``
+    1-3), ``BIDDING_ROUND_PROCEDURE_BID_RANGE`` uses exactly two amounts
+    (green/wish and red/pain threshold) and therefore requires ``bid_levels == 2``.
+    The check constraints enforce both rules. ``contracts_created_at`` marks the
+    round as evaluated: from then on the round is read-only.
+
+    The ``locked_*`` fields freeze the evaluation base at ``average_bid_locked_at``,
+    so contract creation uses exactly what the admin saw. Unlocking is only allowed
+    while no contracts have been created.
+    ``locked_bidder_average_per_share_per_month`` is stored as-is because that is the
+    unit bids are made in; the yearly value is derived as ``month * 12``.
+    ``locked_bid_range_position`` is the position (0-100) on the bidder
+    distribution. ``locked_surcharge_percent`` together with
+    ``locked_surcharge_on_bids``/``locked_surcharge_on_average`` records how the
+    surcharge was applied.
     """
 
     growing_period = models.ForeignKey(GrowingPeriod, on_delete=models.CASCADE)
@@ -45,6 +56,20 @@ class BiddingRound(TapirModel):
     )
     bid_levels = models.PositiveSmallIntegerField(default=1)
     include_auto_renewed = models.BooleanField(default=True)
+    # Frozen evaluation values, so contract creation uses exactly what the admin
+    # saw. Unlocking is only allowed while no contracts have been created.
+    average_bid_locked_at = models.DateTimeField(null=True)
+    locked_bid_range_position = models.DecimalField(
+        max_digits=5, decimal_places=2, null=True
+    )
+    locked_bidder_average_per_share_per_month = models.DecimalField(
+        max_digits=8, decimal_places=2, null=True
+    )
+    locked_surcharge_percent = models.DecimalField(
+        max_digits=5, decimal_places=2, default=0
+    )
+    locked_surcharge_on_bids = models.BooleanField(default=False)
+    locked_surcharge_on_average = models.BooleanField(default=False)
     start_at = models.DateTimeField(null=True)
     end_at = models.DateTimeField(null=False)
     contracts_created_at = models.DateTimeField(null=True)
@@ -122,8 +147,11 @@ class BiddingRoundProductPrice(TapirModel):
 class Bid(TapirModel):
     """One bid per member and round.
 
-    The pickup location is not stored on the bid: statistics and contract creation
-    use the member's location at the growing period's start date
+    ``entered_by_admin`` marks bids captured by an admin on behalf of the member.
+    ``admin_confirmed`` is set when an admin confirms the bid; the timestamp is the
+    confirmation gate for contract creation and is cleared when the bid items change.
+    The pickup location is not stored on the bid: statistics and contract creation use
+    the member's location at the growing period's start date
     (``MemberPickupLocationGetter``).
     """
 
@@ -131,6 +159,8 @@ class Bid(TapirModel):
         BiddingRound, on_delete=models.CASCADE, related_name="bids"
     )
     member = models.ForeignKey(Member, on_delete=models.CASCADE)
+    entered_by_admin = models.BooleanField(default=False)
+    admin_confirmed = models.DateTimeField(null=True)
 
     class Meta:
         constraints = [

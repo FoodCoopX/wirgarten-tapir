@@ -49,21 +49,12 @@ class TestContractCreator(TapirIntegrationTest):
         with pytest.raises(ValidationError):
             ContractCreator.create_contracts_from_bids(bidding_round, cache={})
 
-    def _add_lower_bid(self, bidding_round, product, quantity=1):
-        other_bid = BidFactory.create(round=bidding_round)
-        BidItemFactory.create(
-            bid=other_bid,
-            round_product_type=bidding_round.product_types.first(),
-            product=product,
-            quantity=quantity,
-            amount_1=Decimal("50.00"),
-        )
-
     def test_createContracts_createsSubscriptionAndContribution(self):
         bidding_round, bid, product, period = self._create_closed_round_with_bid(
-            bid_amount=Decimal("80.00"), standard_price=Decimal("50.00")
+            bid_amount=Decimal("80.00"),
+            standard_price=Decimal("50.00"),
+            other_bids=[(1, Decimal("50.00"))],
         )
-        self._add_lower_bid(bidding_round, product)
 
         result = ContractCreator.create_contracts_from_bids(
             bidding_round, cache={}, actor=bid.member, bid_ids=[bid.id]
@@ -91,8 +82,8 @@ class TestContractCreator(TapirIntegrationTest):
             bid_amount=Decimal("80.00"),
             standard_price=Decimal("50.00"),
             quantity=2,
+            other_bids=[(2, Decimal("50.00"))],
         )
-        self._add_lower_bid(bidding_round, product, quantity=2)
 
         ContractCreator.create_contracts_from_bids(
             bidding_round, cache={}, actor=bid.member, bid_ids=[bid.id]
@@ -110,6 +101,7 @@ class TestContractCreator(TapirIntegrationTest):
             bid_amount=Decimal("80.00"),
             standard_price=Decimal("50.00"),
             quantity=3,
+            other_bids=[(3, Decimal("50.00"))],
         )
         existing = SubscriptionFactory.create(
             member=bid.member,
@@ -119,7 +111,6 @@ class TestContractCreator(TapirIntegrationTest):
             start_date=period.start_date,
             end_date=period.end_date,
         )
-        self._add_lower_bid(bidding_round, product, quantity=3)
 
         ContractCreator.create_contracts_from_bids(
             bidding_round, cache={}, actor=bid.member, bid_ids=[bid.id]
@@ -196,20 +187,38 @@ class TestContractCreator(TapirIntegrationTest):
             ).exists()
         )
 
-    def test_createContracts_withBidRangeBidAtRed_usesTheRedAmount(self):
-        bidding_round, bid, _product, period = (
+    def test_createContracts_withLockedRedPosition_usesTheRedAmount(self):
+        bidding_round, bid, product, period = (
             self._create_closed_bid_range_round_with_bid(Decimal("50.00"))
+        )
+        other_bid = BidFactory.create(round=bidding_round)
+        BidItemFactory.create(
+            bid=other_bid,
+            round_product_type=bidding_round.product_types.first(),
+            product=product,
+            amount_1=Decimal("50.00"),
+            amount_2=Decimal("60.00"),
+        )
+        other_bid.admin_confirmed = get_now(cache={})
+        other_bid.save()
+        BiddingRoundService.lock_average_bid(
+            bidding_round,
+            position=100,
+            surcharge_percent=0,
+            surcharge_on_bids=False,
+            surcharge_on_average=False,
+            cache={},
         )
 
         result = ContractCreator.create_contracts_from_bids(
-            bidding_round, cache={}, bid_level=2, actor=bid.member
+            bidding_round, cache={}, actor=bid.member
         )
 
         self.assertEqual([], result["errors"])
         contribution = SolidarityContribution.objects.get(
             member=bid.member, start_date=period.start_date
         )
-        self.assertEqual(Decimal("10.00"), contribution.amount)
+        self.assertEqual(Decimal("15.00"), contribution.amount)
 
     def test_createContracts_withAutoRenewed_createsContractAndFloor(self):
         bidding_round, bid, product, period = self._create_closed_round_with_bid(
@@ -267,7 +276,16 @@ class TestContractCreator(TapirIntegrationTest):
         )
         self.assertEqual(Decimal("30.00"), contribution.amount)
 
-    def _create_closed_round_with_bid(self, bid_amount, standard_price, quantity=1):
+    def _create_closed_round_with_bid(
+        self,
+        bid_amount,
+        standard_price,
+        quantity=1,
+        other_bids=None,
+        surcharge_percent=0,
+        surcharge_on_bids=False,
+        surcharge_on_average=False,
+    ):
         period = GrowingPeriodFactory.create(
             start_date=get_now(cache={}).date() + datetime.timedelta(days=30)
         )
@@ -294,6 +312,27 @@ class TestContractCreator(TapirIntegrationTest):
             quantity=quantity,
             amount_1=bid_amount,
         )
+        for other_quantity, other_amount in other_bids or []:
+            other_bid = BidFactory.create(round=bidding_round)
+            BidItemFactory.create(
+                bid=other_bid,
+                round_product_type=round_product_type,
+                product=product,
+                quantity=other_quantity,
+                amount_1=other_amount,
+            )
+            other_bid.admin_confirmed = get_now(cache={})
+            other_bid.save()
+        BiddingRoundService.lock_average_bid(
+            bidding_round,
+            position=0,
+            surcharge_percent=surcharge_percent,
+            surcharge_on_bids=surcharge_on_bids,
+            surcharge_on_average=surcharge_on_average,
+            cache={},
+        )
+        bid.admin_confirmed = get_now(cache={})
+        bid.save()
         return bidding_round, bid, product, period
 
     def _create_closed_bid_range_round_with_bid(self, standard_price):
@@ -335,5 +374,112 @@ class TestContractCreator(TapirIntegrationTest):
             ],
             cache={},
         )
+        bid.admin_confirmed = get_now(cache={})
+        bid.save()
         BiddingRoundService.close_round(bidding_round, cache={})
         return bidding_round, bid, product, period
+
+    def test_createContracts_withoutLockedAverageBid_raisesValidationError(self):
+        bidding_round, bid, _product, _period = self._create_closed_round_with_bid(
+            bid_amount=Decimal("80.00"), standard_price=Decimal("50.00")
+        )
+        bidding_round.average_bid_locked_at = None
+        bidding_round.save()
+
+        with pytest.raises(ValidationError):
+            ContractCreator.create_contracts_from_bids(
+                bidding_round, cache={}, actor=bid.member
+            )
+
+    def test_createContracts_withUnconfirmedBid_raisesValidationError(self):
+        bidding_round, bid, _product, _period = self._create_closed_round_with_bid(
+            bid_amount=Decimal("80.00"), standard_price=Decimal("50.00")
+        )
+        bid.admin_confirmed = None
+        bid.save()
+
+        with pytest.raises(ValidationError):
+            ContractCreator.create_contracts_from_bids(
+                bidding_round, cache={}, actor=bid.member
+            )
+
+    def test_createContracts_withSurchargeOnBids_appliesSurchargeToContribution(self):
+        bidding_round, bid, product, period = self._create_closed_round_with_bid(
+            bid_amount=Decimal("80.00"),
+            standard_price=Decimal("50.00"),
+            other_bids=[(1, Decimal("50.00"))],
+            surcharge_percent=Decimal("10"),
+            surcharge_on_bids=True,
+        )
+
+        ContractCreator.create_contracts_from_bids(
+            bidding_round, cache={}, actor=bid.member
+        )
+
+        self.assertEqual(
+            Decimal("16.50"),
+            SolidarityContribution.objects.get(
+                member=bid.member, start_date=period.start_date
+            ).amount,
+        )
+
+    def test_createContracts_lockedPositionIgnoresBidLevel(self):
+        period = GrowingPeriodFactory.create(
+            start_date=get_now(cache={}).date() + datetime.timedelta(days=30)
+        )
+        bidding_round = BiddingRoundFactory.create(
+            growing_period=period,
+            status=BIDDING_ROUND_STATUS_CLOSED,
+            bidding_procedure=BIDDING_ROUND_PROCEDURE_BID_RANGE,
+            bid_levels=2,
+        )
+        round_product_type = BiddingRoundProductTypeFactory.create(round=bidding_round)
+        product = ProductFactory.create(type=round_product_type.product_type)
+        ProductPriceFactory.create(
+            product=product,
+            price=Decimal("50.00"),
+            size=1,
+            valid_from=period.start_date - datetime.timedelta(days=1),
+        )
+        BiddingRoundProductPriceFactory.create(
+            round_product_type=round_product_type, product=product
+        )
+        bid = BidFactory.create(round=bidding_round)
+        BidItemFactory.create(
+            bid=bid,
+            round_product_type=round_product_type,
+            product=product,
+            amount_1=Decimal("70.00"),
+            amount_2=Decimal("90.00"),
+        )
+        other_bid = BidFactory.create(round=bidding_round)
+        BidItemFactory.create(
+            bid=other_bid,
+            round_product_type=round_product_type,
+            product=product,
+            amount_1=Decimal("50.00"),
+            amount_2=Decimal("70.00"),
+        )
+        other_bid.admin_confirmed = get_now(cache={})
+        other_bid.save()
+        BiddingRoundService.lock_average_bid(
+            bidding_round,
+            position=50,
+            surcharge_percent=0,
+            surcharge_on_bids=False,
+            surcharge_on_average=False,
+            cache={},
+        )
+        bid.admin_confirmed = get_now(cache={})
+        bid.save()
+
+        ContractCreator.create_contracts_from_bids(
+            bidding_round, cache={}, actor=bid.member, bid_level=3
+        )
+
+        self.assertEqual(
+            Decimal("10.00"),
+            SolidarityContribution.objects.get(
+                member=bid.member, start_date=period.start_date
+            ).amount,
+        )
