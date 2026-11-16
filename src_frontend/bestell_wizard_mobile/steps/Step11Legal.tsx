@@ -5,7 +5,7 @@ import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardS
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { buildFilteredShoppingCart } from "../../bestell_wizard/utils/buildFilteredShoppingCart.ts";
 import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
-import NextStepButton from "../components/NextStepButton.tsx";
+import NextStepButton from "../../components/mobile_wizard/NextStepButton.tsx";
 import TapirCheckbox from "../components/TapirCheckbox.tsx";
 import { scrollIntoView } from "../utils/scrollIntoView.ts";
 

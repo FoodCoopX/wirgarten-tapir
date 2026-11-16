@@ -8,12 +8,12 @@ import {
 } from "../../bestell_wizard/utils/emailsMatch.ts";
 import { isEmailValid } from "../../bestell_wizard/utils/isEmailValid.ts";
 import { isPhoneNumberValid } from "../../bestell_wizard/utils/isPhoneNumberValid.ts";
+import NextStepButton from "../../components/mobile_wizard/NextStepButton.tsx";
 import TapirHelpButton from "../../components/TapirHelpButton.tsx";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
 import { getCsrfToken } from "../../utils/getCsrfToken.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
-import NextStepButton from "../components/NextStepButton.tsx";
 import PersonalDataFormControl from "../components/PersonalDataFormControl.tsx";
 import TapirCheckbox from "../components/TapirCheckbox.tsx";
 import { isPersonalDataValidShort } from "../utils/isPersonalDataValidShort.ts";
