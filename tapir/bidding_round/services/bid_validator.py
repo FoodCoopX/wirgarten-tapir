@@ -6,6 +6,7 @@ from django.utils.translation import gettext_lazy as _
 from tapir.bidding_round.config import (
     BIDDING_ROUND_MAX_SHARES,
     BIDDING_ROUND_MIN_SHARES,
+    BIDDING_ROUND_PROCEDURE_BID_RANGE,
     BIDDING_ROUND_STATUS_ACTIVE,
 )
 from tapir.bidding_round.models import BiddingRoundProductType
@@ -49,17 +50,29 @@ class BidValidator:
         round_product_type = cls._get_round_product_type(bidding_round, item)
         product = cls._get_product(round_product_type, item)
         quantity = cls._parse_quantity(item.get("quantity"))
-        amount = cls._parse_amount(item.get("amount_1"))
+        amounts = cls._parse_amounts(item)
+        cls._validate_levels(bidding_round, amounts)
+
         min_amount = cls._get_min_amount(round_product_type, product)
-        if min_amount is not None and amount < min_amount:
-            raise ValidationError(
-                _(
-                    "Der Betrag für %(product)s muss mindestens %(min_amount)s € betragen."
+        for amount in amounts.values():
+            if amount is None:
+                continue
+            if amount <= 0:
+                raise ValidationError(_("Der Betrag muss größer als 0 sein."))
+            if min_amount is not None and amount < min_amount:
+                raise ValidationError(
+                    _(
+                        "Der Betrag für %(product)s muss mindestens %(min_amount)s € betragen."
+                    )
+                    % {"product": product.name, "min_amount": min_amount}
                 )
-                % {"product": product.name, "min_amount": min_amount}
-            )
+
         item["quantity"] = quantity
-        item["amount_1"] = amount
+
+        if bidding_round.bidding_procedure == BIDDING_ROUND_PROCEDURE_BID_RANGE:
+            amounts[3] = None
+        for level in (1, 2, 3):
+            item[f"amount_{level}"] = amounts[level]
         item["product_id"] = product.id
         item["round_product_type_id"] = round_product_type.id
         return product.id
@@ -110,13 +123,32 @@ class BidValidator:
         }
 
     @classmethod
-    def _parse_amount(cls, value) -> Decimal:
-        if value in (None, ""):
-            raise ValidationError(_("Bitte gib einen Betrag an."))
-        amount = AmountParser.parse_decimal(value)
-        if not amount.is_finite() or amount <= 0:
-            raise ValidationError(_("Der Betrag muss größer als 0 sein."))
-        return amount
+    def _parse_amounts(cls, item) -> dict:
+        amounts = {}
+        for level in (1, 2, 3):
+            amount = AmountParser.parse_optional(item.get(f"amount_{level}"))
+            if amount is not None and not amount.is_finite():
+                raise ValidationError(_("Bitte gib eine gültige Zahl ein."))
+            amounts[level] = amount
+        return amounts
+
+    @classmethod
+    def _validate_levels(cls, bidding_round, amounts: dict):
+        if bidding_round.bidding_procedure == BIDDING_ROUND_PROCEDURE_BID_RANGE:
+            if amounts[1] is None or amounts[2] is None:
+                raise ValidationError(_("Bitte den Grün- und den Rot-Betrag angeben."))
+            if amounts[3] is not None:
+                raise ValidationError(_("Es wurden zu viele Gebote angegeben."))
+        else:
+            if amounts[1] is None:
+                raise ValidationError(_("Bitte gib einen Betrag an."))
+            if amounts[2] is not None or amounts[3] is not None:
+                raise ValidationError(_("Es wurden zu viele Gebote angegeben."))
+
+        provided = [amounts[level] for level in (1, 2, 3) if amounts[level] is not None]
+        for first, second in zip(provided, provided[1:]):
+            if first > second:
+                raise ValidationError(_("Die Gebote müssen aufsteigend sein."))
 
     @classmethod
     def _get_min_amount(cls, round_product_type, product):

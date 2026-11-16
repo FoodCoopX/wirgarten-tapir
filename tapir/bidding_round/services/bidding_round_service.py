@@ -5,6 +5,8 @@ from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 
 from tapir.bidding_round.config import (
+    BIDDING_ROUND_PROCEDURE_SIMPLE,
+    BIDDING_ROUND_PROCEDURE_BID_RANGE,
     BIDDING_ROUND_STATUS_ACTIVE,
     BIDDING_ROUND_STATUS_CLOSED,
     BIDDING_ROUND_STATUS_CONFIGURATION,
@@ -23,8 +25,21 @@ from tapir.wirgarten.utils import get_now
 
 
 class BiddingRoundService:
-    EDITABLE_FIELDS = ("name", "comment", "start_at", "end_at")
-    SENSITIVE_FIELDS = ("product_type_id", "target_amount_per_year", "prices")
+    EDITABLE_FIELDS = (
+        "name",
+        "comment",
+        "start_at",
+        "end_at",
+        "bidding_procedure",
+        "bid_levels",
+    )
+    SENSITIVE_FIELDS = (
+        "product_type_id",
+        "target_amount_per_year",
+        "prices",
+        "bidding_procedure",
+        "bid_levels",
+    )
 
     @classmethod
     @transaction.atomic
@@ -39,6 +54,8 @@ class BiddingRoundService:
         product_type_id: str | None = None,
         target_amount_per_year=None,
         prices: list[dict] | None = None,
+        bidding_procedure: str = BIDDING_ROUND_PROCEDURE_SIMPLE,
+        bid_levels: int = 1,
     ) -> BiddingRound:
         if end_at is None:
             raise ValidationError(_("Die Beitragsrunde braucht ein Enddatum."))
@@ -46,6 +63,8 @@ class BiddingRoundService:
             raise ValidationError(
                 _("Das Startdatum darf nicht nach dem Enddatum liegen.")
             )
+
+        cls._validate_procedure(bidding_procedure, bid_levels)
 
         if product_type_id is None:
             product_types = cls.get_product_types_with_capacity_for_period(
@@ -61,6 +80,8 @@ class BiddingRoundService:
             start_at=start_at or get_now(cache=cache),
             end_at=end_at,
             comment=comment,
+            bidding_procedure=bidding_procedure,
+            bid_levels=bid_levels,
         )
 
         round_product_type, _created = BiddingRoundProductType.objects.get_or_create(
@@ -71,6 +92,20 @@ class BiddingRoundService:
             cls._save_round_prices(round_product_type, prices)
 
         return bidding_round
+
+    @classmethod
+    def _validate_procedure(cls, bidding_procedure: str, bid_levels: int) -> None:
+        if bidding_procedure not in (
+            BIDDING_ROUND_PROCEDURE_SIMPLE,
+            BIDDING_ROUND_PROCEDURE_BID_RANGE,
+        ):
+            raise ValidationError(_("Unbekanntes Verfahren."))
+        if bid_levels < 1 or bid_levels > 3:
+            raise ValidationError(_("Es sind ein bis drei Gebotsstufen erlaubt."))
+        if bidding_procedure == BIDDING_ROUND_PROCEDURE_BID_RANGE and bid_levels != 2:
+            raise ValidationError(
+                _("Das Verfahren mit Gebotsspanne verwendet immer zwei Gebotsstufen.")
+            )
 
     @classmethod
     def _apply_target_amount_per_year(cls, round_product_type, value) -> None:
@@ -241,6 +276,10 @@ class BiddingRoundService:
                 )
             )
         cls._validate_round_config_change(bidding_round, changes)
+        cls._validate_procedure(
+            changes.get("bidding_procedure", bidding_round.bidding_procedure),
+            changes.get("bid_levels", bidding_round.bid_levels),
+        )
 
         for field in cls.EDITABLE_FIELDS:
             if field in changes:
@@ -400,6 +439,8 @@ class BiddingRoundService:
                         product_id=item["product_id"],
                         quantity=item["quantity"],
                         amount_1=AmountParser.parse_optional(item.get("amount_1")),
+                        amount_2=AmountParser.parse_optional(item.get("amount_2")),
+                        amount_3=AmountParser.parse_optional(item.get("amount_3")),
                     )
                     for item in items
                 ]

@@ -5,10 +5,12 @@ import pytest
 from django.core.exceptions import ValidationError
 
 from tapir.bidding_round.config import (
+    BIDDING_ROUND_PROCEDURE_BID_RANGE,
     BIDDING_ROUND_STATUS_ACTIVE,
     BIDDING_ROUND_STATUS_CLOSED,
 )
 from tapir.bidding_round.models import BiddingRoundCreatedSubscription
+from tapir.bidding_round.services.bidding_round_service import BiddingRoundService
 from tapir.bidding_round.services.contract_creator import ContractCreator
 from tapir.bidding_round.tests.factories import (
     BidFactory,
@@ -25,6 +27,7 @@ from tapir.subscriptions.services.subscription_price_calculator import (
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     GrowingPeriodFactory,
+    MemberFactory,
     ProductFactory,
     ProductPriceFactory,
     SubscriptionFactory,
@@ -197,6 +200,21 @@ class TestContractCreator(TapirIntegrationTest):
             ).exists()
         )
 
+    def test_createContracts_withBidRangeBidAtRed_usesTheRedAmount(self):
+        bidding_round, bid, _product, period = (
+            self._create_closed_bid_range_round_with_bid(Decimal("50.00"))
+        )
+
+        result = ContractCreator.create_contracts_from_bids(
+            bidding_round, cache={}, bid_level=2, actor=bid.member
+        )
+
+        self.assertEqual([], result["errors"])
+        contribution = SolidarityContribution.objects.get(
+            member=bid.member, start_date=period.start_date
+        )
+        self.assertEqual(Decimal("10.00"), contribution.amount)
+
     def _create_closed_round_with_bid(self, bid_amount, standard_price, quantity=1):
         period = GrowingPeriodFactory.create(
             start_date=get_now(cache={}).date() + datetime.timedelta(days=30)
@@ -224,4 +242,46 @@ class TestContractCreator(TapirIntegrationTest):
             quantity=quantity,
             amount_1=bid_amount,
         )
+        return bidding_round, bid, product, period
+
+    def _create_closed_bid_range_round_with_bid(self, standard_price):
+        period = GrowingPeriodFactory.create(
+            start_date=get_now(cache={}).date() + datetime.timedelta(days=30)
+        )
+        bidding_round = BiddingRoundFactory.create(
+            growing_period=period,
+            status=BIDDING_ROUND_STATUS_ACTIVE,
+            bidding_procedure=BIDDING_ROUND_PROCEDURE_BID_RANGE,
+            bid_levels=2,
+            start_at=get_now(cache={}) - datetime.timedelta(hours=1),
+            end_at=get_now(cache={}) + datetime.timedelta(days=1),
+        )
+        round_product_type = BiddingRoundProductTypeFactory.create(round=bidding_round)
+        product = ProductFactory.create(type=round_product_type.product_type)
+        ProductPriceFactory.create(
+            product=product,
+            price=standard_price,
+            size=1,
+            valid_from=period.start_date - datetime.timedelta(days=1),
+        )
+        BiddingRoundProductPriceFactory.create(
+            round_product_type=round_product_type,
+            product=product,
+        )
+        member = MemberFactory.create()
+        bid = BiddingRoundService.save_bid(
+            member,
+            bidding_round,
+            [
+                {
+                    "round_product_type_id": round_product_type.id,
+                    "product_id": product.id,
+                    "quantity": 1,
+                    "amount_1": "70.00",
+                    "amount_2": "90.00",
+                }
+            ],
+            cache={},
+        )
+        BiddingRoundService.close_round(bidding_round, cache={})
         return bidding_round, bid, product, period

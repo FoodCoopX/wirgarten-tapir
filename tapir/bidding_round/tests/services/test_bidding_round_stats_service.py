@@ -1,5 +1,10 @@
 from decimal import Decimal
 
+from tapir.bidding_round.config import (
+    BIDDING_ROUND_PROCEDURE_SIMPLE,
+    BIDDING_ROUND_PROCEDURE_BID_RANGE,
+)
+
 from tapir.bidding_round.services.bidding_round_stats_service import (
     BiddingRoundStatsService,
 )
@@ -85,3 +90,108 @@ class TestBiddingRoundStatsService(TapirIntegrationTest):
             Decimal("0"),
             BiddingRoundStatsService.get_bidder_average_per_month(bidding_round),
         )
+
+    def _create_bid_item(self, bidding_round, **amounts):
+        round_product_type = BiddingRoundProductTypeFactory.create(round=bidding_round)
+        bid = BidFactory.create(round=bidding_round)
+        return BidItemFactory.create(
+            bid=bid, round_product_type=round_product_type, **amounts
+        )
+
+    def test_getAmountForPosition_bidRange_interpolatesBetweenLevels(self):
+        bidding_round = BiddingRoundFactory.create(
+            bidding_procedure=BIDDING_ROUND_PROCEDURE_BID_RANGE, bid_levels=2
+        )
+        item = self._create_bid_item(
+            bidding_round,
+            amount_1=Decimal("70.00"),
+            amount_2=Decimal("90.00"),
+        )
+
+        for position, expected in (
+            (0, Decimal("70.00")),
+            (25, Decimal("75.00")),
+            (50, Decimal("80.00")),
+            (75, Decimal("85.00")),
+            (100, Decimal("90.00")),
+        ):
+            self.assertEqual(
+                expected,
+                BiddingRoundStatsService.get_amount_for_position(
+                    item, position, bidding_round
+                ),
+            )
+
+    def test_getAmountForPosition_bidRangeWithZeroGreen_keepsZero(self):
+        bidding_round = BiddingRoundFactory.create(
+            bidding_procedure=BIDDING_ROUND_PROCEDURE_BID_RANGE, bid_levels=2
+        )
+        item = self._create_bid_item(
+            bidding_round,
+            amount_1=Decimal("0.00"),
+            amount_2=Decimal("90.00"),
+        )
+
+        self.assertEqual(
+            Decimal("0.00"),
+            BiddingRoundStatsService.get_amount_for_position(item, 0, bidding_round),
+        )
+        self.assertEqual(
+            Decimal("45.00"),
+            BiddingRoundStatsService.get_amount_for_position(item, 50, bidding_round),
+        )
+
+    def test_getAmountForPosition_simpleWithoutFurtherLevels_repeatsTheAmount(self):
+        bidding_round = BiddingRoundFactory.create(
+            bidding_procedure=BIDDING_ROUND_PROCEDURE_SIMPLE, bid_levels=1
+        )
+        item = self._create_bid_item(bidding_round, amount_1=Decimal("80.00"))
+
+        for position in (0, 50, 100):
+            self.assertEqual(
+                Decimal("80.00"),
+                BiddingRoundStatsService.get_amount_for_position(
+                    item, position, bidding_round
+                ),
+            )
+
+    def test_clampPosition_invalidValue_fallsBackToMiddle(self):
+        self.assertEqual(
+            Decimal("50"), BiddingRoundStatsService.clamp_position("not-a-number")
+        )
+
+    def test_recommendedLevel_bidRange_returnsSecondLevelAndMiddlePosition(self):
+        bidding_round = BiddingRoundFactory.create(
+            bidding_procedure=BIDDING_ROUND_PROCEDURE_BID_RANGE, bid_levels=2
+        )
+        BiddingRoundProductTypeFactory.create(
+            round=bidding_round, target_amount_per_year=Decimal("1000.00")
+        )
+
+        self.assertEqual(
+            2, BiddingRoundStatsService.get_recommended_level(bidding_round)
+        )
+        self.assertEqual(
+            Decimal("50"), BiddingRoundStatsService.get_default_position(bidding_round)
+        )
+
+    def test_buildLevelsEvaluation_bidRange_includesGreenAndRed(self):
+        bidding_round = BiddingRoundFactory.create(
+            bidding_procedure=BIDDING_ROUND_PROCEDURE_BID_RANGE, bid_levels=2
+        )
+        round_product_type = BiddingRoundProductTypeFactory.create(
+            round=bidding_round, target_amount_per_year=Decimal("1000.00")
+        )
+        bid = BidFactory.create(round=bidding_round)
+        BidItemFactory.create(
+            bid=bid,
+            round_product_type=round_product_type,
+            amount_1=Decimal("60.00"),
+            amount_2=Decimal("120.00"),
+        )
+
+        levels = BiddingRoundStatsService.build_levels_evaluation(bidding_round)
+
+        self.assertEqual({"green", "red"}, set(levels))
+        self.assertEqual("red", levels["green"]["coverage_status"])
+        self.assertEqual("green", levels["red"]["coverage_status"])
