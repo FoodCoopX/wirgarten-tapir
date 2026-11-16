@@ -54,6 +54,17 @@ class TestBiddingRoundFeatureFlagGating(TapirIntegrationTest):
 
         self.assertStatusCode(response, status.HTTP_200_OK)
 
+    def test_urlFlagOff_publicResults_returns404(self):
+        self._set_parameter(ParameterKeys.BIDDING_ROUND_ENABLED, True)
+        self._set_parameter(ParameterKeys.BIDDING_ROUND_URL_ENABLED, False)
+        bidding_round = create_open_round()
+
+        response = self.client.get(
+            reverse("bidding_rounds:public_results", args=[bidding_round.id])
+        )
+
+        self.assertStatusCode(response, status.HTTP_404_NOT_FOUND)
+
     def test_urlFlagOff_memberBid_returns404(self):
         self._set_parameter(ParameterKeys.BIDDING_ROUND_ENABLED, True)
         self._set_parameter(ParameterKeys.BIDDING_ROUND_URL_ENABLED, False)

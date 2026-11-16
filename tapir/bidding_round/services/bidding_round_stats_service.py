@@ -5,6 +5,7 @@ from tapir.bidding_round.models import BidItem, BiddingRoundProductPrice
 from tapir.bidding_round.services.bidding_round_view_service import (
     BiddingRoundViewService,
 )
+from tapir.utils.services.tapir_cache import TapirCache
 
 BID_RANGE_POSITION_MIN = Decimal("0")
 BID_RANGE_POSITION_MAX = Decimal("100")
@@ -211,6 +212,59 @@ class BiddingRoundStatsService:
                 ),
             }
             for level, level_key in level_keys.items()
+        }
+
+    @classmethod
+    def get_capacity_shares(cls, bidding_round, cache) -> Decimal:
+        round_product_type = bidding_round.product_types.first()
+        if round_product_type is None:
+            return Decimal("0")
+        capacity = TapirCache.get_product_type_capacity_at_date(
+            cache=cache,
+            product_type=round_product_type.product_type,
+            reference_date=bidding_round.growing_period.start_date,
+        )
+        if capacity is None or capacity.capacity is None:
+            return Decimal("0")
+        return Decimal(capacity.capacity).quantize(Decimal("0.01"))
+
+    @classmethod
+    def get_current_shares(cls, bidding_round, cache) -> Decimal:
+        total = Decimal("0")
+        for item in cls._items(bidding_round).select_related("product"):
+            total += (
+                cls.get_product_size(item.product, bidding_round, cache) * item.quantity
+            )
+        return total
+
+    @classmethod
+    def get_utilization_percent(cls, capacity, current) -> float:
+        if capacity == 0:
+            return 0.0
+        return float(current / capacity * 100)
+
+    @classmethod
+    def build_public_evaluation(cls, bidding_round, cache) -> dict:
+        position = cls.get_default_position(bidding_round)
+        capacity_shares = cls.get_capacity_shares(bidding_round, cache)
+        current_shares = cls.get_current_shares(bidding_round, cache)
+        return {
+            "bidding_procedure": bidding_round.bidding_procedure,
+            "bid_levels": bidding_round.bid_levels,
+            "recommended_level": cls.get_recommended_level(bidding_round),
+            "bid_range_position": float(position),
+            "coverage_status": cls.get_coverage_status(bidding_round, position),
+            "target_per_year": str(cls.get_target_per_year(bidding_round)),
+            "capacity_shares": str(capacity_shares),
+            "current_shares": str(current_shares),
+            "utilization_percent": cls.get_utilization_percent(
+                capacity_shares, current_shares
+            ),
+            "coverage_percent": cls.get_coverage_percent(bidding_round, position),
+            "bidder_average_per_month": str(
+                cls.get_bidder_average_per_month(bidding_round, position)
+            ),
+            "levels": cls.build_levels_evaluation(bidding_round),
         }
 
     @classmethod

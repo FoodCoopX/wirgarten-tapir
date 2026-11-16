@@ -43,19 +43,37 @@ export interface RoundResultsResponse {
    * @type {number}
    * @memberof RoundResultsResponse
    */
-  bidRangePosition: number;
+  recommendedLevel: number;
   /**
    *
    * @type {number}
    * @memberof RoundResultsResponse
    */
-  recommendedLevel: number;
+  bidRangePosition: number;
   /**
    *
    * @type {string}
    * @memberof RoundResultsResponse
    */
   coverageStatus: string;
+  /**
+   *
+   * @type {string}
+   * @memberof RoundResultsResponse
+   */
+  targetPerYear: string;
+  /**
+   *
+   * @type {number}
+   * @memberof RoundResultsResponse
+   */
+  coveragePercent: number;
+  /**
+   *
+   * @type {string}
+   * @memberof RoundResultsResponse
+   */
+  bidderAveragePerMonth: string;
   /**
    *
    * @type {EvaluationLevels}
@@ -67,31 +85,13 @@ export interface RoundResultsResponse {
    * @type {string}
    * @memberof RoundResultsResponse
    */
-  targetPerYear: string;
-  /**
-   *
-   * @type {string}
-   * @memberof RoundResultsResponse
-   */
   reachedPerYear: string;
   /**
    *
    * @type {number}
    * @memberof RoundResultsResponse
    */
-  coveragePercent: number;
-  /**
-   *
-   * @type {number}
-   * @memberof RoundResultsResponse
-   */
   bidderCount: number;
-  /**
-   *
-   * @type {string}
-   * @memberof RoundResultsResponse
-   */
-  bidderAveragePerMonth: string;
   /**
    *
    * @type {Array<RoundStatsBid>}
@@ -109,25 +109,25 @@ export function instanceOfRoundResultsResponse(
   if (!("biddingProcedure" in value) || value["biddingProcedure"] === undefined)
     return false;
   if (!("bidLevels" in value) || value["bidLevels"] === undefined) return false;
-  if (!("bidRangePosition" in value) || value["bidRangePosition"] === undefined)
-    return false;
   if (!("recommendedLevel" in value) || value["recommendedLevel"] === undefined)
+    return false;
+  if (!("bidRangePosition" in value) || value["bidRangePosition"] === undefined)
     return false;
   if (!("coverageStatus" in value) || value["coverageStatus"] === undefined)
     return false;
-  if (!("levels" in value) || value["levels"] === undefined) return false;
   if (!("targetPerYear" in value) || value["targetPerYear"] === undefined)
     return false;
-  if (!("reachedPerYear" in value) || value["reachedPerYear"] === undefined)
-    return false;
   if (!("coveragePercent" in value) || value["coveragePercent"] === undefined)
-    return false;
-  if (!("bidderCount" in value) || value["bidderCount"] === undefined)
     return false;
   if (
     !("bidderAveragePerMonth" in value) ||
     value["bidderAveragePerMonth"] === undefined
   )
+    return false;
+  if (!("levels" in value) || value["levels"] === undefined) return false;
+  if (!("reachedPerYear" in value) || value["reachedPerYear"] === undefined)
+    return false;
+  if (!("bidderCount" in value) || value["bidderCount"] === undefined)
     return false;
   if (!("bids" in value) || value["bids"] === undefined) return false;
   return true;
@@ -147,15 +147,15 @@ export function RoundResultsResponseFromJSONTyped(
   return {
     biddingProcedure: json["bidding_procedure"],
     bidLevels: json["bid_levels"],
-    bidRangePosition: json["bid_range_position"],
     recommendedLevel: json["recommended_level"],
+    bidRangePosition: json["bid_range_position"],
     coverageStatus: json["coverage_status"],
-    levels: EvaluationLevelsFromJSON(json["levels"]),
     targetPerYear: json["target_per_year"],
-    reachedPerYear: json["reached_per_year"],
     coveragePercent: json["coverage_percent"],
-    bidderCount: json["bidder_count"],
     bidderAveragePerMonth: json["bidder_average_per_month"],
+    levels: EvaluationLevelsFromJSON(json["levels"]),
+    reachedPerYear: json["reached_per_year"],
+    bidderCount: json["bidder_count"],
     bids: (json["bids"] as Array<any>).map(RoundStatsBidFromJSON),
   };
 }
@@ -175,15 +175,15 @@ export function RoundResultsResponseToJSONTyped(
   return {
     bidding_procedure: value["biddingProcedure"],
     bid_levels: value["bidLevels"],
-    bid_range_position: value["bidRangePosition"],
     recommended_level: value["recommendedLevel"],
+    bid_range_position: value["bidRangePosition"],
     coverage_status: value["coverageStatus"],
-    levels: EvaluationLevelsToJSON(value["levels"]),
     target_per_year: value["targetPerYear"],
-    reached_per_year: value["reachedPerYear"],
     coverage_percent: value["coveragePercent"],
-    bidder_count: value["bidderCount"],
     bidder_average_per_month: value["bidderAveragePerMonth"],
+    levels: EvaluationLevelsToJSON(value["levels"]),
+    reached_per_year: value["reachedPerYear"],
+    bidder_count: value["bidderCount"],
     bids: (value["bids"] as Array<any>).map(RoundStatsBidToJSON),
   };
 }

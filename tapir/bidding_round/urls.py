@@ -45,6 +45,11 @@ urlpatterns = [
         name="round_reopen",
     ),
     path(
+        "api/<str:round_id>/public_results",
+        views.PublicResultsView.as_view(),
+        name="public_results",
+    ),
+    path(
         "api/<str:round_id>/results",
         views.RoundResultsView.as_view(),
         name="round_results",
