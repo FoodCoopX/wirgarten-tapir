@@ -33,7 +33,12 @@ const BiddingRoundSummaryStep: React.FC<BiddingRoundSummaryStepProps> = ({
 }) => {
   const levelLabels = isBidRange
     ? [texts.bid.greenLabel, texts.bid.redLabel]
-    : [texts.bid.amountLabel];
+    : requiredAmountLevels === 1
+      ? [texts.bid.amountLabel]
+      : Array.from(
+          { length: requiredAmountLevels },
+          (_, index) => `Stufe ${index + 1}`,
+        );
 
   const levelRows = Array.from({ length: requiredAmountLevels }, (_, index) => {
     const amount = parseEuroAmount(amounts[index]);
@@ -66,6 +71,7 @@ const BiddingRoundSummaryStep: React.FC<BiddingRoundSummaryStepProps> = ({
                 label={row.label}
                 amount={row.amount}
                 unit={texts.bid.monthlyUnit}
+                hint={quantity > 1 ? "pro Anteil" : undefined}
                 strong
               />
               {row.monthlyTotal !== null && quantity > 1 && (

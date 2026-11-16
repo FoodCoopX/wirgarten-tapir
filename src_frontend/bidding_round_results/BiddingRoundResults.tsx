@@ -28,6 +28,7 @@ interface BiddingRoundResultsProps {
 }
 
 const BID_RANGE_PROCEDURE = "bid_range";
+const LEVEL_KEYS = ["green", "yellow", "red"] as const;
 const COVERAGE_STATUS_LABELS: Record<string, string> = {
   green: "Grün",
   yellow: "Gelb",
@@ -52,24 +53,26 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
   const roundId = getRoundIdFromPath();
   const [round, setRound] = useState<Round | null>(null);
   const [results, setResults] = useState<RoundResultsResponse | null>(null);
+  const [selectedLevel, setSelectedLevel] = useState(1);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
-  const [selectedLevel, setSelectedLevel] = useState(2);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
 
   useEffect(() => {
     void load();
   }, []);
 
-  async function load() {
+  async function load(position?: number) {
     try {
       const [loadedRound, loadedResults] = await Promise.all([
         api.biddingRoundsApiRetrieve({ roundId }),
-        api.biddingRoundsApiResultsRetrieve({ roundId }),
+        api.biddingRoundsApiResultsRetrieve({ roundId, position }),
       ]);
       setRound(loadedRound);
       setResults(loadedResults);
-      setSelectedLevel(loadedResults.recommendedLevel);
+      if (position === undefined) {
+        setSelectedLevel(loadedResults.recommendedLevel);
+      }
     } catch (error) {
       await handleRequestError(
         error,
@@ -79,6 +82,11 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
     } finally {
       setLoading(false);
     }
+  }
+
+  function selectLevel(level: number) {
+    setSelectedLevel(level);
+    load((level - 1) * 50);
   }
 
   async function runAction(action: () => Promise<unknown>, message: string) {
@@ -93,7 +101,7 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
         },
         setToastDatas,
       );
-      await load();
+      await load((selectedLevel - 1) * 50);
     } catch (error) {
       await handleRequestError(
         error,
@@ -123,8 +131,23 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
     );
   }
 
-  const coverage = Math.min(Math.round(results.coveragePercent), 100);
   const isBidRange = results.biddingProcedure === BID_RANGE_PROCEDURE;
+  const levelCount = isBidRange
+    ? 2
+    : Math.min(Math.max(results.bidLevels, 1), 3);
+  const levelKeys: Array<"green" | "yellow" | "red"> = isBidRange
+    ? ["green", "red"]
+    : [...LEVEL_KEYS].slice(0, levelCount);
+  const levelLabels = isBidRange
+    ? ["Grün", "Rot"]
+    : ["Stufe 1", "Stufe 2", "Stufe 3"].slice(0, levelCount);
+  const selectedLevelData =
+    results.levels[levelKeys[selectedLevel - 1]] ?? results.levels.green;
+  const coverage = selectedLevelData.coveragePercent;
+  const coverageStatus = selectedLevelData.coverageStatus;
+  const coverageStatusLabel =
+    COVERAGE_STATUS_LABELS[coverageStatus] ?? coverageStatus;
+  const selectedLevelLabel = levelLabels[selectedLevel - 1];
 
   return (
     <Container fluid className={"py-4"}>
@@ -135,9 +158,14 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
 
       <div className={"d-flex justify-content-between align-items-center mb-4"}>
         <h1 className={"mb-0"}>{round.name}</h1>
-        <Badge bg={round.status === "active" ? "success" : "secondary"}>
-          {round.status}
-        </Badge>
+        <div>
+          <Badge bg={"secondary"} className={"me-2"}>
+            {isBidRange ? "Gebotsspanne" : `Einfach, ${levelCount} Stufe(n)`}
+          </Badge>
+          <Badge bg={round.status === "active" ? "success" : "secondary"}>
+            {round.status}
+          </Badge>
+        </div>
       </div>
 
       <Row className={"g-3 mb-4"}>
@@ -154,9 +182,11 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
         <Col md={4}>
           <Card className={"h-100"}>
             <Card.Body>
-              <div className={"text-muted"}>Erreicht pro Jahr</div>
+              <div className={"text-muted"}>
+                Erreicht pro Jahr ({selectedLevelLabel})
+              </div>
               <div className={"fs-4"}>
-                {formatCurrency(Number(results.reachedPerYear))}
+                {formatCurrency(Number(selectedLevelData.reachedPerYear))}
               </div>
             </Card.Body>
           </Card>
@@ -167,8 +197,11 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
               <div className={"text-muted"}>Bietende</div>
               <div className={"fs-4"}>{results.bidderCount}</div>
               <div className={"text-muted small"}>
-                Ø {formatCurrency(Number(results.bidderAveragePerMonth))} /
-                Monat
+                Ø{" "}
+                {formatCurrency(
+                  Number(selectedLevelData.bidderAveragePerMonth),
+                )}{" "}
+                / Monat
               </div>
             </Card.Body>
           </Card>
@@ -178,60 +211,75 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
       <Card className={"mb-4"}>
         <Card.Body>
           <div className={"d-flex justify-content-between mb-1"}>
-            <span>Deckung</span>
-            <strong>{results.coveragePercent.toFixed(1)} %</strong>
+            <span>Deckung bei {selectedLevelLabel}</span>
+            <strong>
+              {coverage.toFixed(1)} %{" "}
+              <Badge
+                bg={COVERAGE_STATUS_VARIANTS[coverageStatus] ?? "secondary"}
+              >
+                {coverageStatusLabel}
+              </Badge>
+            </strong>
           </div>
           <ProgressBar
-            now={coverage}
-            variant={
-              COVERAGE_STATUS_VARIANTS[results.coverageStatus] ?? "secondary"
-            }
+            now={Math.min(coverage, 100)}
+            variant={COVERAGE_STATUS_VARIANTS[coverageStatus] ?? "secondary"}
           />
         </Card.Body>
       </Card>
 
-      {isBidRange && (
+      {levelCount > 1 && (
         <Card className={"mb-4"}>
           <Card.Header>
-            <strong>Gebotsstufen</strong>
-            <Badge
-              bg={
-                COVERAGE_STATUS_VARIANTS[results.coverageStatus] ?? "secondary"
-              }
-              className={"ms-2"}
-            >
-              {COVERAGE_STATUS_LABELS[results.coverageStatus] ??
-                results.coverageStatus}
-            </Badge>
+            <strong>Projektion je Stufe</strong>
           </Card.Header>
-          <Card.Body className={"p-0"}>
-            <Table responsive size={"sm"} className={"mb-0"}>
-              <thead>
-                <tr>
-                  <th>Stufe</th>
-                  <th>Erreicht pro Jahr</th>
-                  <th>Deckung</th>
-                  <th>Bietende Ø / Monat</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(
-                  [
-                    ["green", "Grün", results.levels.green],
-                    ["red", "Rot", results.levels.red],
-                  ] as const
-                ).map(([key, label, level]) => (
-                  <tr key={key}>
-                    <td>{label}</td>
-                    <td>{formatCurrency(Number(level.reachedPerYear))}</td>
-                    <td>{level.coveragePercent.toFixed(1)} %</td>
-                    <td>
-                      {formatCurrency(Number(level.bidderAveragePerMonth))}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
+          <Card.Body>
+            <Row className={"g-3"}>
+              {levelLabels.map((label, index) => {
+                const level = results.levels[levelKeys[index]];
+                if (!level) {
+                  return null;
+                }
+                const levelStatus = level.coverageStatus;
+                return (
+                  <Col md={4} key={label}>
+                    <Card
+                      className={
+                        selectedLevel === index + 1
+                          ? "border-dark h-100"
+                          : "h-100"
+                      }
+                      role={"button"}
+                      onClick={() => selectLevel(index + 1)}
+                    >
+                      <Card.Body>
+                        <div className={"d-flex justify-content-between"}>
+                          <strong>{label}</strong>
+                          {results.recommendedLevel === index + 1 && (
+                            <Badge bg={"dark"}>Empfohlen</Badge>
+                          )}
+                        </div>
+                        <div className={"fs-4 mt-2"}>
+                          {level.coveragePercent.toFixed(1)} %
+                        </div>
+                        <div className={"text-muted small"}>
+                          {formatCurrency(Number(level.reachedPerYear))} pro
+                          Jahr
+                        </div>
+                        <Badge
+                          bg={
+                            COVERAGE_STATUS_VARIANTS[levelStatus] ?? "secondary"
+                          }
+                          className={"mt-2"}
+                        >
+                          {COVERAGE_STATUS_LABELS[levelStatus] ?? levelStatus}
+                        </Badge>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                );
+              })}
+            </Row>
           </Card.Body>
         </Card>
       )}
@@ -252,25 +300,42 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
                   <th>Mitglied</th>
                   <th>E-Mail</th>
                   <th>Anteile</th>
+                  {levelLabels.map((label) => (
+                    <th key={label}>{label}</th>
+                  ))}
                   <th>Beitrag / Monat</th>
                   <th>Beitrag / Jahr</th>
                 </tr>
               </thead>
               <tbody>
-                {results.bids.map((bid) => (
-                  <tr key={bid.bidId}>
-                    <td>{bid.memberName}</td>
-                    <td>{bid.email}</td>
-                    <td>
-                      {bid.items.reduce(
-                        (total, item) => total + item.quantity,
-                        0,
-                      )}
-                    </td>
-                    <td>{formatCurrency(Number(bid.amountPerMonth))}</td>
-                    <td>{formatCurrency(Number(bid.amountPerYear))}</td>
-                  </tr>
-                ))}
+                {results.bids.map((bid) => {
+                  const amounts = [
+                    bid.items[0]?.amount1,
+                    bid.items[0]?.amount2,
+                    bid.items[0]?.amount3,
+                  ];
+                  return (
+                    <tr key={bid.bidId}>
+                      <td>{bid.memberName}</td>
+                      <td>{bid.email}</td>
+                      <td>
+                        {bid.items.reduce(
+                          (total, item) => total + item.quantity,
+                          0,
+                        )}
+                      </td>
+                      {levelLabels.map((label, index) => (
+                        <td key={label}>
+                          {amounts[index]
+                            ? formatCurrency(Number(amounts[index]))
+                            : "–"}
+                        </td>
+                      ))}
+                      <td>{formatCurrency(Number(bid.amountPerMonth))}</td>
+                      <td>{formatCurrency(Number(bid.amountPerYear))}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </Table>
           )}
@@ -296,21 +361,24 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
             </Alert>
           ) : (
             <>
-              {isBidRange && (
+              {levelCount > 1 && (
                 <Form.Group className={"mb-3"}>
                   <Form.Label>Gebotsstufe für die Verträge</Form.Label>
                   <Form.Select
                     value={String(selectedLevel)}
                     onChange={(event) =>
-                      setSelectedLevel(Number(event.target.value))
+                      selectLevel(Number(event.target.value))
                     }
                   >
-                    <option value={"1"}>Grün (Wunsch)</option>
-                    <option value={"2"}>Rot (Schmerzgrenze)</option>
+                    {levelLabels.map((label, index) => (
+                      <option key={label} value={String(index + 1)}>
+                        {label}
+                      </option>
+                    ))}
                   </Form.Select>
                   <Form.Text className={"text-muted"}>
                     Empfohlen: Stufe {results.recommendedLevel} bei{" "}
-                    {results.coveragePercent.toFixed(1)} % Deckung.
+                    {coverage.toFixed(1)} % Deckung.
                   </Form.Text>
                 </Form.Group>
               )}
@@ -322,9 +390,8 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
                     () =>
                       api.biddingRoundsApiCreateContractsCreate({
                         roundId,
-                        createContractsRequest: isBidRange
-                          ? { bidLevel: selectedLevel }
-                          : {},
+                        createContractsRequest:
+                          levelCount > 1 ? { bidLevel: selectedLevel } : {},
                       }),
                     "Verträge erstellt",
                   )

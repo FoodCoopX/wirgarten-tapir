@@ -217,8 +217,93 @@ class TestBidValidator(TapirIntegrationTest):
                 cache={},
             )
 
-    def test_validate_simple_givenSecondAmount_raisesValidationError(self):
-        round_product_type, product = self._create_active_round_with_price()
+    def test_validate_simpleWithOneLevel_rejectsSecondAmount(self):
+        round_product_type, product = self._create_active_round_with_price(bid_levels=1)
+
+        with pytest.raises(ValidationError):
+            BidValidator.validate(
+                round_product_type.round,
+                [
+                    {
+                        "round_product_type_id": round_product_type.id,
+                        "product_id": product.id,
+                        "amount_1": "80.00",
+                        "amount_2": "90.00",
+                    }
+                ],
+                cache={},
+            )
+
+    def test_validate_simpleWithTwoLevels_requiresBothAmounts(self):
+        round_product_type, product = self._create_active_round_with_price(bid_levels=2)
+
+        with pytest.raises(ValidationError):
+            BidValidator.validate(
+                round_product_type.round,
+                [
+                    {
+                        "round_product_type_id": round_product_type.id,
+                        "product_id": product.id,
+                        "amount_1": "80.00",
+                    }
+                ],
+                cache={},
+            )
+
+    def test_validate_simpleWithTwoLevels_acceptsAscendingAmounts(self):
+        round_product_type, product = self._create_active_round_with_price(bid_levels=2)
+
+        BidValidator.validate(
+            round_product_type.round,
+            [
+                {
+                    "round_product_type_id": round_product_type.id,
+                    "product_id": product.id,
+                    "amount_1": "80.00",
+                    "amount_2": "90.00",
+                }
+            ],
+            cache={},
+        )
+
+    def test_validate_simpleWithTwoLevels_rejectsThirdAmount(self):
+        round_product_type, product = self._create_active_round_with_price(bid_levels=2)
+
+        with pytest.raises(ValidationError):
+            BidValidator.validate(
+                round_product_type.round,
+                [
+                    {
+                        "round_product_type_id": round_product_type.id,
+                        "product_id": product.id,
+                        "amount_1": "80.00",
+                        "amount_2": "90.00",
+                        "amount_3": "100.00",
+                    }
+                ],
+                cache={},
+            )
+
+    def test_validate_simpleWithThreeLevels_rejectsDescendingAmounts(self):
+        round_product_type, product = self._create_active_round_with_price(bid_levels=3)
+
+        with pytest.raises(ValidationError):
+            BidValidator.validate(
+                round_product_type.round,
+                [
+                    {
+                        "round_product_type_id": round_product_type.id,
+                        "product_id": product.id,
+                        "amount_1": "90.00",
+                        "amount_2": "80.00",
+                        "amount_3": "100.00",
+                    }
+                ],
+                cache={},
+            )
+
+    def test_validate_simpleWithThreeLevels_requiresThirdAmount(self):
+        round_product_type, product = self._create_active_round_with_price(bid_levels=3)
 
         with pytest.raises(ValidationError):
             BidValidator.validate(

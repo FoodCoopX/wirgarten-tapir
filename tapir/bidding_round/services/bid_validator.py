@@ -140,10 +140,13 @@ class BidValidator:
             if amounts[3] is not None:
                 raise ValidationError(_("Es wurden zu viele Gebote angegeben."))
         else:
-            if amounts[1] is None:
-                raise ValidationError(_("Bitte gib einen Betrag an."))
-            if amounts[2] is not None or amounts[3] is not None:
-                raise ValidationError(_("Es wurden zu viele Gebote angegeben."))
+            required_levels = max(1, min(3, bidding_round.bid_levels))
+            for level in range(1, required_levels + 1):
+                if amounts[level] is None:
+                    raise ValidationError(_("Bitte alle Gebote angeben."))
+            for level in range(required_levels + 1, 4):
+                if amounts[level] is not None:
+                    raise ValidationError(_("Es wurden zu viele Gebote angegeben."))
 
         provided = [amounts[level] for level in (1, 2, 3) if amounts[level] is not None]
         for first, second in zip(provided, provided[1:]):

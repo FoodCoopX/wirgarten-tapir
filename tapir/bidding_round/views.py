@@ -391,7 +391,17 @@ class RoundReopenView(BiddingRoundFeatureFlagMixin, APIView):
 class RoundResultsView(BiddingRoundFeatureFlagMixin, APIView):
     permission_classes = [BiddingRoundManagePermission]
 
-    @extend_schema(responses={200: RoundResultsResponseSerializer})
+    @extend_schema(
+        responses={200: RoundResultsResponseSerializer},
+        parameters=[
+            OpenApiParameter(
+                name="position",
+                type=float,
+                required=False,
+                location=OpenApiParameter.QUERY,
+            )
+        ],
+    )
     def get(self, request, round_id):
         cache = {}
         bidding_round = get_object_or_404(BiddingRound, id=round_id)

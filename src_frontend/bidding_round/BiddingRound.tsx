@@ -89,7 +89,11 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({ csrfToken }) => {
   const hasActiveRound = Boolean(data?.round) && data?.roundStatus === "active";
   const biddingProcedure = data?.round?.biddingProcedure ?? "simple";
   const isBidRange = biddingProcedure === BID_RANGE_PROCEDURE;
-  const requiredAmountLevels = isBidRange ? 2 : 1;
+  const configuredLevels = Math.min(
+    Math.max(data?.round?.bidLevels ?? 1, 1),
+    3,
+  );
+  const requiredAmountLevels = isBidRange ? 2 : configuredLevels;
 
   useEffect(() => {
     void load();
@@ -228,11 +232,19 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({ csrfToken }) => {
         );
         return;
       }
-    } else if (parseEuroAmount(amounts[0]) === null) {
+    } else if (
+      Array.from(
+        { length: requiredAmountLevels },
+        (_, index) => amounts[index],
+      ).some((value) => parseEuroAmount(value) === null)
+    ) {
       addToast(
         {
           title: "Bitte prüfe dein Gebot.",
-          message: "Bitte gib einen Betrag an.",
+          message:
+            requiredAmountLevels === 1
+              ? "Bitte gib einen Betrag an."
+              : "Bitte gib alle Gebote an.",
           variant: "danger",
           id: crypto.randomUUID(),
         },
@@ -320,11 +332,13 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({ csrfToken }) => {
     setQuantity(variant.currentQuantity ?? 1);
     const reference = Number(variant.referenceValue ?? 0);
     if (reference > 0) {
-      setAmounts([
-        String(reference),
-        isBidRange ? String(reference * 1.1) : "",
-        "",
-      ]);
+      const next = ["", "", ""];
+      for (let index = 0; index < requiredAmountLevels; index++) {
+        next[index] = String(
+          Number((reference * (1 + index * 0.1)).toFixed(2)),
+        );
+      }
+      setAmounts(next);
     }
   }
 
