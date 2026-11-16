@@ -26,12 +26,6 @@ export interface CreateContractsRequest {
   bidIds?: Array<string>;
   /**
    *
-   * @type {number}
-   * @memberof CreateContractsRequest
-   */
-  bidLevel?: number;
-  /**
-   *
    * @type {boolean}
    * @memberof CreateContractsRequest
    */
@@ -68,7 +62,6 @@ export function CreateContractsRequestFromJSONTyped(
   }
   return {
     bidIds: json["bid_ids"] == null ? undefined : json["bid_ids"],
-    bidLevel: json["bid_level"] == null ? undefined : json["bid_level"],
     createAutoRenewedContracts:
       json["create_auto_renewed_contracts"] == null
         ? undefined
@@ -96,7 +89,6 @@ export function CreateContractsRequestToJSONTyped(
 
   return {
     bid_ids: value["bidIds"],
-    bid_level: value["bidLevel"],
     create_auto_renewed_contracts: value["createAutoRenewedContracts"],
     auto_renewed_member_ids: value["autoRenewedMemberIds"],
   };

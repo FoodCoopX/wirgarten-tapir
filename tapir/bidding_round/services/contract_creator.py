@@ -9,12 +9,16 @@ from tapir.bidding_round.config import BIDDING_ROUND_STATUS_CLOSED
 from tapir.bidding_round.models import (
     BiddingRound,
     BiddingRoundCreatedSubscription,
+    BiddingRoundMemberEffect,
 )
 from tapir.bidding_round.services.bidding_round_stats_service import (
     BiddingRoundStatsService,
 )
 from tapir.bidding_round.services.non_bidder_contribution_service import (
     NonBidderContributionService,
+)
+from tapir.bidding_round.services.round_member_effect_service import (
+    RoundMemberEffectService,
 )
 from tapir.payments.services.mandate_reference_provider import (
     MandateReferenceProvider,
@@ -42,10 +46,8 @@ class ContractCreator:
             raise ValidationError(
                 _("Verträge können erst nach Ende der Beitragsrunde erstellt werden.")
             )
-        if bidding_round.contracts_created_at is not None:
-            raise ValidationError(
-                _("Für diese Beitragsrunde wurden bereits Verträge erstellt.")
-            )
+        # Applied members are skipped individually; the round can be re-run for
+        # the members whose effect was reverted.
         other_round_with_contracts = BiddingRound.objects.filter(
             growing_period=bidding_round.growing_period,
             contracts_created_at__isnull=False,
@@ -70,7 +72,6 @@ class ContractCreator:
         cache,
         bid_ids=None,
         actor=None,
-        bid_level=None,
         create_auto_renewed_contracts=False,
         auto_renewed_member_ids=None,
     ):
@@ -81,6 +82,12 @@ class ContractCreator:
             selected_ids = {str(bid_id) for bid_id in bid_ids}
             bids = [bid for bid in bids if str(bid.id) in selected_ids]
 
+        bids = [
+            bid
+            for bid in bids
+            if RoundMemberEffectService.applied_effect(bidding_round, bid.member)
+            is None
+        ]
         unconfirmed_bids = [bid for bid in bids if bid.admin_confirmed is None]
         if unconfirmed_bids:
             raise ValidationError(
@@ -95,19 +102,8 @@ class ContractCreator:
         if capacity_errors:
             raise ValidationError(" ".join(capacity_errors))
 
-        is_locked = bidding_round.average_bid_locked_at is not None
-        if (
-            bid_level is not None
-            and not is_locked
-            and bid_level not in range(1, (bidding_round.bid_levels or 1) + 1)
-        ):
-            raise ValidationError(_("Unbekannte Gebotsstufe."))
-        position = (
-            BiddingRoundStatsService.get_level_position(bid_level, bidding_round)
-            if bid_level is not None and not is_locked
-            else BiddingRoundStatsService.get_default_position(
-                bidding_round, cache=cache
-            )
+        position = BiddingRoundStatsService.get_default_position(
+            bidding_round, cache=cache
         )
 
         errors = []
@@ -116,12 +112,8 @@ class ContractCreator:
             try:
                 with transaction.atomic():
                     created_subscriptions.extend(
-                        cls._create_contracts_for_bid(
-                            bid,
-                            bidding_round,
-                            actor=actor,
-                            cache=cache,
-                            position=position,
+                        cls.apply_bid_contracts(
+                            bidding_round, bid, position, actor, cache
                         )
                     )
             except ValidationError as error:
@@ -134,21 +126,28 @@ class ContractCreator:
                     }
                 )
 
+        handled_member_ids = set()
         if create_auto_renewed_contracts:
             created_subscriptions.extend(
                 cls._create_auto_renewed_contracts(
                     bidding_round,
                     cache=cache,
                     member_ids=auto_renewed_member_ids,
+                    actor=actor,
+                    handled_member_ids=handled_member_ids,
                 )
             )
 
         if created_subscriptions:
             NonBidderContributionService.apply_non_bidder_contributions(
-                bidding_round, actor=actor, cache=cache
+                bidding_round,
+                actor=actor,
+                cache=cache,
+                exclude_member_ids=handled_member_ids,
             )
-            bidding_round.contracts_created_at = get_now(cache=cache)
-            bidding_round.save(update_fields=["contracts_created_at", "updated_at"])
+            if bidding_round.contracts_created_at is None:
+                bidding_round.contracts_created_at = get_now(cache=cache)
+                bidding_round.save(update_fields=["contracts_created_at", "updated_at"])
 
         logger.info(
             "Bidding round %s contract creation by %s: %s subscriptions created, %s errors",
@@ -171,6 +170,12 @@ class ContractCreator:
         if bid_ids:
             selected_ids = {str(bid_id) for bid_id in bid_ids}
             bids = [bid for bid in bids if str(bid.id) in selected_ids]
+        bids = [
+            bid
+            for bid in bids
+            if RoundMemberEffectService.applied_effect(bidding_round, bid.member)
+            is None
+        ]
 
         capacity_errors = BiddingRoundStatsService.get_capacity_exceeded_errors(
             bidding_round, cache
@@ -217,7 +222,12 @@ class ContractCreator:
 
     @classmethod
     def _create_auto_renewed_contracts(
-        cls, bidding_round, cache, member_ids=None
+        cls,
+        bidding_round,
+        cache,
+        member_ids=None,
+        actor=None,
+        handled_member_ids=None,
     ) -> list:
         context = cls._build_auto_renewal_context(bidding_round, member_ids, cache)
         if context is None:
@@ -234,11 +244,14 @@ class ContractCreator:
                 bidding_round,
             ):
                 continue
-            renewed_subscription = cls._create_renewed_subscription(
-                subscription, bidding_round, cache
+            renewed_subscription = cls.apply_auto_renewed_contract(
+                bidding_round, subscription, actor, cache
             )
-            if renewed_subscription is not None:
-                created.append(renewed_subscription)
+            if renewed_subscription is None:
+                continue
+            created.append(renewed_subscription)
+            if handled_member_ids is not None:
+                handled_member_ids.add(subscription.member_id)
         return created
 
     @classmethod
@@ -292,31 +305,102 @@ class ContractCreator:
         ).exists()
 
     @classmethod
-    def _create_renewed_subscription(cls, subscription, bidding_round, cache):
+    def apply_bid_contracts(cls, bidding_round, bid, position, actor, cache):
+        if (
+            RoundMemberEffectService.applied_effect(bidding_round, bid.member)
+            is not None
+        ):
+            return []
+
+        with RoundMemberEffectService.track(
+            bidding_round,
+            bid.member,
+            BiddingRoundMemberEffect.Source.BID,
+            actor,
+            cache,
+            always_record=True,
+        ):
+            new_subscriptions = cls._materialize_bid_subscriptions(
+                bid, bidding_round, cache
+            )
+            cls._assign_solidarity_contribution(
+                bid,
+                new_subscriptions,
+                bidding_round.growing_period,
+                actor,
+                cache,
+                position,
+                bidding_round,
+            )
+        return new_subscriptions
+
+    @classmethod
+    def apply_auto_renewed_contract(
+        cls, bidding_round, previous_subscription, actor, cache
+    ):
+        member = previous_subscription.member
+        if RoundMemberEffectService.applied_effect(bidding_round, member) is not None:
+            return None
+
         renewed_subscription = (
             AutomaticSubscriptionRenewalService.build_renewed_subscription(
-                subscription, cache=cache
+                previous_subscription, cache=cache
             )
         )
         if renewed_subscription.period_id != bidding_round.growing_period_id:
             return None
-        if subscription.price_override == 0:
-            renewed_subscription.price_override = Decimal("0")
-        else:
-            renewed_subscription.price_override = None
-        renewed_subscription.price_mode = (
-            Subscription.PriceMode.BIDDING_ROUND_AUTO_RENEWED
-        )
-        renewed_subscription.save()
-        BiddingRoundCreatedSubscription.objects.create(
-            round=bidding_round,
-            subscription=renewed_subscription,
-            is_bidder_contract=False,
-        )
+
+        with RoundMemberEffectService.track(
+            bidding_round,
+            member,
+            BiddingRoundMemberEffect.Source.AUTO_RENEWED,
+            actor,
+            cache,
+            always_record=True,
+        ):
+            if previous_subscription.price_override == 0:
+                renewed_subscription.price_override = Decimal("0")
+            else:
+                renewed_subscription.price_override = None
+            renewed_subscription.price_mode = (
+                Subscription.PriceMode.BIDDING_ROUND_AUTO_RENEWED
+            )
+            renewed_subscription.save()
+            BiddingRoundCreatedSubscription.objects.create(
+                round=bidding_round,
+                subscription=renewed_subscription,
+                is_bidder_contract=False,
+            )
+            NonBidderContributionService.apply_floor_to_member(
+                member=member,
+                bidding_round=bidding_round,
+                actor=actor,
+                cache=cache,
+            )
         return renewed_subscription
 
     @classmethod
-    def _create_contracts_for_bid(cls, bid, bidding_round, actor, cache, position):
+    def apply_non_bidder_floor(cls, bidding_round, member, actor, cache) -> bool:
+        if RoundMemberEffectService.applied_effect(bidding_round, member) is not None:
+            return False
+
+        with RoundMemberEffectService.track(
+            bidding_round,
+            member,
+            BiddingRoundMemberEffect.Source.NON_BIDDER_FLOOR,
+            actor,
+            cache,
+        ) as tracked:
+            NonBidderContributionService.apply_floor_to_member(
+                member=member,
+                bidding_round=bidding_round,
+                actor=actor,
+                cache=cache,
+            )
+        return tracked.changed
+
+    @classmethod
+    def _materialize_bid_subscriptions(cls, bid, bidding_round, cache):
         period = bidding_round.growing_period
 
         new_subscriptions = []
@@ -349,9 +433,6 @@ class ContractCreator:
             )
             new_subscriptions.append(subscription)
 
-        cls._assign_solidarity_contribution(
-            bid, new_subscriptions, period, actor, cache, position, bidding_round
-        )
         return new_subscriptions
 
     @classmethod

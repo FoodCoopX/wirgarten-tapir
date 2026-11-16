@@ -141,6 +141,18 @@ export interface Round {
    * @memberof Round
    */
   product: RoundProduct | null;
+  /**
+   *
+   * @type {boolean}
+   * @memberof Round
+   */
+  rollbackAvailable: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof Round
+   */
+  rollbackUntracked: boolean;
 }
 
 /**
@@ -202,6 +214,16 @@ export function instanceOfRound(value: object): value is Round {
   if (!("comment" in value) || value["comment"] === undefined) return false;
   if (!("hasBids" in value) || value["hasBids"] === undefined) return false;
   if (!("product" in value) || value["product"] === undefined) return false;
+  if (
+    !("rollbackAvailable" in value) ||
+    value["rollbackAvailable"] === undefined
+  )
+    return false;
+  if (
+    !("rollbackUntracked" in value) ||
+    value["rollbackUntracked"] === undefined
+  )
+    return false;
   return true;
 }
 
@@ -244,6 +266,8 @@ export function RoundFromJSONTyped(
     comment: json["comment"],
     hasBids: json["has_bids"],
     product: RoundProductFromJSON(json["product"]),
+    rollbackAvailable: json["rollback_available"],
+    rollbackUntracked: json["rollback_untracked"],
   };
 }
 
@@ -288,5 +312,7 @@ export function RoundToJSONTyped(
     comment: value["comment"],
     has_bids: value["hasBids"],
     product: RoundProductToJSON(value["product"]),
+    rollback_available: value["rollbackAvailable"],
+    rollback_untracked: value["rollbackUntracked"],
   };
 }

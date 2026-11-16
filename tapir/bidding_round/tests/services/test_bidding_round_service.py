@@ -3,6 +3,7 @@ from decimal import Decimal
 
 import pytest
 from django.core.exceptions import ValidationError
+from django.db import IntegrityError, transaction
 
 from tapir.bidding_round.config import (
     BIDDING_ROUND_PROCEDURE_BID_RANGE,
@@ -10,7 +11,7 @@ from tapir.bidding_round.config import (
     BIDDING_ROUND_STATUS_CLOSED,
     BIDDING_ROUND_STATUS_CONFIGURATION,
 )
-from tapir.bidding_round.models import Bid, BiddingRound
+from tapir.bidding_round.models import Bid, BiddingRound, BiddingRoundMemberEffect
 from tapir.bidding_round.services.bidding_round_service import (
     BidConsents,
     BiddingRoundService,
@@ -52,6 +53,15 @@ class TestBiddingRoundService(TapirIntegrationTest):
         return BiddingRoundProductPriceFactory.create(
             round_product_type=round_product_type,
             product=product,
+        )
+
+    @staticmethod
+    def _mark_member_applied(bidding_round, member=None):
+        return BiddingRoundMemberEffect.objects.create(
+            round=bidding_round,
+            member=member or MemberFactory.create(),
+            source=BiddingRoundMemberEffect.Source.BID,
+            applied_at=get_now(cache={}),
         )
 
     def test_createRound_createsConfigurationRoundWithProductType(self):
@@ -158,6 +168,7 @@ class TestBiddingRoundService(TapirIntegrationTest):
         bidding_round = BiddingRoundFactory.create(
             status=BIDDING_ROUND_STATUS_CLOSED, contracts_created_at=get_now(cache={})
         )
+        self._mark_member_applied(bidding_round)
 
         with pytest.raises(ValidationError):
             BiddingRoundService.reopen_round(bidding_round, cache={})
@@ -252,6 +263,7 @@ class TestBiddingRoundService(TapirIntegrationTest):
             contracts_created_at=get_now(cache={})
         )
         BiddingRoundProductTypeFactory.create(round=bidding_round)
+        self._mark_member_applied(bidding_round)
 
         with pytest.raises(ValidationError):
             BiddingRoundService.update_round_config(
@@ -403,6 +415,7 @@ class TestBiddingRoundService(TapirIntegrationTest):
         )
         bidding_round.average_bid_locked_at = get_now(cache={})
         bidding_round.save()
+        self._mark_member_applied(bidding_round)
 
         with pytest.raises(ValidationError):
             BiddingRoundService.unlock_average_bid(bidding_round, cache={})
@@ -450,6 +463,7 @@ class TestBiddingRoundService(TapirIntegrationTest):
         member = MemberFactory.create()
         bidding_round.contracts_created_at = get_now(cache={})
         bidding_round.save()
+        self._mark_member_applied(bidding_round, member)
 
         with pytest.raises(ValidationError):
             BiddingRoundService.save_admin_bid(
@@ -464,6 +478,123 @@ class TestBiddingRoundService(TapirIntegrationTest):
                 ],
                 cache={},
             )
+
+    def test_saveAdminBid_afterAnotherMembersContract_allowsEdit(self):
+        bidding_round, round_product_type, product = self._create_active_round()
+        member = MemberFactory.create()
+        self._mark_member_applied(bidding_round)
+
+        bid = BiddingRoundService.save_admin_bid(
+            bidding_round=bidding_round,
+            member=member,
+            items=[
+                {
+                    "round_product_type_id": round_product_type.id,
+                    "product_id": product.id,
+                    "amount_1": "70.00",
+                }
+            ],
+            cache={},
+        )
+
+        self.assertEqual(Decimal("70.00"), bid.items.get().amount_1)
+
+    def test_saveAdminBid_withChangedItemsAndNoConfirmation_resetsConfirmation(self):
+        bidding_round, round_product_type, product = self._create_active_round()
+        member = MemberFactory.create()
+        bid = BiddingRoundService.save_admin_bid(
+            bidding_round=bidding_round,
+            member=member,
+            items=[
+                {
+                    "round_product_type_id": round_product_type.id,
+                    "product_id": product.id,
+                    "amount_1": "70.00",
+                }
+            ],
+            admin_confirmed=True,
+            cache={},
+        )
+
+        BiddingRoundService.save_admin_bid(
+            bidding_round=bidding_round,
+            member=member,
+            items=[
+                {
+                    "round_product_type_id": round_product_type.id,
+                    "product_id": product.id,
+                    "amount_1": "75.00",
+                }
+            ],
+            cache={},
+        )
+
+        bid.refresh_from_db()
+        self.assertIsNone(bid.admin_confirmed)
+
+    def test_saveAdminBid_withUnchangedItems_keepsConfirmation(self):
+        bidding_round, round_product_type, product = self._create_active_round()
+        member = MemberFactory.create()
+        items = [
+            {
+                "round_product_type_id": round_product_type.id,
+                "product_id": product.id,
+                "amount_1": "70.00",
+            }
+        ]
+        bid = BiddingRoundService.save_admin_bid(
+            bidding_round=bidding_round,
+            member=member,
+            items=items,
+            admin_confirmed=True,
+            cache={},
+        )
+
+        BiddingRoundService.save_admin_bid(
+            bidding_round=bidding_round,
+            member=member,
+            items=items,
+            cache={},
+        )
+
+        bid.refresh_from_db()
+        self.assertIsNotNone(bid.admin_confirmed)
+
+    def test_saveAdminBid_withChangedItemsAndExplicitConfirmation_keepsConfirmation(
+        self,
+    ):
+        bidding_round, round_product_type, product = self._create_active_round()
+        member = MemberFactory.create()
+        bid = BiddingRoundService.save_admin_bid(
+            bidding_round=bidding_round,
+            member=member,
+            items=[
+                {
+                    "round_product_type_id": round_product_type.id,
+                    "product_id": product.id,
+                    "amount_1": "70.00",
+                }
+            ],
+            admin_confirmed=True,
+            cache={},
+        )
+
+        BiddingRoundService.save_admin_bid(
+            bidding_round=bidding_round,
+            member=member,
+            items=[
+                {
+                    "round_product_type_id": round_product_type.id,
+                    "product_id": product.id,
+                    "amount_1": "75.00",
+                }
+            ],
+            admin_confirmed=True,
+            cache={},
+        )
+
+        bid.refresh_from_db()
+        self.assertIsNotNone(bid.admin_confirmed)
 
     def test_saveAdminBid_afterAverageLocked_raisesValidationError(self):
         bidding_round, round_product_type, product = self._create_active_round()
@@ -483,4 +614,15 @@ class TestBiddingRoundService(TapirIntegrationTest):
                     }
                 ],
                 cache={},
+            )
+
+    def test_twoRoundsWithContractsInSameGrowingPeriod_raisesIntegrityError(self):
+        period = GrowingPeriodFactory.create()
+        BiddingRoundFactory.create(
+            growing_period=period, contracts_created_at=get_now(cache={})
+        )
+
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            BiddingRoundFactory.create(
+                growing_period=period, contracts_created_at=get_now(cache={})
             )

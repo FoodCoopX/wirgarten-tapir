@@ -121,7 +121,6 @@ class MemberOptionSerializer(serializers.Serializer):
 
 class CreateContractsSerializer(serializers.Serializer):
     bid_ids = serializers.ListField(child=serializers.CharField(), required=False)
-    bid_level = serializers.IntegerField(required=False, min_value=1, max_value=3)
     create_auto_renewed_contracts = serializers.BooleanField(
         required=False, default=False
     )
@@ -143,6 +142,35 @@ class StandardPriceAlignResultSerializer(serializers.Serializer):
 
 class StandardPriceAlignResponseSerializer(serializers.Serializer):
     results = StandardPriceAlignResultSerializer(many=True)
+
+
+class RollbackMembersSerializer(serializers.Serializer):
+    member_ids = serializers.ListField(child=serializers.CharField(), required=False)
+    all = serializers.BooleanField(required=False, default=False)
+    force = serializers.BooleanField(required=False, default=False)
+    reason = serializers.CharField(required=False, allow_blank=True, max_length=500)
+
+    def validate(self, attrs):
+        has_selection = bool(attrs.get("member_ids"))
+        if attrs.get("all") == has_selection:
+            raise serializers.ValidationError(
+                "Genau eines von all oder member_ids angeben."
+            )
+        if attrs.get("force") and not attrs.get("reason", "").strip():
+            raise serializers.ValidationError(
+                "Eine erzwungene Rücknahme braucht eine Begründung."
+            )
+        return attrs
+
+
+class RollbackResultSerializer(serializers.Serializer):
+    member_id = serializers.CharField()
+    member_name = serializers.CharField()
+    state = serializers.CharField()
+    subscriptions_deleted = serializers.IntegerField()
+    subscriptions_restored = serializers.IntegerField()
+    contributions_restored = serializers.IntegerField()
+    detail = serializers.CharField()
 
 
 class RoundProductPriceSerializer(serializers.Serializer):
@@ -181,6 +209,12 @@ class RoundSerializer(serializers.Serializer):
     comment = serializers.CharField()
     has_bids = serializers.BooleanField()
     product = RoundProductSerializer(allow_null=True)
+    rollback_available = serializers.BooleanField()
+    rollback_untracked = serializers.BooleanField()
+
+
+class RollbackMembersResponseSerializer(RoundSerializer):
+    results = RollbackResultSerializer(many=True)
 
 
 class BidItemSerializer(serializers.Serializer):
@@ -503,6 +537,7 @@ class ContractRowSerializer(serializers.Serializer):
     non_bidder_floor_per_month = serializers.CharField(allow_null=True)
     previous_amount_per_month = serializers.CharField(allow_null=True)
     is_created = serializers.BooleanField()
+    rollback_state = serializers.CharField()
 
 
 class PickupLocationUtilizationSerializer(serializers.Serializer):
@@ -537,6 +572,8 @@ class RoundResultsResponseSerializer(EvaluationAggregatesSerializer):
     contracts = ContractRowSerializer(many=True)
     growing_period_id = serializers.CharField(allow_null=True)
     contracts_created_at = serializers.DateTimeField(allow_null=True)
+    rollback_available = serializers.BooleanField()
+    rollback_untracked = serializers.BooleanField()
     round_product_type_id = serializers.CharField(allow_null=True)
     include_auto_renewed = serializers.BooleanField()
     auto_renewed_per_year = serializers.CharField()

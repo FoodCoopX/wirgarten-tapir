@@ -15,6 +15,9 @@ interface ContractsCardProps {
   onToggle: () => void;
   contracts: BiddingRoundContractRow[];
   growingPeriodId: string | null;
+  rollbackAvailable: boolean;
+  rollbackUntracked: boolean;
+  onRollback: (memberIds: string[], memberNames: string[]) => void;
 }
 
 const isSolidarityRound = true;
@@ -24,6 +27,8 @@ const ContractsCard: React.FC<ContractsCardProps> = ({
   onToggle,
   contracts,
   growingPeriodId,
+  rollbackUntracked,
+  onRollback,
 }) => {
   return (
     <CollapsibleCard
@@ -53,6 +58,7 @@ const ContractsCard: React.FC<ContractsCardProps> = ({
             <th className="text-end">{"Gesamt / Jahr"}</th>
             <th>{"Verteilstation"}</th>
             <th>{"Vertrag"}</th>
+            <th>{"Aktion"}</th>
           </tr>
         </thead>
         <tbody>
@@ -128,10 +134,30 @@ const ContractsCard: React.FC<ContractsCardProps> = ({
                   {"Vertrag"}
                 </a>
               </td>
+              <td>
+                {contract.rollbackState === "applied" && (
+                  <Button
+                    variant="outline-danger"
+                    size="sm"
+                    onClick={() =>
+                      onRollback([contract.memberId], [contract.memberName])
+                    }
+                  >
+                    {"Zurücknehmen"}
+                  </Button>
+                )}
+              </td>
             </tr>
           ))}
         </tbody>
       </Table>
+      {rollbackUntracked && (
+        <p className="text-muted small mt-2 mb-0">
+          {
+            "Diese Runde wurde vor der Effekt-Aufzeichnung erzeugt. Eine automatische Rücknahme ist nicht möglich; bitte manuell prüfen."
+          }
+        </p>
+      )}
     </CollapsibleCard>
   );
 };
