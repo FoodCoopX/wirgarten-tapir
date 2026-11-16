@@ -112,6 +112,10 @@ class ConfigurationGenerator:
             value=coop_min_shares.get(organization, 2)
         )
 
+        TapirParameter.objects.filter(
+            key=ParameterKeys.ASSOCIATIONS_MEMBERSHIP_FEE_WAIVED_WITH_PRODUCTS
+        ).update(value=organization == Organization.VIERLANDE)
+
         if organization == Organization.BIOTOP:
             TapirParameter.objects.filter(
                 key=ParameterKeys.MEMBER_NUMBER_PREFIX
