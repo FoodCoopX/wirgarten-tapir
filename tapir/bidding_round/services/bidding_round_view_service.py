@@ -117,6 +117,13 @@ class BiddingRoundViewService:
         association_membership = TapirCache.get_member_association_membership_at_date(
             cache=cache, member=member, reference_date=reference_date
         )
+        # The summary is only reachable on the way to a bid; every bid creates a
+        # product contract, so the parameter is the correct proxy here.
+        membership_fee_waived = cls._get_boolean_parameter(
+            key=ParameterKeys.ASSOCIATIONS_MEMBERSHIP_FEE_WAIVED_WITH_PRODUCTS,
+            default=False,
+            cache=cache,
+        )
         return {
             "account_owner": member.account_owner,
             "iban": member.iban,
@@ -136,7 +143,7 @@ class BiddingRoundViewService:
                         )
                     ),
                 }
-                if association_membership is not None
+                if association_membership is not None and not membership_fee_waived
                 else None
             ),
         }

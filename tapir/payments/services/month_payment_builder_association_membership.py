@@ -8,6 +8,7 @@ from tapir.associations.models import AssociationMembership
 from tapir.associations.services.association_membership_price_type_getter import (
     AssociationMembershipTypePriceGetter,
 )
+from tapir.configuration.parameter import get_parameter_value
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
@@ -20,6 +21,7 @@ from tapir.wirgarten.models import (
     Payment,
     Member,
 )
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import format_currency
 
 
@@ -165,6 +167,14 @@ class MonthPaymentBuilderAssociationMembership:
         membership: AssociationMembership,
         cache: dict,
     ) -> list[CalculationPart]:
+        if cls.is_membership_fee_waived(
+            member=membership.member,
+            range_start=range_start,
+            range_end=range_end,
+            cache=cache,
+        ):
+            return []
+
         parts = []
         current_month = range_start
         while current_month < range_end:
@@ -176,6 +186,48 @@ class MonthPaymentBuilderAssociationMembership:
             current_month += relativedelta(months=1)
 
         return parts
+
+    @classmethod
+    def is_membership_fee_waived(
+        cls,
+        member: Member,
+        range_start: datetime.date,
+        range_end: datetime.date,
+        cache: dict,
+    ) -> bool:
+        enabled = get_parameter_value(
+            key=ParameterKeys.ASSOCIATIONS_MEMBERSHIP_FEE_WAIVED_WITH_PRODUCTS,
+            cache=cache,
+        )
+        if not enabled:
+            return False
+
+        return cls.member_has_product_contract_in_range(
+            member=member,
+            range_start=range_start,
+            range_end=range_end,
+            cache=cache,
+        )
+
+    @classmethod
+    def member_has_product_contract_in_range(
+        cls,
+        member: Member,
+        range_start: datetime.date,
+        range_end: datetime.date,
+        cache: dict,
+    ) -> bool:
+        return any(
+            DateRangeOverlapChecker.do_ranges_overlap(
+                range_1_start=subscription.start_date,
+                range_1_end=subscription.end_date,
+                range_2_start=range_start,
+                range_2_end=range_end,
+            )
+            for subscription in TapirCache.get_all_subscriptions_for_member(
+                member_id=member.id, cache=cache
+            )
+        )
 
     @classmethod
     def _build_calculation_part_for_membership_within_month(
