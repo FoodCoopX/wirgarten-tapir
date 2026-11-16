@@ -147,6 +147,11 @@ class PublicDataView(BiddingRoundFeatureFlagMixin, APIView):
         }
 
         if bidding_round and member:
+            response_data["current_pickup_location"] = (
+                BiddingRoundViewService.build_current_pickup_location(
+                    bidding_round, member, cache
+                )
+            )
             bid = Bid.objects.filter(round=bidding_round, member=member).first()
             if bid is not None:
                 response_data["bid"] = BiddingRoundViewService.serialize_bid(

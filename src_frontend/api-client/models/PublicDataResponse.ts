@@ -19,6 +19,11 @@ import {
   BiddableProductFromJSON,
   BiddableProductToJSON,
 } from "./BiddableProduct";
+import type { CurrentPickupLocation } from "./CurrentPickupLocation";
+import {
+  CurrentPickupLocationFromJSON,
+  CurrentPickupLocationToJSON,
+} from "./CurrentPickupLocation";
 import type { Round } from "./Round";
 import { RoundFromJSON, RoundToJSON } from "./Round";
 import type { RoundTexts } from "./RoundTexts";
@@ -86,6 +91,12 @@ export interface PublicDataResponse {
   isAuthenticated?: boolean;
   /**
    *
+   * @type {CurrentPickupLocation}
+   * @memberof PublicDataResponse
+   */
+  currentPickupLocation?: CurrentPickupLocation | null;
+  /**
+   *
    * @type {Bid}
    * @memberof PublicDataResponse
    */
@@ -130,6 +141,10 @@ export function PublicDataResponseFromJSONTyped(
         : BiddableProductFromJSON(json["biddable_product"]),
     isAuthenticated:
       json["is_authenticated"] == null ? undefined : json["is_authenticated"],
+    currentPickupLocation:
+      json["current_pickup_location"] == null
+        ? undefined
+        : CurrentPickupLocationFromJSON(json["current_pickup_location"]),
     bid: json["bid"] == null ? undefined : BidFromJSON(json["bid"]),
   };
 }
@@ -156,6 +171,9 @@ export function PublicDataResponseToJSONTyped(
     texts: RoundTextsToJSON(value["texts"]),
     biddable_product: BiddableProductToJSON(value["biddableProduct"]),
     is_authenticated: value["isAuthenticated"],
+    current_pickup_location: CurrentPickupLocationToJSON(
+      value["currentPickupLocation"],
+    ),
     bid: BidToJSON(value["bid"]),
   };
 }
