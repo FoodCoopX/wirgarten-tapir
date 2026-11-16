@@ -54,6 +54,12 @@ export interface BidProductVariant {
    * @memberof BidProductVariant
    */
   currentQuantity: number | null;
+  /**
+   *
+   * @type {string}
+   * @memberof BidProductVariant
+   */
+  imageUrl: string | null;
 }
 
 /**
@@ -70,6 +76,7 @@ export function instanceOfBidProductVariant(
   if (!("size" in value) || value["size"] === undefined) return false;
   if (!("currentQuantity" in value) || value["currentQuantity"] === undefined)
     return false;
+  if (!("imageUrl" in value) || value["imageUrl"] === undefined) return false;
   return true;
 }
 
@@ -91,6 +98,7 @@ export function BidProductVariantFromJSONTyped(
     minAmount: json["min_amount"],
     size: json["size"],
     currentQuantity: json["current_quantity"],
+    imageUrl: json["image_url"],
   };
 }
 
@@ -113,5 +121,6 @@ export function BidProductVariantToJSONTyped(
     min_amount: value["minAmount"],
     size: value["size"],
     current_quantity: value["currentQuantity"],
+    image_url: value["imageUrl"],
   };
 }

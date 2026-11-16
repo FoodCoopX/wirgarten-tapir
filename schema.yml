@@ -10690,6 +10690,16 @@ components:
       - product_type_name
       - quantity
       - round_product_type_id
+    BidOptions:
+      type: object
+      properties:
+        quantity_enabled:
+          type: boolean
+        carousel_enabled:
+          type: boolean
+      required:
+      - carousel_enabled
+      - quantity_enabled
     BidProductVariant:
       type: object
       properties:
@@ -10709,9 +10719,13 @@ components:
         current_quantity:
           type: integer
           nullable: true
+        image_url:
+          type: string
+          nullable: true
       required:
       - current_quantity
       - id
+      - image_url
       - min_amount
       - name
       - reference_value
@@ -18113,6 +18127,8 @@ components:
           allOf:
           - $ref: '#/components/schemas/Bid'
           nullable: true
+        bid_options:
+          $ref: '#/components/schemas/BidOptions'
       required:
       - enabled
     PublicEvaluationResponse:
