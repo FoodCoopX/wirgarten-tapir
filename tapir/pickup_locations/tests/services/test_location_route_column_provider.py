@@ -18,6 +18,7 @@ from tapir.wirgarten.tests.factories import (
     MemberPickupLocationFactory,
     ProductCapacityFactory,
     ProductFactory,
+    PickupLocationOpeningTimesFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
@@ -59,6 +60,9 @@ class TestLocationRouteColumnProvider(TapirIntegrationTest):
             route_info="route_info_b",
             location_route=route,
         )
+        PickupLocationOpeningTimesFactory.create(
+            pickup_location=location_a, day_of_week=4  # Friday
+        )
         PickupLocationFactory.create(location_route=LocationRouteFactory.create())
         PickupLocationFactory.create(location_route=None)
 
@@ -82,6 +86,10 @@ class TestLocationRouteColumnProvider(TapirIntegrationTest):
         self.assertEqual("route_info_a", data_location_a["route_info"])
         self.assertFalse(data_location_a["show_details_in_basket_totals_export"])
         self.assertEqual(31, data_location_a["calendar_week"])
+        self.assertEqual(
+            datetime.date(year=2026, month=7, day=31),  # Friday
+            data_location_a["delivery_date"],
+        )
 
         data_location_b = result[1]
         self.assertEqual(location_b.id, data_location_b["id"])
@@ -93,6 +101,10 @@ class TestLocationRouteColumnProvider(TapirIntegrationTest):
         self.assertEqual("route_info_b", data_location_b["route_info"])
         self.assertFalse(data_location_b["show_details_in_basket_totals_export"])
         self.assertEqual(31, data_location_b["calendar_week"])
+        self.assertEqual(
+            datetime.date(year=2026, month=7, day=29),  # Wednesday
+            data_location_b["delivery_date"],
+        )
 
     def test_getValuePickupLocation_pickingModeShare_returnsCorrectSubscriptionData(
         self,
