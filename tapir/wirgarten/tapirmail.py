@@ -88,7 +88,6 @@ def configure_mail_module():
 
 
 def _register_tokens():
-    cache = {}
     bakery_tokens = (
         {
             "Brote der Woche": BreadMailTokenService.breads_this_week,
@@ -102,46 +101,46 @@ def _register_tokens():
             "Vorname": "first_name",
             "Nachname": "last_name",
             "Email": "email",
-            "Abholort": "pickup_location",
+            "Abholort": PickupLocationMailTokenService.pickup_location_name_or_empty,
             "Mitglieds-Nr": "member_no",
             "Kontoempfänger": "account_owner",
             "IBAN": "iban",
-            "Ernteanteilsgrößen": "base_subscriptions_text",
+            "Ernteanteilsgrößen": MemberMailTokenService.get_base_subscriptions_text,
         },
         general_tokens={
-            "WirGarten Standort": lambda: get_parameter_value(
+            "WirGarten Standort": lambda cache: get_parameter_value(
                 ParameterKeys.SITE_NAME, cache=cache
             ),
-            "Admin Name": lambda: get_parameter_value(
+            "Admin Name": lambda cache: get_parameter_value(
                 ParameterKeys.SITE_ADMIN_NAME, cache=cache
             ),
-            "Admin Email": lambda: get_parameter_value(
+            "Admin Email": lambda cache: get_parameter_value(
                 ParameterKeys.SITE_ADMIN_EMAIL, cache=cache
             ),
-            "Admin Telefonnr": lambda: get_parameter_value(
+            "Admin Telefonnr": lambda cache: get_parameter_value(
                 ParameterKeys.SITE_ADMIN_TELEPHONE, cache=cache
             ),
-            "Admin Image": lambda: get_parameter_value(
+            "Admin Image": lambda cache: get_parameter_value(
                 ParameterKeys.SITE_ADMIN_IMAGE, cache=cache
             ),
-            "Kontakt Email": lambda: get_parameter_value(
+            "Kontakt Email": lambda cache: get_parameter_value(
                 ParameterKeys.SITE_EMAIL, cache=cache
             ),
-            "Datenschutzerklärung Link": lambda: get_parameter_value(
+            "Datenschutzerklärung Link": lambda cache: get_parameter_value(
                 ParameterKeys.SITE_PRIVACY_LINK, cache=cache
             ),
-            "Mitglieder-FAQ Link": lambda: get_parameter_value(
+            "Mitglieder-FAQ Link": lambda cache: get_parameter_value(
                 ParameterKeys.SITE_FAQ_LINK, cache=cache
             ),
-            "Satzung Link": lambda: get_parameter_value(
+            "Satzung Link": lambda cache: get_parameter_value(
                 ParameterKeys.COOP_STATUTE_LINK, cache=cache
             ),
-            "Infos zur Genossenschaft": lambda: get_parameter_value(
+            "Infos zur Genossenschaft": lambda cache: get_parameter_value(
                 ParameterKeys.COOP_INFO_LINK, cache=cache
             ),
-            "Jahr (aktuell)": lambda: get_today(cache=cache).year,
-            "Jahr (nächstes)": lambda: get_today(cache=cache).year + 1,
-            "Jahr (übernächstes)": lambda: get_today(cache=cache).year + 2,
+            "Jahr (aktuell)": lambda cache: get_today(cache=cache).year,
+            "Jahr (nächstes)": lambda cache: get_today(cache=cache).year + 1,
+            "Jahr (übernächstes)": lambda cache: get_today(cache=cache).year + 2,
         },
         dynamic_tokens={
             "Mitglied - Beitrittsdatum": OrganisationEntryDateAnnotator.get_organisation_entry_date,
@@ -187,9 +186,9 @@ def _register_triggers():
         }
         | TOKENS_ORDER_PAYMENT
         | TOKENS_SOLIDARITY_CONTRIBUTION,
-        required=lambda: legal_status_is_cooperative(cache={})
+        required=lambda cache: legal_status_is_cooperative(cache=cache)
         and get_parameter_value(
-            ParameterKeys.ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES, cache={}
+            ParameterKeys.ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES, cache=cache
         ),
     )
     register_transactional_trigger(
@@ -198,7 +197,7 @@ def _register_triggers():
         tokens=TOKENS_ORDER_PAYMENT
         | TOKENS_COOP_ENTRY
         | TOKENS_SOLIDARITY_CONTRIBUTION,
-        required=lambda: not legal_status_is_company(cache={}),
+        required=lambda cache: not legal_status_is_company(cache=cache),
     )
     register_transactional_trigger(
         name="Vertragsänderungen im Mitgliederbereich",
@@ -258,15 +257,15 @@ def _register_triggers():
             "Vertragsende": "contract_end_date",
             "Letzte Abholung am": "last_pickup_date",
         },
-        required=lambda: get_parameter_value(
-            ParameterKeys.TRIAL_PERIOD_ENABLED, cache={}
+        required=lambda cache: get_parameter_value(
+            ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache
         ),
     )
     register_transactional_trigger(
         name="Vertrag nicht verlängert",
         key=Events.CONTRACT_NOT_RENEWED,
-        required=lambda: not get_parameter_value(
-            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache={}
+        required=lambda cache: not get_parameter_value(
+            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
         ),
     )
     register_transactional_trigger(
@@ -288,7 +287,7 @@ def _register_triggers():
             "Gesamtwert der gezeichneten Geschäftsanteile": "price_of_all_shares",
             "Beitrittsdatum Genossenschaft": "membership_start_date",
         },
-        required=lambda: legal_status_is_cooperative(cache={}),
+        required=lambda cache: legal_status_is_cooperative(cache=cache),
     )
 
     register_transactional_trigger(
@@ -362,8 +361,8 @@ def _register_triggers():
             "Bestätigungslink": "confirmation_link",
             "Haupt-Mail-Adresse": "main_mail_address",
         },
-        required=lambda: get_parameter_value(
-            ParameterKeys.ENABLE_EXTRA_MAIL_ADDRESSES, cache={}
+        required=lambda cache: get_parameter_value(
+            ParameterKeys.ENABLE_EXTRA_MAIL_ADDRESSES, cache=cache
         ),
     )
 
@@ -377,7 +376,7 @@ def _register_triggers():
             "Wert eines Geno-Anteils": "value_of_a_single_share",
             "Gesamtwert gekündigte Geno-Anteile": "value_of_all_cancelled_shares",
         },
-        required=lambda: legal_status_is_cooperative(cache={}),
+        required=lambda cache: legal_status_is_cooperative(cache=cache),
     )
 
     register_transactional_trigger(
@@ -391,7 +390,7 @@ def _register_triggers():
             "Gesamtanzahl der Geno-Anteile": "total_number_of_shares",
             "Gesamtwert der insgesamt dann gehaltenen geschäftsanteile": "total_price_of_shares",
         },
-        required=lambda: legal_status_is_cooperative(cache={}),
+        required=lambda cache: legal_status_is_cooperative(cache=cache),
     )
 
 

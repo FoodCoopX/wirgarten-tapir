@@ -119,6 +119,9 @@ Services: `web` (8000), `vite` (5173), `keycloak` (8080), `db` (5432), `redis` (
   `setUpTestData` runs earlier, so **users cannot be created in `setUpTestData`**. Run via `make test-fast` /
   `make test-app APP=<app>`.
 - **Test naming**: one file per tested class/function, `test_<snake_case_name>.py`, class `Test<ClassOrFunctionName>`.
+  **Only one test class per file**: never add a second class to an existing file. To split a service's tests by method,
+  use a directory named after the service with one file per method
+  (e.g. `tests/services/member_pickup_location_cleaner/test_should_clean_pickup_location.py`).
   Methods follow `test_<method>_<condition>_<expectedResult>`, each part in camelCase, e.g.
   `test_validateInstalments_moreSharesThanTheMinimum_raisesError`. Use `default` as condition for the nominal case
   (`test_patch_default_callsProductUpdated`); for views, `<method>` is the HTTP verb (`test_get_loggedInAsNormalMember_returns403`).
