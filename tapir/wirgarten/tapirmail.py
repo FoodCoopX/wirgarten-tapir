@@ -275,6 +275,7 @@ def _register_triggers():
         tokens={
             "Vertragsliste": "contract_list",
             "Vertragsende": "contract_end_date",
+            "Letzte Abholung am": "last_pickup_date",
         },
         required=True,
     )
