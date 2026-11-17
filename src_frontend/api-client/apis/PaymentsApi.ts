@@ -23,7 +23,11 @@ import type {
   MemberNeedingBankingData,
   MemberPaymentRhythmData,
   OrderConfirmationResponse,
+  PaginatedPaymentExportExclusionPeriodOverviewList,
   PaginatedPaymentTransactionList,
+  PaymentExportExclusionPeriod,
+  PaymentExportExclusionPeriodCreateRequestRequest,
+  PaymentExportExclusionPeriodUpdateRequestRequest,
   PaymentIntendedUsePreviewResponse,
   PaymentRhythmSerializerRequest,
   PaymentTransaction,
@@ -40,7 +44,11 @@ import {
   MemberNeedingBankingDataFromJSON,
   MemberPaymentRhythmDataFromJSON,
   OrderConfirmationResponseFromJSON,
+  PaginatedPaymentExportExclusionPeriodOverviewListFromJSON,
   PaginatedPaymentTransactionListFromJSON,
+  PaymentExportExclusionPeriodCreateRequestRequestToJSON,
+  PaymentExportExclusionPeriodFromJSON,
+  PaymentExportExclusionPeriodUpdateRequestRequestToJSON,
   PaymentIntendedUsePreviewResponseFromJSON,
   PaymentRhythmSerializerRequestToJSON,
   PaymentTransactionDetailsFromJSON,
@@ -100,6 +108,28 @@ export interface PaymentsApiMemberPaymentRhythmDataRetrieveRequest {
 
 export interface PaymentsApiMembersNeedingBankingDataForRebuildListRequest {
   from: Date;
+}
+
+export interface PaymentsApiPaymentExportExclusionPeriodsCreateRequest {
+  paymentExportExclusionPeriodCreateRequestRequest: PaymentExportExclusionPeriodCreateRequestRequest;
+}
+
+export interface PaymentsApiPaymentExportExclusionPeriodsDestroyRequest {
+  periodId?: string;
+}
+
+export interface PaymentsApiPaymentExportExclusionPeriodsListRequest {
+  memberId?: string;
+}
+
+export interface PaymentsApiPaymentExportExclusionPeriodsOverviewListRequest {
+  includeExpired?: boolean;
+  limit: number;
+  offset: number;
+}
+
+export interface PaymentsApiPaymentExportExclusionPeriodsUpdateRequest {
+  paymentExportExclusionPeriodUpdateRequestRequest: PaymentExportExclusionPeriodUpdateRequestRequest;
 }
 
 export interface PaymentsApiPaymentTransactionDetailsRetrieveRequest {
@@ -945,6 +975,338 @@ export class PaymentsApi extends runtime.BaseAPI {
   ): Promise<Array<MemberNeedingBankingData>> {
     const response =
       await this.paymentsApiMembersNeedingBankingDataListRaw(initOverrides);
+    return await response.value();
+  }
+
+  /**
+   */
+  async paymentsApiPaymentExportExclusionPeriodsCreateRaw(
+    requestParameters: PaymentsApiPaymentExportExclusionPeriodsCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<OrderConfirmationResponse>> {
+    if (
+      requestParameters["paymentExportExclusionPeriodCreateRequestRequest"] ==
+      null
+    ) {
+      throw new runtime.RequiredError(
+        "paymentExportExclusionPeriodCreateRequestRequest",
+        'Required parameter "paymentExportExclusionPeriodCreateRequestRequest" was null or undefined when calling paymentsApiPaymentExportExclusionPeriodsCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/payments/api/payment_export_exclusion_periods`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: PaymentExportExclusionPeriodCreateRequestRequestToJSON(
+          requestParameters["paymentExportExclusionPeriodCreateRequestRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      OrderConfirmationResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async paymentsApiPaymentExportExclusionPeriodsCreate(
+    requestParameters: PaymentsApiPaymentExportExclusionPeriodsCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<OrderConfirmationResponse> {
+    const response =
+      await this.paymentsApiPaymentExportExclusionPeriodsCreateRaw(
+        requestParameters,
+        initOverrides,
+      );
+    return await response.value();
+  }
+
+  /**
+   */
+  async paymentsApiPaymentExportExclusionPeriodsDestroyRaw(
+    requestParameters: PaymentsApiPaymentExportExclusionPeriodsDestroyRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<string>> {
+    const queryParameters: any = {};
+
+    if (requestParameters["periodId"] != null) {
+      queryParameters["period_id"] = requestParameters["periodId"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/payments/api/payment_export_exclusion_periods`,
+        method: "DELETE",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    if (this.isJsonMime(response.headers.get("content-type"))) {
+      return new runtime.JSONApiResponse<string>(response);
+    } else {
+      return new runtime.TextApiResponse(response) as any;
+    }
+  }
+
+  /**
+   */
+  async paymentsApiPaymentExportExclusionPeriodsDestroy(
+    requestParameters: PaymentsApiPaymentExportExclusionPeriodsDestroyRequest = {},
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<string> {
+    const response =
+      await this.paymentsApiPaymentExportExclusionPeriodsDestroyRaw(
+        requestParameters,
+        initOverrides,
+      );
+    return await response.value();
+  }
+
+  /**
+   */
+  async paymentsApiPaymentExportExclusionPeriodsListRaw(
+    requestParameters: PaymentsApiPaymentExportExclusionPeriodsListRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<Array<PaymentExportExclusionPeriod>>> {
+    const queryParameters: any = {};
+
+    if (requestParameters["memberId"] != null) {
+      queryParameters["member_id"] = requestParameters["memberId"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/payments/api/payment_export_exclusion_periods`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      jsonValue.map(PaymentExportExclusionPeriodFromJSON),
+    );
+  }
+
+  /**
+   */
+  async paymentsApiPaymentExportExclusionPeriodsList(
+    requestParameters: PaymentsApiPaymentExportExclusionPeriodsListRequest = {},
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<Array<PaymentExportExclusionPeriod>> {
+    const response = await this.paymentsApiPaymentExportExclusionPeriodsListRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async paymentsApiPaymentExportExclusionPeriodsOverviewListRaw(
+    requestParameters: PaymentsApiPaymentExportExclusionPeriodsOverviewListRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<
+    runtime.ApiResponse<PaginatedPaymentExportExclusionPeriodOverviewList>
+  > {
+    if (requestParameters["limit"] == null) {
+      throw new runtime.RequiredError(
+        "limit",
+        'Required parameter "limit" was null or undefined when calling paymentsApiPaymentExportExclusionPeriodsOverviewList().',
+      );
+    }
+
+    if (requestParameters["offset"] == null) {
+      throw new runtime.RequiredError(
+        "offset",
+        'Required parameter "offset" was null or undefined when calling paymentsApiPaymentExportExclusionPeriodsOverviewList().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    if (requestParameters["includeExpired"] != null) {
+      queryParameters["include_expired"] = requestParameters["includeExpired"];
+    }
+
+    if (requestParameters["limit"] != null) {
+      queryParameters["limit"] = requestParameters["limit"];
+    }
+
+    if (requestParameters["offset"] != null) {
+      queryParameters["offset"] = requestParameters["offset"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/payments/api/payment_export_exclusion_periods_overview`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      PaginatedPaymentExportExclusionPeriodOverviewListFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async paymentsApiPaymentExportExclusionPeriodsOverviewList(
+    requestParameters: PaymentsApiPaymentExportExclusionPeriodsOverviewListRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<PaginatedPaymentExportExclusionPeriodOverviewList> {
+    const response =
+      await this.paymentsApiPaymentExportExclusionPeriodsOverviewListRaw(
+        requestParameters,
+        initOverrides,
+      );
+    return await response.value();
+  }
+
+  /**
+   */
+  async paymentsApiPaymentExportExclusionPeriodsUpdateRaw(
+    requestParameters: PaymentsApiPaymentExportExclusionPeriodsUpdateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<OrderConfirmationResponse>> {
+    if (
+      requestParameters["paymentExportExclusionPeriodUpdateRequestRequest"] ==
+      null
+    ) {
+      throw new runtime.RequiredError(
+        "paymentExportExclusionPeriodUpdateRequestRequest",
+        'Required parameter "paymentExportExclusionPeriodUpdateRequestRequest" was null or undefined when calling paymentsApiPaymentExportExclusionPeriodsUpdate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/payments/api/payment_export_exclusion_periods`,
+        method: "PUT",
+        headers: headerParameters,
+        query: queryParameters,
+        body: PaymentExportExclusionPeriodUpdateRequestRequestToJSON(
+          requestParameters["paymentExportExclusionPeriodUpdateRequestRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      OrderConfirmationResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async paymentsApiPaymentExportExclusionPeriodsUpdate(
+    requestParameters: PaymentsApiPaymentExportExclusionPeriodsUpdateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<OrderConfirmationResponse> {
+    const response =
+      await this.paymentsApiPaymentExportExclusionPeriodsUpdateRaw(
+        requestParameters,
+        initOverrides,
+      );
     return await response.value();
   }
 

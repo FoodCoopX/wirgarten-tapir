@@ -5,7 +5,7 @@ from django.db import models
 from tapir.accounts.models import TapirUser
 from tapir.core.models import TapirModel
 from tapir.deliveries.models import Joker
-from tapir.log.models import LogEntry, ModelLogEntry
+from tapir.log.models import LogEntry, ModelLogEntry, UpdateModelLogEntry
 from tapir.wirgarten.models import Member, PickupLocation
 from tapir.wirgarten.utils import format_date
 
@@ -88,3 +88,32 @@ class MemberCreditCreatedLogEntry(ModelLogEntry):
 
 class MemberCreditSettledLogEntry(ModelLogEntry):
     template_name = "payments/log/member_credit_settled_log_entry.html"
+
+
+class PaymentExportExclusionPeriod(TapirModel):
+    member = models.ForeignKey(Member, on_delete=models.CASCADE)
+    start_date = models.DateField()
+    end_date = models.DateField(null=True, blank=True)
+    comment = models.TextField(blank=True)
+
+    def __str__(self):
+        return f"{self.member} - {format_date(self.start_date)} - {format_date(self.end_date)}"
+
+
+class PaymentExportExclusionPeriodCreatedLogEntry(ModelLogEntry):
+    template_name = (
+        "payments/log/payment_export_exclusion_period_created_log_entry.html"
+    )
+
+
+class PaymentExportExclusionPeriodDeletedLogEntry(ModelLogEntry):
+    template_name = (
+        "payments/log/payment_export_exclusion_period_deleted_log_entry.html"
+    )
+
+
+class PaymentExportExclusionPeriodUpdatedLogEntry(UpdateModelLogEntry):
+    template_name = (
+        "payments/log/payment_export_exclusion_period_updated_log_entry.html"
+    )
+    excluded_fields = ["updated_at"]

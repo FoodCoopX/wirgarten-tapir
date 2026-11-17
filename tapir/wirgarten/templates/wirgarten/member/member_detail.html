@@ -265,6 +265,25 @@
                                                     data-member-id="{{ object.id }}"></span>{% endif %}
               </div>
             </dd>
+            {% if perms.accounts.manage and payment_export_exclusion_enabled %}
+              <dt>{% translate "Vom Zahlungsexport ausgeschlossen" %}</dt>
+              <dd id="tapir_user_payment_export_exclusion">
+                <div class="d-flex gap-2">
+                  {% if payment_export_exclusion_period %}
+                    {{ payment_export_exclusion_period.start_date|format_month_and_year }} –
+                    {% if payment_export_exclusion_period.end_date %}
+                      {{ payment_export_exclusion_period.end_date|format_month_and_year }}
+                    {% else %}
+                      unbefristet
+                    {% endif %}
+                  {% else %}
+                    Nein
+                  {% endif %}
+                  <span id="payment_export_exclusion_period_button"
+                        data-member-id="{{ object.id }}"></span>
+                </div>
+              </dd>
+            {% endif %}
           </dl>
         </div>
       </div>

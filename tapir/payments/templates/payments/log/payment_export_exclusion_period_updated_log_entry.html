@@ -1,0 +1,13 @@
+{% load wirgarten %}
+Ausschluss vom Zahlungsexport geändert:
+<ul>
+    {% for change in changes %}
+        {% if change.0 == "start_date" %}
+            <li>Von: {{ change.1|format_date }} → {{ change.2|format_date }}</li>
+        {% elif change.0 == "end_date" %}
+            <li>Bis: {% if change.1 == "None" %}unbefristet{% else %}{{ change.1|format_date }}{% endif %} → {% if change.2 == "None" %}unbefristet{% else %}{{ change.2|format_date }}{% endif %}</li>
+        {% elif change.0 == "comment" %}
+            <li>Kommentar: {{ change.1|linebreaksbr }} → {{ change.2|linebreaksbr }}</li>
+        {% endif %}
+    {% endfor %}
+</ul>

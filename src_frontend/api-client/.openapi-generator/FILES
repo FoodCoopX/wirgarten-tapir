@@ -182,6 +182,7 @@ models/PaginatedEmailDispatchList.ts
 models/PaginatedEmailDispatchWithRetriesList.ts
 models/PaginatedEmailTemplateList.ts
 models/PaginatedGroupedEmailDispatchList.ts
+models/PaginatedPaymentExportExclusionPeriodOverviewList.ts
 models/PaginatedPaymentTransactionList.ts
 models/PaginatedStoredUploadList.ts
 models/PaginatedTemporaryUploadList.ts
@@ -217,6 +218,10 @@ models/PatchedTemporaryUploadRequest.ts
 models/PatchedUpdateMemberBankDataRequestRequest.ts
 models/PatchedWaitingListEntryRequest.ts
 models/Payment.ts
+models/PaymentExportExclusionPeriod.ts
+models/PaymentExportExclusionPeriodCreateRequestRequest.ts
+models/PaymentExportExclusionPeriodOverview.ts
+models/PaymentExportExclusionPeriodUpdateRequestRequest.ts
 models/PaymentIntendedUsePreviewResponse.ts
 models/PaymentList.ts
 models/PaymentRhythmSerializerRequest.ts

@@ -4665,6 +4665,134 @@ paths:
                 items:
                   $ref: '#/components/schemas/MemberNeedingBankingData'
           description: ''
+  /payments/api/payment_export_exclusion_periods:
+    get:
+      operationId: payments_api_payment_export_exclusion_periods_list
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - payments
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PaymentExportExclusionPeriod'
+          description: ''
+    post:
+      operationId: payments_api_payment_export_exclusion_periods_create
+      tags:
+      - payments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentExportExclusionPeriodCreateRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PaymentExportExclusionPeriodCreateRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PaymentExportExclusionPeriodCreateRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderConfirmationResponse'
+          description: ''
+    put:
+      operationId: payments_api_payment_export_exclusion_periods_update
+      tags:
+      - payments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentExportExclusionPeriodUpdateRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PaymentExportExclusionPeriodUpdateRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PaymentExportExclusionPeriodUpdateRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderConfirmationResponse'
+          description: ''
+    delete:
+      operationId: payments_api_payment_export_exclusion_periods_destroy
+      parameters:
+      - in: query
+        name: period_id
+        schema:
+          type: string
+      tags:
+      - payments
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
+  /payments/api/payment_export_exclusion_periods_overview:
+    get:
+      operationId: payments_api_payment_export_exclusion_periods_overview_list
+      parameters:
+      - in: query
+        name: include_expired
+        schema:
+          type: boolean
+      - in: query
+        name: limit
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: offset
+        schema:
+          type: integer
+        required: true
+      tags:
+      - payments
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPaymentExportExclusionPeriodOverviewList'
+          description: ''
   /payments/api/payment_transaction_details:
     get:
       operationId: payments_api_payment_transaction_details_retrieve
@@ -12647,11 +12775,14 @@ components:
         number_of_instalments:
           type: integer
           nullable: true
+        excluded_from_export:
+          type: boolean
       required:
       - association_memberships
       - coop_share_transactions
       - delivery_charge_pickup_location
       - delivery_dates
+      - excluded_from_export
       - number_of_instalments
       - payment
       - solidarity_contributions
@@ -14429,6 +14560,29 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/GroupedEmailDispatch'
+    PaginatedPaymentExportExclusionPeriodOverviewList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentExportExclusionPeriodOverview'
     PaginatedPaymentTransactionList:
       type: object
       required:
@@ -15310,6 +15464,8 @@ components:
           $ref: '#/components/schemas/PaymentStatusEnum'
         edited:
           type: boolean
+        excluded_from_export:
+          type: boolean
         type:
           type: string
           maxLength: 64
@@ -15344,6 +15500,98 @@ components:
       - mandate_ref
       - type
       - updated_at
+    PaymentExportExclusionPeriod:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        comment:
+          type: string
+      required:
+      - start_date
+    PaymentExportExclusionPeriodCreateRequestRequest:
+      type: object
+      properties:
+        member_id:
+          type: string
+          minLength: 1
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        comment:
+          type: string
+      required:
+      - comment
+      - end_date
+      - member_id
+      - start_date
+    PaymentExportExclusionPeriodOverview:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        comment:
+          type: string
+        member_no:
+          type: integer
+          nullable: true
+        first_name:
+          type: string
+        last_name:
+          type: string
+        member_url:
+          type: string
+          readOnly: true
+        is_active:
+          type: boolean
+          readOnly: true
+      required:
+      - first_name
+      - is_active
+      - last_name
+      - member_no
+      - member_url
+      - start_date
+    PaymentExportExclusionPeriodUpdateRequestRequest:
+      type: object
+      properties:
+        period_id:
+          type: string
+          minLength: 1
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        comment:
+          type: string
+      required:
+      - comment
+      - end_date
+      - period_id
+      - start_date
     PaymentIntendedUsePreviewResponse:
       type: object
       properties:
@@ -15406,6 +15654,13 @@ components:
           type: number
           format: double
           readOnly: true
+        excluded_payments_count:
+          type: integer
+          readOnly: true
+        excluded_payments_sum:
+          type: number
+          format: double
+          readOnly: true
         csv_download_url:
           type: string
           readOnly: true
@@ -15435,6 +15690,8 @@ components:
       - created_at
       - csv_download_url
       - csv_file
+      - excluded_payments_count
+      - excluded_payments_sum
       - month
       - payments_count
       - payments_sum
@@ -16297,7 +16554,7 @@ components:
         cancellation_date:
           type: string
           format: date
-        last_day_of_notice_period:
+        last_day_to_give_notice:
           type: string
           format: date
         date_limit_for_trial_cancellation:
@@ -16307,17 +16564,17 @@ components:
           type: integer
         notice_period_unit:
           $ref: '#/components/schemas/NoticePeriodUnitEnum'
-        subscription_end_date:
+        post_trial_subscription_end_date:
           type: string
           format: date
       required:
       - cancellation_date
       - is_in_trial
-      - last_day_of_notice_period
+      - last_day_to_give_notice
       - notice_period_duration
       - notice_period_unit
+      - post_trial_subscription_end_date
       - product
-      - subscription_end_date
     ProductType:
       type: object
       properties:

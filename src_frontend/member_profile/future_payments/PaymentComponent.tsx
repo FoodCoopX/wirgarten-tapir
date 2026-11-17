@@ -225,6 +225,9 @@ const PaymentComponent: React.FC<PaymentProps> = ({
             {formatDateNumeric(getEndDate(extendedPayment))}
           </span>
         )}
+        {extendedPayment.excludedFromExport && (
+          <span className={"fst-italic"}>Kein Einzug per Lastschrift</span>
+        )}
         <Badge bg={getBadgeBackground(extendedPayment.payment)}>
           {getBadgeText(extendedPayment.payment)}
         </Badge>

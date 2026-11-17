@@ -19,7 +19,11 @@ from tapir.deliveries.models import (
     DeliveryDonation,
     CustomCycleScheduledDeliveryWeek,
 )
-from tapir.payments.models import MemberPaymentRhythm, MemberCredit
+from tapir.payments.models import (
+    MemberPaymentRhythm,
+    MemberCredit,
+    PaymentExportExclusionPeriod,
+)
 from tapir.pickup_locations.models import PickupLocationDeliveryCharge
 from tapir.pickup_locations.models import ProductBasketSizeEquivalence
 from tapir.solidarity_contribution.models import SolidarityContribution
@@ -848,6 +852,22 @@ class TapirCache:
         )
 
         return credits_by_member_cache.get(member_id, [])
+
+    @classmethod
+    def get_payment_export_exclusion_periods_for_member(
+        cls, member_id: str, cache: dict
+    ) -> list[PaymentExportExclusionPeriod]:
+        def compute():
+            periods_by_member_id: dict[str, list[PaymentExportExclusionPeriod]] = {}
+            for period in PaymentExportExclusionPeriod.objects.order_by("start_date"):
+                periods_by_member_id.setdefault(period.member_id, []).append(period)
+            return periods_by_member_id
+
+        return get_from_cache_or_compute(
+            cache=cache,
+            key="payment_export_exclusion_periods_by_member_id",
+            compute_function=compute,
+        ).get(member_id, [])
 
     @classmethod
     def get_association_membership_type_prices(
