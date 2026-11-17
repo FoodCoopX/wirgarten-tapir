@@ -117,10 +117,10 @@ export interface Member {
   phoneNumberLandline?: string | null;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof Member
    */
-  birthdate?: Date | null;
+  birthdate?: string | null;
   /**
    *
    * @type {string}
@@ -306,8 +306,7 @@ export function MemberFromJSONTyped(
       json["phone_number_landline"] == null
         ? undefined
         : json["phone_number_landline"],
-    birthdate:
-      json["birthdate"] == null ? undefined : new Date(json["birthdate"]),
+    birthdate: json["birthdate"] == null ? undefined : json["birthdate"],
     street: json["street"] == null ? undefined : json["street"],
     street2: json["street_2"] == null ? undefined : json["street_2"],
     postcode: json["postcode"] == null ? undefined : json["postcode"],
@@ -393,10 +392,7 @@ export function MemberToJSONTyped(
     email: value["email"],
     phone_number: value["phoneNumber"],
     phone_number_landline: value["phoneNumberLandline"],
-    birthdate:
-      value["birthdate"] == null
-        ? undefined
-        : (value["birthdate"] as any).toISOString().substring(0, 10),
+    birthdate: value["birthdate"],
     street: value["street"],
     street_2: value["street2"],
     postcode: value["postcode"],

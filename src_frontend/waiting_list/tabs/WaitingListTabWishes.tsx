@@ -8,6 +8,7 @@ import {
   WaitingListPickupLocationWish,
   WaitingListProductWish,
 } from "../../api-client";
+import { fromApiDate } from "../../utils/apiDate.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 import formatSubscription from "../../utils/formatSubscription.ts";
 import PickupLocationWishesEditor from "../PickupLocationWishesEditor.tsx";
@@ -105,7 +106,7 @@ const WaitingListTabWishes: React.FC<WaitingListTabWishesProps> = ({
                 setDesiredStartDate(
                   !event.target.value
                     ? undefined
-                    : new Date(event.target.value),
+                    : fromApiDate(event.target.value),
                 );
               }}
               value={

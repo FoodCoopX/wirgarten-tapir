@@ -10,6 +10,7 @@ import TapirButton from "../components/TapirButton.tsx";
 import TapirToastContainer from "../components/TapirToastContainer.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
+import { fromApiDate } from "../utils/apiDate.ts";
 import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
 import { getMinimumDate } from "../utils/getMinimumDate.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
@@ -163,10 +164,12 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
   }
 
   function getEarliestChange(data: MemberDataToConfirm | SubscriptionChange) {
-    let dates = [
-      ...data.subscriptionCreations.map((creation) => creation.startDate!),
-      ...data.subscriptionCancellations.map(
-        (cancellation) => cancellation.endDate!,
+    let dates: Date[] = [
+      ...data.subscriptionCreations.map((creation) =>
+        fromApiDate(creation.startDate!),
+      ),
+      ...data.subscriptionCancellations.map((cancellation) =>
+        fromApiDate(cancellation.endDate!),
       ),
     ];
 
@@ -177,7 +180,7 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
     if ("sharePurchases" in data) {
       dates = [
         ...dates,
-        ...data.sharePurchases.map((purchase) => purchase.validAt),
+        ...data.sharePurchases.map((purchase) => fromApiDate(purchase.validAt)),
       ];
     }
 

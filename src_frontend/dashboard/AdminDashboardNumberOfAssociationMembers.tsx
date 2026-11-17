@@ -39,12 +39,12 @@ const AdminDashboardNumberOfAssociationMembers: React.FC<
     let startDate = dayjs();
     startDate = startDate.date(1);
     startDate = startDate.subtract(8, "month");
-    setStartDateAsString(startDate.toISOString().slice(0, 10));
+    setStartDateAsString(startDate.format("YYYY-MM-DD"));
 
     let endDate = dayjs();
     endDate = endDate.date(31);
     endDate = endDate.add(8, "month");
-    setEndDateAsString(endDate.toISOString().slice(0, 10));
+    setEndDateAsString(endDate.format("YYYY-MM-DD"));
   }, []);
 
   useEffect(() => {
@@ -65,8 +65,8 @@ const AdminDashboardNumberOfAssociationMembers: React.FC<
 
     api
       .associationsApiNumberOfAssociationMembersPerMonthRetrieve({
-        startDate: startDate,
-        endDate: endDate,
+        startDate: startDateAsString,
+        endDate: endDateAsString,
       })
       .then((data) => {
         setLabels(data.labels);

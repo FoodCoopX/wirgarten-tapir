@@ -26,16 +26,16 @@ export interface PaymentExportExclusionPeriodCreateRequestRequest {
   memberId: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof PaymentExportExclusionPeriodCreateRequestRequest
    */
-  startDate: Date;
+  startDate: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof PaymentExportExclusionPeriodCreateRequestRequest
    */
-  endDate: Date | null;
+  endDate: string | null;
   /**
    *
    * @type {string}
@@ -75,8 +75,8 @@ export function PaymentExportExclusionPeriodCreateRequestRequestFromJSONTyped(
   }
   return {
     memberId: json["member_id"],
-    startDate: new Date(json["start_date"]),
-    endDate: json["end_date"] == null ? null : new Date(json["end_date"]),
+    startDate: json["start_date"],
+    endDate: json["end_date"],
     comment: json["comment"],
   };
 }
@@ -100,11 +100,8 @@ export function PaymentExportExclusionPeriodCreateRequestRequestToJSONTyped(
 
   return {
     member_id: value["memberId"],
-    start_date: value["startDate"].toISOString().substring(0, 10),
-    end_date:
-      value["endDate"] == null
-        ? null
-        : (value["endDate"] as any).toISOString().substring(0, 10),
+    start_date: value["startDate"],
+    end_date: value["endDate"],
     comment: value["comment"],
   };
 }

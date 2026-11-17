@@ -32,16 +32,16 @@ export interface DeliveryDonationWithCancellationLimit {
   donation: DeliveryDonation;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof DeliveryDonationWithCancellationLimit
    */
-  cancellationLimit: Date;
+  cancellationLimit: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof DeliveryDonationWithCancellationLimit
    */
-  deliveryDate: Date;
+  deliveryDate: string;
 }
 
 /**
@@ -76,8 +76,8 @@ export function DeliveryDonationWithCancellationLimitFromJSONTyped(
   }
   return {
     donation: DeliveryDonationFromJSON(json["donation"]),
-    cancellationLimit: new Date(json["cancellation_limit"]),
-    deliveryDate: new Date(json["delivery_date"]),
+    cancellationLimit: json["cancellation_limit"],
+    deliveryDate: json["delivery_date"],
   };
 }
 
@@ -97,9 +97,7 @@ export function DeliveryDonationWithCancellationLimitToJSONTyped(
 
   return {
     donation: DeliveryDonationToJSON(value["donation"]),
-    cancellation_limit: value["cancellationLimit"]
-      .toISOString()
-      .substring(0, 10),
-    delivery_date: value["deliveryDate"].toISOString().substring(0, 10),
+    cancellation_limit: value["cancellationLimit"],
+    delivery_date: value["deliveryDate"],
   };
 }

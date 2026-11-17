@@ -118,7 +118,7 @@ const AssociationMembershipUpdateModal: React.FC<
         adminSetAssociationMembershipRequestRequest: {
           membershipTypeId: selectedMembershipTypeId,
           memberId: memberId,
-          startDate: startDate,
+          startDate: startDateAsString,
         },
       })
       .then(() => {

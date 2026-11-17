@@ -32,10 +32,10 @@ export interface PickupLocationDeliveryChargeEntry {
   amount: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof PickupLocationDeliveryChargeEntry
    */
-  validFrom: Date;
+  validFrom: string;
 }
 
 /**
@@ -65,7 +65,7 @@ export function PickupLocationDeliveryChargeEntryFromJSONTyped(
   return {
     id: json["id"] == null ? undefined : json["id"],
     amount: json["amount"],
-    validFrom: new Date(json["valid_from"]),
+    validFrom: json["valid_from"],
   };
 }
 
@@ -86,6 +86,6 @@ export function PickupLocationDeliveryChargeEntryToJSONTyped(
   return {
     id: value["id"],
     amount: value["amount"],
-    valid_from: value["validFrom"].toISOString().substring(0, 10),
+    valid_from: value["validFrom"],
   };
 }

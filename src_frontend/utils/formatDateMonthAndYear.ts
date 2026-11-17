@@ -1,4 +1,8 @@
-export function formatDateMonthAndYear(date: Date | undefined | null): string {
+import { fromApiDate } from "./apiDate.ts";
+
+export function formatDateMonthAndYear(
+  date: Date | string | undefined | null,
+): string {
   if (!date) {
     return "";
   }
@@ -9,5 +13,6 @@ export function formatDateMonthAndYear(date: Date | undefined | null): string {
     day: undefined,
   };
 
-  return date.toLocaleDateString("de-DE", options);
+  const dateObject = typeof date === "string" ? fromApiDate(date) : date;
+  return dateObject.toLocaleDateString("de-DE", options);
 }

@@ -5,6 +5,7 @@ import TapirButton from "../components/TapirButton.tsx";
 import TapirHelpButton from "../components/TapirHelpButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { CustomCycleDeliveryWeeks } from "../types/CustomCycleDeliveryWeeks.ts";
+import { fromApiDate, toApiDate } from "../utils/apiDate.ts";
 import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
 import { getCsrfToken } from "../utils/getCsrfToken.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
@@ -26,7 +27,7 @@ function getDefaultSelectedGrowingPeriod(allGrowingPeriods: GrowingPeriod[]) {
     }
   }
 
-  const today = new Date();
+  const today = toApiDate(new Date());
   for (const growingPeriod of allGrowingPeriods) {
     if (growingPeriod.startDate <= today && today <= growingPeriod.endDate) {
       return growingPeriod;
@@ -44,7 +45,7 @@ const CustomCycleDeliveryWeeksInput: React.FC<
     useState<GrowingPeriod>();
   const [abortController, setAbortController] = useState<AbortController>();
   const [deliveryDates, setDeliveryDates] = useState<{
-    [key: string]: { [key: string]: Date };
+    [key: string]: { [key: string]: string };
   }>({});
   const [internalWeeks, setInternalWeeks] = useState<{
     [growingPeriodId: string]: string[];
@@ -182,7 +183,7 @@ const CustomCycleDeliveryWeeksInput: React.FC<
     if (!(periodId in deliveryDates) || !(week in deliveryDates[periodId])) {
       return undefined;
     }
-    return new Date(deliveryDates[periodId][week]);
+    return fromApiDate(deliveryDates[periodId][week]);
   }
 
   function getDateDisplay(week: number) {

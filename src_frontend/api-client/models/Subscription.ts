@@ -70,16 +70,16 @@ export interface Subscription {
   quantity: number;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof Subscription
    */
-  startDate: Date;
+  startDate: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof Subscription
    */
-  endDate: Date;
+  endDate: string;
   /**
    *
    * @type {Date}
@@ -106,10 +106,10 @@ export interface Subscription {
   trialDisabled?: boolean;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof Subscription
    */
-  trialEndDateOverride?: Date | null;
+  trialEndDateOverride?: string | null;
   /**
    *
    * @type {string}
@@ -202,8 +202,8 @@ export function SubscriptionFromJSONTyped(
         ? undefined
         : new Date(json["auto_confirmed"]),
     quantity: json["quantity"],
-    startDate: new Date(json["start_date"]),
-    endDate: new Date(json["end_date"]),
+    startDate: json["start_date"],
+    endDate: json["end_date"],
     cancellationTs:
       json["cancellation_ts"] == null
         ? undefined
@@ -219,7 +219,7 @@ export function SubscriptionFromJSONTyped(
     trialEndDateOverride:
       json["trial_end_date_override"] == null
         ? undefined
-        : new Date(json["trial_end_date_override"]),
+        : json["trial_end_date_override"],
     priceOverride:
       json["price_override"] == null ? undefined : json["price_override"],
     noticePeriodDuration: json["notice_period_duration"],
@@ -258,8 +258,8 @@ export function SubscriptionToJSONTyped(
         ? undefined
         : (value["autoConfirmed"] as any).toISOString(),
     quantity: value["quantity"],
-    start_date: value["startDate"].toISOString().substring(0, 10),
-    end_date: value["endDate"].toISOString().substring(0, 10),
+    start_date: value["startDate"],
+    end_date: value["endDate"],
     cancellation_ts:
       value["cancellationTs"] == null
         ? undefined
@@ -273,10 +273,7 @@ export function SubscriptionToJSONTyped(
         ? undefined
         : (value["withdrawalConsentTs"] as any).toISOString(),
     trial_disabled: value["trialDisabled"],
-    trial_end_date_override:
-      value["trialEndDateOverride"] == null
-        ? undefined
-        : (value["trialEndDateOverride"] as any).toISOString().substring(0, 10),
+    trial_end_date_override: value["trialEndDateOverride"],
     price_override: value["priceOverride"],
     notice_period_duration: value["noticePeriodDuration"],
     notice_period_unit: NoticePeriodUnitEnumToJSON(value["noticePeriodUnit"]),

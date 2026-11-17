@@ -13,11 +13,14 @@ else
 fi
 
 if [ "$CURRENT_HASH" != "$PREV_HASH" ]; then
+  # --type-mappings=date=string: date-only fields become "YYYY-MM-DD" strings instead of Date,
+  # see docs/dev/frontend_dates.md
   npx openapi-generator-cli generate \
     -i schema.yml \
     -g typescript-fetch \
     -o ./src_frontend/api-client \
-    --additional-properties=sortParamsByRequiredFlag=false,sortModelPropertiesByRequiredFlag=false
+    --additional-properties=sortParamsByRequiredFlag=false,sortModelPropertiesByRequiredFlag=false \
+    --type-mappings=date=string
 
   # We'd prefer not modifying the generated files. However, the generator includes some imports to files that don't exist.
   # This causes "npm run build" to fail with errors like "error TS2724: '"./MemberCountry"' has no exported member named 'MemberCountryToJSONTyped'."

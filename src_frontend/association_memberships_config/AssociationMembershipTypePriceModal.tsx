@@ -58,7 +58,7 @@ const AssociationMembershipTypePriceModal: React.FC<
         associationMembershipTypePriceRequest: {
           type: membershipType.id!,
           price: price.toFixed(2),
-          validFrom: validFrom,
+          validFrom: addPriceDate,
         },
       })
       .then(onEdited)

@@ -9,6 +9,7 @@ import {
 } from "../api-client";
 import TapirButton from "../components/TapirButton.tsx";
 import { CustomCycleDeliveryWeeks } from "../types/CustomCycleDeliveryWeeks.ts";
+import { fromApiDate } from "../utils/apiDate.ts";
 import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
 import { HTML_ALLOWED_TEXT } from "../utils/HTML_ALLOWED_TEXT.ts";
 import CustomCycleDeliveryWeeksInput from "./CustomCycleDeliveryWeeksInput.tsx";
@@ -356,7 +357,7 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
                   <Form.Control
                     type={"date"}
                     onChange={(event) =>
-                      setTaxRateChangeDate(new Date(event.target.value))
+                      setTaxRateChangeDate(fromApiDate(event.target.value))
                     }
                     required={true}
                     value={dayjs(taxRateChangeDate).format("YYYY-MM-DD")}

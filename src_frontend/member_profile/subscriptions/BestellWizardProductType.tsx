@@ -48,6 +48,7 @@ import { shouldIncludeStepGrowingPeriodChoice } from "../../bestell_wizard_mobil
 import { updateWaitingList } from "../../bestell_wizard_mobile/utils/updateWaitingList.ts";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
+import { fromApiDate } from "../../utils/apiDate.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 import { isSubscriptionActive } from "../../utils/isSubscriptionActive.ts";
 
@@ -626,7 +627,9 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
             pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
             studentStatusEnabled={false}
             waitingListEntryDetails={undefined}
-            contractStartDate={selectedGrowingPeriod?.contractStartDate!}
+            contractStartDate={fromApiDate(
+              selectedGrowingPeriod?.contractStartDate!,
+            )}
             singleProductType={productType}
             selectedGrowingPeriod={selectedGrowingPeriod}
             hideTrialPeriod={memberAlreadyHasASubscriptionForThisProductType}
@@ -733,7 +736,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
       goToProductTypeStep={() => {
         setCurrentStep(`${productTypeId}_order`);
       }}
-      contractStartDate={selectedGrowingPeriod?.contractStartDate!}
+      contractStartDate={fromApiDate(selectedGrowingPeriod?.contractStartDate!)}
       selectedGrowingPeriod={selectedGrowingPeriod}
     />
   );

@@ -110,16 +110,16 @@ export interface PickupLocationSaveRequestRequest {
   routeInfo?: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof PickupLocationSaveRequestRequest
    */
-  startDate?: Date | null;
+  startDate?: string | null;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof PickupLocationSaveRequestRequest
    */
-  endDate?: Date | null;
+  endDate?: string | null;
   /**
    *
    * @type {boolean}
@@ -188,9 +188,8 @@ export function PickupLocationSaveRequestRequestFromJSONTyped(
     locationRouteId:
       json["location_route_id"] == null ? undefined : json["location_route_id"],
     routeInfo: json["route_info"] == null ? undefined : json["route_info"],
-    startDate:
-      json["start_date"] == null ? undefined : new Date(json["start_date"]),
-    endDate: json["end_date"] == null ? undefined : new Date(json["end_date"]),
+    startDate: json["start_date"] == null ? undefined : json["start_date"],
+    endDate: json["end_date"] == null ? undefined : json["end_date"],
     showDetailsInBasketTotalsExport:
       json["show_details_in_basket_totals_export"] == null
         ? undefined
@@ -232,14 +231,8 @@ export function PickupLocationSaveRequestRequestToJSONTyped(
     photo_link: value["photoLink"],
     location_route_id: value["locationRouteId"],
     route_info: value["routeInfo"],
-    start_date:
-      value["startDate"] == null
-        ? undefined
-        : (value["startDate"] as any).toISOString().substring(0, 10),
-    end_date:
-      value["endDate"] == null
-        ? undefined
-        : (value["endDate"] as any).toISOString().substring(0, 10),
+    start_date: value["startDate"],
+    end_date: value["endDate"],
     show_details_in_basket_totals_export:
       value["showDetailsInBasketTotalsExport"],
     is_home_delivery: value["isHomeDelivery"],

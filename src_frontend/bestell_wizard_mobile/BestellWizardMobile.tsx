@@ -36,6 +36,7 @@ import { updateProductsAndProductTypesOverCapacity } from "../bestell_wizard/uti
 import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
 import { addToast } from "../utils/addToast.ts";
+import { fromApiDate } from "../utils/apiDate.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import { updateProductPrices } from "../utils/updateProductPrices.ts";
 import BestellWizardMobileBase from "./components/BestellWizardMobileBase.tsx";
@@ -282,7 +283,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
       setToastDatas,
     );
 
-    setContractStartDate(selectedGrowingPeriod.contractStartDate);
+    setContractStartDate(fromApiDate(selectedGrowingPeriod.contractStartDate));
 
     if (waitingListEntryDetails !== undefined) {
       return;

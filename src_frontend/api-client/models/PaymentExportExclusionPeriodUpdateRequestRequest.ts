@@ -26,16 +26,16 @@ export interface PaymentExportExclusionPeriodUpdateRequestRequest {
   periodId: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof PaymentExportExclusionPeriodUpdateRequestRequest
    */
-  startDate: Date;
+  startDate: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof PaymentExportExclusionPeriodUpdateRequestRequest
    */
-  endDate: Date | null;
+  endDate: string | null;
   /**
    *
    * @type {string}
@@ -75,8 +75,8 @@ export function PaymentExportExclusionPeriodUpdateRequestRequestFromJSONTyped(
   }
   return {
     periodId: json["period_id"],
-    startDate: new Date(json["start_date"]),
-    endDate: json["end_date"] == null ? null : new Date(json["end_date"]),
+    startDate: json["start_date"],
+    endDate: json["end_date"],
     comment: json["comment"],
   };
 }
@@ -100,11 +100,8 @@ export function PaymentExportExclusionPeriodUpdateRequestRequestToJSONTyped(
 
   return {
     period_id: value["periodId"],
-    start_date: value["startDate"].toISOString().substring(0, 10),
-    end_date:
-      value["endDate"] == null
-        ? null
-        : (value["endDate"] as any).toISOString().substring(0, 10),
+    start_date: value["startDate"],
+    end_date: value["endDate"],
     comment: value["comment"],
   };
 }

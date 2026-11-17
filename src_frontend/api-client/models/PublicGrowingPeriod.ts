@@ -29,22 +29,22 @@ export interface PublicGrowingPeriod {
   id?: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof PublicGrowingPeriod
    */
-  startDate: Date;
+  startDate: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof PublicGrowingPeriod
    */
-  endDate: Date;
+  endDate: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof PublicGrowingPeriod
    */
-  readonly contractStartDate: Date;
+  readonly contractStartDate: string;
   /**
    *
    * @type {Array<PublicProductType>}
@@ -84,9 +84,9 @@ export function PublicGrowingPeriodFromJSONTyped(
   }
   return {
     id: json["id"] == null ? undefined : json["id"],
-    startDate: new Date(json["start_date"]),
-    endDate: new Date(json["end_date"]),
-    contractStartDate: new Date(json["contract_start_date"]),
+    startDate: json["start_date"],
+    endDate: json["end_date"],
+    contractStartDate: json["contract_start_date"],
     productTypes: (json["product_types"] as Array<any>).map(
       PublicProductTypeFromJSON,
     ),
@@ -110,7 +110,7 @@ export function PublicGrowingPeriodToJSONTyped(
 
   return {
     id: value["id"],
-    start_date: value["startDate"].toISOString().substring(0, 10),
-    end_date: value["endDate"].toISOString().substring(0, 10),
+    start_date: value["startDate"],
+    end_date: value["endDate"],
   };
 }

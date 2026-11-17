@@ -80,10 +80,10 @@ export interface PaymentTransaction {
   type: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof PaymentTransaction
    */
-  month: Date;
+  month: string;
   /**
    *
    * @type {string}
@@ -152,7 +152,7 @@ export function PaymentTransactionFromJSONTyped(
     createdAt: new Date(json["created_at"]),
     updatedAt: new Date(json["updated_at"]),
     type: json["type"],
-    month: new Date(json["month"]),
+    month: json["month"],
     csvFile: json["csv_file"],
     xmlFile: json["xml_file"] == null ? undefined : json["xml_file"],
   };
@@ -183,7 +183,7 @@ export function PaymentTransactionToJSONTyped(
   return {
     id: value["id"],
     type: value["type"],
-    month: value["month"].toISOString().substring(0, 10),
+    month: value["month"],
     csv_file: value["csvFile"],
     xml_file: value["xmlFile"],
   };

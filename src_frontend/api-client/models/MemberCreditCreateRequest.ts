@@ -20,10 +20,10 @@
 export interface MemberCreditCreateRequest {
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof MemberCreditCreateRequest
    */
-  dueDate: Date;
+  dueDate: string;
   /**
    *
    * @type {string}
@@ -78,7 +78,7 @@ export function MemberCreditCreateRequestFromJSONTyped(
     return json;
   }
   return {
-    dueDate: new Date(json["due_date"]),
+    dueDate: json["due_date"],
     memberId: json["member_id"],
     amount: json["amount"],
     purpose: json["purpose"],
@@ -101,7 +101,7 @@ export function MemberCreditCreateRequestToJSONTyped(
   }
 
   return {
-    due_date: value["dueDate"].toISOString().substring(0, 10),
+    due_date: value["dueDate"],
     member_id: value["memberId"],
     amount: value["amount"],
     purpose: value["purpose"],

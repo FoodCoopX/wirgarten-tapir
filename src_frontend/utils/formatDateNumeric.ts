@@ -1,5 +1,7 @@
+import { fromApiDate } from "./apiDate.ts";
+
 export function formatDateNumeric(
-  date: Date | undefined | null,
+  date: Date | string | undefined | null,
   includeTime = false,
 ): string {
   if (!date) {
@@ -10,12 +12,14 @@ export function formatDateNumeric(
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-    timeZone: "Europe/Berlin",
+    // Date-only strings are calendar dates, only times need converting
+    timeZone: typeof date === "string" ? undefined : "Europe/Berlin",
   };
   if (includeTime) {
     options.hour = "2-digit";
     options.minute = "2-digit";
   }
 
-  return date.toLocaleDateString("de-DE", options);
+  const dateObject = typeof date === "string" ? fromApiDate(date) : date;
+  return dateObject.toLocaleDateString("de-DE", options);
 }

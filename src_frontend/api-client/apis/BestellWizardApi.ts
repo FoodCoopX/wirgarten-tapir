@@ -250,7 +250,7 @@ export class BestellWizardApi extends runtime.BaseAPI {
   async bestellWizardApiContractStartDateWaitingListEntryRetrieveRaw(
     requestParameters: BestellWizardApiContractStartDateWaitingListEntryRetrieveRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<Date>> {
+  ): Promise<runtime.ApiResponse<string>> {
     const queryParameters: any = {};
 
     if (requestParameters["waitingListEntryId"] != null) {
@@ -285,7 +285,7 @@ export class BestellWizardApi extends runtime.BaseAPI {
     );
 
     if (this.isJsonMime(response.headers.get("content-type"))) {
-      return new runtime.JSONApiResponse<Date>(response);
+      return new runtime.JSONApiResponse<string>(response);
     } else {
       return new runtime.TextApiResponse(response) as any;
     }
@@ -296,7 +296,7 @@ export class BestellWizardApi extends runtime.BaseAPI {
   async bestellWizardApiContractStartDateWaitingListEntryRetrieve(
     requestParameters: BestellWizardApiContractStartDateWaitingListEntryRetrieveRequest = {},
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<Date> {
+  ): Promise<string> {
     const response =
       await this.bestellWizardApiContractStartDateWaitingListEntryRetrieveRaw(
         requestParameters,
@@ -309,7 +309,7 @@ export class BestellWizardApi extends runtime.BaseAPI {
    */
   async bestellWizardApiEarliestContractStartDateRetrieveRaw(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<Date>> {
+  ): Promise<runtime.ApiResponse<string>> {
     const queryParameters: any = {};
 
     const headerParameters: runtime.HTTPHeaders = {};
@@ -339,7 +339,7 @@ export class BestellWizardApi extends runtime.BaseAPI {
     );
 
     if (this.isJsonMime(response.headers.get("content-type"))) {
-      return new runtime.JSONApiResponse<Date>(response);
+      return new runtime.JSONApiResponse<string>(response);
     } else {
       return new runtime.TextApiResponse(response) as any;
     }
@@ -349,7 +349,7 @@ export class BestellWizardApi extends runtime.BaseAPI {
    */
   async bestellWizardApiEarliestContractStartDateRetrieve(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<Date> {
+  ): Promise<string> {
     const response =
       await this.bestellWizardApiEarliestContractStartDateRetrieveRaw(
         initOverrides,

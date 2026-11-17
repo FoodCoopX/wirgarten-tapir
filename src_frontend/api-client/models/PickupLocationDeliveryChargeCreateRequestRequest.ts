@@ -32,10 +32,10 @@ export interface PickupLocationDeliveryChargeCreateRequestRequest {
   amount: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof PickupLocationDeliveryChargeCreateRequestRequest
    */
-  validFrom: Date;
+  validFrom: string;
 }
 
 /**
@@ -70,7 +70,7 @@ export function PickupLocationDeliveryChargeCreateRequestRequestFromJSONTyped(
   return {
     pickupLocationId: json["pickup_location_id"],
     amount: json["amount"],
-    validFrom: new Date(json["valid_from"]),
+    validFrom: json["valid_from"],
   };
 }
 
@@ -94,6 +94,6 @@ export function PickupLocationDeliveryChargeCreateRequestRequestToJSONTyped(
   return {
     pickup_location_id: value["pickupLocationId"],
     amount: value["amount"],
-    valid_from: value["validFrom"].toISOString().substring(0, 10),
+    valid_from: value["validFrom"],
   };
 }

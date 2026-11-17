@@ -20,10 +20,10 @@
 export interface GetDatesFromCustomCycleDeliveryWeeksResponse {
   /**
    *
-   * @type {{ [key: string]: { [key: string]: Date; }; }}
+   * @type {{ [key: string]: { [key: string]: string; }; }}
    * @memberof GetDatesFromCustomCycleDeliveryWeeksResponse
    */
-  customCycleDeliveryWeeksDates: { [key: string]: { [key: string]: Date } };
+  customCycleDeliveryWeeksDates: { [key: string]: { [key: string]: string } };
   /**
    *
    * @type {string}

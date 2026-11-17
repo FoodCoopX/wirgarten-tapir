@@ -26,16 +26,16 @@ import {
 export interface UsedJokerInGrowingPeriod {
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof UsedJokerInGrowingPeriod
    */
-  growingPeriodStart: Date;
+  growingPeriodStart: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof UsedJokerInGrowingPeriod
    */
-  growingPeriodEnd: Date;
+  growingPeriodEnd: string;
   /**
    *
    * @type {number}
@@ -97,8 +97,8 @@ export function UsedJokerInGrowingPeriodFromJSONTyped(
     return json;
   }
   return {
-    growingPeriodStart: new Date(json["growing_period_start"]),
-    growingPeriodEnd: new Date(json["growing_period_end"]),
+    growingPeriodStart: json["growing_period_start"],
+    growingPeriodEnd: json["growing_period_end"],
     numberOfUsedJokers: json["number_of_used_jokers"],
     jokerRestrictions: (json["joker_restrictions"] as Array<any>).map(
       JokerRestrictionFromJSON,
@@ -122,12 +122,8 @@ export function UsedJokerInGrowingPeriodToJSONTyped(
   }
 
   return {
-    growing_period_start: value["growingPeriodStart"]
-      .toISOString()
-      .substring(0, 10),
-    growing_period_end: value["growingPeriodEnd"]
-      .toISOString()
-      .substring(0, 10),
+    growing_period_start: value["growingPeriodStart"],
+    growing_period_end: value["growingPeriodEnd"],
     number_of_used_jokers: value["numberOfUsedJokers"],
     joker_restrictions: (value["jokerRestrictions"] as Array<any>).map(
       JokerRestrictionToJSON,

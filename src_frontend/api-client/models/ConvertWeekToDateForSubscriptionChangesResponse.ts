@@ -20,16 +20,16 @@
 export interface ConvertWeekToDateForSubscriptionChangesResponse {
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof ConvertWeekToDateForSubscriptionChangesResponse
    */
-  startDate: Date;
+  startDate: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof ConvertWeekToDateForSubscriptionChangesResponse
    */
-  endDate: Date;
+  endDate: string;
 }
 
 /**
@@ -60,8 +60,8 @@ export function ConvertWeekToDateForSubscriptionChangesResponseFromJSONTyped(
     return json;
   }
   return {
-    startDate: new Date(json["start_date"]),
-    endDate: new Date(json["end_date"]),
+    startDate: json["start_date"],
+    endDate: json["end_date"],
   };
 }
 
@@ -83,7 +83,7 @@ export function ConvertWeekToDateForSubscriptionChangesResponseToJSONTyped(
   }
 
   return {
-    start_date: value["startDate"].toISOString().substring(0, 10),
-    end_date: value["endDate"].toISOString().substring(0, 10),
+    start_date: value["startDate"],
+    end_date: value["endDate"],
   };
 }
