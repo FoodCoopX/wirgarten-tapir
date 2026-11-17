@@ -51,7 +51,10 @@ const PickupLocationDeliveryDetailsModal: React.FC<
           {pickupLocation.messengerGroupLink && (
             <>
               Messenger-Gruppe:{" "}
-              <a href={pickupLocation.messengerGroupLink}>
+              <a
+                href={pickupLocation.messengerGroupLink}
+                className={"text-break"}
+              >
                 {pickupLocation.messengerGroupLink}
               </a>
               <br />
@@ -85,7 +88,7 @@ const PickupLocationDeliveryDetailsModal: React.FC<
         {pickupLocation.photoLink && (
           <img
             src={pickupLocation.photoLink}
-            style={{ maxWidth: 764 }}
+            className={"img-fluid"}
             alt={pickupLocation.name}
           />
         )}
