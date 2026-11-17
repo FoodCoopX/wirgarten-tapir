@@ -1,16 +1,31 @@
 import datetime
 
-from django.db.models import Exists, OuterRef, Q
+from django.db.models import Case, DateField, Exists, OuterRef, Q, Value, When
+from django.db.models.functions import Greatest
+from django.db.models.lookups import Exact
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES
+from tapir.payments.config import (
+    PAYMENT_TYPE_ASSOCIATION_DEPOSIT,
+    PAYMENT_TYPE_COOP_SHARES,
+)
 from tapir.payments.models import PaymentExportExclusionPeriod
+from tapir.payments.services.payment_due_date_calculator import PaymentDueDateCalculator
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import Payment
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.utils import get_today
 
 
 class PaymentExportExclusionPeriodService:
+    @staticmethod
+    def get_deposit_collection_date(cache: dict) -> datetime.date:
+        today = get_today(cache=cache)
+        scheduled_date = PaymentDueDateCalculator.get_first_due_date_on_or_after(
+            earliest_date=today.replace(day=1), cache=cache
+        )
+        return max(today, scheduled_date)
+
     @classmethod
     def is_payment_excluded(cls, payment: Payment, cache: dict) -> bool:
         if payment.transaction_id is not None:
@@ -23,7 +38,11 @@ class PaymentExportExclusionPeriodService:
             return False
         return cls.is_member_excluded(
             member_id=payment.mandate_ref.member_id,
-            reference_date=payment.due_date,
+            reference_date=(
+                max(payment.due_date, cls.get_deposit_collection_date(cache=cache))
+                if payment.type == PAYMENT_TYPE_ASSOCIATION_DEPOSIT
+                else payment.due_date
+            ),
             cache=cache,
         )
 
@@ -36,17 +55,32 @@ class PaymentExportExclusionPeriodService:
         ):
             return exported_and_excluded
 
-        member_is_excluded_at_due_date = Exists(
+        reference_date = Case(
+            When(
+                Exact(OuterRef("type"), Value(PAYMENT_TYPE_ASSOCIATION_DEPOSIT)),
+                then=Greatest(
+                    OuterRef("due_date"),
+                    Value(
+                        PaymentExportExclusionPeriodService.get_deposit_collection_date(
+                            cache=cache
+                        )
+                    ),
+                ),
+            ),
+            default=OuterRef("due_date"),
+            output_field=DateField(),
+        )
+        member_is_excluded = Exists(
             PaymentExportExclusionPeriod.objects.filter(
-                Q(end_date__isnull=True) | Q(end_date__gte=OuterRef("due_date")),
+                Q(end_date__isnull=True) | Q(end_date__gte=reference_date),
                 member_id=OuterRef("mandate_ref__member_id"),
-                start_date__lte=OuterRef("due_date"),
+                start_date__lte=reference_date,
             )
         )
         return exported_and_excluded | (
             Q(transaction__isnull=True)
             & ~Q(type=PAYMENT_TYPE_COOP_SHARES)
-            & Q(member_is_excluded_at_due_date)
+            & Q(member_is_excluded)
         )
 
     @classmethod

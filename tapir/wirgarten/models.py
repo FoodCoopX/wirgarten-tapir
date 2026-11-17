@@ -812,6 +812,12 @@ class Payment(TapirModel):
         null=True,
         related_name="payments",
     )
+    association_deposit = models.ForeignKey(
+        "associations.AssociationDeposit",
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="payments",
+    )
     # Only set if the coop shares are paid in instalments
     instalment_number = models.PositiveSmallIntegerField(null=True)
 

@@ -28,9 +28,9 @@ class Pain008XmlFileCreator:
         reference_date: date,
         send_mail: bool,
         cache: dict,
-    ) -> tuple[ExportedFile | None, list[str]]:
+    ) -> tuple[ExportedFile | None, list[str], list[Payment]]:
         try:
-            xml_bytes, errors_failed_payments = (
+            xml_bytes, errors_failed_payments, valid_payments = (
                 cls.build_xml_string_with_valid_payments_and_errors_for_invalid_payments(
                     payments=payments,
                     collection_date=reference_date,
@@ -44,14 +44,14 @@ class Pain008XmlFileCreator:
                 cache=cache,
                 send_mail=send_mail,
             )
-            return None, []
+            return None, [], []
 
         if xml_bytes is None:
             reason = f"<ul><li>{"</li><li>".join(errors_failed_payments)}</li></ul>"
             cls.send_error_mail_or_raise_exception(
                 reason=reason, file_name=file_name, cache=cache, send_mail=send_mail
             )
-            return None, []
+            return None, [], []
 
         xml_file = export_file(
             filename=file_name,
@@ -64,7 +64,7 @@ class Pain008XmlFileCreator:
             cache=cache,
             errors=errors_failed_payments,
         )
-        return xml_file, errors_failed_payments
+        return xml_file, errors_failed_payments, valid_payments
 
     @classmethod
     def send_error_mail_or_raise_exception(
@@ -94,7 +94,7 @@ class Pain008XmlFileCreator:
     @classmethod
     def build_xml_string_with_valid_payments_and_errors_for_invalid_payments(
         cls, payments: list[Payment], collection_date: datetime.date, cache: dict
-    ) -> tuple[bytes | None, list[str]]:
+    ) -> tuple[bytes | None, list[str], list[Payment]]:
         errors = []
         valid_payments = []
         for payment in payments:
@@ -112,4 +112,4 @@ class Pain008XmlFileCreator:
                 payments=valid_payments, collection_date=collection_date, cache=cache
             )
 
-        return xml_string, errors
+        return xml_string, errors, valid_payments

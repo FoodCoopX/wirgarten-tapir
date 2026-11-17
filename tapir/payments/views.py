@@ -202,7 +202,11 @@ class GetFutureMemberPaymentsApiView(APIView):
                     if payment.mandate_ref_id in mandate_ref_ids
                 ]
             )
-            generated_payments.update(member_payments)
+            generated_payments.update(
+                payment
+                for payment in member_payments
+                if payment.type not in payments_config.ONE_OFF_TRANSACTION_TYPES
+            )
             current_month = get_first_of_next_month(current_month)
         return member_payments
 
@@ -232,6 +236,8 @@ class GetFutureMemberPaymentsApiView(APIView):
             number_of_instalments = None
 
             match payment.type:
+                case payments_config.PAYMENT_TYPE_ASSOCIATION_DEPOSIT:
+                    pass
                 case payments_config.PAYMENT_TYPE_COOP_SHARES:
                     if payment.coop_share_transaction is not None:
                         coop_share_transactions = [payment.coop_share_transaction]
@@ -1268,7 +1274,7 @@ class PaymentTransactionDetailsView(APIView):
 
         for mandate_ref in list(payments_by_mandate_ref.keys()):
             payments = payments_by_mandate_ref[mandate_ref]
-            if transaction.type == payments_config.PAYMENT_TYPE_COOP_SHARES:
+            if transaction.type in payments_config.ONE_OFF_TRANSACTION_TYPES:
                 intended_use_by_mandate_ref[mandate_ref] = (
                     PaymentExportIntendedUseBuilder.build_intended_use(
                         payment=payments[0], is_contracts=False, cache=cache
@@ -1382,7 +1388,7 @@ class MembersNeedingBankingDataForRebuildApiView(APIView):
         ).date()
 
         member_ids = (
-            Payment.objects.exclude(type=payments_config.PAYMENT_TYPE_COOP_SHARES)
+            Payment.objects.exclude(type__in=payments_config.ONE_OFF_TRANSACTION_TYPES)
             .filter(
                 transaction__month__gte=from_date.replace(day=1),
                 transaction__month__lte=get_today(cache=cache),

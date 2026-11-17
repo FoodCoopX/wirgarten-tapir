@@ -28,6 +28,7 @@ class TestCreateXmlFileAndSendMail(TapirUnitTest):
         mock_build_xml_string_with_valid_payments_and_errors_for_invalid_payments.return_value = (
             xml_bytes,
             [],
+            [],
         )
 
         xml_file = MagicMock()
@@ -49,7 +50,7 @@ class TestCreateXmlFileAndSendMail(TapirUnitTest):
             cache=cache,
         )
 
-        self.assertEqual((xml_file, []), result)
+        self.assertEqual((xml_file, [], []), result)
 
         mock_build_xml_string_with_valid_payments_and_errors_for_invalid_payments.assert_called_once_with(
             payments=payments, collection_date=reference_date, cache=cache
@@ -80,6 +81,7 @@ class TestCreateXmlFileAndSendMail(TapirUnitTest):
         mock_build_xml_string_with_valid_payments_and_errors_for_invalid_payments.return_value = (
             xml_bytes,
             [],
+            [],
         )
 
         xml_file = MagicMock()
@@ -101,7 +103,7 @@ class TestCreateXmlFileAndSendMail(TapirUnitTest):
             cache=cache,
         )
 
-        self.assertEqual((xml_file, []), result)
+        self.assertEqual((xml_file, [], []), result)
 
         mock_build_xml_string_with_valid_payments_and_errors_for_invalid_payments.assert_called_once_with(
             payments=payments, collection_date=reference_date, cache=cache
@@ -132,6 +134,7 @@ class TestCreateXmlFileAndSendMail(TapirUnitTest):
         mock_build_xml_string_with_valid_payments_and_errors_for_invalid_payments.return_value = (
             xml_bytes,
             [],
+            [],
         )
 
         xml_file = MagicMock()
@@ -153,7 +156,7 @@ class TestCreateXmlFileAndSendMail(TapirUnitTest):
             cache=cache,
         )
 
-        self.assertEqual((xml_file, []), result)
+        self.assertEqual((xml_file, [], []), result)
 
         mock_build_xml_string_with_valid_payments_and_errors_for_invalid_payments.assert_called_once_with(
             payments=payments, collection_date=reference_date, cache=cache
@@ -202,7 +205,7 @@ class TestCreateXmlFileAndSendMail(TapirUnitTest):
             cache=cache,
         )
 
-        self.assertEqual((None, []), result)
+        self.assertEqual((None, [], []), result)
 
         mock_build_xml_string_with_valid_payments_and_errors_for_invalid_payments.assert_called_once_with(
             payments=payments, collection_date=reference_date, cache=cache
@@ -230,6 +233,7 @@ class TestCreateXmlFileAndSendMail(TapirUnitTest):
         mock_build_xml_string_with_valid_payments_and_errors_for_invalid_payments.return_value = (
             xml_bytes,
             errors_failed_payments,
+            [],
         )
 
         xml_file = MagicMock()
@@ -248,7 +252,7 @@ class TestCreateXmlFileAndSendMail(TapirUnitTest):
             cache=cache,
         )
 
-        self.assertEqual((xml_file, errors_failed_payments), result)
+        self.assertEqual((xml_file, errors_failed_payments, []), result)
 
         mock_build_xml_string_with_valid_payments_and_errors_for_invalid_payments.assert_called_once_with(
             payments=payments, collection_date=reference_date, cache=cache
@@ -283,6 +287,7 @@ class TestCreateXmlFileAndSendMail(TapirUnitTest):
         mock_build_xml_string_with_valid_payments_and_errors_for_invalid_payments.return_value = (
             None,
             errors_failed_payments,
+            [],
         )
 
         payments = MagicMock()
@@ -299,7 +304,7 @@ class TestCreateXmlFileAndSendMail(TapirUnitTest):
             cache=cache,
         )
 
-        self.assertEqual((None, []), result)
+        self.assertEqual((None, [], []), result)
 
         mock_build_xml_string_with_valid_payments_and_errors_for_invalid_payments.assert_called_once_with(
             payments=payments, collection_date=reference_date, cache=cache

@@ -64,6 +64,18 @@ class AssociationMembership(TapirModel):
         return f"{self.member.get_display_name()} {self.type.name} {self.start_date} -> {self.end_date}"
 
 
+class AssociationDeposit(TapirModel):
+    member = models.OneToOneField(
+        Member, on_delete=models.CASCADE, related_name="association_deposit"
+    )
+
+
+class AssociationDepositAgreedLogEntry(LogEntry):
+    template_name = "associations/log/deposit_agreed.html"
+
+    amount = models.DecimalField(max_digits=8, decimal_places=2)
+
+
 class AssociationMembershipDeletedLogEntry(LogEntry):
     template_name = "associations/log/membership_deleted.html"
 

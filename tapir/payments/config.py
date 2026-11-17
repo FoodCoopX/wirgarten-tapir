@@ -1,4 +1,14 @@
 PAYMENT_TYPE_COOP_SHARES = "Genossenschaftsanteile"
+PAYMENT_TYPE_ASSOCIATION_DEPOSIT = "payment_type_association_deposit"
+ONE_OFF_TRANSACTION_TYPES = (PAYMENT_TYPE_COOP_SHARES, PAYMENT_TYPE_ASSOCIATION_DEPOSIT)
+
+
+def get_payment_type_label(payment_type: str) -> str:
+    return (
+        "Vereinseinlage"
+        if payment_type == PAYMENT_TYPE_ASSOCIATION_DEPOSIT
+        else payment_type
+    )
 
 
 class IntendedUseTokens:

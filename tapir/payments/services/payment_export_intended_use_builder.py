@@ -2,7 +2,11 @@ from tapir.associations.services.association_membership_price_type_getter import
     AssociationMembershipTypePriceGetter,
 )
 from tapir.configuration.parameter import get_parameter_value
-from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES
+from tapir.payments.config import (
+    PAYMENT_TYPE_ASSOCIATION_DEPOSIT,
+    PAYMENT_TYPE_COOP_SHARES,
+    get_payment_type_label,
+)
 from tapir.payments.services.intended_use_pattern_expander import (
     IntendedUsePatternExpander,
 )
@@ -20,7 +24,7 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 class PaymentExportIntendedUseBuilder:
     @classmethod
     def build_intended_use(cls, payment: Payment, is_contracts: bool, cache: dict):
-        if get_parameter_value(
+        if payment.type != PAYMENT_TYPE_ASSOCIATION_DEPOSIT and get_parameter_value(
             key=ParameterKeys.PAYMENT_INTENDED_USE_ENABLE_CUSTOM, cache=cache
         ):
             return cls._build_intended_use_from_pattern(
@@ -35,8 +39,10 @@ class PaymentExportIntendedUseBuilder:
     def _build_intended_use_legacy(
         cls, payment: Payment, is_contracts: bool, cache: dict
     ):
-        payment_type_display = cls.get_payment_type_display_legacy(
-            contract_payments=is_contracts
+        payment_type_display = (
+            get_payment_type_label(payment.type)
+            if payment.type == PAYMENT_TYPE_ASSOCIATION_DEPOSIT
+            else cls.get_payment_type_display_legacy(contract_payments=is_contracts)
         )
         return f"{get_parameter_value(key=ParameterKeys.SITE_NAME, cache=cache)}, {payment.mandate_ref.member.last_name}, {payment_type_display}"
 
