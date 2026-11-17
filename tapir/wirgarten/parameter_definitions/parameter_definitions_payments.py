@@ -9,6 +9,7 @@ from tapir.payments.config import IntendedUseTokens
 from tapir.payments.services.mandate_reference_pattern_validator import (
     MandateReferencePatternValidator,
 )
+from tapir.utils.config import ADMIN_DOCS_BASE_URL
 from tapir.wirgarten.constants import ParameterCategory
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import legal_status_is_cooperative
@@ -355,9 +356,9 @@ class ParameterDefinitionsPayments:
             datatype=TapirParameterDatatype.BOOLEAN,
             initial_value=False,
             description="Wenn aktiviert, können Admins auf der Mitgliedsseite Zeiträume eintragen, in denen die regelmäßigen Zahlungen "
-            "des Mitglieds (Verträge, Solidarbeitrag, Vereinsbeitrag, Liefergebühren) nicht in die Lastschrift-Exporte übernommen werden, "
-            "z. B. weil das Mitglied einen Kredit über seinen Anteil zurückbezahlt. Genossenschaftsanteile werden weiterhin eingezogen. "
-            "Wenn deaktiviert, werden eingetragene Zeiträume ignoriert, bleiben aber gespeichert.",
+            "des Mitglieds nicht in die Lastschrift-Exporte übernommen werden. Genossenschaftsanteile werden weiterhin eingezogen. "
+            "Wenn deaktiviert, werden eingetragene Zeiträume ignoriert, bleiben aber gespeichert. "
+            f'<a href="{ADMIN_DOCS_BASE_URL}/payments/excluding_members_from_payment_exports/" target="_blank">Dokumentation</a>',
             category=ParameterCategory.PAYMENT,
             order_priority=order_priority,
         )

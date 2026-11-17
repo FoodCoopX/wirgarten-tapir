@@ -1,4 +1,5 @@
 import React from "react";
+import { ADMIN_DOCS_BASE_URL } from "../../utils/ADMIN_DOCS_BASE_URL.ts";
 
 const PaymentExportExclusionExplanation: React.FC = () => {
   return (
@@ -12,6 +13,15 @@ const PaymentExportExclusionExplanation: React.FC = () => {
       <p className={"mb-0"}>
         Die Zahlungen werden trotzdem erzeugt und als bezahlt markiert.
         Genossenschaftsanteile werden weiterhin eingezogen.
+      </p>
+      <p className={"mb-0"}>
+        <a
+          href={`${ADMIN_DOCS_BASE_URL}/payments/excluding_members_from_payment_exports/`}
+          target={"_blank"}
+          rel={"noreferrer"}
+        >
+          Dokumentation
+        </a>
       </p>
     </div>
   );
