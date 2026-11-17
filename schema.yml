@@ -15464,6 +15464,8 @@ components:
           $ref: '#/components/schemas/PaymentStatusEnum'
         edited:
           type: boolean
+        excluded_from_export:
+          type: boolean
         type:
           type: string
           maxLength: 64
@@ -15652,6 +15654,13 @@ components:
           type: number
           format: double
           readOnly: true
+        excluded_payments_count:
+          type: integer
+          readOnly: true
+        excluded_payments_sum:
+          type: number
+          format: double
+          readOnly: true
         csv_download_url:
           type: string
           readOnly: true
@@ -15681,6 +15690,8 @@ components:
       - created_at
       - csv_download_url
       - csv_file
+      - excluded_payments_count
+      - excluded_payments_sum
       - month
       - payments_count
       - payments_sum

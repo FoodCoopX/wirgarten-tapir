@@ -57,6 +57,11 @@ class PaymentExportBuilder:
             exported_contract_payments = cls._remove_excluded_payments(
                 payments=contract_payments, cache=cache
             )
+            exported_payment_ids = {
+                payment.id for payment in exported_contract_payments
+            }
+            for payment in contract_payments:
+                payment.excluded_from_export = payment.id not in exported_payment_ids
 
         combined_contract_payments = cls.combine_contract_payments_by_mandate_ref(
             exported_contract_payments
@@ -157,7 +162,9 @@ class PaymentExportBuilder:
         for payment in payments:
             payment.transaction = payment_transaction
             payment.status = Payment.PaymentStatus.PAID
-        Payment.objects.bulk_update(payments, ["transaction", "status"])
+        Payment.objects.bulk_update(
+            payments, ["transaction", "status", "excluded_from_export"]
+        )
 
     @classmethod
     def combine_contract_payments_by_mandate_ref(cls, payments: list[Payment]):

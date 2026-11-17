@@ -52,7 +52,7 @@ class TestExportAllUnexportedPayments(TapirIntegrationTest):
             end_date=datetime.date(year=2026, month=12, day=31),
         )
         excluded_payment = self._create_payment(member=self.excluded_member)
-        self._create_payment(member=self.other_member)
+        other_payment = self._create_payment(member=self.other_member)
 
         self._export()
 
@@ -61,6 +61,9 @@ class TestExportAllUnexportedPayments(TapirIntegrationTest):
         excluded_payment.refresh_from_db()
         self.assertEqual(Payment.PaymentStatus.PAID, excluded_payment.status)
         self.assertIsNotNone(excluded_payment.transaction)
+        self.assertTrue(excluded_payment.excluded_from_export)
+        other_payment.refresh_from_db()
+        self.assertFalse(other_payment.excluded_from_export)
 
     def test_exportAllUnexportedPayments_featureDisabled_paymentIsExported(self):
         self._set_parameter(

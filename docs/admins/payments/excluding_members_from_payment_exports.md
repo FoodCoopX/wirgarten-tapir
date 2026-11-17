@@ -24,6 +24,9 @@ Während eines Ausschlusszeitraums:
   Vereinsmitgliedsbeitrag, Liefergebühren) fehlen in den Lastschriftdateien:
   den CSV- und XML-Dateien des monatlichen Exports und dem allgemeinen
   CSV-Export "Alle Zahlungen für diese Monat".
+- Die ausgeschlossenen Zahlungen werden beim Export trotzdem als bezahlt
+  markiert. Auf der Seite
+  "Lastschrift" werden sie getrennt als "nicht eingezogen" angezeigt.
 - Zahlungen für Genossenschaftsanteile werden weiterhin eingezogen.
 - Alles andere bleibt gleich: Die Zahlungen werden weiterhin erzeugt, Verträge
   und Solidarbeitrag bleiben unverändert, und Statistiken (zum Beispiel der
@@ -40,6 +43,8 @@ des Zeitraums abdeckt.
     Exporte aus. Bereits exportierte Zahlungen werden nicht geändert. Wenn
     vergangene Zahlungen rückwirkend betroffen sein sollen, nutze die Funktion
     "Lastschriften neu erzeugen".
+
+
 
 ## Zeitraum hinzufügen, bearbeiten oder löschen
 
@@ -69,8 +74,8 @@ wie viele aktuelle und geplante Ausschlusszeiträume es gibt. Ein Klick darauf
 Angabe, ob der Zeitraum aktiv oder geplant ist. Aktiviere "Abgelaufene
 Zeiträume anzeigen", um auch beendete Zeiträume zu sehen.
 
-Um die Zeiträume eines Mitglieds zu ändern, öffne sein Profil aus dieser Liste
-(Klick auf die Mitgliedsnummer) und folge den Schritten oben.
+Um die Zeiträume eines Mitglieds zu ändern, öffne sein Profil aus dieser Liste (Klick auf die Mitgliedsnummer) und folge
+den Schritten oben.
 
 ## Was das Mitglied sieht
 

@@ -128,17 +128,34 @@ class PaymentTransactionSerializer(serializers.ModelSerializer):
 
     payments_count = serializers.SerializerMethodField()
     payments_sum = serializers.SerializerMethodField()
+    excluded_payments_count = serializers.SerializerMethodField()
+    excluded_payments_sum = serializers.SerializerMethodField()
     csv_download_url = serializers.SerializerMethodField()
     xml_download_url = serializers.SerializerMethodField()
 
     @staticmethod
     def get_payments_count(transaction: PaymentTransaction) -> int:
-        return transaction.payment_set.count()
+        return transaction.payment_set.filter(excluded_from_export=False).count()
 
     @staticmethod
     def get_payments_sum(transaction: PaymentTransaction) -> float:
         return (
-            transaction.payment_set.aggregate(amount_sum=Sum(F("amount")))["amount_sum"]
+            transaction.payment_set.filter(excluded_from_export=False).aggregate(
+                amount_sum=Sum(F("amount"))
+            )["amount_sum"]
+            or 0
+        )
+
+    @staticmethod
+    def get_excluded_payments_count(transaction: PaymentTransaction) -> int:
+        return transaction.payment_set.filter(excluded_from_export=True).count()
+
+    @staticmethod
+    def get_excluded_payments_sum(transaction: PaymentTransaction) -> float:
+        return (
+            transaction.payment_set.filter(excluded_from_export=True).aggregate(
+                amount_sum=Sum(F("amount"))
+            )["amount_sum"]
             or 0
         )
 

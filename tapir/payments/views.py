@@ -1282,12 +1282,17 @@ class PaymentTransactionDetailsView(APIView):
                     )
                 )
             else:
+                exported_payments = [
+                    payment for payment in payments if not payment.excluded_from_export
+                ]
                 combined = (
                     PaymentExportBuilder.combine_contract_payments_by_mandate_ref(
-                        payments=payments
+                        payments=exported_payments
                     )
                 )
                 if mandate_ref not in combined:
+                    if len(exported_payments) < len(payments):
+                        continue
                     # this happens if the sum of payments is negative
                     del payments_by_mandate_ref[mandate_ref]
                     del members_by_mandate_ref[mandate_ref]
