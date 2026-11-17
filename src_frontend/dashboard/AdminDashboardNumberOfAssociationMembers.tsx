@@ -51,14 +51,12 @@ const AdminDashboardNumberOfAssociationMembers: React.FC<
     setLoading(true);
     setInputError("");
 
-    const startDate = new Date(startDateAsString);
-    if (Number.isNaN(startDate.valueOf())) {
+    if (!dayjs(startDateAsString).isValid()) {
       setInputError("Ungültiges Start-Datum: " + startDateAsString);
       return;
     }
 
-    const endDate = new Date(endDateAsString);
-    if (Number.isNaN(endDate.valueOf())) {
+    if (!dayjs(endDateAsString).isValid()) {
       setInputError("Ungültiges End-Datum: " + endDateAsString);
       return;
     }

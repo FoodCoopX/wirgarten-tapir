@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import "dayjs/locale/de";
 import React, { useEffect, useState } from "react";
 import { Col, Form, Modal, Row, Spinner } from "react-bootstrap";
@@ -82,8 +83,7 @@ const AssociationMembershipCancelModal: React.FC<
       return;
     }
 
-    const endDate = new Date(endDateAsString);
-    if (Number.isNaN(endDate.valueOf())) {
+    if (!dayjs(endDateAsString).isValid()) {
       alert("Ungültiges Datum");
       return;
     }

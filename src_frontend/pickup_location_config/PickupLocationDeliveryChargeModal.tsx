@@ -1,4 +1,3 @@
-import dayjs from "dayjs";
 import React, { useEffect, useRef, useState } from "react";
 import { Alert, Form, Modal, Spinner, Table } from "react-bootstrap";
 import {
@@ -9,7 +8,7 @@ import TapirButton from "../components/TapirButton.tsx";
 import TapirHelpButton from "../components/TapirHelpButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
-import { fromApiDate } from "../utils/apiDate.ts";
+import { fromApiDate, toApiDate } from "../utils/apiDate.ts";
 import { formatCurrency } from "../utils/formatCurrency.ts";
 import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
@@ -47,16 +46,8 @@ const PickupLocationDeliveryChargeModal: React.FC<
   const [error, setError] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
 
-  // valid_from is a calendar date that the API client parses as UTC midnight, so
-  // we read the date part in UTC and re-anchor it locally: comparing UTC midnight
-  // against the local "today" would classify the whole validity day as future in
-  // any timezone east of UTC.
-  function getValidFromAsLocalDate(entry: PickupLocationDeliveryChargeEntry) {
-    return dayjs(entry.validFrom);
-  }
-
   function isFutureEntry(entry: PickupLocationDeliveryChargeEntry): boolean {
-    return getValidFromAsLocalDate(entry).isAfter(dayjs(), "day");
+    return entry.validFrom > toApiDate(new Date());
   }
 
   function getTomorrowInputValue(): string {
