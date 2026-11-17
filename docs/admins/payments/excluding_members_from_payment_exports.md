@@ -44,6 +44,10 @@ des Zeitraums abdeckt.
     vergangene Zahlungen rückwirkend betroffen sein sollen, nutze die Funktion
     "Lastschriften neu erzeugen".
 
+!!! warning
+    Gutschriften werden für ausgeschlossene Mitglieder weiterhin erzeugt, zum
+    Beispiel für einen Joker oder wenn ein Vertrag reduziert wird.
+
 
 
 ## Zeitraum hinzufügen, bearbeiten oder löschen
