@@ -37,8 +37,11 @@ new date field needed the same workaround, and forgetting it caused off-by-one-d
 - To compare with today, use `toApiDate(new Date())`. This is the browser's local day, which
   can differ from the server's day (`Europe/Berlin`) for a few hours around midnight for users
   in other time zones.
-- The `formatDate…` helpers in `src_frontend/utils/` accept both a `Date` and a date-only
-  string. A string is formatted as a calendar date; a `Date` is formatted as a moment in time.
+- Pass date-only values to the `formatDate…` helpers in `src_frontend/utils/` as strings: a
+  string is always formatted as the calendar date it represents. Never pass `fromApiDate(...)`,
+  or a `Date` derived from it, to `formatDateNumeric`: it formats `Date`s in `Europe/Berlin`
+  (for date-times), so local midnight shows as the previous day for users east of Berlin. If you
+  only have a `Date`, format `toApiDate(date)`. The other formatters use the browser's time zone.
 
 ## Examples
 

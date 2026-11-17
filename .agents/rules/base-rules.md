@@ -64,8 +64,8 @@ Routing: [tapir/urls.py](tapir/urls.py) includes per-app `urls.py`; apps mix DRF
 - `src_frontend/api-client/` is generated from `schema.yml` — never hand-edit.
 - Date-only API fields (`format: date`) are `"YYYY-MM-DD"` strings in the generated client; date-time fields stay `Date`.
   Never pass them to `new Date(...)` (parses as UTC): use `fromApiDate` / `toApiDate` from
-  [src_frontend/utils/apiDate.ts](src_frontend/utils/apiDate.ts). Compare and sort them as strings. Details in
-  [docs/dev/frontend_dates.md](docs/dev/frontend_dates.md).
+  [src_frontend/utils/apiDate.ts](src_frontend/utils/apiDate.ts). Compare and sort them as strings. Pass them to `formatDate…` as strings
+  (`toApiDate(date)` if you only have a `Date`). Details in [docs/dev/frontend_dates.md](docs/dev/frontend_dates.md).
 - Fetch through [src_frontend/hooks/useApi.ts](src_frontend/hooks/useApi.ts) (CSRF token + base path from `env.ts`).
   React hooks only, no Redux/Zustand, no path aliases.
 - Button variants by what the button does:

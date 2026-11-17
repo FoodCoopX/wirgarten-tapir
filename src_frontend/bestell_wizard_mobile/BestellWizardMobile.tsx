@@ -131,7 +131,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
   const [
     firstDeliveryDatesByPickupLocationAndProductType,
     setFirstDeliveryDatesByPickupLocationAndProductType,
-  ] = useState<{ [key: string]: { [key: string]: Date } }>({});
+  ] = useState<{ [key: string]: { [key: string]: string } }>({});
   const [cancellationPolicyRead, setCancellationPolicyRead] = useState(false);
   const [privacyPolicyRead, setPrivacyPolicyRead] = useState(false);
   const [selectedDistributionChannels, setSelectedDistributionChannels] =

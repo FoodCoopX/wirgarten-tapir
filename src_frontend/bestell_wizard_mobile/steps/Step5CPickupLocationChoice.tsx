@@ -28,7 +28,7 @@ interface Step5CPickupLocationChoiceProps {
   goToNextStep: () => void;
   stepIsActive: boolean;
   firstDeliveryDatesByPickupLocationAndProductType: {
-    [key: string]: { [key: string]: Date };
+    [key: string]: { [key: string]: string };
   };
   stepActive: boolean;
   productTypesInWaitingList: Set<PublicProductType>;

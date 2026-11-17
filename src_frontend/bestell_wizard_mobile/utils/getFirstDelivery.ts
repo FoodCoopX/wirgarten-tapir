@@ -3,7 +3,7 @@ import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 export function getFirstDelivery(
   pickupLocationId: string,
   firstDeliveryDatesByPickupLocationAndProductType: {
-    [key: string]: { [key: string]: Date };
+    [key: string]: { [key: string]: string };
   },
 ) {
   let dateAsString = "Kapazität frei";

@@ -105,7 +105,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
   const [
     firstDeliveryDatesByPickupLocationAndProductType,
     setFirstDeliveryDatesByPickupLocationAndProductType,
-  ] = useState<{ [key: string]: { [key: string]: Date } }>({});
+  ] = useState<{ [key: string]: { [key: string]: string } }>({});
   const [currentPickupLocationTab, setCurrentPickupLocationTab] =
     useState<PickupLocationTab>("map");
   const [mustAddPickupLocation, setMustAddPickupLocation] = useState(false);
@@ -131,6 +131,9 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
   const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>("pickup");
   const [deliveryAddress, setDeliveryAddress] =
     useState<DeliveryAddressRequest>({ sameAsBillingAddress: true });
+  const contractStartDate = selectedGrowingPeriod
+    ? fromApiDate(selectedGrowingPeriod.contractStartDate)
+    : undefined;
 
   useEffect(() => {
     setPersonalData({
@@ -627,9 +630,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
             pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
             studentStatusEnabled={false}
             waitingListEntryDetails={undefined}
-            contractStartDate={fromApiDate(
-              selectedGrowingPeriod?.contractStartDate!,
-            )}
+            contractStartDate={contractStartDate}
             singleProductType={productType}
             selectedGrowingPeriod={selectedGrowingPeriod}
             hideTrialPeriod={memberAlreadyHasASubscriptionForThisProductType}
@@ -736,7 +737,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
       goToProductTypeStep={() => {
         setCurrentStep(`${productTypeId}_order`);
       }}
-      contractStartDate={fromApiDate(selectedGrowingPeriod?.contractStartDate!)}
+      contractStartDate={contractStartDate}
       selectedGrowingPeriod={selectedGrowingPeriod}
     />
   );
