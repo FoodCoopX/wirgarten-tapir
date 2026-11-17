@@ -273,13 +273,14 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         context["cancelled_coop_shares_data"] = list(cancellations.values())
 
     def add_cancelled_association_memberships_context(self, context):
-        cancellations_per_year = {}
-        for cancelled_membership in AssociationMembership.objects.filter(
-            end_date__isnull=False
-        ).order_by("end_date"):
-            if cancelled_membership.end_date.year not in cancellations_per_year:
-                cancellations_per_year[cancelled_membership.end_date.year] = 0
-            cancellations_per_year[cancelled_membership.end_date.year] += 1
+        cancellations_per_year = {
+            row["year"]: row["count"]
+            for row in AssociationMembership.objects.filter(end_date__isnull=False)
+            .annotate(year=ExtractYear("end_date"))
+            .values("year")
+            .annotate(count=Count("id"))
+            .order_by("year")
+        }
 
         context["cancelled_association_memberships_labels"] = list(
             cancellations_per_year.keys()
