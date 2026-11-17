@@ -1,5 +1,4 @@
 import React from "react";
-import { ADMIN_DOCS_BASE_URL } from "../../utils/ADMIN_DOCS_BASE_URL.ts";
 
 const PaymentExportExclusionExplanation: React.FC = () => {
   return (
@@ -7,21 +6,13 @@ const PaymentExportExclusionExplanation: React.FC = () => {
       <p className={"mb-0"}>
         In den eingetragenen Monaten werden die regelmäßigen Zahlungen des
         Mitglieds (Verträge, Solidarbeitrag, Vereinsbeitrag, Liefergebühren)
-        nicht in die SEPA-Exporte übernommen, z. B. weil das Mitglied einen
-        Kredit über seinen Anteil zurückbezahlt.
+        nicht in die SEPA-Exporte übernommen, z. B. weil die Organisation dem
+        Mitglied ein Darlehen über seinen Anteil zurückzahlt.
       </p>
       <p className={"mb-0"}>
         Die Zahlungen werden trotzdem erzeugt und als bezahlt markiert.
-        Genossenschaftsanteile werden weiterhin eingezogen.
-      </p>
-      <p className={"mb-0"}>
-        <a
-          href={`${ADMIN_DOCS_BASE_URL}/payments/excluding_members_from_payment_exports/`}
-          target={"_blank"}
-          rel={"noreferrer"}
-        >
-          Dokumentation
-        </a>
+        Statistiken wie der Cashflow oder der Solidartopf bleiben daher
+        unverändert. Genossenschaftsanteile werden weiterhin eingezogen.
       </p>
     </div>
   );
