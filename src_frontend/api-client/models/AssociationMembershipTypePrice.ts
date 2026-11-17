@@ -44,10 +44,10 @@ export interface AssociationMembershipTypePrice {
   readonly updatedAt: Date;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof AssociationMembershipTypePrice
    */
-  validFrom: Date;
+  validFrom: string;
   /**
    *
    * @type {string}
@@ -96,7 +96,7 @@ export function AssociationMembershipTypePriceFromJSONTyped(
     priceAsFloat: json["price_as_float"],
     createdAt: new Date(json["created_at"]),
     updatedAt: new Date(json["updated_at"]),
-    validFrom: new Date(json["valid_from"]),
+    validFrom: json["valid_from"],
     price: json["price"],
     type: json["type"],
   };
@@ -121,7 +121,7 @@ export function AssociationMembershipTypePriceToJSONTyped(
 
   return {
     id: value["id"],
-    valid_from: value["validFrom"].toISOString().substring(0, 10),
+    valid_from: value["validFrom"],
     price: value["price"],
     type: value["type"],
   };

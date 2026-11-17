@@ -1,10 +1,11 @@
+import dayjs from "dayjs";
 import React, { useEffect, useState } from "react";
 import { Form, Modal } from "react-bootstrap";
-import TapirButton from "../components/TapirButton.tsx";
-import { ToastData } from "../types/ToastData.ts";
-import dayjs from "dayjs";
 import { CoopApi, Member, PaymentsApi } from "../api-client";
+import TapirButton from "../components/TapirButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
+import { ToastData } from "../types/ToastData.ts";
+import { fromApiDate, toApiDate } from "../utils/apiDate.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 
 interface CreateMemberCreditModalProps {
@@ -78,7 +79,7 @@ const CreateMemberCreditModal: React.FC<CreateMemberCreditModalProps> = ({
           memberId: memberId,
           purpose: purpose,
           comment: comment,
-          dueDate: dueDate,
+          dueDate: toApiDate(dueDate),
           amount: amount,
         },
       })
@@ -112,7 +113,7 @@ const CreateMemberCreditModal: React.FC<CreateMemberCreditModalProps> = ({
             <Form.Control
               type={"date"}
               onChange={(event) =>
-                setDueDate(getLastDayOfMonth(new Date(event.target.value)))
+                setDueDate(getLastDayOfMonth(fromApiDate(event.target.value)))
               }
               required={true}
               value={dayjs(dueDate).format("YYYY-MM-DD")}

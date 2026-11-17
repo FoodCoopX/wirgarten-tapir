@@ -75,10 +75,10 @@ export interface ExtendedPayment {
   deliveryChargePickupLocation: PublicPickupLocation | null;
   /**
    *
-   * @type {Array<Date>}
+   * @type {Array<string>}
    * @memberof ExtendedPayment
    */
-  deliveryDates: Array<Date>;
+  deliveryDates: Array<string>;
   /**
    *
    * @type {Array<AssociationMembership>}

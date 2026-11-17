@@ -50,16 +50,16 @@ export interface AssociationMembership {
   readonly updatedAt: Date;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof AssociationMembership
    */
-  startDate: Date;
+  startDate: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof AssociationMembership
    */
-  endDate?: Date | null;
+  endDate?: string | null;
   /**
    *
    * @type {Date}
@@ -112,8 +112,8 @@ export function AssociationMembershipFromJSONTyped(
     type: AssociationMembershipTypeFromJSON(json["type"]),
     createdAt: new Date(json["created_at"]),
     updatedAt: new Date(json["updated_at"]),
-    startDate: new Date(json["start_date"]),
-    endDate: json["end_date"] == null ? undefined : new Date(json["end_date"]),
+    startDate: json["start_date"],
+    endDate: json["end_date"] == null ? undefined : json["end_date"],
     cancellationTs:
       json["cancellation_ts"] == null
         ? undefined
@@ -141,11 +141,8 @@ export function AssociationMembershipToJSONTyped(
   return {
     id: value["id"],
     type: AssociationMembershipTypeToJSON(value["type"]),
-    start_date: value["startDate"].toISOString().substring(0, 10),
-    end_date:
-      value["endDate"] == null
-        ? undefined
-        : (value["endDate"] as any).toISOString().substring(0, 10),
+    start_date: value["startDate"],
+    end_date: value["endDate"],
     cancellation_ts:
       value["cancellationTs"] == null
         ? undefined

@@ -26,16 +26,16 @@ export interface PatchedGrowingPeriodRequest {
   id?: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof PatchedGrowingPeriodRequest
    */
-  startDate?: Date;
+  startDate?: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof PatchedGrowingPeriodRequest
    */
-  endDate?: Date;
+  endDate?: string;
   /**
    *
    * @type {Array<number>}
@@ -86,9 +86,8 @@ export function PatchedGrowingPeriodRequestFromJSONTyped(
   }
   return {
     id: json["id"] == null ? undefined : json["id"],
-    startDate:
-      json["start_date"] == null ? undefined : new Date(json["start_date"]),
-    endDate: json["end_date"] == null ? undefined : new Date(json["end_date"]),
+    startDate: json["start_date"] == null ? undefined : json["start_date"],
+    endDate: json["end_date"] == null ? undefined : json["end_date"],
     weeksWithoutDelivery:
       json["weeks_without_delivery"] == null
         ? undefined
@@ -124,14 +123,8 @@ export function PatchedGrowingPeriodRequestToJSONTyped(
 
   return {
     id: value["id"],
-    start_date:
-      value["startDate"] == null
-        ? undefined
-        : value["startDate"].toISOString().substring(0, 10),
-    end_date:
-      value["endDate"] == null
-        ? undefined
-        : value["endDate"].toISOString().substring(0, 10),
+    start_date: value["startDate"],
+    end_date: value["endDate"],
     weeks_without_delivery: value["weeksWithoutDelivery"],
     max_jokers_per_member: value["maxJokersPerMember"],
     joker_restrictions: value["jokerRestrictions"],

@@ -9,6 +9,7 @@ import TapirHelpButton from "../components/TapirHelpButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import PaymentExportExclusionExplanation from "../member_profile/payment_export_exclusion/PaymentExportExclusionExplanation.tsx";
 import { ToastData } from "../types/ToastData.ts";
+import { toApiDate } from "../utils/apiDate.ts";
 import { formatDateMonthAndYear } from "../utils/formatDateMonthAndYear.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import { DEFAULT_PAGE_SIZE } from "../utils/pagination.ts";
@@ -23,7 +24,7 @@ function buildStatusBadge(period: PaymentExportExclusionPeriodOverview) {
   if (period.isActive) {
     return <Badge bg={"success"}>aktiv</Badge>;
   }
-  if (period.startDate > new Date()) {
+  if (period.startDate > toApiDate(new Date())) {
     return <Badge bg={"info"}>geplant</Badge>;
   }
   return <Badge bg={"secondary"}>abgelaufen</Badge>;

@@ -48,6 +48,7 @@ import { shouldIncludeStepGrowingPeriodChoice } from "../../bestell_wizard_mobil
 import { updateWaitingList } from "../../bestell_wizard_mobile/utils/updateWaitingList.ts";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
+import { fromApiDate } from "../../utils/apiDate.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 import { isSubscriptionActive } from "../../utils/isSubscriptionActive.ts";
 
@@ -104,7 +105,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
   const [
     firstDeliveryDatesByPickupLocationAndProductType,
     setFirstDeliveryDatesByPickupLocationAndProductType,
-  ] = useState<{ [key: string]: { [key: string]: Date } }>({});
+  ] = useState<{ [key: string]: { [key: string]: string } }>({});
   const [currentPickupLocationTab, setCurrentPickupLocationTab] =
     useState<PickupLocationTab>("map");
   const [mustAddPickupLocation, setMustAddPickupLocation] = useState(false);
@@ -130,6 +131,9 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
   const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>("pickup");
   const [deliveryAddress, setDeliveryAddress] =
     useState<DeliveryAddressRequest>({ sameAsBillingAddress: true });
+  const contractStartDate = selectedGrowingPeriod
+    ? fromApiDate(selectedGrowingPeriod.contractStartDate)
+    : undefined;
 
   useEffect(() => {
     setPersonalData({
@@ -626,7 +630,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
             pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
             studentStatusEnabled={false}
             waitingListEntryDetails={undefined}
-            contractStartDate={selectedGrowingPeriod?.contractStartDate!}
+            contractStartDate={contractStartDate}
             singleProductType={productType}
             selectedGrowingPeriod={selectedGrowingPeriod}
             hideTrialPeriod={memberAlreadyHasASubscriptionForThisProductType}
@@ -733,7 +737,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
       goToProductTypeStep={() => {
         setCurrentStep(`${productTypeId}_order`);
       }}
-      contractStartDate={selectedGrowingPeriod?.contractStartDate!}
+      contractStartDate={contractStartDate}
       selectedGrowingPeriod={selectedGrowingPeriod}
     />
   );

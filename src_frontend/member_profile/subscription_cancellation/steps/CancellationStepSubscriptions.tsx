@@ -7,6 +7,7 @@ import {
 } from "../../../api-client";
 import TapirButton from "../../../components/TapirButton.tsx";
 import TapirHelpButton from "../../../components/TapirHelpButton.tsx";
+import { fromApiDate } from "../../../utils/apiDate.ts";
 import { formatDateNumeric } from "../../../utils/formatDateNumeric.ts";
 import { formatDateText } from "../../../utils/formatDateText.ts";
 import { formatDateTextLong } from "../../../utils/formatDateTextLong.ts";
@@ -104,10 +105,9 @@ function buildHelpText(
           Wenn du deine komplette Probezeit nutzen willst, dann kündige in der
           letzten Lieferwoche bis zum{" "}
           {subscribedProduct.dateLimitForTrialCancellation
-            ? subscribedProduct.dateLimitForTrialCancellation.toLocaleDateString(
-                "de-DE",
-                { weekday: "long" },
-              )
+            ? fromApiDate(
+                subscribedProduct.dateLimitForTrialCancellation,
+              ).toLocaleDateString("de-DE", { weekday: "long" })
             : "Kein Datum"}{" "}
           um 23:59 Uhr.
         </p>

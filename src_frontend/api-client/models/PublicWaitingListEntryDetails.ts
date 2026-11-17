@@ -109,10 +109,10 @@ export interface PublicWaitingListEntryDetails {
   pseudonym: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof PublicWaitingListEntryDetails
    */
-  birthdate?: Date;
+  birthdate?: string;
   /**
    *
    * @type {string}
@@ -227,8 +227,7 @@ export function PublicWaitingListEntryDetailsFromJSONTyped(
     city: json["city"],
     country: json["country"],
     pseudonym: json["pseudonym"],
-    birthdate:
-      json["birthdate"] == null ? undefined : new Date(json["birthdate"]),
+    birthdate: json["birthdate"] == null ? undefined : json["birthdate"],
     accountOwner:
       json["account_owner"] == null ? undefined : json["account_owner"],
     iban: json["iban"] == null ? undefined : json["iban"],
@@ -283,10 +282,7 @@ export function PublicWaitingListEntryDetailsToJSONTyped(
     city: value["city"],
     country: value["country"],
     pseudonym: value["pseudonym"],
-    birthdate:
-      value["birthdate"] == null
-        ? undefined
-        : value["birthdate"].toISOString().substring(0, 10),
+    birthdate: value["birthdate"],
     account_owner: value["accountOwner"],
     iban: value["iban"],
     pickup_location_wishes:

@@ -2,6 +2,7 @@ import React from "react";
 import { Badge } from "react-bootstrap";
 import { ExtendedPayment, Payment } from "../../api-client";
 import TapirHelpButton from "../../components/TapirHelpButton.tsx";
+import { toApiDate } from "../../utils/apiDate.ts";
 import { formatCoopShareLabel } from "../../utils/formatCoopShareLabel.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
@@ -47,7 +48,7 @@ function getEndDate(extendedPayment: ExtendedPayment) {
   const paymentRangeEnd = extendedPayment.payment.subscriptionPaymentRangeEnd;
 
   const subscriptionEndDates = extendedPayment.subscriptions.map(
-    (subscription) => subscription.endDate ?? new Date("9999-12-31"),
+    (subscription) => subscription.endDate ?? "9999-12-31",
   );
 
   const contributionEndDates = extendedPayment.solidarityContributions.map(
@@ -55,7 +56,7 @@ function getEndDate(extendedPayment: ExtendedPayment) {
   );
 
   const membershipEndDates = extendedPayment.associationMemberships.map(
-    (membership) => membership.endDate ?? new Date("9999-12-31"),
+    (membership) => membership.endDate ?? "9999-12-31",
   );
 
   const candidates = [
@@ -105,7 +106,7 @@ function trialPeriodText(
 }
 
 function getBadgeBackground(payment: Payment) {
-  if (payment.dueDate > new Date()) {
+  if (payment.dueDate > toApiDate(new Date())) {
     return "info";
   }
 
@@ -120,18 +121,18 @@ function getBadgeBackground(payment: Payment) {
 }
 
 function getBadgeText(payment: Payment) {
-  if (payment.dueDate > new Date()) {
+  if (payment.dueDate > toApiDate(new Date())) {
     return "UPCOMING";
   }
 
   return payment.status;
 }
 
-function buildDeliveries(deliveryDates: Date[]) {
+function buildDeliveries(deliveryDates: string[]) {
   if (deliveryDates.length < 6) {
     return deliveryDates
       .toSorted()
-      .map((deliveryDate) => formatDateNumeric(new Date(deliveryDate)))
+      .map((deliveryDate) => formatDateNumeric(deliveryDate))
       .join(", ");
   }
 
@@ -141,7 +142,7 @@ function buildDeliveries(deliveryDates: Date[]) {
       title={"Liefertage"}
       text={deliveryDates
         .toSorted()
-        .map((deliveryDate) => formatDateNumeric(new Date(deliveryDate)))
+        .map((deliveryDate) => formatDateNumeric(deliveryDate))
         .join(", ")}
     />
   );

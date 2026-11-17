@@ -9,6 +9,7 @@ import TapirHelpButton from "../../components/TapirHelpButton.tsx";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
 import { addToast } from "../../utils/addToast.ts";
+import { toApiDate } from "../../utils/apiDate.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 
 interface CoopSharesAdminModalProps {
@@ -47,7 +48,7 @@ const CoopSharesAdminModal: React.FC<CoopSharesAdminModalProps> = ({
           memberId: memberId,
           numberOfSharesToAdd: quantity,
           asAdmin: true,
-          startDate: startDate,
+          startDate: toApiDate(startDate),
         },
       })
       .then((response) => {

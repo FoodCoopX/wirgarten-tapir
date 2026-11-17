@@ -107,7 +107,7 @@ export interface PaymentsApiMemberPaymentRhythmDataRetrieveRequest {
 }
 
 export interface PaymentsApiMembersNeedingBankingDataForRebuildListRequest {
-  from: Date;
+  from: string;
 }
 
 export interface PaymentsApiPaymentExportExclusionPeriodsCreateRequest {
@@ -137,7 +137,7 @@ export interface PaymentsApiPaymentTransactionDetailsRetrieveRequest {
 }
 
 export interface PaymentsApiRebuildSubscriptionPaymentsCreateRequest {
-  from: Date;
+  from: string;
 }
 
 export interface PaymentsApiSetMemberPaymentRhythmCreateRequest {
@@ -880,9 +880,7 @@ export class PaymentsApi extends runtime.BaseAPI {
     const queryParameters: any = {};
 
     if (requestParameters["from"] != null) {
-      queryParameters["from"] = (requestParameters["from"] as any)
-        .toISOString()
-        .substring(0, 10);
+      queryParameters["from"] = requestParameters["from"];
     }
 
     const headerParameters: runtime.HTTPHeaders = {};
@@ -1389,9 +1387,7 @@ export class PaymentsApi extends runtime.BaseAPI {
     const queryParameters: any = {};
 
     if (requestParameters["from"] != null) {
-      queryParameters["from"] = (requestParameters["from"] as any)
-        .toISOString()
-        .substring(0, 10);
+      queryParameters["from"] = requestParameters["from"];
     }
 
     const headerParameters: runtime.HTTPHeaders = {};

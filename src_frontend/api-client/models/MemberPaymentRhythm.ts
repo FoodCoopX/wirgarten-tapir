@@ -35,10 +35,10 @@ export interface MemberPaymentRhythm {
   rhythm: RhythmEnum;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof MemberPaymentRhythm
    */
-  validFrom: Date;
+  validFrom: string;
   /**
    *
    * @type {string}
@@ -73,7 +73,7 @@ export function MemberPaymentRhythmFromJSONTyped(
   return {
     id: json["id"] == null ? undefined : json["id"],
     rhythm: RhythmEnumFromJSON(json["rhythm"]),
-    validFrom: new Date(json["valid_from"]),
+    validFrom: json["valid_from"],
     member: json["member"],
   };
 }
@@ -93,7 +93,7 @@ export function MemberPaymentRhythmToJSONTyped(
   return {
     id: value["id"],
     rhythm: RhythmEnumToJSON(value["rhythm"]),
-    valid_from: value["validFrom"].toISOString().substring(0, 10),
+    valid_from: value["validFrom"],
     member: value["member"],
   };
 }

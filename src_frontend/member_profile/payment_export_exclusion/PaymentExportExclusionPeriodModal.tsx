@@ -8,6 +8,7 @@ import TapirMonthInput, {
 } from "../../components/TapirMonthInput.tsx";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
+import { fromApiDate, toApiDate } from "../../utils/apiDate.ts";
 import { formatDateMonthAndYear } from "../../utils/formatDateMonthAndYear.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 import PaymentExportExclusionExplanation from "./PaymentExportExclusionExplanation.tsx";
@@ -22,9 +23,9 @@ interface PaymentExportExclusionPeriodModalProps {
 
 type ModalContent = "list" | "form" | "confirmDelete";
 
-// Dates are handled in UTC because the API client serializes them with toISOString().
-function toYearAndMonth(date: Date): YearAndMonth {
-  return { year: date.getUTCFullYear(), month: date.getUTCMonth() };
+function toYearAndMonth(date: string): YearAndMonth {
+  const dateObject = fromApiDate(date);
+  return { year: dateObject.getFullYear(), month: dateObject.getMonth() };
 }
 
 function getCurrentYearAndMonth(): YearAndMonth {
@@ -32,12 +33,12 @@ function getCurrentYearAndMonth(): YearAndMonth {
   return { year: today.getFullYear(), month: today.getMonth() };
 }
 
-function getFirstDayOfMonth(value: YearAndMonth): Date {
-  return new Date(Date.UTC(value.year, value.month, 1));
+function getFirstDayOfMonth(value: YearAndMonth): string {
+  return toApiDate(new Date(value.year, value.month, 1));
 }
 
-function getLastDayOfMonth(value: YearAndMonth): Date {
-  return new Date(Date.UTC(value.year, value.month + 1, 0));
+function getLastDayOfMonth(value: YearAndMonth): string {
+  return toApiDate(new Date(value.year, value.month + 1, 0));
 }
 
 function formatPeriod(period: PaymentExportExclusionPeriod): string {

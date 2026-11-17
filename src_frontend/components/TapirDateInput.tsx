@@ -20,9 +20,7 @@ const TapirDateInput: React.FC<TapirDateInputProps> = ({
   useEffect(() => {
     const date = dayjs(intervalValue);
     if (date.isValid()) {
-      // We must specify UTC otherwise the server will convert
-      // local time to UTC and create the share one day too early.
-      setDate(new Date(Date.UTC(date.year(), date.month(), date.date())));
+      setDate(date.toDate());
     }
   }, [intervalValue]);
 

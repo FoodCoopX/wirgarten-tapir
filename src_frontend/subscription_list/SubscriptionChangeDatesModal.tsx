@@ -24,6 +24,7 @@ import TapirButton from "../components/TapirButton.tsx";
 import TapirHelpButton from "../components/TapirHelpButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
+import { fromApiDate } from "../utils/apiDate.ts";
 import { formatCurrency } from "../utils/formatCurrency.ts";
 import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
 import formatSubscription, {
@@ -271,8 +272,8 @@ const SubscriptionChangeDatesModal: React.FC<
         { signal: localController.signal },
       )
       .then((response) => {
-        setStartDate(response.startDate);
-        setEndDate(response.endDate);
+        setStartDate(fromApiDate(response.startDate));
+        setEndDate(fromApiDate(response.endDate));
       })
       .catch((error) => {
         if (error.cause?.name === "AbortError") return;

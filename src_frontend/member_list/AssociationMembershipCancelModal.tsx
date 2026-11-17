@@ -70,7 +70,7 @@ const AssociationMembershipCancelModal: React.FC<
     if (!selectedMembership) return;
 
     if (selectedMembership.endDate) {
-      setEndDateAsString(selectedMembership.endDate.toISOString().slice(0, 10));
+      setEndDateAsString(selectedMembership.endDate);
     } else {
       setEndDateAsString("");
     }
@@ -92,7 +92,7 @@ const AssociationMembershipCancelModal: React.FC<
     associationApi
       .associationsApiSetMembershipEndDateCreate({
         setAssociationMembershipEndDateRequestRequest: {
-          endDate: endDate,
+          endDate: endDateAsString,
           membershipId: selectedMembership.id!,
         },
       })

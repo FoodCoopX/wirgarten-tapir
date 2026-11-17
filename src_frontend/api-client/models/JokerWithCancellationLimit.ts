@@ -29,16 +29,16 @@ export interface JokerWithCancellationLimit {
   joker: Joker;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof JokerWithCancellationLimit
    */
-  cancellationLimit: Date;
+  cancellationLimit: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof JokerWithCancellationLimit
    */
-  deliveryDate: Date;
+  deliveryDate: string;
 }
 
 /**
@@ -73,8 +73,8 @@ export function JokerWithCancellationLimitFromJSONTyped(
   }
   return {
     joker: JokerFromJSON(json["joker"]),
-    cancellationLimit: new Date(json["cancellation_limit"]),
-    deliveryDate: new Date(json["delivery_date"]),
+    cancellationLimit: json["cancellation_limit"],
+    deliveryDate: json["delivery_date"],
   };
 }
 
@@ -94,9 +94,7 @@ export function JokerWithCancellationLimitToJSONTyped(
 
   return {
     joker: JokerToJSON(value["joker"]),
-    cancellation_limit: value["cancellationLimit"]
-      .toISOString()
-      .substring(0, 10),
-    delivery_date: value["deliveryDate"].toISOString().substring(0, 10),
+    cancellation_limit: value["cancellationLimit"],
+    delivery_date: value["deliveryDate"],
   };
 }

@@ -28,7 +28,7 @@ interface Step5CPickupLocationMapProps {
   setMapRef: (mr: MapRef) => void;
   pickupLocationsWithCapacityFull: Set<PublicPickupLocation>;
   firstDeliveryDatesByPickupLocationAndProductType: {
-    [key: string]: { [key: string]: Date };
+    [key: string]: { [key: string]: string };
   };
   shoppingCart: ShoppingCart;
   productTypesInWaitingList: Set<PublicProductType>;

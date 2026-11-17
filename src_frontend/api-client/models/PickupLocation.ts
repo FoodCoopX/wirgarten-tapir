@@ -131,16 +131,16 @@ export interface PickupLocation {
   routeInfo?: string;
   /**
    * Leer = ab sofort verfügbar. Neuanlagen nur an einem Montag möglich.
-   * @type {Date}
+   * @type {string}
    * @memberof PickupLocation
    */
-  startDate?: Date | null;
+  startDate?: string | null;
   /**
    * Leer = dauerhaft verfügbar. Schließen nur an einem Sonntag möglich.
-   * @type {Date}
+   * @type {string}
    * @memberof PickupLocation
    */
-  endDate?: Date | null;
+  endDate?: string | null;
   /**
    *
    * @type {boolean}
@@ -216,9 +216,8 @@ export function PickupLocationFromJSONTyped(
       json["contact_name"] == null ? undefined : json["contact_name"],
     photoLink: json["photo_link"] == null ? undefined : json["photo_link"],
     routeInfo: json["route_info"] == null ? undefined : json["route_info"],
-    startDate:
-      json["start_date"] == null ? undefined : new Date(json["start_date"]),
-    endDate: json["end_date"] == null ? undefined : new Date(json["end_date"]),
+    startDate: json["start_date"] == null ? undefined : json["start_date"],
+    endDate: json["end_date"] == null ? undefined : json["end_date"],
     showDetailsInBasketTotalsExport:
       json["show_details_in_basket_totals_export"] == null
         ? undefined
@@ -260,14 +259,8 @@ export function PickupLocationToJSONTyped(
     contact_name: value["contactName"],
     photo_link: value["photoLink"],
     route_info: value["routeInfo"],
-    start_date:
-      value["startDate"] == null
-        ? undefined
-        : (value["startDate"] as any).toISOString().substring(0, 10),
-    end_date:
-      value["endDate"] == null
-        ? undefined
-        : (value["endDate"] as any).toISOString().substring(0, 10),
+    start_date: value["startDate"],
+    end_date: value["endDate"],
     show_details_in_basket_totals_export:
       value["showDetailsInBasketTotalsExport"],
     is_home_delivery: value["isHomeDelivery"],

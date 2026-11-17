@@ -6,6 +6,7 @@ import TapirButton from "../components/TapirButton.tsx";
 import TapirHelpButton from "../components/TapirHelpButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
+import { toApiDate } from "../utils/apiDate.ts";
 import { formatCurrency } from "../utils/formatCurrency.ts";
 import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
@@ -33,8 +34,8 @@ const AssociationMembershipTypeTable: React.FC<
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   function getNextPrice(type: AssociationMembershipType) {
-    const now = new Date();
-    return type.prices.find((price) => price.validFrom > now);
+    const today = toApiDate(new Date());
+    return type.prices.find((price) => price.validFrom > today);
   }
 
   function buildPrice(type: AssociationMembershipType) {

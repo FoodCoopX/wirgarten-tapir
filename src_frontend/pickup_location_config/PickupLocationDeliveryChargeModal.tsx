@@ -1,5 +1,4 @@
 import dayjs from "dayjs";
-import utc from "dayjs/plugin/utc";
 import React, { useEffect, useRef, useState } from "react";
 import { Alert, Form, Modal, Spinner, Table } from "react-bootstrap";
 import {
@@ -10,11 +9,10 @@ import TapirButton from "../components/TapirButton.tsx";
 import TapirHelpButton from "../components/TapirHelpButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
+import { fromApiDate } from "../utils/apiDate.ts";
 import { formatCurrency } from "../utils/formatCurrency.ts";
 import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
-
-dayjs.extend(utc);
 
 interface PickupLocationDeliveryChargeModalProps {
   show: boolean;
@@ -54,7 +52,7 @@ const PickupLocationDeliveryChargeModal: React.FC<
   // against the local "today" would classify the whole validity day as future in
   // any timezone east of UTC.
   function getValidFromAsLocalDate(entry: PickupLocationDeliveryChargeEntry) {
-    return dayjs(dayjs.utc(entry.validFrom).format("YYYY-MM-DD"));
+    return dayjs(entry.validFrom);
   }
 
   function isFutureEntry(entry: PickupLocationDeliveryChargeEntry): boolean {
@@ -79,8 +77,8 @@ const PickupLocationDeliveryChargeModal: React.FC<
       .then((response) => {
         setLocationName(response.pickupLocationName);
         setEntries(
-          response.entries.toSorted(
-            (a, b) => b.validFrom.getTime() - a.validFrom.getTime(),
+          response.entries.toSorted((a, b) =>
+            b.validFrom.localeCompare(a.validFrom),
           ),
         );
       })
@@ -113,8 +111,7 @@ const PickupLocationDeliveryChargeModal: React.FC<
   function onSave() {
     if (!formRef.current?.reportValidity()) return;
 
-    const validFrom = new Date(validFromInput);
-    if (validFrom.getUTCDay() !== 1) {
+    if (fromApiDate(validFromInput).getDay() !== 1) {
       setError("Das Start-Datum muss ein Montag sein.");
       return;
     }
@@ -126,7 +123,7 @@ const PickupLocationDeliveryChargeModal: React.FC<
         pickupLocationDeliveryChargeCreateRequestRequest: {
           pickupLocationId: pickupLocationId,
           amount: parseAmountInput(amountInput),
-          validFrom: new Date(validFromInput),
+          validFrom: validFromInput,
         },
       })
       .then(() => {

@@ -32,10 +32,10 @@ export interface AdminSetAssociationMembershipRequestRequest {
   membershipTypeId: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof AdminSetAssociationMembershipRequestRequest
    */
-  startDate: Date;
+  startDate: string;
 }
 
 /**
@@ -67,7 +67,7 @@ export function AdminSetAssociationMembershipRequestRequestFromJSONTyped(
   return {
     memberId: json["member_id"],
     membershipTypeId: json["membership_type_id"],
-    startDate: new Date(json["start_date"]),
+    startDate: json["start_date"],
   };
 }
 
@@ -88,6 +88,6 @@ export function AdminSetAssociationMembershipRequestRequestToJSONTyped(
   return {
     member_id: value["memberId"],
     membership_type_id: value["membershipTypeId"],
-    start_date: value["startDate"].toISOString().substring(0, 10),
+    start_date: value["startDate"],
   };
 }

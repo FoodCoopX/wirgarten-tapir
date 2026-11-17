@@ -32,10 +32,10 @@ export interface SubscriptionTrialChangeRequestRequest {
   trialDisabled: boolean;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof SubscriptionTrialChangeRequestRequest
    */
-  trialEndDateOverride?: Date | null;
+  trialEndDateOverride?: string | null;
 }
 
 /**
@@ -70,7 +70,7 @@ export function SubscriptionTrialChangeRequestRequestFromJSONTyped(
     trialEndDateOverride:
       json["trial_end_date_override"] == null
         ? undefined
-        : new Date(json["trial_end_date_override"]),
+        : json["trial_end_date_override"],
   };
 }
 
@@ -91,9 +91,6 @@ export function SubscriptionTrialChangeRequestRequestToJSONTyped(
   return {
     subscription_id: value["subscriptionId"],
     trial_disabled: value["trialDisabled"],
-    trial_end_date_override:
-      value["trialEndDateOverride"] == null
-        ? undefined
-        : (value["trialEndDateOverride"] as any).toISOString().substring(0, 10),
+    trial_end_date_override: value["trialEndDateOverride"],
   };
 }

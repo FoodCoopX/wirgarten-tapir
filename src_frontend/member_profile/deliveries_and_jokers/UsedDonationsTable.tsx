@@ -8,6 +8,7 @@ import {
 } from "../../api-client";
 import PlaceholderTableRows from "../../components/PlaceholderTableRows.tsx";
 import TapirButton from "../../components/TapirButton.tsx";
+import { toApiDate } from "../../utils/apiDate.ts";
 import { formatDateText } from "../../utils/formatDateText.ts";
 import { getWeekdayDisplay } from "../../utils/getWeekdayDisplay.ts";
 
@@ -51,7 +52,8 @@ const UsedDonationsTable: React.FC<UsedDonationsTableProps> = ({
                   </small>
                 </td>
                 <td>
-                  {donationWithCancellation.cancellationLimit >= new Date() ? (
+                  {donationWithCancellation.cancellationLimit >=
+                  toApiDate(new Date()) ? (
                     <TapirButton
                       text={"Spende absagen"}
                       variant={"outline-primary"}

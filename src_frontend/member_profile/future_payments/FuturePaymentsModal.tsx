@@ -11,6 +11,7 @@ import "../../fixed_header.css";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
 import { TransactionsByDueDate } from "../../types/TransactionsByDueDate.ts";
+import { fromApiDate } from "../../utils/apiDate.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { formatDateText } from "../../utils/formatDateText.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
@@ -156,8 +157,8 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
       <tr key={dueDateAsString}>
         <td style={{ textAlign: "center" }}>
           <div className={"d-flex flex-column"}>
-            <strong>{formatDateText(new Date(dueDateAsString))}</strong>
-            <span>{dayjs().to(new Date(dueDateAsString))}</span>
+            <strong>{formatDateText(dueDateAsString)}</strong>
+            <span>{dayjs().to(fromApiDate(dueDateAsString))}</span>
           </div>
         </td>
         <td>
@@ -181,10 +182,7 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
 
   function buildTableContentPastPayments() {
     return Object.entries(pastTransactionsByDueDate)
-      .toSorted(
-        ([dueDateA], [dueDateB]) =>
-          new Date(dueDateB).getTime() - new Date(dueDateA).getTime(),
-      )
+      .toSorted(([dueDateA], [dueDateB]) => dueDateB.localeCompare(dueDateA))
       .map(([dueDateAsString, objects]) => buildRow(dueDateAsString, objects));
   }
 

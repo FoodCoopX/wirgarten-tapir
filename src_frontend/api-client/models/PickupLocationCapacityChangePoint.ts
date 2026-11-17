@@ -20,10 +20,10 @@
 export interface PickupLocationCapacityChangePoint {
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof PickupLocationCapacityChangePoint
    */
-  date: Date;
+  date: string;
   /**
    *
    * @type {Array<string>}
@@ -57,7 +57,7 @@ export function PickupLocationCapacityChangePointFromJSONTyped(
     return json;
   }
   return {
-    date: new Date(json["date"]),
+    date: json["date"],
     values: json["values"],
   };
 }
@@ -77,7 +77,7 @@ export function PickupLocationCapacityChangePointToJSONTyped(
   }
 
   return {
-    date: value["date"].toISOString().substring(0, 10),
+    date: value["date"],
     values: value["values"],
   };
 }

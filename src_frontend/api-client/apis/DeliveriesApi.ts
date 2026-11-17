@@ -65,12 +65,12 @@ export interface DeliveriesApiMemberJokerInformationRetrieveRequest {
 }
 
 export interface DeliveriesApiUseDonationCreateRequest {
-  date?: Date;
+  date?: string;
   memberId?: string;
 }
 
 export interface DeliveriesApiUseJokerCreateRequest {
-  date?: Date;
+  date?: string;
   memberId?: string;
 }
 
@@ -524,9 +524,7 @@ export class DeliveriesApi extends runtime.BaseAPI {
     const queryParameters: any = {};
 
     if (requestParameters["date"] != null) {
-      queryParameters["date"] = (requestParameters["date"] as any)
-        .toISOString()
-        .substring(0, 10);
+      queryParameters["date"] = requestParameters["date"];
     }
 
     if (requestParameters["memberId"] != null) {
@@ -588,9 +586,7 @@ export class DeliveriesApi extends runtime.BaseAPI {
     const queryParameters: any = {};
 
     if (requestParameters["date"] != null) {
-      queryParameters["date"] = (requestParameters["date"] as any)
-        .toISOString()
-        .substring(0, 10);
+      queryParameters["date"] = requestParameters["date"];
     }
 
     if (requestParameters["memberId"] != null) {

@@ -50,10 +50,10 @@ export interface ExistingMemberPurchasesSharesRequestRequest {
   asAdmin: boolean;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof ExistingMemberPurchasesSharesRequestRequest
    */
-  startDate?: Date;
+  startDate?: string;
 }
 
 /**
@@ -92,8 +92,7 @@ export function ExistingMemberPurchasesSharesRequestRequestFromJSONTyped(
     accountOwner:
       json["account_owner"] == null ? undefined : json["account_owner"],
     asAdmin: json["as_admin"],
-    startDate:
-      json["start_date"] == null ? undefined : new Date(json["start_date"]),
+    startDate: json["start_date"] == null ? undefined : json["start_date"],
   };
 }
 
@@ -117,9 +116,6 @@ export function ExistingMemberPurchasesSharesRequestRequestToJSONTyped(
     iban: value["iban"],
     account_owner: value["accountOwner"],
     as_admin: value["asAdmin"],
-    start_date:
-      value["startDate"] == null
-        ? undefined
-        : value["startDate"].toISOString().substring(0, 10),
+    start_date: value["startDate"],
   };
 }

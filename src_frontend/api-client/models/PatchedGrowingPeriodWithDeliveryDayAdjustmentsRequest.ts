@@ -32,16 +32,16 @@ export interface PatchedGrowingPeriodWithDeliveryDayAdjustmentsRequest {
   growingPeriodId?: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof PatchedGrowingPeriodWithDeliveryDayAdjustmentsRequest
    */
-  growingPeriodStartDate?: Date;
+  growingPeriodStartDate?: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof PatchedGrowingPeriodWithDeliveryDayAdjustmentsRequest
    */
-  growingPeriodEndDate?: Date;
+  growingPeriodEndDate?: string;
   /**
    *
    * @type {Array<number>}
@@ -105,11 +105,11 @@ export function PatchedGrowingPeriodWithDeliveryDayAdjustmentsRequestFromJSONTyp
     growingPeriodStartDate:
       json["growing_period_start_date"] == null
         ? undefined
-        : new Date(json["growing_period_start_date"]),
+        : json["growing_period_start_date"],
     growingPeriodEndDate:
       json["growing_period_end_date"] == null
         ? undefined
-        : new Date(json["growing_period_end_date"]),
+        : json["growing_period_end_date"],
     growingPeriodWeeksWithoutDelivery:
       json["growing_period_weeks_without_delivery"] == null
         ? undefined
@@ -154,14 +154,8 @@ export function PatchedGrowingPeriodWithDeliveryDayAdjustmentsRequestToJSONTyped
 
   return {
     growing_period_id: value["growingPeriodId"],
-    growing_period_start_date:
-      value["growingPeriodStartDate"] == null
-        ? undefined
-        : value["growingPeriodStartDate"].toISOString().substring(0, 10),
-    growing_period_end_date:
-      value["growingPeriodEndDate"] == null
-        ? undefined
-        : value["growingPeriodEndDate"].toISOString().substring(0, 10),
+    growing_period_start_date: value["growingPeriodStartDate"],
+    growing_period_end_date: value["growingPeriodEndDate"],
     growing_period_weeks_without_delivery:
       value["growingPeriodWeeksWithoutDelivery"],
     adjustments:

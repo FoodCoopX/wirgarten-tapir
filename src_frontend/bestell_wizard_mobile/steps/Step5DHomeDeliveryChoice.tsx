@@ -16,7 +16,7 @@ interface Step5DHomeDeliveryChoiceProps {
   pickupLocationsWithCapacityFull: Set<PublicPickupLocation>;
   goToNextStep: () => void;
   firstDeliveryDatesByPickupLocationAndProductType: {
-    [key: string]: { [key: string]: Date };
+    [key: string]: { [key: string]: string };
   };
   stepActive: boolean;
   productTypesInWaitingList: Set<PublicProductType>;

@@ -16,6 +16,7 @@ import { useApi } from "../hooks/useApi.ts";
 import { CustomCycleDeliveryWeeks } from "../types/CustomCycleDeliveryWeeks.ts";
 import { ToastData } from "../types/ToastData.ts";
 import { addToast } from "../utils/addToast.ts";
+import { toApiDate } from "../utils/apiDate.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import { getPeriodIdFromUrl } from "./get_parameter_from_url.ts";
 import ProductTypeForm from "./ProductTypeForm.tsx";
@@ -176,7 +177,7 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
       descriptionBestellwizardShort: descriptionBestellwizardShort,
       mustBeSubscribedTo: mustBeSubscribedTo,
       singleSubscriptionOnly: singleSubscriptionOnly,
-      taxRateChangeDate: taxRateChangeDate,
+      taxRateChangeDate: toApiDate(taxRateChangeDate),
       taxRate: taxRate,
       noticePeriodDuration: customNoticePeriodEnabled
         ? noticePeriodDuration

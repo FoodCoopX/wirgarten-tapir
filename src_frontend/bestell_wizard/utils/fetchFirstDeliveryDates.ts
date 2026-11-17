@@ -9,7 +9,7 @@ export function fetchFirstDeliveryDates(
   shoppingCart: ShoppingCart,
   selectedGrowingPeriod: PublicGrowingPeriod | undefined,
   setFirstDeliveryDatesByPickupLocationIdAndProductTypeId: (map: {
-    [key: string]: { [key: string]: Date };
+    [key: string]: { [key: string]: string };
   }) => void,
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>,
   waitingListEntryId: string | undefined,
@@ -23,24 +23,9 @@ export function fetchFirstDeliveryDates(
       },
     })
     .then((response) => {
-      const dates: { [key: string]: { [key: string]: Date } } = {};
-
-      const byPickupLocationId = Object.entries(
+      setFirstDeliveryDatesByPickupLocationIdAndProductTypeId(
         response.deliveryDateByPickupLocationIdAndProductTypeId,
       );
-
-      for (const [pickupLocationId, byProductTypeId] of byPickupLocationId) {
-        dates[pickupLocationId] = {};
-
-        for (const [productTypeId, dateAsString] of Object.entries(
-          byProductTypeId,
-        )) {
-          dates[pickupLocationId][productTypeId] = new Date(
-            dateAsString as unknown as string,
-          ); //The generated client say that the values are Dates, but they are actually strings
-        }
-      }
-      setFirstDeliveryDatesByPickupLocationIdAndProductTypeId(dates);
     })
     .catch((error) =>
       handleRequestError(
