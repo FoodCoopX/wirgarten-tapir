@@ -23,7 +23,7 @@ Während eines Ausschlusszeitraums:
 - Die regelmäßigen Zahlungen des Mitglieds (Verträge, Solidarbeitrag,
   Vereinsmitgliedsbeitrag, Liefergebühren) fehlen in den Lastschriftdateien:
   den CSV- und XML-Dateien des monatlichen Exports und dem allgemeinen
-  CSV-Export "Alle Zahlungen für diese Monat".
+  CSV-Export "Alle Zahlungen für diesen Monat".
 - Die ausgeschlossenen Zahlungen werden beim Export trotzdem als bezahlt
   markiert. Auf der Seite
   "Lastschrift" werden sie getrennt als "nicht eingezogen" angezeigt.

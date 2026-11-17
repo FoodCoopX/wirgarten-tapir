@@ -6,6 +6,7 @@ from tapir.generic_exports.services.payment_segment_provider import (
 )
 from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES
 from tapir.payments.tests.factories import PaymentExportExclusionPeriodFactory
+from tapir.utils.tests_utils import mock_parameter_value
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import PaymentFactory, PaymentTransactionFactory
@@ -32,6 +33,44 @@ class TestPaymentSegmentProvider(TapirIntegrationTest):
         )
         self.assertEqual(
             PaymentColumnProvider.get_payment_columns, segment.get_available_columns
+        )
+        self.assertEqual(
+            PaymentSegmentProvider.get_description_all_payments_this_month,
+            segment.get_description,
+        )
+
+    def test_getDescriptionAllPaymentsThisMonth_featureEnabled_mentionsExclusions(
+        self,
+    ):
+        cache = {}
+        mock_parameter_value(
+            cache=cache,
+            key=ParameterKeys.PAYMENT_EXPORT_EXCLUSION_ENABLED,
+            value=True,
+        )
+
+        result = PaymentSegmentProvider.get_description_all_payments_this_month(
+            cache=cache
+        )
+
+        self.assertIn("vom Zahlungsexport ausgeschlossen", result)
+
+    def test_getDescriptionAllPaymentsThisMonth_featureDisabled_returnsBaseDescription(
+        self,
+    ):
+        cache = {}
+        mock_parameter_value(
+            cache=cache,
+            key=ParameterKeys.PAYMENT_EXPORT_EXCLUSION_ENABLED,
+            value=False,
+        )
+
+        result = PaymentSegmentProvider.get_description_all_payments_this_month(
+            cache=cache
+        )
+
+        self.assertEqual(
+            PaymentSegmentProvider.DESCRIPTION_ALL_PAYMENTS_THIS_MONTH, result
         )
 
     def test_getQuerysetAllPaymentsThisMonth_default_includesOnlyPaymentsDueThisMonth(

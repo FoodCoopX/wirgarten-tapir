@@ -15,9 +15,11 @@ class ExportSegmentColumn:
 class ExportSegment:
     id: str
     display_name: str
-    description: str
     get_queryset: Callable[[datetime.datetime], Iterable]
     get_available_columns: Callable[[], List[ExportSegmentColumn]]
+    # Set exactly one of description and get_description
+    description: str = ""
+    get_description: Callable[[dict], str] | None = None
 
 
 class ExportSegmentManager:

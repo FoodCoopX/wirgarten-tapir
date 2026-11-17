@@ -48,13 +48,18 @@ class GetExportSegmentsView(APIView):
         if not request.user.has_perm(Permission.Coop.MANAGE):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
+        cache = {}
         segment_datas = []
         for segment in ExportSegmentManager.registered_export_segments.values():
             segment_datas.append(
                 {
                     "id": segment.id,
                     "display_name": segment.display_name,
-                    "description": segment.description,
+                    "description": (
+                        segment.get_description(cache)
+                        if segment.get_description is not None
+                        else segment.description
+                    ),
                     "columns": [
                         {
                             "id": column.id,
