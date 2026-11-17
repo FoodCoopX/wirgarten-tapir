@@ -1,14 +1,13 @@
 import datetime
 
-from django.db.models import QuerySet, Exists, OuterRef, Q
+from django.db.models import QuerySet
 
-from tapir.configuration.parameter import get_parameter_value
 from tapir.generic_exports.services.export_segment_manager import ExportSegment
 from tapir.generic_exports.services.payment_column_provider import PaymentColumnProvider
-from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES
-from tapir.payments.models import PaymentExportExclusionPeriod
+from tapir.payments.services.payment_export_exclusion_period_service import (
+    PaymentExportExclusionPeriodService,
+)
 from tapir.wirgarten.models import Payment
-from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
 class PaymentSegmentProvider:
@@ -29,27 +28,15 @@ class PaymentSegmentProvider:
     def get_queryset_all_payments_this_month(
         cls, reference_datetime: datetime.datetime
     ) -> QuerySet:
-        payments = Payment.objects.filter(
-            due_date__year=reference_datetime.year,
-            due_date__month=reference_datetime.month,
-        ).select_related("mandate_ref", "mandate_ref__member")
-
-        if not get_parameter_value(
-            key=ParameterKeys.PAYMENT_EXPORT_EXCLUSION_ENABLED, cache={}
-        ):
-            return payments
-
-        return payments.exclude(
-            cls._build_member_is_excluded_from_export_condition(),
-            ~Q(type=PAYMENT_TYPE_COOP_SHARES),
-        )
-
-    @staticmethod
-    def _build_member_is_excluded_from_export_condition() -> Exists:
-        return Exists(
-            PaymentExportExclusionPeriod.objects.filter(
-                Q(end_date__isnull=True) | Q(end_date__gte=OuterRef("due_date")),
-                member_id=OuterRef("mandate_ref__member_id"),
-                start_date__lte=OuterRef("due_date"),
+        return (
+            Payment.objects.filter(
+                due_date__year=reference_datetime.year,
+                due_date__month=reference_datetime.month,
             )
+            .exclude(
+                PaymentExportExclusionPeriodService.build_payment_is_excluded_condition(
+                    cache={}
+                )
+            )
+            .select_related("mandate_ref", "mandate_ref__member")
         )

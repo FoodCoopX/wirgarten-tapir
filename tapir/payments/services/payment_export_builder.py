@@ -50,18 +50,15 @@ class PaymentExportBuilder:
             cls.split_payments_by_contract_or_coop_shares(payments)
         )
 
-        exported_contract_payments = contract_payments
-        if get_parameter_value(
-            key=ParameterKeys.PAYMENT_EXPORT_EXCLUSION_ENABLED, cache=cache
-        ):
-            exported_contract_payments = cls._remove_excluded_payments(
-                payments=contract_payments, cache=cache
+        for payment in contract_payments:
+            payment.excluded_from_export = (
+                PaymentExportExclusionPeriodService.is_payment_excluded(
+                    payment=payment, cache=cache
+                )
             )
-            exported_payment_ids = {
-                payment.id for payment in exported_contract_payments
-            }
-            for payment in contract_payments:
-                payment.excluded_from_export = payment.id not in exported_payment_ids
+        exported_contract_payments = [
+            payment for payment in contract_payments if not payment.excluded_from_export
+        ]
 
         combined_contract_payments = cls.combine_contract_payments_by_mandate_ref(
             exported_contract_payments
@@ -205,20 +202,6 @@ class PaymentExportBuilder:
         }
 
         return combined_payments
-
-    @staticmethod
-    def _remove_excluded_payments(
-        payments: list[Payment], cache: dict
-    ) -> list[Payment]:
-        return [
-            payment
-            for payment in payments
-            if not PaymentExportExclusionPeriodService.is_member_excluded(
-                member_id=payment.mandate_ref.member_id,
-                reference_date=payment.due_date,
-                cache=cache,
-            )
-        ]
 
     @classmethod
     def get_unexported_payments(cls, reference_date: datetime.date):

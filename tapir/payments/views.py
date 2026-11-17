@@ -182,7 +182,7 @@ class GetFutureMemberPaymentsApiView(APIView):
                 )
                 | Q(status=Payment.PaymentStatus.DUE)
             )
-            .select_related("coop_share_transaction")
+            .select_related("mandate_ref", "coop_share_transaction")
             .prefetch_related("coop_share_transaction__payments")
         )
         current_month = get_today(cache=self.cache)
@@ -222,9 +222,6 @@ class GetFutureMemberPaymentsApiView(APIView):
             for membership in TapirCache.get_all_association_memberships(cache=cache)
             if membership.member_id == member_id
         ]
-        exclusion_enabled = get_parameter_value(
-            key=ParameterKeys.PAYMENT_EXPORT_EXCLUSION_ENABLED, cache=cache
-        )
         for payment in member_payments:
             subscriptions = []
             coop_share_transactions = []
@@ -305,12 +302,8 @@ class GetFutureMemberPaymentsApiView(APIView):
                     ),
                     "delivery_dates": delivery_dates,
                     "number_of_instalments": number_of_instalments,
-                    "excluded_from_export": exclusion_enabled
-                    and payment.type != payments_config.PAYMENT_TYPE_COOP_SHARES
-                    and PaymentExportExclusionPeriodService.is_member_excluded(
-                        member_id=member_id,
-                        reference_date=payment.due_date,
-                        cache=cache,
+                    "excluded_from_export": PaymentExportExclusionPeriodService.is_payment_excluded(
+                        payment=payment, cache=cache
                     ),
                 }
             )
