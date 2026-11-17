@@ -290,7 +290,7 @@ const PaymentExportExclusionPeriodModal: React.FC<
       case "list":
         return (
           <TapirButton
-            variant={"primary"}
+            variant={"outline-primary"}
             icon={"add"}
             text={"Zeitraum hinzufügen"}
             onClick={() => openForm(undefined)}
