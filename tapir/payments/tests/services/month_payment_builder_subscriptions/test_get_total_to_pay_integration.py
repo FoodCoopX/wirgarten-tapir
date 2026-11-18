@@ -221,6 +221,35 @@ class TestGetTotalToPayIntegration(TapirIntegrationTest):
             ),
         )
 
+    def test_getTotalToPay_noPickupLocationBeforeContractStart_weeksBeforeContractUseLocationOfContract(
+        self,
+    ):
+        self.member = MemberFactory.create()
+        self._move_member_to_location_with_delivery_on(
+            day_of_week=self.THURSDAY,
+            valid_from=datetime.date(year=2027, month=1, day=18),
+        )
+        self._move_member_to_location_with_delivery_on(
+            day_of_week=self.MONDAY,
+            valid_from=datetime.date(year=2027, month=3, day=1),
+        )
+        contract = self._create_subscription(
+            product=self.medium_box,
+            start_date=datetime.date(year=2027, month=1, day=18),
+            end_date=datetime.date(year=2027, month=12, day=31),
+        )
+
+        # Thursdays of January 2027: 7, 14, 21, 28. Thursday 31.12.2026 is in December.
+        # 2/4 × 95
+        self.assertEqual(
+            Decimal("47.50"),
+            self._get_total_to_pay(
+                contracts=[contract],
+                range_start=datetime.date(year=2027, month=1, day=1),
+                range_end=datetime.date(year=2027, month=1, day=31),
+            ).quantize(Decimal("0.01")),
+        )
+
     def test_getTotalToPay_rangeSpansCutoff_appliesOldRuleBeforeAndNewRuleFromCutoff(
         self,
     ):
