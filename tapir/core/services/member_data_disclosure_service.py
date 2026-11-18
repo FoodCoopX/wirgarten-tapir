@@ -26,7 +26,7 @@ from tapir.wirgarten.models import (
     WaitingListEntry,
 )
 
-# Texts to Purpose and Retention are a technical proposal, see wiki "Betrieb-Datenschutz".
+# The purpose and retention texts are a technical proposal.
 # Each cooperative has to confirm them with its auditing association or data protection officer.
 RETENTION_UNTIL_LEAVING = (
     "Bis zum Ende der Mitgliedschaft, danach nur, soweit eine gesetzliche "
