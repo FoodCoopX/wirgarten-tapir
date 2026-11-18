@@ -732,7 +732,6 @@ class Payment(TapirModel):
         choices=PaymentStatus.choices,
         default=PaymentStatus.DUE,
     )
-    edited = models.BooleanField(default=False)
     transaction = models.ForeignKey(
         PaymentTransaction, on_delete=models.DO_NOTHING, null=True
     )

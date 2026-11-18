@@ -15462,8 +15462,6 @@ components:
           format: date
         status:
           $ref: '#/components/schemas/PaymentStatusEnum'
-        edited:
-          type: boolean
         excluded_from_export:
           type: boolean
         type:

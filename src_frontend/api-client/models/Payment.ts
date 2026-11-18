@@ -65,12 +65,6 @@ export interface Payment {
    * @type {boolean}
    * @memberof Payment
    */
-  edited?: boolean;
-  /**
-   *
-   * @type {boolean}
-   * @memberof Payment
-   */
   excludedFromExport?: boolean;
   /**
    *
@@ -163,7 +157,6 @@ export function PaymentFromJSONTyped(
       json["status"] == null
         ? undefined
         : PaymentStatusEnumFromJSON(json["status"]),
-    edited: json["edited"] == null ? undefined : json["edited"],
     excludedFromExport:
       json["excluded_from_export"] == null
         ? undefined
@@ -211,7 +204,6 @@ export function PaymentToJSONTyped(
     amount: value["amount"],
     due_date: value["dueDate"],
     status: PaymentStatusEnumToJSON(value["status"]),
-    edited: value["edited"],
     excluded_from_export: value["excludedFromExport"],
     type: value["type"],
     subscription_payment_range_start: value["subscriptionPaymentRangeStart"],
