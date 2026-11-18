@@ -5,7 +5,7 @@ Issue: #1387 "NEU: Teilmonate anteilig nach Lieferterminen abrechnen". Related: 
 ## Progress
 Tick a box right after finishing the step. Each phase writes and updates the unit tests for the code it changes (see "Tests"); Phase 7 adds the cross-cutting scenarios.
 
-- [ ] Phase 1 — nullable DATE parameter + cutoff parameter
+- [x] Phase 1 — cutoff parameter
 - [ ] Phase 2 — shared delivery counting + cutoff check
 - [ ] Phase 3 — subscription payments
 - [ ] Phase 4 — joker credit
@@ -62,7 +62,7 @@ Joker credit today (`JokerValueService`, from #1328): monthly price × 12 ÷ wee
    - Explanation text e.g. "Kiste: 95,00 € monatlich ÷ 5 Liefertermine im Oktober = 19,00 €".
    - `DeliveryPriceCalculator.get_price_of_single_delivery_from_monthly_price` is not changed (still used before the cutoff).
    - Example 95 € box weekly: October 2026 (5 dates) 19.00 € instead of 21.51 € (member pays 95 − 19 = 76 € = 4/5 × 95 €, same as a contract ending one delivery earlier). November 2026 (4 dates) 23.75 € instead of 21.51 €. Jokers on all dates of a month sum to the monthly price (today October: 5 × 21.51 = 107.55 €).
-7. Cutoff date: the new rule applies per month only from a cutoff date (config parameter, default empty = old behaviour). Earlier months keep the old rule. Reason: with quarterly/yearly payment the whole period is recomputed; without a cutoff, already billed months would produce back-charges (e.g. 2 of 4 deliveries: old 43.02 €, new 47.50 €).
+7. Cutoff date: the new rule applies per month only from a cutoff date (config parameter, default 01.01.2028). Earlier months keep the old rule. Reason: with quarterly/yearly payment the whole period is recomputed; without a cutoff, already billed months would produce back-charges (e.g. 2 of 4 deliveries: old 43.02 €, new 47.50 €).
 8. `MemberCreditCreator` and the sales export (`MonthlySalesSegmentProvider`) use `get_total_to_pay` and pick up the new rule without own changes.
 9. Tests: all delivery cycles, months with 4 and 5 dates, change with and without price change, two changes in the same month (sum = 1 monthly fee), month with delivery-free weeks, pickup location change within the month, 0 dates, cutoff, yearly payment rhythm, trial period. Joker: all delivery cycles, months with 4 and 5 dates, solidarity part, joker before cutoff, jokers on all dates of a month (sum = monthly price).
 
@@ -87,13 +87,7 @@ New service `tapir/deliveries/services/monthly_delivery_date_counter.py`, `Month
 `get_number_of_deliveries_in_month` is removed and its tests moved.
 
 ### Cutoff
-- New key `ParameterKeys.PAYMENT_PARTIAL_MONTH_PRO_RATA_START` (name tbd), defined in `parameter_definitions_payments.py`, DATE, default empty, validator: must be the 1st of a month. A month uses the new rule iff its first day ≥ cutoff.
-- DATE parameters can't be empty today. Phase 1 adds empty DATE support:
-  - `TapirParameter.get_value` calls `date.fromisoformat(self.value)`: return `None` for `""` and for `"None"` (the latter may already be stored, see below).
-  - `configuration/views.py:87` saves `str(form.cleaned_data[...])`, i.e. `"None"` for an empty date field (the form field is already `required=False`): store `""` instead.
-  - `parameter.py:168,200` persist `str(initial_value)`, i.e. `"None"`: store `""` for `None`.
-  - `__get_expected_datatype(None)` returns `None`, so the datatype check is skipped; fine.
-  - `__validate_initial_value` runs all validators on the initial value: the "1st of month" validator must accept `None`.
+- New key `ParameterKeys.PAYMENT_PARTIAL_MONTH_PRO_RATA_START`, defined in `parameter_definitions_payments.py`, DATE, default 01.01.2028, validator `validate_date_is_first_of_month`. A month uses the new rule iff its first day ≥ cutoff.
 - New service `PartialMonthProRataDecider.is_pro_rata_active(first_of_month, cache)`, used by payments and jokers.
 
 ### Payments (Phase 3)
@@ -148,12 +142,9 @@ Frontend: display the explanation below the amount, collapsed by default (e.g. "
 ## Tests
 One class per file, one file per method, `TapirUnitTest` where no DB is needed. Each phase writes the tests for its own code; tests of removed methods are removed in the phase that removes the method. Phase 7 covers the cross-cutting scenarios of criterion 9 marked below.
 
-Phase 1:
-- `tapir/configuration/tests/`: empty DATE parameter returns `None` for `""` and `"None"`; empty form value stored as `""`; empty initial value stored as `""`; cutoff validator accepts `None` and the 1st of a month, rejects other days.
-
 Phase 2, `tapir/deliveries/tests/services/monthly_delivery_date_counter/`:
 - `test_count_delivery_dates_in_month.py`: with and without contract range, delivery-free weeks count, pickup location change within the month, 0 dates, all cycles.
-- `partial_month_pro_rata_decider/test_is_pro_rata_active.py`: no cutoff, month before, month equal to, month after the cutoff.
+- `partial_month_pro_rata_decider/test_is_pro_rata_active.py`: month before, month equal to, month after the cutoff.
 
 Phase 3, `tapir/payments/tests/services/month_payment_builder_subscriptions/`:
 - `test_get_amount_to_pay_for_subscription_within_month.py` (replaces `test_get_number_of_months_and_deliveries_to_pay.py`): each branch; weekly, biweekly, every 4 weeks, custom, no delivery; months with 4 and 5 dates; 0 dates; cutoff before/after the month.
@@ -193,7 +184,6 @@ Merge all migrations created on this branch into as few as possible, ideally one
 - Consider a dedicated page, e.g. `docs/admins/payments/partial_months_and_joker_credits.md`: delivery-date fraction with the October 2026 example, delivery-free weeks counting, "Keine Lieferung" by days, joker formula, cutoff parameter and what happens to earlier months.
 
 ## Files
-- `tapir/configuration/models.py`, `tapir/configuration/parameter.py`, `tapir/configuration/views.py`
 - `tapir/wirgarten/parameter_keys.py`, `tapir/wirgarten/parameter_definitions/parameter_definitions_payments.py`, `parameter_definitions_jokers.py`
 - new `tapir/deliveries/services/monthly_delivery_date_counter.py`, new `PartialMonthProRataDecider`
 - `tapir/payments/services/month_payment_builder_subscriptions.py`, `tapir/payments/services/month_payment_builder_solidarity_contributions.py` (shared days ratio), `tapir/payments/services/month_payment_builder_utils.py` (if the explained payment is excluded from "already paid" there)
