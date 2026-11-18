@@ -146,27 +146,29 @@ class JokerValueService:
         value = DeliveryPriceCalculator.get_price_of_single_delivery_for_subscription(
             subscription=subscription, at_date=delivery_date, cache=cache
         )
-        product_price = get_product_price(
-            product=subscription.product, reference_date=delivery_date, cache=cache
-        ).price
+        quantity_factor = ""
+        if subscription.price_override is not None:
+            name += " (Sonderpreis)"
+            price = subscription.price_override
+        else:
+            price = get_product_price(
+                product=subscription.product, reference_date=delivery_date, cache=cache
+            ).price
+            if subscription.quantity != 1:
+                quantity_factor = f" × {subscription.quantity} Anteile"
 
         if delivery_cycle == CUSTOM_CYCLE[0]:
-            explanation = (
-                f"{name}: Preis pro Lieferung {format_currency(product_price)} €"
-            )
-            if subscription.quantity != 1:
-                explanation += (
-                    f" × {subscription.quantity} Anteile = {format_currency(value)} €"
-                )
+            explanation = f"{name}: Preis pro Lieferung {format_currency(price)} €"
+            if quantity_factor:
+                explanation += f"{quantity_factor} = {format_currency(value)} €"
             return JokerCreditValuePart(explanation=explanation, value=value)
 
         calculation = cls._build_monthly_to_delivery_calculation(
-            monthly_amount=product_price,
+            monthly_amount=price,
             delivery_cycle=delivery_cycle,
             delivery_date=delivery_date,
         )
-        if subscription.quantity != 1:
-            calculation += f" × {subscription.quantity} Anteile"
+        calculation += quantity_factor
 
         return JokerCreditValuePart(
             explanation=f"{name}: {calculation} = {format_currency(value)} €",

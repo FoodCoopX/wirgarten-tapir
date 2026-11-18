@@ -162,6 +162,50 @@ class TestGetSubscriptionPart(TapirUnitTest):
             part.explanation,
         )
 
+    def test_getSubscriptionPart_customCycleWithPriceOverride_explainsOverridePrice(
+        self,
+        mock_get_product_price: MagicMock,
+        mock_get_price_of_single_delivery: MagicMock,
+        _: MagicMock,
+    ):
+        mock_get_price_of_single_delivery.return_value = Decimal(15)
+        subscription = self.build_subscription(
+            delivery_cycle=CUSTOM_CYCLE[0], quantity=2
+        )
+        subscription.price_override = Decimal(15)
+
+        part = JokerValueService._get_subscription_part(
+            subscription=subscription, delivery_date=self.JOKER_DATE, cache={}
+        )
+
+        self.assertEqual(Decimal(15), part.value)
+        self.assertEqual(
+            "Ernteanteil Gemüse M (Sonderpreis): Preis pro Lieferung 15,00 €",
+            part.explanation,
+        )
+        mock_get_product_price.assert_not_called()
+
+    def test_getSubscriptionPart_priceOverride_explainsOverridePrice(
+        self,
+        mock_get_product_price: MagicMock,
+        mock_get_price_of_single_delivery: MagicMock,
+        _: MagicMock,
+    ):
+        mock_get_price_of_single_delivery.return_value = Decimal("6.92")
+        subscription = self.build_subscription(delivery_cycle=WEEKLY[0], quantity=2)
+        subscription.price_override = Decimal(30)
+
+        part = JokerValueService._get_subscription_part(
+            subscription=subscription, delivery_date=self.JOKER_DATE, cache={}
+        )
+
+        self.assertEqual(Decimal("6.92"), part.value)
+        self.assertEqual(
+            "Ernteanteil Gemüse M (Sonderpreis): 30,00 € monatlich × 12 ÷ 52 Wochen = 6,92 €",
+            part.explanation,
+        )
+        mock_get_product_price.assert_not_called()
+
     @patch.object(
         MonthlyDeliveryDateCounter,
         "count_delivery_dates_in_month",
