@@ -4,7 +4,11 @@ from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalcu
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
-from tapir.utils.shortcuts import get_from_cache_or_compute, get_last_day_of_month
+from tapir.utils.shortcuts import (
+    get_from_cache_or_compute,
+    get_last_day_of_month,
+    get_monday,
+)
 from tapir.wirgarten.models import ProductType
 
 
@@ -48,28 +52,33 @@ class MonthlyDeliveryDateCounter:
         last_of_month = get_last_day_of_month(first_of_month)
         number_of_deliveries = 0
 
-        # start one day back so that deliveries on the first day of the month are counted
-        current_date = first_of_month - datetime.timedelta(days=1)
-
-        while current_date <= last_of_month:
-            current_date = DeliveryDateCalculator.get_next_delivery_date_for_product_type(
-                reference_date=current_date,
+        # One delivery per week at most, at the pickup location valid on that week's Monday.
+        # The search starts on the Sunday before, so that a delivery on Monday is found;
+        # a result on or after next Monday means the week isn't delivered (e.g. biweekly).
+        monday = get_monday(first_of_month)
+        while monday <= last_of_month:
+            next_monday = monday + datetime.timedelta(days=7)
+            delivery_date = DeliveryDateCalculator.get_next_delivery_date_for_product_type(
+                reference_date=monday - datetime.timedelta(days=1),
                 pickup_location_id=MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
                     member_id=member_id,
-                    reference_date=current_date,
+                    reference_date=monday,
                     cache=cache,
                 ),
                 product_type=product_type,
                 check_for_weeks_without_delivery=False,
                 cache=cache,
             )
-            if current_date is None:
+            monday = next_monday
+            if delivery_date is None:
                 break
-            if current_date > last_of_month:
-                break
-            if contract_start is not None and current_date < contract_start:
+            if delivery_date >= next_monday:
                 continue
-            if contract_end is not None and current_date > contract_end:
+            if not first_of_month <= delivery_date <= last_of_month:
+                continue
+            if contract_start is not None and delivery_date < contract_start:
+                continue
+            if contract_end is not None and delivery_date > contract_end:
                 continue
             number_of_deliveries += 1
 

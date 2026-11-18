@@ -29,9 +29,10 @@ class TestCountDeliveryDatesInMonth(TapirUnitTest):
         cls, mock_get_next_delivery_date: MagicMock, interval_in_days: int
     ) -> None:
         def get_next_delivery_date(reference_date: datetime.date, **_) -> datetime.date:
-            if reference_date < cls.FIRST_OF_MONTH:
-                return cls.FIRST_OF_MONTH
-            return reference_date + datetime.timedelta(days=interval_in_days)
+            friday = reference_date + datetime.timedelta(days=5)
+            while (friday - cls.FIRST_OF_MONTH).days % interval_in_days != 0:
+                friday += datetime.timedelta(days=7)
+            return friday
 
         mock_get_next_delivery_date.side_effect = get_next_delivery_date
 
@@ -160,7 +161,22 @@ class TestCountDeliveryDatesInMonth(TapirUnitTest):
 
         self.assertEqual(0, self._count(contract_start=None, contract_end=None))
 
-    def test_countDeliveryDatesInMonth_pickupLocationChangesWithinMonth_usesLocationValidAtEachDate(
+    def test_countDeliveryDatesInMonth_deliveryOfFirstWeekBeforeMonth_notCounted(
+        self,
+        mock_get_next_delivery_date: MagicMock,
+        _: MagicMock,
+    ):
+        mock_get_next_delivery_date.side_effect = (
+            lambda reference_date, **__: reference_date + datetime.timedelta(days=1)
+        )
+
+        self.assertEqual(
+            4,
+            self._count(contract_start=None, contract_end=None),
+            "There should be a delivery on the Mondays 4, 11, 18, 25 but not on 28.07.",
+        )
+
+    def test_countDeliveryDatesInMonth_pickupLocationChangesWithinMonth_usesLocationValidOnMondayOfEachWeek(
         self,
         mock_get_next_delivery_date: MagicMock,
         mock_get_member_pickup_location_id_from_cache: MagicMock,
@@ -188,12 +204,11 @@ class TestCountDeliveryDatesInMonth(TapirUnitTest):
                     cache=cache,
                 )
                 for reference_date, pickup_location_id in [
-                    (datetime.date(year=2025, month=7, day=31), "pl_id_1"),
-                    (datetime.date(year=2025, month=8, day=1), "pl_id_1"),
-                    (datetime.date(year=2025, month=8, day=8), "pl_id_1"),
-                    (datetime.date(year=2025, month=8, day=15), "pl_id_1"),
-                    (datetime.date(year=2025, month=8, day=22), "pl_id_2"),
-                    (datetime.date(year=2025, month=8, day=29), "pl_id_2"),
+                    (datetime.date(year=2025, month=7, day=27), "pl_id_1"),
+                    (datetime.date(year=2025, month=8, day=3), "pl_id_1"),
+                    (datetime.date(year=2025, month=8, day=10), "pl_id_1"),
+                    (datetime.date(year=2025, month=8, day=17), "pl_id_2"),
+                    (datetime.date(year=2025, month=8, day=24), "pl_id_2"),
                 ]
             ]
         )
@@ -205,12 +220,11 @@ class TestCountDeliveryDatesInMonth(TapirUnitTest):
                     cache=cache,
                 )
                 for reference_date in [
-                    datetime.date(year=2025, month=7, day=31),
-                    datetime.date(year=2025, month=8, day=1),
-                    datetime.date(year=2025, month=8, day=8),
-                    datetime.date(year=2025, month=8, day=15),
-                    datetime.date(year=2025, month=8, day=22),
-                    datetime.date(year=2025, month=8, day=29),
+                    datetime.date(year=2025, month=7, day=28),
+                    datetime.date(year=2025, month=8, day=4),
+                    datetime.date(year=2025, month=8, day=11),
+                    datetime.date(year=2025, month=8, day=18),
+                    datetime.date(year=2025, month=8, day=25),
                 ]
             ]
         )

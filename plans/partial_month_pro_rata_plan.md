@@ -11,7 +11,7 @@ Tick a box right after finishing the step. Each phase writes and updates the uni
 - [x] Phase 4 — joker credit
 - [x] Phase 5 — calculation explanation in the member profile payment list (payments and credits)
 - [x] Phase 6 — texts (parameter descriptions, joker explanation)
-- [ ] Phase 7 — cross-cutting tests for criterion 9
+- [x] Phase 7 — cross-cutting tests for criterion 9
 - [ ] Phase 8 — cleanup: remove `Payment.edited` (see "Cleanup (Phase 8)")
 - [ ] Phase 9 — merge the migrations created by this plan (see "Migrations (Phase 9)")
 - [ ] Phase 10 — documentation review (see "Documentation (Phase 10)")
@@ -83,7 +83,7 @@ Joker credits are rounded to cents when saved as `MemberCredit`. "Jokers on all 
 Explanation lines (Phase 5) show amounts rounded to cents while the total is rounded once, so the displayed lines may not add up to the displayed total (e.g. 3 × 31,67 € = 95,01 € vs. total 95,00 €). Accepted.
 
 ### Shared delivery counting
-New service `tapir/deliveries/services/monthly_delivery_date_counter.py`, `MonthlyDeliveryDateCounter.count_delivery_dates_in_month(member_id, product_type, first_of_month, contract_start, contract_end, cache)` with `contract_start`/`contract_end` optional (`None` = denominator). Logic moved from `MonthPaymentBuilderSubscriptions.get_number_of_deliveries_in_month` (pickup location history, `check_for_weeks_without_delivery=False`). Lives in `deliveries` so `JokerValueService` doesn't depend on `payments`. Results go through the cache: the denominator is requested for every subscription of a member and product type, and for every joker.
+New service `tapir/deliveries/services/monthly_delivery_date_counter.py`, `MonthlyDeliveryDateCounter.count_delivery_dates_in_month(member_id, product_type, first_of_month, contract_start, contract_end, cache)` with `contract_start`/`contract_end` optional (`None` = denominator). Logic moved from `MonthPaymentBuilderSubscriptions.get_number_of_deliveries_in_month` (pickup location history, `check_for_weeks_without_delivery=False`). Phase 7 changed it to loop over the weeks of the month with the pickup location valid on each week's Monday, like `MemberSpecificDeliveryDayCalculator`; before, the location valid on the previous delivery date decided the next date, so after a location change the first date came from the old location. Lives in `deliveries` so `JokerValueService` doesn't depend on `payments`. Results go through the cache: the denominator is requested for every subscription of a member and product type, and for every joker.
 `get_number_of_deliveries_in_month` is removed and its tests moved (done in Phase 2; `get_number_of_months_and_deliveries_to_pay` calls the counter until Phase 3 replaces it).
 
 ### Cutoff
@@ -146,8 +146,8 @@ Phase 2, `tapir/deliveries/tests/services/`:
 
 Phase 3, `tapir/payments/tests/services/month_payment_builder_subscriptions/`:
 - `test_build_calculation_part_for_subscription_within_month.py` (replaces `test_get_number_of_months_and_deliveries_to_pay.py`): each branch; weekly, biweekly, every 4 weeks, custom, no delivery; months with 4 and 5 dates; 0 dates; cutoff before/after the month.
-- Phase 7: `test_get_total_to_pay.py` (extend): issue example October 2026 = 184.00 €; change without price change = 95 €; two changes in one month = 1 monthly fee; January 2027 with KW 1–2 delivery-free, start KW 4 = 1/4; pickup location change within the month; yearly rhythm spanning the cutoff (months before old rule, after new).
-- Phase 7: `test_build_payments_for_subscriptions_in_trial.py` (extend): partial trial month pro rata.
+- Phase 7: `test_get_total_to_pay_integration.py` (new, DB; `test_get_total_to_pay.py` stays a unit test): issue example October 2026 = 184.00 €; two changes without price change in one month = 1 monthly fee (also covers a single change, e.g. renewal into a growing period starting mid-month); January 2027 with KW 1–2 delivery-free, start KW 4 = 1/4; pickup location change within the month; yearly rhythm spanning the cutoff (months before old rule, after new).
+- Trial period: no own test. Trial only shifts the target month and forces the monthly rhythm (covered by `test_build_payments_for_subscriptions_in_trial.py`, which asserts `calculation_parts_function=get_calculation_parts`); the amount comes from `get_calculation_parts`, covered by `test_get_total_to_pay_integration.py`.
 - Remove the tests of `get_number_of_months_and_deliveries_to_pay`.
 
 Phase 4, `tapir/deliveries/tests/services/joker_value_service/`:
