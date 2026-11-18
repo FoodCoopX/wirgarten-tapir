@@ -57,7 +57,8 @@ class ParameterDefinitionsJokers:
             description="Wenn ein Produkttyp ausgewählt ist, wird der Solidarbeitrag des Mitglieds in der Joker-Gutschrift erstattet, "
             "falls das Mitglied einen Vertrag für diesen Produkttyp hat und dieser in der Joker-Woche geliefert wird. "
             "Der Solidarbeitrag zählt einmal pro Mitglied, unabhängig von der Anzahl der Anteile. "
-            "Berechnung: monatlicher Solidarbeitrag × 12 ÷ Wochen im Jahr, bei 14-täglicher Lieferung × 2, bei 4-wöchentlicher Lieferung × 4.",
+            "Berechnung: monatlicher Solidarbeitrag ÷ Liefertermine dieses Produkttyps im Monat. "
+            "Vor dem Start-Datum für anteilige Teilmonate: × 12 ÷ Wochen im Jahr (× 2 bei 14-täglich, × 4 bei 4-wöchentlich).",
             category=ParameterCategory.JOKERS,
             order_priority=order_priority,
             meta=ParameterMeta(

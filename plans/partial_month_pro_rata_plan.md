@@ -10,7 +10,7 @@ Tick a box right after finishing the step. Each phase writes and updates the uni
 - [x] Phase 3 — subscription payments
 - [x] Phase 4 — joker credit
 - [x] Phase 5 — calculation explanation in the member profile payment list (payments and credits)
-- [ ] Phase 6 — texts (parameter descriptions, joker explanation)
+- [x] Phase 6 — texts (parameter descriptions, joker explanation)
 - [ ] Phase 7 — cross-cutting tests for criterion 9
 - [ ] Phase 8 — cleanup: remove `Payment.edited` (see "Cleanup (Phase 8)")
 - [ ] Phase 9 — merge the migrations created by this plan (see "Migrations (Phase 9)")

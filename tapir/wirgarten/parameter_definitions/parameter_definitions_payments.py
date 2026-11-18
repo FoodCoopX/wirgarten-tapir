@@ -102,7 +102,7 @@ class ParameterDefinitionsPayments:
             label="Start-Datum für anteilige Abrechnung von Teilmonaten",
             datatype=TapirParameterDatatype.DATE,
             initial_value=datetime.date(year=2028, month=1, day=1),
-            description="Ab diesem Monat kosten Teilmonate den Monatspreis × eigene Liefertermine ÷ alle Liefertermine des Monats. Monate davor werden nach der alten Formel abgerechnet: voller Monatspreis ab einer Mindestanzahl Lieferungen im Monat (wöchentlich 4, 14-täglich 2, 4-wöchentlich 1), sonst pro Lieferung Monatspreis × 12 ÷ Wochen im Jahr (× 2 bei 14-täglich, × 4 bei 4-wöchentlich).",
+            description="Ab diesem Monat kosten Teilmonate den Monatspreis × eigene Liefertermine ÷ alle Liefertermine des Monats, und ein Joker wird mit Monatspreis ÷ Liefertermine des Monats gutgeschrieben. Monate davor werden nach der alten Formel abgerechnet: voller Monatspreis ab einer Mindestanzahl Lieferungen im Monat (wöchentlich 4, 14-täglich 2, 4-wöchentlich 1), sonst pro Lieferung bzw. Joker Monatspreis × 12 ÷ Wochen im Jahr (× 2 bei 14-täglich, × 4 bei 4-wöchentlich).",
             category=ParameterCategory.PAYMENT,
             meta=ParameterMeta(validators=[validate_date_is_first_of_month]),
             order_priority=order_priority,
