@@ -8,7 +8,7 @@ Tick a box right after finishing the step. Each phase writes and updates the uni
 - [x] Phase 1 — cutoff parameter
 - [x] Phase 2 — shared delivery counting + cutoff check
 - [x] Phase 3 — subscription payments
-- [ ] Phase 4 — joker credit
+- [x] Phase 4 — joker credit
 - [ ] Phase 5 — calculation explanation in the member profile payment list (payments and credits)
 - [ ] Phase 6 — texts (parameter descriptions, joker explanation)
 - [ ] Phase 7 — cross-cutting tests for criterion 9
@@ -111,7 +111,7 @@ This also removes the latent infinite loop at `month_payment_builder_subscriptio
 - `_get_delivery_charge_part`: unchanged.
 - The whole credit calculation uses the actual delivery date, recomputed at evaluation time, instead of `joker.date`: subscription selection (`get_subscriptions_that_get_delivered_in_week` → `get_active_subscriptions`), monthly price, solidarity contribution, delivery charge, the month for the denominator and the cutoff check. Otherwise a contract starting on 01.10 would be missed for a joker stored as 30.09. Recomputation: `MemberSpecificDeliveryDayCalculator.get_specific_delivery_date(member_id, get_next_delivery_date(get_monday(joker_date)))`. `joker.date` is the member-specific pickup date at the time the joker was used and becomes stale if the member later switches to a pickup location with another weekday; in a week spanning two months (old location Wed 30.09.2026, new location Thu 01.10.2026) it would point to the wrong month. The recomputation uses the pickup location history, like the delivery date counting. The credit is created at the joker cancellation deadline, so later location changes don't affect it.
 - New public `JokerValueService.get_actual_delivery_date(member_id, joker_date, cache)`. `get_joker_credit_value_parts` calls it first and passes the result on to all parts. `JokerCreditCreator._build_credit_for_joker` uses it instead of its own identical computation.
-- New `_build_proportional_calculation(monthly_amount, number_of_dates, month)` → "95,00 € monatlich ÷ 5 Liefertermine im Oktober". `monthly_amount` is `get_monthly_price` (quantity and price override included), so no "× N Anteile" suffix; instead the name shows the quantity, e.g. "Kiste (2 Anteile): 190,00 € monatlich ÷ 5 Liefertermine im Oktober = 38,00 €". With price override: "Kiste (Sonderpreis): …". `_build_monthly_to_delivery_calculation` stays for jokers before the cutoff.
+- New `_build_proportional_part(name, monthly_amount, member_id, product_type, delivery_date, cache)`, shared by the subscription and solidarity parts, and `_build_proportional_calculation(monthly_amount, number_of_dates, month)` → "95,00 € monatlich ÷ 5 Liefertermine im Oktober". `monthly_amount` is `get_monthly_price` (quantity and price override included), so no "× N Anteile" suffix; instead the name shows the quantity, e.g. "Kiste (2 Anteile): 190,00 € monatlich ÷ 5 Liefertermine im Oktober = 38,00 €". With price override: "Kiste (Sonderpreis): …". `_build_monthly_to_delivery_calculation` stays for jokers before the cutoff.
 - `get_price_of_single_delivery_from_monthly_price` unchanged.
 - Callers `IntendedUsePatternExpander`, `MemberColumnProvider`: no change.
 
@@ -156,7 +156,7 @@ Phase 4, `tapir/deliveries/tests/services/joker_value_service/`:
 - `test_get_subscription_part.py` (extend): all cycles, October 2026 = 19.00 €, November 2026 = 23.75 €, before cutoff = 21.51 €, quantity and price override, explanation text (quantity shown once, in the name).
 - `test_get_solidarity_contribution_part.py` (extend): denominator from the selected product type, before/after cutoff.
 - `test_get_joker_credit_value_for_single_joker.py` (extend): Phase 7: jokers on all dates of October 2026 sum to 95 €. Phase 4: subscription starting 01.10.2026 is included for a joker stored as 30.09.2026 after a switch to a Thursday location; joker in the week of Mon 28.09.2026 used at a Wednesday location (`joker.date` 30.09.2026), member then switches to a Thursday location → October denominator and October cutoff check.
-- `test_get_actual_delivery_date.py` (new): unchanged location, location switched to another weekday after the joker was used, week spanning two months.
+- `test_get_actual_delivery_date.py` (new): call test (Monday of the joker week → next delivery date → member-specific date); the location scenarios are covered in `test_get_joker_credit_value_for_single_joker.py`.
 - `test_build_proportional_calculation.py` (new).
 
 Phase 5:

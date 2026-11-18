@@ -13,7 +13,7 @@ class TestBuildMonthlyToDeliveryCalculation(TapirUnitTest):
             JokerValueService._build_monthly_to_delivery_calculation(
                 monthly_amount=Decimal(10),
                 delivery_cycle=WEEKLY[0],
-                joker_date=datetime.date(year=2021, month=5, day=7),
+                delivery_date=datetime.date(year=2021, month=5, day=7),
             ),
         )
 
@@ -23,7 +23,7 @@ class TestBuildMonthlyToDeliveryCalculation(TapirUnitTest):
             JokerValueService._build_monthly_to_delivery_calculation(
                 monthly_amount=Decimal(10),
                 delivery_cycle=ODD_WEEKS[0],
-                joker_date=datetime.date(year=2020, month=5, day=7),
+                delivery_date=datetime.date(year=2020, month=5, day=7),
             ),
         )
 
@@ -33,6 +33,6 @@ class TestBuildMonthlyToDeliveryCalculation(TapirUnitTest):
             JokerValueService._build_monthly_to_delivery_calculation(
                 monthly_amount=Decimal("-5.5"),
                 delivery_cycle=EVERY_FOUR_WEEKS[0],
-                joker_date=datetime.date(year=2021, month=5, day=7),
+                delivery_date=datetime.date(year=2021, month=5, day=7),
             ),
         )
