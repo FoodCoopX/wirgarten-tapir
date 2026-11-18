@@ -118,8 +118,8 @@ urlpatterns = [
         name="member_data_disclosure",
     ),
     path(
-        "api/member_data_disclosure_download",
-        member_data.MemberDataDisclosureDownloadApiView.as_view(),
-        name="member_data_disclosure_download",
+        "api/member_data_disclosure_pdf",
+        member_data.MemberDataDisclosurePdfApiView.as_view(),
+        name="member_data_disclosure_pdf",
     ),
 ]

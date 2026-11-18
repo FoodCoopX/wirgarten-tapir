@@ -89,12 +89,15 @@
       <div id="member-personal-data" class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
           <h5 class="mb-0">{% translate "Persönliche Daten" %}</h5>
-          <span
-            id="personal_data_dropdown"
-            data-member-id="{{ object.id }}"
-            data-extra-email-addresses-enabled="{{ extra_email_addresses_enabled }}"
-            data-has-home-delivery="{{ has_home_delivery }}">
-          </span>
+          <div class="d-flex gap-2 align-items-center">
+            <span id="member_data_disclosure" data-member-id="{{ object.id }}"></span>
+            <span
+              id="personal_data_dropdown"
+              data-member-id="{{ object.id }}"
+              data-extra-email-addresses-enabled="{{ extra_email_addresses_enabled }}"
+              data-has-home-delivery="{{ has_home_delivery }}">
+            </span>
+          </div>
         </div>
         <div class="card-body">
           <dl class="mb-0">
@@ -234,9 +237,6 @@
           {% include "wirgarten/member/loading_card.html" with title="Mailing-Listen" %}
         </div>
       {% endif %}
-      <div id="member_data_disclosure" data-member-id="{{ object.pk }}">
-        {% include "wirgarten/member/loading_card.html" with title="Meine Daten" %}
-      </div>
       <div id="member-payment-data" class="card">
         <h5 class="card-header d-flex justify-content-between align-items-center">
           {% translate "Bankverbindung" %}

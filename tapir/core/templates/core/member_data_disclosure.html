@@ -2,7 +2,7 @@
 <html lang="de">
   <head>
     <meta charset="utf-8">
-    <title>Gespeicherte Daten - {{ member.name }}</title>
+    <title>Meine Daten - {{ member.name }}</title>
     <style>
       @page { size: A4; margin: 18mm 16mm; @bottom-right { content: "Seite " counter(page) " von " counter(pages); font-size: 8pt; color: #666; } }
       body { font-family: sans-serif; font-size: 9.5pt; color: #222; }
@@ -17,7 +17,7 @@
     </style>
   </head>
   <body>
-    <h1>Gespeicherte Daten</h1>
+    <h1>Meine Daten</h1>
     <p class="meta">
       {{ member.name }}{% if member.member_no %}, Mitgliedsnummer {{ member.member_no }}{% endif %}<br>
       Stand: {{ generated_at|date:"d.m.Y H:i" }}

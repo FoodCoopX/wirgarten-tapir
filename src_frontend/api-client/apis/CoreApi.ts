@@ -82,8 +82,7 @@ export interface CoreApiMailingListUnsubscribeCreateRequest {
   mailingListSubscribeExternalRecipientRequestRequest: MailingListSubscribeExternalRecipientRequestRequest;
 }
 
-export interface CoreApiMemberDataDisclosureDownloadRetrieveRequest {
-  fileType?: CoreApiMemberDataDisclosureDownloadRetrieveFileTypeEnum;
+export interface CoreApiMemberDataDisclosurePdfRetrieveRequest {
   memberId?: string;
 }
 
@@ -840,15 +839,11 @@ export class CoreApi extends runtime.BaseAPI {
 
   /**
    */
-  async coreApiMemberDataDisclosureDownloadRetrieveRaw(
-    requestParameters: CoreApiMemberDataDisclosureDownloadRetrieveRequest,
+  async coreApiMemberDataDisclosurePdfRetrieveRaw(
+    requestParameters: CoreApiMemberDataDisclosurePdfRetrieveRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<Blob>> {
     const queryParameters: any = {};
-
-    if (requestParameters["fileType"] != null) {
-      queryParameters["file_type"] = requestParameters["fileType"];
-    }
 
     if (requestParameters["memberId"] != null) {
       queryParameters["member_id"] = requestParameters["memberId"];
@@ -872,7 +867,7 @@ export class CoreApi extends runtime.BaseAPI {
     }
     const response = await this.request(
       {
-        path: `/core/api/member_data_disclosure_download`,
+        path: `/core/api/member_data_disclosure_pdf`,
         method: "GET",
         headers: headerParameters,
         query: queryParameters,
@@ -885,11 +880,11 @@ export class CoreApi extends runtime.BaseAPI {
 
   /**
    */
-  async coreApiMemberDataDisclosureDownloadRetrieve(
-    requestParameters: CoreApiMemberDataDisclosureDownloadRetrieveRequest = {},
+  async coreApiMemberDataDisclosurePdfRetrieve(
+    requestParameters: CoreApiMemberDataDisclosurePdfRetrieveRequest = {},
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<Blob> {
-    const response = await this.coreApiMemberDataDisclosureDownloadRetrieveRaw(
+    const response = await this.coreApiMemberDataDisclosurePdfRetrieveRaw(
       requestParameters,
       initOverrides,
     );
@@ -1664,13 +1659,3 @@ export class CoreApi extends runtime.BaseAPI {
     return await response.value();
   }
 }
-
-/**
- * @export
- */
-export const CoreApiMemberDataDisclosureDownloadRetrieveFileTypeEnum = {
-  Json: "json",
-  Pdf: "pdf",
-} as const;
-export type CoreApiMemberDataDisclosureDownloadRetrieveFileTypeEnum =
-  (typeof CoreApiMemberDataDisclosureDownloadRetrieveFileTypeEnum)[keyof typeof CoreApiMemberDataDisclosureDownloadRetrieveFileTypeEnum];

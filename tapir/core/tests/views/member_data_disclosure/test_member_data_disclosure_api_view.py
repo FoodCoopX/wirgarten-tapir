@@ -1,5 +1,3 @@
-import json
-
 from django.core.mail import EmailMessage
 from django.urls import reverse
 from rest_framework import status
@@ -68,40 +66,22 @@ class TestMemberDataDisclosureApiView(TapirIntegrationTest):
 
         self.assertStatusCode(response, status.HTTP_200_OK)
 
-    def test_download_json_returnsRecordsAsObjects(self):
-        member = MemberFactory.create(first_name="Erika", is_superuser=False)
-        self.client.force_login(member)
-
-        response = self.get(
-            "member_data_disclosure_download", member.id, file_type="json"
-        )
-
-        self.assertStatusCode(response, status.HTTP_200_OK)
-        self.assertIn("attachment", response["Content-Disposition"])
-        data = json.loads(response.content)
-        personal_data = next(s for s in data["sections"] if s["key"] == "personal_data")
-        self.assertEqual("Erika", personal_data["records"][0]["first_name"])
-
-    def test_download_pdf_returnsPdf(self):
+    def test_pdf_ownData_returnsPdf(self):
         member = MemberFactory.create(is_superuser=False)
         self.client.force_login(member)
 
-        response = self.get(
-            "member_data_disclosure_download", member.id, file_type="pdf"
-        )
+        response = self.get("member_data_disclosure_pdf", member.id)
 
         # assertStatusCode decodes the body as text, which a PDF is not
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual("application/pdf", response["Content-Type"])
         self.assertTrue(response.content.startswith(b"%PDF"))
 
-    def test_download_otherMember_returns403(self):
+    def test_pdf_otherMember_returns403(self):
         member = MemberFactory.create()
         self.client.force_login(MemberFactory.create(is_superuser=False))
 
-        response = self.get(
-            "member_data_disclosure_download", member.id, file_type="json"
-        )
+        response = self.get("member_data_disclosure_pdf", member.id)
 
         self.assertStatusCode(response, status.HTTP_403_FORBIDDEN)
 

@@ -3,7 +3,7 @@ import { getCsrfToken } from "../utils/getCsrfToken.ts";
 import AssociationMembershipCard from "./association_membership/AssociationMembershipCard.tsx";
 import MemberBankingDataBase from "./banking_data/MemberBankingDataBase.tsx";
 import CoopSharesCard from "./coop_shares/CoopSharesCard.tsx";
-import MemberDataDisclosureCard from "./data_disclosure/MemberDataDisclosureCard.tsx";
+import MemberDataDisclosureButton from "./data_disclosure/MemberDataDisclosureButton.tsx";
 import DeliveryListCard from "./deliveries_and_jokers/DeliveryListCard.tsx";
 import FuturePaymentsCard from "./future_payments/FuturePaymentsCard.tsx";
 import MemberMailCategoryCard from "./mail_category/MemberMailCategoryCard.tsx";
@@ -188,7 +188,7 @@ if (domNodeMemberDataDisclosure) {
   const root = createRoot(domNodeMemberDataDisclosure);
 
   root.render(
-    <MemberDataDisclosureCard
+    <MemberDataDisclosureButton
       memberId={domNodeMemberDataDisclosure.dataset.memberId!}
       csrfToken={getCsrfToken()}
     />,

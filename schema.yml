@@ -3245,17 +3245,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/MemberDataDisclosure'
           description: ''
-  /core/api/member_data_disclosure_download:
+  /core/api/member_data_disclosure_pdf:
     get:
-      operationId: core_api_member_data_disclosure_download_retrieve
+      operationId: core_api_member_data_disclosure_pdf_retrieve
       parameters:
-      - in: query
-        name: file_type
-        schema:
-          type: string
-          enum:
-          - json
-          - pdf
       - in: query
         name: member_id
         schema:
