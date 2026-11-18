@@ -8,7 +8,7 @@ from tapir.deliveries.services.monthly_delivery_date_counter import (
 from tapir.deliveries.services.partial_month_calculation_mode_decider import (
     PartialMonthCalculationModeDecider,
 )
-from tapir.payments.dataclasses import PaymentCalculationPart
+from tapir.utils.dataclasses import CalculationPart
 from tapir.payments.services.month_payment_builder_subscriptions import (
     MonthPaymentBuilderSubscriptions,
 )
@@ -68,7 +68,7 @@ class TestBuildCalculationPartForSubscriptionWithinMonth(TapirUnitTest):
     @classmethod
     def _get_part(
         cls, subscription: Subscription, first_of_month: datetime.date
-    ) -> PaymentCalculationPart | None:
+    ) -> CalculationPart | None:
         return MonthPaymentBuilderSubscriptions.build_calculation_part_for_subscription_within_month(
             subscription=subscription,
             first_of_month=first_of_month,

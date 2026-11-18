@@ -15,7 +15,7 @@ from tapir.deliveries.services.partial_month_calculation_mode_decider import (
 from tapir.deliveries.services.subscription_price_type_decider import (
     SubscriptionPricingStrategyDecider,
 )
-from tapir.payments.dataclasses import PaymentCalculationPart
+from tapir.utils.dataclasses import CalculationPart
 from tapir.payments.models import MemberPaymentRhythm
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
@@ -169,7 +169,7 @@ class MonthPaymentBuilderSubscriptions:
         range_end: datetime.date,
         contracts: list[Subscription],
         cache: dict,
-    ) -> list[PaymentCalculationPart]:
+    ) -> list[CalculationPart]:
         subscriptions_active_within_period = sorted(
             (
                 subscription
@@ -204,7 +204,7 @@ class MonthPaymentBuilderSubscriptions:
         range_start: datetime.date,
         range_end: datetime.date,
         cache: dict,
-    ) -> list[PaymentCalculationPart]:
+    ) -> list[CalculationPart]:
         monthly_price = SubscriptionPriceCalculator.get_monthly_price(
             subscription=subscription, reference_date=range_start, cache=cache
         )
@@ -238,7 +238,7 @@ class MonthPaymentBuilderSubscriptions:
         monthly_price: Decimal,
         price_of_single_delivery: Decimal,
         cache: dict,
-    ) -> PaymentCalculationPart | None:
+    ) -> CalculationPart | None:
         if not DateRangeOverlapChecker.do_ranges_overlap(
             range_1_start=first_of_month,
             range_1_end=get_last_day_of_month(first_of_month),
@@ -264,7 +264,7 @@ class MonthPaymentBuilderSubscriptions:
         if cls.is_month_fully_covered_by_subscription(
             subscription=subscription, first_of_month=first_of_month
         ):
-            return PaymentCalculationPart(
+            return CalculationPart(
                 explanation=f"{prefix}: {format_currency(monthly_price)} € monatlich (voller Monat)",
                 value=monthly_price,
             )
@@ -296,7 +296,7 @@ class MonthPaymentBuilderSubscriptions:
             threshold = cls.get_number_of_deliveries_for_full_month_price(
                 delivery_cycle
             )
-            return PaymentCalculationPart(
+            return CalculationPart(
                 explanation=f"{prefix}: {format_currency(monthly_price)} € monatlich ({cls._build_count_label(number_of_deliveries, "Lieferung", "Lieferungen")}, voller Monatspreis ab {threshold})",
                 value=monthly_price,
             )
@@ -312,9 +312,9 @@ class MonthPaymentBuilderSubscriptions:
         prefix: str,
         number_of_deliveries: int,
         price_of_single_delivery: Decimal,
-    ) -> PaymentCalculationPart:
+    ) -> CalculationPart:
         value = number_of_deliveries * price_of_single_delivery
-        return PaymentCalculationPart(
+        return CalculationPart(
             explanation=f"{prefix}: {cls._build_count_label(number_of_deliveries, "Lieferung", "Lieferungen")} à {format_currency(price_of_single_delivery)} € = {format_currency(value)} €",
             value=value,
         )
@@ -326,7 +326,7 @@ class MonthPaymentBuilderSubscriptions:
         subscription: Subscription,
         first_of_month: datetime.date,
         monthly_price: Decimal,
-    ) -> PaymentCalculationPart:
+    ) -> CalculationPart:
         days_covered = MonthPaymentBuilderUtils.get_number_of_days_covered_in_month(
             first_of_month=first_of_month,
             contract_start=subscription.start_date,
@@ -334,7 +334,7 @@ class MonthPaymentBuilderSubscriptions:
         )
         days_in_month = get_last_day_of_month(first_of_month).day
         value = monthly_price * days_covered / days_in_month
-        return PaymentCalculationPart(
+        return CalculationPart(
             explanation=f"{prefix}: {format_currency(monthly_price)} € × {days_covered} von {days_in_month} Tagen = {format_currency(value)} €",
             value=value,
         )
@@ -347,7 +347,7 @@ class MonthPaymentBuilderSubscriptions:
         first_of_month: datetime.date,
         monthly_price: Decimal,
         cache: dict,
-    ) -> PaymentCalculationPart:
+    ) -> CalculationPart:
         total_dates = MonthlyDeliveryDateCounter.count_delivery_dates_in_month(
             member_id=subscription.member_id,
             product_type=subscription.product.type,
@@ -357,7 +357,7 @@ class MonthPaymentBuilderSubscriptions:
             cache=cache,
         )
         if total_dates == 0:
-            return PaymentCalculationPart(
+            return CalculationPart(
                 explanation=f"{prefix}: keine Liefertermine im Monat = {format_currency(0)} €",
                 value=Decimal(0),
             )
@@ -366,7 +366,7 @@ class MonthPaymentBuilderSubscriptions:
             subscription=subscription, first_of_month=first_of_month, cache=cache
         )
         value = monthly_price * subscription_dates / total_dates
-        return PaymentCalculationPart(
+        return CalculationPart(
             explanation=f"{prefix}: {format_currency(monthly_price)} € × {subscription_dates} ÷ {cls._build_count_label(total_dates, "Liefertermin", "Liefertermine")} = {format_currency(value)} €",
             value=value,
         )

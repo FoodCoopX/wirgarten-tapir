@@ -3,10 +3,8 @@ from decimal import Decimal
 from unittest.mock import Mock, patch, ANY, MagicMock
 
 from tapir.deliveries.models import Joker
-from tapir.deliveries.services.joker_value_service import (
-    JokerValueService,
-    JokerCreditValuePart,
-)
+from tapir.deliveries.services.joker_value_service import JokerValueService
+from tapir.utils.dataclasses import CalculationPart
 from tapir.deliveries.services.member_specific_delivery_day_calculator import (
     MemberSpecificDeliveryDayCalculator,
 )
@@ -209,7 +207,7 @@ class TestMemberColumnProvider(TapirIntegrationTest):
         self, mock_get_subscription_part: Mock, _: Mock
     ):
         member = MemberFactory.create()
-        mock_get_subscription_part.return_value = JokerCreditValuePart(
+        mock_get_subscription_part.return_value = CalculationPart(
             explanation="", value=Decimal(6)
         )
         jokers_before_date = self.setupJokerData(member)
@@ -236,7 +234,7 @@ class TestMemberColumnProvider(TapirIntegrationTest):
         self, mock_get_subscription_part: Mock
     ):
         member = MemberFactory.create()
-        mock_get_subscription_part.return_value = JokerCreditValuePart(
+        mock_get_subscription_part.return_value = CalculationPart(
             explanation="", value=Decimal(6)
         )
         self.setupJokerData(member)

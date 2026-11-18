@@ -4,7 +4,7 @@ from decimal import Decimal
 from dateutil.relativedelta import relativedelta
 from django.utils.formats import date_format
 
-from tapir.payments.dataclasses import PaymentCalculationPart
+from tapir.utils.dataclasses import CalculationPart
 from tapir.payments.models import MemberPaymentRhythm
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
@@ -109,7 +109,7 @@ class MonthPaymentBuilderSolidarityContributions:
         range_end: datetime.date,
         contracts: list[SolidarityContribution],
         cache: dict,
-    ) -> list[PaymentCalculationPart]:
+    ) -> list[CalculationPart]:
         contributions_active_within_period = sorted(
             (
                 contribution
@@ -190,7 +190,7 @@ class MonthPaymentBuilderSolidarityContributions:
         range_start: datetime.date,
         range_end: datetime.date,
         contribution: SolidarityContribution,
-    ) -> list[PaymentCalculationPart]:
+    ) -> list[CalculationPart]:
         parts = []
         current_month = range_start
         while current_month < range_end:
@@ -206,7 +206,7 @@ class MonthPaymentBuilderSolidarityContributions:
     @classmethod
     def build_calculation_part_for_contribution_within_month(
         cls, first_of_month: datetime.date, contribution: SolidarityContribution
-    ) -> PaymentCalculationPart | None:
+    ) -> CalculationPart | None:
         nb_days_in_month = get_last_day_of_month(first_of_month).day
         nb_days_overlap = MonthPaymentBuilderUtils.get_number_of_days_covered_in_month(
             first_of_month=first_of_month,
@@ -219,14 +219,14 @@ class MonthPaymentBuilderSolidarityContributions:
         prefix = f"{date_format(first_of_month, "F Y")}, Solidarbeitrag"
         monthly_amount = format_currency(contribution.amount)
         if nb_days_overlap == nb_days_in_month:
-            return PaymentCalculationPart(
+            return CalculationPart(
                 explanation=f"{prefix}: {monthly_amount} € monatlich (voller Monat)",
                 value=contribution.amount,
             )
 
         ratio = nb_days_overlap / nb_days_in_month
         value = (contribution.amount * Decimal(ratio)).quantize(Decimal("0.01"))
-        return PaymentCalculationPart(
+        return CalculationPart(
             explanation=f"{prefix}: {monthly_amount} € × {nb_days_overlap} von {nb_days_in_month} Tagen = {format_currency(value)} €",
             value=value,
         )

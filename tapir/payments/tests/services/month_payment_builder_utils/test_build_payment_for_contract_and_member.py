@@ -2,7 +2,7 @@ import datetime
 from decimal import Decimal
 from unittest.mock import patch, Mock, call, MagicMock
 
-from tapir.payments.dataclasses import PaymentCalculationPart
+from tapir.utils.dataclasses import CalculationPart
 from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
@@ -1068,8 +1068,8 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
         "get_calculation_parts",
         autospec=True,
         return_value=[
-            PaymentCalculationPart(explanation="Juli 2026, A", value=Decimal(10)),
-            PaymentCalculationPart(explanation="Juli 2026, B", value=Decimal("7.5")),
+            CalculationPart(explanation="Juli 2026, A", value=Decimal(10)),
+            CalculationPart(explanation="Juli 2026, B", value=Decimal("7.5")),
         ],
     )
     @patch.object(

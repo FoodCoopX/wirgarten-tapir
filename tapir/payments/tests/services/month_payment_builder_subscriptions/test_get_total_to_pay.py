@@ -2,7 +2,7 @@ import datetime
 from decimal import Decimal
 from unittest.mock import patch, MagicMock
 
-from tapir.payments.dataclasses import PaymentCalculationPart
+from tapir.utils.dataclasses import CalculationPart
 from tapir.payments.services.month_payment_builder_subscriptions import (
     MonthPaymentBuilderSubscriptions,
 )
@@ -15,8 +15,8 @@ class TestGetTotalToPay(TapirUnitTest):
         "get_calculation_parts",
         autospec=True,
         return_value=[
-            PaymentCalculationPart(explanation="", value=Decimal(3)),
-            PaymentCalculationPart(explanation="", value=Decimal("7.5")),
+            CalculationPart(explanation="", value=Decimal(3)),
+            CalculationPart(explanation="", value=Decimal("7.5")),
         ],
     )
     def test_getTotalToPay_default_returnsSumOfCalculationParts(

@@ -1,5 +1,4 @@
 import datetime
-from dataclasses import dataclass
 from decimal import Decimal
 
 from django.utils.formats import date_format
@@ -29,6 +28,10 @@ from tapir.subscriptions.services.delivery_price_calculator import (
 from tapir.subscriptions.services.subscription_price_calculator import (
     SubscriptionPriceCalculator,
 )
+from tapir.utils.dataclasses import CalculationPart
+from tapir.utils.services.calculation_explanation_builder import (
+    CalculationExplanationBuilder,
+)
 from tapir.utils.shortcuts import get_monday
 from tapir.wirgarten.constants import CUSTOM_CYCLE
 from tapir.wirgarten.models import Member, Subscription, ProductType
@@ -36,12 +39,6 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.get_next_delivery_date import get_next_delivery_date
 from tapir.wirgarten.service.products import get_product_price
 from tapir.wirgarten.utils import format_currency
-
-
-@dataclass
-class JokerCreditValuePart:
-    explanation: str
-    value: Decimal
 
 
 class JokerValueService:
@@ -56,16 +53,17 @@ class JokerValueService:
         )
 
     @classmethod
-    def get_total_value(cls, parts: list[JokerCreditValuePart]) -> Decimal:
+    def get_total_value(cls, parts: list[CalculationPart]) -> Decimal:
         # A negative solidarity contribution may lower the credit, but never below 0.
         return max(sum((part.value for part in parts), start=Decimal(0)), Decimal(0))
 
     @classmethod
-    def build_explanation(cls, parts: list[JokerCreditValuePart]) -> str:
-        lines = ["Berechnung der Gutschrift:"]
-        lines.extend(f"- {part.explanation}" for part in parts)
-        lines.append(f"Summe: {format_currency(cls.get_total_value(parts))} €")
-        return "\n".join(lines)
+    def build_explanation(cls, parts: list[CalculationPart]) -> str:
+        return "\n".join(
+            CalculationExplanationBuilder.build_credit_lines(
+                calculation_parts=parts, total=cls.get_total_value(parts)
+            )
+        )
 
     @classmethod
     def get_actual_delivery_date(
@@ -80,7 +78,7 @@ class JokerValueService:
     @classmethod
     def get_joker_credit_value_parts(
         cls, member: Member, joker_date: datetime.date, cache: dict
-    ) -> list[JokerCreditValuePart]:
+    ) -> list[CalculationPart]:
         delivery_date = cls.get_actual_delivery_date(
             member_id=member.id, joker_date=joker_date, cache=cache
         )
@@ -117,7 +115,7 @@ class JokerValueService:
     @classmethod
     def _get_subscription_part(
         cls, subscription: Subscription, delivery_date: datetime.date, cache: dict
-    ) -> JokerCreditValuePart:
+    ) -> CalculationPart:
         name = f"{subscription.product.type.name} {subscription.product.name}"
         delivery_cycle = subscription.product.type.delivery_cycle
 
@@ -161,7 +159,7 @@ class JokerValueService:
             explanation = f"{name}: Preis pro Lieferung {format_currency(price)} €"
             if quantity_factor:
                 explanation += f"{quantity_factor} = {format_currency(value)} €"
-            return JokerCreditValuePart(explanation=explanation, value=value)
+            return CalculationPart(explanation=explanation, value=value)
 
         calculation = cls._build_monthly_to_delivery_calculation(
             monthly_amount=price,
@@ -170,7 +168,7 @@ class JokerValueService:
         )
         calculation += quantity_factor
 
-        return JokerCreditValuePart(
+        return CalculationPart(
             explanation=f"{name}: {calculation} = {format_currency(value)} €",
             value=value,
         )
@@ -182,7 +180,7 @@ class JokerValueService:
         delivery_date: datetime.date,
         subscriptions: list[Subscription],
         cache: dict,
-    ) -> JokerCreditValuePart | None:
+    ) -> CalculationPart | None:
         product_type_id = get_parameter_value(
             key=ParameterKeys.JOKERS_SOLIDARITY_CONTRIBUTION_PRODUCT_TYPE, cache=cache
         )
@@ -229,7 +227,7 @@ class JokerValueService:
             delivery_date=delivery_date,
         )
 
-        return JokerCreditValuePart(
+        return CalculationPart(
             explanation=f"Solidarbeitrag: {calculation} = {format_currency(value)} €",
             value=value,
         )
@@ -237,7 +235,7 @@ class JokerValueService:
     @classmethod
     def _get_delivery_charge_part(
         cls, member: Member, delivery_date: datetime.date, cache: dict
-    ) -> JokerCreditValuePart | None:
+    ) -> CalculationPart | None:
         pickup_location_id = (
             MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
                 member_id=member.id, reference_date=delivery_date, cache=cache
@@ -256,7 +254,7 @@ class JokerValueService:
         if delivery_charge == 0:
             return None
 
-        return JokerCreditValuePart(
+        return CalculationPart(
             explanation=f"Liefergebühr Abholort: {format_currency(delivery_charge)} €",
             value=delivery_charge,
         )
@@ -291,7 +289,7 @@ class JokerValueService:
         product_type: ProductType,
         delivery_date: datetime.date,
         cache: dict,
-    ) -> JokerCreditValuePart:
+    ) -> CalculationPart:
         number_of_dates = MonthlyDeliveryDateCounter.count_delivery_dates_in_month(
             member_id=member_id,
             product_type=product_type,
@@ -306,7 +304,7 @@ class JokerValueService:
             number_of_dates=number_of_dates,
             month=delivery_date,
         )
-        return JokerCreditValuePart(
+        return CalculationPart(
             explanation=f"{name}: {calculation} = {format_currency(value)} €",
             value=value,
         )

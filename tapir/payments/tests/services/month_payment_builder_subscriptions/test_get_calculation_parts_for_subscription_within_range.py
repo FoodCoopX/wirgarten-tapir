@@ -2,7 +2,7 @@ import datetime
 from decimal import Decimal
 from unittest.mock import patch, MagicMock, call
 
-from tapir.payments.dataclasses import PaymentCalculationPart
+from tapir.utils.dataclasses import CalculationPart
 from tapir.payments.services.month_payment_builder_subscriptions import (
     MonthPaymentBuilderSubscriptions,
 )
@@ -49,7 +49,7 @@ class TestGetCalculationPartsForSubscriptionWithinRange(TapirUnitTest):
             lambda first_of_month, **_: (
                 None
                 if amounts_by_month[first_of_month] is None
-                else PaymentCalculationPart(
+                else CalculationPart(
                     explanation=str(first_of_month),
                     value=amounts_by_month[first_of_month],
                 )
@@ -68,8 +68,8 @@ class TestGetCalculationPartsForSubscriptionWithinRange(TapirUnitTest):
 
         self.assertEqual(
             [
-                PaymentCalculationPart(explanation="2025-01-01", value=Decimal("14.5")),
-                PaymentCalculationPart(explanation="2025-02-01", value=Decimal("6.3")),
+                CalculationPart(explanation="2025-01-01", value=Decimal("14.5")),
+                CalculationPart(explanation="2025-02-01", value=Decimal("6.3")),
             ],
             result,
         )

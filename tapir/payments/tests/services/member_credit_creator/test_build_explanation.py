@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from tapir.payments.dataclasses import PaymentCalculationPart
+from tapir.utils.dataclasses import CalculationPart
 from tapir.payments.services.member_credit_creator import MemberCreditCreator
 from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
@@ -9,7 +9,7 @@ class TestBuildExplanation(TapirUnitTest):
     def test_buildExplanation_default_showsPartsSumAlreadyPaidAndCredit(self):
         result = MemberCreditCreator.build_explanation(
             calculation_parts=[
-                PaymentCalculationPart(
+                CalculationPart(
                     explanation="Oktober 2026, Ernteanteil Kiste: 95,00 € × 4 ÷ 5 Liefertermine = 76,00 €",
                     value=Decimal(76),
                 )

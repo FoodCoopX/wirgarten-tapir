@@ -4,7 +4,10 @@ from decimal import Decimal
 
 from tapir.associations.models import AssociationMembership
 from tapir.configuration.parameter import get_parameter_value
-from tapir.payments.dataclasses import PaymentCalculationPart
+from tapir.utils.dataclasses import CalculationPart
+from tapir.utils.services.calculation_explanation_builder import (
+    CalculationExplanationBuilder,
+)
 from tapir.payments.models import MemberCredit
 from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.payments.services.member_payment_rhythm_service import (
@@ -159,9 +162,7 @@ class MonthPaymentBuilderUtils:
         payment_type: str,
         allow_negative_amounts: bool,
         total_to_pay_function: Callable[..., Decimal] | None = None,
-        calculation_parts_function: (
-            Callable[..., list[PaymentCalculationPart]] | None
-        ) = None,
+        calculation_parts_function: Callable[..., list[CalculationPart]] | None = None,
     ) -> Payment | None:
         first_day_of_rhythm_period = (
             MemberPaymentRhythmService.get_first_day_of_rhythm_period(
@@ -260,12 +261,13 @@ class MonthPaymentBuilderUtils:
     @classmethod
     def build_calculation_explanation(
         cls,
-        calculation_parts: list[PaymentCalculationPart],
+        calculation_parts: list[CalculationPart],
         total_to_pay: Decimal,
         already_paid: Decimal,
     ) -> str:
-        lines = [part.explanation for part in calculation_parts]
-        lines.append(f"Summe: {format_currency(total_to_pay)} €")
+        lines = CalculationExplanationBuilder.build_lines(
+            calculation_parts=calculation_parts, total=total_to_pay
+        )
         if already_paid != 0:
             lines.append(f"Bereits bezahlt: {format_currency(already_paid)} €")
             lines.append(f"Zu zahlen: {format_currency(total_to_pay - already_paid)} €")

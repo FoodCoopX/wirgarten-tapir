@@ -1,7 +1,7 @@
 import datetime
 from decimal import Decimal
 
-from tapir.payments.dataclasses import PaymentCalculationPart
+from tapir.utils.dataclasses import CalculationPart
 from tapir.payments.services.month_payment_builder_solidarity_contributions import (
     MonthPaymentBuilderSolidarityContributions,
 )
@@ -40,11 +40,11 @@ class TestGetCalculationPartsForSingleContributionWithinRange(TapirUnitTest):
 
         self.assertEqual(
             [
-                PaymentCalculationPart(
+                CalculationPart(
                     explanation="Februar 1993, Solidarbeitrag: 100,00 € × 14 von 28 Tagen = 50,00 €",
                     value=Decimal("50.00"),
                 ),
-                PaymentCalculationPart(
+                CalculationPart(
                     explanation="März 1993, Solidarbeitrag: 100,00 € monatlich (voller Monat)",
                     value=Decimal(100),
                 ),

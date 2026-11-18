@@ -2,7 +2,7 @@ import datetime
 from decimal import Decimal
 from unittest.mock import patch, MagicMock, call
 
-from tapir.payments.dataclasses import PaymentCalculationPart
+from tapir.utils.dataclasses import CalculationPart
 from tapir.payments.services.month_payment_builder_solidarity_contributions import (
     MonthPaymentBuilderSolidarityContributions,
 )
@@ -33,11 +33,11 @@ class TestGetCalculationParts(TapirUnitTest):
         )
         parts_by_contribution = {
             contribution_starting_later: [
-                PaymentCalculationPart(explanation="later", value=Decimal(1))
+                CalculationPart(explanation="later", value=Decimal(1))
             ],
             contribution_starting_earlier: [
-                PaymentCalculationPart(explanation="earlier 1", value=Decimal(2)),
-                PaymentCalculationPart(explanation="earlier 2", value=Decimal(3)),
+                CalculationPart(explanation="earlier 1", value=Decimal(2)),
+                CalculationPart(explanation="earlier 2", value=Decimal(3)),
             ],
         }
         mock_get_calculation_parts_for_single_contribution_within_range.side_effect = (

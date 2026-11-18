@@ -3,7 +3,7 @@ from decimal import Decimal
 from unittest.mock import patch, MagicMock
 
 from tapir.configuration.models import TapirParameter
-from tapir.payments.dataclasses import PaymentCalculationPart
+from tapir.utils.dataclasses import CalculationPart
 from tapir.payments.models import MemberPaymentRhythm
 from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.payments.services.member_credit_creator import MemberCreditCreator
@@ -163,7 +163,7 @@ class TestGetCreditCalculation(TapirIntegrationTest):
         )
         # 29 € × 1 ÷ 3 delivery dates = 9.6666…, paid as 9.67
         mock_get_calculation_parts_subscriptions.return_value = [
-            PaymentCalculationPart(explanation="part", value=Decimal(29) / 3)
+            CalculationPart(explanation="part", value=Decimal(29) / 3)
         ]
 
         result = MemberCreditCreator.get_credit_calculation(

@@ -1,14 +1,14 @@
 from decimal import Decimal
 
-from tapir.payments.dataclasses import PaymentCalculationPart
+from tapir.utils.dataclasses import CalculationPart
 from tapir.payments.services.month_payment_builder_utils import MonthPaymentBuilderUtils
 from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestBuildCalculationExplanation(TapirUnitTest):
     PARTS = [
-        PaymentCalculationPart(explanation="Oktober 2026, A", value=Decimal(152)),
-        PaymentCalculationPart(explanation="Oktober 2026, B", value=Decimal(32)),
+        CalculationPart(explanation="Oktober 2026, A", value=Decimal(152)),
+        CalculationPart(explanation="Oktober 2026, B", value=Decimal(32)),
     ]
 
     def test_buildCalculationExplanation_nothingPaidYet_showsPartsAndSum(self):

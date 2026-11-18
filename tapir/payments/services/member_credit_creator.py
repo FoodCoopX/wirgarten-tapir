@@ -3,7 +3,11 @@ from decimal import Decimal
 
 from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
-from tapir.payments.dataclasses import CreditCalculation, PaymentCalculationPart
+from tapir.payments.dataclasses import CreditCalculation
+from tapir.utils.dataclasses import CalculationPart
+from tapir.utils.services.calculation_explanation_builder import (
+    CalculationExplanationBuilder,
+)
 from tapir.payments.models import MemberCredit, MemberCreditCreatedLogEntry
 from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.payments.services.member_payment_rhythm_service import (
@@ -189,14 +193,14 @@ class MemberCreditCreator:
     @classmethod
     def build_explanation(
         cls,
-        calculation_parts: list[PaymentCalculationPart],
+        calculation_parts: list[CalculationPart],
         total_to_pay: Decimal,
         already_paid: Decimal,
         amount_to_credit: Decimal,
     ) -> str:
-        lines = ["Berechnung der Gutschrift:"]
-        lines.extend(part.explanation for part in calculation_parts)
-        lines.append(f"Summe: {format_currency(total_to_pay)} €")
+        lines = CalculationExplanationBuilder.build_credit_lines(
+            calculation_parts=calculation_parts, total=total_to_pay
+        )
         lines.append(f"Bereits bezahlt: {format_currency(already_paid)} €")
         lines.append(f"Gutschrift: {format_currency(amount_to_credit)} €")
         return "\n".join(lines)
@@ -208,7 +212,7 @@ class MemberCreditCreator:
         member_id: str,
         first_day_of_rhythm_period: datetime.date,
         last_day_of_rhythm_period: datetime.date,
-    ) -> list[PaymentCalculationPart]:
+    ) -> list[CalculationPart]:
         contributions = TapirCache.get_all_solidarity_contributions_for_member(
             member_id=member_id, cache=cache
         )
@@ -227,7 +231,7 @@ class MemberCreditCreator:
         member_id: str,
         first_day_of_rhythm_period: datetime.date,
         last_day_of_rhythm_period: datetime.date,
-    ) -> list[PaymentCalculationPart]:
+    ) -> list[CalculationPart]:
         product_type = TapirCache.get_product_type_by_id(
             cache=cache, product_type_id=product_type_id
         )

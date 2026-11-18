@@ -15,12 +15,6 @@ class MonthlyActualIncome:
 
 
 @dataclass
-class PaymentCalculationPart:
-    explanation: str
-    value: Decimal
-
-
-@dataclass
 class CreditCalculation:
     amount: Decimal
     explanation: str
