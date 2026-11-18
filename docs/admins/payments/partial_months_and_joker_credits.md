@@ -75,9 +75,9 @@ Monate verlegt wird.
 ## Berechnung nachvollziehen
 
 Im Profil des Mitglieds zeigt das Fenster "Zahlungen" bei jeder Zahlung für
-Verträge und Solidarbeitrag sowie bei jeder Gutschrift die Berechnung unter
-"Berechnung anzeigen". Mitglieder sehen diese Berechnung ebenfalls, wenn sie
-ihre eigenen Zahlungen sehen dürfen.
+Verträge, Solidarbeitrag und Vereinsmitgliedschaft sowie bei jeder Gutschrift
+die Berechnung unter "Berechnung anzeigen". Mitglieder sehen diese Berechnung
+ebenfalls, wenn sie ihre eigenen Zahlungen sehen dürfen.
 
 Bei Zahlungen, die vor der Einführung dieser Funktion erzeugt wurden, ist keine
 Berechnung gespeichert.

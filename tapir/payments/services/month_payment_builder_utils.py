@@ -33,13 +33,13 @@ class MonthPaymentBuilderUtils:
         cls,
         first_of_month: datetime.date,
         contract_start: datetime.date,
-        contract_end: datetime.date,
+        contract_end: datetime.date | None,
     ) -> int:
         return DateRangeOverlapChecker.get_number_of_days_of_overlap(
-            range_1_start=first_of_month,
-            range_1_end=get_last_day_of_month(first_of_month),
-            range_2_start=contract_start,
-            range_2_end=contract_end,
+            range_1_start=contract_start,
+            range_1_end=contract_end,
+            range_2_start=first_of_month,
+            range_2_end=get_last_day_of_month(first_of_month),
         )
 
     @classmethod
@@ -161,8 +161,7 @@ class MonthPaymentBuilderUtils:
         in_trial: bool,
         payment_type: str,
         allow_negative_amounts: bool,
-        total_to_pay_function: Callable[..., Decimal] | None = None,
-        calculation_parts_function: Callable[..., list[CalculationPart]] | None = None,
+        calculation_parts_function: Callable[..., list[CalculationPart]],
     ) -> Payment | None:
         first_day_of_rhythm_period = (
             MemberPaymentRhythmService.get_first_day_of_rhythm_period(
@@ -194,24 +193,13 @@ class MonthPaymentBuilderUtils:
             cache=cache,
             generated_payments=generated_payments,
         )
-        calculation_parts = None
-        if calculation_parts_function is None:
-            total_to_pay = total_to_pay_function(
-                range_start=first_day_of_rhythm_period,
-                range_end=last_day_of_rhythm_period,
-                contracts=contracts,
-                cache=cache,
-            )
-        else:
-            calculation_parts = calculation_parts_function(
-                range_start=first_day_of_rhythm_period,
-                range_end=last_day_of_rhythm_period,
-                contracts=contracts,
-                cache=cache,
-            )
-            total_to_pay = sum(
-                (part.value for part in calculation_parts), start=Decimal(0)
-            )
+        calculation_parts = calculation_parts_function(
+            range_start=first_day_of_rhythm_period,
+            range_end=last_day_of_rhythm_period,
+            contracts=contracts,
+            cache=cache,
+        )
+        total_to_pay = sum((part.value for part in calculation_parts), start=Decimal(0))
 
         new_payment_amount = total_to_pay - already_paid
         new_payment_amount = Decimal(new_payment_amount).quantize(Decimal("0.01"))
@@ -247,14 +235,10 @@ class MonthPaymentBuilderUtils:
             type=payment_type,
             subscription_payment_range_start=subscription_payment_range_start,
             subscription_payment_range_end=subscription_payment_range_end,
-            calculation_explanation=(
-                ""
-                if calculation_parts is None
-                else cls.build_calculation_explanation(
-                    calculation_parts=calculation_parts,
-                    total_to_pay=total_to_pay,
-                    already_paid=already_paid,
-                )
+            calculation_explanation=cls.build_calculation_explanation(
+                calculation_parts=calculation_parts,
+                total_to_pay=total_to_pay,
+                already_paid=already_paid,
             ),
         )
 

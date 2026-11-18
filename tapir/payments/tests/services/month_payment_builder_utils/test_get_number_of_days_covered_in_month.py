@@ -27,8 +27,8 @@ class TestGetNumberOfDaysCoveredInMonth(TapirUnitTest):
 
         self.assertEqual(12, result)
         mock_get_number_of_days_of_overlap.assert_called_once_with(
-            range_1_start=datetime.date(year=2028, month=2, day=1),
-            range_1_end=datetime.date(year=2028, month=2, day=29),
-            range_2_start=contract_start,
-            range_2_end=contract_end,
+            range_1_start=contract_start,
+            range_1_end=contract_end,
+            range_2_start=datetime.date(year=2028, month=2, day=1),
+            range_2_end=datetime.date(year=2028, month=2, day=29),
         )

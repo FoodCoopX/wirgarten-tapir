@@ -31,7 +31,9 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
     @patch.object(
         MonthPaymentBuilderUtils, "get_payment_due_date_on_month", autospec=True
     )
-    @patch.object(MonthPaymentBuilderSubscriptions, "get_total_to_pay", autospec=True)
+    @patch.object(
+        MonthPaymentBuilderSubscriptions, "get_calculation_parts", autospec=True
+    )
     @patch.object(MonthPaymentBuilderUtils, "get_already_paid_amount", autospec=True)
     @patch.object(
         MandateReferenceProvider,
@@ -50,7 +52,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
         mock_get_last_day_of_rhythm_period: Mock,
         mock_get_or_create_mandate_reference: Mock,
         mock_get_already_paid_amount: Mock,
-        mock_get_total_to_pay: Mock,
+        mock_get_calculation_parts: Mock,
         mock_get_payment_due_date_on_month: Mock,
         mock_get_trial_period_start_date_for_reference: Mock,
     ):
@@ -62,7 +64,9 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
         mandate_ref = MandateReferenceFactory.build(member=member, ref="test_ref")
         mock_get_or_create_mandate_reference.return_value = mandate_ref
         mock_get_already_paid_amount.return_value = 10
-        mock_get_total_to_pay.return_value = 17.5
+        mock_get_calculation_parts.return_value = [
+            CalculationPart(explanation="test_part", value=Decimal("17.5"))
+        ]
         due_date = datetime.date(year=2026, month=7, day=13)
         mock_get_payment_due_date_on_month.return_value = due_date
         mock_get_trial_period_start_date_for_reference.return_value = datetime.date(
@@ -105,7 +109,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
             cache=cache,
             generated_payments=generated_payments,
             in_trial=False,
-            total_to_pay_function=MonthPaymentBuilderSubscriptions.get_total_to_pay,
+            calculation_parts_function=MonthPaymentBuilderSubscriptions.get_calculation_parts,
             allow_negative_amounts=False,
         )
 
@@ -140,7 +144,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
             cache=cache,
             generated_payments=generated_payments,
         )
-        mock_get_total_to_pay.assert_called_once_with(
+        mock_get_calculation_parts.assert_called_once_with(
             range_start=range_start,
             range_end=range_end,
             contracts=set(subscriptions),
@@ -169,7 +173,9 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
     @patch.object(
         MonthPaymentBuilderUtils, "get_payment_due_date_on_month", autospec=True
     )
-    @patch.object(MonthPaymentBuilderSubscriptions, "get_total_to_pay", autospec=True)
+    @patch.object(
+        MonthPaymentBuilderSubscriptions, "get_calculation_parts", autospec=True
+    )
     @patch.object(MonthPaymentBuilderUtils, "get_already_paid_amount", autospec=True)
     @patch.object(
         MandateReferenceProvider,
@@ -188,7 +194,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
         mock_get_last_day_of_rhythm_period: Mock,
         mock_get_or_create_mandate_reference: Mock,
         mock_get_already_paid_amount: Mock,
-        mock_get_total_to_pay: Mock,
+        mock_get_calculation_parts: Mock,
         mock_get_payment_due_date_on_month: Mock,
         mock_get_parameter_value: Mock,
     ):
@@ -199,8 +205,10 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
         member = MemberFactory.build()
         mandate_ref = MandateReferenceFactory.build(member=member, ref="test_ref")
         mock_get_or_create_mandate_reference.return_value = mandate_ref
-        mock_get_already_paid_amount.return_value = 17.5
-        mock_get_total_to_pay.return_value = 17.5
+        mock_get_already_paid_amount.return_value = Decimal("17.5")
+        mock_get_calculation_parts.return_value = [
+            CalculationPart(explanation="test_part", value=Decimal("17.5"))
+        ]
         mock_get_parameter_value.return_value = datetime.date(year=2026, month=6, day=1)
 
         first_of_month = Mock()
@@ -221,7 +229,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
             cache=cache,
             generated_payments=generated_payments,
             in_trial=False,
-            total_to_pay_function=MonthPaymentBuilderSubscriptions.get_total_to_pay,
+            calculation_parts_function=MonthPaymentBuilderSubscriptions.get_calculation_parts,
             allow_negative_amounts=False,
         )
 
@@ -247,7 +255,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
             cache=cache,
             generated_payments=generated_payments,
         )
-        mock_get_total_to_pay.assert_called_once_with(
+        mock_get_calculation_parts.assert_called_once_with(
             range_start=range_start,
             range_end=range_end,
             contracts=set(subscriptions),
@@ -265,7 +273,9 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
     @patch.object(
         MonthPaymentBuilderUtils, "get_payment_due_date_on_month", autospec=True
     )
-    @patch.object(MonthPaymentBuilderSubscriptions, "get_total_to_pay", autospec=True)
+    @patch.object(
+        MonthPaymentBuilderSubscriptions, "get_calculation_parts", autospec=True
+    )
     @patch.object(MonthPaymentBuilderUtils, "get_already_paid_amount", autospec=True)
     @patch.object(
         MandateReferenceProvider,
@@ -284,7 +294,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
         mock_get_last_day_of_rhythm_period: Mock,
         mock_get_or_create_mandate_reference: Mock,
         mock_get_already_paid_amount: Mock,
-        mock_get_total_to_pay: Mock,
+        mock_get_calculation_parts: Mock,
         mock_get_payment_due_date_on_month: Mock,
         mock_get_parameter_value: Mock,
     ):
@@ -296,7 +306,9 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
         mandate_ref = MandateReferenceFactory.build(member=member, ref="test_ref")
         mock_get_or_create_mandate_reference.return_value = mandate_ref
         mock_get_already_paid_amount.return_value = 20
-        mock_get_total_to_pay.return_value = 17.5
+        mock_get_calculation_parts.return_value = [
+            CalculationPart(explanation="test_part", value=Decimal("17.5"))
+        ]
         mock_get_parameter_value.return_value = datetime.date(year=2026, month=6, day=1)
 
         first_of_month = Mock()
@@ -317,7 +329,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
             cache=cache,
             generated_payments=generated_payments,
             in_trial=False,
-            total_to_pay_function=MonthPaymentBuilderSubscriptions.get_total_to_pay,
+            calculation_parts_function=MonthPaymentBuilderSubscriptions.get_calculation_parts,
             allow_negative_amounts=False,
         )
 
@@ -343,7 +355,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
             cache=cache,
             generated_payments=generated_payments,
         )
-        mock_get_total_to_pay.assert_called_once_with(
+        mock_get_calculation_parts.assert_called_once_with(
             range_start=range_start,
             range_end=range_end,
             contracts=set(subscriptions),
@@ -360,7 +372,9 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
     @patch.object(
         MonthPaymentBuilderUtils, "get_payment_due_date_on_month", autospec=True
     )
-    @patch.object(MonthPaymentBuilderSubscriptions, "get_total_to_pay", autospec=True)
+    @patch.object(
+        MonthPaymentBuilderSubscriptions, "get_calculation_parts", autospec=True
+    )
     @patch.object(MonthPaymentBuilderUtils, "get_already_paid_amount", autospec=True)
     @patch.object(
         MandateReferenceProvider,
@@ -379,7 +393,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
         mock_get_last_day_of_rhythm_period: Mock,
         mock_get_or_create_mandate_reference: Mock,
         mock_get_already_paid_amount: Mock,
-        mock_get_total_to_pay: Mock,
+        mock_get_calculation_parts: Mock,
         mock_get_payment_due_date_on_month: Mock,
         mock_get_trial_period_start_date_for_reference: Mock,
     ):
@@ -391,7 +405,9 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
         mandate_ref = MandateReferenceFactory.build(member=member, ref="test_ref")
         mock_get_or_create_mandate_reference.return_value = mandate_ref
         mock_get_already_paid_amount.return_value = 20
-        mock_get_total_to_pay.return_value = 17.5
+        mock_get_calculation_parts.return_value = [
+            CalculationPart(explanation="test_part", value=Decimal("17.5"))
+        ]
         due_date = datetime.date(year=2026, month=7, day=13)
         mock_get_payment_due_date_on_month.return_value = due_date
         mock_get_trial_period_start_date_for_reference.return_value = datetime.date(
@@ -433,7 +449,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
             cache=cache,
             generated_payments=generated_payments,
             in_trial=False,
-            total_to_pay_function=MonthPaymentBuilderSubscriptions.get_total_to_pay,
+            calculation_parts_function=MonthPaymentBuilderSubscriptions.get_calculation_parts,
             allow_negative_amounts=True,
         )
 
@@ -466,7 +482,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
             cache=cache,
             generated_payments=generated_payments,
         )
-        mock_get_total_to_pay.assert_called_once_with(
+        mock_get_calculation_parts.assert_called_once_with(
             range_start=range_start,
             range_end=range_end,
             contracts=set(subscriptions),
@@ -494,7 +510,9 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
     @patch.object(
         MonthPaymentBuilderUtils, "get_payment_due_date_on_month", autospec=True
     )
-    @patch.object(MonthPaymentBuilderSubscriptions, "get_total_to_pay", autospec=True)
+    @patch.object(
+        MonthPaymentBuilderSubscriptions, "get_calculation_parts", autospec=True
+    )
     @patch.object(MonthPaymentBuilderUtils, "get_already_paid_amount", autospec=True)
     @patch.object(
         MandateReferenceProvider,
@@ -513,7 +531,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
         mock_get_last_day_of_rhythm_period: Mock,
         mock_get_or_create_mandate_reference: Mock,
         mock_get_already_paid_amount: Mock,
-        mock_get_total_to_pay: Mock,
+        mock_get_calculation_parts: Mock,
         mock_get_payment_due_date_on_month: Mock,
         mock_get_trial_period_start_date_for_reference: Mock,
     ):
@@ -525,7 +543,9 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
         mandate_ref = MandateReferenceFactory.build(member=member, ref="test_ref")
         mock_get_or_create_mandate_reference.return_value = mandate_ref
         mock_get_already_paid_amount.return_value = 10
-        mock_get_total_to_pay.return_value = 17.5
+        mock_get_calculation_parts.return_value = [
+            CalculationPart(explanation="test_part", value=Decimal("17.5"))
+        ]
         due_date = datetime.date(year=2026, month=7, day=13)
         mock_get_payment_due_date_on_month.return_value = due_date
         mock_get_trial_period_start_date_for_reference.return_value = datetime.date(
@@ -567,7 +587,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
             cache=cache,
             generated_payments=generated_payments,
             in_trial=True,
-            total_to_pay_function=MonthPaymentBuilderSubscriptions.get_total_to_pay,
+            calculation_parts_function=MonthPaymentBuilderSubscriptions.get_calculation_parts,
             allow_negative_amounts=False,
         )
 
@@ -602,7 +622,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
             cache=cache,
             generated_payments=generated_payments,
         )
-        mock_get_total_to_pay.assert_called_once_with(
+        mock_get_calculation_parts.assert_called_once_with(
             range_start=range_start,
             range_end=range_end,
             contracts=set(subscriptions),
@@ -631,7 +651,9 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
     @patch.object(
         MonthPaymentBuilderUtils, "get_payment_due_date_on_month", autospec=True
     )
-    @patch.object(MonthPaymentBuilderSubscriptions, "get_total_to_pay", autospec=True)
+    @patch.object(
+        MonthPaymentBuilderSubscriptions, "get_calculation_parts", autospec=True
+    )
     @patch.object(MonthPaymentBuilderUtils, "get_already_paid_amount", autospec=True)
     @patch.object(
         MandateReferenceProvider,
@@ -650,7 +672,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
         mock_get_last_day_of_rhythm_period: Mock,
         mock_get_or_create_mandate_reference: Mock,
         mock_get_already_paid_amount: Mock,
-        mock_get_total_to_pay: Mock,
+        mock_get_calculation_parts: Mock,
         mock_get_payment_due_date_on_month: Mock,
         mock_get_parameter_value: Mock,
     ):
@@ -675,7 +697,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
             cache=cache,
             generated_payments=generated_payments,
             in_trial=False,
-            total_to_pay_function=MonthPaymentBuilderSubscriptions.get_total_to_pay,
+            calculation_parts_function=MonthPaymentBuilderSubscriptions.get_calculation_parts,
             allow_negative_amounts=False,
         )
 
@@ -692,7 +714,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
         )
         mock_get_or_create_mandate_reference.assert_not_called()
         mock_get_already_paid_amount.assert_not_called()
-        mock_get_total_to_pay.assert_not_called()
+        mock_get_calculation_parts.assert_not_called()
         mock_get_payment_due_date_on_month.assert_not_called()
         mock_get_parameter_value.assert_called_once_with(
             key=ParameterKeys.PAYMENT_START_DATE, cache=cache
@@ -704,7 +726,9 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
     @patch.object(
         MonthPaymentBuilderUtils, "get_payment_due_date_on_month", autospec=True
     )
-    @patch.object(MonthPaymentBuilderSubscriptions, "get_total_to_pay", autospec=True)
+    @patch.object(
+        MonthPaymentBuilderSubscriptions, "get_calculation_parts", autospec=True
+    )
     @patch.object(MonthPaymentBuilderUtils, "get_already_paid_amount", autospec=True)
     @patch.object(
         MandateReferenceProvider,
@@ -723,7 +747,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
         mock_get_last_day_of_rhythm_period: Mock,
         mock_get_or_create_mandate_reference: Mock,
         mock_get_already_paid_amount: Mock,
-        mock_get_total_to_pay: Mock,
+        mock_get_calculation_parts: Mock,
         mock_get_payment_due_date_on_month: Mock,
         mock_get_trial_period_start_date_for_reference: Mock,
     ):
@@ -735,7 +759,9 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
         mandate_ref = MandateReferenceFactory.build(member=member, ref="test_ref")
         mock_get_or_create_mandate_reference.return_value = mandate_ref
         mock_get_already_paid_amount.return_value = 0
-        mock_get_total_to_pay.return_value = 17.5
+        mock_get_calculation_parts.return_value = [
+            CalculationPart(explanation="test_part", value=Decimal("17.5"))
+        ]
         due_date = datetime.date(year=2026, month=6, day=5)
         mock_get_payment_due_date_on_month.return_value = due_date
         payment_start_date = datetime.date(year=2026, month=7, day=12)
@@ -778,7 +804,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
             cache=cache,
             generated_payments=generated_payments,
             in_trial=False,
-            total_to_pay_function=MonthPaymentBuilderSubscriptions.get_total_to_pay,
+            calculation_parts_function=MonthPaymentBuilderSubscriptions.get_calculation_parts,
             allow_negative_amounts=False,
         )
 
@@ -814,7 +840,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
             cache=cache,
             generated_payments=generated_payments,
         )
-        mock_get_total_to_pay.assert_called_once_with(
+        mock_get_calculation_parts.assert_called_once_with(
             range_start=payment_start_date,
             range_end=range_end,
             contracts=set(subscriptions),
@@ -836,7 +862,9 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
             any_order=True,
         )
 
-    @patch.object(MonthPaymentBuilderSubscriptions, "get_total_to_pay", autospec=True)
+    @patch.object(
+        MonthPaymentBuilderSubscriptions, "get_calculation_parts", autospec=True
+    )
     @patch.object(MonthPaymentBuilderUtils, "get_already_paid_amount", autospec=True)
     @patch.object(
         MandateReferenceProvider,
@@ -855,7 +883,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
         mock_get_last_day_of_rhythm_period: Mock,
         mock_get_or_create_mandate_reference: Mock,
         mock_get_already_paid_amount: Mock,
-        mock_get_total_to_pay: Mock,
+        mock_get_calculation_parts: Mock,
     ):
         range_start = datetime.date(year=2026, month=7, day=1)
         mock_get_first_day_of_rhythm_period.return_value = range_start
@@ -865,7 +893,9 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
         mandate_ref = MandateReferenceFactory.build(member=member, ref="test_ref")
         mock_get_or_create_mandate_reference.return_value = mandate_ref
         mock_get_already_paid_amount.return_value = 10
-        mock_get_total_to_pay.return_value = 17.5
+        mock_get_calculation_parts.return_value = [
+            CalculationPart(explanation="test_part", value=Decimal("17.5"))
+        ]
 
         cache = {}
         mock_parameter_value(
@@ -904,7 +934,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
             cache=cache,
             generated_payments=generated_payments,
             in_trial=False,
-            total_to_pay_function=MonthPaymentBuilderSubscriptions.get_total_to_pay,
+            calculation_parts_function=MonthPaymentBuilderSubscriptions.get_calculation_parts,
             allow_negative_amounts=False,
         )
 
@@ -943,14 +973,16 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
             cache=cache,
             generated_payments=generated_payments,
         )
-        mock_get_total_to_pay.assert_called_once_with(
+        mock_get_calculation_parts.assert_called_once_with(
             range_start=range_start,
             range_end=range_end,
             contracts=set(subscriptions),
             cache=cache,
         )
 
-    @patch.object(MonthPaymentBuilderSubscriptions, "get_total_to_pay", autospec=True)
+    @patch.object(
+        MonthPaymentBuilderSubscriptions, "get_calculation_parts", autospec=True
+    )
     @patch.object(MonthPaymentBuilderUtils, "get_already_paid_amount", autospec=True)
     @patch.object(
         MandateReferenceProvider,
@@ -969,7 +1001,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
         mock_get_last_day_of_rhythm_period: Mock,
         mock_get_or_create_mandate_reference: Mock,
         mock_get_already_paid_amount: Mock,
-        mock_get_total_to_pay: Mock,
+        mock_get_calculation_parts: Mock,
     ):
         # Regression test for support ticket #169 HAL https://support.foodcoopx.de/conversation/169?folder_id=63
         # The end date of a subscription gets changed by the admin to somewhere far in the past:
@@ -989,7 +1021,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
         mandate_ref = MandateReferenceFactory.build(member=member, ref="test_ref")
         mock_get_or_create_mandate_reference.return_value = mandate_ref
         mock_get_already_paid_amount.return_value = Decimal("-12.35")
-        mock_get_total_to_pay.return_value = Decimal(0)
+        mock_get_calculation_parts.return_value = []
 
         cache = {}
         mock_parameter_value(
@@ -1027,7 +1059,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
             cache=cache,
             generated_payments=generated_payments,
             in_trial=False,
-            total_to_pay_function=MonthPaymentBuilderSubscriptions.get_total_to_pay,
+            calculation_parts_function=MonthPaymentBuilderSubscriptions.get_calculation_parts,
             allow_negative_amounts=False,
         )
 
@@ -1050,7 +1082,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
             cache=cache,
             generated_payments=generated_payments,
         )
-        mock_get_total_to_pay.assert_called_once_with(
+        mock_get_calculation_parts.assert_called_once_with(
             range_start=range_start,
             range_end=range_end,
             contracts=set(subscriptions),
