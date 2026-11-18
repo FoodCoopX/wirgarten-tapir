@@ -3,6 +3,7 @@ from decimal import Decimal
 from unittest.mock import patch, Mock, call, MagicMock
 
 from tapir.utils.dataclasses import CalculationPart
+from tapir.payments.models import MemberPaymentRhythm
 from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
@@ -96,7 +97,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
             start_date=datetime.date(year=2026, month=1, day=1),
             end_date=datetime.date(year=2026, month=12, day=31),
         )
-        rhythm = Mock()
+        rhythm = MemberPaymentRhythm.Rhythm.MONTHLY
 
         generated_payments = Mock()
 
@@ -216,7 +217,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
         subscriptions = SubscriptionFactory.build_batch(
             size=3, product__type=product_type, member=member, mandate_ref=mandate_ref
         )
-        rhythm = Mock()
+        rhythm = MemberPaymentRhythm.Rhythm.MONTHLY
         cache = Mock()
         generated_payments = Mock()
 
@@ -316,7 +317,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
         subscriptions = SubscriptionFactory.build_batch(
             size=3, product__type=product_type, member=member, mandate_ref=mandate_ref
         )
-        rhythm = Mock()
+        rhythm = MemberPaymentRhythm.Rhythm.MONTHLY
         cache = Mock()
         generated_payments = Mock()
 
@@ -437,7 +438,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
             start_date=datetime.date(year=2026, month=1, day=1),
             end_date=datetime.date(year=2026, month=12, day=31),
         )
-        rhythm = Mock()
+        rhythm = MemberPaymentRhythm.Rhythm.MONTHLY
         generated_payments = Mock()
 
         payment = MonthPaymentBuilderUtils.build_payment_for_contract_and_member(
@@ -575,7 +576,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
             start_date=datetime.date(year=2026, month=7, day=1),
             end_date=datetime.date(year=2026, month=12, day=31),
         )
-        rhythm = Mock()
+        rhythm = MemberPaymentRhythm.Rhythm.MONTHLY
         generated_payments = Mock()
 
         payment = MonthPaymentBuilderUtils.build_payment_for_contract_and_member(
@@ -684,7 +685,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
         mock_get_parameter_value.return_value = datetime.date(year=2026, month=8, day=1)
 
         first_of_month = Mock()
-        rhythm = Mock()
+        rhythm = MemberPaymentRhythm.Rhythm.MONTHLY
         cache = Mock()
         generated_payments = Mock()
 
@@ -792,7 +793,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
             start_date=datetime.date(year=2026, month=1, day=1),
             end_date=datetime.date(year=2026, month=12, day=31),
         )
-        rhythm = Mock()
+        rhythm = MemberPaymentRhythm.Rhythm.MONTHLY
         generated_payments = Mock()
 
         payment = MonthPaymentBuilderUtils.build_payment_for_contract_and_member(
@@ -922,7 +923,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
             start_date=datetime.date(year=2026, month=7, day=15),
             end_date=datetime.date(year=2026, month=12, day=31),
         )
-        rhythm = Mock()
+        rhythm = MemberPaymentRhythm.Rhythm.MONTHLY
         generated_payments = Mock()
 
         payment = MonthPaymentBuilderUtils.build_payment_for_contract_and_member(
@@ -1046,7 +1047,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
             start_date=datetime.date(year=2026, month=1, day=1),
             end_date=datetime.date(year=2026, month=12, day=31),
         )
-        rhythm = Mock()
+        rhythm = MemberPaymentRhythm.Rhythm.MONTHLY
 
         generated_payments = Mock()
 
@@ -1160,7 +1161,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
             first_of_month=datetime.date(year=2026, month=7, day=1),
             contracts=subscriptions,
             payment_type="pt_test_name",
-            rhythm=Mock(),
+            rhythm=MemberPaymentRhythm.Rhythm.MONTHLY,
             cache=cache,
             generated_payments=set(),
             in_trial=False,

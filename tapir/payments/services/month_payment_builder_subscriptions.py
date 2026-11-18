@@ -27,6 +27,9 @@ from tapir.subscriptions.services.automatic_subscription_renewal_service import 
 from tapir.subscriptions.services.delivery_price_calculator import (
     DeliveryPriceCalculator,
 )
+from tapir.subscriptions.services.subscription_calculation_name_builder import (
+    SubscriptionCalculationNameBuilder,
+)
 from tapir.subscriptions.services.subscription_price_calculator import (
     SubscriptionPriceCalculator,
 )
@@ -189,7 +192,7 @@ class MonthPaymentBuilderSubscriptions:
         return [
             part
             for subscription in subscriptions_active_within_period
-            for part in cls.get_calculation_parts_for_subscription_within_range(
+            for part in cls._get_calculation_parts_for_subscription_within_range(
                 subscription=subscription,
                 range_start=range_start,
                 range_end=range_end,
@@ -198,7 +201,7 @@ class MonthPaymentBuilderSubscriptions:
         ]
 
     @classmethod
-    def get_calculation_parts_for_subscription_within_range(
+    def _get_calculation_parts_for_subscription_within_range(
         cls,
         subscription: Subscription,
         range_start: datetime.date,
@@ -217,7 +220,7 @@ class MonthPaymentBuilderSubscriptions:
         parts = []
         current_month = range_start
         while current_month < range_end:
-            part = cls.build_calculation_part_for_subscription_within_month(
+            part = cls._build_calculation_part_for_subscription_within_month(
                 subscription=subscription,
                 first_of_month=current_month,
                 monthly_price=monthly_price,
@@ -231,7 +234,7 @@ class MonthPaymentBuilderSubscriptions:
         return parts
 
     @classmethod
-    def build_calculation_part_for_subscription_within_month(
+    def _build_calculation_part_for_subscription_within_month(
         cls,
         subscription: Subscription,
         first_of_month: datetime.date,
@@ -247,7 +250,7 @@ class MonthPaymentBuilderSubscriptions:
         ):
             return None
 
-        prefix = f"{date_format(first_of_month, "F Y")}, {cls._build_subscription_name(subscription)}"
+        prefix = f"{date_format(first_of_month, "F Y")}, {SubscriptionCalculationNameBuilder.build_name(subscription=subscription)}"
         delivery_cycle = subscription.product.type.delivery_cycle
 
         if SubscriptionPricingStrategyDecider.is_price_by_delivery(delivery_cycle):
@@ -383,13 +386,6 @@ class MonthPaymentBuilderSubscriptions:
             contract_end=subscription.end_date,
             cache=cache,
         )
-
-    @classmethod
-    def _build_subscription_name(cls, subscription: Subscription) -> str:
-        name = f"{subscription.product.type.name} {subscription.product.name}"
-        if subscription.quantity != 1:
-            name += f" ({subscription.quantity} Anteile)"
-        return name
 
     @staticmethod
     def _build_count_label(count: int, singular: str, plural: str) -> str:

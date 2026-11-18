@@ -53,18 +53,21 @@ class TestGetWeeksOfMonthWithPickupLocation(TapirUnitTest):
         ids_by_week = ["pl_1", "pl_1", "pl_2", "pl_2", "pl_2"]
 
         self._assert_weeks(
-            ids_by_week,
-            self._get_weeks(mock_get_member_pickup_location_id_from_cache, ids_by_week),
+            expected_ids=ids_by_week,
+            weeks=self._get_weeks(
+                mock_get_member_pickup_location_id_from_cache=mock_get_member_pickup_location_id_from_cache,
+                ids_by_week=ids_by_week,
+            ),
         )
 
     def test_getWeeksOfMonthWithPickupLocation_noLocationInFirstWeeks_firstWeeksTakeFirstKnownLocation(
         self, mock_get_member_pickup_location_id_from_cache: MagicMock
     ):
         self._assert_weeks(
-            ["pl_1", "pl_1", "pl_1", "pl_1", "pl_2"],
-            self._get_weeks(
-                mock_get_member_pickup_location_id_from_cache,
-                [None, None, "pl_1", "pl_1", "pl_2"],
+            expected_ids=["pl_1", "pl_1", "pl_1", "pl_1", "pl_2"],
+            weeks=self._get_weeks(
+                mock_get_member_pickup_location_id_from_cache=mock_get_member_pickup_location_id_from_cache,
+                ids_by_week=[None, None, "pl_1", "pl_1", "pl_2"],
             ),
         )
 
@@ -72,10 +75,10 @@ class TestGetWeeksOfMonthWithPickupLocation(TapirUnitTest):
         self, mock_get_member_pickup_location_id_from_cache: MagicMock
     ):
         self._assert_weeks(
-            ["pl_1", "pl_1", "pl_2", "pl_2", "pl_2"],
-            self._get_weeks(
-                mock_get_member_pickup_location_id_from_cache,
-                ["pl_1", None, "pl_2", None, None],
+            expected_ids=["pl_1", "pl_1", "pl_2", "pl_2", "pl_2"],
+            weeks=self._get_weeks(
+                mock_get_member_pickup_location_id_from_cache=mock_get_member_pickup_location_id_from_cache,
+                ids_by_week=["pl_1", None, "pl_2", None, None],
             ),
         )
 
@@ -83,8 +86,11 @@ class TestGetWeeksOfMonthWithPickupLocation(TapirUnitTest):
         self, mock_get_member_pickup_location_id_from_cache: MagicMock
     ):
         self._assert_weeks(
-            [None] * 5,
-            self._get_weeks(mock_get_member_pickup_location_id_from_cache, [None] * 5),
+            expected_ids=[None] * 5,
+            weeks=self._get_weeks(
+                mock_get_member_pickup_location_id_from_cache=mock_get_member_pickup_location_id_from_cache,
+                ids_by_week=[None] * 5,
+            ),
         )
 
     def test_getWeeksOfMonthWithPickupLocation_default_looksUpLocationOnEachMonday(

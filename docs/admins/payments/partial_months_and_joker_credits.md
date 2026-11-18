@@ -37,8 +37,9 @@ Besonderheiten:
 - Produkttypen mit "Keine Lieferung" werden taggenau abgerechnet:
   Monatspreis × Vertragstage im Monat ÷ Tage im Monat. Der Solidarbeitrag wird
   immer taggenau abgerechnet.
-- Produkttypen mit individuellen Lieferwochen werden unverändert pro Lieferung
-  abgerechnet.
+- Produkttypen mit individuellen Lieferwochen werden weiterhin pro Lieferung
+  abgerechnet: Preis pro Lieferung × Anzahl Anteile × Liefertermine des
+  Vertrags im Monat. Ein Sonderpreis ersetzt Preis × Anteile.
 
 ## Joker-Gutschriften
 

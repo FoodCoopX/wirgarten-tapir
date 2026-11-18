@@ -17,7 +17,7 @@ class TestGetCalculationPartsForSingleContributionWithinRange(TapirUnitTest):
             amount=Decimal(100), start_date=datetime.date(year=1992, month=4, day=1)
         )
 
-        result = MonthPaymentBuilderSolidarityContributions.get_calculation_parts_for_single_contribution_within_range(
+        result = MonthPaymentBuilderSolidarityContributions._get_calculation_parts_for_single_contribution_within_range(
             range_start=datetime.date(year=1992, month=1, day=1),
             range_end=datetime.date(year=1992, month=3, day=31),
             contribution=contribution,
@@ -32,7 +32,7 @@ class TestGetCalculationPartsForSingleContributionWithinRange(TapirUnitTest):
             amount=Decimal(100), start_date=datetime.date(year=1993, month=2, day=15)
         )
 
-        result = MonthPaymentBuilderSolidarityContributions.get_calculation_parts_for_single_contribution_within_range(
+        result = MonthPaymentBuilderSolidarityContributions._get_calculation_parts_for_single_contribution_within_range(
             range_start=datetime.date(year=1993, month=1, day=1),
             range_end=datetime.date(year=1993, month=3, day=31),
             contribution=contribution,

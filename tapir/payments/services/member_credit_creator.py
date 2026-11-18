@@ -182,7 +182,7 @@ class MemberCreditCreator:
         )
         return CreditCalculation(
             amount=amount_to_credit,
-            explanation=cls.build_explanation(
+            explanation=cls._build_explanation(
                 calculation_parts=calculation_parts,
                 total_to_pay=total_to_pay,
                 already_paid=already_paid,
@@ -191,7 +191,7 @@ class MemberCreditCreator:
         )
 
     @classmethod
-    def build_explanation(
+    def _build_explanation(
         cls,
         calculation_parts: list[CalculationPart],
         total_to_pay: Decimal,

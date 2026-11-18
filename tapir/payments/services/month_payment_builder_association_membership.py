@@ -115,7 +115,7 @@ class MonthPaymentBuilderAssociationMembership:
         return [
             part
             for membership in memberships_active_within_period
-            for part in cls.get_calculation_parts_for_single_membership_within_range(
+            for part in cls._get_calculation_parts_for_single_membership_within_range(
                 membership=membership,
                 range_start=range_start,
                 range_end=range_end,
@@ -158,7 +158,7 @@ class MonthPaymentBuilderAssociationMembership:
         ]
 
     @classmethod
-    def get_calculation_parts_for_single_membership_within_range(
+    def _get_calculation_parts_for_single_membership_within_range(
         cls,
         range_start: datetime.date,
         range_end: datetime.date,
@@ -168,7 +168,7 @@ class MonthPaymentBuilderAssociationMembership:
         parts = []
         current_month = range_start
         while current_month < range_end:
-            part = cls.build_calculation_part_for_membership_within_month(
+            part = cls._build_calculation_part_for_membership_within_month(
                 first_of_month=current_month, membership=membership, cache=cache
             )
             if part is not None:
@@ -178,7 +178,7 @@ class MonthPaymentBuilderAssociationMembership:
         return parts
 
     @classmethod
-    def build_calculation_part_for_membership_within_month(
+    def _build_calculation_part_for_membership_within_month(
         cls,
         first_of_month: datetime.date,
         membership: AssociationMembership,

@@ -126,7 +126,7 @@ class MonthPaymentBuilderSolidarityContributions:
         return [
             part
             for contribution in contributions_active_within_period
-            for part in cls.get_calculation_parts_for_single_contribution_within_range(
+            for part in cls._get_calculation_parts_for_single_contribution_within_range(
                 contribution=contribution,
                 range_start=range_start,
                 range_end=range_end,
@@ -185,7 +185,7 @@ class MonthPaymentBuilderSolidarityContributions:
         ]
 
     @classmethod
-    def get_calculation_parts_for_single_contribution_within_range(
+    def _get_calculation_parts_for_single_contribution_within_range(
         cls,
         range_start: datetime.date,
         range_end: datetime.date,
@@ -194,7 +194,7 @@ class MonthPaymentBuilderSolidarityContributions:
         parts = []
         current_month = range_start
         while current_month < range_end:
-            part = cls.build_calculation_part_for_contribution_within_month(
+            part = cls._build_calculation_part_for_contribution_within_month(
                 first_of_month=current_month, contribution=contribution
             )
             if part is not None:
@@ -204,7 +204,7 @@ class MonthPaymentBuilderSolidarityContributions:
         return parts
 
     @classmethod
-    def build_calculation_part_for_contribution_within_month(
+    def _build_calculation_part_for_contribution_within_month(
         cls, first_of_month: datetime.date, contribution: SolidarityContribution
     ) -> CalculationPart | None:
         nb_days_in_month = get_last_day_of_month(first_of_month).day

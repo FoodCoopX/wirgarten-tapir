@@ -57,7 +57,9 @@ class TestCountDeliveryDatesInMonth(TapirUnitTest):
         mock_get_next_delivery_date: MagicMock,
         _: MagicMock,
     ):
-        self._deliver_every(mock_get_next_delivery_date, interval_in_days=7)
+        self._deliver_every(
+            mock_get_next_delivery_date=mock_get_next_delivery_date, interval_in_days=7
+        )
 
         self.assertEqual(
             5,
@@ -70,7 +72,9 @@ class TestCountDeliveryDatesInMonth(TapirUnitTest):
         mock_get_next_delivery_date: MagicMock,
         _: MagicMock,
     ):
-        self._deliver_every(mock_get_next_delivery_date, interval_in_days=7)
+        self._deliver_every(
+            mock_get_next_delivery_date=mock_get_next_delivery_date, interval_in_days=7
+        )
 
         self.assertEqual(
             5,
@@ -85,7 +89,9 @@ class TestCountDeliveryDatesInMonth(TapirUnitTest):
         mock_get_next_delivery_date: MagicMock,
         _: MagicMock,
     ):
-        self._deliver_every(mock_get_next_delivery_date, interval_in_days=7)
+        self._deliver_every(
+            mock_get_next_delivery_date=mock_get_next_delivery_date, interval_in_days=7
+        )
 
         self.assertEqual(
             3,
@@ -101,7 +107,9 @@ class TestCountDeliveryDatesInMonth(TapirUnitTest):
         mock_get_next_delivery_date: MagicMock,
         _: MagicMock,
     ):
-        self._deliver_every(mock_get_next_delivery_date, interval_in_days=7)
+        self._deliver_every(
+            mock_get_next_delivery_date=mock_get_next_delivery_date, interval_in_days=7
+        )
 
         self.assertEqual(
             4,
@@ -117,7 +125,9 @@ class TestCountDeliveryDatesInMonth(TapirUnitTest):
         mock_get_next_delivery_date: MagicMock,
         _: MagicMock,
     ):
-        self._deliver_every(mock_get_next_delivery_date, interval_in_days=7)
+        self._deliver_every(
+            mock_get_next_delivery_date=mock_get_next_delivery_date, interval_in_days=7
+        )
 
         self.assertEqual(
             3,
@@ -135,7 +145,10 @@ class TestCountDeliveryDatesInMonth(TapirUnitTest):
     ):
         for interval_in_days, expected in [(7, 5), (14, 3), (28, 2)]:
             with self.subTest(interval_in_days=interval_in_days):
-                self._deliver_every(mock_get_next_delivery_date, interval_in_days)
+                self._deliver_every(
+                    mock_get_next_delivery_date=mock_get_next_delivery_date,
+                    interval_in_days=interval_in_days,
+                )
 
                 self.assertEqual(
                     expected, self._count(contract_start=None, contract_end=None)
@@ -181,7 +194,9 @@ class TestCountDeliveryDatesInMonth(TapirUnitTest):
         mock_get_next_delivery_date: MagicMock,
         mock_get_member_pickup_location_id_from_cache: MagicMock,
     ):
-        self._deliver_every(mock_get_next_delivery_date, interval_in_days=7)
+        self._deliver_every(
+            mock_get_next_delivery_date=mock_get_next_delivery_date, interval_in_days=7
+        )
         mock_get_member_pickup_location_id_from_cache.side_effect = (
             lambda reference_date, **_: (
                 "pl_id_1"
@@ -234,7 +249,9 @@ class TestCountDeliveryDatesInMonth(TapirUnitTest):
         mock_get_next_delivery_date: MagicMock,
         _: MagicMock,
     ):
-        self._deliver_every(mock_get_next_delivery_date, interval_in_days=7)
+        self._deliver_every(
+            mock_get_next_delivery_date=mock_get_next_delivery_date, interval_in_days=7
+        )
         cache = {}
 
         self._count(contract_start=None, contract_end=None, cache=cache)

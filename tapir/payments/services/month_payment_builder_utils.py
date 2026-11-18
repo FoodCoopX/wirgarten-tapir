@@ -235,7 +235,7 @@ class MonthPaymentBuilderUtils:
             type=payment_type,
             subscription_payment_range_start=subscription_payment_range_start,
             subscription_payment_range_end=subscription_payment_range_end,
-            calculation_explanation=cls.build_calculation_explanation(
+            calculation_explanation=cls._build_calculation_explanation(
                 calculation_parts=calculation_parts,
                 total_to_pay=total_to_pay,
                 already_paid=already_paid,
@@ -243,7 +243,7 @@ class MonthPaymentBuilderUtils:
         )
 
     @classmethod
-    def build_calculation_explanation(
+    def _build_calculation_explanation(
         cls,
         calculation_parts: list[CalculationPart],
         total_to_pay: Decimal,

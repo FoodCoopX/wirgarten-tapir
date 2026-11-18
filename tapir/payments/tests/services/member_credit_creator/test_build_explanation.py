@@ -7,7 +7,7 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 class TestBuildExplanation(TapirUnitTest):
     def test_buildExplanation_default_showsPartsSumAlreadyPaidAndCredit(self):
-        result = MemberCreditCreator.build_explanation(
+        result = MemberCreditCreator._build_explanation(
             calculation_parts=[
                 CalculationPart(
                     explanation="Oktober 2026, Ernteanteil Kiste: 95,00 € × 4 ÷ 5 Liefertermine = 76,00 €",

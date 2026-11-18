@@ -13,7 +13,7 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
 class TestGetCalculationPartsForSingleMembershipWithinRange(TapirUnitTest):
     @patch.object(
         MonthPaymentBuilderAssociationMembership,
-        "build_calculation_part_for_membership_within_month",
+        "_build_calculation_part_for_membership_within_month",
         autospec=True,
     )
     def test_getCalculationPartsForSingleMembershipWithinRange_default_returnsPartOfEachCoveredMonth(
@@ -31,7 +31,7 @@ class TestGetCalculationPartsForSingleMembershipWithinRange(TapirUnitTest):
             lambda first_of_month, **_: parts_by_month[first_of_month.month]
         )
 
-        result = MonthPaymentBuilderAssociationMembership.get_calculation_parts_for_single_membership_within_range(
+        result = MonthPaymentBuilderAssociationMembership._get_calculation_parts_for_single_membership_within_range(
             range_start=datetime.date(year=2012, month=2, day=1),
             range_end=datetime.date(year=2012, month=5, day=31),
             membership=membership,

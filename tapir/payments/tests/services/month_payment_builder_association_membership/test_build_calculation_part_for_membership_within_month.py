@@ -35,7 +35,7 @@ class TestBuildCalculationPartForMembershipWithinMonth(TapirUnitTest):
     def _build_part(
         cls, membership: AssociationMembership, cache: dict | None = None
     ) -> CalculationPart | None:
-        return MonthPaymentBuilderAssociationMembership.build_calculation_part_for_membership_within_month(
+        return MonthPaymentBuilderAssociationMembership._build_calculation_part_for_membership_within_month(
             first_of_month=cls.FIRST_OF_APRIL,
             membership=membership,
             cache={} if cache is None else cache,

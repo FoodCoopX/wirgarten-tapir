@@ -13,7 +13,7 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
 class TestGetCalculationParts(TapirUnitTest):
     @patch.object(
         MonthPaymentBuilderAssociationMembership,
-        "get_calculation_parts_for_single_membership_within_range",
+        "_get_calculation_parts_for_single_membership_within_range",
         autospec=True,
     )
     def test_getCalculationParts_default_returnsPartsOfActiveMembershipsSortedByStartDate(

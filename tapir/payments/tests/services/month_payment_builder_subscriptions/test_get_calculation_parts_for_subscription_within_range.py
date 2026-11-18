@@ -31,7 +31,7 @@ class TestGetCalculationPartsForSubscriptionWithinRange(TapirUnitTest):
     )
     @patch.object(
         MonthPaymentBuilderSubscriptions,
-        "build_calculation_part_for_subscription_within_month",
+        "_build_calculation_part_for_subscription_within_month",
         autospec=True,
     )
     def test_getCalculationPartsForSubscriptionWithinRange_default_returnsPartsOfEachCoveredMonth(
@@ -59,7 +59,7 @@ class TestGetCalculationPartsForSubscriptionWithinRange(TapirUnitTest):
         range_start = datetime.date(2025, 1, 1)
         cache = {}
 
-        result = MonthPaymentBuilderSubscriptions.get_calculation_parts_for_subscription_within_range(
+        result = MonthPaymentBuilderSubscriptions._get_calculation_parts_for_subscription_within_range(
             subscription=subscription,
             range_start=range_start,
             range_end=datetime.date(2025, 3, 31),

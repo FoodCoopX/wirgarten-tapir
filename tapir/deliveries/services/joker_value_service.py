@@ -25,6 +25,9 @@ from tapir.solidarity_contribution.services.member_solidarity_contribution_servi
 from tapir.subscriptions.services.delivery_price_calculator import (
     DeliveryPriceCalculator,
 )
+from tapir.subscriptions.services.subscription_calculation_name_builder import (
+    SubscriptionCalculationNameBuilder,
+)
 from tapir.subscriptions.services.subscription_price_calculator import (
     SubscriptionPriceCalculator,
 )
@@ -124,12 +127,10 @@ class JokerValueService:
                 first_of_month=delivery_date.replace(day=1), cache=cache
             )
         ):
-            if subscription.price_override is not None:
-                name += " (Sonderpreis)"
-            elif subscription.quantity != 1:
-                name += f" ({subscription.quantity} Anteile)"
             return cls._build_proportional_part(
-                name=name,
+                name=SubscriptionCalculationNameBuilder.build_name(
+                    subscription=subscription
+                ),
                 monthly_amount=SubscriptionPriceCalculator.get_monthly_price(
                     subscription=subscription,
                     reference_date=delivery_date,

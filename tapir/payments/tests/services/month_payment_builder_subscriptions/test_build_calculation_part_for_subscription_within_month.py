@@ -69,7 +69,7 @@ class TestBuildCalculationPartForSubscriptionWithinMonth(TapirUnitTest):
     def _get_part(
         cls, subscription: Subscription, first_of_month: datetime.date
     ) -> CalculationPart | None:
-        return MonthPaymentBuilderSubscriptions.build_calculation_part_for_subscription_within_month(
+        return MonthPaymentBuilderSubscriptions._build_calculation_part_for_subscription_within_month(
             subscription=subscription,
             first_of_month=first_of_month,
             monthly_price=cls.MONTHLY_PRICE,
@@ -88,7 +88,9 @@ class TestBuildCalculationPartForSubscriptionWithinMonth(TapirUnitTest):
             end_date=datetime.date(year=2026, month=12, day=31),
         )
 
-        self.assertIsNone(self._get_part(subscription, self.OCTOBER))
+        self.assertIsNone(
+            self._get_part(subscription=subscription, first_of_month=self.OCTOBER)
+        )
         mock_count_delivery_dates_in_month.assert_not_called()
         mock_is_proportional_mode_active.assert_not_called()
 
@@ -106,7 +108,7 @@ class TestBuildCalculationPartForSubscriptionWithinMonth(TapirUnitTest):
             end_date=datetime.date(year=2026, month=12, day=31),
         )
 
-        part = self._get_part(subscription, self.OCTOBER)
+        part = self._get_part(subscription=subscription, first_of_month=self.OCTOBER)
 
         self.assertEqual(Decimal("64.53"), part.value)
         self.assertEqual(
@@ -126,7 +128,7 @@ class TestBuildCalculationPartForSubscriptionWithinMonth(TapirUnitTest):
             end_date=datetime.date(year=2026, month=12, day=31),
         )
 
-        part = self._get_part(subscription, self.OCTOBER)
+        part = self._get_part(subscription=subscription, first_of_month=self.OCTOBER)
 
         self.assertEqual(self.MONTHLY_PRICE, part.value)
         self.assertEqual(
@@ -150,7 +152,7 @@ class TestBuildCalculationPartForSubscriptionWithinMonth(TapirUnitTest):
             end_date=datetime.date(year=2026, month=10, day=26),
         )
 
-        part = self._get_part(subscription, self.OCTOBER)
+        part = self._get_part(subscription=subscription, first_of_month=self.OCTOBER)
 
         self.assertEqual(Decimal("76"), part.value)
         self.assertEqual(
@@ -175,7 +177,7 @@ class TestBuildCalculationPartForSubscriptionWithinMonth(TapirUnitTest):
             end_date=datetime.date(year=2027, month=12, day=31),
         )
 
-        part = self._get_part(subscription, self.NOVEMBER)
+        part = self._get_part(subscription=subscription, first_of_month=self.NOVEMBER)
 
         self.assertEqual(Decimal("71.25"), part.value)
 
@@ -193,7 +195,7 @@ class TestBuildCalculationPartForSubscriptionWithinMonth(TapirUnitTest):
             end_date=datetime.date(year=2027, month=12, day=31),
         )
 
-        part = self._get_part(subscription, self.OCTOBER)
+        part = self._get_part(subscription=subscription, first_of_month=self.OCTOBER)
 
         self.assertEqual(self.MONTHLY_PRICE / 3, part.value)
         self.assertEqual(
@@ -215,7 +217,7 @@ class TestBuildCalculationPartForSubscriptionWithinMonth(TapirUnitTest):
             end_date=datetime.date(year=2027, month=12, day=31),
         )
 
-        part = self._get_part(subscription, self.OCTOBER)
+        part = self._get_part(subscription=subscription, first_of_month=self.OCTOBER)
 
         self.assertEqual(self.MONTHLY_PRICE, part.value)
         self.assertEqual(
@@ -237,7 +239,7 @@ class TestBuildCalculationPartForSubscriptionWithinMonth(TapirUnitTest):
             end_date=datetime.date(year=2027, month=12, day=31),
         )
 
-        part = self._get_part(subscription, self.OCTOBER)
+        part = self._get_part(subscription=subscription, first_of_month=self.OCTOBER)
 
         self.assertEqual(Decimal(0), part.value)
         self.assertEqual(
@@ -256,7 +258,7 @@ class TestBuildCalculationPartForSubscriptionWithinMonth(TapirUnitTest):
             end_date=datetime.date(year=2027, month=12, day=31),
         )
 
-        part = self._get_part(subscription, self.OCTOBER)
+        part = self._get_part(subscription=subscription, first_of_month=self.OCTOBER)
 
         self.assertEqual(self.MONTHLY_PRICE * 12 / 31, part.value)
         self.assertEqual(
@@ -281,7 +283,7 @@ class TestBuildCalculationPartForSubscriptionWithinMonth(TapirUnitTest):
 
         mock_is_proportional_mode_active.return_value = False
 
-        part = self._get_part(subscription, self.OCTOBER)
+        part = self._get_part(subscription=subscription, first_of_month=self.OCTOBER)
 
         self.assertEqual(self.MONTHLY_PRICE, part.value)
 
@@ -301,7 +303,7 @@ class TestBuildCalculationPartForSubscriptionWithinMonth(TapirUnitTest):
 
         mock_is_proportional_mode_active.return_value = False
 
-        part = self._get_part(subscription, self.OCTOBER)
+        part = self._get_part(subscription=subscription, first_of_month=self.OCTOBER)
 
         self.assertEqual(self.MONTHLY_PRICE, part.value)
         self.assertEqual(
@@ -325,7 +327,7 @@ class TestBuildCalculationPartForSubscriptionWithinMonth(TapirUnitTest):
 
         mock_is_proportional_mode_active.return_value = False
 
-        part = self._get_part(subscription, self.OCTOBER)
+        part = self._get_part(subscription=subscription, first_of_month=self.OCTOBER)
 
         self.assertEqual(Decimal("43.02"), part.value)
         self.assertEqual(
@@ -345,7 +347,7 @@ class TestBuildCalculationPartForSubscriptionWithinMonth(TapirUnitTest):
             quantity=2,
         )
 
-        part = self._get_part(subscription, self.OCTOBER)
+        part = self._get_part(subscription=subscription, first_of_month=self.OCTOBER)
 
         self.assertEqual(
             "Oktober 2026, Ernteanteil Kiste (2 Anteile): 95,00 € monatlich (voller Monat)",

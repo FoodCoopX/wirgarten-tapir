@@ -14,7 +14,7 @@ class TestBuildCalculationExplanation(TapirUnitTest):
     def test_buildCalculationExplanation_nothingPaidYet_showsPartsAndSum(self):
         self.assertEqual(
             "Oktober 2026, A\nOktober 2026, B\nSumme: 184,00 €",
-            MonthPaymentBuilderUtils.build_calculation_explanation(
+            MonthPaymentBuilderUtils._build_calculation_explanation(
                 calculation_parts=self.PARTS,
                 total_to_pay=Decimal(184),
                 already_paid=Decimal(0),
@@ -26,7 +26,7 @@ class TestBuildCalculationExplanation(TapirUnitTest):
     ):
         self.assertEqual(
             "Oktober 2026, A\nOktober 2026, B\nSumme: 184,00 €\nBereits bezahlt: 190,00 €\nZu zahlen: -6,00 €",
-            MonthPaymentBuilderUtils.build_calculation_explanation(
+            MonthPaymentBuilderUtils._build_calculation_explanation(
                 calculation_parts=self.PARTS,
                 total_to_pay=Decimal(184),
                 already_paid=Decimal(190),
