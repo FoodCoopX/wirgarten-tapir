@@ -105,7 +105,7 @@ class TestBuildPaymentsForAssociationMemberships(TapirUnitTest):
                     generated_payments=generated_payments,
                     in_trial=False,
                     payment_type="payment_type_association_membership",
-                    total_to_pay_function=MonthPaymentBuilderAssociationMembership.get_total_to_pay,
+                    calculation_parts_function=MonthPaymentBuilderAssociationMembership.get_calculation_parts,
                     allow_negative_amounts=False,
                 )
                 for member in members

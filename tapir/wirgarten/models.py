@@ -732,7 +732,6 @@ class Payment(TapirModel):
         choices=PaymentStatus.choices,
         default=PaymentStatus.DUE,
     )
-    edited = models.BooleanField(default=False)
     transaction = models.ForeignKey(
         PaymentTransaction, on_delete=models.DO_NOTHING, null=True
     )
@@ -755,6 +754,7 @@ class Payment(TapirModel):
     )
     # Only set if the coop shares are paid in instalments
     instalment_number = models.PositiveSmallIntegerField(null=True)
+    calculation_explanation = models.TextField(blank=True, default="")
 
     class Meta:
         indexes = [

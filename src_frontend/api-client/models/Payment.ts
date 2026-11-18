@@ -65,12 +65,6 @@ export interface Payment {
    * @type {boolean}
    * @memberof Payment
    */
-  edited?: boolean;
-  /**
-   *
-   * @type {boolean}
-   * @memberof Payment
-   */
   excludedFromExport?: boolean;
   /**
    *
@@ -96,6 +90,12 @@ export interface Payment {
    * @memberof Payment
    */
   instalmentNumber?: number | null;
+  /**
+   *
+   * @type {string}
+   * @memberof Payment
+   */
+  calculationExplanation?: string;
   /**
    *
    * @type {string}
@@ -157,7 +157,6 @@ export function PaymentFromJSONTyped(
       json["status"] == null
         ? undefined
         : PaymentStatusEnumFromJSON(json["status"]),
-    edited: json["edited"] == null ? undefined : json["edited"],
     excludedFromExport:
       json["excluded_from_export"] == null
         ? undefined
@@ -173,6 +172,10 @@ export function PaymentFromJSONTyped(
         : json["subscription_payment_range_end"],
     instalmentNumber:
       json["instalment_number"] == null ? undefined : json["instalment_number"],
+    calculationExplanation:
+      json["calculation_explanation"] == null
+        ? undefined
+        : json["calculation_explanation"],
     mandateRef: json["mandate_ref"],
     transaction: json["transaction"] == null ? undefined : json["transaction"],
     pickupLocation:
@@ -201,12 +204,12 @@ export function PaymentToJSONTyped(
     amount: value["amount"],
     due_date: value["dueDate"],
     status: PaymentStatusEnumToJSON(value["status"]),
-    edited: value["edited"],
     excluded_from_export: value["excludedFromExport"],
     type: value["type"],
     subscription_payment_range_start: value["subscriptionPaymentRangeStart"],
     subscription_payment_range_end: value["subscriptionPaymentRangeEnd"],
     instalment_number: value["instalmentNumber"],
+    calculation_explanation: value["calculationExplanation"],
     mandate_ref: value["mandateRef"],
     transaction: value["transaction"],
     pickup_location: value["pickupLocation"],

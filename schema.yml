@@ -15462,8 +15462,6 @@ components:
           format: date
         status:
           $ref: '#/components/schemas/PaymentStatusEnum'
-        edited:
-          type: boolean
         excluded_from_export:
           type: boolean
         type:
@@ -15482,6 +15480,8 @@ components:
           maximum: 32767
           minimum: 0
           nullable: true
+        calculation_explanation:
+          type: string
         mandate_ref:
           type: string
         transaction:
