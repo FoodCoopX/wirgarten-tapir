@@ -5,7 +5,9 @@ from decimal import Decimal
 from dateutil.relativedelta import relativedelta
 
 from tapir.core.exceptions import TapirImproperlyConfigured
-from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
+from tapir.deliveries.services.monthly_delivery_date_counter import (
+    MonthlyDeliveryDateCounter,
+)
 from tapir.deliveries.services.subscription_price_type_decider import (
     SubscriptionPricingStrategyDecider,
 )
@@ -14,9 +16,6 @@ from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
 from tapir.payments.services.month_payment_builder_utils import MonthPaymentBuilderUtils
-from tapir.pickup_locations.services.member_pickup_location_getter import (
-    MemberPickupLocationGetter,
-)
 from tapir.subscriptions.services.automatic_subscription_renewal_service import (
     AutomaticSubscriptionRenewalService,
 )
@@ -233,8 +232,15 @@ class MonthPaymentBuilderSubscriptions:
             ):
                 number_of_full_month_to_pay += 1
             else:
-                number_of_deliveries = cls.get_number_of_deliveries_in_month(
-                    subscription=subscription, first_of_month=current_month, cache=cache
+                number_of_deliveries = (
+                    MonthlyDeliveryDateCounter.count_delivery_dates_in_month(
+                        member_id=subscription.member_id,
+                        product_type=subscription.product.type,
+                        first_of_month=current_month,
+                        contract_start=subscription.start_date,
+                        contract_end=subscription.end_date,
+                        cache=cache,
+                    )
                 )
                 if (
                     cls.should_pay_full_month_price(
@@ -285,41 +291,6 @@ class MonthPaymentBuilderSubscriptions:
             number_of_deliveries
             >= cls.get_number_of_deliveries_for_full_month_price(delivery_cycle)
         )
-
-    @classmethod
-    def get_number_of_deliveries_in_month(
-        cls,
-        subscription: Subscription,
-        first_of_month: datetime.date,
-        cache: dict,
-    ):
-        last_of_month = get_last_day_of_month(first_of_month)
-        number_of_deliveries = 0
-
-        # we start one day back so that deliveries on the first day of the month are counted
-        current_date = first_of_month - datetime.timedelta(days=1)
-
-        while current_date <= last_of_month:
-            current_date = DeliveryDateCalculator.get_next_delivery_date_for_product_type(
-                reference_date=current_date,
-                pickup_location_id=MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
-                    member_id=subscription.member_id,
-                    reference_date=current_date,
-                    cache=cache,
-                ),
-                product_type=subscription.product.type,
-                check_for_weeks_without_delivery=False,
-                cache=cache,
-            )
-            if current_date is None:
-                break
-            if (
-                current_date <= last_of_month
-                and subscription.start_date <= current_date <= subscription.end_date
-            ):
-                number_of_deliveries += 1
-
-        return number_of_deliveries
 
     @classmethod
     def group_subscriptions_by_member_and_product_type(

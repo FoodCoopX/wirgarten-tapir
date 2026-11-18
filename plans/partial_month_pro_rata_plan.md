@@ -6,7 +6,7 @@ Issue: #1387 "NEU: Teilmonate anteilig nach Lieferterminen abrechnen". Related: 
 Tick a box right after finishing the step. Each phase writes and updates the unit tests for the code it changes (see "Tests"); Phase 7 adds the cross-cutting scenarios.
 
 - [x] Phase 1 — cutoff parameter
-- [ ] Phase 2 — shared delivery counting + cutoff check
+- [x] Phase 2 — shared delivery counting + cutoff check
 - [ ] Phase 3 — subscription payments
 - [ ] Phase 4 — joker credit
 - [ ] Phase 5 — calculation explanation in the member profile payment list (payments and credits)
@@ -84,11 +84,11 @@ Explanation lines (Phase 5) show amounts rounded to cents while the total is rou
 
 ### Shared delivery counting
 New service `tapir/deliveries/services/monthly_delivery_date_counter.py`, `MonthlyDeliveryDateCounter.count_delivery_dates_in_month(member_id, product_type, first_of_month, contract_start, contract_end, cache)` with `contract_start`/`contract_end` optional (`None` = denominator). Logic moved from `MonthPaymentBuilderSubscriptions.get_number_of_deliveries_in_month` (pickup location history, `check_for_weeks_without_delivery=False`). Lives in `deliveries` so `JokerValueService` doesn't depend on `payments`. Results go through the cache: the denominator is requested for every subscription of a member and product type, and for every joker.
-`get_number_of_deliveries_in_month` is removed and its tests moved.
+`get_number_of_deliveries_in_month` is removed and its tests moved (done in Phase 2; `get_number_of_months_and_deliveries_to_pay` calls the counter until Phase 3 replaces it).
 
 ### Cutoff
-- New key `ParameterKeys.PAYMENT_PARTIAL_MONTH_PRO_RATA_START`, defined in `parameter_definitions_payments.py`, DATE, default 01.01.2028, validator `validate_date_is_first_of_month`. A month uses the new rule iff its first day ≥ cutoff.
-- New service `PartialMonthProRataDecider.is_pro_rata_active(first_of_month, cache)`, used by payments and jokers.
+- New key `ParameterKeys.PAYMENT_PARTIAL_MONTH_PROPORTIONAL_START_DATE`, defined in `parameter_definitions_payments.py`, DATE, default 01.01.2028, validator `validate_date_is_first_of_month`. A month uses the new rule iff its first day ≥ cutoff.
+- New service `tapir/deliveries/services/partial_month_calculation_mode_decider.py`, `PartialMonthCalculationModeDecider.is_proportional_mode_active(first_of_month, cache)`, used by payments and jokers.
 
 ### Payments (Phase 3)
 Replace `get_number_of_months_and_deliveries_to_pay` (returns two ints, can't express a fraction) by a per-month function `get_amount_to_pay_for_subscription_within_month(subscription, first_of_month, monthly_price, price_of_single_delivery, cache) -> PaymentCalculationPart` (amount + explanation, analogous to `JokerCreditValuePart`), so the amount charged and the formula shown in Phase 5 come from the same code. Each branch below builds its own explanation, old rule included. `get_amount_to_pay_for_subscription_within_range` loops over months and sums the amounts; monthly price and single delivery price are still taken at `range_start` (out-of-scope point 1).
@@ -97,8 +97,8 @@ Per month, in this order:
 1. Subscription doesn't overlap the month → 0.
 2. `force_price_per_delivery` → own dates × price per delivery (criterion 4).
 3. Fully covered → monthly price.
-4. NO_DELIVERY and pro rata active → monthly price × days covered ÷ days in month, same ratio as `MonthPaymentBuilderSolidarityContributions.get_amount_to_pay_for_contribution_within_month` (extract the ratio into a shared helper instead of duplicating it).
-5. Pro rata active → total dates = 0 ? 0 : monthly price × own dates ÷ total dates (criteria 1–3).
+4. NO_DELIVERY and proportional mode active → monthly price × days covered ÷ days in month, same ratio as `MonthPaymentBuilderSolidarityContributions.get_amount_to_pay_for_contribution_within_month` (extract the ratio into a shared helper instead of duplicating it).
+5. Proportional mode active → total dates = 0 ? 0 : monthly price × own dates ÷ total dates (criteria 1–3).
 6. Else old rule: threshold (`should_pay_full_month_price`) → monthly price, otherwise own dates × price per delivery.
 
 This also removes the latent infinite loop at `month_payment_builder_subscriptions.py:213` (`continue` without advancing `current_month`; unreachable today because callers pre-filter).
@@ -106,12 +106,12 @@ This also removes the latent infinite loop at `month_payment_builder_subscriptio
 
 ### Joker (Phase 4)
 `JokerValueService`:
-- `_get_subscription_part`: custom cycle unchanged. Pro rata active for the joker month → `SubscriptionPriceCalculator.get_monthly_price(subscription, joker_date)` ÷ total delivery dates of the product type in that month (0 dates → 0); else old path.
+- `_get_subscription_part`: custom cycle unchanged. Proportional mode active for the joker month → `SubscriptionPriceCalculator.get_monthly_price(subscription, joker_date)` ÷ total delivery dates of the product type in that month (0 dates → 0); else old path.
 - `_get_solidarity_contribution_part`: same, denominator from the product type selected in `JOKERS_SOLIDARITY_CONTRIBUTION_PRODUCT_TYPE`.
 - `_get_delivery_charge_part`: unchanged.
 - The whole credit calculation uses the actual delivery date, recomputed at evaluation time, instead of `joker.date`: subscription selection (`get_subscriptions_that_get_delivered_in_week` → `get_active_subscriptions`), monthly price, solidarity contribution, delivery charge, the month for the denominator and the cutoff check. Otherwise a contract starting on 01.10 would be missed for a joker stored as 30.09. Recomputation: `MemberSpecificDeliveryDayCalculator.get_specific_delivery_date(member_id, get_next_delivery_date(get_monday(joker_date)))`. `joker.date` is the member-specific pickup date at the time the joker was used and becomes stale if the member later switches to a pickup location with another weekday; in a week spanning two months (old location Wed 30.09.2026, new location Thu 01.10.2026) it would point to the wrong month. The recomputation uses the pickup location history, like the delivery date counting. The credit is created at the joker cancellation deadline, so later location changes don't affect it.
 - New public `JokerValueService.get_actual_delivery_date(member_id, joker_date, cache)`. `get_joker_credit_value_parts` calls it first and passes the result on to all parts. `JokerCreditCreator._build_credit_for_joker` uses it instead of its own identical computation.
-- New `_build_monthly_pro_rata_calculation(monthly_amount, number_of_dates, month)` → "95,00 € monatlich ÷ 5 Liefertermine im Oktober". `monthly_amount` is `get_monthly_price` (quantity and price override included), so no "× N Anteile" suffix; instead the name shows the quantity, e.g. "Kiste (2 Anteile): 190,00 € monatlich ÷ 5 Liefertermine im Oktober = 38,00 €". With price override: "Kiste (Sonderpreis): …". `_build_monthly_to_delivery_calculation` stays for jokers before the cutoff.
+- New `_build_proportional_calculation(monthly_amount, number_of_dates, month)` → "95,00 € monatlich ÷ 5 Liefertermine im Oktober". `monthly_amount` is `get_monthly_price` (quantity and price override included), so no "× N Anteile" suffix; instead the name shows the quantity, e.g. "Kiste (2 Anteile): 190,00 € monatlich ÷ 5 Liefertermine im Oktober = 38,00 €". With price override: "Kiste (Sonderpreis): …". `_build_monthly_to_delivery_calculation` stays for jokers before the cutoff.
 - `get_price_of_single_delivery_from_monthly_price` unchanged.
 - Callers `IntendedUsePatternExpander`, `MemberColumnProvider`: no change.
 
@@ -142,22 +142,22 @@ Frontend: display the explanation below the amount, collapsed by default (e.g. "
 ## Tests
 One class per file, one file per method, `TapirUnitTest` where no DB is needed. Each phase writes the tests for its own code; tests of removed methods are removed in the phase that removes the method. Phase 7 covers the cross-cutting scenarios of criterion 9 marked below.
 
-Phase 2, `tapir/deliveries/tests/services/monthly_delivery_date_counter/`:
-- `test_count_delivery_dates_in_month.py`: with and without contract range, delivery-free weeks count, pickup location change within the month, 0 dates, all cycles.
-- `partial_month_pro_rata_decider/test_is_pro_rata_active.py`: month before, month equal to, month after the cutoff.
+Phase 2, `tapir/deliveries/tests/services/`:
+- `monthly_delivery_date_counter/test_count_delivery_dates_in_month.py`: with and without contract range, delivery-free weeks count, pickup location change within the month, 0 dates, all cycles.
+- `partial_month_calculation_mode_decider/test_is_proportional_mode_active.py`: month before, month equal to, month after the cutoff.
 
 Phase 3, `tapir/payments/tests/services/month_payment_builder_subscriptions/`:
 - `test_get_amount_to_pay_for_subscription_within_month.py` (replaces `test_get_number_of_months_and_deliveries_to_pay.py`): each branch; weekly, biweekly, every 4 weeks, custom, no delivery; months with 4 and 5 dates; 0 dates; cutoff before/after the month.
 - Phase 7: `test_get_total_to_pay.py` (extend): issue example October 2026 = 184.00 €; change without price change = 95 €; two changes in one month = 1 monthly fee; January 2027 with KW 1–2 delivery-free, start KW 4 = 1/4; pickup location change within the month; yearly rhythm spanning the cutoff (months before old rule, after new).
 - Phase 7: `test_build_payments_for_subscriptions_in_trial.py` (extend): partial trial month pro rata.
-- Remove the tests of `get_number_of_months_and_deliveries_to_pay` and `get_number_of_deliveries_in_month` (the latter moved to Phase 2).
+- Remove the tests of `get_number_of_months_and_deliveries_to_pay`.
 
 Phase 4, `tapir/deliveries/tests/services/joker_value_service/`:
 - `test_get_subscription_part.py` (extend): all cycles, October 2026 = 19.00 €, November 2026 = 23.75 €, before cutoff = 21.51 €, quantity and price override, explanation text (quantity shown once, in the name).
 - `test_get_solidarity_contribution_part.py` (extend): denominator from the selected product type, before/after cutoff.
 - `test_get_joker_credit_value_for_single_joker.py` (extend): Phase 7: jokers on all dates of October 2026 sum to 95 €. Phase 4: subscription starting 01.10.2026 is included for a joker stored as 30.09.2026 after a switch to a Thursday location; joker in the week of Mon 28.09.2026 used at a Wednesday location (`joker.date` 30.09.2026), member then switches to a Thursday location → October denominator and October cutoff check.
 - `test_get_actual_delivery_date.py` (new): unchanged location, location switched to another weekday after the joker was used, week spanning two months.
-- `test_build_monthly_pro_rata_calculation.py` (new).
+- `test_build_proportional_calculation.py` (new).
 
 Phase 5:
 - `test_get_total_to_pay_explanation.py` (new, `month_payment_builder_subscriptions/`): one line per subscription and month for each branch, old and new rule, sum equals `get_total_to_pay`.
@@ -185,7 +185,7 @@ Merge all migrations created on this branch into as few as possible, ideally one
 
 ## Files
 - `tapir/wirgarten/parameter_keys.py`, `tapir/wirgarten/parameter_definitions/parameter_definitions_payments.py`, `parameter_definitions_jokers.py`
-- new `tapir/deliveries/services/monthly_delivery_date_counter.py`, new `PartialMonthProRataDecider`
+- new `tapir/deliveries/services/monthly_delivery_date_counter.py`, new `tapir/deliveries/services/partial_month_calculation_mode_decider.py`
 - `tapir/payments/services/month_payment_builder_subscriptions.py`, `tapir/payments/services/month_payment_builder_solidarity_contributions.py` (shared days ratio), `tapir/payments/services/month_payment_builder_utils.py` (if the explained payment is excluded from "already paid" there)
 - `tapir/deliveries/services/joker_value_service.py`, `tapir/payments/services/joker_credit_creator.py`
 - `tapir/wirgarten/models.py` + migration (Phase 8)

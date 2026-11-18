@@ -98,7 +98,7 @@ class ParameterDefinitionsPayments:
         order_priority -= 1
 
         importer.parameter_definition(
-            key=ParameterKeys.PAYMENT_PARTIAL_MONTH_PRO_RATA_START,
+            key=ParameterKeys.PAYMENT_PARTIAL_MONTH_PROPORTIONAL_START_DATE,
             label="Start-Datum für anteilige Abrechnung von Teilmonaten",
             datatype=TapirParameterDatatype.DATE,
             initial_value=datetime.date(year=2028, month=1, day=1),
