@@ -2,6 +2,7 @@ import json
 
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
+from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db.models import Count, Max, Sum
 from django.db.models.functions import ExtractYear
@@ -61,6 +62,7 @@ from tapir.wirgarten.utils import (
 
 
 @require_GET
+@permission_required(Permission.Coop.VIEW, raise_exception=True)
 def get_cashflow_chart_data(request):
     cache = {}
     last_contract_end = Subscription.objects.aggregate(max_date=Max("end_date"))[
@@ -68,7 +70,7 @@ def get_cashflow_chart_data(request):
     ]
 
     payment_dates = [get_next_payment_date(cache=cache)]
-    while payment_dates[-1] < last_contract_end:
+    while last_contract_end is not None and payment_dates[-1] < last_contract_end:
         payment_dates.append(payment_dates[-1] + relativedelta(months=1))
 
     generated_payments = set()
@@ -94,7 +96,7 @@ def get_cashflow_chart_data(request):
                 and payment.due_date.month == payment_date.month
             ]
         )
-        monthly_sums.append(sum_for_this_month)
+        monthly_sums.append(float(sum_for_this_month))
 
     return JsonResponse(
         {
@@ -271,13 +273,14 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         context["cancelled_coop_shares_data"] = list(cancellations.values())
 
     def add_cancelled_association_memberships_context(self, context):
-        cancellations_per_year = {}
-        for cancelled_membership in AssociationMembership.objects.filter(
-            end_date__isnull=False
-        ).order_by("end_date"):
-            if cancelled_membership.end_date.year not in cancellations_per_year:
-                cancellations_per_year[cancelled_membership.end_date.year] = 0
-            cancellations_per_year[cancelled_membership.end_date.year] += 1
+        cancellations_per_year = {
+            row["year"]: row["count"]
+            for row in AssociationMembership.objects.filter(end_date__isnull=False)
+            .annotate(year=ExtractYear("end_date"))
+            .values("year")
+            .annotate(count=Count("id"))
+            .order_by("year")
+        }
 
         context["cancelled_association_memberships_labels"] = list(
             cancellations_per_year.keys()

@@ -21,16 +21,6 @@ interface SubscriptionTrialPeriodModalProps {
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
 
-function formatDateForInput(date: Date | null | undefined): string {
-  if (!date) {
-    return "";
-  }
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
 const SubscriptionTrialPeriodModal: React.FC<
   SubscriptionTrialPeriodModalProps
 > = ({ onHide, show, subscriptionId, csrfToken, setToastDatas }) => {
@@ -56,30 +46,27 @@ const SubscriptionTrialPeriodModal: React.FC<
         setSubscription(subscriptionData);
         setTrialDisabled(subscriptionData.trialDisabled ?? false);
         setUseCustomEndDate(subscriptionData.trialEndDateOverride != null);
-        setCustomEndDate(
-          formatDateForInput(subscriptionData.trialEndDateOverride),
-        );
+        setCustomEndDate(subscriptionData.trialEndDateOverride ?? "");
       })
-      .catch(
-        async (requestError) =>
-          await handleRequestError(
-            requestError,
-            "Fehler beim Laden der Probezeit-Daten",
-            setToastDatas,
-          ),
+      .catch((requestError) =>
+        handleRequestError(
+          requestError,
+          "Fehler beim Laden der Probezeit-Daten",
+          setToastDatas,
+        ),
       )
       .finally(() => setLoading(false));
   }, [show, subscriptionId]);
 
-  function getDisplayedTrialEndDate(): Date | null {
+  function getDisplayedTrialEndDate(): string | null {
     if (trialDisabled || !subscription) {
       return null;
     }
     if (useCustomEndDate && customEndDate) {
-      return new Date(customEndDate);
+      return customEndDate;
     }
     if (subscription.defaultTrialEndDate) {
-      return new Date(subscription.defaultTrialEndDate);
+      return subscription.defaultTrialEndDate;
     }
     return null;
   }
@@ -89,13 +76,13 @@ const SubscriptionTrialPeriodModal: React.FC<
       return;
     }
 
-    let trialEndDateOverride: Date | null = null;
+    let trialEndDateOverride: string | null = null;
     if (!trialDisabled && useCustomEndDate) {
       if (!customEndDate) {
         setError("Bitte ein Probezeit-Enddatum angeben.");
         return;
       }
-      trialEndDateOverride = new Date(customEndDate);
+      trialEndDateOverride = customEndDate;
     }
 
     setLoading(true);
@@ -222,9 +209,7 @@ const SubscriptionTrialPeriodModal: React.FC<
                   setError(undefined);
                   if (checked) {
                     if (!customEndDate && subscription.trialEndDateOverride) {
-                      setCustomEndDate(
-                        formatDateForInput(subscription.trialEndDateOverride),
-                      );
+                      setCustomEndDate(subscription.trialEndDateOverride);
                     }
                   } else {
                     setCustomEndDate("");

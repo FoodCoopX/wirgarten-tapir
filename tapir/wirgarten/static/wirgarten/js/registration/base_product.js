@@ -24,11 +24,11 @@ const calculatePrice = (harvest_share) => {
   return elem.value * price;
 };
 
-var initHarvestShareSummary = (
+function initHarvestShareSummary(
   harvest_share_prices,
   solidarity_total,
   solidarity_unit,
-) => {
+) {
   const resultElem = document.getElementById("harvest_shares_total");
   let customSoliElem = document.getElementById("id_solidarity_price_custom");
   if (!customSoliElem) {
@@ -175,4 +175,4 @@ var initHarvestShareSummary = (
   resultElem.innerText = formatCurrency(calculateTotal());
 
   initDependentFields();
-};
+}

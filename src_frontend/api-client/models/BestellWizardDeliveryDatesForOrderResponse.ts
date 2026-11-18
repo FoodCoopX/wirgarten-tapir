@@ -20,11 +20,11 @@
 export interface BestellWizardDeliveryDatesForOrderResponse {
   /**
    *
-   * @type {{ [key: string]: { [key: string]: Date; }; }}
+   * @type {{ [key: string]: { [key: string]: string; }; }}
    * @memberof BestellWizardDeliveryDatesForOrderResponse
    */
   deliveryDateByPickupLocationIdAndProductTypeId: {
-    [key: string]: { [key: string]: Date };
+    [key: string]: { [key: string]: string };
   };
 }
 

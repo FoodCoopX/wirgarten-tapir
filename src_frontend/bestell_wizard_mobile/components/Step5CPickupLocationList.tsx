@@ -1,0 +1,184 @@
+import React, { useEffect } from "react";
+import { ListGroup, ListGroupItem, Spinner } from "react-bootstrap";
+import { PublicPickupLocation, PublicProductType } from "../../api-client";
+import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
+import { buildFilteredShoppingCart } from "../../bestell_wizard/utils/buildFilteredShoppingCart.ts";
+import { formatOpeningTimes } from "../../bestell_wizard/utils/formatOpeningTimes.ts";
+import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
+import formatAddress from "../../utils/formatAddress.ts";
+import { buildDeliveryChargeBadge } from "../utils/buildDeliveryChargeBadge.tsx";
+import { getFirstDelivery } from "../utils/getFirstDelivery.ts";
+
+interface Step5CPickupLocationListProps {
+  pickupLocations: PublicPickupLocation[];
+  selectedPickupLocations: PublicPickupLocation[];
+  setSelectedPickupLocations: (locations: PublicPickupLocation[]) => void;
+  pickupLocationsCapacityCheckLoading: boolean;
+  pickupLocationsWithCapacityFull: Set<PublicPickupLocation>;
+  waitingListLinkConfirmationModeEnabled: boolean;
+  tabIsActive: boolean;
+  firstDeliveryDatesByPickupLocationAndProductType: {
+    [key: string]: { [key: string]: string };
+  };
+  productTypesInWaitingList: Set<PublicProductType>;
+  shoppingCart: ShoppingCart;
+  changesDisabled: boolean;
+  isHomeDelivery?: boolean;
+}
+
+const Step5CPickupLocationList: React.FC<Step5CPickupLocationListProps> = ({
+  pickupLocations,
+  selectedPickupLocations,
+  setSelectedPickupLocations,
+  pickupLocationsCapacityCheckLoading,
+  pickupLocationsWithCapacityFull,
+  waitingListLinkConfirmationModeEnabled,
+  tabIsActive,
+  firstDeliveryDatesByPickupLocationAndProductType,
+  shoppingCart,
+  productTypesInWaitingList,
+  changesDisabled,
+  isHomeDelivery,
+}) => {
+  function getClassForPickupLocationListItem(
+    pickupLocation: PublicPickupLocation,
+  ) {
+    if (selectedPickupLocations.includes(pickupLocation)) {
+      return "active";
+    }
+
+    if (changesDisabled) {
+      return "disabled";
+    }
+
+    return "";
+  }
+
+  function buildCapacityIndicator(pickupLocation: PublicPickupLocation) {
+    if (waitingListLinkConfirmationModeEnabled) {
+      return;
+    }
+
+    if (pickupLocationsCapacityCheckLoading) {
+      return <Spinner size={"sm"} />;
+    }
+
+    if (pickupLocationsWithCapacityFull.has(pickupLocation)) {
+      return <span className={"text-danger"}>Ausgelastet</span>;
+    }
+
+    let freeCapacityText;
+    if (
+      isAtLeastOneProductOrdered(
+        buildFilteredShoppingCart(
+          shoppingCart,
+          false,
+          productTypesInWaitingList,
+        ),
+      )
+    ) {
+      freeCapacityText = getFirstDelivery(
+        pickupLocation.id,
+        firstDeliveryDatesByPickupLocationAndProductType,
+      );
+    } else {
+      freeCapacityText = "Kapazität frei";
+    }
+
+    return (
+      <span
+        className={
+          selectedPickupLocations.includes(pickupLocation) ? "" : "text-success"
+        }
+      >
+        {freeCapacityText}
+      </span>
+    );
+  }
+
+  useEffect(() => {
+    if (tabIsActive && selectedPickupLocations.length > 0) {
+      setTimeout(() => {
+        const elem = document.getElementById(selectedPickupLocations[0].id);
+        elem?.scrollIntoView();
+      }, 10);
+    }
+  }, [tabIsActive]);
+
+  function sortPickupLocations(
+    a: PublicPickupLocation,
+    b: PublicPickupLocation,
+  ) {
+    if (
+      pickupLocationsWithCapacityFull.has(a) &&
+      !pickupLocationsWithCapacityFull.has(b)
+    ) {
+      return 1;
+    }
+
+    if (
+      pickupLocationsWithCapacityFull.has(b) &&
+      !pickupLocationsWithCapacityFull.has(a)
+    ) {
+      return -1;
+    }
+
+    return a.name.localeCompare(b.name);
+  }
+
+  return (
+    <ListGroup style={{ maxHeight: "100%", overflow: "scroll" }}>
+      {pickupLocations.toSorted(sortPickupLocations).map((pickupLocation) => {
+        const deliveryChargeBadge = buildDeliveryChargeBadge(pickupLocation);
+        return (
+          <ListGroupItem
+            key={pickupLocation.id}
+            style={{
+              cursor: changesDisabled ? "" : "pointer",
+              lineHeight: "1.1rem",
+            }}
+            onClick={
+              changesDisabled
+                ? () => {}
+                : () => setSelectedPickupLocations([pickupLocation])
+            }
+            className={getClassForPickupLocationListItem(pickupLocation)}
+            id={pickupLocation.id}
+          >
+            <small style={{ lineHeight: "0" }}>
+              <strong>{pickupLocation.name}</strong>
+              {deliveryChargeBadge && (
+                <>
+                  <br />
+                  {deliveryChargeBadge}
+                </>
+              )}
+              <br />
+              {buildCapacityIndicator(pickupLocation)}
+              {!isHomeDelivery && (
+                <>
+                  <br />
+                  <small>
+                    {formatAddress(
+                      pickupLocation.street,
+                      pickupLocation.street2,
+                      pickupLocation.postcode,
+                      pickupLocation.city,
+                    )}
+                  </small>
+                </>
+              )}
+              <br />
+              <small>
+                {isHomeDelivery && "Lieferfenster: "}
+                {formatOpeningTimes(pickupLocation)}
+              </small>
+            </small>
+          </ListGroupItem>
+        );
+      })}
+    </ListGroup>
+  );
+};
+
+export default Step5CPickupLocationList;

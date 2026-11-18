@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import "dayjs/locale/de";
 import React, { useEffect, useState } from "react";
 import { Col, Form, Modal, Row, Spinner } from "react-bootstrap";
@@ -106,8 +107,7 @@ const AssociationMembershipUpdateModal: React.FC<
       return;
     }
 
-    const startDate = new Date(startDateAsString);
-    if (Number.isNaN(startDate.valueOf())) {
+    if (!dayjs(startDateAsString).isValid()) {
       alert("Ungültiges Datum");
       return;
     }
@@ -118,7 +118,7 @@ const AssociationMembershipUpdateModal: React.FC<
         adminSetAssociationMembershipRequestRequest: {
           membershipTypeId: selectedMembershipTypeId,
           memberId: memberId,
-          startDate: startDate,
+          startDate: startDateAsString,
         },
       })
       .then(() => {

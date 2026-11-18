@@ -35,6 +35,8 @@ import type {
   PaginatedEmailDispatchWithRetriesList,
   PaginatedEmailTemplateList,
   PaginatedGroupedEmailDispatchList,
+  PaginatedStoredUploadList,
+  PaginatedTemporaryUploadList,
   PatchedBundledEmailConfigurationRequest,
   PatchedEmailConfigurationDispatchRequest,
   PatchedEmailConfigurationRequest,
@@ -44,6 +46,8 @@ import type {
   PatchedStaticSegmentRequest,
   PatchedStoredUploadRequest,
   PatchedTemporaryUploadRequest,
+  PreviewRequest,
+  PreviewResponse,
   RecipientRequest,
   SegmentDataRequest,
   StaticSegment,
@@ -80,6 +84,8 @@ import {
   PaginatedEmailDispatchWithRetriesListFromJSON,
   PaginatedEmailTemplateListFromJSON,
   PaginatedGroupedEmailDispatchListFromJSON,
+  PaginatedStoredUploadListFromJSON,
+  PaginatedTemporaryUploadListFromJSON,
   PatchedBundledEmailConfigurationRequestToJSON,
   PatchedEmailConfigurationDispatchRequestToJSON,
   PatchedEmailConfigurationRequestToJSON,
@@ -89,6 +95,8 @@ import {
   PatchedStaticSegmentRequestToJSON,
   PatchedStoredUploadRequestToJSON,
   PatchedTemporaryUploadRequestToJSON,
+  PreviewRequestToJSON,
+  PreviewResponseFromJSON,
   RecipientRequestToJSON,
   SegmentDataRequestToJSON,
   StaticSegmentFromJSON,
@@ -104,6 +112,10 @@ import {
 } from "../models/index";
 import * as runtime from "../runtime";
 
+export interface EmailConfigurationVersionPreviewRequest {
+  previewRequest: PreviewRequest;
+}
+
 export interface EmailConfigurationVersionSendTestEmailRequest {
   id: string;
   recipientRequest: RecipientRequest;
@@ -115,6 +127,12 @@ export interface StoreduploadsCreateRequest {
 
 export interface StoreduploadsDestroyRequest {
   uploadId: string;
+}
+
+export interface StoreduploadsListRequest {
+  limit?: number;
+  offset?: number;
+  search?: string;
 }
 
 export interface StoreduploadsPartialUpdateRequest {
@@ -240,10 +258,6 @@ export interface TapirmailApiEmailConfigurationVersionPartialUpdateRequest {
 }
 
 export interface TapirmailApiEmailConfigurationVersionReleaseCreateRequest {
-  id: string;
-}
-
-export interface TapirmailApiEmailConfigurationVersionRetrieveRequest {
   id: string;
 }
 
@@ -424,6 +438,11 @@ export interface TemporaryuploadsDestroyRequest {
   uploadId: string;
 }
 
+export interface TemporaryuploadsListRequest {
+  limit?: number;
+  offset?: number;
+}
+
 export interface TemporaryuploadsPartialUpdateRequest {
   uploadId: string;
   patchedTemporaryUploadRequest?: PatchedTemporaryUploadRequest;
@@ -442,6 +461,68 @@ export interface TemporaryuploadsUpdateRequest {
  *
  */
 export class TapirmailApi extends runtime.BaseAPI {
+  /**
+   */
+  async emailConfigurationVersionPreviewRaw(
+    requestParameters: EmailConfigurationVersionPreviewRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<PreviewResponse>> {
+    if (requestParameters["previewRequest"] == null) {
+      throw new runtime.RequiredError(
+        "previewRequest",
+        'Required parameter "previewRequest" was null or undefined when calling emailConfigurationVersionPreview().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/tapirmail/api/email_configuration_version/preview/`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: PreviewRequestToJSON(requestParameters["previewRequest"]),
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      PreviewResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async emailConfigurationVersionPreview(
+    requestParameters: EmailConfigurationVersionPreviewRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<PreviewResponse> {
+    const response = await this.emailConfigurationVersionPreviewRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
   /**
    */
   async emailConfigurationVersionSendTestEmailRaw(
@@ -635,9 +716,22 @@ export class TapirmailApi extends runtime.BaseAPI {
   /**
    */
   async storeduploadsListRaw(
+    requestParameters: StoreduploadsListRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<Array<StoredUpload>>> {
+  ): Promise<runtime.ApiResponse<PaginatedStoredUploadList>> {
     const queryParameters: any = {};
+
+    if (requestParameters["limit"] != null) {
+      queryParameters["limit"] = requestParameters["limit"];
+    }
+
+    if (requestParameters["offset"] != null) {
+      queryParameters["offset"] = requestParameters["offset"];
+    }
+
+    if (requestParameters["search"] != null) {
+      queryParameters["search"] = requestParameters["search"];
+    }
 
     const headerParameters: runtime.HTTPHeaders = {};
 
@@ -666,16 +760,20 @@ export class TapirmailApi extends runtime.BaseAPI {
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      jsonValue.map(StoredUploadFromJSON),
+      PaginatedStoredUploadListFromJSON(jsonValue),
     );
   }
 
   /**
    */
   async storeduploadsList(
+    requestParameters: StoreduploadsListRequest = {},
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<Array<StoredUpload>> {
-    const response = await this.storeduploadsListRaw(initOverrides);
+  ): Promise<PaginatedStoredUploadList> {
+    const response = await this.storeduploadsListRaw(
+      requestParameters,
+      initOverrides,
+    );
     return await response.value();
   }
 
@@ -2355,54 +2453,6 @@ export class TapirmailApi extends runtime.BaseAPI {
 
   /**
    */
-  async tapirmailApiEmailConfigurationVersionListRaw(
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<Array<BundledEmailConfiguration>>> {
-    const queryParameters: any = {};
-
-    const headerParameters: runtime.HTTPHeaders = {};
-
-    if (this.configuration && this.configuration.apiKey) {
-      headerParameters["Authorization"] =
-        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
-    }
-
-    if (
-      this.configuration &&
-      (this.configuration.username !== undefined ||
-        this.configuration.password !== undefined)
-    ) {
-      headerParameters["Authorization"] =
-        "Basic " +
-        btoa(this.configuration.username + ":" + this.configuration.password);
-    }
-    const response = await this.request(
-      {
-        path: `/tapirmail/api/email_configuration_version/`,
-        method: "GET",
-        headers: headerParameters,
-        query: queryParameters,
-      },
-      initOverrides,
-    );
-
-    return new runtime.JSONApiResponse(response, (jsonValue) =>
-      jsonValue.map(BundledEmailConfigurationFromJSON),
-    );
-  }
-
-  /**
-   */
-  async tapirmailApiEmailConfigurationVersionList(
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<Array<BundledEmailConfiguration>> {
-    const response =
-      await this.tapirmailApiEmailConfigurationVersionListRaw(initOverrides);
-    return await response.value();
-  }
-
-  /**
-   */
   async tapirmailApiEmailConfigurationVersionPartialUpdateRaw(
     requestParameters: TapirmailApiEmailConfigurationVersionPartialUpdateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
@@ -2524,69 +2574,6 @@ export class TapirmailApi extends runtime.BaseAPI {
   ): Promise<{ [key: string]: any }> {
     const response =
       await this.tapirmailApiEmailConfigurationVersionReleaseCreateRaw(
-        requestParameters,
-        initOverrides,
-      );
-    return await response.value();
-  }
-
-  /**
-   */
-  async tapirmailApiEmailConfigurationVersionRetrieveRaw(
-    requestParameters: TapirmailApiEmailConfigurationVersionRetrieveRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<BundledEmailConfiguration>> {
-    if (requestParameters["id"] == null) {
-      throw new runtime.RequiredError(
-        "id",
-        'Required parameter "id" was null or undefined when calling tapirmailApiEmailConfigurationVersionRetrieve().',
-      );
-    }
-
-    const queryParameters: any = {};
-
-    const headerParameters: runtime.HTTPHeaders = {};
-
-    if (this.configuration && this.configuration.apiKey) {
-      headerParameters["Authorization"] =
-        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
-    }
-
-    if (
-      this.configuration &&
-      (this.configuration.username !== undefined ||
-        this.configuration.password !== undefined)
-    ) {
-      headerParameters["Authorization"] =
-        "Basic " +
-        btoa(this.configuration.username + ":" + this.configuration.password);
-    }
-    const response = await this.request(
-      {
-        path: `/tapirmail/api/email_configuration_version/{id}/`.replace(
-          `{${"id"}}`,
-          encodeURIComponent(String(requestParameters["id"])),
-        ),
-        method: "GET",
-        headers: headerParameters,
-        query: queryParameters,
-      },
-      initOverrides,
-    );
-
-    return new runtime.JSONApiResponse(response, (jsonValue) =>
-      BundledEmailConfigurationFromJSON(jsonValue),
-    );
-  }
-
-  /**
-   */
-  async tapirmailApiEmailConfigurationVersionRetrieve(
-    requestParameters: TapirmailApiEmailConfigurationVersionRetrieveRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<BundledEmailConfiguration> {
-    const response =
-      await this.tapirmailApiEmailConfigurationVersionRetrieveRaw(
         requestParameters,
         initOverrides,
       );
@@ -5752,9 +5739,18 @@ export class TapirmailApi extends runtime.BaseAPI {
   /**
    */
   async temporaryuploadsListRaw(
+    requestParameters: TemporaryuploadsListRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<Array<TemporaryUpload>>> {
+  ): Promise<runtime.ApiResponse<PaginatedTemporaryUploadList>> {
     const queryParameters: any = {};
+
+    if (requestParameters["limit"] != null) {
+      queryParameters["limit"] = requestParameters["limit"];
+    }
+
+    if (requestParameters["offset"] != null) {
+      queryParameters["offset"] = requestParameters["offset"];
+    }
 
     const headerParameters: runtime.HTTPHeaders = {};
 
@@ -5783,16 +5779,20 @@ export class TapirmailApi extends runtime.BaseAPI {
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      jsonValue.map(TemporaryUploadFromJSON),
+      PaginatedTemporaryUploadListFromJSON(jsonValue),
     );
   }
 
   /**
    */
   async temporaryuploadsList(
+    requestParameters: TemporaryuploadsListRequest = {},
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<Array<TemporaryUpload>> {
-    const response = await this.temporaryuploadsListRaw(initOverrides);
+  ): Promise<PaginatedTemporaryUploadList> {
+    const response = await this.temporaryuploadsListRaw(
+      requestParameters,
+      initOverrides,
+    );
     return await response.value();
   }
 

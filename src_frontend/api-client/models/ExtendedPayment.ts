@@ -75,10 +75,10 @@ export interface ExtendedPayment {
   deliveryChargePickupLocation: PublicPickupLocation | null;
   /**
    *
-   * @type {Array<Date>}
+   * @type {Array<string>}
    * @memberof ExtendedPayment
    */
-  deliveryDates: Array<Date>;
+  deliveryDates: Array<string>;
   /**
    *
    * @type {Array<AssociationMembership>}
@@ -91,6 +91,12 @@ export interface ExtendedPayment {
    * @memberof ExtendedPayment
    */
   numberOfInstalments: number | null;
+  /**
+   *
+   * @type {boolean}
+   * @memberof ExtendedPayment
+   */
+  excludedFromExport: boolean;
 }
 
 /**
@@ -129,6 +135,11 @@ export function instanceOfExtendedPayment(
     value["numberOfInstalments"] === undefined
   )
     return false;
+  if (
+    !("excludedFromExport" in value) ||
+    value["excludedFromExport"] === undefined
+  )
+    return false;
   return true;
 }
 
@@ -162,6 +173,7 @@ export function ExtendedPaymentFromJSONTyped(
       AssociationMembershipFromJSON,
     ),
     numberOfInstalments: json["number_of_instalments"],
+    excludedFromExport: json["excluded_from_export"],
   };
 }
 
@@ -196,5 +208,6 @@ export function ExtendedPaymentToJSONTyped(
       value["associationMemberships"] as Array<any>
     ).map(AssociationMembershipToJSON),
     number_of_instalments: value["numberOfInstalments"],
+    excluded_from_export: value["excludedFromExport"],
   };
 }

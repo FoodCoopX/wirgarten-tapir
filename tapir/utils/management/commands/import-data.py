@@ -86,6 +86,20 @@ class Command(BaseCommand):
             help="If enabled, will print the stacktrace for all errors. Otherwise, only a short summary will be printed",
         )
 
+    def confirm_reset_all(self) -> bool:
+        self.stdout.write(
+            "--reset-all deletes ALL members (including their Keycloak accounts), shares, subscriptions, "
+            "payments, mandate references, pickup location assignments, log entries and all other member "
+            "related data, then exits without importing anything. "
+            "The deletion is not done in a transaction and can't be undone.\n"
+            "--delete-all on the other hand only deletes the data related to the given --type "
+            "(members: same as --reset-all, shares: share transactions, subscriptions: subscriptions and "
+            "non-share payments), inside the same transaction as the import, then runs the import. "
+            "It can be combined with --dry-run."
+        )
+        answer = input("Are you sure you want to reset all data? [y/N] ").lower()
+        return answer in ["y", "yes"]
+
     def handle(self, *args, **options):
         # Helper functions
         dry_run = options.get("dry_run", False)
@@ -95,6 +109,9 @@ class Command(BaseCommand):
                 raise TapirDataImportException(
                     "Can't use reset_all and dry_run at the same time"
                 )
+            if not self.confirm_reset_all():
+                self.stdout.write("Aborting")
+                return
             SolidarityContribution.objects.all().delete()
             SubscriptionChangeLogEntry.objects.all().delete()
             TransferCoopSharesLogEntry.objects.all().delete()

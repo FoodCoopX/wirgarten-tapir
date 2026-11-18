@@ -19,6 +19,8 @@ through the matrix channel or by tagging me in issues or PRs.
     - Payments are quite complex, meaning the payment builder services are complex too, but maybe they can be improved
       on
 - We can probably squash many migrations, hoping to make setting up a new local instance from a blank state faster
+    - We must wait until the LNP instance is migrated to the master version first, they are still on tapir2.0 prod (but
+      it's the last one on that branch)
 - The mail module is currently a separate private repo, but it's only used by Tapir. It should be integrated directly
   into Tapir instead
     - Hopefully the build if the frontend part of the mail module can use the same process as Tapir
@@ -54,3 +56,9 @@ through the matrix channel or by tagging me in issues or PRs.
   pass deserialized parameters instead, in a data class if it's too many parameters
 - There are a few places where we let admins configure strings with tokens, typically in the bestell wizard, but some
   use {} and some use {{}}, we should be consistent.
+- We still use some of the legacy modals, they should be replaced with react components. The legacy modals have a bug
+  where they shortly show an error before closing even if the operation succeeded.
+- The media library of the mail module should show where each media is used, and have the option to filter by unused
+  medias.
+- In the mail module, I added a custom picker for the mail segments, so that we avoid a very long dropdown, and so that
+  we can show a description for each segment. We need the same thing for mail triggers.

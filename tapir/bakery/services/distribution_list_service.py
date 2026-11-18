@@ -67,16 +67,18 @@ class DistributionListService:
                 )
 
             all_location_ids = sorted(
-                set(list(baked_by_location.keys()) + list(ordered_by_location.keys())),
+                baked_by_location.keys() | ordered_by_location.keys(),
                 key=lambda location_id: location_names_by_id.get(location_id, ""),
             )
             all_bread_names = sorted(
-                set(
+                {
                     name
-                    for breads in list(baked_by_location.values())
-                    + list(ordered_by_location.values())
+                    for breads in [
+                        *baked_by_location.values(),
+                        *ordered_by_location.values(),
+                    ]
                     for name in breads.keys()
-                )
+                }
             )
 
             locations = []
@@ -113,18 +115,15 @@ class DistributionListService:
 
         else:
             all_location_ids = sorted(
-                set(
-                    list(ordered_by_location.keys())
-                    + list(total_deliveries_by_location.keys())
-                ),
+                ordered_by_location.keys() | total_deliveries_by_location.keys(),
                 key=lambda location_id: location_names_by_id.get(location_id, ""),
             )
             all_bread_names = sorted(
-                set(
+                {
                     name
                     for breads in ordered_by_location.values()
                     for name in breads.keys()
-                )
+                }
             )
 
             locations = []

@@ -5,6 +5,7 @@ import ConfirmModal from "../components/ConfirmModal.tsx";
 import TapirButton from "../components/TapirButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
+import { toApiDate } from "../utils/apiDate.ts";
 import { getCsrfToken } from "../utils/getCsrfToken.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import MembersNeedingBankingDataDetails from "./MembersNeedingBankingDataDetails.tsx";
@@ -43,11 +44,7 @@ const RebuildSubscriptionPaymentsModal: React.FC<
   const [error, setError] = useState("");
 
   function getSelectedMonthDate() {
-    // Built in UTC (not via local-time setters) so the date sent to the
-    // backend can't shift to the previous day depending on the browser's
-    // timezone and the time of day this is clicked - the API client
-    // serializes this via toISOString(), which is UTC-based.
-    return new Date(Date.UTC(year, month, 1));
+    return toApiDate(new Date(year, month, 1));
   }
 
   function onClickRebuild() {

@@ -310,17 +310,15 @@ class TestBuildXmlString(TapirUnitTest):
             value="",
         )
 
-        with self.assertRaises(Pain008XmlGlobalException) as error:
+        with self.assertRaisesMessage(
+            Pain008XmlGlobalException,
+            "Der Parameter 'IBAN der Organisation' muss in der Konfig gesetzt werden",
+        ):
             Pain008XmlStringGenerator.build_xml_string(
                 payments=[payment],
                 collection_date=datetime.date(year=2019, month=9, day=17),
                 cache=self.cache,
             )
-
-        self.assertIn(
-            "Der Parameter 'IBAN der Organisation' muss in der Konfig gesetzt werden",
-            error.exception.message,
-        )
 
     def test_buildXmlString_missingOrgIdentifier_raisesGlobalError(self):
         payment = PaymentFactory.build(amount=Decimal("10"))
@@ -330,17 +328,15 @@ class TestBuildXmlString(TapirUnitTest):
             value="",
         )
 
-        with self.assertRaises(Pain008XmlGlobalException) as error:
+        with self.assertRaisesMessage(
+            Pain008XmlGlobalException,
+            "Der Parameter 'Gläubiger-Identifikationsnummer' muss in der Konfig gesetzt werden",
+        ):
             Pain008XmlStringGenerator.build_xml_string(
                 payments=[payment],
                 collection_date=datetime.date(year=2019, month=9, day=17),
                 cache=self.cache,
             )
-
-        self.assertIn(
-            "Der Parameter 'Gläubiger-Identifikationsnummer' muss in der Konfig gesetzt werden",
-            error.exception.message,
-        )
 
     def test_buildXmlString_invalidMemberIban_raisesSGlobalError(self):
         payment = PaymentFactory.build(
@@ -351,17 +347,15 @@ class TestBuildXmlString(TapirUnitTest):
             mandate_ref__member__member_no=123,
         )
 
-        with self.assertRaises(Pain008XmlGlobalException) as error:
+        with self.assertRaisesMessage(
+            Pain008XmlGlobalException,
+            "The value 'DE00 INVALID' is not accepted by the pattern",
+        ):
             Pain008XmlStringGenerator.build_xml_string(
                 payments=[payment],
                 collection_date=datetime.date(year=2019, month=9, day=17),
                 cache=self.cache,
             )
-
-        self.assertIn(
-            "The value 'DE00 INVALID' is not accepted by the pattern",
-            error.exception.message,
-        )
 
     @classmethod
     def _get_child(cls, path: str, tree):

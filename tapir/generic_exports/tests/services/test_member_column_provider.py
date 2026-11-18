@@ -1,11 +1,14 @@
 import datetime
 from decimal import Decimal
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, ANY, MagicMock
 
 from tapir.deliveries.models import Joker
 from tapir.deliveries.services.joker_value_service import (
     JokerValueService,
     JokerCreditValuePart,
+)
+from tapir.deliveries.services.member_specific_delivery_day_calculator import (
+    MemberSpecificDeliveryDayCalculator,
 )
 from tapir.generic_exports.services.member_column_provider import MemberColumnProvider
 from tapir.pickup_locations.tests.factories import PickupLocationDeliveryChargeFactory
@@ -282,3 +285,84 @@ class TestMemberColumnProvider(TapirIntegrationTest):
             member, datetime.datetime(2025, 1, 1), {}
         )
         self.assertEqual(42, result)
+
+    @patch.object(
+        MemberSpecificDeliveryDayCalculator,
+        "get_specific_delivery_date",
+        autospec=True,
+        return_value=datetime.date(year=2031, month=4, day=17),
+    )
+    def test_getValueMemberDeliveryDate_default_returnsMemberSpecificDeliveryDateInWeekOfReferenceDate(
+        self, mock_get_specific_delivery_date: MagicMock
+    ):
+        self._set_parameter(key=ParameterKeys.DELIVERY_DAY, value=2)
+        member = MemberFactory.build()
+
+        result = MemberColumnProvider.get_value_member_delivery_date(
+            member, datetime.datetime(year=2031, month=4, day=19), {}
+        )
+
+        self.assertEqual("17.04.2031", result)
+        mock_get_specific_delivery_date.assert_called_once_with(
+            member_id=member.id,
+            delivery_date=datetime.date(year=2031, month=4, day=16),
+            cache=ANY,
+        )
+
+    def test_getValueMemberDeliveryAddress_separateDeliveryAddress_returnsDeliveryAddress(
+        self,
+    ):
+        member = MemberFactory.build(
+            street="Rechnungsstraße 1",
+            delivery_same_as_billing_address=False,
+            delivery_street="Lieferstraße 2",
+            delivery_street_2="Hinterhaus",
+            delivery_postcode="54321",
+            delivery_city="Lieferstadt",
+        )
+
+        self.assertEqual(
+            "Lieferstraße 2",
+            MemberColumnProvider.get_value_member_delivery_street(member, None, {}),
+        )
+        self.assertEqual(
+            "Hinterhaus",
+            MemberColumnProvider.get_value_member_delivery_street_2(member, None, {}),
+        )
+        self.assertEqual(
+            "54321",
+            MemberColumnProvider.get_value_member_delivery_postcode(member, None, {}),
+        )
+        self.assertEqual(
+            "Lieferstadt",
+            MemberColumnProvider.get_value_member_delivery_city(member, None, {}),
+        )
+
+    def test_getValueMemberDeliveryAddress_sameAsBillingAddress_returnsBillingAddress(
+        self,
+    ):
+        member = MemberFactory.build(
+            street="Rechnungsstraße 1",
+            street_2="",
+            postcode="12345",
+            city="Rechnungsstadt",
+            delivery_same_as_billing_address=True,
+            delivery_street="Lieferstraße 2",
+        )
+
+        self.assertEqual(
+            "Rechnungsstraße 1",
+            MemberColumnProvider.get_value_member_delivery_street(member, None, {}),
+        )
+        self.assertEqual(
+            "",
+            MemberColumnProvider.get_value_member_delivery_street_2(member, None, {}),
+        )
+        self.assertEqual(
+            "12345",
+            MemberColumnProvider.get_value_member_delivery_postcode(member, None, {}),
+        )
+        self.assertEqual(
+            "Rechnungsstadt",
+            MemberColumnProvider.get_value_member_delivery_city(member, None, {}),
+        )

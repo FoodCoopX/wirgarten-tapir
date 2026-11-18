@@ -1,5 +1,7 @@
+import datetime
+
 from django.db import models
-from django.db.models import UniqueConstraint
+from django.db.models import UniqueConstraint, Q
 
 from tapir.accounts.models import TapirUser
 from tapir.core.models import TapirModel
@@ -39,7 +41,18 @@ class AssociationMembershipTypePrice(TapirModel):
         return f"{self.type.name} {self.price} from:{self.valid_from}"
 
 
+class AssociationMembershipQuerySet(models.QuerySet):
+    def active_at(
+        self, reference_date: datetime.date
+    ) -> "AssociationMembershipQuerySet":
+        return self.filter(start_date__lte=reference_date).filter(
+            Q(end_date__isnull=True) | Q(end_date__gte=reference_date)
+        )
+
+
 class AssociationMembership(TapirModel):
+    objects = AssociationMembershipQuerySet.as_manager()
+
     member = models.ForeignKey(Member, on_delete=models.CASCADE)
     type = models.ForeignKey(AssociationMembershipType, on_delete=models.PROTECT)
     start_date = models.DateField()

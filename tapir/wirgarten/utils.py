@@ -2,7 +2,6 @@ import datetime
 import logging
 from decimal import Decimal
 from typing import TYPE_CHECKING
-from zoneinfo import ZoneInfo
 
 from django.core.exceptions import PermissionDenied
 from django.urls import reverse_lazy
@@ -35,7 +34,7 @@ def format_date(value: datetime.date | datetime.datetime) -> str:
     if value is None:
         return ""
     if type(value) is datetime.datetime:
-        desired_tz = ZoneInfo("Europe/Berlin")
+        desired_tz = timezone.get_default_timezone()
         localized_datetime = value.astimezone(desired_tz)
         return f"{str(localized_datetime.day).zfill(2)}.{str(localized_datetime.month).zfill(2)}.{localized_datetime.year} {str(localized_datetime.hour).zfill(2)}:{str(localized_datetime.minute).zfill(2)}"
     else:
@@ -71,7 +70,7 @@ def get_now(cache: dict | None = None) -> datetime.datetime:
         now = get_debug_now(cache)
     else:
         now = timezone.now()
-    return now.astimezone(ZoneInfo("Europe/Berlin"))
+    return now.astimezone(timezone.get_default_timezone())
 
 
 def get_debug_now(cache: dict | None = None) -> datetime.datetime:
@@ -80,7 +79,7 @@ def get_debug_now(cache: dict | None = None) -> datetime.datetime:
     if preset == TEST_DATE_OVERRIDE_DISABLED:
         return timezone.now()
 
-    tzinfo = ZoneInfo("Europe/Berlin")
+    tzinfo = timezone.get_default_timezone()
 
     if preset == TEST_DATE_OVERRIDE_MANUAL:
         date_as_string = get_parameter_value(

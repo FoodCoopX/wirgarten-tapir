@@ -2,7 +2,13 @@ from unittest.mock import patch, Mock
 
 from tapir_mail.triggers.transactional_trigger import TransactionalTriggerData
 
+from tapir.bestell_wizard.services.bestell_wizard_order_validator import (
+    BestellWizardOrderValidator,
+)
 from tapir.bestell_wizard.views import BestellWizardConfirmOrderApiView
+from tapir.pickup_locations.services.member_delivery_address_getter import (
+    DeliveryAddressInput,
+)
 from tapir.coop.services.personal_data_validator import PersonalDataValidator
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.waiting_list.services.waiting_list_entry_confirmation_email_sender import (
@@ -18,6 +24,12 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestValidateAndCreateWaitingListEntryPotentialMember(TapirUnitTest):
+    @patch.object(
+        BestellWizardOrderValidator, "validate_home_delivery_address", autospec=True
+    )
+    @patch.object(
+        BestellWizardConfirmOrderApiView, "build_delivery_address_input", autospec=True
+    )
     @patch.object(
         PersonalDataValidator,
         "validate_phone_number_is_valid",
@@ -46,6 +58,8 @@ class TestValidateAndCreateWaitingListEntryPotentialMember(TapirUnitTest):
         mock_create_entry_potential_member: Mock,
         mock_send_confirmation_mail: Mock,
         mock_validate_phone_number_is_valid: Mock,
+        mock_build_delivery_address_input: Mock,
+        mock_validate_home_delivery_address: Mock,
     ):
         cache = Mock()
         shopping_cart_waiting_list = Mock()
@@ -68,6 +82,15 @@ class TestValidateAndCreateWaitingListEntryPotentialMember(TapirUnitTest):
         )
         entry = Mock()
         mock_create_entry_potential_member.return_value = entry
+        delivery_address_input = DeliveryAddressInput(
+            same_as_billing_address=True,
+            street="",
+            street_2="",
+            postcode="",
+            city="",
+            country="",
+        )
+        mock_build_delivery_address_input.return_value = delivery_address_input
 
         BestellWizardConfirmOrderApiView.validate_and_create_waiting_list_entry_potential_member(
             validated_serializer_data=validated_serializer_data, cache=cache
@@ -85,11 +108,21 @@ class TestValidateAndCreateWaitingListEntryPotentialMember(TapirUnitTest):
         mock_validate_phone_number_is_valid.assert_called_once_with(
             phone_number="test_phone_number", cache=cache
         )
+        mock_build_delivery_address_input.assert_called_once_with(
+            validated_serializer_data=validated_serializer_data
+        )
+        mock_validate_home_delivery_address.assert_called_once_with(
+            pickup_location_ids=pickup_location_ids,
+            delivery_address_input=delivery_address_input,
+            personal_data=personal_data,
+            cache=cache,
+        )
         mock_create_entry_potential_member.assert_called_once_with(
             order=waiting_list_order,
             pickup_location_ids_in_priority_order=pickup_location_ids,
             number_of_coop_shares=7,
             personal_data=personal_data,
+            delivery_address_input=delivery_address_input,
             cache=cache,
         )
         mock_send_confirmation_mail.assert_called_once_with(

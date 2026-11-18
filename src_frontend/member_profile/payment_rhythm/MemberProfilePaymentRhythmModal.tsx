@@ -24,7 +24,7 @@ const MemberProfilePaymentRhythmModal: React.FC<
   MemberProfilePaymentRhythmModalProps
 > = ({ memberId, csrfToken, setToastDatas, show, onHide, allowedRhythms }) => {
   const api = useApi(PaymentsApi, csrfToken);
-  const [dateOfNextChange, setDateOfNextChange] = useState<Date>();
+  const [dateOfNextChange, setDateOfNextChange] = useState<string>();
   const [loading, setLoading] = useState(true);
   const [currentRhythm, setCurrentRhythm] = useState("monthly");
   const [newRhythm, setNewRhythm] = useState("monthly");

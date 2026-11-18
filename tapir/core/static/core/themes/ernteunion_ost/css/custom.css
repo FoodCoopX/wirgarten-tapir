@@ -147,6 +147,7 @@ body {
 
 @font-face {
   font-family: "BaiJamjuree";
+  font-display: swap;
   src: url("/static/core/themes/ernteunion_ost/fonts/BaiJamjuree-Regular.ttf")
        format("ttf");
 }

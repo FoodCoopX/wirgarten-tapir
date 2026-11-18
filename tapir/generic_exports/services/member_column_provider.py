@@ -15,14 +15,22 @@ from django.db.models import (
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.deliveries.services.joker_value_service import JokerValueService
+from tapir.deliveries.services.member_specific_delivery_day_calculator import (
+    MemberSpecificDeliveryDayCalculator,
+)
 from tapir.generic_exports.services.export_segment_manager import ExportSegmentColumn
 from tapir.payments.services.intended_use_pattern_expander import (
     IntendedUsePatternExpander,
 )
+from tapir.pickup_locations.services.member_delivery_address_getter import (
+    MemberDeliveryAddressGetter,
+)
 from tapir.utils.services.tapir_cache import TapirCache
+from tapir.utils.shortcuts import get_monday
 from tapir.utils.user_utils import UserUtils
 from tapir.wirgarten.models import CoopShareTransaction
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.service.get_next_delivery_date import get_next_delivery_date
 
 if TYPE_CHECKING:
     from tapir.wirgarten.models import (
@@ -34,11 +42,18 @@ class MemberColumnProvider:
     COLUMN_ID_MEMBER_NUMBER = "member_number"
     COLUMN_ID_LAST_NAME = "member_last_name"
     COLUMN_ID_FIRST_NAME = "member_first_name"
+    COLUMN_ID_EMAIL_ADDRESS = "member_email_address"
+    COLUMN_ID_PHONE_NUMBER = "member_phone_number"
     COLUMN_ID_FULL_ADDRESS = "member_full_address"
     COLUMN_ID_ADMISSION_DATE = "member_admission_date"
     COLUMN_ID_SHARE_QUANTITY = "member_share_quantity"
     COLUMN_ID_SHARE_HISTORY = "member_share_history"
     COLUMN_ID_TERMINATION_DATE = "member_termination_date"
+    COLUMN_ID_DELIVERY_DATE = "member_delivery_date"
+    COLUMN_ID_DELIVERY_STREET = "member_delivery_street"
+    COLUMN_ID_DELIVERY_STREET_2 = "member_delivery_street_2"
+    COLUMN_ID_DELIVERY_POSTCODE = "member_delivery_postcode"
+    COLUMN_ID_DELIVERY_CITY = "member_delivery_city"
 
     @classmethod
     def get_member_columns(cls) -> list[ExportSegmentColumn]:
@@ -62,13 +77,13 @@ class MemberColumnProvider:
                 get_value=cls.get_value_member_number,
             ),
             ExportSegmentColumn(
-                id="member_email_address",
+                id=cls.COLUMN_ID_EMAIL_ADDRESS,
                 display_name="Mailadresse",
                 description="",
                 get_value=cls.get_value_member_email_address,
             ),
             ExportSegmentColumn(
-                id="member_phone_number",
+                id=cls.COLUMN_ID_PHONE_NUMBER,
                 display_name="Telefonnummer",
                 description="",
                 get_value=cls.get_value_member_phone_number,
@@ -140,6 +155,36 @@ class MemberColumnProvider:
                 display_name="Anzahl gekündigte Anteile im Vorjahr",
                 description="",
                 get_value=cls.get_value_member_share_quantity_cancelled_in_previous_year,
+            ),
+            ExportSegmentColumn(
+                id=cls.COLUMN_ID_DELIVERY_DATE,
+                display_name="Liefertag",
+                description="Liefertag des Mitglieds in der Kalenderwoche des Exports",
+                get_value=cls.get_value_member_delivery_date,
+            ),
+            ExportSegmentColumn(
+                id=cls.COLUMN_ID_DELIVERY_STREET,
+                display_name="Lieferadresse Straße",
+                description="",
+                get_value=cls.get_value_member_delivery_street,
+            ),
+            ExportSegmentColumn(
+                id=cls.COLUMN_ID_DELIVERY_STREET_2,
+                display_name="Lieferadresse Adresszusatz",
+                description="",
+                get_value=cls.get_value_member_delivery_street_2,
+            ),
+            ExportSegmentColumn(
+                id=cls.COLUMN_ID_DELIVERY_POSTCODE,
+                display_name="Lieferadresse PLZ",
+                description="",
+                get_value=cls.get_value_member_delivery_postcode,
+            ),
+            ExportSegmentColumn(
+                id=cls.COLUMN_ID_DELIVERY_CITY,
+                display_name="Lieferadresse Ort",
+                description="",
+                get_value=cls.get_value_member_delivery_city,
             ),
         ]
 
@@ -299,3 +344,38 @@ class MemberColumnProvider:
             ).aggregate(quantity=Sum(F("quantity")))["quantity"]
             or 0
         )
+
+    @classmethod
+    def get_value_member_delivery_date(
+        cls, member: Member, reference_datetime: datetime.datetime, cache: dict
+    ):
+        delivery_date = get_next_delivery_date(
+            reference_date=get_monday(reference_datetime.date()), cache=cache
+        )
+        return MemberSpecificDeliveryDayCalculator.get_specific_delivery_date(
+            member_id=member.id, delivery_date=delivery_date, cache=cache
+        ).strftime("%d.%m.%Y")
+
+    @classmethod
+    def get_value_member_delivery_street(cls, member: Member, _, __):
+        return MemberDeliveryAddressGetter.get_delivery_address(
+            address_owner=member
+        ).street
+
+    @classmethod
+    def get_value_member_delivery_street_2(cls, member: Member, _, __):
+        return MemberDeliveryAddressGetter.get_delivery_address(
+            address_owner=member
+        ).street_2
+
+    @classmethod
+    def get_value_member_delivery_postcode(cls, member: Member, _, __):
+        return MemberDeliveryAddressGetter.get_delivery_address(
+            address_owner=member
+        ).postcode
+
+    @classmethod
+    def get_value_member_delivery_city(cls, member: Member, _, __):
+        return MemberDeliveryAddressGetter.get_delivery_address(
+            address_owner=member
+        ).city

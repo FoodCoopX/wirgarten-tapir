@@ -513,9 +513,10 @@ export const DistributionListSection: React.FC<
                         shopping_cart
                       </span>{" "}
                       = Bestellt &nbsp;|&nbsp;
-                      <span className="text-bakery-success">+</span>/
+                      <span className="text-bakery-success">+</span>
+                      {"/"}
                       <span className="text-bakery-danger">-</span> = Differenz
-                      &nbsp;|&nbsp;
+                      &nbsp;|{" "}
                       <span
                         className="material-icons"
                         style={{ fontSize: "10px", verticalAlign: "middle" }}

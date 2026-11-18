@@ -1,12 +1,13 @@
+import dayjs from "dayjs";
 import React, { useEffect, useState } from "react";
 import { Col, Form, ListGroup, Modal, Row, Spinner } from "react-bootstrap";
 import { DeliveriesApi, DeliveryDayAdjustment } from "../api-client";
-import { useApi } from "../hooks/useApi.ts";
-import dayjs from "dayjs";
 import TapirButton from "../components/TapirButton.tsx";
-import { getPeriodIdFromUrl } from "./get_parameter_from_url.ts";
-import { handleRequestError } from "../utils/handleRequestError.ts";
+import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
+import { fromApiDate, toApiDate } from "../utils/apiDate.ts";
+import { handleRequestError } from "../utils/handleRequestError.ts";
+import { getPeriodIdFromUrl } from "./get_parameter_from_url.ts";
 
 interface GrowingPeriodModalProps {
   show: boolean;
@@ -48,8 +49,8 @@ const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
         growingPeriodId: getPeriodIdFromUrl(),
       })
       .then((response) => {
-        setStartDate(response.growingPeriodStartDate);
-        setEndDate(response.growingPeriodEndDate);
+        setStartDate(fromApiDate(response.growingPeriodStartDate));
+        setEndDate(fromApiDate(response.growingPeriodEndDate));
         setWeeksWithoutDelivery(response.growingPeriodWeeksWithoutDelivery);
         setAdjustments(response.adjustments);
         setJokersEnabled(response.jokersEnabled);
@@ -79,8 +80,8 @@ const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
       .deliveriesApiGrowingPeriodWithAdjustmentsPartialUpdate({
         patchedGrowingPeriodWithDeliveryDayAdjustmentsRequest: {
           growingPeriodId: getPeriodIdFromUrl(),
-          growingPeriodStartDate: startDate,
-          growingPeriodEndDate: endDate,
+          growingPeriodStartDate: toApiDate(startDate),
+          growingPeriodEndDate: toApiDate(endDate),
           growingPeriodWeeksWithoutDelivery: weeksWithoutDelivery,
           adjustments: adjustments,
           jokerRestrictions: jokerRestrictions,
@@ -162,7 +163,7 @@ const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
                   <Form.Control
                     type={"date"}
                     onChange={(event) =>
-                      setStartDate(new Date(event.target.value))
+                      setStartDate(fromApiDate(event.target.value))
                     }
                     required={true}
                     value={dayjs(startDate).format("YYYY-MM-DD")}
@@ -175,7 +176,7 @@ const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
                   <Form.Control
                     type={"date"}
                     onChange={(event) =>
-                      setEndDate(new Date(event.target.value))
+                      setEndDate(fromApiDate(event.target.value))
                     }
                     required={true}
                     value={dayjs(endDate).format("YYYY-MM-DD")}

@@ -44,15 +44,15 @@ const PaymentsButton: React.FC<PaymentsButtonProps> = ({
       .then((response) => {
         setTrialPeriodEnabled(response.trialPeriodEnabled);
 
-        const extendedPayments = response.payments.toSorted(
-          (a, b) => a.payment.dueDate.getTime() - b.payment.dueDate.getTime(),
+        const extendedPayments = response.payments.toSorted((a, b) =>
+          a.payment.dueDate.localeCompare(b.payment.dueDate),
         );
         setTransactionsByDueDate(
           groupTransactionsByDueDate(extendedPayments, response.credits),
         );
       })
-      .catch(async (error) => {
-        await handleRequestError(
+      .catch((error) => {
+        handleRequestError(
           error,
           "Fehler beim Laden der Zahlungen",
           setToastDatas,

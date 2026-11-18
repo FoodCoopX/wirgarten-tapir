@@ -5,7 +5,10 @@ from tapir.core.config import LEGAL_STATUS_OPTIONS
 from tapir.deliveries.serializers import (
     PublicGrowingPeriodSerializer,
 )
-from tapir.pickup_locations.serializers import PublicPickupLocationSerializer
+from tapir.pickup_locations.serializers import (
+    DeliveryAddressSerializer,
+    PublicPickupLocationSerializer,
+)
 from tapir.products.serializers import PublicProductTypeSerializer
 from tapir.solidarity_contribution.config import (
     OPTIONS_BESTELL_WIZARD_SOLIDARITY_STEP_POSITION,
@@ -50,6 +53,7 @@ class BestellWizardConfirmOrderRequestSerializer(serializers.Serializer):
     association_membership_type_id = serializers.CharField(
         required=False, allow_blank=True
     )
+    delivery_address = DeliveryAddressSerializer(required=False)
 
 
 class BestellWizardCapacityCheckRequestSerializer(serializers.Serializer):
@@ -86,8 +90,10 @@ class BestellWizardStringsSerializer(serializers.Serializer):
     step5a_title = serializers.CharField()
     step5a_text = serializers.CharField()
     step5b_title = serializers.CharField()
+    step5b_home_delivery_title = serializers.CharField()
     step5c_title = serializers.CharField()
     step5c_text = serializers.CharField()
+    home_delivery_choice_text = serializers.CharField()
     step6a_title = serializers.CharField()
     step6a_text = serializers.CharField()
     step6b_title = serializers.CharField()

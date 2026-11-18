@@ -1,4 +1,5 @@
 import datetime
+from collections import Counter
 from decimal import Decimal
 
 from tapir.configuration.parameter import get_parameter_value
@@ -110,11 +111,8 @@ class PickListBuilder:
 
     @classmethod
     def get_delivery_quantity_by_product_name(cls, subscriptions: list[Subscription]):
-        quantities_by_product_name = {}
-
+        quantities_by_product_name = Counter()
         for subscription in subscriptions:
-            if subscription.product.name not in quantities_by_product_name:
-                quantities_by_product_name[subscription.product.name] = 0
             quantities_by_product_name[
                 subscription.product.name
             ] += subscription.quantity

@@ -3,6 +3,7 @@ import datetime
 from django.urls import reverse
 from rest_framework import status
 
+from tapir.subscriptions.models import SubscriptionTrialChangedLogEntry
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import MemberFactory, SubscriptionFactory
@@ -114,6 +115,31 @@ class TestSubscriptionTrialChangeApiView(TapirIntegrationTest):
             "Das Probezeit-Enddatum muss ein Sonntag sein",
             response_content["error"],
         )
+
+    def test_post_successfulChange_createsLogEntry(self):
+        admin = MemberFactory.create(is_superuser=True)
+        subscription = SubscriptionFactory.create(
+            trial_disabled=False,
+            trial_end_date_override=datetime.date(2026, 3, 22),
+        )
+        self.client.force_login(admin)
+
+        self.client.post(
+            reverse("subscriptions:subscription_trial_change"),
+            data={"subscription_id": subscription.id, "trial_disabled": True},
+        )
+
+        log_entry = SubscriptionTrialChangedLogEntry.objects.get(
+            subscription=subscription
+        )
+        self.assertEqual(log_entry.actor_id, admin.id)
+        self.assertEqual(log_entry.user_id, subscription.member.id)
+        self.assertFalse(log_entry.trial_disabled_before)
+        self.assertTrue(log_entry.trial_disabled_after)
+        self.assertEqual(
+            log_entry.trial_end_date_override_before, datetime.date(2026, 3, 22)
+        )
+        self.assertIsNone(log_entry.trial_end_date_override_after)
 
     def test_post_enableTrialWhenGloballyDisabled_returnsError(self):
         admin = MemberFactory.create(is_superuser=True)

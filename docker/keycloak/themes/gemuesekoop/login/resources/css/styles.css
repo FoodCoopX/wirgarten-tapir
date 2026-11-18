@@ -1,0 +1,113 @@
+/* Gemüsekoop Köln e.V. — locally hosted assets; no external font requests. */
+:root {
+  --gk-green: #209d50;
+  --gk-action: #18783d;
+  --gk-ink: #1d231c;
+  --gk-paper: #f7f6f2;
+  --pf-global--primary-color--100: var(--gk-action);
+  --pf-global--primary-color--200: #105e2e;
+  --pf-global--link--Color: #176e38;
+  --pf-global--link--Color--hover: #104f28;
+}
+.login-pf body {
+  background: var(--gk-paper) none;
+  color: var(--gk-ink);
+  font-family: "Nunito Sans", Arial, sans-serif;
+}
+.login-pf-page { padding: 32px 16px; }
+#kc-header {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0;
+  color: var(--gk-ink);
+}
+#kc-header-wrapper {
+  padding: 148px 20px 24px;
+  background: url(../img/logo.webp) no-repeat top center;
+  background-size: 132px 132px;
+  color: var(--gk-ink);
+  font: 700 26px/1.2 "Sansita", sans-serif;
+  letter-spacing: -0.02em;
+  text-transform: none;
+  white-space: normal;
+  text-align: center;
+}
+.card-pf {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 28px 32px;
+  border-top: 4px solid var(--gk-green);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 6px 24px rgba(29, 35, 28, 0.08);
+}
+#kc-page-title {
+  color: var(--gk-ink);
+  font: 700 28px/1.2 "Sansita", sans-serif;
+  letter-spacing: -0.02em;
+}
+/* Keep a heading for assistive technology without repeating the brand visually.
+   Password reset, verification and error screens retain their visible titles. */
+.login-pf-page:has(#kc-form-login) #kc-page-title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.login-pf-page:has(#kc-form-login) .login-pf-header { margin-bottom: 24px; }
+.login-pf a { color: #176e38; }
+.login-pf a:hover { color: #104f28; text-decoration: underline; }
+.login-pf a:focus-visible, .login-pf button:focus-visible {
+  outline: 3px solid #176e38;
+  outline-offset: 3px;
+}
+input, .pf-c-form-control, button {
+  font-family: "Nunito Sans", Arial, sans-serif;
+}
+.pf-c-form-control {
+  min-height: 44px;
+  border: 1px solid #a3aaa0;
+  border-radius: 6px;
+}
+.pf-c-form-control:focus {
+  border-color: var(--gk-action);
+  outline-color: var(--gk-action);
+  box-shadow: 0 0 0 3px rgba(32, 157, 80, 0.2);
+}
+.pf-c-button.pf-m-primary, .btn-primary {
+  min-height: 44px;
+  color: #fff;
+  background: var(--gk-action);
+  border-color: var(--gk-action);
+  border-radius: 6px;
+  font-weight: 700;
+}
+.pf-c-button.pf-m-primary:hover, .pf-c-button.pf-m-primary:focus,
+.btn-primary:hover, .btn-primary:focus { background: #105e2e; border-color: #105e2e; }
+#kc-info-wrapper { background-color: #eeede7; }
+#kc-form-options .checkbox { color: var(--gk-ink); }
+#kc-locale { position: relative; }
+#kc-locale ul { z-index: 10; }
+
+@media (max-width: 767.98px) {
+  .login-pf-page { padding: 20px 16px; }
+  #kc-header-wrapper {
+    padding: 112px 8px 20px;
+    background-size: 100px 100px;
+    font-size: 23px;
+  }
+  .login-pf-page .card-pf {
+    padding: 20px;
+    margin: 0 auto;
+    border-top: 4px solid var(--gk-green);
+  }
+  #kc-locale { margin-bottom: 20px; }
+  .login-pf-page #kc-page-title { font-size: 25px; }
+  #kc-info { margin: 20px -20px -20px; }
+}

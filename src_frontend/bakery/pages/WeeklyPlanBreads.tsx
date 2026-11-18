@@ -211,7 +211,7 @@ export const WeeklyPlanBreads: React.FC<WeeklyPlanBreadsProps> = ({
         {saving && (
           <span className="badge bg-warning">
             <span className="spinner-border spinner-border-sm me-1" />
-            Speichert...
+            <span>Speichert...</span>
           </span>
         )}
       </div>

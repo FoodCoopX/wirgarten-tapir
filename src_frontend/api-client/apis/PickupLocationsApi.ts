@@ -13,8 +13,11 @@
  */
 
 import type {
+  ChangeMemberPickupLocationRequestRequest,
+  DeliveryAddressRequest,
   LocationRoute,
   LocationRouteRequest,
+  MemberDeliveryAddress,
   Mpl,
   OrderConfirmationResponse,
   PatchedLocationRouteRequest,
@@ -26,11 +29,15 @@ import type {
   PickupLocationCapacityEvolution,
   PickupLocationDeliveryChargeCreateRequestRequest,
   PickupLocationDeliveryChargesResponse,
+  PickupLocationSaveRequestRequest,
   PublicPickupLocation,
 } from "../models/index";
 import {
+  ChangeMemberPickupLocationRequestRequestToJSON,
+  DeliveryAddressRequestToJSON,
   LocationRouteFromJSON,
   LocationRouteRequestToJSON,
+  MemberDeliveryAddressFromJSON,
   MplFromJSON,
   OrderConfirmationResponseFromJSON,
   PatchedLocationRouteRequestToJSON,
@@ -42,18 +49,27 @@ import {
   PickupLocationDeliveryChargeCreateRequestRequestToJSON,
   PickupLocationDeliveryChargesResponseFromJSON,
   PickupLocationFromJSON,
+  PickupLocationSaveRequestRequestToJSON,
   PublicPickupLocationFromJSON,
 } from "../models/index";
 import * as runtime from "../runtime";
 
 export interface PickupLocationsApiChangeMemberPickupLocationCreateRequest {
-  memberId?: string;
-  pickupLocationId?: string;
+  changeMemberPickupLocationRequestRequest: ChangeMemberPickupLocationRequestRequest;
 }
 
 export interface PickupLocationsApiGetMemberPickupLocationRetrieveRequest {
   growingPeriodId?: string;
   memberId?: string;
+}
+
+export interface PickupLocationsApiMemberDeliveryAddressRetrieveRequest {
+  memberId?: string;
+}
+
+export interface PickupLocationsApiMemberDeliveryAddressUpdateRequest {
+  memberId?: string;
+  deliveryAddressRequest: DeliveryAddressRequest;
 }
 
 export interface PickupLocationsApiPickupLocationCapacitiesPartialUpdateRequest {
@@ -106,8 +122,21 @@ export interface PickupLocationsLocationRoutesUpdateRequest {
   locationRouteRequest: LocationRouteRequest;
 }
 
+export interface PickupLocationsPickupLocationsCreateRequest {
+  pickupLocationSaveRequestRequest: PickupLocationSaveRequestRequest;
+}
+
+export interface PickupLocationsPickupLocationsDestroyRequest {
+  id: string;
+}
+
 export interface PickupLocationsPickupLocationsRetrieveRequest {
   id: string;
+}
+
+export interface PickupLocationsPickupLocationsUpdateRequest {
+  id: string;
+  pickupLocationSaveRequestRequest: PickupLocationSaveRequestRequest;
 }
 
 export interface PickupLocationsPublicPickupLocationsRetrieveRequest {
@@ -124,18 +153,18 @@ export class PickupLocationsApi extends runtime.BaseAPI {
     requestParameters: PickupLocationsApiChangeMemberPickupLocationCreateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<OrderConfirmationResponse>> {
+    if (requestParameters["changeMemberPickupLocationRequestRequest"] == null) {
+      throw new runtime.RequiredError(
+        "changeMemberPickupLocationRequestRequest",
+        'Required parameter "changeMemberPickupLocationRequestRequest" was null or undefined when calling pickupLocationsApiChangeMemberPickupLocationCreate().',
+      );
+    }
+
     const queryParameters: any = {};
 
-    if (requestParameters["memberId"] != null) {
-      queryParameters["member_id"] = requestParameters["memberId"];
-    }
-
-    if (requestParameters["pickupLocationId"] != null) {
-      queryParameters["pickup_location_id"] =
-        requestParameters["pickupLocationId"];
-    }
-
     const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
 
     if (this.configuration && this.configuration.apiKey) {
       headerParameters["Authorization"] =
@@ -157,6 +186,9 @@ export class PickupLocationsApi extends runtime.BaseAPI {
         method: "POST",
         headers: headerParameters,
         query: queryParameters,
+        body: ChangeMemberPickupLocationRequestRequestToJSON(
+          requestParameters["changeMemberPickupLocationRequestRequest"],
+        ),
       },
       initOverrides,
     );
@@ -169,7 +201,7 @@ export class PickupLocationsApi extends runtime.BaseAPI {
   /**
    */
   async pickupLocationsApiChangeMemberPickupLocationCreate(
-    requestParameters: PickupLocationsApiChangeMemberPickupLocationCreateRequest = {},
+    requestParameters: PickupLocationsApiChangeMemberPickupLocationCreateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<OrderConfirmationResponse> {
     const response =
@@ -236,6 +268,132 @@ export class PickupLocationsApi extends runtime.BaseAPI {
   ): Promise<Mpl> {
     const response =
       await this.pickupLocationsApiGetMemberPickupLocationRetrieveRaw(
+        requestParameters,
+        initOverrides,
+      );
+    return await response.value();
+  }
+
+  /**
+   */
+  async pickupLocationsApiMemberDeliveryAddressRetrieveRaw(
+    requestParameters: PickupLocationsApiMemberDeliveryAddressRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<MemberDeliveryAddress>> {
+    const queryParameters: any = {};
+
+    if (requestParameters["memberId"] != null) {
+      queryParameters["member_id"] = requestParameters["memberId"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/pickup_locations/api/member_delivery_address`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      MemberDeliveryAddressFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async pickupLocationsApiMemberDeliveryAddressRetrieve(
+    requestParameters: PickupLocationsApiMemberDeliveryAddressRetrieveRequest = {},
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<MemberDeliveryAddress> {
+    const response =
+      await this.pickupLocationsApiMemberDeliveryAddressRetrieveRaw(
+        requestParameters,
+        initOverrides,
+      );
+    return await response.value();
+  }
+
+  /**
+   */
+  async pickupLocationsApiMemberDeliveryAddressUpdateRaw(
+    requestParameters: PickupLocationsApiMemberDeliveryAddressUpdateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<OrderConfirmationResponse>> {
+    if (requestParameters["deliveryAddressRequest"] == null) {
+      throw new runtime.RequiredError(
+        "deliveryAddressRequest",
+        'Required parameter "deliveryAddressRequest" was null or undefined when calling pickupLocationsApiMemberDeliveryAddressUpdate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    if (requestParameters["memberId"] != null) {
+      queryParameters["member_id"] = requestParameters["memberId"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/pickup_locations/api/member_delivery_address`,
+        method: "PUT",
+        headers: headerParameters,
+        query: queryParameters,
+        body: DeliveryAddressRequestToJSON(
+          requestParameters["deliveryAddressRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      OrderConfirmationResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async pickupLocationsApiMemberDeliveryAddressUpdate(
+    requestParameters: PickupLocationsApiMemberDeliveryAddressUpdateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<OrderConfirmationResponse> {
+    const response =
+      await this.pickupLocationsApiMemberDeliveryAddressUpdateRaw(
         requestParameters,
         initOverrides,
       );
@@ -1048,6 +1206,129 @@ export class PickupLocationsApi extends runtime.BaseAPI {
 
   /**
    */
+  async pickupLocationsPickupLocationsCreateRaw(
+    requestParameters: PickupLocationsPickupLocationsCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<PickupLocation>> {
+    if (requestParameters["pickupLocationSaveRequestRequest"] == null) {
+      throw new runtime.RequiredError(
+        "pickupLocationSaveRequestRequest",
+        'Required parameter "pickupLocationSaveRequestRequest" was null or undefined when calling pickupLocationsPickupLocationsCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/pickup_locations/pickup_locations/`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: PickupLocationSaveRequestRequestToJSON(
+          requestParameters["pickupLocationSaveRequestRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      PickupLocationFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async pickupLocationsPickupLocationsCreate(
+    requestParameters: PickupLocationsPickupLocationsCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<PickupLocation> {
+    const response = await this.pickupLocationsPickupLocationsCreateRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async pickupLocationsPickupLocationsDestroyRaw(
+    requestParameters: PickupLocationsPickupLocationsDestroyRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<void>> {
+    if (requestParameters["id"] == null) {
+      throw new runtime.RequiredError(
+        "id",
+        'Required parameter "id" was null or undefined when calling pickupLocationsPickupLocationsDestroy().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/pickup_locations/pickup_locations/{id}/`.replace(
+          `{${"id"}}`,
+          encodeURIComponent(String(requestParameters["id"])),
+        ),
+        method: "DELETE",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.VoidApiResponse(response);
+  }
+
+  /**
+   */
+  async pickupLocationsPickupLocationsDestroy(
+    requestParameters: PickupLocationsPickupLocationsDestroyRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<void> {
+    await this.pickupLocationsPickupLocationsDestroyRaw(
+      requestParameters,
+      initOverrides,
+    );
+  }
+
+  /**
+   */
   async pickupLocationsPickupLocationsListRaw(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<Array<PickupLocation>>> {
@@ -1150,6 +1431,80 @@ export class PickupLocationsApi extends runtime.BaseAPI {
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<PickupLocation> {
     const response = await this.pickupLocationsPickupLocationsRetrieveRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async pickupLocationsPickupLocationsUpdateRaw(
+    requestParameters: PickupLocationsPickupLocationsUpdateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<PickupLocation>> {
+    if (requestParameters["id"] == null) {
+      throw new runtime.RequiredError(
+        "id",
+        'Required parameter "id" was null or undefined when calling pickupLocationsPickupLocationsUpdate().',
+      );
+    }
+
+    if (requestParameters["pickupLocationSaveRequestRequest"] == null) {
+      throw new runtime.RequiredError(
+        "pickupLocationSaveRequestRequest",
+        'Required parameter "pickupLocationSaveRequestRequest" was null or undefined when calling pickupLocationsPickupLocationsUpdate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/pickup_locations/pickup_locations/{id}/`.replace(
+          `{${"id"}}`,
+          encodeURIComponent(String(requestParameters["id"])),
+        ),
+        method: "PUT",
+        headers: headerParameters,
+        query: queryParameters,
+        body: PickupLocationSaveRequestRequestToJSON(
+          requestParameters["pickupLocationSaveRequestRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      PickupLocationFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async pickupLocationsPickupLocationsUpdate(
+    requestParameters: PickupLocationsPickupLocationsUpdateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<PickupLocation> {
+    const response = await this.pickupLocationsPickupLocationsUpdateRaw(
       requestParameters,
       initOverrides,
     );

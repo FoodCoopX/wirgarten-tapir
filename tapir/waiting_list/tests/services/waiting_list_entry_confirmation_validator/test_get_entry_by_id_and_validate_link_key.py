@@ -45,14 +45,12 @@ class TestGetEntryByIdAndValidateLinkKey(TapirUnitTest):
         )
         mock_get_object_or_404.return_value = waiting_list_entry
 
-        with self.assertRaises(Http404) as error:
+        with self.assertRaisesMessage(
+            Http404, "Unknown entry (id:test_id, key:invalid_key)"
+        ):
             WaitingListEntryConfirmationValidator.get_entry_by_id_and_validate_link_key(
                 entry_id="test_id", link_key="invalid_key"
             )
-
-        self.assertEqual(
-            "Unknown entry (id:test_id, key:invalid_key)", error.exception.args[0]
-        )
 
     @patch(
         "tapir.waiting_list.services.waiting_list_entry_confirmation_validator.get_object_or_404",
@@ -68,12 +66,9 @@ class TestGetEntryByIdAndValidateLinkKey(TapirUnitTest):
         )
         mock_get_object_or_404.return_value = waiting_list_entry
 
-        with self.assertRaises(Http404) as error:
+        with self.assertRaisesMessage(
+            Http404, f"Unknown entry (id:test_id, key:{invalid_link_key})"
+        ):
             WaitingListEntryConfirmationValidator.get_entry_by_id_and_validate_link_key(
                 entry_id="test_id", link_key=str(invalid_link_key)
             )
-
-        self.assertEqual(
-            f"Unknown entry (id:test_id, key:{invalid_link_key})",
-            error.exception.args[0],
-        )

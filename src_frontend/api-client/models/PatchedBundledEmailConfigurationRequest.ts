@@ -77,6 +77,18 @@ export interface PatchedBundledEmailConfigurationRequest {
    * @memberof PatchedBundledEmailConfigurationRequest
    */
   segmentData?: SegmentDataRequest;
+  /**
+   *
+   * @type {string}
+   * @memberof PatchedBundledEmailConfigurationRequest
+   */
+  layoutTemplateId?: string | null;
+  /**
+   *
+   * @type {boolean}
+   * @memberof PatchedBundledEmailConfigurationRequest
+   */
+  layoutEnabled?: boolean;
 }
 
 /**
@@ -118,6 +130,12 @@ export function PatchedBundledEmailConfigurationRequestFromJSONTyped(
       json["segment_data"] == null
         ? undefined
         : SegmentDataRequestFromJSON(json["segment_data"]),
+    layoutTemplateId:
+      json["layout_template_id"] == null
+        ? undefined
+        : json["layout_template_id"],
+    layoutEnabled:
+      json["layout_enabled"] == null ? undefined : json["layout_enabled"],
   };
 }
 
@@ -150,5 +168,7 @@ export function PatchedBundledEmailConfigurationRequestToJSONTyped(
         ? undefined
         : (value["updatedAt"] as any).toISOString(),
     segment_data: SegmentDataRequestToJSON(value["segmentData"]),
+    layout_template_id: value["layoutTemplateId"],
+    layout_enabled: value["layoutEnabled"],
   };
 }

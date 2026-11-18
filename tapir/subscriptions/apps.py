@@ -27,6 +27,7 @@ class SubscriptionsConfig(AppConfig):
         )
         from tapir.configuration.parameter import get_parameter_value
         from tapir.wirgarten.tapirmail import Segments, SegmentGroups
+        from tapir.wirgarten.utils import legal_status_is_cooperative
 
         cache = {}
 
@@ -42,12 +43,6 @@ class SubscriptionsConfig(AppConfig):
                 label=Segments.WITHOUT_ACTIVE_SUBSCRIPTION,
                 group=SegmentGroups.CONTRACTS,
                 description="Mitglieder ohne heute laufenden Vertrag, auch wenn sie einen zukünftigen Vertrag haben.",
-            ),
-            Segments.MEMBERS_WITH_CONTRACT_SINCE_MORE_THAN_ONE_YEAR_BUT_NO: MailSegment(
-                get_queryset=MemberSegmentProvider.get_queryset_members_with_contract_since_more_than_one_year_but_no_coop_share,
-                label=Segments.MEMBERS_WITH_CONTRACT_SINCE_MORE_THAN_ONE_YEAR_BUT_NO,
-                group=SegmentGroups.GENERAL,
-                description="Mitglieder mit einem Vertrag, der vor über einem Jahr begonnen hat, und einer laufenden Zahlung, aber ohne Genossenschaftsanteil.",
             ),
             Segments.WITH_DELIVERY_THIS_WEEK: MailSegment(
                 get_queryset=partial(
@@ -72,6 +67,16 @@ class SubscriptionsConfig(AppConfig):
                 description="Mitglieder, die nächste Woche mindestens eine Lieferung bekommen. Joker, Spenden und Wochen ohne Lieferung sind berücksichtigt.",
             ),
         }
+
+        if legal_status_is_cooperative(cache=cache):
+            segment_registry[
+                Segments.MEMBERS_WITH_CONTRACT_SINCE_MORE_THAN_ONE_YEAR_BUT_NO
+            ] = MailSegment(
+                get_queryset=MemberSegmentProvider.get_queryset_members_with_contract_since_more_than_one_year_but_no_coop_share,
+                label=Segments.MEMBERS_WITH_CONTRACT_SINCE_MORE_THAN_ONE_YEAR_BUT_NO,
+                group=SegmentGroups.GENERAL,
+                description="Mitglieder mit einem Vertrag, der vor über einem Jahr begonnen hat, und einer laufenden Zahlung, aber ohne Genossenschaftsanteil.",
+            )
 
         trial_period_enabled = get_parameter_value(
             key=ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache

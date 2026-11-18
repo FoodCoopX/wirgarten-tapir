@@ -5,6 +5,9 @@ from tapir.payments.services.member_credit_creator import MemberCreditCreator
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
+from tapir.pickup_locations.services.member_delivery_address_setter import (
+    MemberDeliveryAddressSetter,
+)
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
@@ -35,6 +38,8 @@ class SubscriptionUpdateViewChangeApplier:
         sepa_allowed: bool,
         cache: dict,
     ):
+        MemberDeliveryAddressSetter.save_delivery_address(member=member, actor=actor)
+
         if (
             desired_pickup_location_id
             != MemberPickupLocationGetter.get_member_pickup_location_id(

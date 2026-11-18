@@ -7,6 +7,7 @@ import {
   AssociationMembershipType,
   BestellWizardApi,
   CoopApi,
+  DeliveryAddressRequest,
   OrderConfirmationResponse,
   PickupLocationsApi,
   PublicGrowingPeriod,
@@ -28,12 +29,14 @@ import { getEmptyPersonalData } from "../bestell_wizard/utils/getEmptyPersonalDa
 import { getTestPersonalData } from "../bestell_wizard/utils/getTestPersonalData.ts";
 import { isAtLeastOneProductOrdered } from "../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
 import { isShoppingCartEmpty } from "../bestell_wizard/utils/isShoppingCartEmpty.ts";
+import { selectAllRequiredProductTypes } from "../bestell_wizard/utils/selectAllRequiredProductTypes.ts";
 import { sortProductTypes } from "../bestell_wizard/utils/sortProductTypes.ts";
 import { updateMinimumNumberOfShares } from "../bestell_wizard/utils/updateMinimumNumberOfShares.ts";
 import { updateProductsAndProductTypesOverCapacity } from "../bestell_wizard/utils/updateProductsAndProductTypesOverCapacity.ts";
 import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
 import { addToast } from "../utils/addToast.ts";
+import { fromApiDate } from "../utils/apiDate.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import { updateProductPrices } from "../utils/updateProductPrices.ts";
 import BestellWizardMobileBase from "./components/BestellWizardMobileBase.tsx";
@@ -49,20 +52,25 @@ import Step2FirstName from "./steps/Step2FirstName.tsx";
 import Step3BGrowingPeriodChoice from "./steps/Step3BGrowingPeriodChoice.tsx";
 import Step3ProductTypesChoice from "./steps/Step3ProductTypesChoice.tsx";
 import Step4BProductTypeOrder from "./steps/Step4BProductTypeOrder.tsx";
-import Step5BPickupLocationChoice from "./steps/Step5BPickupLocationChoice.tsx";
-import Step5CPickupLocationConfirmWaitingList from "./steps/Step5CPickupLocationConfirmWaitingList.tsx";
+import Step5BDeliveryModeChoice from "./steps/Step5BDeliveryModeChoice.tsx";
+import Step5CPickupLocationChoice from "./steps/Step5CPickupLocationChoice.tsx";
+import Step5DHomeDeliveryChoice from "./steps/Step5DHomeDeliveryChoice.tsx";
+import Step5EPickupLocationConfirmWaitingList from "./steps/Step5EPickupLocationConfirmWaitingList.tsx";
 import Step6BAssociationMembership from "./steps/Step6BAssociationMembership.tsx";
 import Step6BCoopShares from "./steps/Step6BCoopShares.tsx";
 import Step6CCoopMemberNow from "./steps/Step6CCoopMemberNow.tsx";
 import Step7SolidarityContribution from "./steps/Step7SolidarityContribution.tsx";
+import Step8BDeliveryAddress from "./steps/Step8BDeliveryAddress.tsx";
 import Step8PersonalData from "./steps/Step8PersonalData.tsx";
 import Step9BankingData from "./steps/Step9BankingData.tsx";
 import StepGenericIntro from "./steps/StepGenericIntro.tsx";
+import { DeliveryMode } from "./types/DeliveryMode.ts";
 import { Phase } from "./types/Phase.ts";
 import { PickupLocationTab } from "./types/PickupLocationTab.ts";
 import { Step } from "./types/Step.ts";
 import { buildSteps } from "./utils/buildSteps.ts";
 import { getPhase } from "./utils/getPhase.ts";
+import { getPickupLocationsForDeliveryMode } from "./utils/getPickupLocationsForDeliveryMode.ts";
 import { getProductTypeByProductId } from "./utils/getProductTypeByProductId.ts";
 import { getProductTypeFromStep } from "./utils/getProductTypeFromStep.ts";
 import { getPublicPickupLocationById } from "./utils/getPublicPickupLocationById.ts";
@@ -123,7 +131,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
   const [
     firstDeliveryDatesByPickupLocationAndProductType,
     setFirstDeliveryDatesByPickupLocationAndProductType,
-  ] = useState<{ [key: string]: { [key: string]: Date } }>({});
+  ] = useState<{ [key: string]: { [key: string]: string } }>({});
   const [cancellationPolicyRead, setCancellationPolicyRead] = useState(false);
   const [privacyPolicyRead, setPrivacyPolicyRead] = useState(false);
   const [selectedDistributionChannels, setSelectedDistributionChannels] =
@@ -158,6 +166,16 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     selectedAssociationMembershipType,
     setSelectedAssociationMembershipType,
   ] = useState<AssociationMembershipType>();
+  const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>("pickup");
+  const [deliveryAddress, setDeliveryAddress] =
+    useState<DeliveryAddressRequest>({
+      sameAsBillingAddress: true,
+      street: "",
+      street2: "",
+      postcode: "",
+      city: "",
+      country: "DE",
+    });
 
   useEffect(() => {
     Promise.all([
@@ -169,6 +187,9 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     ])
       .then(([baseData, minNumberOfShares]) => {
         const newSettings = buildSettings(baseData);
+        if (waitingListEntryDetails) {
+          newSettings.forceWaitingList = false;
+        }
         setSettings(newSettings);
         setSettingsLoaded(true);
         setSelectedProductTypes(
@@ -219,10 +240,15 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
           setSelectedPickupLocations(
             (waitingListEntryDetails.pickupLocationWishes ?? [])
               .map((pickupLocation) =>
-                getPublicPickupLocationById(pickupLocation.id!, newSettings),
+                getPublicPickupLocationById(pickupLocation.id, newSettings),
               )
               .filter((pl) => pl !== undefined),
           );
+          if (
+            waitingListEntryDetails.pickupLocationWishes?.[0]?.isHomeDelivery
+          ) {
+            setDeliveryMode("home_delivery");
+          }
         }
 
         setPersonalData({ ...personalData });
@@ -257,11 +283,21 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
       setToastDatas,
     );
 
-    setContractStartDate(selectedGrowingPeriod.contractStartDate);
+    setContractStartDate(fromApiDate(selectedGrowingPeriod.contractStartDate));
 
-    if (waitingListEntryDetails === undefined) {
-      setSelectedProductTypes(
-        settings.introEnabled ? [] : selectedGrowingPeriod.productTypes,
+    if (waitingListEntryDetails !== undefined) {
+      return;
+    }
+
+    if (!settings.introEnabled) {
+      setSelectedProductTypes(selectedGrowingPeriod.productTypes);
+    } else if (investingMembership) {
+      setSelectedProductTypes([]);
+    } else {
+      selectAllRequiredProductTypes(
+        selectedGrowingPeriod.productTypes,
+        [],
+        setSelectedProductTypes,
       );
     }
   }, [selectedGrowingPeriod]);
@@ -301,16 +337,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
 
   useEffect(() => {
     if (!settingsLoaded) return;
-    const newSteps = buildSteps(
-      settings,
-      selectedProductTypes,
-      shoppingCart,
-      becomeMemberNow,
-      productTypesInWaitingList,
-      selectedPickupLocations,
-      pickupLocationsWithCapacityFull,
-      waitingListEntryDetails,
-    );
+    const newSteps = buildStepsFor(deliveryMode, selectedPickupLocations);
 
     setSteps(newSteps);
     if (waitingListEntryDetails) {
@@ -328,6 +355,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     productTypesInWaitingList,
     selectedPickupLocations,
     pickupLocationsWithCapacityFull,
+    deliveryMode,
     waitingListEntryDetails,
   ]);
 
@@ -382,6 +410,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
       productTypesInWaitingList,
       setMinimumNumberOfShares,
       setSelectedNumberOfCoopShares,
+      setToastDatas,
     );
   }, [shoppingCart, selectedGrowingPeriod]);
 
@@ -449,6 +478,42 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     return newShoppingCart;
   }
 
+  function buildStepsFor(
+    deliveryMode: DeliveryMode,
+    selectedPickupLocations: PublicPickupLocation[],
+  ) {
+    return buildSteps(
+      settings,
+      selectedProductTypes,
+      shoppingCart,
+      becomeMemberNow,
+      productTypesInWaitingList,
+      selectedPickupLocations,
+      pickupLocationsWithCapacityFull,
+      deliveryMode,
+      waitingListEntryDetails,
+    );
+  }
+
+  function onDeliveryModeChosen(newDeliveryMode: DeliveryMode) {
+    let newSelection = selectedPickupLocations;
+    if (newDeliveryMode !== deliveryMode) {
+      const locations = getPickupLocationsForDeliveryMode(
+        settings.pickupLocations,
+        newDeliveryMode,
+      );
+      newSelection =
+        newDeliveryMode === "home_delivery" && locations.length === 1
+          ? locations
+          : [];
+    }
+    setDeliveryMode(newDeliveryMode);
+    setSelectedPickupLocations(newSelection);
+
+    const newSteps = buildStepsFor(newDeliveryMode, newSelection);
+    setCurrentStep(newSteps[newSteps.indexOf("5b_delivery_mode_choice") + 1]);
+  }
+
   function goToNextStep() {
     const currentIndex = steps.indexOf(currentStep);
     if (currentIndex + 1 >= steps.length) {
@@ -469,18 +534,22 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
       }
     }
     setShoppingCart(newShoppingCart);
-    setSelectedPickupLocations([settings.pickupLocations[0]]);
+    setSelectedPickupLocations([
+      getPickupLocationsForDeliveryMode(
+        settings.pickupLocations,
+        deliveryMode,
+      )[0],
+    ]);
     switch (settings.legalStatus) {
       case "coop":
         setSelectedNumberOfCoopShares(7);
         break;
       case "association":
-        const visibleMembershipTypes = getVisibleAssociationMembershipTypes(
-          settings.associationMembershipTypes,
+        setSelectedAssociationMembershipType(
+          getVisibleAssociationMembershipTypes(
+            settings.associationMembershipTypes,
+          )[0],
         );
-        if (visibleMembershipTypes.length > 0) {
-          setSelectedAssociationMembershipType(visibleMembershipTypes[0]);
-        }
     }
     setSepaAllowed(true);
     setContractAccepted(true);
@@ -522,8 +591,8 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
           },
         })
         .then(handleOrderResponse)
-        .catch(async (error) => {
-          await handleRequestError(
+        .catch((error) => {
+          handleRequestError(
             error,
             "Fehler bei der Bestätigung der Warteliste-Eintrag",
             setToastDatas,
@@ -556,7 +625,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
           numberOfCoopShares: selectedNumberOfCoopShares,
           payCoopSharesInInstalments: isPayingCoopSharesInInstalments(),
           pickupLocationIds: selectedPickupLocations.map(
-            (locations) => locations.id!,
+            (locations) => locations.id,
           ),
           shoppingCartOrder: buildFilteredShoppingCart(
             shoppingCart,
@@ -578,11 +647,16 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
           distributionChannels: [...selectedDistributionChannels],
           feedback: feedback,
           associationMembershipTypeId: selectedAssociationMembershipType?.id,
+          deliveryAddress: selectedPickupLocations.some(
+            (pickupLocation) => pickupLocation.isHomeDelivery,
+          )
+            ? deliveryAddress
+            : undefined,
         },
       })
       .then(handleOrderResponse)
-      .catch(async (error) => {
-        await handleRequestError(
+      .catch((error) => {
+        handleRequestError(
           error,
           "Fehler bei der Bestätigung der Bestellung",
           setToastDatas,
@@ -623,7 +697,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     if (!selectedProductTypes.includes(productType)) {
       setSelectedProductTypes([...selectedProductTypes, productType]);
     }
-    setCurrentStep(productType.id! + "_order");
+    setCurrentStep(`${productType.id!}_order`);
   }
 
   function getStepComponent(step: Step) {
@@ -685,9 +759,16 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             stepActive={step === currentStep}
           />
         );
-      case "5b_pickup_location_choice":
+      case "5b_delivery_mode_choice":
         return (
-          <Step5BPickupLocationChoice
+          <Step5BDeliveryModeChoice
+            settings={settings}
+            onDeliveryModeChosen={onDeliveryModeChosen}
+          />
+        );
+      case "5d_home_delivery_choice":
+        return (
+          <Step5DHomeDeliveryChoice
             settings={settings}
             selectedPickupLocations={selectedPickupLocations}
             setSelectedPickupLocations={setSelectedPickupLocations}
@@ -696,7 +777,31 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             }
             pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
             goToNextStep={goToNextStep}
-            stepIsActive={step === "5b_pickup_location_choice"}
+            firstDeliveryDatesByPickupLocationAndProductType={
+              firstDeliveryDatesByPickupLocationAndProductType
+            }
+            stepActive={currentStep === step}
+            productTypesInWaitingList={productTypesInWaitingList}
+            shoppingCart={shoppingCart}
+            productTypeIdsOverCapacity={productTypeIdsOverCapacity}
+            productIdsOverCapacity={productIdsOverCapacity}
+            changesDisabled={
+              (waitingListEntryDetails?.pickupLocationWishes ?? []).length > 0
+            }
+          />
+        );
+      case "5c_pickup_location_choice":
+        return (
+          <Step5CPickupLocationChoice
+            settings={settings}
+            selectedPickupLocations={selectedPickupLocations}
+            setSelectedPickupLocations={setSelectedPickupLocations}
+            pickupLocationsCapacityCheckLoading={
+              pickupLocationsCapacityCheckLoading
+            }
+            pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
+            goToNextStep={goToNextStep}
+            stepIsActive={step === "5c_pickup_location_choice"}
             firstDeliveryDatesByPickupLocationAndProductType={
               firstDeliveryDatesByPickupLocationAndProductType
             }
@@ -714,13 +819,18 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             }
           />
         );
-      case "5c_pickup_location_confirm_waiting_list":
+      case "5e_pickup_location_confirm_waiting_list":
         return (
-          <Step5CPickupLocationConfirmWaitingList
+          <Step5EPickupLocationConfirmWaitingList
             settings={settings}
             setCurrentStep={setCurrentStep}
             goToNextStep={goToNextStep}
             setCurrentTab={setCurrentPickupLocationTab}
+            pickupLocationChoiceStep={
+              deliveryMode === "home_delivery"
+                ? "5d_home_delivery_choice"
+                : "5c_pickup_location_choice"
+            }
           />
         );
       case "6a_coop_intro":
@@ -812,6 +922,16 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             changesDisabled={waitingListEntryDetails !== undefined}
           />
         );
+      case "8b_delivery_address":
+        return (
+          <Step8BDeliveryAddress
+            settings={settings}
+            goToNextStep={goToNextStep}
+            deliveryAddress={deliveryAddress}
+            setDeliveryAddress={setDeliveryAddress}
+            stepActive={currentStep === step}
+          />
+        );
       case "9_banking_data":
         return (
           <Step9BankingData
@@ -862,6 +982,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             hideTrialPeriod={false}
             stepActive={step === currentStep}
             setCurrentStep={setCurrentStep}
+            deliveryAddress={deliveryAddress}
           />
         );
       case "11_legal":

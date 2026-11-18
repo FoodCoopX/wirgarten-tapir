@@ -19,9 +19,9 @@ class Command(BaseCommand):
 
         celery = app.control.inspect()
 
-        revoked_tasks = set(
-            [item for sublist in celery.revoked().values() for item in sublist]
-        )
+        revoked_tasks = {
+            item for sublist in celery.revoked().values() for item in sublist
+        }
 
         scheduled_tasks = celery.scheduled()
 
@@ -74,7 +74,6 @@ class Command(BaseCommand):
                         "  >>> Subscription already ended, no need to schedule a new task"
                     )
                 )
-                continue
             else:
                 schedule_task_unique(
                     task=send_email_member_contract_end_reminder,

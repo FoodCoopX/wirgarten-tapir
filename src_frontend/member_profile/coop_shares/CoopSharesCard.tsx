@@ -7,6 +7,7 @@ import TapirHelpButton from "../../components/TapirHelpButton.tsx";
 import TapirToastContainer from "../../components/TapirToastContainer.tsx";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
+import { toApiDate } from "../../utils/apiDate.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
@@ -56,7 +57,7 @@ const CoopSharesCard: React.FC<CoopSharesCardProps> = ({
 
   function getCurrentNumberOfShares(): number {
     return transactions
-      .filter((transaction) => transaction.validAt <= new Date())
+      .filter((transaction) => transaction.validAt <= toApiDate(new Date()))
       .reduce((sum, transaction) => sum + transaction.quantity, 0);
   }
 
@@ -83,7 +84,7 @@ const CoopSharesCard: React.FC<CoopSharesCardProps> = ({
         transaction.transactionType === "purchase" ||
         transaction.transactionType === "transfer_in"
       ) {
-        if (transaction.validAt < new Date()) {
+        if (transaction.validAt <= toApiDate(new Date())) {
           return true;
         }
       }

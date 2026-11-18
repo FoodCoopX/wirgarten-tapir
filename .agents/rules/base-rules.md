@@ -8,7 +8,7 @@ Role profiles: `.agents/agents/`. Task recipes: `.agents/skills/`. See [.agents/
 
 ## Stack
 
-- Backend: Python 3.14, Django 6, DRF, drf-spectacular; Celery + Beat, Redis; PostgreSQL 14
+- Backend: Python 3.14, Django 6, DRF, drf-spectacular; Celery + Beat, Redis; PostgreSQL 18
 - Auth: Keycloak via `django-allauth` (socialaccount)
 - Frontend: React 19, TypeScript, Vite, `django_vite`, react-bootstrap / Bootstrap 5
 - Tooling: Poetry, pnpm, pytest + pytest-django + factory-boy (no frontend tests), Black / Prettier / DjHTML
@@ -62,8 +62,18 @@ Routing: [tapir/urls.py](tapir/urls.py) includes per-app `urls.py`; apps mix DRF
   `rollupOptions.input` in [vite.config.ts](vite.config.ts) and include it via `{% load django_vite %}` +
   `{% vite_asset "<folder>/<x>_entry.tsx" %}`.
 - `src_frontend/api-client/` is generated from `schema.yml` — never hand-edit.
+- Date-only API fields (`format: date`) are `"YYYY-MM-DD"` strings in the generated client; date-time fields stay `Date`.
+  Never pass them to `new Date(...)` (parses as UTC): use `fromApiDate` / `toApiDate` from
+  [src_frontend/utils/apiDate.ts](src_frontend/utils/apiDate.ts). Compare and sort them as strings. Pass them to `formatDate…` as strings
+  (`toApiDate(date)` if you only have a `Date`). Details in [docs/dev/frontend_dates.md](docs/dev/frontend_dates.md).
 - Fetch through [src_frontend/hooks/useApi.ts](src_frontend/hooks/useApi.ts) (CSRF token + base path from `env.ts`).
   React hooks only, no Redux/Zustand, no path aliases.
+- Button variants by what the button does:
+    - `outline-secondary`: no effect (close a modal, cancel, go back, navigate to another page).
+    - `outline-primary`: no effect yet, but leads to a button that has one (open a form, go to a confirmation step).
+    - `primary`: does something permanent (save, send a mail).
+    - `danger` / `outline-danger`: only for deletions, instead of `primary` / `outline-primary` with the same
+      rules (`outline-danger` opens the delete confirmation, `danger` deletes).
 
 ## Commands
 
@@ -108,7 +118,23 @@ Services: `web` (8000), `vite` (5173), `keycloak` (8080), `db` (5432), `redis` (
   from [tapir/wirgarten/tests/test_utils.py](tapir/wirgarten/tests/test_utils.py), which mocks Keycloak in `setUp`;
   `setUpTestData` runs earlier, so **users cannot be created in `setUpTestData`**. Run via `make test-fast` /
   `make test-app APP=<app>`.
+- **Test naming**: one file per tested class/function, `test_<snake_case_name>.py`, class `Test<ClassOrFunctionName>`.
+  **Only one test class per file**: never add a second class to an existing file. To split a service's tests by method,
+  use a directory named after the service with one file per method
+  (e.g. `tests/services/member_pickup_location_cleaner/test_should_clean_pickup_location.py`).
+  Methods follow `test_<method>_<condition>_<expectedResult>`, each part in camelCase, e.g.
+  `test_validateInstalments_moreSharesThanTheMinimum_raisesError`. Use `default` as condition for the nominal case
+  (`test_patch_default_callsProductUpdated`); for views, `<method>` is the HTTP verb (`test_get_loggedInAsNormalMember_returns403`).
+- **Mock parameter naming**: the test parameter receiving a patched function or method is named
+  `mock_<name_of_the_function>`, e.g. `mock_get_payment_export_exclusion_periods_for_member` for
+  `@patch.object(TapirCache, "get_payment_export_exclusion_periods_for_member", ...)`.
+- **Mock return values**: set `return_value` / `side_effect` in the test body (`mock_x.return_value = ...`), never in
+  the `@patch` / `@patch.object` decorator. Exception: class-level decorators, which may set a default for all tests.
 - **Annotate API views** with `@extend_schema(...)` and run `make schema`.
+- **Admin docs**: when adding, changing or removing an admin-visible feature, ask whether the admin documentation in
+  `docs/admins/` should be updated.
+- **Docs language**: admin documentation (`docs/admins/`) is written in German, developer documentation (`docs/dev/`) in
+  English.
 - **Formatting**: Black / Prettier / DjHTML, enforced by pre-commit (`poetry run pre-commit install`).
 - **Commits**: [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/), referencing the GitHub issue ID
   when applicable.

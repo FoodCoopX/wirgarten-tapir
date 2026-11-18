@@ -24,14 +24,17 @@ class TapirMailmanClient:
     @classmethod
     def get_domain(cls, cache: dict):
         client = TapirMailmanClient.get_client(cache)
-        return client.get_domain(mail_host=settings.EMAIL_HOST)
+        return client.get_domain(mail_host=settings.MAILING_LIST_DOMAIN)
 
     @classmethod
     def ensure_instance_domain_exists(cls, cache: dict):
         client = cls.get_client(cache)
-        if any(domain.mail_host == settings.EMAIL_HOST for domain in client.domains):
+        if any(
+            domain.mail_host == settings.MAILING_LIST_DOMAIN
+            for domain in client.domains
+        ):
             return
         client.create_domain(
-            mail_host=settings.EMAIL_HOST,
+            mail_host=settings.MAILING_LIST_DOMAIN,
             description=f"The domain for the {settings.SITE_URL} instance",
         )

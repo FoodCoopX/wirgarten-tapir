@@ -240,7 +240,7 @@ class SubscriptionListView(PermissionRequiredMixin, FilterView):
         context["today"] = get_today(cache=self.cache)
         context["number_of_contracts"] = self.filterset.qs.count()
         context["quantity_sum"] = self.filterset.qs.aggregate(
-            quantity_sum=Sum("quantity")
+            quantity_sum=Sum("quantity", default=0)
         )["quantity_sum"]
 
         subscriptions_trial_end_dates = {}

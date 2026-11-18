@@ -13,6 +13,9 @@ from tapir.accounts.models import TapirUser
 from tapir.bakery.services.breaddelivery_service import BreadDeliveryService
 from tapir.configuration.parameter import get_parameter_value
 from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
+from tapir.pickup_locations.services.home_delivery_address_validator import (
+    HomeDeliveryAddressValidator,
+)
 from tapir.pickup_locations.services.member_pickup_location_setter import (
     MemberPickupLocationSetter,
 )
@@ -40,6 +43,7 @@ from tapir.wirgarten.models import (
     MandateReference,
     Member,
     MemberPickupLocation,
+    PickupLocation,
     Product,
     ProductType,
     Subscription,
@@ -64,6 +68,20 @@ from tapir.wirgarten.service.products import (
 from tapir.wirgarten.utils import format_date, get_now, get_today
 
 BASE_PRODUCT_FIELD_PREFIX = "base_product_"
+MONTHLY_PRICE_HELP_TEXT = "{:.2f} € inkl. MwSt / Monat"
+
+
+def clean_home_delivery_pickup_location(
+    pickup_location: PickupLocation | None, member_id: str
+) -> PickupLocation | None:
+    if pickup_location is None:
+        return pickup_location
+
+    HomeDeliveryAddressValidator.validate(
+        address_owner=Member.objects.get(id=member_id),
+        pickup_location=pickup_location,
+    )
+    return pickup_location
 
 
 class BaseProductForm(forms.Form):
@@ -215,9 +233,7 @@ class BaseProductForm(forms.Form):
                     min_value=0,
                     initial=0,
                     label=prod_field.name,
-                    help_text="""{:.2f} € inkl. MwSt / Monat""".format(
-                        prices[prod_field.id]
-                    ),
+                    help_text=MONTHLY_PRICE_HELP_TEXT.format(prices[prod_field.id]),
                 )
             )
 
@@ -276,7 +292,7 @@ class BaseProductForm(forms.Form):
             today = get_today(self.cache)
             next_delivery_date = get_next_delivery_date(
                 today + relativedelta(days=2), cache=self.cache
-            )  # FIXME: the +2 days should be a configurable treshold. It takes some time to prepare the deliveries in which no changes are allowed
+            )
             next_month = today + relativedelta(months=1, day=1)
             if next_month < next_delivery_date:
                 next_month += relativedelta(months=1)
@@ -308,13 +324,8 @@ class BaseProductForm(forms.Form):
             }
             harvest_share_strings.append(
                 ",".join(
-                    map(
-                        lambda p: BASE_PRODUCT_FIELD_PREFIX
-                        + p.name
-                        + ":"
-                        + str(prices[p.id]),
-                        harvest_share_products,
-                    )
+                    f"{BASE_PRODUCT_FIELD_PREFIX}{product.name}:{prices[product.id]}"
+                    for product in harvest_share_products
                 )
             )
         self.harvest_shares = ";".join(harvest_share_strings)
@@ -434,6 +445,12 @@ class BaseProductForm(forms.Form):
                     )
                 }
             )
+
+    def clean_pickup_location(self):
+        return clean_home_delivery_pickup_location(
+            pickup_location=self.cleaned_data.get("pickup_location"),
+            member_id=self.member_id,
+        )
 
     def validate_pickup_location(self):
         if not MemberPickupLocation.objects.filter(member_id=self.member_id).exists():
@@ -635,9 +652,7 @@ class AdditionalProductForm(forms.Form):
                     required=False,
                     initial=False,
                     label=product.name,
-                    help_text="""{:.2f} € inkl. MwSt / Monat""".format(
-                        prices[product.id]
-                    ),
+                    help_text=MONTHLY_PRICE_HELP_TEXT.format(prices[product.id]),
                 )
         else:
             for field_key, product in self.products.items():
@@ -646,9 +661,7 @@ class AdditionalProductForm(forms.Form):
                     min_value=0,
                     initial=0,
                     label=product.name,
-                    help_text="""{:.2f} € inkl. MwSt / Monat""".format(
-                        prices[product.id]
-                    ),
+                    help_text=MONTHLY_PRICE_HELP_TEXT.format(prices[product.id]),
                 )
 
         if self.product_type.contract_link:
@@ -685,12 +698,9 @@ class AdditionalProductForm(forms.Form):
             next_delivery_date = get_next_delivery_date(
                 today + relativedelta(days=2), cache=self.cache
             )
-            # FIXME: the +2 days should be a configurable threshold.
-            # FIXME: It takes some time to prepare the deliveries in which no changes are allowed
             next_month = today + relativedelta(months=1, day=1)
 
             def add_pickup_location_fields():
-                # FIXME: no dummy, use the real diff value
                 new_sub_dummy = Subscription(
                     quantity=1,
                     product=Product.objects.get(type=self.product_type, base=True),
@@ -730,10 +740,7 @@ class AdditionalProductForm(forms.Form):
                 add_pickup_location_fields()
 
         self.prices = ",".join(
-            map(
-                lambda k: k + ":" + str(prices[self.products[k].id]),
-                self.products.keys(),
-            )
+            f"{key}:{prices[product.id]}" for key, product in self.products.items()
         )
 
     @transaction.atomic
@@ -889,6 +896,12 @@ class AdditionalProductForm(forms.Form):
             .order_by("-valid_from")
             .first()
             .pickup_location
+        )
+
+    def clean_pickup_location(self):
+        return clean_home_delivery_pickup_location(
+            pickup_location=self.cleaned_data.get("pickup_location"),
+            member_id=self.member_id,
         )
 
     def validate_pickup_location(self, cache: dict):

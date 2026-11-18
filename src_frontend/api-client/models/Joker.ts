@@ -38,10 +38,10 @@ export interface Joker {
   readonly updatedAt: Date;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof Joker
    */
-  date: Date;
+  date: string;
   /**
    *
    * @type {string}
@@ -76,7 +76,7 @@ export function JokerFromJSONTyped(
     id: json["id"] == null ? undefined : json["id"],
     createdAt: new Date(json["created_at"]),
     updatedAt: new Date(json["updated_at"]),
-    date: new Date(json["date"]),
+    date: json["date"],
     member: json["member"],
   };
 }
@@ -95,7 +95,7 @@ export function JokerToJSONTyped(
 
   return {
     id: value["id"],
-    date: value["date"].toISOString().substring(0, 10),
+    date: value["date"],
     member: value["member"],
   };
 }

@@ -16,14 +16,21 @@ class CoopConfig(AppConfig):
         from tapir.generic_exports.services.member_segment_provider import (
             MemberSegmentProvider,
         )
+        from tapir.wirgarten.utils import legal_status_is_cooperative
 
-        return {
+        segment_registry = {
             Segments.ALL_USERS: MailSegment(
                 get_queryset=MemberSegmentProvider.get_queryset_active_members,
                 label=Segments.ALL_USERS,
                 group=SegmentGroups.GENERAL,
                 description="Alle aktiven Mitglieder: mit mindenstens ein aus Geno-Anteilen, Vereinsmitgliedschaft, Solidarbeitrag oder laufendem bzw. zukünftigem Vertrag.",
             ),
+        }
+
+        if not legal_status_is_cooperative(cache={}):
+            return segment_registry
+
+        segment_registry |= {
             Segments.COOP_MEMBERS: MailSegment(
                 get_queryset=Member.objects.with_shares,
                 label=Segments.COOP_MEMBERS,
@@ -37,3 +44,5 @@ class CoopConfig(AppConfig):
                 description="Mitglieder, die heute keinen Genossenschaftsanteil haben.",
             ),
         }
+
+        return segment_registry

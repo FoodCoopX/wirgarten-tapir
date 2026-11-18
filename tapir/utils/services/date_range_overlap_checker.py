@@ -8,8 +8,19 @@ class DateRangeOverlapChecker:
         range_1_start: datetime.date,
         range_1_end: datetime.date | None,
         range_2_start: datetime.date,
-        range_2_end: datetime.date,
+        range_2_end: datetime.date | None,
     ) -> bool:
+        if range_1_end is None and range_2_end is None:
+            return True
+
+        if range_2_end is None:
+            return cls.do_ranges_overlap(
+                range_1_start=range_2_start,
+                range_1_end=range_2_end,
+                range_2_start=range_1_start,
+                range_2_end=range_1_end,
+            )
+
         return (
             cls.get_number_of_days_of_overlap(
                 range_1_start=range_1_start,

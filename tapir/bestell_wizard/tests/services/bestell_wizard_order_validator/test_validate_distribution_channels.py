@@ -62,10 +62,9 @@ class TestValidateDistributionChannels(TapirUnitTest):
         }
         cache = Mock()
 
-        with self.assertRaises(ValidationError) as error:
+        with self.assertRaisesMessage(ValidationError, "Ungültige Vertriebskanäle"):
             BestellWizardOrderValidator.validate_distribution_channels(
                 given_channel_ids=["id_1", "id_4"], cache=cache
             )
 
-        self.assertEqual("Ungültige Vertriebskanäle", error.exception.message)
         mock_get_questionnaire_source_choices.assert_called_once_with(cache=cache)

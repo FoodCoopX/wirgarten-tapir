@@ -3,7 +3,6 @@ import logging
 from celery import shared_task
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
-from django.db.models import Q
 from tapir_mail.triggers.transactional_trigger import (
     TransactionalTrigger,
     TransactionalTriggerData,
@@ -184,7 +183,7 @@ def send_email_member_contract_end_reminder(member_id: str):
         )
 
 
-def _fire_membership_entry_trigger(member: Member, cache: dict):
+def _fire_coop_membership_entry_trigger(member: Member, cache: dict):
     number_of_coop_shares = member.coop_shares_quantity
     price_of_a_share = get_parameter_value(
         key=ParameterKeys.COOP_SHARE_PRICE, cache=cache
@@ -202,6 +201,24 @@ def _fire_membership_entry_trigger(member: Member, cache: dict):
                 "membership_start_date": OrganisationEntryDateAnnotator.get_organisation_entry_date(
                     recipient=member, cache=cache
                 ),
+            },
+        ),
+    )
+
+
+def _fire_association_membership_entry_trigger(member: Member):
+    membership = (
+        AssociationMembership.objects.filter(member=member)
+        .order_by("start_date")
+        .first()
+    )
+    TransactionalTrigger.fire_action(
+        trigger_data=TransactionalTriggerData(
+            key=Events.ASSOCIATION_MEMBERSHIP_ENTRY,
+            recipient_id_in_base_queryset=member.id,
+            token_data={
+                "membership_type_name": membership.type.name,
+                "membership_start_date": membership.start_date,
             },
         ),
     )
@@ -227,18 +244,17 @@ def send_membership_entry_mails():
                 )
                 if entry_date is not None and entry_date <= today:
                     should_send_mail = True
+                    _fire_coop_membership_entry_trigger(member=member, cache=cache)
 
             if (
                 legal_status_is_association(cache=cache)
-                and AssociationMembership.objects.filter(
-                    member=member, start_date__lte=today
-                )
-                .filter(Q(end_date__isnull=True) | Q(end_date__gte=today))
+                and AssociationMembership.objects.filter(member=member)
+                .active_at(today)
                 .exists()
             ):
                 should_send_mail = True
+                _fire_association_membership_entry_trigger(member=member)
 
             if should_send_mail:
-                _fire_membership_entry_trigger(member=member, cache=cache)
                 member.has_received_membership_started_mail = True
                 member.save()

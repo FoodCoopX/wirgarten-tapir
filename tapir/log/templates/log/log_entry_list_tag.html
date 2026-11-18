@@ -33,7 +33,9 @@
                         this way.
                             {% endcomment %}
                             <div class="d-flex">
+                                <label for="log_entry_text" class="visually-hidden">{% translate "Notiz" %}</label>
                                 <input class="form-control flex-grow-1"
+                                       id="log_entry_text"
                                        name="text"
                                        placeholder="{% translate "Notizen über diese*n Benutzer*in" %}">
                                 <button class="btn tapir-btn btn-sm btn-primary ms-2"

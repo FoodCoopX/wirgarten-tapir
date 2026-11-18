@@ -22,8 +22,10 @@
             <td>{{ job.name }}</td>
             <td>{{ job.task }}</td>
             <td>{{ job.schedule }}</td>
-            <td style="text-align: right"><span onclick="handleRun('{{job.name}}', '{{job.task}}')"
-                                                class="material-icons">play_circle_outline</span></td>
+            <td style="text-align: right"><button type="button"
+                                                  class="btn btn-link p-0 material-icons"
+                                                  aria-label="Job ausführen"
+                                                  onclick="handleRun('{{job.name}}', '{{job.task}}')">play_circle_outline</button></td>
         </tr>
 
     {% endfor %}

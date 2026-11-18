@@ -1,6 +1,10 @@
 import React from "react";
 import { Col, Form, Row } from "react-bootstrap";
-import { WaitingListEntryDetails } from "../../api-client";
+import {
+  DeliveryAddressRequest,
+  WaitingListEntryDetails,
+} from "../../api-client";
+import DeliveryAddressFields from "../../components/DeliveryAddressFields.tsx";
 
 interface WaitingListTabPersonalDataProps {
   entryDetails: WaitingListEntryDetails;
@@ -22,6 +26,9 @@ interface WaitingListTabPersonalDataProps {
   setCity: (city: string) => void;
   comment: string;
   setComment: (comment: string) => void;
+  showDeliveryAddress: boolean;
+  deliveryAddress: DeliveryAddressRequest;
+  setDeliveryAddress: (deliveryAddress: DeliveryAddressRequest) => void;
 }
 
 const WaitingListTabPersonalData: React.FC<WaitingListTabPersonalDataProps> = ({
@@ -44,6 +51,9 @@ const WaitingListTabPersonalData: React.FC<WaitingListTabPersonalDataProps> = ({
   setCity,
   comment,
   setComment,
+  showDeliveryAddress,
+  deliveryAddress,
+  setDeliveryAddress,
 }) => {
   return (
     <>
@@ -167,6 +177,17 @@ const WaitingListTabPersonalData: React.FC<WaitingListTabPersonalDataProps> = ({
           </Form.Group>
         </Col>
       </Row>
+      {showDeliveryAddress && (
+        <Row className={"mt-2"}>
+          <Col>
+            <h6>Lieferadresse</h6>
+            <DeliveryAddressFields
+              deliveryAddress={deliveryAddress}
+              setDeliveryAddress={setDeliveryAddress}
+            />
+          </Col>
+        </Row>
+      )}
       <Row className={"mt-2"}>
         <Col>
           <Form.Label>Kommentar</Form.Label>

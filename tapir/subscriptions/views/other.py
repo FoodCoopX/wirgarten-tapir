@@ -25,6 +25,7 @@ from tapir.solidarity_contribution.services.solidarity_validator import (
 )
 from tapir.subscriptions.models import (
     SubscriptionPriceChangedLogEntry,
+    SubscriptionTrialChangedLogEntry,
 )
 from tapir.subscriptions.serializers import (
     OrderConfirmationResponseSerializer,
@@ -377,10 +378,21 @@ class SubscriptionTrialChangeApiView(APIView):
         if trial_disabled:
             trial_end_date_override = None
 
+        trial_disabled_before = subscription.trial_disabled
+        trial_end_date_override_before = subscription.trial_end_date_override
+
         with transaction.atomic():
             subscription.trial_disabled = trial_disabled
             subscription.trial_end_date_override = trial_end_date_override
             subscription.save()
+
+            SubscriptionTrialChangedLogEntry().populate_trial_change(
+                subscription=subscription,
+                trial_disabled_before=trial_disabled_before,
+                trial_end_date_override_before=trial_end_date_override_before,
+                actor=request.user,
+                user=subscription.member,
+            ).save()
 
         return Response(
             OrderConfirmationResponseSerializer(

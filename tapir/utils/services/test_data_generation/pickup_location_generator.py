@@ -1,12 +1,21 @@
 import datetime
+from decimal import Decimal
 
 from tapir.core.exceptions import TapirImproperlyConfigured
-from tapir.pickup_locations.models import PickupLocationBasketCapacity
+from tapir.pickup_locations.models import (
+    PickupLocationBasketCapacity,
+    PickupLocationDeliveryCharge,
+)
 from tapir.utils.config import Organization
 from tapir.utils.services.test_data_generation.product_generator import (
     BREAD_PRODUCT_TYPE_NAME,
 )
-from tapir.wirgarten.models import ProductType, PickupLocationOpeningTime
+from tapir.wirgarten.models import (
+    PickupLocation,
+    PickupLocationCapability,
+    PickupLocationOpeningTime,
+    ProductType,
+)
 from tapir.wirgarten.tests.factories import (
     PickupLocationFactory,
     PickupLocationCapabilityFactory,
@@ -33,6 +42,58 @@ class PickupLocationGenerator:
             case _:
                 raise TapirImproperlyConfigured(f"Unknown organization: {organization}")
 
+        cls.generate_home_delivery_location()
+
+    @classmethod
+    def generate_home_delivery_location(cls):
+        depot = PickupLocation.objects.order_by("created_at").first()
+        home_delivery = PickupLocationFactory.create(
+            name="Hauslieferung",
+            is_home_delivery=True,
+            latitude=None,
+            longitude=None,
+            street=depot.street,
+            postcode=depot.postcode,
+            city=depot.city,
+            info="Lieferung an die eigene Haustür.",
+        )
+
+        for capability in PickupLocationCapability.objects.filter(
+            pickup_location=depot
+        ):
+            PickupLocationCapabilityFactory.create(
+                pickup_location=home_delivery,
+                product_type=capability.product_type,
+                max_capacity=20,
+            )
+        for basket_capacity in PickupLocationBasketCapacity.objects.filter(
+            pickup_location=depot
+        ):
+            PickupLocationBasketCapacity.objects.create(
+                pickup_location=home_delivery,
+                basket_size_name=basket_capacity.basket_size_name,
+                capacity=20,
+            )
+
+        delivery_day = (
+            PickupLocationOpeningTime.objects.filter(pickup_location=depot)
+            .order_by("day_of_week")
+            .first()
+            .day_of_week
+        )
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=home_delivery,
+            day_of_week=delivery_day,
+            open_time=datetime.time(hour=14),
+            close_time=datetime.time(hour=19),
+        )
+
+        PickupLocationDeliveryCharge.objects.create(
+            pickup_location=home_delivery,
+            amount=Decimal("3.50"),
+            valid_from=datetime.date(year=2020, month=1, day=6),
+        )
+
     @classmethod
     def generate_pickup_locations_for_wirgarten(cls):
         ernteanteile = ProductType.objects.get(name="Ernteanteile")
@@ -40,8 +101,8 @@ class PickupLocationGenerator:
 
         wirgarten = PickupLocationFactory.create(
             name="WirGarten Lüneburg",
-            coords_lon=53.2731785,
-            coords_lat=10.3741809,
+            latitude=53.2731785,
+            longitude=10.3741809,
             street="Vögelser Straße 25",
             postcode="21339",
             city="Lüneburg-Ochtmissen",
@@ -61,8 +122,8 @@ class PickupLocationGenerator:
 
         edeka = PickupLocationFactory.create(
             name="Edeka Bergmann",
-            coords_lon=53.2443079,
-            coords_lat=10.3996325,
+            latitude=53.2443079,
+            longitude=10.3996325,
             street="Sülfmeisterstraße 3",
             postcode="21335",
             city="Lüneburg",
@@ -82,8 +143,8 @@ class PickupLocationGenerator:
 
         fluse = PickupLocationFactory.create(
             name="Wohnprojekt Fluse",
-            coords_lon=53.2541747,
-            coords_lat=10.4238272,
+            latitude=53.2541747,
+            longitude=10.4238272,
             street="Meisterweg 100",
             postcode="21337",
             city="Lüneburg",
@@ -103,8 +164,8 @@ class PickupLocationGenerator:
 
         frohnatur = PickupLocationFactory.create(
             name="FrohNatur",
-            coords_lon=53.2476476,
-            coords_lat=10.3533381,
+            latitude=53.2476476,
+            longitude=10.3533381,
             street="An der Eulenburg 28",
             postcode="21391",
             city="Reppenstedt",
@@ -124,8 +185,8 @@ class PickupLocationGenerator:
 
         garage = PickupLocationFactory.create(
             name="Garage am Finkenberg",
-            coords_lon=53.2421706,
-            coords_lat=10.3937467,
+            latitude=53.2421706,
+            longitude=10.3937467,
             street="Finkenberg 1",
             postcode="21339",
             city="Lüneburg",
@@ -151,8 +212,8 @@ class PickupLocationGenerator:
 
         gemeinde = PickupLocationFactory.create(
             name="Paul-Gerhardt-Gemeinde",
-            coords_lon=53.2477177,
-            coords_lat=10.4385238,
+            latitude=53.2477177,
+            longitude=10.4385238,
             street="Bunsenstr. 82",
             postcode="21337",
             city="Lüneburg",
@@ -172,8 +233,8 @@ class PickupLocationGenerator:
 
         uni = PickupLocationFactory.create(
             name="Uni-Campus",
-            coords_lon=53.2477453,
-            coords_lat=10.4231546,
+            latitude=53.2477453,
+            longitude=10.4231546,
             street="Scharnhorststr. 1",
             postcode="21335",
             city="Lüneburg",
@@ -199,8 +260,8 @@ class PickupLocationGenerator:
 
         feldstrasse = PickupLocationFactory.create(
             name="Feldstraße (Rotes Feld)",
-            coords_lon=53.2424043,
-            coords_lat=10.4074418,
+            latitude=53.2424043,
+            longitude=10.4074418,
             street="Feldstr. 14",
             postcode="21335",
             city="Lüneburg",
@@ -220,8 +281,8 @@ class PickupLocationGenerator:
 
         lena = PickupLocationFactory.create(
             name="LeNa",
-            coords_lon=53.2574314,
-            coords_lat=10.3790822,
+            latitude=53.2574314,
+            longitude=10.3790822,
             street="Brockwinkler Weg 72b",
             postcode="21339",
             city="Lüneburg",
@@ -262,8 +323,8 @@ class PickupLocationGenerator:
         toelzer_route = LocationRouteFactory.create(name="Tölz")
         biodelikat = PickupLocationFactory.create(
             name="Biodelikat",
-            coords_lon=47.7603882,
-            coords_lat=11.5542721,
+            latitude=47.7603882,
+            longitude=11.5542721,
             location_route=toelzer_route,
             route_info="kleine Kisten links, große Tauschkiste",
         )
@@ -298,8 +359,8 @@ class PickupLocationGenerator:
 
         zentrum = PickupLocationFactory.create(
             name="Reginriedstraße",
-            coords_lon=47.7574811,
-            coords_lat=11.569017,
+            latitude=47.7574811,
+            longitude=11.569017,
             location_route=toelzer_route,
             route_info="kleine Kisten rechts, kleine Tauschkiste",
         )
@@ -328,8 +389,8 @@ class PickupLocationGenerator:
 
         badeteil = PickupLocationFactory.create(
             name="Schützenweg",
-            coords_lon=47.7565423,
-            coords_lat=11.5483139,
+            latitude=47.7565423,
+            longitude=11.5483139,
             location_route=toelzer_route,
         )
         PickupLocationBasketCapacity.objects.create(
@@ -363,8 +424,8 @@ class PickupLocationGenerator:
 
         norden = PickupLocationFactory.create(
             name="Ludwig-Thoma-Straße",
-            coords_lon=47.7698548,
-            coords_lat=11.5626015,
+            latitude=47.7698548,
+            longitude=11.5626015,
             location_route=toelzer_route,
         )
         PickupLocationBasketCapacity.objects.create(
@@ -393,8 +454,8 @@ class PickupLocationGenerator:
         lenggriesser_route = LocationRouteFactory.create(name="Lenggries")
         hofpunkt = PickupLocationFactory.create(
             name="Biotop-Hofpunkt",
-            coords_lon=47.6946584,
-            coords_lat=11.5700489,
+            latitude=47.6946584,
+            longitude=11.5700489,
             location_route=lenggriesser_route,
         )
         PickupLocationBasketCapacity.objects.create(
@@ -434,8 +495,8 @@ class PickupLocationGenerator:
 
         warenhaus = PickupLocationFactory.create(
             name="Grünes Warenhaus",
-            coords_lon=47.683342,
-            coords_lat=11.575253,
+            latitude=47.683342,
+            longitude=11.575253,
             location_route=lenggriesser_route,
         )
         PickupLocationBasketCapacity.objects.create(
@@ -469,8 +530,8 @@ class PickupLocationGenerator:
 
         hochalmstrasse = PickupLocationFactory.create(
             name="Hochalmstraße Lenggries",
-            coords_lon=47.675942,
-            coords_lat=11.5773619,
+            latitude=47.675942,
+            longitude=11.5773619,
             location_route=lenggriesser_route,
         )
         PickupLocationBasketCapacity.objects.create(
@@ -498,8 +559,8 @@ class PickupLocationGenerator:
 
         schlossweg = PickupLocationFactory.create(
             name="Greiling",
-            coords_lon=47.7628852,
-            coords_lat=11.6096926,
+            latitude=47.7628852,
+            longitude=11.6096926,
         )
         PickupLocationBasketCapacity.objects.create(
             basket_size_name="kleine Kiste",
@@ -532,8 +593,8 @@ class PickupLocationGenerator:
 
         hotel = PickupLocationFactory.create(
             name="Bad Heilbrunn",
-            coords_lon=47.7452572,
-            coords_lat=11.4602164,
+            latitude=47.7452572,
+            longitude=11.4602164,
         )
         PickupLocationBasketCapacity.objects.create(
             basket_size_name="kleine Kiste",
@@ -560,8 +621,8 @@ class PickupLocationGenerator:
 
         penzberg = PickupLocationFactory.create(
             name="Penzberg",
-            coords_lon=47.751751,
-            coords_lat=11.3762038,
+            latitude=47.751751,
+            longitude=11.3762038,
         )
         PickupLocationBasketCapacity.objects.create(
             basket_size_name="kleine Kiste",
@@ -588,8 +649,8 @@ class PickupLocationGenerator:
 
         tutzing = PickupLocationFactory.create(
             name="Tutzing",
-            coords_lon=47.9099578,
-            coords_lat=11.2804248,
+            latitude=47.9099578,
+            longitude=11.2804248,
         )
         PickupLocationBasketCapacity.objects.create(
             basket_size_name="kleine Kiste",
@@ -620,8 +681,8 @@ class PickupLocationGenerator:
 
         hof = PickupLocationFactory.create(
             name="Biohof Dickendorf",
-            coords_lon=53.2731785,
-            coords_lat=10.3741809,
+            latitude=53.2731785,
+            longitude=10.3741809,
             street="Vögelser Straße 25",
             postcode="21339",
             city="Lüneburg-Ochtmissen",
@@ -642,8 +703,8 @@ class PickupLocationGenerator:
 
         wirgarten = PickupLocationFactory.create(
             name="WirGarten Lüneburg",
-            coords_lon=53.2731785,
-            coords_lat=10.3741809,
+            latitude=53.2731785,
+            longitude=10.3741809,
             street="Vögelser Straße 25",
             postcode="21339",
             city="Lüneburg-Ochtmissen",
@@ -660,8 +721,8 @@ class PickupLocationGenerator:
 
         edeka = PickupLocationFactory.create(
             name="Edeka Bergmann",
-            coords_lon=53.2443079,
-            coords_lat=10.3996325,
+            latitude=53.2443079,
+            longitude=10.3996325,
             street="Sülfmeisterstraße 3",
             postcode="21335",
             city="Lüneburg",
@@ -678,8 +739,8 @@ class PickupLocationGenerator:
 
         fluse = PickupLocationFactory.create(
             name="Wohnprojekt Fluse",
-            coords_lon=53.2541747,
-            coords_lat=10.4238272,
+            latitude=53.2541747,
+            longitude=10.4238272,
             street="Meisterweg 100",
             postcode="21337",
             city="Lüneburg",
@@ -696,8 +757,8 @@ class PickupLocationGenerator:
 
         frohnatur = PickupLocationFactory.create(
             name="FrohNatur",
-            coords_lon=53.2476476,
-            coords_lat=10.3533381,
+            latitude=53.2476476,
+            longitude=10.3533381,
             street="An der Eulenburg 28",
             postcode="21391",
             city="Reppenstedt",
@@ -714,8 +775,8 @@ class PickupLocationGenerator:
 
         garage = PickupLocationFactory.create(
             name="Garage am Finkenberg",
-            coords_lon=53.2421706,
-            coords_lat=10.3937467,
+            latitude=53.2421706,
+            longitude=10.3937467,
             street="Finkenberg 1",
             postcode="21339",
             city="Lüneburg",
@@ -739,14 +800,14 @@ class PickupLocationGenerator:
     @classmethod
     def generate_pickup_locations_for_bakery(cls):
         brotanteil = ProductType.objects.get(name=BREAD_PRODUCT_TYPE_NAME)
-        for name, coords_lon, coords_lat, day_of_week, max_capacity in [
+        for name, latitude, longitude, day_of_week, max_capacity in [
             ("Hofbäckerei", 47.7603882, 11.5542721, 1, 80),
             ("Marktstand Tölz", 47.7574811, 11.5690170, 1, 40),
             ("Dorfladen Lenggries", 47.6836000, 11.5704000, 4, 30),
             ("Bahnhofskiosk Bad Tölz", 47.7412000, 11.5556000, 4, None),
         ]:
             pickup_location = PickupLocationFactory.create(
-                name=name, coords_lon=coords_lon, coords_lat=coords_lat
+                name=name, latitude=latitude, longitude=longitude
             )
             PickupLocationCapabilityFactory.create(
                 pickup_location=pickup_location,

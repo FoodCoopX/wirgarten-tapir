@@ -77,16 +77,14 @@ class TestSubscriptionUpdateViewValidatorValidateOptionalProductCanBeOrderedWith
         )
         member = MemberFactory.create()
 
-        with self.assertRaises(ValidationError) as error:
+        with self.assertRaisesMessage(
+            ValidationError,
+            "Um Anteile dieses Zusatzprodukts (optional_PT) zu bestellen, "
+            "musst du in derselben Vertragsperiode auch Anteile des Basisprodukts (required_PT) haben.",
+        ):
             SubscriptionUpdateViewValidator.validate_optional_product_can_be_ordered_without_required_product_subscription(
                 product_type=optional_product_type,
                 member=member,
                 contract_start_date=datetime.date(year=2010, month=1, day=1),
                 cache={},
             )
-
-        self.assertEqual(
-            "Um Anteile dieses Zusatzprodukts (optional_PT) zu bestellen, "
-            "musst du in derselben Vertragsperiode auch Anteile des Basisprodukts (required_PT) haben.",
-            error.exception.message,
-        )

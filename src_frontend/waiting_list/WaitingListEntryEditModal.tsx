@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Modal, Tab, Tabs } from "react-bootstrap";
 import {
+  DeliveryAddressRequest,
   PickupLocation,
   Product,
   WaitingListApi,
@@ -13,6 +14,7 @@ import ConfirmDeleteModal from "../components/ConfirmDeleteModal.tsx";
 import TapirButton from "../components/TapirButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
+import { fromApiDate, toApiDate } from "../utils/apiDate.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import WaitingListTabLink from "./tabs/WaitingListTabLink.tsx";
 import WaitingListTabPersonalData from "./tabs/WaitingListTabPersonalData.tsx";
@@ -64,6 +66,12 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
   );
   const [comment, setComment] = useState("");
   const [category, setCategory] = useState("");
+  const [deliveryAddress, setDeliveryAddress] =
+    useState<DeliveryAddressRequest>({ sameAsBillingAddress: true });
+
+  const hasHomeDeliveryWish = pickupLocationWishes.some(
+    (wish) => wish.pickupLocation.isHomeDelivery,
+  );
 
   useEffect(() => {
     setFirstName(entryDetails.firstName);
@@ -74,11 +82,16 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
     setStreet2(entryDetails.street2);
     setPostcode(entryDetails.postcode);
     setCity(entryDetails.city);
-    setDesiredStartDate(entryDetails.desiredStartDate);
+    setDesiredStartDate(
+      entryDetails.desiredStartDate
+        ? fromApiDate(entryDetails.desiredStartDate)
+        : undefined,
+    );
     setPickupLocationWishes(entryDetails.pickupLocationWishes ?? []);
     setProductWishes(entryDetails.productWishes ?? []);
     setComment(entryDetails.comment);
     setCategory(entryDetails.category ?? "");
+    setDeliveryAddress(entryDetails.deliveryAddress);
   }, [entryDetails]);
 
   function onConfirmDelete() {
@@ -121,7 +134,9 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
           street2: street2,
           postcode: postcode,
           city: city,
-          desiredStartDate: desiredStartDate,
+          desiredStartDate: desiredStartDate
+            ? toApiDate(desiredStartDate)
+            : undefined,
           category: category,
           comment: comment,
           id: entryDetails.id,
@@ -129,6 +144,7 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
             (wish) => wish.pickupLocation.id!,
           ),
           shoppingCart: buildShoppingCart(),
+          deliveryAddress: hasHomeDeliveryWish ? deliveryAddress : undefined,
         },
       })
       .then(() => {
@@ -185,6 +201,9 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
                 setCity={setCity}
                 comment={comment}
                 setComment={setComment}
+                showDeliveryAddress={hasHomeDeliveryWish}
+                deliveryAddress={deliveryAddress}
+                setDeliveryAddress={setDeliveryAddress}
               />
             </Tab>
             <Tab eventKey="wishes" title="Wünsche">

@@ -481,7 +481,34 @@ class UserGenerator:
                 )
             )
 
+        fake = Faker("de_DE")
+        members_with_home_delivery = [
+            member_pickup_location.member
+            for member_pickup_location in member_pickup_locations
+            if member_pickup_location.pickup_location.is_home_delivery
+        ]
+        for member in members_with_home_delivery:
+            cls.fill_delivery_address(member=member, fake=fake)
+        Member.objects.bulk_update(
+            members_with_home_delivery,
+            [
+                "delivery_same_as_billing_address",
+                "delivery_street",
+                "delivery_postcode",
+                "delivery_city",
+            ],
+        )
         MemberPickupLocation.objects.bulk_create(member_pickup_locations)
+
+    @classmethod
+    def fill_delivery_address(cls, member: Member, fake: Faker):
+        if random.random() < 0.5:
+            member.delivery_same_as_billing_address = True
+            return
+        member.delivery_same_as_billing_address = False
+        member.delivery_street = fake.street_address()
+        member.delivery_postcode = fake.postcode()
+        member.delivery_city = fake.city()
 
     @classmethod
     def get_confirmation_datetime(cls, reference_date: datetime.date, cache: dict):

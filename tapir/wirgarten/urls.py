@@ -34,12 +34,7 @@ from tapir.wirgarten.views.member.list.modals import (
     get_coop_share_transfer_form,
     get_member_personal_data_create_form,
 )
-from tapir.wirgarten.views.pickup_location_config import (
-    PickupLocationCfgView,
-    delete_pickup_location,
-    get_pickup_location_add_form,
-    get_pickup_location_edit_form,
-)
+from tapir.wirgarten.views.pickup_location_config import PickupLocationCfgView
 from tapir.wirgarten.views.product_cfg import (
     ProductCfgView,
     delete_period,
@@ -102,21 +97,6 @@ urlpatterns = [
         "admin/pickuplocations",
         PickupLocationCfgView.as_view(),
         name="pickup_locations",
-    ),
-    path(
-        "admin/pickuplocations/add",
-        get_pickup_location_add_form,
-        name="pickup_locations_add",
-    ),
-    path(
-        "admin/pickuplocations/edit/<str:id>",
-        get_pickup_location_edit_form,
-        name="pickup_locations_edit",
-    ),
-    path(
-        "admin/pickuplocations/delete/<str:id>",
-        delete_pickup_location,
-        name="pickup_locations_delete",
     ),
     path(
         "admin/contract_updates",

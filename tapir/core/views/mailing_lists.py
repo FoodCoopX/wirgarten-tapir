@@ -127,7 +127,7 @@ class MailingListCreateView(APIView):
         domain = TapirMailmanClient.get_domain(cache)
 
         list_name: str = create_serializer.validated_data["name"]
-        suffix = f"@{settings.EMAIL_HOST}"
+        suffix = f"@{settings.MAILING_LIST_DOMAIN}"
         if list_name.endswith(suffix):
             list_name = list_name.replace(suffix, "")
         created_list = domain.create_list(list_name=list_name)

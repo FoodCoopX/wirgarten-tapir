@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { useApi } from "../hooks/useApi.ts";
-import { PublicWaitingListEntryDetails, WaitingListApi } from "../api-client";
-import { handleRequestError } from "../utils/handleRequestError.ts";
 import { Spinner } from "react-bootstrap";
+import { PublicWaitingListEntryDetails, WaitingListApi } from "../api-client";
 import BestellWizardMobile from "../bestell_wizard_mobile/BestellWizardMobile.tsx";
+import { useApi } from "../hooks/useApi.ts";
+import { handleRequestError } from "../utils/handleRequestError.ts";
 
 interface WaitingListConfirmBaseProps {
   csrfToken: string;
@@ -30,12 +30,9 @@ const WaitingListConfirmBase: React.FC<WaitingListConfirmBaseProps> = ({
         linkKey: waitingListLinkKey,
       })
       .then(setWaitingListEntryDetails)
-      .catch(async (error) => {
+      .catch((error) => {
         if (error?.response?.status === 404) return;
-        await handleRequestError(
-          error,
-          "Fehler beim Laden der Warteliste-Eintrag!",
-        );
+        handleRequestError(error, "Fehler beim Laden der Warteliste-Eintrag!");
       })
       .finally(() => setLoading(false));
   }, []);
@@ -55,8 +52,8 @@ const WaitingListConfirmBase: React.FC<WaitingListConfirmBaseProps> = ({
 
   return (
     <p>
-      Der Link ist bereits abgelaufen. Bitte wende dich an{" "}
-      <a href={"mailto:" + adminEmail}>{adminEmail}</a>
+      Der Link ist bereits abgelaufen. Bitte wende dich an die Verwaltung (
+      <a href={"mailto:" + adminEmail}>{adminEmail}</a>).
     </p>
   );
 };

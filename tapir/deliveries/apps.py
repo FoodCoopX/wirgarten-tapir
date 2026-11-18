@@ -20,8 +20,8 @@ class DeliveriesConfig(AppConfig):
             name="Joker: Joker eingesetzt",
             key=self.MAIL_TRIGGER_JOKER_USED,
             tokens={"Joker Datum": "joker_date"},
-            required=lambda: get_parameter_value(
-                ParameterKeys.JOKERS_ENABLED, cache={}
+            required=lambda cache: get_parameter_value(
+                ParameterKeys.JOKERS_ENABLED, cache=cache
             ),
         )
 
@@ -29,8 +29,8 @@ class DeliveriesConfig(AppConfig):
             name="Joker: Joker storniert",
             key=self.MAIL_TRIGGER_JOKER_CANCELLED,
             tokens={"Joker Datum": "joker_date"},
-            required=lambda: get_parameter_value(
-                ParameterKeys.JOKERS_ENABLED, cache={}
+            required=lambda cache: get_parameter_value(
+                ParameterKeys.JOKERS_ENABLED, cache=cache
             ),
         )
 
@@ -38,8 +38,8 @@ class DeliveriesConfig(AppConfig):
             name="Lieferung Spende: Spende eingesetzt",
             key=self.MAIL_TRIGGER_DONATION_USED,
             tokens={"Spende Datum": "donation_date"},
-            required=lambda: get_parameter_value(
-                ParameterKeys.DELIVERY_DONATION_MODE, cache={}
+            required=lambda cache: get_parameter_value(
+                ParameterKeys.DELIVERY_DONATION_MODE, cache=cache
             )
             != DELIVERY_DONATION_MODE_DISABLED,
         )
@@ -48,8 +48,8 @@ class DeliveriesConfig(AppConfig):
             name="Lieferung Spende: Spende storniert",
             key=self.MAIL_TRIGGER_DONATION_CANCELLED,
             tokens={"Spende Datum": "donation_date"},
-            required=lambda: get_parameter_value(
-                ParameterKeys.DELIVERY_DONATION_MODE, cache={}
+            required=lambda cache: get_parameter_value(
+                ParameterKeys.DELIVERY_DONATION_MODE, cache=cache
             )
             != DELIVERY_DONATION_MODE_DISABLED,
         )

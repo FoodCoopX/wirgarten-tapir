@@ -25,3 +25,9 @@ class TestParameterForm(TapirIntegrationTest):
 
         self.assertIn(ParameterCategory.BAKERY, form.categories)
         self.assertIn(ParameterKeys.BAKERY_STOVE_LAYERS, form.fields)
+
+    def test_isValid_stringValueLongerThanDatabaseColumn_fieldHasError(self):
+        form = ParameterForm(data={ParameterKeys.SITE_NAME: "a" * 4097})
+
+        self.assertFalse(form.is_valid())
+        self.assertIn(ParameterKeys.SITE_NAME, form.errors)

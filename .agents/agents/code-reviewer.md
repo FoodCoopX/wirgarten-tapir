@@ -43,6 +43,10 @@ context.
 - Data fetching goes through `src_frontend/hooks/useApi.ts`. No new state management library, no
   path aliases.
 
+**Documentation**
+
+- Does the diff change behaviour described in `docs/admins/`? If so, the admin documentation is updated too.
+
 **Tests**
 
 - Tests live in `tapir/<app>/tests/`, with factory-boy factories in `factories.py`.

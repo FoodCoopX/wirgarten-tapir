@@ -111,6 +111,7 @@ class BreadContent(TapirModel):
 
     class Meta:
         unique_together = ("bread", "ingredient")
+        ordering = ["sort_order"]
 
     def __str__(self):
         return f"{self.bread.name} - {self.ingredient.name}"
@@ -231,8 +232,9 @@ class BreadsPerPickupLocationPerWeek(TapirModel):
 
 class BreadsToBakePerWeek(TapirModel):
     """
-    A bread with fixed_pieces occupies no stove layers, so its quantity cannot
-    be recovered by summing StoveSession.
+    A bread with fixed_pieces occupies no stove layers (unless it shares them
+    with its BreadGroup), so its quantity cannot be recovered by summing
+    StoveSession.
     """
 
     year = models.PositiveIntegerField()

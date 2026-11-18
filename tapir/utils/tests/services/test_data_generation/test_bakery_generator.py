@@ -1,4 +1,5 @@
 import datetime
+from unittest.mock import patch
 
 from django.test import override_settings
 
@@ -156,6 +157,7 @@ class TestBakeryGenerator(TapirIntegrationTest):
                 ).exists(),
             )
 
+    @patch.object(BakeryGenerator, "SHARE_OF_MEMBERS_WITH_PREFERENCES", 1.0)
     def test_generateWeekData_givesMembersFavourites(self):
         pickup_location = create_pickup_location_with_opening_times(
             [4], name="Hofladen"
@@ -178,11 +180,7 @@ class TestBakeryGenerator(TapirIntegrationTest):
             end_date=datetime.date.fromisocalendar(year, week, 7),
         )
 
-        BakeryGenerator.SHARE_OF_MEMBERS_WITH_PREFERENCES = 1.0
-        try:
-            BakeryGenerator.generate_week_data()
-        finally:
-            BakeryGenerator.SHARE_OF_MEMBERS_WITH_PREFERENCES = 0.6
+        BakeryGenerator.generate_week_data()
 
         preferred = PreferredBread.objects.get(member=member)
         self.assertGreaterEqual(preferred.breads.count(), 1)

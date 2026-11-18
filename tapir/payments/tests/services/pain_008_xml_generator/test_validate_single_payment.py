@@ -17,11 +17,9 @@ class TestValidateSinglePayment(TapirUnitTest):
             mandate_ref__member__iban="DE00123456781234567890",
         )
 
-        with self.assertRaises(Pain008XmlSinglePaymentException) as context:
+        with self.assertRaisesMessage(
+            Pain008XmlSinglePaymentException, "Mitglied John Doe #12: Ungültige IBAN."
+        ):
             Pain008XmlStringGenerator.validate_single_payment(
                 payment=payment, cache={}, collection_date=datetime.date(2026, 1, 1)
             )
-
-        self.assertEqual(
-            "Mitglied John Doe #12: Ungültige IBAN.", context.exception.message
-        )

@@ -11,6 +11,9 @@ from tapir.coop.services.member_needs_banking_data_checker import (
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
+from tapir.pickup_locations.services.home_delivery_address_validator import (
+    HomeDeliveryAddressValidator,
+)
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
@@ -178,7 +181,13 @@ class SubscriptionUpdateViewValidator:
         if pickup_location_id is None:
             raise ValidationError("Bitte wähle einen Abholort aus!")
 
-        return PickupLocation.objects.get(id=pickup_location_id)
+        pickup_location = PickupLocation.objects.get(id=pickup_location_id)
+        if current_pickup_location_id is None:
+            HomeDeliveryAddressValidator.validate(
+                address_owner=member, pickup_location=pickup_location
+            )
+
+        return pickup_location
 
     @classmethod
     def validate_all_products_belong_to_product_type(

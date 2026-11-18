@@ -32,10 +32,10 @@ export interface MemberPaymentRhythmData {
   currentRhythm: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof MemberPaymentRhythmData
    */
-  dateOfNextRhythmChange: Date;
+  dateOfNextRhythmChange: string;
   /**
    *
    * @type {{ [key: string]: string; }}
@@ -85,7 +85,7 @@ export function MemberPaymentRhythmDataFromJSONTyped(
   }
   return {
     currentRhythm: json["current_rhythm"],
-    dateOfNextRhythmChange: new Date(json["date_of_next_rhythm_change"]),
+    dateOfNextRhythmChange: json["date_of_next_rhythm_change"],
     allowedRhythms: json["allowed_rhythms"],
     rhythmHistory: (json["rhythm_history"] as Array<any>).map(
       MemberPaymentRhythmFromJSON,
@@ -109,9 +109,7 @@ export function MemberPaymentRhythmDataToJSONTyped(
 
   return {
     current_rhythm: value["currentRhythm"],
-    date_of_next_rhythm_change: value["dateOfNextRhythmChange"]
-      .toISOString()
-      .substring(0, 10),
+    date_of_next_rhythm_change: value["dateOfNextRhythmChange"],
     allowed_rhythms: value["allowedRhythms"],
     rhythm_history: (value["rhythmHistory"] as Array<any>).map(
       MemberPaymentRhythmToJSON,

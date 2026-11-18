@@ -36,7 +36,7 @@ export function checkPickupLocationCapacities(
           pickupLocations.filter(
             (location) =>
               !response.pickupLocationIdsWithEnoughCapacityForOrder.includes(
-                location.id!,
+                location.id,
               ),
           ),
         ),

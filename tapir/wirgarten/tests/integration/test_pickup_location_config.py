@@ -1,5 +1,6 @@
 import datetime
 import json
+from decimal import Decimal
 from unittest.mock import Mock, patch
 
 from tapir.wirgarten.forms import pickup_location as pickup_location_module
@@ -29,6 +30,23 @@ class TestPickupLocationConfig(TapirIntegrationTest):
         data = json.loads(get_pickup_locations_map_data([pickup_location], [], {}))
         self.assertIsNone(data[pickup_location.id]["start_date"])
         self.assertIsNone(data[pickup_location.id]["end_date"])
+
+    def test_getPickupLocationsMapData_withCoordinates_serializesLatitudeFirst(self):
+        pickup_location = PickupLocationFactory.create(
+            latitude=Decimal("47.7"), longitude=Decimal("11.5")
+        )
+        data = json.loads(get_pickup_locations_map_data([pickup_location], [], {}))
+        self.assertEqual("47.7,11.5", data[pickup_location.id]["coords"])
+
+    def test_getPickupLocationsMapData_homeDeliveryWithoutCoordinates_coordsIsNull(
+        self,
+    ):
+        pickup_location = PickupLocationFactory.create(
+            is_home_delivery=True, latitude=None, longitude=None
+        )
+        data = json.loads(get_pickup_locations_map_data([pickup_location], [], {}))
+        self.assertIsNone(data[pickup_location.id]["coords"])
+        self.assertTrue(data[pickup_location.id]["is_home_delivery"])
 
     @patch.object(
         pickup_location_module,

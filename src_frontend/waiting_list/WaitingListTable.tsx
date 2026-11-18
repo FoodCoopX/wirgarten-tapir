@@ -122,7 +122,7 @@ const WaitingListTable: React.FC<WaitingListTableProps> = ({
           >
             &nbsp;
           </span>
-          Kann erfüllt werden
+          <span>Kann erfüllt werden</span>
         </span>
         <span>
           <span
@@ -131,7 +131,7 @@ const WaitingListTable: React.FC<WaitingListTableProps> = ({
           >
             &nbsp;
           </span>
-          Link bereits versendet
+          <span>Link bereits versendet</span>
         </span>
       </div>
       <Table striped hover responsive className={"max-column-width"}>

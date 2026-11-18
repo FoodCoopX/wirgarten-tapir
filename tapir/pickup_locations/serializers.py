@@ -18,20 +18,6 @@ from tapir.wirgarten.models import (
 from tapir.wirgarten.utils import get_today
 
 
-class PickupLocationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PickupLocation
-        fields = "__all__"
-
-    delivery_day = serializers.SerializerMethodField()
-
-    @extend_schema_field(serializers.IntegerField(allow_null=True))
-    def get_delivery_day(self, pickup_location: PickupLocation) -> int | None:
-        return PickupLocationDeliveryDayService.get_delivery_day(
-            pickup_location_id=pickup_location.id, cache=self.context["cache"]
-        )
-
-
 class PickupLocationOpeningTimeSerializer(serializers.ModelSerializer):
     class Meta:
         model = PickupLocationOpeningTime
@@ -42,6 +28,55 @@ class PickupLocationOpeningTimeSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_day_of_week_string(opening_time: PickupLocationOpeningTime) -> str:
         return OPTIONS_WEEKDAYS[opening_time.day_of_week][1]
+
+
+class PickupLocationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PickupLocation
+        fields = "__all__"
+
+    delivery_day = serializers.SerializerMethodField()
+    opening_times = PickupLocationOpeningTimeSerializer(many=True, read_only=True)
+
+    @extend_schema_field(serializers.IntegerField(allow_null=True))
+    def get_delivery_day(self, pickup_location: PickupLocation) -> int | None:
+        return PickupLocationDeliveryDayService.get_delivery_day(
+            pickup_location_id=pickup_location.id, cache=self.context["cache"]
+        )
+
+
+class PickupLocationOpeningTimeInputSerializer(serializers.Serializer):
+    day_of_week = serializers.ChoiceField(choices=OPTIONS_WEEKDAYS)
+    open_time = serializers.TimeField()
+    close_time = serializers.TimeField()
+
+
+class PickupLocationSaveRequestSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=150)
+    latitude = serializers.DecimalField(
+        max_digits=None, decimal_places=None, allow_null=True, default=None
+    )
+    longitude = serializers.DecimalField(
+        max_digits=None, decimal_places=None, allow_null=True, default=None
+    )
+    street = serializers.CharField(max_length=150)
+    street_2 = serializers.CharField(max_length=150, allow_blank=True, default="")
+    postcode = serializers.CharField(max_length=32)
+    city = serializers.CharField(max_length=50)
+    info = serializers.CharField(max_length=3000, allow_blank=True, default="")
+    access_code = serializers.CharField(max_length=20, allow_blank=True, default="")
+    messenger_group_link = serializers.CharField(
+        max_length=150, allow_blank=True, default=""
+    )
+    contact_name = serializers.CharField(max_length=150, allow_blank=True, default="")
+    photo_link = serializers.CharField(max_length=512, allow_blank=True, default="")
+    location_route_id = serializers.CharField(allow_null=True, default=None)
+    route_info = serializers.CharField(max_length=3000, allow_blank=True, default="")
+    start_date = serializers.DateField(allow_null=True, default=None)
+    end_date = serializers.DateField(allow_null=True, default=None)
+    show_details_in_basket_totals_export = serializers.BooleanField(default=False)
+    is_home_delivery = serializers.BooleanField(default=False)
+    opening_times = PickupLocationOpeningTimeInputSerializer(many=True)
 
 
 class ProductBasketSizeEquivalenceSerializer(serializers.Serializer):
@@ -84,8 +119,8 @@ class PublicPickupLocationSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "name",
-            "coords_lon",
-            "coords_lat",
+            "latitude",
+            "longitude",
             "street",
             "street_2",
             "postcode",
@@ -93,7 +128,9 @@ class PublicPickupLocationSerializer(serializers.ModelSerializer):
             "opening_times",
             "current_delivery_charge",
             "delivery_day",
+            "is_home_delivery",
         ]
+        read_only_fields = fields
 
     opening_times = serializers.SerializerMethodField()
     current_delivery_charge = serializers.SerializerMethodField()
@@ -172,3 +209,31 @@ class LocationRouteSerializer(serializers.ModelSerializer):
             .order_by("name")
             .values_list("name", flat=True)
         )
+
+
+class DeliveryAddressSerializer(serializers.Serializer):
+    same_as_billing_address = serializers.BooleanField()
+    street = serializers.CharField(allow_blank=True, default="")
+    street_2 = serializers.CharField(allow_blank=True, default="")
+    postcode = serializers.CharField(allow_blank=True, default="")
+    city = serializers.CharField(allow_blank=True, default="")
+    country = serializers.CharField(allow_blank=True, default="DE")
+
+
+class ChangeMemberPickupLocationRequestSerializer(serializers.Serializer):
+    member_id = serializers.CharField()
+    pickup_location_id = serializers.CharField()
+    delivery_address = DeliveryAddressSerializer(required=False)
+
+
+class StoredDeliveryAddressSerializer(serializers.Serializer):
+    same_as_billing_address = serializers.BooleanField()
+    street = serializers.CharField()
+    street_2 = serializers.CharField()
+    postcode = serializers.CharField()
+    city = serializers.CharField()
+    country = serializers.CharField()
+
+
+class MemberDeliveryAddressSerializer(StoredDeliveryAddressSerializer):
+    change_warning_text = serializers.CharField()

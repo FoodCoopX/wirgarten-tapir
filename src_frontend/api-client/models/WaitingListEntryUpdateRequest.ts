@@ -12,6 +12,12 @@
  * Do not edit the class manually.
  */
 
+import type { DeliveryAddressRequest } from "./DeliveryAddressRequest";
+import {
+  DeliveryAddressRequestFromJSON,
+  DeliveryAddressRequestToJSON,
+} from "./DeliveryAddressRequest";
+
 /**
  *
  * @export
@@ -86,10 +92,10 @@ export interface WaitingListEntryUpdateRequest {
   shoppingCart: { [key: string]: number };
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof WaitingListEntryUpdateRequest
    */
-  desiredStartDate?: Date;
+  desiredStartDate?: string;
   /**
    *
    * @type {string}
@@ -102,6 +108,12 @@ export interface WaitingListEntryUpdateRequest {
    * @memberof WaitingListEntryUpdateRequest
    */
   category?: string;
+  /**
+   *
+   * @type {DeliveryAddressRequest}
+   * @memberof WaitingListEntryUpdateRequest
+   */
+  deliveryAddress?: DeliveryAddressRequest;
 }
 
 /**
@@ -159,9 +171,13 @@ export function WaitingListEntryUpdateRequestFromJSONTyped(
     desiredStartDate:
       json["desired_start_date"] == null
         ? undefined
-        : new Date(json["desired_start_date"]),
+        : json["desired_start_date"],
     comment: json["comment"],
     category: json["category"] == null ? undefined : json["category"],
+    deliveryAddress:
+      json["delivery_address"] == null
+        ? undefined
+        : DeliveryAddressRequestFromJSON(json["delivery_address"]),
   };
 }
 
@@ -191,11 +207,9 @@ export function WaitingListEntryUpdateRequestToJSONTyped(
     city: value["city"],
     pickup_location_ids: value["pickupLocationIds"],
     shopping_cart: value["shoppingCart"],
-    desired_start_date:
-      value["desiredStartDate"] == null
-        ? undefined
-        : value["desiredStartDate"].toISOString().substring(0, 10),
+    desired_start_date: value["desiredStartDate"],
     comment: value["comment"],
     category: value["category"],
+    delivery_address: DeliveryAddressRequestToJSON(value["deliveryAddress"]),
   };
 }

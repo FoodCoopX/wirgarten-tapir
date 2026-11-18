@@ -56,7 +56,9 @@
       <div id="contract-tiles"
            data-show-cancellation-card="{{ subscriptionAutomaticRenewal }}"
            data-member-id="{{ object.pk }}"
-           data-show-contract-edit="{{ show_contract_edit }}">
+           data-show-contract-edit="{{ show_contract_edit }}"
+           data-contact-email="{{ contactEmail }}"
+           data-user-is-admin="{{ perms.accounts.manage }}">
         <div id="subscription_cards" data-member-id="{{ object.pk }}">
           {% include "wirgarten/member/loading_spinner.html" %}
         </div>
@@ -90,7 +92,8 @@
           <span
             id="personal_data_dropdown"
             data-member-id="{{ object.id }}"
-            data-extra-email-addresses-enabled="{{ extra_email_addresses_enabled }}">
+            data-extra-email-addresses-enabled="{{ extra_email_addresses_enabled }}"
+            data-has-home-delivery="{{ has_home_delivery }}">
           </span>
         </div>
         <div class="card-body">
@@ -145,6 +148,19 @@
                 <span class="text-danger">{% translate "Fehlt" %}</span>
               {% endif %}
             </dd>
+            {% if has_home_delivery %}
+              <dt>{% translate "Lieferadresse" %}</dt>
+              <dd id="tapir_user_delivery_address">
+                {% if delivery_address_complete %}
+                  {{ delivery_address }}
+                  {% if object.delivery_same_as_billing_address %}
+                    <span class="text-muted">({% translate "wie Rechnungsadresse" %})</span>
+                  {% endif %}
+                {% else %}
+                  <span class="text-danger">{% translate "Unvollständig" %}</span>
+                {% endif %}
+              </dd>
+            {% endif %}
             {% if bakery_enabled %}
               <dt>{% translate "Pseudonym" %}</dt>
               <dd id="tapir_user_pseudonym">
@@ -187,8 +203,8 @@
                    target="_blank"><span class="material-icons" aria-hidden="true">phone</span>{{ admin_telephone }}</a>
               {% endif %}
               <a class="card-text text-reset text-decoration-none d-flex align-items-center gap-2 text-break"
-                 href="mailto:{% get_parameter_value_tag 'wirgarten.site.admin_email' cache %}"
-                 target="_blank"><span class="material-icons" aria-hidden="true">mail</span>{% get_parameter_value_tag 'wirgarten.site.admin_email' cache %}</a>
+                 href="mailto:{% get_parameter_value_tag 'wirgarten.site.email' cache %}"
+                 target="_blank"><span class="material-icons" aria-hidden="true">mail</span>{% get_parameter_value_tag 'wirgarten.site.email' cache %}</a>
             </div>
             <img src="{% get_parameter_value_tag 'wirgarten.site.admin_image' cache %}"
                  alt="{% get_parameter_value_tag 'wirgarten.site.admin_name' cache %}"
@@ -249,6 +265,25 @@
                                                     data-member-id="{{ object.id }}"></span>{% endif %}
               </div>
             </dd>
+            {% if perms.accounts.manage and payment_export_exclusion_enabled %}
+              <dt>{% translate "Vom Zahlungsexport ausgeschlossen" %}</dt>
+              <dd id="tapir_user_payment_export_exclusion">
+                <div class="d-flex gap-2">
+                  {% if payment_export_exclusion_period %}
+                    {{ payment_export_exclusion_period.start_date|format_month_and_year }} –
+                    {% if payment_export_exclusion_period.end_date %}
+                      {{ payment_export_exclusion_period.end_date|format_month_and_year }}
+                    {% else %}
+                      unbefristet
+                    {% endif %}
+                  {% else %}
+                    Nein
+                  {% endif %}
+                  <span id="payment_export_exclusion_period_button"
+                        data-member-id="{{ object.id }}"></span>
+                </div>
+              </dd>
+            {% endif %}
           </dl>
         </div>
       </div>

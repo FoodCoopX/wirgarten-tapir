@@ -43,12 +43,14 @@ body {
 
 @font-face {
     font-family: "RadioCanada-Regular";
+    font-display: swap;
     font-style: normal;
     src: url("/static/core/themes/sos/fonts/RadioCanada-Regular.woff2") format("woff2");
 }
 
 @font-face {
     font-family: "RadioCanada-Light";
+    font-display: swap;
     font-style: normal;
     src: url("/static/core/themes/sos/fonts/RadioCanada-Light.woff2") format("woff2");
 }

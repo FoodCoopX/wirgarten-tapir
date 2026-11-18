@@ -12,6 +12,12 @@
  * Do not edit the class manually.
  */
 
+import type { DeliveryAddressRequest } from "./DeliveryAddressRequest";
+import {
+  DeliveryAddressRequestFromJSON,
+  DeliveryAddressRequestToJSON,
+} from "./DeliveryAddressRequest";
+
 /**
  *
  * @export
@@ -78,6 +84,12 @@ export interface UpdateSubscriptionsRequestRequest {
    * @memberof UpdateSubscriptionsRequestRequest
    */
   paymentRhythm?: string;
+  /**
+   *
+   * @type {DeliveryAddressRequest}
+   * @memberof UpdateSubscriptionsRequestRequest
+   */
+  deliveryAddress?: DeliveryAddressRequest;
 }
 
 /**
@@ -134,6 +146,10 @@ export function UpdateSubscriptionsRequestRequestFromJSONTyped(
     iban: json["iban"],
     paymentRhythm:
       json["payment_rhythm"] == null ? undefined : json["payment_rhythm"],
+    deliveryAddress:
+      json["delivery_address"] == null
+        ? undefined
+        : DeliveryAddressRequestFromJSON(json["delivery_address"]),
   };
 }
 
@@ -162,5 +178,6 @@ export function UpdateSubscriptionsRequestRequestToJSONTyped(
     account_owner: value["accountOwner"],
     iban: value["iban"],
     payment_rhythm: value["paymentRhythm"],
+    delivery_address: DeliveryAddressRequestToJSON(value["deliveryAddress"]),
   };
 }

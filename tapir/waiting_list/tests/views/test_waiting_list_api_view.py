@@ -147,6 +147,14 @@ class TestWaitingListAPIView(TapirIntegrationTest):
                 "account_owner": None,
                 "iban": None,
                 "can_be_fulfilled": False,
+                "delivery_address": {
+                    "same_as_billing_address": True,
+                    "street": "",
+                    "street_2": "",
+                    "postcode": "",
+                    "city": "",
+                    "country": "DE",
+                },
             },
             response_content["results"][0],
         )

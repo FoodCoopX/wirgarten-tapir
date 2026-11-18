@@ -5,7 +5,10 @@ from tapir.core.config import LEGAL_STATUS_OPTIONS
 from tapir.deliveries.serializers import (
     SubscriptionSerializer,
 )
-from tapir.pickup_locations.serializers import PickupLocationSerializer
+from tapir.pickup_locations.serializers import (
+    DeliveryAddressSerializer,
+    PickupLocationSerializer,
+)
 from tapir.products.serializers import (
     PublicProductTypeSerializer,
     ProductTypeSerializer,
@@ -29,11 +32,11 @@ class ProductForCancellationSerializer(serializers.Serializer):
     product = ProductSerializer(read_only=True)
     is_in_trial = serializers.BooleanField()
     cancellation_date = serializers.DateField()
-    last_day_of_notice_period = serializers.DateField()
+    last_day_to_give_notice = serializers.DateField()
     date_limit_for_trial_cancellation = serializers.DateField(required=False)
     notice_period_duration = serializers.IntegerField()
     notice_period_unit = serializers.ChoiceField(choices=NOTICE_PERIOD_UNIT_OPTIONS)
-    subscription_end_date = serializers.DateField()
+    post_trial_subscription_end_date = serializers.DateField()
 
 
 class SolidarityContributionCancellationDataSerializer(serializers.Serializer):
@@ -166,6 +169,7 @@ class UpdateSubscriptionsRequestSerializer(serializers.Serializer):
     account_owner = serializers.CharField(allow_blank=True)
     iban = serializers.CharField(allow_blank=True)
     payment_rhythm = serializers.CharField(required=False)
+    delivery_address = DeliveryAddressSerializer(required=False)
 
 
 class MemberProfileCapacityCheckRequestSerializer(serializers.Serializer):

@@ -65,6 +65,40 @@ class TestsDateRangeOverlapChecker(TapirUnitTest):
             )
         )
 
+    def test_doRangesOverlap_bothRangesHaveNoEnd_returnsTrue(self):
+        self.assertTrue(
+            DateRangeOverlapChecker.do_ranges_overlap(
+                range_1_start=datetime.date(year=2025, month=3, day=1),
+                range_1_end=None,
+                range_2_start=datetime.date(year=2030, month=1, day=1),
+                range_2_end=None,
+            )
+        )
+
+    def test_doRangesOverlap_range2HasNoEndAndStartsBeforeRange1Ends_returnsTrue(
+        self,
+    ):
+        self.assertTrue(
+            DateRangeOverlapChecker.do_ranges_overlap(
+                range_1_start=datetime.date(year=2025, month=3, day=1),
+                range_1_end=datetime.date(year=2025, month=3, day=31),
+                range_2_start=datetime.date(year=2025, month=3, day=31),
+                range_2_end=None,
+            )
+        )
+
+    def test_doRangesOverlap_range2HasNoEndAndStartsAfterRange1Ends_returnsFalse(
+        self,
+    ):
+        self.assertFalse(
+            DateRangeOverlapChecker.do_ranges_overlap(
+                range_1_start=datetime.date(year=2025, month=3, day=1),
+                range_1_end=datetime.date(year=2025, month=3, day=31),
+                range_2_start=datetime.date(year=2025, month=4, day=1),
+                range_2_end=None,
+            )
+        )
+
     def test_getNumberOfDaysOfOverlap_range1IsCompletelyBeforeRange2_returnsFalse(self):
         self.assertEqual(
             0,

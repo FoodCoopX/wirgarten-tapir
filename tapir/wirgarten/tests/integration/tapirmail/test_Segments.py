@@ -1,12 +1,17 @@
 import datetime
 
 from dateutil.relativedelta import relativedelta
+from tapir_mail.registries import get_mail_segment_definitions
 from tapir_mail.service.segment import resolve_segments
+
+from tapir.configuration.models import TapirParameter
+from tapir.core.config import LEGAL_STATUS_ASSOCIATION
 
 from tapir.subscriptions.services.contract_start_date_calculator import (
     ContractStartDateCalculator,
 )
 from tapir.wirgarten.models import Subscription
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tapirmail import Segments, configure_mail_module
 from tapir.wirgarten.tests.factories import (
@@ -128,3 +133,32 @@ class SegmentTest(TapirIntegrationTest):
             dynamic_segment_names_additive=[Segments.WITH_ACTIVE_SUBSCRIPTION]
         )
         self.assertSetEqual(self.ids(segment_members), expected_member_ids)
+
+    def test_getMailSegmentDefinitions_legalStatusIsCooperative_coopSegmentsIncluded(
+        self,
+    ):
+        segment_names = get_mail_segment_definitions().keys()
+
+        self.assertIn(Segments.COOP_MEMBERS, segment_names)
+        self.assertIn(Segments.NON_COOP_MEMBERS, segment_names)
+        self.assertIn(
+            Segments.MEMBERS_WITH_CONTRACT_SINCE_MORE_THAN_ONE_YEAR_BUT_NO,
+            segment_names,
+        )
+
+    def test_getMailSegmentDefinitions_legalStatusIsNotCooperative_coopSegmentsExcluded(
+        self,
+    ):
+        TapirParameter.objects.filter(
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS
+        ).update(value=LEGAL_STATUS_ASSOCIATION)
+
+        segment_names = get_mail_segment_definitions().keys()
+
+        self.assertNotIn(Segments.COOP_MEMBERS, segment_names)
+        self.assertNotIn(Segments.NON_COOP_MEMBERS, segment_names)
+        self.assertNotIn(
+            Segments.MEMBERS_WITH_CONTRACT_SINCE_MORE_THAN_ONE_YEAR_BUT_NO,
+            segment_names,
+        )
+        self.assertIn(Segments.ALL_USERS, segment_names)

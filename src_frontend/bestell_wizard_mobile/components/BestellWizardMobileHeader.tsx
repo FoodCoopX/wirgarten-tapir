@@ -33,7 +33,7 @@ interface BestellWizardMobileHeaderProps {
   selectedNumberOfCoopShares: number;
   goToProductTypeStep: (productType: PublicProductType) => void;
   associationMembershipType?: AssociationMembershipType;
-  contractStartDate: Date;
+  contractStartDate: Date | undefined;
   selectedGrowingPeriod: PublicGrowingPeriod | undefined;
   setCurrentStep: (step: Step) => void;
 }

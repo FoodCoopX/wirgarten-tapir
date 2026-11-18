@@ -128,7 +128,7 @@ class AvailableBreadsForDeliveryListView(APIView):
             )
 
         if is_active:
-            entry, created = AvailableBreadsForDeliveryDay.objects.get_or_create(
+            _, created = AvailableBreadsForDeliveryDay.objects.get_or_create(
                 year=year,
                 delivery_week=delivery_week,
                 delivery_day=delivery_day,

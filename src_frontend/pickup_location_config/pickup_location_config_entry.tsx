@@ -2,6 +2,18 @@ import { createRoot } from "react-dom/client";
 import { getCsrfToken } from "../utils/getCsrfToken.ts";
 import LocationRouteBase from "./LocationRouteBase.tsx";
 import PickupLocationCapacityBase from "./PickupLocationCapacityBase.tsx";
+import PickupLocationEditBase from "./PickupLocationEditBase.tsx";
+
+const domNodeEditButtons = document.getElementById(
+  "pickup_location_edit_buttons",
+);
+if (domNodeEditButtons) {
+  createRoot(domNodeEditButtons).render(
+    <PickupLocationEditBase csrfToken={getCsrfToken()} />,
+  );
+} else {
+  console.error("Failed to render pickup location edit buttons from React");
+}
 
 const domNodeCapacityButton = document.getElementById(
   "pickup_location_capacity_edit_button",

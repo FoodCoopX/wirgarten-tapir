@@ -32,16 +32,16 @@ export interface GrowingPeriodWithDeliveryDayAdjustments {
   growingPeriodId: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof GrowingPeriodWithDeliveryDayAdjustments
    */
-  growingPeriodStartDate: Date;
+  growingPeriodStartDate: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof GrowingPeriodWithDeliveryDayAdjustments
    */
-  growingPeriodEndDate: Date;
+  growingPeriodEndDate: string;
   /**
    *
    * @type {Array<number>}
@@ -140,8 +140,8 @@ export function GrowingPeriodWithDeliveryDayAdjustmentsFromJSONTyped(
   }
   return {
     growingPeriodId: json["growing_period_id"],
-    growingPeriodStartDate: new Date(json["growing_period_start_date"]),
-    growingPeriodEndDate: new Date(json["growing_period_end_date"]),
+    growingPeriodStartDate: json["growing_period_start_date"],
+    growingPeriodEndDate: json["growing_period_end_date"],
     growingPeriodWeeksWithoutDelivery:
       json["growing_period_weeks_without_delivery"],
     adjustments: (json["adjustments"] as Array<any>).map(
@@ -173,12 +173,8 @@ export function GrowingPeriodWithDeliveryDayAdjustmentsToJSONTyped(
 
   return {
     growing_period_id: value["growingPeriodId"],
-    growing_period_start_date: value["growingPeriodStartDate"]
-      .toISOString()
-      .substring(0, 10),
-    growing_period_end_date: value["growingPeriodEndDate"]
-      .toISOString()
-      .substring(0, 10),
+    growing_period_start_date: value["growingPeriodStartDate"],
+    growing_period_end_date: value["growingPeriodEndDate"],
     growing_period_weeks_without_delivery:
       value["growingPeriodWeeksWithoutDelivery"],
     adjustments: (value["adjustments"] as Array<any>).map(

@@ -5,6 +5,7 @@ from django.urls import reverse
 from rest_framework import status
 
 from tapir.payments.models import MemberPaymentRhythm
+from tapir.pickup_locations.models import MemberDeliveryAddressChangedLogEntry
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
@@ -224,6 +225,69 @@ class TestUpdateSubscriptionsApiView(TapirIntegrationTest):
         )
 
         self.assertFalse(Subscription.objects.exists())
+
+    def test_post_homeDeliveryWithAddressInRequest_savesAddressAndLinksLocation(
+        self,
+    ):
+        member = MemberFactory.create(street="", postcode="", city="")
+        home_delivery_location = PickupLocationFactory.create(is_home_delivery=True)
+        self.client.force_login(member)
+        data = self.build_valid_post_data_for_member(member.id)
+        data["pickup_location_id"] = home_delivery_location.id
+        data["delivery_address"] = self._build_separate_address()
+
+        response_content = self.send_request_and_assert_response_200(data=data)
+
+        self.assert_order_confirmed(response_content)
+        member.refresh_from_db()
+        self.assertFalse(member.delivery_same_as_billing_address)
+        self.assertEqual("Lieferweg 2", member.delivery_street)
+        self.assertEqual("22222", member.delivery_postcode)
+        self.assertEqual("Lieferdorf", member.delivery_city)
+        self.assertEqual(1, MemberDeliveryAddressChangedLogEntry.objects.count())
+        self.assertEqual(
+            home_delivery_location.id,
+            MemberPickupLocationGetter.get_member_pickup_location_id(
+                member=member,
+                reference_date=Subscription.objects.first().start_date,
+            ),
+        )
+
+    def test_post_homeDeliveryWithIncompleteAddressInRequest_noChangesApplied(
+        self,
+    ):
+        member = MemberFactory.create(street="", postcode="", city="")
+        home_delivery_location = PickupLocationFactory.create(is_home_delivery=True)
+        self.client.force_login(member)
+        data = self.build_valid_post_data_for_member(member.id)
+        data["pickup_location_id"] = home_delivery_location.id
+        data["delivery_address"] = self._build_separate_address(street="")
+
+        response_content = self.send_request_and_assert_response_200(data=data)
+
+        self.assertFalse(response_content["order_confirmed"])
+        self.assertEqual(
+            "Für die Hauslieferung wird eine vollständige Lieferadresse (Straße, PLZ und Ort) benötigt.",
+            response_content["error"],
+        )
+        member.refresh_from_db()
+        self.assertTrue(member.delivery_same_as_billing_address)
+        self.assertEqual("", member.delivery_city)
+        self.assertFalse(MemberDeliveryAddressChangedLogEntry.objects.exists())
+        self.assertFalse(Subscription.objects.exists())
+
+    @staticmethod
+    def _build_separate_address(**overrides: str) -> dict[str, str | bool]:
+        address = {
+            "same_as_billing_address": False,
+            "street": "Lieferweg 2",
+            "street_2": "",
+            "postcode": "22222",
+            "city": "Lieferdorf",
+            "country": "DE",
+        }
+        address.update(overrides)
+        return address
 
     def send_request_and_assert_response_200(self, data: dict):
         response = self.send_request_and_assert_status_code(

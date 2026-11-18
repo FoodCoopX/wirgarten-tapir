@@ -169,7 +169,7 @@ class MemberPaymentRhythmService:
     @classmethod
     def get_rhythm_from_display_name(cls, display_name: str) -> str:
         for choice in MemberPaymentRhythm.Rhythm.choices:
-            if choice[1] == display_name:
+            if choice[1].casefold() == display_name.strip().casefold():
                 return choice[0]
         raise TapirImproperlyConfigured(
             f"Unknown display name for payment rhythm: {display_name}"

@@ -113,3 +113,62 @@ class TestPaymentTransactionDetailsView(TapirIntegrationTest):
             },
             intended_uses,
         )
+
+    def test_get_allPaymentsOfMandateRefExcluded_mandateRefListedWithoutIntendedUse(
+        self,
+    ):
+        member = MemberFactory.create(is_superuser=True)
+        self.client.force_login(member)
+        PaymentFactory.create(
+            transaction=self.transaction,
+            mandate_ref__ref="test_ref_excluded",
+            excluded_from_export=True,
+            subscription_payment_range_start=datetime.date.today(),
+            subscription_payment_range_end=datetime.date.today(),
+        )
+
+        url = reverse(
+            "payments:payment_transaction_details",
+        )
+        url = f"{url}?transaction_id={self.transaction.id}"
+        response = self.client.get(url)
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        response_content = response.json()
+        self.assertIn("test_ref_excluded", response_content["payments_by_mandate_ref"])
+        self.assertNotIn(
+            "test_ref_excluded", response_content["intended_use_by_mandate_ref"]
+        )
+
+    def test_get_somePaymentsOfMandateRefExcluded_intendedUseBuiltFromExportedPayments(
+        self,
+    ):
+        member = MemberFactory.create(is_superuser=True)
+        self.client.force_login(member)
+        mandate_ref = MandateReferenceFactory.create(ref="test_ref_mixed")
+        for excluded_from_export in [True, False]:
+            PaymentFactory.create(
+                transaction=self.transaction,
+                mandate_ref=mandate_ref,
+                excluded_from_export=excluded_from_export,
+                subscription_payment_range_start=datetime.date.today(),
+                subscription_payment_range_end=datetime.date.today(),
+            )
+
+        url = reverse(
+            "payments:payment_transaction_details",
+        )
+        url = f"{url}?transaction_id={self.transaction.id}"
+        response = self.client.get(url)
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        response_content = response.json()
+        self.assertEqual(
+            2,
+            len(
+                response_content["payments_by_mandate_ref"]["test_ref_mixed"][
+                    "payments"
+                ]
+            ),
+        )
+        self.assertIn("test_ref_mixed", response_content["intended_use_by_mandate_ref"])

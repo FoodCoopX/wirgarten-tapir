@@ -12,7 +12,7 @@ jobs:
       - name: Run Test
         run: docker compose run web make test
       - name: Upload coverage
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-reports
           path: coverage.xml
@@ -29,7 +29,7 @@ jobs:
         with:
           name: coverage-reports
       - name: SonarCloud Scan
-        uses: SonarSource/sonarqube-scan-action@master
+        uses: SonarSource/sonarqube-scan-action@e805d875275f728fac1885b413934be6d7c63f65 # v8.4.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

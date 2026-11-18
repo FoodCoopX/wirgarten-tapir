@@ -1,92 +1,53 @@
 import datetime
+from unittest.mock import patch, MagicMock
 
-from tapir.deliveries.models import DeliveryDayAdjustment
 from tapir.deliveries.services.member_specific_delivery_day_calculator import (
     MemberSpecificDeliveryDayCalculator,
 )
-from tapir.wirgarten.parameters import ParameterDefinitions
-from tapir.wirgarten.tests.factories import (
-    MemberFactory,
-    MemberPickupLocationFactory,
-    PickupLocationOpeningTimesFactory,
-    GrowingPeriodFactory,
+from tapir.deliveries.services.pickup_location_delivery_date_calculator import (
+    PickupLocationDeliveryDateCalculator,
 )
-from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
+)
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
-class TestMemberSpecificDeliveryDayCalculator(TapirIntegrationTest):
-    @classmethod
-    def setUpTestData(cls) -> None:
-        ParameterDefinitions().import_definitions(bulk_create=True)
-
-    def test_getSpecificDeliveryDate_noPickupLocation_returnsSameDateAsInput(self):
-        member = MemberFactory.create()
-
-        result = MemberSpecificDeliveryDayCalculator.get_specific_delivery_date(
-            member_id=member.id,
-            delivery_date=datetime.date(year=2020, month=11, day=18),
-            cache={},
-        )
-
-        self.assertEqual(datetime.date(year=2020, month=11, day=18), result)
-
-    def test_getSpecificDeliveryDate_pickupLocationWithoutOpeningTimes_returnsSameDateAsInput(
+class TestMemberSpecificDeliveryDayCalculator(TapirUnitTest):
+    @patch.object(
+        PickupLocationDeliveryDateCalculator,
+        "get_delivery_date_at_pickup_location",
+        autospec=True,
+    )
+    @patch.object(
+        MemberPickupLocationGetter,
+        "get_member_pickup_location_id_from_cache",
+        autospec=True,
+    )
+    def test_getSpecificDeliveryDate_default_returnsDateAtMemberPickupLocation(
         self,
+        mock_get_member_pickup_location_id_from_cache: MagicMock,
+        mock_get_delivery_date_at_pickup_location: MagicMock,
     ):
-        member = MemberFactory.create()
-        MemberPickupLocationFactory.create(
-            member=member, valid_from=datetime.date(year=2020, month=1, day=1)
-        )
+        mock_get_member_pickup_location_id_from_cache.return_value = "test_location"
+        expected_result = datetime.date(year=2020, month=11, day=20)
+        mock_get_delivery_date_at_pickup_location.return_value = expected_result
+        cache = {}
 
         result = MemberSpecificDeliveryDayCalculator.get_specific_delivery_date(
-            member_id=member.id,
+            member_id="test_member",
+            delivery_date=datetime.date(year=2020, month=11, day=18),  # Wednesday
+            cache=cache,
+        )
+
+        self.assertEqual(expected_result, result)
+        mock_get_member_pickup_location_id_from_cache.assert_called_once_with(
+            member_id="test_member",
+            reference_date=datetime.date(year=2020, month=11, day=16),  # Monday
+            cache=cache,
+        )
+        mock_get_delivery_date_at_pickup_location.assert_called_once_with(
+            pickup_location_id="test_location",
             delivery_date=datetime.date(year=2020, month=11, day=18),
-            cache={},
+            cache=cache,
         )
-
-        self.assertEqual(datetime.date(year=2020, month=11, day=18), result)
-
-    def test_getSpecificDeliveryDate_pickupLocationWithOpeningTimes_returnsDateAdjustedToPickupLocation(
-        self,
-    ):
-        member = MemberFactory.create()
-        member_pickup_location = MemberPickupLocationFactory.create(
-            member=member, valid_from=datetime.date(year=2020, month=1, day=1)
-        )
-        PickupLocationOpeningTimesFactory.create(
-            pickup_location=member_pickup_location.pickup_location, day_of_week=4
-        )
-
-        result = MemberSpecificDeliveryDayCalculator.get_specific_delivery_date(
-            member_id=member.id,
-            delivery_date=datetime.date(year=2020, month=11, day=18),
-            cache={},
-        )
-
-        self.assertEqual(datetime.date(year=2020, month=11, day=20), result)
-
-    def test_getSpecificDeliveryDate_bothPickupLocationAndAdjustedDelivery_adjustedDeliveryHasPriority(
-        self,
-    ):
-        member = MemberFactory.create()
-        member_pickup_location = MemberPickupLocationFactory.create(
-            member=member, valid_from=datetime.date(year=2020, month=1, day=1)
-        )
-        PickupLocationOpeningTimesFactory.create(
-            pickup_location=member_pickup_location.pickup_location, day_of_week=4
-        )
-        DeliveryDayAdjustment.objects.create(
-            growing_period=GrowingPeriodFactory.create(
-                start_date=datetime.date(year=2020, month=1, day=1)
-            ),
-            calendar_week=47,
-            adjusted_weekday=1,
-        )
-
-        result = MemberSpecificDeliveryDayCalculator.get_specific_delivery_date(
-            member_id=member.id,
-            delivery_date=datetime.date(year=2020, month=11, day=18),
-            cache={},
-        )
-
-        self.assertEqual(datetime.date(year=2020, month=11, day=17), result)

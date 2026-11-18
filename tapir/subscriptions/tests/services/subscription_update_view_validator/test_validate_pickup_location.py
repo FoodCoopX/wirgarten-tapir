@@ -1,7 +1,10 @@
-from unittest.mock import patch, Mock
+from unittest.mock import patch, Mock, MagicMock
 
 from django.core.exceptions import ValidationError
 
+from tapir.pickup_locations.services.home_delivery_address_validator import (
+    HomeDeliveryAddressValidator,
+)
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
@@ -33,10 +36,8 @@ class TestSubscriptionUpdateViewValidatorValidatePickupLocation(TapirUnitTest):
         }
 
     def assert_raises_validation_error(self, error_message: str, **params):
-        with self.assertRaises(ValidationError) as error:
+        with self.assertRaisesMessage(ValidationError, error_message):
             SubscriptionUpdateViewValidator.validate_pickup_location(**params)
-
-        self.assertEqual(error_message, error.exception.message)
 
     def test_validatePickupLocation_orderDoesNotNeedPickupLocation_returnsNone(
         self,
@@ -173,3 +174,41 @@ class TestSubscriptionUpdateViewValidatorValidatePickupLocation(TapirUnitTest):
             member=self.member, reference_date=self.contract_start_date
         )
         mock_pickup_location_objects.get.assert_not_called()
+
+    @patch.object(HomeDeliveryAddressValidator, "validate", autospec=True)
+    def test_validatePickupLocation_newLocationAndAddressInvalid_raisesValidationError(
+        self,
+        mock_validate: MagicMock,
+        mock_does_order_need_a_pickup_location: MagicMock,
+        mock_get_member_pickup_location_id: MagicMock,
+        mock_pickup_location_objects: MagicMock,
+    ):
+        mock_does_order_need_a_pickup_location.return_value = True
+        mock_get_member_pickup_location_id.return_value = None
+        mock_pickup_location = Mock()
+        mock_pickup_location_objects.get.return_value = mock_pickup_location
+        mock_validate.side_effect = ValidationError("Adresse fehlt")
+        params = self.build_default_params()
+
+        self.assert_raises_validation_error("Adresse fehlt", **params)
+
+        mock_validate.assert_called_once_with(
+            address_owner=self.member, pickup_location=mock_pickup_location
+        )
+
+    @patch.object(HomeDeliveryAddressValidator, "validate", autospec=True)
+    def test_validatePickupLocation_currentLocationKept_doesNotValidateAddress(
+        self,
+        mock_validate: MagicMock,
+        mock_does_order_need_a_pickup_location: MagicMock,
+        mock_get_member_pickup_location_id: MagicMock,
+        mock_pickup_location_objects: MagicMock,
+    ):
+        mock_does_order_need_a_pickup_location.return_value = True
+        mock_get_member_pickup_location_id.return_value = "current_id"
+        params = self.build_default_params()
+        params["desired_pickup_location_id"] = None
+
+        SubscriptionUpdateViewValidator.validate_pickup_location(**params)
+
+        mock_validate.assert_not_called()

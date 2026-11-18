@@ -14,14 +14,12 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 class TestValidateAssociationContent(TapirUnitTest):
     def test_validateAssociationContent_noTypeSelected_raisesValidationError(self):
-        with self.assertRaises(ValidationError) as error:
+        with self.assertRaisesMessage(
+            ValidationError, "Keine Vereinsmitgliedschaft ausgewählt"
+        ):
             BestellWizardOrderValidator.validate_association_content(
                 None, order=Mock(), cache=Mock()
             )
-
-        self.assertEqual(
-            "Keine Vereinsmitgliedschaft ausgewählt", error.exception.message
-        )
 
     @patch.object(AssociationMembershipType, "objects")
     def test_validateAssociationContent_typeDoesntExist_raisesValidationError(
@@ -29,17 +27,16 @@ class TestValidateAssociationContent(TapirUnitTest):
     ):
         mock_type_objects.filter.return_value.first.return_value = None
 
-        with self.assertRaises(ValidationError) as error:
+        with self.assertRaisesMessage(
+            ValidationError,
+            "Unbekannte Vereinsmitgliedschafttyp-ID: test_membership_type_id",
+        ):
             BestellWizardOrderValidator.validate_association_content(
                 "test_membership_type_id",
                 order=Mock(),
                 cache=Mock(),
             )
 
-        self.assertEqual(
-            "Unbekannte Vereinsmitgliedschafttyp-ID: test_membership_type_id",
-            error.exception.message,
-        )
         mock_type_objects.filter.assert_called_once_with(id="test_membership_type_id")
 
     @patch.object(AssociationMembershipType, "objects")
@@ -54,17 +51,16 @@ class TestValidateAssociationContent(TapirUnitTest):
             value=False,
         )
 
-        with self.assertRaises(ValidationError) as error:
+        with self.assertRaisesMessage(
+            ValidationError,
+            "Fördermitgliedschaften sind nicht erlaubt, es muss mindestens 1 Product ausgewählt werden",
+        ):
             BestellWizardOrderValidator.validate_association_content(
                 "test_membership_type_id",
                 order={},
                 cache=cache,
             )
 
-        self.assertEqual(
-            "Fördermitgliedschaften sind nicht erlaubt, es muss mindestens 1 Product ausgewählt werden",
-            error.exception.message,
-        )
         mock_type_objects.filter.assert_called_once_with(id="test_membership_type_id")
 
     @patch.object(AssociationMembershipType, "objects")

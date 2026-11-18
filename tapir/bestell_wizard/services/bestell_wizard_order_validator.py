@@ -16,6 +16,13 @@ from tapir.coop.services.minimum_number_of_shares_validator import (
     MinimumNumberOfSharesValidator,
 )
 from tapir.coop.services.personal_data_validator import PersonalDataValidator
+from tapir.pickup_locations.services.home_delivery_address_validator import (
+    HomeDeliveryAddressValidator,
+)
+from tapir.pickup_locations.services.member_delivery_address_getter import (
+    DeliveryAddressInput,
+    MemberDeliveryAddressGetter,
+)
 from tapir.pickup_locations.services.pickup_location_capacity_general_checker import (
     PickupLocationCapacityGeneralChecker,
 )
@@ -124,6 +131,26 @@ class BestellWizardOrderValidator:
         cls.validate_distribution_channels(
             validated_serializer_data["distribution_channels"], cache=cache
         )
+
+    @classmethod
+    def validate_home_delivery_address(
+        cls,
+        pickup_location_ids: list[str],
+        delivery_address_input: DeliveryAddressInput,
+        personal_data: dict,
+        cache: dict,
+    ):
+        delivery_address = MemberDeliveryAddressGetter.get_delivery_address_from_input(
+            delivery_address_input=delivery_address_input,
+            personal_data=personal_data,
+        )
+        for pickup_location_id in pickup_location_ids:
+            HomeDeliveryAddressValidator.validate_address(
+                delivery_address=delivery_address,
+                pickup_location=TapirCache.get_pickup_location_by_id(
+                    cache=cache, pickup_location_id=pickup_location_id
+                ),
+            )
 
     @classmethod
     def validate_distribution_channels(cls, given_channel_ids: list[str], cache: dict):

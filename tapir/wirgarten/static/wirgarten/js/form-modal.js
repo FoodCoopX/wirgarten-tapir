@@ -40,11 +40,11 @@ const FormModal = {
       if (modalInfoContent) {
         modalInfoContent.innerText = info;
 
-        for (clazz of modalInfoContent.classList) {
-          if (clazz.startsWith("alert-")) {
-            modalInfoContent.classList.remove(clazz);
-          }
-        }
+        modalInfoContent.classList.remove(
+          ...[...modalInfoContent.classList].filter((clazz) =>
+            clazz.startsWith("alert-"),
+          ),
+        );
         modalInfoContent.classList.add("alert-" + infoType);
       }
     }
@@ -65,7 +65,7 @@ const FormModal = {
         modalInfo.style.marginBottom = "1em";
         modalInfoContent.className = "alert alert-danger"; // Reset classes and add alert-danger.
         modalInfoContent.innerText =
-          "Ein Fehler ist aufgetreten. Bitte versuche es später erneut oder kontaktiere den Admin!";
+          "Ein Fehler ist aufgetreten. Bitte versuche es später erneut oder wende dich an die Verwaltung.";
         frame.style.display = "none";
       } else {
         frame.style.display = "block";
@@ -93,7 +93,7 @@ const FormModal = {
   },
 };
 
-MSG_HANDLERS = [
+const MSG_HANDLERS = [
   ["modal-close", FormModal.close],
   [
     "modal-save-successful",
@@ -121,7 +121,7 @@ const initMessageHandlers = () => {
 
   eventer(messageEvent, (e) => {
     MSG_HANDLERS.forEach(([msgType, handler]) =>
-      handleMessage(event, msgType, handler),
+      handleMessage(e, msgType, handler),
     );
   });
 };

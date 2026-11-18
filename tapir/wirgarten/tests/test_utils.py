@@ -74,6 +74,12 @@ class TapirIntegrationTest(TapirFactoryMixin, TestCase):
         )
         self.assertIsNone(response_content["error"])
 
+    def assert_order_not_confirmed(self, response_content: dict, expected_error: str):
+        self.assertFalse(
+            response_content["order_confirmed"], "Order should not be confirmed"
+        )
+        self.assertEqual(expected_error, response_content["error"])
+
     def _login_as_admin(self):
         admin = MemberFactory.create(is_superuser=True)
         self.client.force_login(admin)

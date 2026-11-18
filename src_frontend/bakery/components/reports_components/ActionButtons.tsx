@@ -26,8 +26,10 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
         >
           warning
         </span>
-        Vorschau aktiv — PDF wird aus gespeicherten Daten erstellt. Erst
-        „Anwenden", dann PDF herunterladen.
+        <span>
+          Vorschau aktiv — PDF wird aus gespeicherten Daten erstellt. Erst
+          „Anwenden", dann PDF herunterladen.
+        </span>
       </div>
     )}
     {pdfUrl ? (

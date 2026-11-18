@@ -51,6 +51,7 @@ THEME_ACKERNATIVE = "ack"
 THEME_ACKERVIELFALT = "akv"
 THEME_SUPERSCHMELZ = "sup"
 THEME_VIERLANDE = "vie"
+THEME_GEMUESEKOOP = "gemuesekoop"
 
 
 THEME_OPTIONS = [
@@ -62,6 +63,7 @@ THEME_OPTIONS = [
     (THEME_FALKENHOF, "Falkenhof"),
     (THEME_GEBAECK, "Ge:Bäck"),
     (THEME_GKH, "GemüseKollektiv Hebenshausen"),
+    (THEME_GEMUESEKOOP, "Gemüsekoop Köln e.V."),
     (THEME_GROSSHOECHBERG, "Grosshöchberg"),
     (THEME_HECKENGAEU, "Heckengäu"),
     (THEME_HUMUSWERKSTATT, "Humuswerkstatt"),

@@ -56,6 +56,12 @@ from tapir.wirgarten.utils import (
 )
 
 
+class ContractStatus(models.TextChoices):
+    CONTRACT_RENEWED = "Contract Renewed", "Verträge verlängert"
+    CONTRACT_CANCELLED = "Contract Cancelled", "Explizit nicht verlängert"
+    UNDECIDED = "Undecided", "Keine Reaktion"
+
+
 class ContractStatusFilter(ChoiceFilter):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -65,7 +71,7 @@ class ContractStatusFilter(ChoiceFilter):
         if not value:
             return qs
 
-        if value not in ["Contract Renewed", "Contract Cancelled", "Undecided"]:
+        if value not in ContractStatus.values:
             raise ValueError(f"Unknown filter value: {value}")
 
         # Filter members with an active subscription which is not cancelled
@@ -75,11 +81,11 @@ class ContractStatusFilter(ChoiceFilter):
             subscription__end_date__gte=today,
         )
 
-        if value == "Contract Renewed":
+        if value == ContractStatus.CONTRACT_RENEWED:
             qs = self.filter_contract_renewed(qs)
-        elif value == "Contract Cancelled":
+        elif value == ContractStatus.CONTRACT_CANCELLED:
             qs = self.filter_contract_cancelled(qs)
-        elif value == "Undecided":
+        elif value == ContractStatus.UNDECIDED:
             qs = self.filter_undecided(qs)
 
         return qs.distinct()
@@ -137,11 +143,7 @@ class MemberFilter(FilterSet):
     )
     contract_status = ContractStatusFilter(
         label="Verträge verlängert",
-        choices=(
-            ("Contract Renewed", "Verträge verlängert"),
-            ("Contract Cancelled", "Explizit nicht verlängert"),
-            ("Undecided", "Keine Reaktion"),
-        ),
+        choices=ContractStatus.choices,
     )
     email_verified = BooleanFilter(
         label="Email verifiziert",
