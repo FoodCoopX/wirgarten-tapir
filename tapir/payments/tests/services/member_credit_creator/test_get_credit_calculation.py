@@ -24,7 +24,7 @@ from tapir.wirgarten.tests.factories import (
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
 
-class TestGetAmountToCredit(TapirIntegrationTest):
+class TestGetCreditCalculation(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
@@ -32,7 +32,7 @@ class TestGetAmountToCredit(TapirIntegrationTest):
             value=datetime.date(year=2026, month=1, day=1)
         )
 
-    def test_getAmountToCredit_parameterProductId_returnsCorrectValue(self):
+    def test_getCreditCalculation_parameterProductId_returnsCorrectValue(self):
         now = mock_timezone(self, datetime.datetime(year=2027, month=8, day=19))
         member = MemberFactory.create()
         growing_period = GrowingPeriodFactory.create(
@@ -71,7 +71,7 @@ class TestGetAmountToCredit(TapirIntegrationTest):
             product=subscription.product, price=10, valid_from=growing_period.start_date
         )  # should give MonthPaymentBuilder.get_total_to_pay = 60 (6 month for 10 € each)
 
-        result = MemberCreditCreator.get_amount_to_credit(
+        result = MemberCreditCreator.get_credit_calculation(
             member=member,
             cache={},
             reference_date=datetime.date(year=2027, month=2, day=15),
@@ -79,10 +79,11 @@ class TestGetAmountToCredit(TapirIntegrationTest):
         )
 
         self.assertEqual(
-            Decimal(12.8).quantize(Decimal("0.01")), result.quantize(Decimal("0.01"))
+            Decimal(12.8).quantize(Decimal("0.01")),
+            result.amount.quantize(Decimal("0.01")),
         )
 
-    def test_getAmountToCredit_parameterSoli_returnsCorrectValue(self):
+    def test_getCreditCalculation_parameterSoli_returnsCorrectValue(self):
         now = mock_timezone(self, datetime.datetime(year=2027, month=8, day=19))
         member = MemberFactory.create()
         growing_period = GrowingPeriodFactory.create(
@@ -112,7 +113,7 @@ class TestGetAmountToCredit(TapirIntegrationTest):
             member=member, start_date=growing_period.start_date, amount=10
         )
 
-        result = MemberCreditCreator.get_amount_to_credit(
+        result = MemberCreditCreator.get_credit_calculation(
             member=member,
             cache={},
             reference_date=datetime.date(year=2027, month=2, day=15),
@@ -120,5 +121,19 @@ class TestGetAmountToCredit(TapirIntegrationTest):
         )
 
         self.assertEqual(
-            Decimal(12.8).quantize(Decimal("0.01")), result.quantize(Decimal("0.01"))
+            Decimal(12.8).quantize(Decimal("0.01")),
+            result.amount.quantize(Decimal("0.01")),
+        )
+        self.assertEqual(
+            "Berechnung der Gutschrift:\n"
+            "Januar 2027, Solidarbeitrag: 10,00 € monatlich (voller Monat)\n"
+            "Februar 2027, Solidarbeitrag: 10,00 € monatlich (voller Monat)\n"
+            "März 2027, Solidarbeitrag: 10,00 € monatlich (voller Monat)\n"
+            "April 2027, Solidarbeitrag: 10,00 € monatlich (voller Monat)\n"
+            "Mai 2027, Solidarbeitrag: 10,00 € monatlich (voller Monat)\n"
+            "Juni 2027, Solidarbeitrag: 10,00 € monatlich (voller Monat)\n"
+            "Summe: 60,00 €\n"
+            "Bereits bezahlt: 72,80 €\n"
+            "Gutschrift: 12,80 €",
+            result.explanation,
         )

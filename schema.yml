@@ -15482,6 +15482,8 @@ components:
           maximum: 32767
           minimum: 0
           nullable: true
+        calculation_explanation:
+          type: string
         mandate_ref:
           type: string
         transaction:

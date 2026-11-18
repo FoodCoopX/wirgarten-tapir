@@ -1,8 +1,10 @@
 import datetime
+from collections.abc import Callable
 from decimal import Decimal
 
 from tapir.associations.models import AssociationMembership
 from tapir.configuration.parameter import get_parameter_value
+from tapir.payments.dataclasses import PaymentCalculationPart
 from tapir.payments.models import MemberCredit
 from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.payments.services.member_payment_rhythm_service import (
@@ -19,6 +21,7 @@ from tapir.wirgarten.models import (
     Member,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.utils import format_currency
 
 
 class MonthPaymentBuilderUtils:
@@ -153,9 +156,12 @@ class MonthPaymentBuilderUtils:
         cache: dict,
         generated_payments: set[Payment],
         in_trial: bool,
-        total_to_pay_function,
         payment_type: str,
         allow_negative_amounts: bool,
+        total_to_pay_function: Callable[..., Decimal] | None = None,
+        calculation_parts_function: (
+            Callable[..., list[PaymentCalculationPart]] | None
+        ) = None,
     ) -> Payment | None:
         first_day_of_rhythm_period = (
             MemberPaymentRhythmService.get_first_day_of_rhythm_period(
@@ -187,12 +193,24 @@ class MonthPaymentBuilderUtils:
             cache=cache,
             generated_payments=generated_payments,
         )
-        total_to_pay = total_to_pay_function(
-            range_start=first_day_of_rhythm_period,
-            range_end=last_day_of_rhythm_period,
-            contracts=contracts,
-            cache=cache,
-        )
+        calculation_parts = None
+        if calculation_parts_function is None:
+            total_to_pay = total_to_pay_function(
+                range_start=first_day_of_rhythm_period,
+                range_end=last_day_of_rhythm_period,
+                contracts=contracts,
+                cache=cache,
+            )
+        else:
+            calculation_parts = calculation_parts_function(
+                range_start=first_day_of_rhythm_period,
+                range_end=last_day_of_rhythm_period,
+                contracts=contracts,
+                cache=cache,
+            )
+            total_to_pay = sum(
+                (part.value for part in calculation_parts), start=Decimal(0)
+            )
 
         new_payment_amount = total_to_pay - already_paid
         new_payment_amount = Decimal(new_payment_amount).quantize(Decimal("0.01"))
@@ -228,7 +246,30 @@ class MonthPaymentBuilderUtils:
             type=payment_type,
             subscription_payment_range_start=subscription_payment_range_start,
             subscription_payment_range_end=subscription_payment_range_end,
+            calculation_explanation=(
+                ""
+                if calculation_parts is None
+                else cls.build_calculation_explanation(
+                    calculation_parts=calculation_parts,
+                    total_to_pay=total_to_pay,
+                    already_paid=already_paid,
+                )
+            ),
         )
+
+    @classmethod
+    def build_calculation_explanation(
+        cls,
+        calculation_parts: list[PaymentCalculationPart],
+        total_to_pay: Decimal,
+        already_paid: Decimal,
+    ) -> str:
+        lines = [part.explanation for part in calculation_parts]
+        lines.append(f"Summe: {format_currency(total_to_pay)} €")
+        if already_paid != 0:
+            lines.append(f"Bereits bezahlt: {format_currency(already_paid)} €")
+            lines.append(f"Zu zahlen: {format_currency(total_to_pay - already_paid)} €")
+        return "\n".join(lines)
 
     @classmethod
     def get_payment_due_date(

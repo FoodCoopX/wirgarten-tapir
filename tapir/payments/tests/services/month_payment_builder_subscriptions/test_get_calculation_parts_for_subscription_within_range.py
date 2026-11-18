@@ -16,7 +16,7 @@ from tapir.wirgarten.tests.factories import SubscriptionFactory
 from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
-class TestGetAmountToPayForSubscriptionWithinRange(TapirUnitTest):
+class TestGetCalculationPartsForSubscriptionWithinRange(TapirUnitTest):
     @patch.object(
         SubscriptionPriceCalculator,
         "get_monthly_price",
@@ -34,7 +34,7 @@ class TestGetAmountToPayForSubscriptionWithinRange(TapirUnitTest):
         "build_calculation_part_for_subscription_within_month",
         autospec=True,
     )
-    def test_getAmountToPayForSubscriptionWithinRange_default_sumsAmountsOfEachMonth(
+    def test_getCalculationPartsForSubscriptionWithinRange_default_returnsPartsOfEachCoveredMonth(
         self,
         mock_build_calculation_part_for_subscription_within_month: MagicMock,
         mock_get_price_of_single_delivery_for_subscription: MagicMock,
@@ -50,7 +50,8 @@ class TestGetAmountToPayForSubscriptionWithinRange(TapirUnitTest):
                 None
                 if amounts_by_month[first_of_month] is None
                 else PaymentCalculationPart(
-                    explanation="", value=amounts_by_month[first_of_month]
+                    explanation=str(first_of_month),
+                    value=amounts_by_month[first_of_month],
                 )
             )
         )
@@ -58,14 +59,20 @@ class TestGetAmountToPayForSubscriptionWithinRange(TapirUnitTest):
         range_start = datetime.date(2025, 1, 1)
         cache = {}
 
-        result = MonthPaymentBuilderSubscriptions.get_amount_to_pay_for_subscription_within_range(
+        result = MonthPaymentBuilderSubscriptions.get_calculation_parts_for_subscription_within_range(
             subscription=subscription,
             range_start=range_start,
             range_end=datetime.date(2025, 3, 31),
             cache=cache,
         )
 
-        self.assertEqual(Decimal("20.8"), result)
+        self.assertEqual(
+            [
+                PaymentCalculationPart(explanation="2025-01-01", value=Decimal("14.5")),
+                PaymentCalculationPart(explanation="2025-02-01", value=Decimal("6.3")),
+            ],
+            result,
+        )
         mock_build_calculation_part_for_subscription_within_month.assert_has_calls(
             [
                 call(

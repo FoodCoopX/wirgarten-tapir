@@ -1,7 +1,8 @@
 import datetime
 from decimal import Decimal
-from unittest.mock import patch, Mock, call
+from unittest.mock import patch, Mock, call, MagicMock
 
+from tapir.payments.dataclasses import PaymentCalculationPart
 from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
@@ -1053,5 +1054,96 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
             range_start=range_start,
             range_end=range_end,
             contracts=set(subscriptions),
+            cache=cache,
+        )
+
+    @patch.object(
+        MonthPaymentBuilderUtils,
+        "get_payment_due_date_on_month",
+        autospec=True,
+        return_value=datetime.date(year=2026, month=7, day=13),
+    )
+    @patch.object(
+        MonthPaymentBuilderSubscriptions,
+        "get_calculation_parts",
+        autospec=True,
+        return_value=[
+            PaymentCalculationPart(explanation="Juli 2026, A", value=Decimal(10)),
+            PaymentCalculationPart(explanation="Juli 2026, B", value=Decimal("7.5")),
+        ],
+    )
+    @patch.object(
+        MonthPaymentBuilderUtils,
+        "get_already_paid_amount",
+        autospec=True,
+        return_value=Decimal(10),
+    )
+    @patch.object(
+        MandateReferenceProvider, "get_or_create_mandate_reference", autospec=True
+    )
+    @patch.object(
+        MemberPaymentRhythmService,
+        "get_last_day_of_rhythm_period",
+        autospec=True,
+        return_value=datetime.date(year=2026, month=7, day=31),
+    )
+    @patch.object(
+        MemberPaymentRhythmService,
+        "get_first_day_of_rhythm_period",
+        autospec=True,
+        return_value=datetime.date(year=2026, month=7, day=1),
+    )
+    def test_buildPaymentForContractAndMember_calculationPartsFunctionGiven_paymentContainsExplanation(
+        self,
+        _: MagicMock,
+        __: MagicMock,
+        mock_get_or_create_mandate_reference: MagicMock,
+        ___: MagicMock,
+        mock_get_calculation_parts: MagicMock,
+        ____: MagicMock,
+    ):
+        member = MemberFactory.build()
+        mock_get_or_create_mandate_reference.return_value = (
+            MandateReferenceFactory.build(member=member, ref="test_ref")
+        )
+        cache = {}
+        mock_parameter_value(
+            key=ParameterKeys.TRIAL_PERIOD_ENABLED, value=False, cache=cache
+        )
+        mock_parameter_value(
+            key=ParameterKeys.PAYMENT_START_DATE,
+            value=datetime.date(year=2026, month=6, day=1),
+            cache=cache,
+        )
+        subscriptions = {
+            SubscriptionFactory.build(
+                member=member,
+                start_date=datetime.date(year=2026, month=1, day=1),
+                end_date=datetime.date(year=2026, month=12, day=31),
+            )
+        }
+
+        payment = MonthPaymentBuilderUtils.build_payment_for_contract_and_member(
+            member=member,
+            first_of_month=datetime.date(year=2026, month=7, day=1),
+            contracts=subscriptions,
+            payment_type="pt_test_name",
+            rhythm=Mock(),
+            cache=cache,
+            generated_payments=set(),
+            in_trial=False,
+            calculation_parts_function=MonthPaymentBuilderSubscriptions.get_calculation_parts,
+            allow_negative_amounts=False,
+        )
+
+        self.assertEqual(Decimal("7.5"), payment.amount)
+        self.assertEqual(
+            "Juli 2026, A\nJuli 2026, B\nSumme: 17,50 €\nBereits bezahlt: 10,00 €\nZu zahlen: 7,50 €",
+            payment.calculation_explanation,
+        )
+        mock_get_calculation_parts.assert_called_once_with(
+            range_start=datetime.date(year=2026, month=7, day=1),
+            range_end=datetime.date(year=2026, month=7, day=31),
+            contracts=subscriptions,
             cache=cache,
         )

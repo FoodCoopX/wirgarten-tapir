@@ -99,7 +99,7 @@ class MonthPaymentBuilderSubscriptions:
                         cache=cache,
                         generated_payments=generated_payments,
                         in_trial=in_trial,
-                        total_to_pay_function=cls.get_total_to_pay,
+                        calculation_parts_function=cls.get_calculation_parts,
                         allow_negative_amounts=False,
                     )
                 )
@@ -149,38 +149,62 @@ class MonthPaymentBuilderSubscriptions:
         contracts: list[Subscription],
         cache: dict,
     ) -> Decimal:
-        subscriptions_active_within_period = [
-            subscription
-            for subscription in contracts
-            if DateRangeOverlapChecker.do_ranges_overlap(
-                range_1_start=range_start,
-                range_1_end=range_end,
-                range_2_start=subscription.start_date,
-                range_2_end=subscription.end_date,
-            )
-        ]
-        total_to_pay = sum(
-            [
-                cls.get_amount_to_pay_for_subscription_within_range(
-                    subscription=subscription,
+        return sum(
+            (
+                part.value
+                for part in cls.get_calculation_parts(
                     range_start=range_start,
                     range_end=range_end,
+                    contracts=contracts,
                     cache=cache,
                 )
-                for subscription in subscriptions_active_within_period
-            ],
+            ),
             Decimal(0),
         )
-        return total_to_pay
 
     @classmethod
-    def get_amount_to_pay_for_subscription_within_range(
+    def get_calculation_parts(
+        cls,
+        range_start: datetime.date,
+        range_end: datetime.date,
+        contracts: list[Subscription],
+        cache: dict,
+    ) -> list[PaymentCalculationPart]:
+        subscriptions_active_within_period = sorted(
+            (
+                subscription
+                for subscription in contracts
+                if DateRangeOverlapChecker.do_ranges_overlap(
+                    range_1_start=range_start,
+                    range_1_end=range_end,
+                    range_2_start=subscription.start_date,
+                    range_2_end=subscription.end_date,
+                )
+            ),
+            key=lambda subscription: (
+                subscription.start_date,
+                subscription.product.name,
+            ),
+        )
+        return [
+            part
+            for subscription in subscriptions_active_within_period
+            for part in cls.get_calculation_parts_for_subscription_within_range(
+                subscription=subscription,
+                range_start=range_start,
+                range_end=range_end,
+                cache=cache,
+            )
+        ]
+
+    @classmethod
+    def get_calculation_parts_for_subscription_within_range(
         cls,
         subscription: Subscription,
         range_start: datetime.date,
         range_end: datetime.date,
         cache: dict,
-    ) -> Decimal:
+    ) -> list[PaymentCalculationPart]:
         monthly_price = SubscriptionPriceCalculator.get_monthly_price(
             subscription=subscription, reference_date=range_start, cache=cache
         )
@@ -190,7 +214,7 @@ class MonthPaymentBuilderSubscriptions:
             )
         )
 
-        total = Decimal(0)
+        parts = []
         current_month = range_start
         while current_month < range_end:
             part = cls.build_calculation_part_for_subscription_within_month(
@@ -201,10 +225,10 @@ class MonthPaymentBuilderSubscriptions:
                 cache=cache,
             )
             if part is not None:
-                total += part.value
+                parts.append(part)
             current_month += relativedelta(months=1)
 
-        return total
+        return parts
 
     @classmethod
     def build_calculation_part_for_subscription_within_month(

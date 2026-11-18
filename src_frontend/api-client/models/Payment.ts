@@ -101,6 +101,12 @@ export interface Payment {
    * @type {string}
    * @memberof Payment
    */
+  calculationExplanation?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof Payment
+   */
   mandateRef: string;
   /**
    *
@@ -173,6 +179,10 @@ export function PaymentFromJSONTyped(
         : json["subscription_payment_range_end"],
     instalmentNumber:
       json["instalment_number"] == null ? undefined : json["instalment_number"],
+    calculationExplanation:
+      json["calculation_explanation"] == null
+        ? undefined
+        : json["calculation_explanation"],
     mandateRef: json["mandate_ref"],
     transaction: json["transaction"] == null ? undefined : json["transaction"],
     pickupLocation:
@@ -207,6 +217,7 @@ export function PaymentToJSONTyped(
     subscription_payment_range_start: value["subscriptionPaymentRangeStart"],
     subscription_payment_range_end: value["subscriptionPaymentRangeEnd"],
     instalment_number: value["instalmentNumber"],
+    calculation_explanation: value["calculationExplanation"],
     mandate_ref: value["mandateRef"],
     transaction: value["transaction"],
     pickup_location: value["pickupLocation"],

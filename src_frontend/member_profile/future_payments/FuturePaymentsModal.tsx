@@ -15,6 +15,7 @@ import { fromApiDate } from "../../utils/apiDate.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { formatDateText } from "../../utils/formatDateText.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
+import CalculationExplanation from "./CalculationExplanation.tsx";
 import { groupTransactionsByDueDate } from "./groupTransactionsByDueDate.ts";
 import PaymentComponent from "./PaymentComponent.tsx";
 
@@ -132,6 +133,7 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
         <div className={"d-flex flex-column align-items-center"}>
           <strong>{formatCurrency(credit.amount)}</strong>
           <Badge bg={"success"}>Gutschrift</Badge>
+          <CalculationExplanation text={credit.comment} />
         </div>
       </div>
     );
