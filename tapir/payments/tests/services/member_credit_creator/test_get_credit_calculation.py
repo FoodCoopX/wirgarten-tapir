@@ -1,13 +1,16 @@
 import datetime
 from decimal import Decimal
+from unittest.mock import patch, MagicMock
 
 from tapir.configuration.models import TapirParameter
+from tapir.payments.dataclasses import PaymentCalculationPart
 from tapir.payments.models import MemberPaymentRhythm
 from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.payments.services.member_credit_creator import MemberCreditCreator
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
+from tapir.payments.services.month_payment_builder_utils import MonthPaymentBuilderUtils
 from tapir.payments.services.month_payment_builder_solidarity_contributions import (
     MonthPaymentBuilderSolidarityContributions,
 )
@@ -20,6 +23,7 @@ from tapir.wirgarten.tests.factories import (
     PaymentFactory,
     SubscriptionFactory,
     ProductPriceFactory,
+    ProductTypeFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
@@ -137,3 +141,36 @@ class TestGetCreditCalculation(TapirIntegrationTest):
             "Gutschrift: 12,80 €",
             result.explanation,
         )
+
+    @patch.object(
+        MonthPaymentBuilderUtils,
+        "get_already_paid_amount",
+        autospec=True,
+        return_value=Decimal("9.67"),
+    )
+    @patch.object(
+        MemberCreditCreator, "get_calculation_parts_subscriptions", autospec=True
+    )
+    def test_getCreditCalculation_differenceBelowOneCent_returnsZero(
+        self,
+        mock_get_calculation_parts_subscriptions: MagicMock,
+        _: MagicMock,
+    ):
+        mock_timezone(self, datetime.datetime(year=2027, month=8, day=19))
+        GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2027, month=1, day=1),
+            end_date=datetime.date(year=2027, month=12, day=31),
+        )
+        # 29 € × 1 ÷ 3 delivery dates = 9.6666…, paid as 9.67
+        mock_get_calculation_parts_subscriptions.return_value = [
+            PaymentCalculationPart(explanation="part", value=Decimal(29) / 3)
+        ]
+
+        result = MemberCreditCreator.get_credit_calculation(
+            member=MemberFactory.create(),
+            cache={},
+            reference_date=datetime.date(year=2027, month=2, day=15),
+            product_type_id_or_soli=ProductTypeFactory.create().id,
+        )
+
+        self.assertEqual(Decimal("0.00"), result.amount)

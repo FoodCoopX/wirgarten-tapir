@@ -173,7 +173,9 @@ class MemberCreditCreator:
             )
 
         total_to_pay = sum((part.value for part in calculation_parts), Decimal(0))
-        amount_to_credit = max(already_paid - total_to_pay, Decimal(0))
+        amount_to_credit = max(already_paid - total_to_pay, Decimal(0)).quantize(
+            Decimal("0.01")
+        )
         return CreditCalculation(
             amount=amount_to_credit,
             explanation=cls.build_explanation(
