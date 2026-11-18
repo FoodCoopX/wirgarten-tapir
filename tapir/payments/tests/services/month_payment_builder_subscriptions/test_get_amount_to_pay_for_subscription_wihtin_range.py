@@ -1,6 +1,8 @@
+import datetime
 from decimal import Decimal
-from unittest.mock import patch, Mock
+from unittest.mock import patch, MagicMock, call
 
+from tapir.payments.dataclasses import PaymentCalculationPart
 from tapir.payments.services.month_payment_builder_subscriptions import (
     MonthPaymentBuilderSubscriptions,
 )
@@ -10,55 +12,74 @@ from tapir.subscriptions.services.delivery_price_calculator import (
 from tapir.subscriptions.services.subscription_price_calculator import (
     SubscriptionPriceCalculator,
 )
+from tapir.wirgarten.tests.factories import SubscriptionFactory
 from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestGetAmountToPayForSubscriptionWithinRange(TapirUnitTest):
-    @patch.object(SubscriptionPriceCalculator, "get_monthly_price", autospec=True)
+    @patch.object(
+        SubscriptionPriceCalculator,
+        "get_monthly_price",
+        autospec=True,
+        return_value=Decimal("14.5"),
+    )
     @patch.object(
         DeliveryPriceCalculator,
         "get_price_of_single_delivery_for_subscription",
         autospec=True,
+        return_value=Decimal("2.15"),
     )
     @patch.object(
         MonthPaymentBuilderSubscriptions,
-        "get_number_of_months_and_deliveries_to_pay",
+        "build_calculation_part_for_subscription_within_month",
         autospec=True,
     )
-    def test_getAmountToPayForSubscriptionWithinRange_default_returnsCorrectPrice(
+    def test_getAmountToPayForSubscriptionWithinRange_default_sumsAmountsOfEachMonth(
         self,
-        mock_get_number_of_months_and_deliveries_to_pay: Mock,
-        mock_get_price_of_single_delivery_for_subscription: Mock,
-        mock_get_monthly_price: Mock,
+        mock_build_calculation_part_for_subscription_within_month: MagicMock,
+        mock_get_price_of_single_delivery_for_subscription: MagicMock,
+        mock_get_monthly_price: MagicMock,
     ):
-        mock_get_number_of_months_and_deliveries_to_pay.return_value = 3, 4
-        mock_get_price_of_single_delivery_for_subscription.return_value = Decimal(
-            "2.15"
+        amounts_by_month = {
+            datetime.date(2025, 1, 1): Decimal("14.5"),
+            datetime.date(2025, 2, 1): Decimal("6.3"),
+            datetime.date(2025, 3, 1): None,
+        }
+        mock_build_calculation_part_for_subscription_within_month.side_effect = (
+            lambda first_of_month, **_: (
+                None
+                if amounts_by_month[first_of_month] is None
+                else PaymentCalculationPart(
+                    explanation="", value=amounts_by_month[first_of_month]
+                )
+            )
         )
-
-        subscription = Mock()
-        mock_get_monthly_price.return_value = Decimal("14.5")
-
-        range_start = Mock()
-        range_end = Mock()
-        cache = Mock()
+        subscription = SubscriptionFactory.build()
+        range_start = datetime.date(2025, 1, 1)
+        cache = {}
 
         result = MonthPaymentBuilderSubscriptions.get_amount_to_pay_for_subscription_within_range(
             subscription=subscription,
             range_start=range_start,
-            range_end=range_end,
+            range_end=datetime.date(2025, 3, 31),
             cache=cache,
         )
 
+        self.assertEqual(Decimal("20.8"), result)
+        mock_build_calculation_part_for_subscription_within_month.assert_has_calls(
+            [
+                call(
+                    subscription=subscription,
+                    first_of_month=first_of_month,
+                    monthly_price=Decimal("14.5"),
+                    price_of_single_delivery=Decimal("2.15"),
+                    cache=cache,
+                )
+                for first_of_month in amounts_by_month.keys()
+            ]
+        )
         self.assertEqual(
-            Decimal("52.10"), result
-        )  # 3 full months * 14.5 total price + 4 deliveries * 2.15 delivery price
-
-        mock_get_number_of_months_and_deliveries_to_pay.assert_called_once_with(
-            range_start=range_start,
-            range_end=range_end,
-            subscription=subscription,
-            cache=cache,
+            3, mock_build_calculation_part_for_subscription_within_month.call_count
         )
         mock_get_price_of_single_delivery_for_subscription.assert_called_once_with(
             subscription=subscription, at_date=range_start, cache=cache

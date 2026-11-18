@@ -7,7 +7,7 @@ Tick a box right after finishing the step. Each phase writes and updates the uni
 
 - [x] Phase 1 — cutoff parameter
 - [x] Phase 2 — shared delivery counting + cutoff check
-- [ ] Phase 3 — subscription payments
+- [x] Phase 3 — subscription payments
 - [ ] Phase 4 — joker credit
 - [ ] Phase 5 — calculation explanation in the member profile payment list (payments and credits)
 - [ ] Phase 6 — texts (parameter descriptions, joker explanation)
@@ -91,13 +91,13 @@ New service `tapir/deliveries/services/monthly_delivery_date_counter.py`, `Month
 - New service `tapir/deliveries/services/partial_month_calculation_mode_decider.py`, `PartialMonthCalculationModeDecider.is_proportional_mode_active(first_of_month, cache)`, used by payments and jokers.
 
 ### Payments (Phase 3)
-Replace `get_number_of_months_and_deliveries_to_pay` (returns two ints, can't express a fraction) by a per-month function `get_amount_to_pay_for_subscription_within_month(subscription, first_of_month, monthly_price, price_of_single_delivery, cache) -> PaymentCalculationPart` (amount + explanation, analogous to `JokerCreditValuePart`), so the amount charged and the formula shown in Phase 5 come from the same code. Each branch below builds its own explanation, old rule included. `get_amount_to_pay_for_subscription_within_range` loops over months and sums the amounts; monthly price and single delivery price are still taken at `range_start` (out-of-scope point 1).
+Replace `get_number_of_months_and_deliveries_to_pay` (returns two ints, can't express a fraction) by a per-month function `build_calculation_part_for_subscription_within_month(subscription, first_of_month, monthly_price, price_of_single_delivery, cache) -> PaymentCalculationPart | None` (amount + explanation, analogous to `JokerCreditValuePart`; dataclass in `tapir/payments/dataclasses.py`; `None` if the subscription doesn't overlap the month), so the amount charged and the formula shown in Phase 5 come from the same code. Each branch below builds its own explanation, old rule included. `get_amount_to_pay_for_subscription_within_range` loops over months and sums the amounts; monthly price and single delivery price are still taken at `range_start` (out-of-scope point 1).
 
 Per month, in this order:
-1. Subscription doesn't overlap the month → 0.
+1. Subscription doesn't overlap the month → `None`.
 2. `force_price_per_delivery` → own dates × price per delivery (criterion 4).
 3. Fully covered → monthly price.
-4. NO_DELIVERY and proportional mode active → monthly price × days covered ÷ days in month, same ratio as `MonthPaymentBuilderSolidarityContributions.get_amount_to_pay_for_contribution_within_month` (extract the ratio into a shared helper instead of duplicating it).
+4. NO_DELIVERY and proportional mode active → monthly price × days covered ÷ days in month, same ratio as `MonthPaymentBuilderSolidarityContributions.get_amount_to_pay_for_contribution_within_month` (shared helper `MonthPaymentBuilderUtils.get_number_of_days_covered_in_month`).
 5. Proportional mode active → total dates = 0 ? 0 : monthly price × own dates ÷ total dates (criteria 1–3).
 6. Else old rule: threshold (`should_pay_full_month_price`) → monthly price, otherwise own dates × price per delivery.
 
@@ -147,7 +147,7 @@ Phase 2, `tapir/deliveries/tests/services/`:
 - `partial_month_calculation_mode_decider/test_is_proportional_mode_active.py`: month before, month equal to, month after the cutoff.
 
 Phase 3, `tapir/payments/tests/services/month_payment_builder_subscriptions/`:
-- `test_get_amount_to_pay_for_subscription_within_month.py` (replaces `test_get_number_of_months_and_deliveries_to_pay.py`): each branch; weekly, biweekly, every 4 weeks, custom, no delivery; months with 4 and 5 dates; 0 dates; cutoff before/after the month.
+- `test_build_calculation_part_for_subscription_within_month.py` (replaces `test_get_number_of_months_and_deliveries_to_pay.py`): each branch; weekly, biweekly, every 4 weeks, custom, no delivery; months with 4 and 5 dates; 0 dates; cutoff before/after the month.
 - Phase 7: `test_get_total_to_pay.py` (extend): issue example October 2026 = 184.00 €; change without price change = 95 €; two changes in one month = 1 monthly fee; January 2027 with KW 1–2 delivery-free, start KW 4 = 1/4; pickup location change within the month; yearly rhythm spanning the cutoff (months before old rule, after new).
 - Phase 7: `test_build_payments_for_subscriptions_in_trial.py` (extend): partial trial month pro rata.
 - Remove the tests of `get_number_of_months_and_deliveries_to_pay`.
@@ -186,7 +186,7 @@ Merge all migrations created on this branch into as few as possible, ideally one
 ## Files
 - `tapir/wirgarten/parameter_keys.py`, `tapir/wirgarten/parameter_definitions/parameter_definitions_payments.py`, `parameter_definitions_jokers.py`
 - new `tapir/deliveries/services/monthly_delivery_date_counter.py`, new `tapir/deliveries/services/partial_month_calculation_mode_decider.py`
-- `tapir/payments/services/month_payment_builder_subscriptions.py`, `tapir/payments/services/month_payment_builder_solidarity_contributions.py` (shared days ratio), `tapir/payments/services/month_payment_builder_utils.py` (if the explained payment is excluded from "already paid" there)
+- `tapir/payments/dataclasses.py`, `tapir/payments/services/month_payment_builder_subscriptions.py`, `tapir/payments/services/month_payment_builder_solidarity_contributions.py` (shared days ratio), `tapir/payments/services/month_payment_builder_utils.py` (if the explained payment is excluded from "already paid" there)
 - `tapir/deliveries/services/joker_value_service.py`, `tapir/payments/services/joker_credit_creator.py`
 - `tapir/wirgarten/models.py` + migration (Phase 8)
 - `tapir/payments/services/member_credit_creator.py`, `tapir/payments/views.py`, `tapir/payments/serializers.py`, `schema.yml`, `src_frontend/api-client`, `src_frontend/member_profile/future_payments/FuturePaymentsModal.tsx`

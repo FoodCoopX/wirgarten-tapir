@@ -98,10 +98,14 @@ class JokerValueService:
         name = f"{subscription.product.type.name} {subscription.product.name}"
 
         if subscription.product.type.delivery_cycle == CUSTOM_CYCLE[0]:
-            return JokerCreditValuePart(
-                explanation=f"{name}: Preis pro Lieferung {format_currency(product_price)} €",
-                value=value,
+            explanation = (
+                f"{name}: Preis pro Lieferung {format_currency(product_price)} €"
             )
+            if subscription.quantity != 1:
+                explanation += (
+                    f" × {subscription.quantity} Anteile = {format_currency(value)} €"
+                )
+            return JokerCreditValuePart(explanation=explanation, value=value)
 
         calculation = cls._build_monthly_to_delivery_calculation(
             monthly_amount=product_price,

@@ -23,6 +23,20 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 
 class MonthPaymentBuilderUtils:
     @classmethod
+    def get_number_of_days_covered_in_month(
+        cls,
+        first_of_month: datetime.date,
+        contract_start: datetime.date,
+        contract_end: datetime.date,
+    ) -> int:
+        return DateRangeOverlapChecker.get_number_of_days_of_overlap(
+            range_1_start=first_of_month,
+            range_1_end=get_last_day_of_month(first_of_month),
+            range_2_start=contract_start,
+            range_2_end=contract_end,
+        )
+
+    @classmethod
     def filter_contracts_by_member[T: TapirContract](
         cls, contracts: list[T], member_id: str | None
     ) -> list[T]:

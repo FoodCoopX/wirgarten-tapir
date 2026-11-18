@@ -15,7 +15,7 @@ from tapir.subscriptions.services.automatic_solidarity_contribution_renewal_serv
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.utils.services.date_range_overlap_checker import DateRangeOverlapChecker
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.utils.shortcuts import get_last_day_of_month, get_first_of_next_month
+from tapir.utils.shortcuts import get_last_day_of_month
 from tapir.wirgarten.models import (
     Payment,
     Member,
@@ -183,14 +183,11 @@ class MonthPaymentBuilderSolidarityContributions:
     def get_amount_to_pay_for_contribution_within_month(
         cls, first_of_month: datetime.date, contribution: SolidarityContribution
     ):
-        nb_days_in_month = (
-            get_first_of_next_month(first_of_month) - first_of_month
-        ).days
-        nb_days_overlap = DateRangeOverlapChecker.get_number_of_days_of_overlap(
-            range_1_start=first_of_month,
-            range_1_end=get_last_day_of_month(first_of_month),
-            range_2_start=contribution.start_date,
-            range_2_end=contribution.end_date,
+        nb_days_in_month = get_last_day_of_month(first_of_month).day
+        nb_days_overlap = MonthPaymentBuilderUtils.get_number_of_days_covered_in_month(
+            first_of_month=first_of_month,
+            contract_start=contribution.start_date,
+            contract_end=contribution.end_date,
         )
         ratio = nb_days_overlap / nb_days_in_month
 

@@ -117,3 +117,27 @@ class TestGetSubscriptionPart(TapirUnitTest):
         self.assertEqual(
             "Ernteanteil Gemüse M: Preis pro Lieferung 10,00 €", part.explanation
         )
+
+    def test_getSubscriptionPart_customCycleWithQuantity_explainsQuantity(
+        self,
+        mock_get_product_price: Mock,
+        mock_get_price_of_single_delivery: Mock,
+    ):
+        self.setup_prices(
+            mock_get_product_price=mock_get_product_price,
+            mock_get_price_of_single_delivery=mock_get_price_of_single_delivery,
+            delivery_value=Decimal(30),
+        )
+        subscription = self.build_subscription(
+            delivery_cycle=CUSTOM_CYCLE[0], quantity=3
+        )
+
+        part = JokerValueService._get_subscription_part(
+            subscription=subscription, joker_date=self.JOKER_DATE, cache={}
+        )
+
+        self.assertEqual(Decimal(30), part.value)
+        self.assertEqual(
+            "Ernteanteil Gemüse M: Preis pro Lieferung 10,00 € × 3 Anteile = 30,00 €",
+            part.explanation,
+        )
