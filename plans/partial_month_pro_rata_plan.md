@@ -14,7 +14,7 @@ Tick a box right after finishing the step. Each phase writes and updates the uni
 - [x] Phase 7 — cross-cutting tests for criterion 9
 - [x] Phase 8 — cleanup: remove `Payment.edited` (see "Cleanup (Phase 8)")
 - [x] Phase 9 — merge the migrations created by this plan (see "Migrations (Phase 9)")
-- [ ] Phase 10 — documentation review (see "Documentation (Phase 10)")
+- [x] Phase 10 — documentation review (see "Documentation (Phase 10)")
 - [ ] Phase 11 — delete this plan file (`plans/partial_month_pro_rata_plan.md`)
 
 ## Context
