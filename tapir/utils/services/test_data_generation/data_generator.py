@@ -2,6 +2,7 @@ import datetime
 
 import factory.random
 from django.core.management import call_command
+from tapir_mail.models import EmailConfiguration, EmailConfigurationVersion
 
 from tapir.accounts.models import EmailChangeRequest
 from tapir.accounts.services.keycloak_user_delete_service import (
@@ -31,6 +32,12 @@ from tapir.utils.services.test_data_generation.configuration_generator import (
     ConfigurationGenerator,
 )
 from tapir.utils.services.test_data_generation.joker_generator import JokerGenerator
+from tapir.utils.services.test_data_generation.mail_trigger_generator import (
+    MailTriggerGenerator,
+)
+from tapir.utils.services.test_data_generation.mailing_list_generator import (
+    MailingListGenerator,
+)
 from tapir.utils.services.test_data_generation.member_credit_generator import (
     MemberCreditGenerator,
 )
@@ -106,11 +113,15 @@ class DataGenerator:
             MemberCredit,
             AssociationMembership,
             AssociationMembershipType,
+            EmailConfigurationVersion,
+            EmailConfiguration,
         ]
 
         for model_class in model_classes:
             models = model_class.objects.all()
             models.delete()
+
+        MailingListGenerator.delete_all_mailing_lists()
 
         members_to_delete = Member.objects.filter(email__endswith="@example.com")
         for member in members_to_delete:
@@ -152,6 +163,10 @@ class DataGenerator:
         MemberCreditGenerator.generate_member_credits()
         print("Creating payment history...")
         call_command("rebuild_payment_history", "--no-confirm")
+        print("Creating required mail triggers...")
+        MailTriggerGenerator.generate_required_triggers()
+        print("Creating mailing lists...")
+        MailingListGenerator.generate_mailing_lists()
         print("Test data generation done")
 
     @classmethod
