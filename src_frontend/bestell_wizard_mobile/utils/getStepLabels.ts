@@ -32,53 +32,38 @@ export function getPhaseLabel(
   return phase;
 }
 
+const STEP_NAMES: Record<string, string> = {
+  "1a_welcome": "1A: Willkommen",
+  "1b_welcome_waiting_list": "1B: Willkommen (warteliste)",
+  "2_first_name": "2: Erste Name",
+  "3_product_type_choice": "3: Produkt-Type Auswahl",
+  "3b_growing_period_choice": "3B: Vertragsperiode-Auswahl",
+  "5a_pickup_location_intro": "5A: Verteilstation (Intro)",
+  "5b_pickup_location_choice": "5B: Verteilstation (Auswahl)",
+  "5c_pickup_location_confirm_waiting_list":
+    "5C: Verteilstation (Bestätigung Warteliste)",
+  "6a_coop_intro": "6A: Genossenschaft (Intro)",
+  "6b_association_membership": "6B: Vereinsmitgliedschaft (Auswahl)",
+  "6b_coop_shares": "6B: Genossenschaft (Auswahl)",
+  "6c_coop_member_now": "6C: Genossenschaft (Bestätigung)",
+  "7_solidarity_contribution": "7: Solidarbeitrag",
+  "8_personal_data": "8: Persönliche Daten",
+  "9_banking_data": "9: Bank Daten",
+  "10_summary": "10: Zusammenfassung",
+  "11_legal": "11: Legal",
+  "12_channel": "12: Vertriebskanal",
+  "13_feedback": "13: Feedback",
+  "14_confirmation": "14: Bestätigung",
+  "14b_confirmation_waiting_list": "14: Bestätigung (Warteliste)",
+};
+
 export function getStepName(
   step: string,
   settings: BestellWizardSettings,
 ): string {
-  switch (step) {
-    case "1a_welcome":
-      return "1A: Willkommen";
-    case "1b_welcome_waiting_list":
-      return "1B: Willkommen (warteliste)";
-    case "2_first_name":
-      return "2: Erste Name";
-    case "3_product_type_choice":
-      return "3: Produkt-Type Auswahl";
-    case "3b_growing_period_choice":
-      return "3B: Vertragsperiode-Auswahl";
-    case "5a_pickup_location_intro":
-      return "5A: Verteilstation (Intro)";
-    case "5b_pickup_location_choice":
-      return "5B: Verteilstation (Auswahl)";
-    case "5c_pickup_location_confirm_waiting_list":
-      return "5C: Verteilstation (Bestätigung Warteliste)";
-    case "6a_coop_intro":
-      return "6A: Genossenschaft (Intro)";
-    case "6b_association_membership":
-      return "6B: Vereinsmitgliedschaft (Auswahl)";
-    case "6b_coop_shares":
-      return "6B: Genossenschaft (Auswahl)";
-    case "6c_coop_member_now":
-      return "6C: Genossenschaft (Bestätigung)";
-    case "7_solidarity_contribution":
-      return "7: Solidarbeitrag";
-    case "8_personal_data":
-      return "8: Persönliche Daten";
-    case "9_banking_data":
-      return "9: Bank Daten";
-    case "10_summary":
-      return "10: Zusammenfassung";
-    case "11_legal":
-      return "11: Legal";
-    case "12_channel":
-      return "12: Vertriebskanal";
-    case "13_feedback":
-      return "13: Feedback";
-    case "14_confirmation":
-      return "14: Bestätigung";
-    case "14b_confirmation_waiting_list":
-      return "14: Bestätigung (Warteliste)";
+  const stepName = STEP_NAMES[step];
+  if (stepName !== undefined) {
+    return stepName;
   }
   for (const productType of settings.productTypes) {
     if (!step.includes(productType.id!)) {
