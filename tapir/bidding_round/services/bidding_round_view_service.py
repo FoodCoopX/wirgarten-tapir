@@ -336,5 +336,6 @@ class BiddingRoundViewService:
             "yearly_delivery_charge": str(yearly_delivery_charge),
         }
 
+    @classmethod
     def serialize_validation_error(cls, error: ValidationError) -> str:
         return "; ".join(error.messages)
