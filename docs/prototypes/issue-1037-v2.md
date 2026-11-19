@@ -6,6 +6,64 @@ Die gemeinsame Variante 1 bleibt auf diesem Branch zum Vergleichen erreichbar.
 
 ![Zwei getrennte Vertragsaktionen](issue-1037/03-separate-icons.png)
 
+## Screenshots Version 2
+
+Aufgenommen am 19.11.2026 mit generierten lokalen Testdaten (Vertragsart „Brotanteil“).
+Der Prototyp-Code ist unverändert; nur die Screenshots wurden ergänzt.
+
+### Die zwei Icons in der Aktionsleiste unter „Verträge“
+
+![Icon „Vertrag hinzufügen“](issue-1037/v2/00a-icon-vertrag-hinzufuegen.png)
+
+![Icon „Anteilsgröße zu einem bestimmten Datum verändern“](issue-1037/v2/00b-icon-anteilsgroesse-aendern.png)
+
+### Icon 1: Vertrag hinzufügen
+
+1. Mitglied suchen und auswählen.
+
+   ![Mitglied suchen](issue-1037/v2/neu-1-mitglied-suchen.png)
+
+2. Vertragsdaten: Vertragsart, Produktanteilsgröße, Menge, Beginn. Rechts der Status von
+   Abholort, Zahlungsintervall und Bankverbindung. Hier fehlt der Abholort (rotes Kreuz),
+   deshalb erscheint eine Auswahl mit den Abholorten, die noch Kapazität haben.
+
+   ![Vertragsdaten](issue-1037/v2/neu-2-vertragsdaten.png)
+
+3. Beginn zu einer bestimmten Kalenderwoche (erst Jahr, dann KW mit Montagsdatum),
+   Abholort gewählt, Kapazitätsprüfung grün.
+
+   ![Beginn per Kalenderwoche](issue-1037/v2/neu-3-beginn-kalenderwoche.png)
+
+4. Zusammenfassung mit Vorschau für das Mitgliederprotokoll.
+
+   ![Zusammenfassung Neuanlage](issue-1037/v2/neu-4-zusammenfassung.png)
+
+### Icon 2: Anteilsgröße zu einem bestimmten Datum verändern
+
+Die Mitgliedssuche ist dieselbe wie bei Icon 1.
+
+1. Genau einen bestehenden Anteil auswählen. Beendete oder gekündigte Verträge sind
+   ausgegraut und nicht wählbar.
+
+   ![Anteil auswählen](issue-1037/v2/aendern-1-anteil-auswaehlen.png)
+
+2. Neue Produktanteilsgröße und Wirksamkeitsdatum. Vertragsart gesperrt, kein Mengenfeld.
+
+   ![Größe und Datum](issue-1037/v2/aendern-2-groesse-und-datum.png)
+
+3. Zusammenfassung „Bisher → Neu“ mit Vorschau für das Mitgliederprotokoll.
+
+   ![Zusammenfassung Änderung](issue-1037/v2/aendern-3-zusammenfassung.png)
+
+4. Hinweis, wenn der hinterlegte Abholort für die neue Größe keine Kapazität mehr hat:
+   „Änderung prüfen“ bleibt gesperrt.
+
+   ![Abholort ohne Kapazität](issue-1037/v2/aendern-4-hinweis-abholort-voll.png)
+
+Bekannte Kleinigkeit im Prototyp: Das Status-Icon „Abholort“ bleibt nach der Auswahl
+eines Abholorts rot (Screenshot Neuanlage Schritt 3). In der Umsetzung sollte es nach
+der Auswahl auf grün wechseln.
+
 ## Lokal ansehen
 
 Branch: `codex/issue-1037-admin-contract-prototype-v2`
