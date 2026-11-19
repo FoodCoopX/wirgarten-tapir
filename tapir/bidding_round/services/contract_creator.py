@@ -37,15 +37,7 @@ logger = logging.getLogger(__name__)
 
 class ContractCreator:
     @classmethod
-    def create_contracts_from_bids(
-        cls,
-        bidding_round,
-        cache,
-        bid_ids=None,
-        actor=None,
-        bid_level=None,
-        create_auto_renewed_contracts=False,
-    ):
+    def _validate_can_create_contracts(cls, bidding_round):
         if bidding_round.status != BIDDING_ROUND_STATUS_CLOSED:
             raise ValidationError(
                 _("Verträge können erst nach Ende der Beitragsrunde erstellt werden.")
@@ -70,6 +62,18 @@ class ContractCreator:
                     "Das durchschnittliche Gebot muss fixiert sein, bevor Verträge erstellt werden können."
                 )
             )
+
+    @classmethod
+    def create_contracts_from_bids(
+        cls,
+        bidding_round,
+        cache,
+        bid_ids=None,
+        actor=None,
+        bid_level=None,
+        create_auto_renewed_contracts=False,
+    ):
+        cls._validate_can_create_contracts(bidding_round)
 
         bids = list(bidding_round.bids.select_related("member").all())
         if bid_ids:

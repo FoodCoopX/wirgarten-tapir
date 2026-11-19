@@ -26,6 +26,9 @@ import { addToast } from "../utils/addToast.ts";
 import { formatCurrency } from "../utils/formatCurrency.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 
+import ContractsCard from "./components/ContractsCard.tsx";
+import LockAverageBidCard from "./components/LockAverageBidCard.tsx";
+
 interface BiddingRoundResultsProps {
   csrfToken: string;
 }
@@ -47,6 +50,22 @@ function getRoundIdFromPath(): string {
   const parts = window.location.pathname.split("/").filter(Boolean);
   const adminIndex = parts.indexOf("admin");
   return parts[adminIndex + 1] ?? "";
+}
+
+function buildItem(
+  roundProductTypeId: string,
+  productId: string,
+  quantity: number,
+  amounts: string[],
+) {
+  return {
+    roundProductTypeId,
+    productId,
+    quantity,
+    amount1: amounts[0] || null,
+    amount2: amounts[1] || null,
+    amount3: amounts[2] || null,
+  };
 }
 
 const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
@@ -105,7 +124,7 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
         setLockPosition((loadedResults.recommendedLevel - 1) * 50);
       }
     } catch (error) {
-      await handleRequestError(
+      handleRequestError(
         error,
         "Die Auswertung konnte nicht geladen werden.",
         setToastDatas,
@@ -134,7 +153,7 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
       );
       await load((selectedLevel - 1) * 50);
     } catch (error) {
-      await handleRequestError(
+      handleRequestError(
         error,
         "Die Aktion ist fehlgeschlagen.",
         setToastDatas,
@@ -156,7 +175,7 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
       setManualQuantity(1);
       setShowManualBid(true);
     } catch (error) {
-      await handleRequestError(
+      handleRequestError(
         error,
         "Die Mitglieder konnten nicht geladen werden.",
         setToastDatas,
@@ -173,22 +192,6 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
     ]);
     setEditQuantity(bid.items[0]?.quantity ?? 1);
     setEditConfirmed(!!bid.adminConfirmed);
-  }
-
-  function buildItem(
-    roundProductTypeId: string,
-    productId: string,
-    quantity: number,
-    amounts: string[],
-  ) {
-    return {
-      roundProductTypeId,
-      productId,
-      quantity,
-      amount1: amounts[0] || null,
-      amount2: amounts[1] || null,
-      amount3: amounts[2] || null,
-    };
   }
 
   if (loading) {
@@ -385,104 +388,22 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
         </Card>
       )}
 
-      <Card className={"mb-4"}>
-        <Card.Header>
-          <strong>Durchschnittsgebot fixieren</strong>
-        </Card.Header>
-        <Card.Body>
-          {isLocked ? (
-            <>
-              <p className={"mb-2"}>
-                Fixiert bei Position{" "}
-                <strong>{Number(round.lockedBidRangePosition)}</strong>,
-                Aufschlag{" "}
-                <strong>{String(round.lockedSurchargePercent)} %</strong>
-                {round.lockedSurchargeOnBids ? " auf die Gebote" : ""}
-                {round.lockedSurchargeOnAverage ? " auf den Durchschnitt" : ""}.
-              </p>
-              <Button
-                variant={"outline-dark"}
-                disabled={busy}
-                onClick={() =>
-                  runAction(
-                    () =>
-                      api.biddingRoundsApiUnlockAverageBidCreate({ roundId }),
-                    "Durchschnittsgebot freigegeben",
-                  )
-                }
-              >
-                Freigeben
-              </Button>
-            </>
-          ) : (
-            <>
-              <Row className={"g-3 align-items-end"}>
-                <Col md={6}>
-                  <Form.Label>Position: {lockPosition}</Form.Label>
-                  <Form.Range
-                    min={0}
-                    max={100}
-                    step={10}
-                    value={lockPosition}
-                    onChange={(event) =>
-                      setLockPosition(Number(event.target.value))
-                    }
-                  />
-                </Col>
-                <Col md={2}>
-                  <Form.Label>Aufschlag %</Form.Label>
-                  <Form.Control
-                    value={surchargePercent}
-                    onChange={(event) =>
-                      setSurchargePercent(event.target.value)
-                    }
-                  />
-                </Col>
-                <Col md={4}>
-                  <Form.Check
-                    type={"checkbox"}
-                    label={"Aufschlag auf die Gebote"}
-                    checked={surchargeOnBids}
-                    onChange={(event) =>
-                      setSurchargeOnBids(event.target.checked)
-                    }
-                  />
-                  <Form.Check
-                    type={"checkbox"}
-                    label={"Aufschlag auf den Durchschnitt"}
-                    checked={surchargeOnAverage}
-                    onChange={(event) =>
-                      setSurchargeOnAverage(event.target.checked)
-                    }
-                  />
-                </Col>
-              </Row>
-              <Button
-                variant={"dark"}
-                className={"mt-3"}
-                disabled={busy}
-                onClick={() =>
-                  runAction(
-                    () =>
-                      api.biddingRoundsApiLockAverageBidCreate({
-                        roundId,
-                        lockAverageBidRequest: {
-                          position: lockPosition,
-                          surchargePercent: Number(surchargePercent) || 0,
-                          surchargeOnBids,
-                          surchargeOnAverage,
-                        },
-                      }),
-                    "Durchschnittsgebot fixiert",
-                  )
-                }
-              >
-                Fixieren
-              </Button>
-            </>
-          )}
-        </Card.Body>
-      </Card>
+      <LockAverageBidCard
+        round={round}
+        isLocked={isLocked}
+        busy={busy}
+        api={api}
+        roundId={roundId}
+        runAction={runAction}
+        lockPosition={lockPosition}
+        setLockPosition={setLockPosition}
+        surchargePercent={surchargePercent}
+        setSurchargePercent={setSurchargePercent}
+        surchargeOnBids={surchargeOnBids}
+        setSurchargeOnBids={setSurchargeOnBids}
+        surchargeOnAverage={surchargeOnAverage}
+        setSurchargeOnAverage={setSurchargeOnAverage}
+      />
 
       <Card className={"mb-4"}>
         <Card.Header>
@@ -695,64 +616,17 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
         </Card.Body>
       </Card>
 
-      <Card>
-        <Card.Header>
-          <strong>Verträge</strong>
-        </Card.Header>
-        <Card.Body>
-          {round.contractsCreatedAt ? (
-            <Alert variant={"success"}>
-              Verträge erstellt am{" "}
-              {new Date(round.contractsCreatedAt).toLocaleString("de-DE")}. Die
-              Erzeugung ist endgültig; Korrekturen laufen über die normalen
-              Verwaltungswerkzeuge.
-            </Alert>
-          ) : round.status !== "closed" ? (
-            <Alert variant={"info"}>
-              Verträge können erst erstellt werden, wenn die Beitragsrunde
-              geschlossen ist.
-            </Alert>
-          ) : !isLocked ? (
-            <Alert variant={"warning"}>
-              Bitte zuerst das Durchschnittsgebot fixieren.
-            </Alert>
-          ) : results.unconfirmedBidCount > 0 ? (
-            <Alert variant={"warning"}>
-              Es gibt noch {results.unconfirmedBidCount} unbestätigte Gebote.
-            </Alert>
-          ) : (
-            <>
-              <Form.Check
-                type={"checkbox"}
-                className={"mb-3"}
-                label={
-                  "Verträge für automatisch verlängerte Mitglieder mit erzeugen"
-                }
-                checked={createAutoRenewed}
-                onChange={(event) => setCreateAutoRenewed(event.target.checked)}
-              />
-              <Button
-                variant={"dark"}
-                disabled={busy || results.bids.length === 0}
-                onClick={() =>
-                  runAction(
-                    () =>
-                      api.biddingRoundsApiCreateContractsCreate({
-                        roundId,
-                        createContractsRequest: {
-                          createAutoRenewedContracts: createAutoRenewed,
-                        },
-                      }),
-                    "Verträge erstellt",
-                  )
-                }
-              >
-                Verträge aus allen Geboten erstellen
-              </Button>
-            </>
-          )}
-        </Card.Body>
-      </Card>
+      <ContractsCard
+        round={round}
+        results={results}
+        isLocked={isLocked}
+        busy={busy}
+        createAutoRenewed={createAutoRenewed}
+        setCreateAutoRenewed={setCreateAutoRenewed}
+        api={api}
+        roundId={roundId}
+        runAction={runAction}
+      />
 
       <Modal show={!!editingBid} onHide={() => setEditingBid(null)}>
         <Modal.Header closeButton>
