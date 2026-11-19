@@ -133,6 +133,9 @@ Services: `web` (8000), `vite` (5173), `keycloak` (8080), `db` (5432), `redis` (
 - **Annotate API views** with `@extend_schema(...)` and run `make schema`.
 - **Admin docs**: when adding, changing or removing an admin-visible feature, ask whether the admin documentation in
   `docs/admins/` should be updated.
+- **Test data generation**: when adding or updating a feature, ask whether test data generation
+  (`tapir/utils/services/test_data_generation/`, `populate` command) should be updated. Never write automated tests for
+  test data generation.
 - **Docs language**: admin documentation (`docs/admins/`) is written in German, developer documentation (`docs/dev/`) in
   English.
 - **Formatting**: Black / Prettier / DjHTML, enforced by pre-commit (`poetry run pre-commit install`).
