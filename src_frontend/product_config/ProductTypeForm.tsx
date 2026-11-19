@@ -193,10 +193,11 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
               <Row className={"mt-4"}>
                 <Form.Group controlId={"capacity"}>
                   <Form.Label>
-                    Produkt Kapazität in Produkt-Größe für die Vertragsperiode{" "}
+                    Kapazität des Produktanteils für die Vertragsperiode{" "}
                     {formatDateNumeric(globalSelectedGrowingPeriod?.startDate)}{" "}
                     bis{" "}
-                    {formatDateNumeric(globalSelectedGrowingPeriod?.endDate)}
+                    {formatDateNumeric(globalSelectedGrowingPeriod?.endDate)}{" "}
+                    (gemessen in der „Größe“ der Anteilsgrößen)
                   </Form.Label>
                   <Form.Control
                     type={"number"}
@@ -289,9 +290,9 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
                       disabled={!canUpdateNoticePeriod}
                     />
                     <Form.Text>
-                      Ob dieses Produkt-Typ ein andere Kündigungsfrist nutzen
-                      soll als die aus der allgemeine Konfig. Wenn du diese
-                      Option einsetzen willst, wende dich an der Admins.
+                      Ob dieser Produktanteil eine andere Kündigungsfrist nutzen
+                      soll als die aus der allgemeinen Konfig. Wenn du diese
+                      Option einsetzen willst, wende dich an die Admins.
                     </Form.Text>
                   </Form.Group>
                 </Row>
@@ -418,8 +419,8 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
               <Row className={"mt-2"}>
                 <Form.Group controlId={"description_bestellwizard_short"}>
                   <Form.Label>
-                    Beschreibung im Bestellwizard bei der erste Seite
-                    (Produkt-Typ Auswahl)
+                    Beschreibung im Bestellwizard auf der ersten Seite (Auswahl
+                    der Produktanteile)
                   </Form.Label>
                   <Form.Control
                     type={"text"}
@@ -435,8 +436,8 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
               <Row className={"mt-4"}>
                 <Form.Group controlId={"description_bestellwizard_long"}>
                   <Form.Label>
-                    Beschreibung im Bestellwizard bei der Produkt-Spezifische
-                    Seite
+                    Beschreibung im Bestellwizard auf der Seite des
+                    Produktanteils
                   </Form.Label>
                   <Form.Control
                     type={"text"}
@@ -472,7 +473,7 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
               <Row className={"mt-4"}>
                 <Form.Group controlId={"title_bestellwizard"}>
                   <Form.Label>
-                    Titel im BestellWizard bei der Produkt-Größe-Auswahl
+                    Titel im BestellWizard bei der Auswahl der Anteilsgröße
                   </Form.Label>
                   <Form.Control
                     type={"text"}
@@ -488,7 +489,7 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
               <Row className={"mt-4"}>
                 <Form.Group controlId={"title_bestellwizard"}>
                   <Form.Label>
-                    Titel im BestellWizard bei der Produkt-Typ-Intro
+                    Titel im BestellWizard beim Intro des Produktanteils
                   </Form.Label>
                   <Form.Control
                     type={"text"}

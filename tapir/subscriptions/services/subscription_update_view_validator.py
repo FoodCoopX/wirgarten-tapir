@@ -226,6 +226,6 @@ class SubscriptionUpdateViewValidator:
             )
             if not has_subscription_to_required_product_type:
                 raise ValidationError(
-                    f"Um Anteile dieses Zusatzprodukts ({product_type.name}) zu bestellen, "
-                    f"musst du in derselben Vertragsperiode auch Anteile des Basisprodukts ({other_product_type.name}) haben."
+                    f"Um Anteile dieses zusätzlichen Produktanteils ({product_type.name}) zu bestellen, "
+                    f"musst du in derselben Vertragsperiode auch Anteile des Pflicht-Produktanteils ({other_product_type.name}) haben."
                 )
