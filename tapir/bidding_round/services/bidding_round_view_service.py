@@ -174,10 +174,7 @@ class BiddingRoundViewService:
         )
         if pickup_location is None:
             return None
-        round_product_type = cls._get_round_product_type(bidding_round)
-        product_type = (
-            round_product_type.product_type if round_product_type is not None else None
-        )
+        product_type = bidding_round.product_type
         yearly_delivery_charge = (
             BiddingRoundDeliveryChargeService.get_yearly_delivery_charge(
                 pickup_location_id=pickup_location.id,
@@ -192,5 +189,6 @@ class BiddingRoundViewService:
             "yearly_delivery_charge": str(yearly_delivery_charge),
         }
 
+    @classmethod
     def serialize_validation_error(cls, error: ValidationError) -> str:
         return "; ".join(error.messages)
