@@ -12,6 +12,7 @@ REALM_MANAGEMENT_CLIENT_ID = "realm-management"
 BACKEND_CLIENT_ROLES = ("manage-users",)
 PROVISIONER_CLIENT_ROLES = ("realm-admin",)
 PROVISIONER_SECRET_PLACEHOLDER = "**********"
+ADMIN_API_CLIENT_SCOPE = "kc-admin-api"
 
 assert REALM_ROLES, "Permission.all() returned no realm roles"
 assert len(REALM_ROLES) == len(
@@ -61,6 +62,7 @@ class ClientSpec:
     web_origins: tuple[str, ...]
     secret: str | None = None
     full_scope_allowed: bool = True
+    default_client_scopes: tuple[str, ...] = ()
 
     def to_create_payload(self) -> dict:
         payload = {
@@ -208,6 +210,7 @@ def build_desired_state() -> DesiredState:
                 web_origins=web_origins,
                 secret=admin_config["CLIENT_SECRET_KEY"],
                 full_scope_allowed=False,
+                default_client_scopes=(ADMIN_API_CLIENT_SCOPE,),
             ),
             ClientSpec(
                 client_id=admin_config["FRONTEND_CLIENT_ID"],
@@ -231,6 +234,7 @@ def build_desired_state() -> DesiredState:
                 web_origins=(),
                 secret=provisioner_config["CLIENT_SECRET_KEY"],
                 full_scope_allowed=False,
+                default_client_scopes=(ADMIN_API_CLIENT_SCOPE,),
             ),
         ),
         service_account_roles={

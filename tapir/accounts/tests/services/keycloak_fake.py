@@ -25,6 +25,15 @@ BUILTIN_ROLE_NAMES = (
     "uma_authorization",
 )
 
+REALM_DEFAULT_CLIENT_SCOPES = (
+    "web-origins",
+    "acr",
+    "roles",
+    "profile",
+    "basic",
+    "email",
+)
+
 
 class FakeKeycloakAdmin:
     def __init__(
@@ -50,6 +59,11 @@ class FakeKeycloakAdmin:
         )
         self.realm_error_code = realm_error_code
         self.connection_error = connection_error
+        self.client_scope_names = [
+            *REALM_DEFAULT_CLIENT_SCOPES,
+            "offline_access",
+            "kc-admin-api",
+        ]
         self.calls: list[tuple] = []
 
     @classmethod
@@ -88,6 +102,11 @@ class FakeKeycloakAdmin:
         for spec in desired.clients:
             payload = spec.to_create_payload()
             payload["id"] = f"client-{spec.client_id}"
+            payload["defaultClientScopes"] = list(
+                dict.fromkeys(
+                    (*REALM_DEFAULT_CLIENT_SCOPES, *spec.default_client_scopes)
+                )
+            )
             clients.append(payload)
             roles_for_client = desired.service_account_roles.get(spec.client_id, {})
             service_account_roles[spec.client_id] = {
@@ -231,6 +250,34 @@ class FakeKeycloakAdmin:
             "id": f"service-account-{client['clientId']}",
             "username": f"service-account-{client['clientId']}",
         }
+
+    def get_client_default_client_scopes(self, client_id: str) -> list:
+        self.calls.append(("get_client_default_client_scopes", client_id))
+        client = self.get_client(client_id)
+        return [
+            {"id": f"scope-{name}", "name": name}
+            for name in client.get("defaultClientScopes", [])
+        ]
+
+    def get_client_scopes(self) -> list:
+        self.calls.append(("get_client_scopes",))
+        return [
+            {"id": f"scope-{name}", "name": name} for name in self.client_scope_names
+        ]
+
+    def add_client_default_client_scope(
+        self, client_id: str, client_scope_id: str, payload: dict
+    ) -> dict:
+        self.calls.append(
+            ("add_client_default_client_scope", client_id, client_scope_id, payload)
+        )
+        name = client_scope_id.removeprefix("scope-")
+        client = self.get_client(client_id)
+        scopes = client.setdefault("defaultClientScopes", [])
+        if name not in scopes:
+            scopes.append(name)
+            self.update_client(client_id, {"defaultClientScopes": scopes})
+        return {}
 
     def get_client_role(self, client_id: str, role_name: str) -> dict:
         self.calls.append(("get_client_role", client_id, role_name))

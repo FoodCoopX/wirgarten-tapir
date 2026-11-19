@@ -66,9 +66,11 @@ is `./scripts/reset_and_start_local_server.sh`
 
 ## Keycloak setup
 
-Tapir delegates login to Keycloak. The repository ships a minimal bootstrap realm
-(`docker/keycloak/import/tapir-realm.json`) with the `tapir-provisioner` client. `keycloak-sync` creates the runtime
-clients, the nine Tapir roles, the `superuser` group and the service-account mappings.
+Tapir delegates login to Keycloak. Keycloak 26.8.2 or newer is required, because the Admin REST API only accepts
+tokens that carry the `kc-admin-api` scope. The repository ships a minimal bootstrap realm
+(`docker/keycloak/import/tapir-realm.json`) with the `tapir-provisioner` client and that default client scope.
+`keycloak-sync` creates the runtime clients, the nine Tapir roles, the `superuser` group and the service-account
+mappings, and assigns the `kc-admin-api` scope to the clients that call the admin API.
 
 For the local Docker stack, check and repair the realm with:
 

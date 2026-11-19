@@ -1,6 +1,7 @@
 from django.test import override_settings
 
 from tapir.accounts.services.keycloak_desired_state import (
+    ADMIN_API_CLIENT_SCOPE,
     PROVISIONER_SECRET_PLACEHOLDER,
     REALM_MANAGEMENT_CLIENT_ID,
     build_desired_state,
@@ -76,6 +77,7 @@ class TestKeycloakDesiredState(TapirUnitTest):
         self.assertFalse(backend.direct_access_grants_enabled)
         self.assertFalse(backend.full_scope_allowed)
         self.assertEqual("backend-secret", backend.secret)
+        self.assertEqual((ADMIN_API_CLIENT_SCOPE,), backend.default_client_scopes)
 
         frontend = clients["tapir-frontend"]
         self.assertTrue(frontend.public_client)
@@ -84,6 +86,7 @@ class TestKeycloakDesiredState(TapirUnitTest):
         self.assertFalse(frontend.direct_access_grants_enabled)
         self.assertFalse(frontend.full_scope_allowed)
         self.assertIsNone(frontend.secret)
+        self.assertEqual((), frontend.default_client_scopes)
 
         provisioner = clients["tapir-provisioner"]
         self.assertFalse(provisioner.public_client)
@@ -93,6 +96,7 @@ class TestKeycloakDesiredState(TapirUnitTest):
         self.assertFalse(provisioner.full_scope_allowed)
         self.assertEqual((), provisioner.redirect_uris)
         self.assertEqual((), provisioner.web_origins)
+        self.assertEqual((ADMIN_API_CLIENT_SCOPE,), provisioner.default_client_scopes)
 
     def test_buildDesiredState_default_serviceAccountRolesAreMappedToRealmManagement(
         self,

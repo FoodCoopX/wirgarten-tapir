@@ -75,18 +75,23 @@ the role available to the token.
 
 ### Admin API audience
 
-Current Keycloak releases enforce an audience check on the Admin REST API. Clients that call the
-admin API need the built-in `kc-admin-api` client scope as a **Default** client scope:
-`tapir-provisioner` for `keycloak sync` and `tapir-backend` for runtime user management. The default
-realm import already contains the scope on the provisioner; add it to `tapir-backend` manually if
-your Keycloak enforces the audience check. Without it, admin calls fail with
-`401 {"error":"HTTP 401 Unauthorized"}`.
+Current Keycloak releases enforce an audience check on the Admin REST API (RFC 9700). A client's
+access token only reaches the admin endpoints when it carries the `kc-admin-api` scope and the
+realm's admin API URL in its `aud` claim. The built-in `kc-admin-api` client scope supplies both;
+Keycloak's own `admin-cli` and `security-admin-console` clients get it automatically on upgrade,
+custom clients do not.
+
+`tapir-backend` and `tapir-provisioner` call the Admin API, so `check`/`sync` assign the
+`kc-admin-api` default client scope to both. Without it Keycloak answers every admin call with
+`401 {"error":"HTTP 401 Unauthorized"}` and Tapir fails on the first permission check. The service
+account roles stay unchanged; the audience check is independent of them.
 
 ### What the command does not manage
 
-Users, SMTP settings, themes, client scopes, optional protocol mappers, authentication flows,
-identity providers and the user profile are not managed. Configure those in the Keycloak admin
-console. A missing `smtpServer` is reported as a warning, not as an error.
+Users, SMTP settings, themes, client scope definitions, optional protocol mappers, authentication
+flows, identity providers and the user profile are not managed. Client scopes are only assigned, and
+only the built-in `kc-admin-api` scope is assigned. Configure the rest in the Keycloak admin console.
+A missing `smtpServer` is reported as a warning, not as an error.
 
 Export the realm from the Keycloak admin console, or with `kc.sh export`, before the first `sync` if
 you want a backup.
@@ -140,8 +145,9 @@ insecure verification toggle.
 
 ## Bootstrapping a new Keycloak server
 
-The only thing Tapir needs before the first `sync` is a realm and a provisioner client with
-`realm-management/realm-admin`. Everything else is created by the command.
+Keycloak 26.8.2 or newer is required. The only things Tapir needs before the first `sync` are a
+realm and a provisioner client with `realm-management/realm-admin` and the `kc-admin-api` default
+client scope. Everything else is created by the command.
 
 ### 1. Create the realm
 
@@ -163,8 +169,9 @@ In the Keycloak admin console, create a client in that realm:
 - Client scopes: add the built-in `kc-admin-api` scope as a **Default** client scope
 - Client secret: generate one and copy it
 
-The local bootstrap file `docker/keycloak/import/tapir-realm.json` is a minimal reference for these
-settings.
+`sync` cannot add the scope to its own provisioner client, because it is not authenticated yet; add
+it by hand here. The local bootstrap file `docker/keycloak/import/tapir-realm.json` is a minimal
+reference for these settings and already contains the scope.
 
 ### 3. Give the provisioner client realm-admin
 
@@ -239,8 +246,9 @@ effective server URL, public URL, realm, site URL and client IDs, but never secr
 
 The `docker-compose.yml` stack imports `docker/keycloak/import/tapir-realm.json` into a fresh
 Keycloak database. That import intentionally contains only the realm, the `tapir-provisioner` client
-and the `realm-management/realm-admin` mappings. `tapir-backend`, `tapir-frontend`, the Tapir roles
-and the `superuser` group are created by `make keycloak-sync`.
+with its `realm-management/realm-admin` mappings and the `kc-admin-api` default client scope.
+`tapir-backend`, `tapir-frontend`, the Tapir roles, the `superuser` group and the `kc-admin-api` scope
+on the backend client are created by `make keycloak-sync`.
 
 Keycloak reads the import only when its database is empty. After changing the import, recreate the
 container and its volume:
@@ -260,10 +268,12 @@ remapped public URL.
 | Message | Fix |
 | ------- | --- |
 | `Keycloak is not reachable at KEYCLOAK_ADMIN_SERVER_URL=...` | Check the URL, DNS and network access from the Tapir container, and the TLS trust chain. |
-| `The Keycloak provisioning client could not authenticate ...` | Check `KEYCLOAK_PROVISIONER_CLIENT_ID`, its secret and `KEYCLOAK_REALM_NAME`. |
+| `The Keycloak provisioning client could not authenticate ...` | Check `KEYCLOAK_PROVISIONER_CLIENT_ID`, its secret and `KEYCLOAK_REALM_NAME`. Also check that the provisioner client has the `kc-admin-api` default client scope. |
 | `The Keycloak realm does not exist.` | Create the realm or correct `KEYCLOAK_REALM_NAME`. |
 | `The Keycloak provisioning client lacks realm-management/realm-admin.` | Assign `realm-admin` to the service account and add the client scope mapping. |
 | `client tapir-backend cannot authenticate with the configured secret` | `sync` repairs it. Also check `KEYCLOAK_ADMIN_CLIENT_SECRET_KEY` and `KEYCLOAK_CLIENT_ID`. |
+| `client tapir-backend cannot call the Admin API: ... kc-admin-api ...` | The server does not offer the built-in scope or the assignment failed. Upgrade Keycloak if the scope is missing, otherwise assign `kc-admin-api` as a default client scope. |
+| `The Keycloak server does not provide the built-in client scope 'kc-admin-api'` | Upgrade Keycloak; older releases do not ship the scope. |
 | `KEYCLOAK_PROVISIONER_CLIENT_SECRET_KEY is still the placeholder value` | Set a real secret in Keycloak and in the environment. |
 | `Invalid redirect URI` in the browser | Make `SITE_URL` match the canonical browser URL, and proxy other hostnames to that URL. |
 | `SSL: CERTIFICATE_VERIFY_FAILED` | Add the private CA to the trust store or set `REQUESTS_CA_BUNDLE`. |

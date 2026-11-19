@@ -2,8 +2,16 @@ from unittest.mock import patch
 
 from django.test import override_settings
 
-from tapir.accounts.services.keycloak_desired_state import build_desired_state
+from tapir.accounts.services.keycloak_client_factory import (
+    REASON_AUTHENTICATION_FAILED,
+    REASON_MISSING_ADMIN_API_SCOPE,
+)
+from tapir.accounts.services.keycloak_desired_state import (
+    ADMIN_API_CLIENT_SCOPE,
+    build_desired_state,
+)
 from tapir.accounts.services.keycloak_reconciler import (
+    ADMIN_API_SCOPE_MISSING_MESSAGE,
     KeycloakReconciler,
     KeycloakSetupError,
 )
@@ -29,7 +37,7 @@ SETTINGS = dict(
     KEYCLOAK_PROVISIONER_CONFIG=PROVISIONER_CONFIG,
 )
 
-MUTATING_CALL_PREFIXES = ("create_", "update_", "assign_", "delete_")
+MUTATING_CALL_PREFIXES = ("create_", "update_", "assign_", "add_", "delete_")
 
 
 def mutating_calls(fake: FakeKeycloakAdmin) -> list:
@@ -408,12 +416,59 @@ class TestKeycloakReconciler(TapirUnitTest):
 
         self.assertIn("not reachable", str(context.exception))
 
+    def test_reconcile_missingAdminApiScope_reportsAndAdds(self, _can_authenticate):
+        desired = build_desired_state()
+        fake = FakeKeycloakAdmin.converged(desired)
+        backend = next(
+            client for client in fake.clients if client["clientId"] == "tapir-backend"
+        )
+        backend["defaultClientScopes"].remove(ADMIN_API_CLIENT_SCOPE)
+
+        check = KeycloakReconciler(fake, desired).reconcile(dry_run=True)
+        self.assertTrue(
+            any(
+                change.section == "clients" and ADMIN_API_CLIENT_SCOPE in change.message
+                for change in check.changes
+            )
+        )
+        self.assertFalse(fake.calls_of("add_client_default_client_scope"))
+
+        KeycloakReconciler(fake, desired).reconcile(dry_run=False)
+
+        add_calls = fake.calls_of("add_client_default_client_scope")
+        self.assertEqual(1, len(add_calls))
+        self.assertEqual(f"scope-{ADMIN_API_CLIENT_SCOPE}", add_calls[0][2])
+        self.assertIn(ADMIN_API_CLIENT_SCOPE, backend["defaultClientScopes"])
+
+    def test_reconcile_adminApiScopeMissingOnServer_reportsNotFixable(
+        self, _can_authenticate
+    ):
+        desired = build_desired_state()
+        fake = FakeKeycloakAdmin.converged(desired)
+        fake.client_scope_names.remove(ADMIN_API_CLIENT_SCOPE)
+        backend = next(
+            client for client in fake.clients if client["clientId"] == "tapir-backend"
+        )
+        backend["defaultClientScopes"].remove(ADMIN_API_CLIENT_SCOPE)
+
+        result = KeycloakReconciler(fake, desired).reconcile(dry_run=False)
+
+        self.assertTrue(
+            any(
+                change.section == "clients"
+                and change.message == ADMIN_API_SCOPE_MISSING_MESSAGE
+                and not change.fixable
+                for change in result.changes
+            )
+        )
+        self.assertFalse(fake.calls_of("add_client_default_client_scope"))
+
 
 @override_settings(**SETTINGS)
 class TestKeycloakReconcilerRuntimeSecret(TapirUnitTest):
     @patch(
         "tapir.accounts.services.keycloak_reconciler.can_authenticate",
-        side_effect=[(False, "authentication failed"), (True, None)],
+        side_effect=[(False, REASON_AUTHENTICATION_FAILED), (True, None)],
     )
     def test_reconcile_runtimeClientCannotAuthenticate_repairsSecret(
         self, _can_authenticate
@@ -427,3 +482,39 @@ class TestKeycloakReconcilerRuntimeSecret(TapirUnitTest):
         self.assertEqual(1, len(update_calls))
         self.assertEqual({"secret": "backend-secret"}, update_calls[0][2])
         self.assertEqual(2, _can_authenticate.call_count)
+
+    @patch(
+        "tapir.accounts.services.keycloak_reconciler.can_authenticate",
+        return_value=(False, REASON_MISSING_ADMIN_API_SCOPE),
+    )
+    def test_reconcile_runtimeClientMissingAdminApiScope_doesNotRewriteSecret(
+        self, _can_authenticate
+    ):
+        desired = build_desired_state()
+        fake = FakeKeycloakAdmin.converged(desired)
+
+        result = KeycloakReconciler(fake, desired).reconcile(dry_run=False)
+
+        self.assertFalse(fake.calls_of("update_client"))
+        self.assertTrue(
+            any(
+                change.section == "clients"
+                and "Admin API" in change.message
+                and not change.fixable
+                for change in result.changes
+            )
+        )
+
+    @patch(
+        "tapir.accounts.services.keycloak_reconciler.can_authenticate",
+        return_value=(False, "keycloak is not reachable"),
+    )
+    def test_reconcile_runtimeClientUnreachable_doesNotRewriteSecret(
+        self, _can_authenticate
+    ):
+        desired = build_desired_state()
+        fake = FakeKeycloakAdmin.converged(desired)
+
+        KeycloakReconciler(fake, desired).reconcile(dry_run=False)
+
+        self.assertFalse(fake.calls_of("update_client"))

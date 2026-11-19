@@ -10,8 +10,13 @@ from keycloak.exceptions import (
     KeycloakOperationError,
 )
 
-from tapir.accounts.services.keycloak_client_factory import can_authenticate
+from tapir.accounts.services.keycloak_client_factory import (
+    REASON_AUTHENTICATION_FAILED,
+    REASON_MISSING_ADMIN_API_SCOPE,
+    can_authenticate,
+)
 from tapir.accounts.services.keycloak_desired_state import (
+    ADMIN_API_CLIENT_SCOPE,
     ClientSpec,
     DesiredState,
     REALM_MANAGEMENT_CLIENT_ID,
@@ -34,10 +39,13 @@ AUTH_ERROR_MESSAGE = (
     f"{settings.KEYCLOAK_ADMIN_CONFIG['SERVER_URL']} in realm "
     f"{settings.KEYCLOAK_ADMIN_CONFIG['REALM_NAME']!r}. Check "
     "KEYCLOAK_PROVISIONER_CLIENT_ID and "
-    "KEYCLOAK_PROVISIONER_CLIENT_SECRET_KEY. For the local stack, import "
+    "KEYCLOAK_PROVISIONER_CLIENT_SECRET_KEY. The built-in "
+    f"{ADMIN_API_CLIENT_SCOPE} default client scope is also required on "
+    "every client that calls the Admin API. For the local stack, import "
     "docker/keycloak/import/tapir-realm.json; for other servers see "
     "docs/admins/keycloak.md."
 )
+
 CONNECTION_ERROR_MESSAGE = (
     "Keycloak is not reachable at KEYCLOAK_ADMIN_SERVER_URL="
     f"{settings.KEYCLOAK_ADMIN_CONFIG['SERVER_URL']}. Check DNS, network "
@@ -52,6 +60,12 @@ REALM_MISSING_MESSAGE = (
     "The Keycloak realm does not exist. Check KEYCLOAK_REALM_NAME or create "
     "the realm first; for the local stack import "
     "docker/keycloak/import/tapir-realm.json. See docs/admins/keycloak.md."
+)
+ADMIN_API_SCOPE_MISSING_MESSAGE = (
+    "The Keycloak server does not provide the built-in client scope "
+    f"{ADMIN_API_CLIENT_SCOPE!r}, which current Keycloak releases require for "
+    "the Admin REST API. Upgrade Keycloak and rerun the command; see "
+    "docs/admins/keycloak.md."
 )
 
 
@@ -325,6 +339,7 @@ class KeycloakReconciler:
                 current = self._ensure_client_detail(current)
 
             clients[spec.client_id] = current
+            self._reconcile_default_client_scopes(spec, current, result, dry_run)
             self._reconcile_client_role_scope_mappings(spec, result, dry_run)
             payload = spec.to_update_payload()
             drift = {
@@ -366,6 +381,62 @@ class KeycloakReconciler:
         if internal_id is None:
             return {}
         return self.client.get_client(internal_id)
+
+    def _reconcile_default_client_scopes(
+        self,
+        spec: ClientSpec,
+        client: dict,
+        result: ReconcileResult,
+        dry_run: bool,
+    ) -> None:
+        if not spec.default_client_scopes:
+            return
+
+        internal_id = client.get("id") or self.client.get_client_id(spec.client_id)
+        current = {
+            scope["name"]
+            for scope in self.client.get_client_default_client_scopes(internal_id)
+        }
+        missing = [name for name in spec.default_client_scopes if name not in current]
+        if not missing:
+            return
+
+        available = {scope["name"]: scope for scope in self.client.get_client_scopes()}
+        for name in missing:
+            scope = available.get(name)
+            if scope is None:
+                result.changes.append(
+                    Change(
+                        level="error",
+                        section="clients",
+                        message=ADMIN_API_SCOPE_MISSING_MESSAGE,
+                        fixable=False,
+                    )
+                )
+                continue
+
+            result.changes.append(
+                Change(
+                    level="error",
+                    section="clients",
+                    message=(
+                        f"client {spec.client_id} is missing default client scope "
+                        f"{name}"
+                    ),
+                    fixed=not dry_run,
+                )
+            )
+            if dry_run:
+                continue
+            self.client.add_client_default_client_scope(
+                internal_id,
+                scope["id"],
+                {
+                    "realm": self.desired.realm_name,
+                    "client": internal_id,
+                    "clientScopeId": scope["id"],
+                },
+            )
 
     def _reconcile_client_role_scope_mappings(
         self, spec: ClientSpec, result: ReconcileResult, dry_run: bool
@@ -506,6 +577,20 @@ class KeycloakReconciler:
         if can_login:
             return
 
+        if reason == REASON_MISSING_ADMIN_API_SCOPE:
+            result.changes.append(
+                Change(
+                    level="error",
+                    section="clients",
+                    message=(
+                        f"client {admin_config['CLIENT_ID']} cannot call the "
+                        f"Admin API: {reason}"
+                    ),
+                    fixable=False,
+                )
+            )
+            return
+
         result.changes.append(
             Change(
                 level="error",
@@ -517,7 +602,7 @@ class KeycloakReconciler:
                 fixed=not dry_run,
             )
         )
-        if dry_run:
+        if dry_run or reason != REASON_AUTHENTICATION_FAILED:
             return
 
         internal_id = backend.get("id") or self.client.get_client_id(
