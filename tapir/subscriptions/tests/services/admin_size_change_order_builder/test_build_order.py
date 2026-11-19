@@ -127,3 +127,25 @@ class TestAdminSizeChangeOrderBuilderBuildOrder(TapirUnitTest):
         )
 
         self.assertEqual({self.product_medium: 1}, order)
+
+    def test_buildOrder_changeFromNextSeason_usesSubscriptionsOfLastDayOfPreviousContract(
+        self, mock_get_all_subscriptions_for_member: MagicMock
+    ):
+        subscription = self._build_subscription(product=self.product_small, quantity=1)
+        other_subscription = self._build_subscription(
+            product=self.product_large, quantity=1
+        )
+        mock_get_all_subscriptions_for_member.return_value = [
+            subscription,
+            other_subscription,
+        ]
+
+        order = AdminSizeChangeOrderBuilder.build_order(
+            member=self.member,
+            subscription=subscription,
+            new_product=self.product_medium,
+            change_date=datetime.date(year=2028, month=1, day=1),
+            cache={},
+        )
+
+        self.assertEqual({self.product_large: 1, self.product_medium: 1}, order)

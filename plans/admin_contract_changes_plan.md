@@ -189,7 +189,7 @@ Mark a step as done by checking its box (`- [x]`).
 - [x] **3. Refactor: shared contract prerequisites**: extract the pickup location / payment rhythm / banking data part
   of `SubscriptionUpdateViewChangeApplier` and `SubscriptionUpdateViewValidator` into a service used by the
   member-profile flow. No behaviour change; existing tests stay green and the extracted service gets its own unit tests.
-- [ ] **4. Size change core**: `AdminSizeChangeOrderBuilder` + `AdminSizeChangeValidator` + an applier that calls
+- [x] **4. Size change core**: `AdminSizeChangeOrderBuilder` + `AdminSizeChangeValidator` + an applier that calls
   `ApplyTapirOrderManager` for the change date, marks the previous contract as cancelled, creates the credit, sends the
   mail. Without next-period handling. Unit tests for builder and validator, service tests for the applier (end dates,
   cancellation, log entries, trial carried over, mail, quantity > 1 remainder, SEPA consent).

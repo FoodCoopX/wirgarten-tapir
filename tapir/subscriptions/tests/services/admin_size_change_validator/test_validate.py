@@ -8,6 +8,7 @@ from tapir.subscriptions.services.contract_prerequisites_validator import (
     ContractPrerequisitesValidator,
 )
 from tapir.subscriptions.services.order_validator import OrderValidator
+from tapir.subscriptions.types import ContractPrerequisitesInput
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
     PickupLocationFactory,
@@ -19,6 +20,7 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 @patch.object(AdminSizeChangeValidator, "validate_sepa_mandate", autospec=True)
 @patch.object(ContractPrerequisitesValidator, "validate_banking_data", autospec=True)
+@patch.object(AdminSizeChangeValidator, "validate_next_period_capacity", autospec=True)
 @patch.object(OrderValidator, "validate_order_general", autospec=True)
 @patch.object(
     ContractPrerequisitesValidator,
@@ -49,11 +51,13 @@ class TestAdminSizeChangeValidatorValidate(TapirUnitTest):
             new_product=self.new_product,
             change_date=self.change_date,
             order=self.order,
-            desired_pickup_location_id="desired_id",
-            payment_rhythm="yearly",
-            iban="NL76RABO8675663943",
-            account_owner="test_account_owner",
-            sepa_mandate_confirmed=True,
+            prerequisites=ContractPrerequisitesInput(
+                desired_pickup_location_id="desired_id",
+                payment_rhythm="yearly",
+                iban="NL76RABO8675663943",
+                account_owner="test_account_owner",
+                sepa_mandate_confirmed=True,
+            ),
             cache=self.cache,
         )
 
@@ -65,6 +69,7 @@ class TestAdminSizeChangeValidatorValidate(TapirUnitTest):
         mock_validate_no_other_cancelled_subscription: MagicMock,
         mock_validate_pickup_location: MagicMock,
         mock_validate_order_general: MagicMock,
+        mock_validate_next_period_capacity: MagicMock,
         mock_validate_banking_data: MagicMock,
         mock_validate_sepa_mandate: MagicMock,
     ):
@@ -74,6 +79,7 @@ class TestAdminSizeChangeValidatorValidate(TapirUnitTest):
             member=self.member,
             subscription=self.subscription,
             change_date=self.change_date,
+            cache=self.cache,
         )
         mock_validate_change_date.assert_called_once_with(
             change_date=self.change_date, cache=self.cache
@@ -100,6 +106,14 @@ class TestAdminSizeChangeValidatorValidate(TapirUnitTest):
             cache=self.cache,
             member=self.member,
             pickup_location=mock_validate_pickup_location.return_value,
+        )
+        mock_validate_next_period_capacity.assert_called_once_with(
+            member=self.member,
+            subscription=self.subscription,
+            change_date=self.change_date,
+            order=self.order,
+            pickup_location=mock_validate_pickup_location.return_value,
+            cache=self.cache,
         )
         mock_validate_banking_data.assert_called_once_with(
             member=self.member,

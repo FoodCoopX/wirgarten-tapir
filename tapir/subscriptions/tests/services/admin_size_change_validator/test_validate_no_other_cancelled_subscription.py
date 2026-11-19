@@ -93,3 +93,21 @@ class TestAdminSizeChangeValidatorValidateNoOtherCancelledSubscription(TapirUnit
         ]
 
         self._validate(cache={})
+
+    def test_validateNoOtherCancelledSubscription_changeFromNextSeason_checksSubscriptionsOnLastDayOfPreviousContract(
+        self, mock_get_all_subscriptions_for_member: MagicMock
+    ):
+        mock_get_all_subscriptions_for_member.return_value = [
+            self.subscription,
+            self._build_subscription(
+                product=ProductFactory.build(type=self.product_type), cancelled=True
+            ),
+        ]
+
+        with self.assertRaisesMessage(ValidationError, "Kündigung aufheben"):
+            AdminSizeChangeValidator.validate_no_other_cancelled_subscription(
+                member=self.member,
+                subscription=self.subscription,
+                change_date=datetime.date(year=2028, month=1, day=1),
+                cache={},
+            )

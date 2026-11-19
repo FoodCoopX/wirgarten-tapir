@@ -1,5 +1,5 @@
 import datetime
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, ANY
 
 from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
@@ -10,6 +10,13 @@ from tapir.subscriptions.services.admin_size_change_applier import (
 from tapir.subscriptions.services.admin_size_change_order_builder import (
     AdminSizeChangeOrderBuilder,
 )
+from tapir.subscriptions.services.automatic_subscription_renewal_service import (
+    AutomaticSubscriptionRenewalService,
+)
+from tapir.subscriptions.services.unconfirmed_changes_provider import (
+    UnconfirmedChangesProvider,
+)
+from tapir.subscriptions.types import ContractPrerequisitesInput
 from tapir.wirgarten.constants import WEEKLY
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
@@ -37,6 +44,7 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 @patch.object(TransactionalTrigger, "fire_action", autospec=True)
 class TestAdminSizeChangeApplierApplyChange(TapirIntegrationTest):
     CHANGE_DATE = datetime.date(year=2030, month=6, day=10)
+    NEXT_SEASON_START = datetime.date(year=2031, month=1, day=1)
 
     @classmethod
     def setUpTestData(cls):
@@ -59,11 +67,15 @@ class TestAdminSizeChangeApplierApplyChange(TapirIntegrationTest):
         cls.growing_period = GrowingPeriodFactory.create(
             start_date=datetime.date(year=2030, month=1, day=1)
         )
-        ProductCapacityFactory.create(
-            period=cls.growing_period,
-            product_type=cls.product_small.type,
-            capacity=1000,
+        cls.next_growing_period = GrowingPeriodFactory.create(
+            start_date=cls.NEXT_SEASON_START
         )
+        for growing_period in [cls.growing_period, cls.next_growing_period]:
+            ProductCapacityFactory.create(
+                period=growing_period,
+                product_type=cls.product_small.type,
+                capacity=1000,
+            )
         cls.pickup_location = PickupLocationFactory.create()
         PickupLocationCapabilityFactory.create(
             pickup_location=cls.pickup_location,
@@ -94,10 +106,29 @@ class TestAdminSizeChangeApplierApplyChange(TapirIntegrationTest):
             quantity=quantity,
         )
 
+    def _create_next_period_subscription(
+        self, member: Member, product: Product, quantity: int
+    ) -> Subscription:
+        return SubscriptionFactory.create(
+            member=member,
+            period=self.next_growing_period,
+            product=product,
+            quantity=quantity,
+        )
+
+    def _get_next_period_quantities(self, member: Member) -> dict[Product, int]:
+        return {
+            subscription.product: subscription.quantity
+            for subscription in Subscription.objects.filter(
+                member=member, period=self.next_growing_period
+            )
+        }
+
     def _apply_change(
         self,
         subscription: Subscription,
         new_product: Product,
+        change_date: datetime.date = CHANGE_DATE,
         iban: str = "",
         account_owner: str = "",
         sepa_mandate_confirmed: bool = False,
@@ -106,20 +137,22 @@ class TestAdminSizeChangeApplierApplyChange(TapirIntegrationTest):
         return AdminSizeChangeApplier.apply_change(
             member=subscription.member,
             previous_subscription=subscription,
-            change_date=self.CHANGE_DATE,
+            change_date=change_date,
             order=AdminSizeChangeOrderBuilder.build_order(
                 member=subscription.member,
                 subscription=subscription,
                 new_product=new_product,
-                change_date=self.CHANGE_DATE,
+                change_date=change_date,
                 cache=cache,
             ),
+            prerequisites=ContractPrerequisitesInput(
+                desired_pickup_location_id=None,
+                payment_rhythm=None,
+                iban=iban,
+                account_owner=account_owner,
+                sepa_mandate_confirmed=sepa_mandate_confirmed,
+            ),
             actor=MemberFactory.create(is_superuser=True),
-            desired_pickup_location_id=None,
-            payment_rhythm=None,
-            iban=iban,
-            account_owner=account_owner,
-            sepa_mandate_confirmed=sepa_mandate_confirmed,
             cache=cache,
         )
 
@@ -146,6 +179,10 @@ class TestAdminSizeChangeApplierApplyChange(TapirIntegrationTest):
         self.assertEqual(self.CHANGE_DATE, new_subscription.start_date)
         self.assertEqual(self.growing_period.end_date, new_subscription.end_date)
         self.assertEqual(self.now, new_subscription.auto_confirmed)
+        self.assertEqual(self.now, new_subscription.admin_confirmed)
+        self.assertNotIn(
+            new_subscription, UnconfirmedChangesProvider.get_unconfirmed_creations()
+        )
         self.assertIsNone(new_subscription.price_override)
 
     def test_applyChange_quantityThree_keepsOldProductWithQuantityTwoInANewSubscription(
@@ -233,3 +270,161 @@ class TestAdminSizeChangeApplierApplyChange(TapirIntegrationTest):
         self.assertEqual("NL76RABO8675663943", member.iban)
         self.assertEqual("test account owner", member.account_owner)
         self.assertEqual(self.now, member.sepa_consent)
+
+    def test_applyChange_nextPeriodRenewalExists_replacesItWithRenewalOfNewSubscriptions(
+        self, _: MagicMock
+    ):
+        subscription = self._create_member_with_subscription(quantity=1)
+        self._create_next_period_subscription(
+            member=subscription.member, product=self.product_small, quantity=1
+        )
+
+        self._apply_change(subscription=subscription, new_product=self.product_medium)
+
+        self.assertEqual(
+            {self.product_medium: 1},
+            self._get_next_period_quantities(member=subscription.member),
+        )
+        next_period_subscription = Subscription.objects.get(
+            member=subscription.member, period=self.next_growing_period
+        )
+        self.assertEqual(
+            self.next_growing_period.start_date, next_period_subscription.start_date
+        )
+        self.assertEqual(
+            self.next_growing_period.end_date, next_period_subscription.end_date
+        )
+        self.assertEqual(self.now, next_period_subscription.admin_confirmed)
+
+    def test_applyChange_nextPeriodHasDifferentOrder_overwritesIt(self, _: MagicMock):
+        subscription = self._create_member_with_subscription(quantity=1)
+        self._create_next_period_subscription(
+            member=subscription.member, product=self.product_medium, quantity=2
+        )
+
+        self._apply_change(subscription=subscription, new_product=self.product_medium)
+
+        self.assertEqual(
+            {self.product_medium: 1},
+            self._get_next_period_quantities(member=subscription.member),
+        )
+
+    def test_applyChange_noNextPeriodSubscription_createsNothingInNextPeriod(
+        self, _: MagicMock
+    ):
+        subscription = self._create_member_with_subscription(quantity=1)
+
+        self._apply_change(subscription=subscription, new_product=self.product_medium)
+
+        self.assertEqual(
+            {}, self._get_next_period_quantities(member=subscription.member)
+        )
+
+    def test_applyChange_nextPeriodRenewalExists_trialDataAsForARenewal(
+        self, _: MagicMock
+    ):
+        self._set_parameter(key=ParameterKeys.TRIAL_PERIOD_ENABLED, value=True)
+        subscription = self._create_member_with_subscription(quantity=1)
+        subscription.trial_end_date_override = datetime.date(year=2031, month=1, day=26)
+        subscription.save()
+        self._create_next_period_subscription(
+            member=subscription.member, product=self.product_small, quantity=1
+        )
+
+        self._apply_change(subscription=subscription, new_product=self.product_medium)
+
+        next_period_subscription = Subscription.objects.get(
+            member=subscription.member, period=self.next_growing_period
+        )
+        self.assertFalse(next_period_subscription.trial_disabled)
+        self.assertEqual(
+            datetime.date(year=2031, month=1, day=26),
+            next_period_subscription.trial_end_date_override,
+        )
+
+    @patch(
+        "tapir.subscriptions.services.admin_size_change_applier.send_contract_change_confirmation",
+        autospec=True,
+    )
+    def test_applyChange_nextPeriodRenewalExists_sendsOneMailWithAllNewSubscriptions(
+        self, mock_send_contract_change_confirmation: MagicMock, _: MagicMock
+    ):
+        subscription = self._create_member_with_subscription(quantity=1)
+        self._create_next_period_subscription(
+            member=subscription.member, product=self.product_small, quantity=1
+        )
+
+        new_subscriptions = self._apply_change(
+            subscription=subscription, new_product=self.product_medium
+        )
+
+        self.assertEqual(
+            {self.CHANGE_DATE, self.next_growing_period.start_date},
+            {new_subscription.start_date for new_subscription in new_subscriptions},
+        )
+        mock_send_contract_change_confirmation.assert_called_once_with(
+            member=subscription.member, subs=new_subscriptions, cache=ANY
+        )
+
+    def test_applyChange_fromNextSeason_previousSubscriptionKeepsEndDateAndIsCancelled(
+        self, _: MagicMock
+    ):
+        subscription = self._create_member_with_subscription(quantity=1)
+
+        self._apply_change(
+            subscription=subscription,
+            new_product=self.product_medium,
+            change_date=self.NEXT_SEASON_START,
+        )
+
+        subscription.refresh_from_db()
+        self.assertEqual(self.growing_period.end_date, subscription.end_date)
+        self.assertEqual(self.now, subscription.cancellation_ts)
+        self.assertEqual(self.now, subscription.cancellation_admin_confirmed)
+        self.assertFalse(
+            AutomaticSubscriptionRenewalService.must_subscription_be_renewed(
+                subscription=subscription, cache={}
+            )
+        )
+
+    def test_applyChange_fromNextSeason_createsRenewalWithTheNewSize(
+        self, _: MagicMock
+    ):
+        subscription = self._create_member_with_subscription(quantity=3)
+
+        self._apply_change(
+            subscription=subscription,
+            new_product=self.product_medium,
+            change_date=self.NEXT_SEASON_START,
+        )
+
+        self.assertEqual(
+            {self.product_small: 2, self.product_medium: 1},
+            self._get_next_period_quantities(member=subscription.member),
+        )
+        self.assertFalse(
+            Subscription.objects.filter(
+                member=subscription.member,
+                period=self.next_growing_period,
+                admin_confirmed__isnull=True,
+            ).exists()
+        )
+
+    def test_applyChange_fromNextSeason_replacesExistingNextPeriodSubscriptions(
+        self, _: MagicMock
+    ):
+        subscription = self._create_member_with_subscription(quantity=1)
+        self._create_next_period_subscription(
+            member=subscription.member, product=self.product_small, quantity=1
+        )
+
+        self._apply_change(
+            subscription=subscription,
+            new_product=self.product_medium,
+            change_date=self.NEXT_SEASON_START,
+        )
+
+        self.assertEqual(
+            {self.product_medium: 1},
+            self._get_next_period_quantities(member=subscription.member),
+        )

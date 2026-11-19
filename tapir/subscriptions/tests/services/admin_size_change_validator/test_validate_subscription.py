@@ -1,4 +1,5 @@
 import datetime
+from unittest.mock import patch, MagicMock
 
 from django.core.exceptions import ValidationError
 
@@ -30,6 +31,7 @@ class TestAdminSizeChangeValidatorValidateSubscription(TapirUnitTest):
             member=self.member,
             subscription=self.subscription,
             change_date=datetime.date(year=2027, month=6, day=7),
+            cache={},
         )
 
     def test_validateSubscription_subscriptionOfOtherMember_raisesValidationError(
@@ -42,6 +44,7 @@ class TestAdminSizeChangeValidatorValidateSubscription(TapirUnitTest):
                 member=MemberFactory.build(),
                 subscription=self.subscription,
                 change_date=datetime.date(year=2027, month=6, day=7),
+                cache={},
             )
 
     def test_validateSubscription_subscriptionCancelled_raisesValidationError(self):
@@ -52,6 +55,7 @@ class TestAdminSizeChangeValidatorValidateSubscription(TapirUnitTest):
                 member=self.member,
                 subscription=self.subscription,
                 change_date=datetime.date(year=2027, month=6, day=7),
+                cache={},
             )
 
     def test_validateSubscription_dateBeforeStart_raisesValidationError(self):
@@ -62,12 +66,43 @@ class TestAdminSizeChangeValidatorValidateSubscription(TapirUnitTest):
                 member=self.member,
                 subscription=self.subscription,
                 change_date=datetime.date(year=2027, month=6, day=7),
+                cache={},
             )
 
-    def test_validateSubscription_dateAfterEnd_raisesValidationError(self):
+    @patch.object(
+        AdminSizeChangeValidator,
+        "is_change_from_next_season",
+        autospec=True,
+        return_value=False,
+    )
+    def test_validateSubscription_dateAfterEndAndNotNextSeason_raisesValidationError(
+        self, mock_is_change_from_next_season: MagicMock
+    ):
+        change_date = datetime.date(year=2028, month=1, day=3)
+        cache = {}
+
         with self.assertRaisesMessage(ValidationError, "innerhalb der Laufzeit"):
             AdminSizeChangeValidator.validate_subscription(
                 member=self.member,
                 subscription=self.subscription,
-                change_date=datetime.date(year=2028, month=1, day=3),
+                change_date=change_date,
+                cache=cache,
             )
+
+        mock_is_change_from_next_season.assert_called_once_with(
+            subscription=self.subscription, change_date=change_date, cache=cache
+        )
+
+    @patch.object(
+        AdminSizeChangeValidator,
+        "is_change_from_next_season",
+        autospec=True,
+        return_value=True,
+    )
+    def test_validateSubscription_changeFromNextSeason_doesNotRaise(self, _: MagicMock):
+        AdminSizeChangeValidator.validate_subscription(
+            member=self.member,
+            subscription=self.subscription,
+            change_date=datetime.date(year=2028, month=1, day=1),
+            cache={},
+        )

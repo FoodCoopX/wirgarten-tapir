@@ -15,6 +15,7 @@ class AdminSizeChangeOrderBuilder:
         change_date: datetime.date,
         cache: dict,
     ) -> TapirOrder:
+        base_date = min(change_date, subscription.end_date)
         order = {}
         for other_subscription in TapirCache.get_all_subscriptions_for_member(
             member_id=member.id, cache=cache
@@ -22,7 +23,7 @@ class AdminSizeChangeOrderBuilder:
             if (
                 other_subscription.product.type_id != subscription.product.type_id
                 or not other_subscription.start_date
-                <= change_date
+                <= base_date
                 <= other_subscription.end_date
             ):
                 continue

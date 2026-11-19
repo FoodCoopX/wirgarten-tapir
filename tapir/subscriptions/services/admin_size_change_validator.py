@@ -2,13 +2,16 @@ import datetime
 
 from django.core.exceptions import ValidationError
 
+from tapir.subscriptions.services.admin_size_change_next_period_finder import (
+    AdminSizeChangeNextPeriodFinder,
+)
 from tapir.subscriptions.services.contract_prerequisites_validator import (
     ContractPrerequisitesValidator,
 )
 from tapir.subscriptions.services.order_validator import OrderValidator
-from tapir.subscriptions.types import TapirOrder
+from tapir.subscriptions.types import ContractPrerequisitesInput, TapirOrder
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.wirgarten.models import Member, Product, Subscription
+from tapir.wirgarten.models import Member, PickupLocation, Product, Subscription
 from tapir.wirgarten.utils import get_today
 
 
@@ -21,15 +24,14 @@ class AdminSizeChangeValidator:
         new_product: Product,
         change_date: datetime.date,
         order: TapirOrder,
-        desired_pickup_location_id: str | None,
-        payment_rhythm: str | None,
-        iban: str,
-        account_owner: str,
-        sepa_mandate_confirmed: bool,
+        prerequisites: ContractPrerequisitesInput,
         cache: dict,
     ):
         cls.validate_subscription(
-            member=member, subscription=subscription, change_date=change_date
+            member=member,
+            subscription=subscription,
+            change_date=change_date,
+            cache=cache,
         )
         cls.validate_change_date(change_date=change_date, cache=cache)
         cls.validate_new_product(subscription=subscription, new_product=new_product)
@@ -44,7 +46,7 @@ class AdminSizeChangeValidator:
             order=order,
             member=member,
             contract_start_date=change_date,
-            desired_pickup_location_id=desired_pickup_location_id,
+            desired_pickup_location_id=prerequisites.desired_pickup_location_id,
             cache=cache,
         )
         OrderValidator.validate_order_general(
@@ -54,21 +56,34 @@ class AdminSizeChangeValidator:
             member=member,
             pickup_location=pickup_location,
         )
+        cls.validate_next_period_capacity(
+            member=member,
+            subscription=subscription,
+            change_date=change_date,
+            order=order,
+            pickup_location=pickup_location,
+            cache=cache,
+        )
 
         ContractPrerequisitesValidator.validate_banking_data(
             member=member,
-            account_owner=account_owner,
-            iban=iban,
-            payment_rhythm=payment_rhythm,
+            account_owner=prerequisites.account_owner,
+            iban=prerequisites.iban,
+            payment_rhythm=prerequisites.payment_rhythm,
             cache=cache,
         )
         cls.validate_sepa_mandate(
-            iban=iban, sepa_mandate_confirmed=sepa_mandate_confirmed
+            iban=prerequisites.iban,
+            sepa_mandate_confirmed=prerequisites.sepa_mandate_confirmed,
         )
 
     @classmethod
     def validate_subscription(
-        cls, member: Member, subscription: Subscription, change_date: datetime.date
+        cls,
+        member: Member,
+        subscription: Subscription,
+        change_date: datetime.date,
+        cache: dict,
     ):
         if subscription.member.id != member.id:
             raise ValidationError("Dieser Vertrag gehört nicht zu diesem Mitglied.")
@@ -78,10 +93,29 @@ class AdminSizeChangeValidator:
                 "Dieser Vertrag ist bereits gekündigt und kann daher nicht bearbeitet werden."
             )
 
-        if not subscription.start_date <= change_date <= subscription.end_date:
-            raise ValidationError(
-                "Das Datum der Änderung muss innerhalb der Laufzeit des Vertrags liegen."
-            )
+        if subscription.start_date <= change_date <= subscription.end_date:
+            return
+
+        if cls.is_change_from_next_season(
+            subscription=subscription, change_date=change_date, cache=cache
+        ):
+            return
+
+        raise ValidationError(
+            "Das Datum der Änderung muss innerhalb der Laufzeit des Vertrags oder am Beginn der folgenden Vertragsperiode liegen."
+        )
+
+    @classmethod
+    def is_change_from_next_season(
+        cls, subscription: Subscription, change_date: datetime.date, cache: dict
+    ) -> bool:
+        if change_date != subscription.end_date + datetime.timedelta(days=1):
+            return False
+
+        growing_period = TapirCache.get_growing_period_at_date(
+            reference_date=change_date, cache=cache
+        )
+        return growing_period is not None and growing_period.start_date == change_date
 
     @classmethod
     def validate_change_date(cls, change_date: datetime.date, cache: dict):
@@ -124,6 +158,7 @@ class AdminSizeChangeValidator:
         change_date: datetime.date,
         cache: dict,
     ):
+        base_date = min(change_date, subscription.end_date)
         for other_subscription in TapirCache.get_all_subscriptions_for_member(
             member_id=member.id, cache=cache
         ):
@@ -131,7 +166,7 @@ class AdminSizeChangeValidator:
                 other_subscription.id != subscription.id
                 and other_subscription.product.type_id == subscription.product.type_id
                 and other_subscription.start_date
-                <= change_date
+                <= base_date
                 <= other_subscription.end_date
                 and other_subscription.cancellation_ts is not None
             ):
@@ -139,6 +174,35 @@ class AdminSizeChangeValidator:
                     f"Der Vertrag {other_subscription.long_str()} derselben Vertragsart ist gekündigt. "
                     f"Eine Änderung würde die Kündigung aufheben."
                 )
+
+    @classmethod
+    def validate_next_period_capacity(
+        cls,
+        member: Member,
+        subscription: Subscription,
+        change_date: datetime.date,
+        order: TapirOrder,
+        pickup_location: PickupLocation | None,
+        cache: dict,
+    ):
+        if change_date > subscription.end_date:
+            return
+
+        next_growing_period = (
+            AdminSizeChangeNextPeriodFinder.get_next_period_with_subscriptions(
+                member=member, subscription=subscription, cache=cache
+            )
+        )
+        if next_growing_period is None:
+            return
+
+        OrderValidator.validate_capacities(
+            order=order,
+            contract_start_date=next_growing_period.start_date,
+            member=member,
+            pickup_location=pickup_location,
+            cache=cache,
+        )
 
     @classmethod
     def validate_sepa_mandate(cls, iban: str, sepa_mandate_confirmed: bool):
