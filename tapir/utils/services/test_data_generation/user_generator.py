@@ -65,6 +65,8 @@ class UserGenerator:
     SEASON_START_ORDER_WINDOW = datetime.timedelta(weeks=12)
     SEASON_START_ORDER_PROBABILITY = 0.8
     EXTRA_COOP_SHARES_PROBABILITY = 0.25
+    CREATED_BY_ADMIN_PROBABILITY = 0.3
+    MISSING_PAYMENT_RHYTHM_PROBABILITY = 0.02
 
     @classmethod
     def get_past_growing_period(cls, cache: dict):
@@ -162,15 +164,21 @@ class UserGenerator:
             datetime.time(hour=random.randint(0, 23), minute=random.randint(0, 59)),
         )
 
+        member_without_subscriptions = random.random() < 0.20
+        created_by_admin = (
+            member_without_subscriptions
+            and random.random() < cls.CREATED_BY_ADMIN_PROBABILITY
+        )
+
         is_superuser = json_user.get_username() == "roberto.cortes"
         member = Member(
             is_superuser=is_superuser,
             is_staff=is_superuser,
             is_active=True,
             date_joined=json_user.date_joined,
-            iban=fake["de_DE"].iban(),
-            account_owner=json_user.get_full_name(),
-            sepa_consent=json_user.date_joined,
+            iban="" if created_by_admin else fake["de_DE"].iban(),
+            account_owner="" if created_by_admin else json_user.get_full_name(),
+            sepa_consent=None if created_by_admin else json_user.date_joined,
             privacy_consent=json_user.date_joined,
             withdrawal_consent=json_user.date_joined,
         )
@@ -184,7 +192,6 @@ class UserGenerator:
             initial_password=member.email.split("@")[0],
         )
 
-        member_without_subscriptions = random.random() < 0.20
         min_coop_shares = 0
         if not member_without_subscriptions:
             min_coop_shares, needs_pickup_location = cls.create_contracts_for_member(
@@ -206,6 +213,12 @@ class UserGenerator:
             and not member_without_subscriptions
         ):
             cls.create_association_membership(member, cache=cache)
+
+        if created_by_admin or (
+            not member_without_subscriptions
+            and random.random() < cls.MISSING_PAYMENT_RHYTHM_PROBABILITY
+        ):
+            return
 
         MemberPaymentRhythmService.assign_payment_rhythm_to_member(
             member=member,

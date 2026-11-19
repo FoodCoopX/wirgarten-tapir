@@ -174,7 +174,7 @@ Steps 1–2: test data. Steps 3–9: "Anteilsgröße ändern". Steps 10–11: "V
 "Anteilsgröße ändern" becomes visible only in step 9, so the work can be merged after any step.
 Mark a step as done by checking its box (`- [x]`).
 
-- [ ] **1. Test data: sync with prod**: make all generated data plausible, not only the data relevant here. Base: the
+- [x] **1. Test data: sync with prod**: make all generated data plausible, not only the data relevant here. Base: the
   "Prod data reference" section and its list of differences with `populate`. Run `populate`, review the result through
   the UI and DB, and fix the generators (`tapir/utils/services/test_data_generation/`) where the data is implausible.
   Also check what the prod reference doesn't cover: date consistency (cancellations before end dates, log entries and
