@@ -62,8 +62,8 @@ class UserGenerator:
     PRICE_OVERRIDE_PROBABILITY = 0.005
     PRICE_EXEMPTION_PROBABILITY = 0.005
     TRIAL_DISABLED_PROBABILITY = 0.02
-    SEASON_START_ORDER_WINDOW = datetime.timedelta(weeks=12)
-    SEASON_START_ORDER_PROBABILITY = 0.8
+    PERIOD_START_ORDER_WINDOW = datetime.timedelta(weeks=12)
+    PERIOD_START_ORDER_PROBABILITY = 0.8
     EXTRA_COOP_SHARES_PROBABILITY = 0.25
     CREATED_BY_ADMIN_PROBABILITY = 0.3
     MISSING_PAYMENT_RHYTHM_PROBABILITY = 0.02
@@ -341,8 +341,8 @@ class UserGenerator:
         if (
             next_growing_period is not None
             and next_growing_period.start_date - order_date
-            <= cls.SEASON_START_ORDER_WINDOW
-            and random.random() < cls.SEASON_START_ORDER_PROBABILITY
+            <= cls.PERIOD_START_ORDER_WINDOW
+            and random.random() < cls.PERIOD_START_ORDER_PROBABILITY
         ):
             return next_growing_period.start_date
 

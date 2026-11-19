@@ -86,7 +86,7 @@ class TestAdminSizeChangeValidatorValidateNextPeriodCapacity(TapirUnitTest):
 
         mock_validate_capacities.assert_not_called()
 
-    def test_validateNextPeriodCapacity_changeFromNextSeason_doesNotValidate(
+    def test_validateNextPeriodCapacity_changeFromNextPeriod_doesNotValidate(
         self,
         mock_get_next_period_with_subscriptions: MagicMock,
         mock_validate_capacities: MagicMock,

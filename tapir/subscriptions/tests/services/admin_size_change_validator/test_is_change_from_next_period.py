@@ -18,7 +18,7 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
         end_date=datetime.date(year=2028, month=12, day=31),
     ),
 )
-class TestAdminSizeChangeValidatorIsChangeFromNextSeason(TapirUnitTest):
+class TestAdminSizeChangeValidatorIsChangeFromNextPeriod(TapirUnitTest):
     def setUp(self):
         super().setUp()
         self.subscription = SubscriptionFactory.build(
@@ -28,13 +28,13 @@ class TestAdminSizeChangeValidatorIsChangeFromNextSeason(TapirUnitTest):
             )
         )
 
-    def test_isChangeFromNextSeason_dayAfterEndIsStartOfNextPeriod_returnsTrue(
+    def test_isChangeFromNextPeriod_dayAfterEndIsStartOfNextPeriod_returnsTrue(
         self, mock_get_growing_period_at_date: MagicMock
     ):
         change_date = datetime.date(year=2028, month=1, day=1)
         cache = {}
 
-        result = AdminSizeChangeValidator.is_change_from_next_season(
+        result = AdminSizeChangeValidator.is_change_from_next_period(
             subscription=self.subscription, change_date=change_date, cache=cache
         )
 
@@ -43,10 +43,10 @@ class TestAdminSizeChangeValidatorIsChangeFromNextSeason(TapirUnitTest):
             reference_date=change_date, cache=cache
         )
 
-    def test_isChangeFromNextSeason_dateIsNotTheDayAfterEnd_returnsFalse(
+    def test_isChangeFromNextPeriod_dateIsNotTheDayAfterEnd_returnsFalse(
         self, mock_get_growing_period_at_date: MagicMock
     ):
-        result = AdminSizeChangeValidator.is_change_from_next_season(
+        result = AdminSizeChangeValidator.is_change_from_next_period(
             subscription=self.subscription,
             change_date=datetime.date(year=2028, month=1, day=3),
             cache={},
@@ -55,12 +55,12 @@ class TestAdminSizeChangeValidatorIsChangeFromNextSeason(TapirUnitTest):
         self.assertFalse(result)
         mock_get_growing_period_at_date.assert_not_called()
 
-    def test_isChangeFromNextSeason_subscriptionEndsBeforePeriodEnd_returnsFalse(
+    def test_isChangeFromNextPeriod_subscriptionEndsBeforePeriodEnd_returnsFalse(
         self, _: MagicMock
     ):
         self.subscription.end_date = datetime.date(year=2027, month=6, day=6)
 
-        result = AdminSizeChangeValidator.is_change_from_next_season(
+        result = AdminSizeChangeValidator.is_change_from_next_period(
             subscription=self.subscription,
             change_date=datetime.date(year=2027, month=6, day=7),
             cache={},
@@ -68,12 +68,12 @@ class TestAdminSizeChangeValidatorIsChangeFromNextSeason(TapirUnitTest):
 
         self.assertFalse(result)
 
-    def test_isChangeFromNextSeason_noGrowingPeriodAfterEnd_returnsFalse(
+    def test_isChangeFromNextPeriod_noGrowingPeriodAfterEnd_returnsFalse(
         self, mock_get_growing_period_at_date: MagicMock
     ):
         mock_get_growing_period_at_date.return_value = None
 
-        result = AdminSizeChangeValidator.is_change_from_next_season(
+        result = AdminSizeChangeValidator.is_change_from_next_period(
             subscription=self.subscription,
             change_date=datetime.date(year=2028, month=1, day=1),
             cache={},

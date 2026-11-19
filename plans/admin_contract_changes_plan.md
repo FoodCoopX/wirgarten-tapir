@@ -35,7 +35,7 @@ implementation is React + DRF like the other buttons of that bar (`SubscriptionC
        (`WeeksWithoutDeliveryService.is_delivery_cancelled_this_week`) are allowed and marked with a hint as well,
      - c) start of the next growing period.
      An option is disabled (with reason) if its date is outside the selected subscription's `[start_date, end_date]`,
-     except option c for a subscription that ends at the end of the current period (change from next season).
+     except option c for a subscription that ends at the end of the current period (change from next period).
      Growing periods are assumed to follow each other without gap; a gap (as at LEM) is a configuration error of the
      organisation and is not handled.
    - Live capacity check on every change (product, global, pickup location). Warning + "Weiter" disabled if not OK,
@@ -86,11 +86,11 @@ New files under `tapir/subscriptions/`:
 - Created as confirmed (`needs_admin_confirmation=False`), not listed in "Verträge bestätigen".
 - **The previous contract is always marked as cancelled** (`cancellation_ts` and `cancellation_admin_confirmed` set to
   now, change logged). For a change in the current period `cancel_or_delete_subscriptions` already does it. For a
-  change from next season (option c on a current-period subscription) the end date stays, only the cancellation is
+  change from next period (option c on a current-period subscription) the end date stays, only the cancellation is
   set. Otherwise the renewal task would renew it next to the new contract, since `must_subscription_be_renewed` only
   looks for a next-period contract of the same product.
 - `price_override` is dropped (decided): the new subscriptions get the standard price.
-- **Change from next season** (option c on a current-period subscription): existing next-period subscriptions of the
+- **Change from next period** (option c on a current-period subscription): existing next-period subscriptions of the
   type are deleted (logged); the next-period order is the renewal of the current subscriptions of the type
   (`build_renewed_subscription`) with the swap applied (−1 old product, +1 new product). Capacity is checked at the
   next period start.
@@ -134,7 +134,7 @@ New files under `tapir/subscriptions/`:
   subscriptions; log entries.
 - Next-period (service tests): plain renewal replaced, different next-period order overwritten, no next-period
   subscriptions → nothing created, trial data as for a renewal, capacity checked at the next period start.
-- Change from next season (service tests): previous contract keeps its end date and is marked as cancelled,
+- Change from next period (service tests): previous contract keeps its end date and is marked as cancelled,
   next-period order = renewal with the swap, existing next-period subscriptions replaced, the renewal task doesn't
   renew the previous contract afterwards.
 - Integration (API): permission denied for non-admins; validation or capacity error returns a message and writes
@@ -163,7 +163,7 @@ Apply: order = existing subscriptions of the type at the date + the new product 
    (`build_renewed_subscription`); the admin's change overrides any different next-period choice.
 4. **Admin confirmation**: auto-confirmed.
 5. **Buffer time**: any Monday ≥ today in option b, weeks inside the buffer marked with a hint.
-6. **Previous contract**: always marked as cancelled, also for a change from next season.
+6. **Previous contract**: always marked as cancelled, also for a change from next period.
 7. **Banking data entered by the admin**: only with the checkbox "Ein unterschriebenes SEPA-Mandat liegt vor".
 8. **Preselected member**: taken from the selected contract row, if any.
 
@@ -195,7 +195,7 @@ Mark a step as done by checking its box (`- [x]`).
   cancellation, log entries, trial carried over, mail, quantity > 1 remainder, SEPA consent).
 - [ ] **5. Next-period subscriptions**: change in the current period → renew the new current-period subscriptions with
   `AutomaticSubscriptionRenewalService.build_renewed_subscription` if next-period subscriptions of the type existed,
-  overwriting any different next-period choice. Change from next season (option c) → previous contract cancelled with
+  overwriting any different next-period choice. Change from next period (option c) → previous contract cancelled with
   its end date kept, next-period order = renewal with the swap. Both: capacity at the next period start, log, single
   mail. Tests as listed in "Tests". Isolated because it is the trickiest rule.
 - [ ] **6. Read endpoints**: member search, member data (unit rows, price badges, prerequisites status) and the date
@@ -263,7 +263,7 @@ Not visible in lists (would need per-member pages, not read): payment rhythm dis
    Fix: call `AutomaticSubscriptionRenewalService.renew_subscriptions_if_necessary()` at the end of `populate` instead of
    creating renewals by hand, so next-period contracts exist only when the notice period is over. The generated
    previous → current period renewals follow the same rule (always past the deadline), so they can stay as they are.
-   New orders that start in the next period (members joining for next season) are a separate case and stay.
+   New orders that start in the next period (members joining for next period) are a separate case and stay.
 6. Payment rhythm chosen among all choices, ignoring the allowed rhythms parameter (to verify).
 7. No trial-disabled contracts; KGZ has many (likely from its migration).
 8. Quantity > 1 at ~2 %: plausible; prod is lower, but the feature needs some.

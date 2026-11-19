@@ -96,7 +96,7 @@ class AdminSizeChangeValidator:
         if subscription.start_date <= change_date <= subscription.end_date:
             return
 
-        if cls.is_change_from_next_season(
+        if cls.is_change_from_next_period(
             subscription=subscription, change_date=change_date, cache=cache
         ):
             return
@@ -106,7 +106,7 @@ class AdminSizeChangeValidator:
         )
 
     @classmethod
-    def is_change_from_next_season(
+    def is_change_from_next_period(
         cls, subscription: Subscription, change_date: datetime.date, cache: dict
     ) -> bool:
         if change_date != subscription.end_date + datetime.timedelta(days=1):

@@ -57,7 +57,7 @@ class AdminSizeChangeApplier:
         )
 
         if change_date > previous_subscription.end_date:
-            new_subscriptions = cls.apply_change_from_next_season(
+            new_subscriptions = cls.apply_change_from_next_period(
                 member=member,
                 previous_subscription=previous_subscription,
                 change_date=change_date,
@@ -158,7 +158,7 @@ class AdminSizeChangeApplier:
         )
 
     @classmethod
-    def apply_change_from_next_season(
+    def apply_change_from_next_period(
         cls,
         member: Member,
         previous_subscription: Subscription,
@@ -196,7 +196,7 @@ class AdminSizeChangeApplier:
                 end_date__gte=previous_subscription.end_date,
             ).select_related("product__type")
         }
-        next_season_subscriptions = []
+        next_period_subscriptions = []
         for product, quantity in order.items():
             subscription = (
                 AutomaticSubscriptionRenewalService.build_renewed_subscription(
@@ -209,11 +209,11 @@ class AdminSizeChangeApplier:
             subscription.product = product
             subscription.quantity = quantity
             subscription.price_override = None
-            next_season_subscriptions.append(subscription)
+            next_period_subscriptions.append(subscription)
 
         return cls.save_next_period_subscriptions(
             member=member,
-            subscriptions=next_season_subscriptions,
+            subscriptions=next_period_subscriptions,
             actor=actor,
             cache=cache,
         )

@@ -44,7 +44,7 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 @patch.object(TransactionalTrigger, "fire_action", autospec=True)
 class TestAdminSizeChangeApplierApplyChange(TapirIntegrationTest):
     CHANGE_DATE = datetime.date(year=2030, month=6, day=10)
-    NEXT_SEASON_START = datetime.date(year=2031, month=1, day=1)
+    NEXT_PERIOD_START = datetime.date(year=2031, month=1, day=1)
 
     @classmethod
     def setUpTestData(cls):
@@ -68,7 +68,7 @@ class TestAdminSizeChangeApplierApplyChange(TapirIntegrationTest):
             start_date=datetime.date(year=2030, month=1, day=1)
         )
         cls.next_growing_period = GrowingPeriodFactory.create(
-            start_date=cls.NEXT_SEASON_START
+            start_date=cls.NEXT_PERIOD_START
         )
         for growing_period in [cls.growing_period, cls.next_growing_period]:
             ProductCapacityFactory.create(
@@ -366,7 +366,7 @@ class TestAdminSizeChangeApplierApplyChange(TapirIntegrationTest):
             member=subscription.member, subs=new_subscriptions, cache=ANY
         )
 
-    def test_applyChange_fromNextSeason_previousSubscriptionKeepsEndDateAndIsCancelled(
+    def test_applyChange_fromNextPeriod_previousSubscriptionKeepsEndDateAndIsCancelled(
         self, _: MagicMock
     ):
         subscription = self._create_member_with_subscription(quantity=1)
@@ -374,7 +374,7 @@ class TestAdminSizeChangeApplierApplyChange(TapirIntegrationTest):
         self._apply_change(
             subscription=subscription,
             new_product=self.product_medium,
-            change_date=self.NEXT_SEASON_START,
+            change_date=self.NEXT_PERIOD_START,
         )
 
         subscription.refresh_from_db()
@@ -387,7 +387,7 @@ class TestAdminSizeChangeApplierApplyChange(TapirIntegrationTest):
             )
         )
 
-    def test_applyChange_fromNextSeason_createsRenewalWithTheNewSize(
+    def test_applyChange_fromNextPeriod_createsRenewalWithTheNewSize(
         self, _: MagicMock
     ):
         subscription = self._create_member_with_subscription(quantity=3)
@@ -395,7 +395,7 @@ class TestAdminSizeChangeApplierApplyChange(TapirIntegrationTest):
         self._apply_change(
             subscription=subscription,
             new_product=self.product_medium,
-            change_date=self.NEXT_SEASON_START,
+            change_date=self.NEXT_PERIOD_START,
         )
 
         self.assertEqual(
@@ -410,7 +410,7 @@ class TestAdminSizeChangeApplierApplyChange(TapirIntegrationTest):
             ).exists()
         )
 
-    def test_applyChange_fromNextSeason_replacesExistingNextPeriodSubscriptions(
+    def test_applyChange_fromNextPeriod_replacesExistingNextPeriodSubscriptions(
         self, _: MagicMock
     ):
         subscription = self._create_member_with_subscription(quantity=1)
@@ -421,7 +421,7 @@ class TestAdminSizeChangeApplierApplyChange(TapirIntegrationTest):
         self._apply_change(
             subscription=subscription,
             new_product=self.product_medium,
-            change_date=self.NEXT_SEASON_START,
+            change_date=self.NEXT_PERIOD_START,
         )
 
         self.assertEqual(

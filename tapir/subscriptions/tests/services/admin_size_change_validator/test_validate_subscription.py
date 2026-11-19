@@ -71,12 +71,12 @@ class TestAdminSizeChangeValidatorValidateSubscription(TapirUnitTest):
 
     @patch.object(
         AdminSizeChangeValidator,
-        "is_change_from_next_season",
+        "is_change_from_next_period",
         autospec=True,
         return_value=False,
     )
-    def test_validateSubscription_dateAfterEndAndNotNextSeason_raisesValidationError(
-        self, mock_is_change_from_next_season: MagicMock
+    def test_validateSubscription_dateAfterEndAndNotNextPeriod_raisesValidationError(
+        self, mock_is_change_from_next_period: MagicMock
     ):
         change_date = datetime.date(year=2028, month=1, day=3)
         cache = {}
@@ -89,17 +89,17 @@ class TestAdminSizeChangeValidatorValidateSubscription(TapirUnitTest):
                 cache=cache,
             )
 
-        mock_is_change_from_next_season.assert_called_once_with(
+        mock_is_change_from_next_period.assert_called_once_with(
             subscription=self.subscription, change_date=change_date, cache=cache
         )
 
     @patch.object(
         AdminSizeChangeValidator,
-        "is_change_from_next_season",
+        "is_change_from_next_period",
         autospec=True,
         return_value=True,
     )
-    def test_validateSubscription_changeFromNextSeason_doesNotRaise(self, _: MagicMock):
+    def test_validateSubscription_changeFromNextPeriod_doesNotRaise(self, _: MagicMock):
         AdminSizeChangeValidator.validate_subscription(
             member=self.member,
             subscription=self.subscription,

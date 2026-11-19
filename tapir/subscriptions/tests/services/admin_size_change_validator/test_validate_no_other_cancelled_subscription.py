@@ -94,7 +94,7 @@ class TestAdminSizeChangeValidatorValidateNoOtherCancelledSubscription(TapirUnit
 
         self._validate(cache={})
 
-    def test_validateNoOtherCancelledSubscription_changeFromNextSeason_checksSubscriptionsOnLastDayOfPreviousContract(
+    def test_validateNoOtherCancelledSubscription_changeFromNextPeriod_checksSubscriptionsOnLastDayOfPreviousContract(
         self, mock_get_all_subscriptions_for_member: MagicMock
     ):
         mock_get_all_subscriptions_for_member.return_value = [
