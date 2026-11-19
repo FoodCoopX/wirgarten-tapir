@@ -260,9 +260,7 @@ class UserGenerator:
     ):
         random_generator = random_generator or random
         nb_days_range = (upper_boundary - lower_boundary).days
-        nb_days = min(
-            [random_generator.randint(0, nb_days_range) for _ in range(3)]
-        )
+        nb_days = min([random_generator.randint(0, nb_days_range) for _ in range(3)])
         return lower_boundary + datetime.timedelta(days=nb_days)
 
     @classmethod

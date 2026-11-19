@@ -548,7 +548,6 @@ class VierlandeGenerator:
             cache=cache,
         )
 
-
     @classmethod
     def link_members_to_pickup_location(cls, members_with_sizes):
         city_locations, land_locations = cls.get_pickup_location_groups()
