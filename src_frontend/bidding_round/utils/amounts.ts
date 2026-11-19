@@ -11,7 +11,7 @@ export function parseEuroAmount(raw: string | null | undefined): number | null {
 
 export function sanitizeEuroAmountInput(raw: string): string {
   const cleaned = raw.replace(/[\s€]/g, "").replace(",", ".");
-  const match = cleaned.match(/^\d*(?:\.\d{0,2})?/);
+  const match = /^\d*(?:\.\d{0,2})?/.exec(cleaned);
   return match ? match[0] : "";
 }
 

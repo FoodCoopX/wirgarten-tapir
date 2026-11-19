@@ -26,8 +26,11 @@ export function buildBiddingRoundSteps({
   if (hasProductIntro) {
     steps.push(productTypeId + "_intro");
   }
-  steps.push(productTypeId + "_bid", "bidding_round_summary");
-  steps.push("bidding_round_confirmation");
+  steps.push(
+    productTypeId + "_bid",
+    "bidding_round_summary",
+    "bidding_round_confirmation",
+  );
   return steps;
 }
 

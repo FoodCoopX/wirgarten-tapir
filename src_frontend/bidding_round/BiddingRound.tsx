@@ -83,7 +83,7 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({ csrfToken }) => {
   const hasActiveRound = Boolean(data?.round) && data?.roundStatus === "active";
 
   useEffect(() => {
-    load();
+    void load();
   }, []);
 
   async function load() {
@@ -91,7 +91,7 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({ csrfToken }) => {
     try {
       publicData = await api.biddingRoundsApiPublicDataRetrieve();
     } catch (error) {
-      await handleRequestError(
+      handleRequestError(
         error,
         "Die Beitragsrunde konnte nicht geladen werden.",
         setToastDatas,
@@ -223,7 +223,7 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({ csrfToken }) => {
       setConfirmationHtml(texts.bid.successText);
       setCurrentStep("bidding_round_confirmation");
     } catch (error) {
-      await handleRequestError(
+      handleRequestError(
         error,
         texts.bid.errorText || "Das Gebot konnte nicht gespeichert werden.",
         setToastDatas,

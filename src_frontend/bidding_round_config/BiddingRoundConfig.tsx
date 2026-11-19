@@ -78,7 +78,7 @@ const BiddingRoundConfig: React.FC<BiddingRoundConfigProps> = ({
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
 
   useEffect(() => {
-    load();
+    void load();
   }, []);
 
   async function load() {
@@ -90,7 +90,7 @@ const BiddingRoundConfig: React.FC<BiddingRoundConfigProps> = ({
       setRounds(loadedRounds);
       setPeriods(loadedPeriods);
     } catch (error) {
-      await handleRequestError(
+      handleRequestError(
         error,
         "Die Beitragsrunden konnten nicht geladen werden.",
         setToastDatas,
@@ -112,7 +112,7 @@ const BiddingRoundConfig: React.FC<BiddingRoundConfigProps> = ({
         }),
       );
     } catch (error) {
-      await handleRequestError(
+      handleRequestError(
         error,
         "Die Produkttypen konnten nicht geladen werden.",
         setToastDatas,
@@ -138,7 +138,7 @@ const BiddingRoundConfig: React.FC<BiddingRoundConfigProps> = ({
       return next;
     });
     if (field === "growingPeriodId") {
-      loadProductTypes(value);
+      void loadProductTypes(value);
     }
   }
 
@@ -195,7 +195,7 @@ const BiddingRoundConfig: React.FC<BiddingRoundConfigProps> = ({
       targetAmountPerYear: round.product?.targetAmountPerYear ?? "",
       prices,
     });
-    loadProductTypes(round.growingPeriodId ?? "");
+    void loadProductTypes(round.growingPeriodId ?? "");
     setShowModal(true);
   }
 
@@ -277,7 +277,7 @@ const BiddingRoundConfig: React.FC<BiddingRoundConfigProps> = ({
       resetForm();
       await load();
     } catch (error) {
-      await handleRequestError(
+      handleRequestError(
         error,
         "Die Beitragsrunde konnte nicht gespeichert werden.",
         setToastDatas,
@@ -301,7 +301,7 @@ const BiddingRoundConfig: React.FC<BiddingRoundConfigProps> = ({
       );
       await load();
     } catch (error) {
-      await handleRequestError(
+      handleRequestError(
         error,
         "Die Aktion ist fehlgeschlagen.",
         setToastDatas,

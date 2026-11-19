@@ -29,10 +29,10 @@ type PriceMode =
   | "free"
   | "bidding_round_bid"
   | "bidding_round_auto_renewed";
-const BIDDING_ROUND_MODES: PriceMode[] = [
+const BIDDING_ROUND_MODES = new Set<PriceMode>([
   "bidding_round_bid",
   "bidding_round_auto_renewed",
-];
+]);
 const ALL_MODES: PriceMode[] = [
   "standard",
   "custom",
@@ -41,7 +41,7 @@ const ALL_MODES: PriceMode[] = [
 ];
 
 function isBiddingRoundMode(mode: PriceMode) {
-  return BIDDING_ROUND_MODES.includes(mode);
+  return BIDDING_ROUND_MODES.has(mode);
 }
 
 function getPriceModeDisplay(mode: PriceMode) {

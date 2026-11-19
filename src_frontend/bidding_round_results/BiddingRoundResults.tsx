@@ -36,6 +36,14 @@ function getRoundIdFromPath(): string {
   return parts[adminIndex + 1] ?? "";
 }
 
+function getCoverageVariant(
+  coverage: number,
+): "success" | "warning" | "danger" {
+  if (coverage >= 100) return "success";
+  if (coverage >= 90) return "warning";
+  return "danger";
+}
+
 const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
   csrfToken,
 }) => {
@@ -48,7 +56,7 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
 
   useEffect(() => {
-    load();
+    void load();
   }, []);
 
   async function load() {
@@ -60,7 +68,7 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
       setRound(loadedRound);
       setResults(loadedResults);
     } catch (error) {
-      await handleRequestError(
+      handleRequestError(
         error,
         "Die Auswertung konnte nicht geladen werden.",
         setToastDatas,
@@ -84,7 +92,7 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
       );
       await load();
     } catch (error) {
-      await handleRequestError(
+      handleRequestError(
         error,
         "Die Aktion ist fehlgeschlagen.",
         setToastDatas,
@@ -113,6 +121,44 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
   }
 
   const coverage = Math.min(Math.round(results.coveragePercent), 100);
+  function renderContractsSection() {
+    if (round.contractsCreatedAt) {
+      return (
+        <Alert variant={"success"}>
+          Verträge erstellt am{" "}
+          {new Date(round.contractsCreatedAt).toLocaleString("de-DE")}. Die
+          Erzeugung ist endgültig; Korrekturen laufen über die normalen
+          Verwaltungswerkzeuge.
+        </Alert>
+      );
+    }
+    if (round.status !== "closed") {
+      return (
+        <Alert variant={"info"}>
+          Verträge können erst erstellt werden, wenn die Beitragsrunde
+          geschlossen ist.
+        </Alert>
+      );
+    }
+    return (
+      <Button
+        variant={"dark"}
+        disabled={busy || results.bids.length === 0}
+        onClick={() =>
+          runAction(
+            () =>
+              api.biddingRoundsApiCreateContractsCreate({
+                roundId,
+                createContractsRequest: {},
+              }),
+            "Verträge erstellt",
+          )
+        }
+      >
+        Verträge aus allen Geboten erstellen
+      </Button>
+    );
+  }
 
   return (
     <Container fluid className={"py-4"}>
@@ -171,13 +217,7 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
           </div>
           <ProgressBar
             now={coverage}
-            variant={
-              coverage >= 100
-                ? "success"
-                : coverage >= 90
-                  ? "warning"
-                  : "danger"
-            }
+            variant={getCoverageVariant(coverage)}
           />
         </Card.Body>
       </Card>
@@ -228,36 +268,7 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
           <strong>Verträge</strong>
         </Card.Header>
         <Card.Body>
-          {round.contractsCreatedAt ? (
-            <Alert variant={"success"}>
-              Verträge erstellt am{" "}
-              {new Date(round.contractsCreatedAt).toLocaleString("de-DE")}. Die
-              Erzeugung ist endgültig; Korrekturen laufen über die normalen
-              Verwaltungswerkzeuge.
-            </Alert>
-          ) : round.status !== "closed" ? (
-            <Alert variant={"info"}>
-              Verträge können erst erstellt werden, wenn die Beitragsrunde
-              geschlossen ist.
-            </Alert>
-          ) : (
-            <Button
-              variant={"dark"}
-              disabled={busy || results.bids.length === 0}
-              onClick={() =>
-                runAction(
-                  () =>
-                    api.biddingRoundsApiCreateContractsCreate({
-                      roundId,
-                      createContractsRequest: {},
-                    }),
-                  "Verträge erstellt",
-                )
-              }
-            >
-              Verträge aus allen Geboten erstellen
-            </Button>
-          )}
+          {renderContractsSection()}
         </Card.Body>
       </Card>
     </Container>
