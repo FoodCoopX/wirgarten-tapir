@@ -22,7 +22,7 @@ class MemberDataDisclosureApiView(APIView):
     )
     def get(self, request):
         member = _get_member_checking_permission(request)
-        data = MemberDataDisclosureService.build(member)
+        data = MemberDataDisclosureService.build(member, cache={})
         return Response(MemberDataDisclosureSerializer(data).data)
 
 
@@ -33,7 +33,7 @@ class MemberDataDisclosurePdfApiView(APIView):
     )
     def get(self, request):
         member = _get_member_checking_permission(request)
-        data = MemberDataDisclosureService.build(member)
+        data = MemberDataDisclosureService.build(member, cache={})
         html = render_to_string("core/member_data_disclosure.html", data)
         response = HttpResponse(
             weasyprint.HTML(string=html).write_pdf(),

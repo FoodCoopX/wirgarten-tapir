@@ -69,6 +69,12 @@ export interface MemberDataDisclosure {
    * @memberof MemberDataDisclosure
    */
   mailOverview: MemberDataMailOverview;
+  /**
+   *
+   * @type {string}
+   * @memberof MemberDataDisclosure
+   */
+  pdfUrl: string;
 }
 
 /**
@@ -85,6 +91,7 @@ export function instanceOfMemberDataDisclosure(
     return false;
   if (!("mailOverview" in value) || value["mailOverview"] === undefined)
     return false;
+  if (!("pdfUrl" in value) || value["pdfUrl"] === undefined) return false;
   return true;
 }
 
@@ -107,6 +114,7 @@ export function MemberDataDisclosureFromJSONTyped(
       MemberDataLogOverviewFromJSON,
     ),
     mailOverview: MemberDataMailOverviewFromJSON(json["mail_overview"]),
+    pdfUrl: json["pdf_url"],
   };
 }
 
@@ -130,5 +138,6 @@ export function MemberDataDisclosureToJSONTyped(
       MemberDataLogOverviewToJSON,
     ),
     mail_overview: MemberDataMailOverviewToJSON(value["mailOverview"]),
+    pdf_url: value["pdfUrl"],
   };
 }

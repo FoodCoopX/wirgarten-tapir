@@ -13973,11 +13973,14 @@ components:
             $ref: '#/components/schemas/MemberDataLogOverview'
         mail_overview:
           $ref: '#/components/schemas/MemberDataMailOverview'
+        pdf_url:
+          type: string
       required:
       - generated_at
       - log_overview
       - mail_overview
       - member
+      - pdf_url
       - sections
     MemberDataField:
       type: object

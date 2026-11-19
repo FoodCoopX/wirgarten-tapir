@@ -7,6 +7,7 @@ interface TapirHelpButtonProps {
   text: ReactNode;
   buttonSize?: "sm" | "lg";
   width?: string;
+  icon?: string;
 }
 
 const TapirHelpButton: React.FC<TapirHelpButtonProps> = ({
@@ -14,6 +15,7 @@ const TapirHelpButton: React.FC<TapirHelpButtonProps> = ({
   text,
   buttonSize,
   width,
+  icon,
 }) => {
   function buildTooltip() {
     return (
@@ -33,7 +35,7 @@ const TapirHelpButton: React.FC<TapirHelpButtonProps> = ({
     >
       <TapirButton
         variant={"outline-secondary"}
-        icon={"help"}
+        icon={icon ?? "help"}
         size={buttonSize}
       />
     </OverlayTrigger>

@@ -126,3 +126,4 @@ class MemberDataDisclosureSerializer(serializers.Serializer):
     sections = MemberDataSectionSerializer(many=True)
     log_overview = MemberDataLogOverviewSerializer(many=True)
     mail_overview = MemberDataMailOverviewSerializer()
+    pdf_url = serializers.CharField()

@@ -1,12 +1,12 @@
-import dayjs from "dayjs";
-import "dayjs/locale/de";
 import React, { useState } from "react";
 import { Accordion, Modal, Spinner, Table } from "react-bootstrap";
 import { CoreApi, type MemberDataDisclosure } from "../../api-client";
 import TapirButton from "../../components/TapirButton.tsx";
+import TapirHelpButton from "../../components/TapirHelpButton.tsx";
 import TapirToastContainer from "../../components/TapirToastContainer.tsx";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
+import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 
 interface MemberDataDisclosureButtonProps {
@@ -43,25 +43,21 @@ const MemberDataDisclosureButton: React.FC<MemberDataDisclosureButtonProps> = ({
       .finally(() => setLoading(false));
   }
 
-  function pdfUrl() {
-    const parameters = new URLSearchParams({ member_id: memberId });
-    return `/core/api/member_data_disclosure_pdf?${parameters}`;
-  }
-
-  function formatDate(date: Date | null | undefined) {
-    return date ? dayjs(date).locale("de").format("DD.MM.YYYY") : "–";
-  }
-
   return (
     <>
       <TapirButton
         variant={"outline-secondary"}
         icon={"help"}
-        size={"sm"}
         tooltip={"Was wird über mich gespeichert?"}
         onClick={onShow}
       />
-      <Modal show={show} onHide={() => setShow(false)} size={"lg"} centered>
+      <Modal
+        show={show}
+        onHide={() => setShow(false)}
+        size={"lg"}
+        centered
+        scrollable
+      >
         <Modal.Header closeButton>
           <h5 className={"mb-0"}>Meine Daten</h5>
         </Modal.Header>
@@ -73,12 +69,27 @@ const MemberDataDisclosureButton: React.FC<MemberDataDisclosureButtonProps> = ({
           {loading && <Spinner size={"sm"} />}
           {data && (
             <>
-              <p className={"text-muted small"}>
-                Stand:{" "}
-                {dayjs(data.generatedAt)
-                  .locale("de")
-                  .format("DD.MM.YYYY HH:mm")}
-              </p>
+              <div
+                className={
+                  "d-flex justify-content-between align-items-center mb-2"
+                }
+              >
+                <span className={"text-muted small"}>
+                  Stand: {formatDateNumeric(data.generatedAt, true)}
+                </span>
+                <TapirHelpButton
+                  icon={"warning"}
+                  buttonSize={"sm"}
+                  title={"Weitere Daten"}
+                  text={
+                    "Hier siehst du die Daten zu den Funktionen, die deine Solawi derzeit nutzt. " +
+                    "Im Lauf der Zeit können weitere Daten entstanden sein, zum Beispiel Joker, " +
+                    "Brotwünsche oder weitere E-Mail-Adressen aus Funktionen, die inzwischen " +
+                    "abgeschaltet sind, oder Genossenschaftsanteile bzw. eine Vereinsmitgliedschaft " +
+                    "aus einer früheren Rechtsform. Diese Daten teilen wir dir auf Anfrage mit."
+                  }
+                />
+              </div>
               <Accordion alwaysOpen>
                 {data.sections.map((section) => (
                   <Accordion.Item key={section.key} eventKey={section.key}>
@@ -129,8 +140,8 @@ const MemberDataDisclosureButton: React.FC<MemberDataDisclosureButtonProps> = ({
                             <tr key={entry.type}>
                               <th className={"w-50 fw-normal"}>{entry.type}</th>
                               <td>
-                                {entry.count}x, {formatDate(entry.first)} bis{" "}
-                                {formatDate(entry.last)}
+                                {entry.count}x, {formatDateNumeric(entry.first)}{" "}
+                                bis {formatDateNumeric(entry.last)}
                               </td>
                             </tr>
                           ))}
@@ -150,8 +161,8 @@ const MemberDataDisclosureButton: React.FC<MemberDataDisclosureButtonProps> = ({
                     ) : (
                       <p>
                         {data.mailOverview.count} E-Mails,{" "}
-                        {formatDate(data.mailOverview.first)} bis{" "}
-                        {formatDate(data.mailOverview.last)}
+                        {formatDateNumeric(data.mailOverview.first)} bis{" "}
+                        {formatDateNumeric(data.mailOverview.last)}
                       </p>
                     )}
                   </Accordion.Body>
@@ -161,9 +172,15 @@ const MemberDataDisclosureButton: React.FC<MemberDataDisclosureButtonProps> = ({
           )}
         </Modal.Body>
         <Modal.Footer>
-          <a className={"btn btn-outline-primary"} href={pdfUrl()} download>
-            <span className={"material-icons"}>print</span> Als PDF
-          </a>
+          {data && (
+            <a
+              className={"btn btn-outline-primary"}
+              href={data.pdfUrl}
+              download
+            >
+              <span className={"material-icons"}>print</span> Als PDF
+            </a>
+          )}
         </Modal.Footer>
       </Modal>
       <TapirToastContainer

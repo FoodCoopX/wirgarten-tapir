@@ -106,6 +106,9 @@ Services: `web` (8000), `vite` (5173), `keycloak` (8080), `db` (5432), `redis` (
 - **Models** inherit `tapir.core.models.TapirModel` (nanoid IDs prevent cross-model ID mixups; `created_at`/
   `updated_at`). Keep model classes to their own fields; helper methods only if they reference just that object's
   fields.
+- **Member data disclosure**: when you add or change a model that stores data about a member (a foreign key to
+  `Member`/`TapirUser`, or personal data), check `tapir/core/services/member_data_disclosure_service.py`: add a
+  `DataSource`, update its fields, or exclude fields that must not be shown (secrets, tokens, other members' data).
 - **Business logic in service classes** under `tapir/<app>/services/`, not in views or models.
 - **`cache` parameter**: a plain `dict` passed through service functions as a per-request query cache. Create it at the
   origin (view `__init__`, first lines of a command) and pass it down. Request-scoped, so usually no invalidation; if
