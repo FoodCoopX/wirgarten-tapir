@@ -13,6 +13,7 @@ import {
   parseEuroAmount,
   sanitizeEuroAmountInput,
 } from "../utils/amounts.ts";
+import { getLevelLabels } from "../utils/levelLabels.ts";
 
 interface BiddingRoundBidStepProps {
   biddableProduct: BiddableProduct;
@@ -50,14 +51,7 @@ const BiddingRoundBidStep: React.FC<BiddingRoundBidStepProps> = ({
     (variant) => variant.id === selectedVariantId,
   );
 
-  const levelLabels = isBidRange
-    ? [texts.bid.greenLabel, texts.bid.redLabel]
-    : requiredAmountLevels === 1
-      ? [texts.bid.amountLabel]
-      : Array.from(
-          { length: requiredAmountLevels },
-          (_, index) => `Stufe ${index + 1}`,
-        );
+  const levelLabels = getLevelLabels(isBidRange, requiredAmountLevels, texts);
 
   function getLevelYearlyAmount(levelIndex: number): number | null {
     const parsedAmount = parseEuroAmount(amounts[levelIndex]);
