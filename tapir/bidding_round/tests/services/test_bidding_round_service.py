@@ -138,13 +138,15 @@ class TestBiddingRoundService(TapirIntegrationTest):
 
     def test_createRound_withoutPrices_raisesValidationError(self):
         growing_period = GrowingPeriodFactory.create()
+        product_type = ProductTypeFactory.create()
+        end_at = self._end_at(growing_period)
 
         with pytest.raises(ValidationError):
             BiddingRoundService.create_round(
                 growing_period=growing_period,
                 name="Beitragsrunde Test",
-                end_at=self._end_at(growing_period),
-                product_type_id=ProductTypeFactory.create().id,
+                end_at=end_at,
+                product_type_id=product_type.id,
                 prices=[],
                 cache={},
             )
@@ -208,11 +210,11 @@ class TestBiddingRoundService(TapirIntegrationTest):
         bidding_round = BiddingRoundFactory.create()
         BiddingRoundProductTypeFactory.create(round=bidding_round)
 
+        new_start_at = bidding_round.end_at + datetime.timedelta(days=1)
+
         with pytest.raises(ValidationError):
             BiddingRoundService.update_round_config(
-                bidding_round,
-                {"start_at": bidding_round.end_at + datetime.timedelta(days=1)},
-                cache={},
+                bidding_round, {"start_at": new_start_at}, cache={}
             )
 
     def test_updateRoundConfig_afterContractsWereCreated_raisesValidationError(self):

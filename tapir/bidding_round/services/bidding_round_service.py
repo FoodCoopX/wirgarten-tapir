@@ -246,8 +246,17 @@ class BiddingRoundService:
             if field in changes:
                 setattr(bidding_round, field, changes[field])
 
+        cls._apply_product_type_change(bidding_round, changes.get("product_type_id"))
+        bidding_round.save()
+        cls._apply_round_product_type_changes(
+            bidding_round.product_types.first(), changes
+        )
+
+        return bidding_round
+
+    @classmethod
+    def _apply_product_type_change(cls, bidding_round, new_product_type_id) -> None:
         current_product_type = bidding_round.product_types.first()
-        new_product_type_id = changes.get("product_type_id")
         if new_product_type_id and (
             current_product_type is None
             or current_product_type.product_type_id != new_product_type_id
@@ -257,27 +266,25 @@ class BiddingRoundService:
                 round=bidding_round, product_type_id=new_product_type_id
             )
 
-        bidding_round.save()
-
-        round_product_type = bidding_round.product_types.first()
-        if round_product_type is not None:
-            if "target_amount_per_year" in changes:
-                target_amount_per_year = AmountParser.parse_optional(
-                    changes["target_amount_per_year"]
+    @classmethod
+    def _apply_round_product_type_changes(cls, round_product_type, changes) -> None:
+        if round_product_type is None:
+            return
+        if "target_amount_per_year" in changes:
+            target_amount_per_year = AmountParser.parse_optional(
+                changes["target_amount_per_year"]
+            )
+            if target_amount_per_year != round_product_type.target_amount_per_year:
+                cls._validate_non_negative(
+                    target_amount_per_year,
+                    _("Der Zielbetrag pro Jahr darf nicht negativ sein."),
                 )
-                if target_amount_per_year != round_product_type.target_amount_per_year:
-                    cls._validate_non_negative(
-                        target_amount_per_year,
-                        _("Der Zielbetrag pro Jahr darf nicht negativ sein."),
-                    )
-                    round_product_type.target_amount_per_year = target_amount_per_year
-                    round_product_type.save(update_fields=["target_amount_per_year"])
-            if "prices" in changes and cls._payload_prices_signature(
-                changes["prices"]
-            ) != cls._prices_signature(round_product_type):
-                cls._save_round_prices(round_product_type, changes["prices"])
-
-        return bidding_round
+                round_product_type.target_amount_per_year = target_amount_per_year
+                round_product_type.save(update_fields=["target_amount_per_year"])
+        if "prices" in changes and cls._payload_prices_signature(
+            changes["prices"]
+        ) != cls._prices_signature(round_product_type):
+            cls._save_round_prices(round_product_type, changes["prices"])
 
     @classmethod
     def _prices_signature(cls, round_product_type) -> dict:

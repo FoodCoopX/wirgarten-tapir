@@ -142,7 +142,7 @@ class BiddingRoundViewService:
         }
 
     @classmethod
-    def serialize_bid(cls, bid, cache: dict) -> dict:
+    def serialize_bid(cls, bid, cache: dict) -> dict | None:
         if bid is None:
             return None
         pickup_location_id = (
