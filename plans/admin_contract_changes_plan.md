@@ -186,7 +186,7 @@ Mark a step as done by checking its box (`- [x]`).
 - [x] **2. Test data for this feature**: on top of step 1, a few members with quantity > 1 subscriptions, members
   without banking data / payment rhythm, personalised and exempt prices, in proportions that stay close to prod.
   Benchmark as in step 1, with the step 1 result as baseline.
-- [ ] **3. Refactor: shared contract prerequisites**: extract the pickup location / payment rhythm / banking data part
+- [x] **3. Refactor: shared contract prerequisites**: extract the pickup location / payment rhythm / banking data part
   of `SubscriptionUpdateViewChangeApplier` and `SubscriptionUpdateViewValidator` into a service used by the
   member-profile flow. No behaviour change; existing tests stay green and the extracted service gets its own unit tests.
 - [ ] **4. Size change core**: `AdminSizeChangeOrderBuilder` + `AdminSizeChangeValidator` + an applier that calls

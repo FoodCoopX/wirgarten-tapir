@@ -216,7 +216,7 @@ def send_contract_change_confirmation(
     )
 
     TransactionalTrigger.fire_action(
-        TransactionalTriggerData(
+        trigger_data=TransactionalTriggerData(
             key=Events.MEMBERAREA_CHANGE_CONTRACT,
             recipient_id_in_base_queryset=member.id,
             token_data={
