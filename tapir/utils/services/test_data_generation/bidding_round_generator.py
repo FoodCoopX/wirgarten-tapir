@@ -123,70 +123,13 @@ class BiddingRoundGenerator:
         if not subscriptions:
             return None
 
-        subscriptions_by_member_id = {}
-        for subscription in subscriptions:
-            subscriptions_by_member_id.setdefault(subscription.member_id, subscription)
-
-        member_ids = sorted(subscriptions_by_member_id)
-        random_generator = random.Random(RANDOM_SEED)
-        random_generator.shuffle(member_ids)
-
-        automatic_renewal_enabled = cls._is_automatic_renewal_enabled(cache)
-        bidder_ratio = (
-            BIDDER_RATIO if automatic_renewal_enabled else BIDDER_RATIO_WITHOUT_RENEWAL
+        assignments = cls._build_bidder_assignments(
+            subscriptions, growing_period, current_period, product_type, now, cache
         )
-        auto_renew_ratio = (
-            AUTO_RENEW_RATIO if automatic_renewal_enabled else Decimal("0")
-        )
-        bidder_count = int(len(member_ids) * bidder_ratio)
-        auto_renew_count = int(len(member_ids) * auto_renew_ratio)
-        bidder_ids = set(member_ids[:bidder_count])
-        free_ids = set(member_ids[bidder_count + auto_renew_count :])
-
-        if free_ids:
-            Subscription.objects.filter(
-                member_id__in=free_ids,
-                period=current_period,
-                product__type=product_type,
-                cancellation_ts__isnull=True,
-            ).update(cancellation_ts=now)
-
-        assignments = []
-        for member_id in member_ids:
-            if member_id not in bidder_ids:
-                continue
-            subscription = subscriptions_by_member_id[member_id]
-            assignments.append(
-                {
-                    "member": subscription.member,
-                    "product": subscription.product,
-                    "size": cls._get_size_or_one(
-                        subscription.product, growing_period, cache
-                    ),
-                    "quantity": subscription.quantity,
-                    "factor": Decimal(
-                        str(round(random_generator.uniform(*BID_FACTOR_RANGE), 3))
-                    ),
-                }
-            )
         if not assignments:
             return None
 
-        prices = [
-            RoundPriceInput(
-                product_id=product.id,
-                reference_value=(
-                    REFERENCE_VALUE_PER_SIZE
-                    * cls._get_size_or_one(product, growing_period, cache)
-                ).quantize(Decimal("0.01")),
-                min_amount=(
-                    MIN_AMOUNT_PER_SIZE
-                    * cls._get_size_or_one(product, growing_period, cache)
-                ).quantize(Decimal("0.01")),
-                size=cls._get_size_or_one(product, growing_period, cache),
-            )
-            for product in products
-        ]
+        prices = cls._build_prices(products, growing_period, cache)
 
         year = growing_period.start_date.year
         start_at = now - datetime.timedelta(days=1)
@@ -227,9 +170,7 @@ class BiddingRoundGenerator:
             assignments=assignments,
             fixed_per_year=fixed_per_year,
         )
-        if target_amount_per_year != TARGET_AMOUNT_PER_YEAR:
-            bid_range_round.target_amount_per_year = target_amount_per_year
-            bid_range_round.save(update_fields=["target_amount_per_year"])
+        cls._apply_target_amount_per_year(bid_range_round, target_amount_per_year)
 
         bid_range_amounts = cls._calibrate_amounts(
             assignments,
@@ -281,6 +222,83 @@ class BiddingRoundGenerator:
         cls._save_bids(bidding_round, assignments, simple_amounts, cache=cache)
 
         return bidding_round
+
+    @classmethod
+    def _build_bidder_assignments(
+        cls, subscriptions, growing_period, current_period, product_type, now, cache
+    ) -> list:
+        subscriptions_by_member_id = {}
+        for subscription in subscriptions:
+            subscriptions_by_member_id.setdefault(subscription.member_id, subscription)
+
+        member_ids = sorted(subscriptions_by_member_id)
+        random_generator = random.Random(RANDOM_SEED)
+        random_generator.shuffle(member_ids)
+
+        automatic_renewal_enabled = cls._is_automatic_renewal_enabled(cache)
+        bidder_ratio = (
+            BIDDER_RATIO if automatic_renewal_enabled else BIDDER_RATIO_WITHOUT_RENEWAL
+        )
+        auto_renew_ratio = (
+            AUTO_RENEW_RATIO if automatic_renewal_enabled else Decimal("0")
+        )
+        bidder_count = int(len(member_ids) * bidder_ratio)
+        auto_renew_count = int(len(member_ids) * auto_renew_ratio)
+        bidder_ids = set(member_ids[:bidder_count])
+        free_ids = set(member_ids[bidder_count + auto_renew_count :])
+
+        if free_ids:
+            Subscription.objects.filter(
+                member_id__in=free_ids,
+                period=current_period,
+                product__type=product_type,
+                cancellation_ts__isnull=True,
+            ).update(cancellation_ts=now)
+
+        assignments = []
+        for member_id in member_ids:
+            if member_id not in bidder_ids:
+                continue
+            subscription = subscriptions_by_member_id[member_id]
+            assignments.append(
+                {
+                    "member": subscription.member,
+                    "product": subscription.product,
+                    "size": cls._get_size_or_one(
+                        subscription.product, growing_period, cache
+                    ),
+                    "quantity": subscription.quantity,
+                    "factor": Decimal(
+                        str(round(random_generator.uniform(*BID_FACTOR_RANGE), 3))
+                    ),
+                }
+            )
+        return assignments
+
+    @classmethod
+    def _build_prices(cls, products, growing_period, cache) -> list[RoundPriceInput]:
+        return [
+            cls._build_price(product, growing_period, cache) for product in products
+        ]
+
+    @classmethod
+    def _build_price(cls, product, growing_period, cache) -> RoundPriceInput:
+        size = cls._get_size_or_one(product, growing_period, cache)
+        return RoundPriceInput(
+            product_id=product.id,
+            reference_value=(REFERENCE_VALUE_PER_SIZE * size).quantize(
+                Decimal("0.01")
+            ),
+            min_amount=(MIN_AMOUNT_PER_SIZE * size).quantize(Decimal("0.01")),
+            size=size,
+        )
+
+    @classmethod
+    def _apply_target_amount_per_year(cls, bidding_round, target_amount_per_year):
+        if target_amount_per_year == TARGET_AMOUNT_PER_YEAR:
+            return
+        bidding_round.target_amount_per_year = target_amount_per_year
+        bidding_round.save(update_fields=["target_amount_per_year", "updated_at"])
 
     @classmethod
     def _get_size_or_one(cls, product, growing_period, cache) -> Decimal:
