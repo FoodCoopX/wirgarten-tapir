@@ -2,6 +2,9 @@ from unittest.mock import patch, Mock
 
 from django.core.exceptions import ValidationError
 
+from tapir.subscriptions.services.contract_prerequisites_validator import (
+    ContractPrerequisitesValidator,
+)
 from tapir.subscriptions.services.order_validator import OrderValidator
 from tapir.subscriptions.services.subscription_update_view_validator import (
     SubscriptionUpdateViewValidator,
@@ -58,7 +61,7 @@ class TestSubscriptionUpdateViewValidatorValidateEverything(TapirUnitTest):
     @patch.object(OrderValidator, "validate_cannot_reduce_size", autospec=True)
     @patch.object(OrderValidator, "validate_order_general", autospec=True)
     @patch.object(
-        SubscriptionUpdateViewValidator, "validate_pickup_location", autospec=True
+        ContractPrerequisitesValidator, "validate_pickup_location", autospec=True
     )
     @patch.object(
         SubscriptionUpdateViewValidator,
@@ -66,7 +69,7 @@ class TestSubscriptionUpdateViewValidatorValidateEverything(TapirUnitTest):
         autospec=True,
     )
     @patch.object(
-        SubscriptionUpdateViewValidator, "validate_banking_data", autospec=True
+        ContractPrerequisitesValidator, "validate_banking_data", autospec=True
     )
     def test_validateEverything_allValid_callsAllValidators(
         self,

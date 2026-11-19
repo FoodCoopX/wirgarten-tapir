@@ -183,7 +183,7 @@ Mark a step as done by checking its box (`- [x]`).
   changing the generators. No feature-specific data in this step.
   Benchmark: time `make populate` (same machine, 3 runs, median) before the first change and after the last one.
   The result must not be significantly slower; record both timings in the step's summary.
-- [ ] **2. Test data for this feature**: on top of step 1, a few members with quantity > 1 subscriptions, members
+- [x] **2. Test data for this feature**: on top of step 1, a few members with quantity > 1 subscriptions, members
   without banking data / payment rhythm, personalised and exempt prices, in proportions that stay close to prod.
   Benchmark as in step 1, with the step 1 result as baseline.
 - [ ] **3. Refactor: shared contract prerequisites**: extract the pickup location / payment rhythm / banking data part

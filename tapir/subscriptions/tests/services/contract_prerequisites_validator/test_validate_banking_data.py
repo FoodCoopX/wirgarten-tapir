@@ -10,8 +10,8 @@ from tapir.coop.services.member_needs_banking_data_checker import (
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
-from tapir.subscriptions.services.subscription_update_view_validator import (
-    SubscriptionUpdateViewValidator,
+from tapir.subscriptions.services.contract_prerequisites_validator import (
+    ContractPrerequisitesValidator,
 )
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.tests.test_utils import mock_timezone
@@ -25,7 +25,7 @@ from tapir.wirgarten.tests.test_utils import mock_timezone
 @patch.object(
     MemberNeedsBankingDataChecker, "does_member_need_banking_data", autospec=True
 )
-class TestSubscriptionUpdateViewValidatorValidateBankingData(TapirUnitTest):
+class TestContractPrerequisitesValidatorValidateBankingData(TapirUnitTest):
     def setUp(self):
         self.now = mock_timezone(
             test=self, now=datetime.datetime(year=2024, month=5, day=1)
@@ -44,7 +44,7 @@ class TestSubscriptionUpdateViewValidatorValidateBankingData(TapirUnitTest):
 
     def assert_raises_validation_error(self, error_message: str, **params):
         with self.assertRaises(ValidationError) as error:
-            SubscriptionUpdateViewValidator.validate_banking_data(**params)
+            ContractPrerequisitesValidator.validate_banking_data(**params)
 
         self.assertEqual(error_message, error.exception.message)
 
@@ -97,7 +97,7 @@ class TestSubscriptionUpdateViewValidatorValidateBankingData(TapirUnitTest):
         params["account_owner"] = ""
         params["payment_rhythm"] = None
 
-        SubscriptionUpdateViewValidator.validate_banking_data(**params)
+        ContractPrerequisitesValidator.validate_banking_data(**params)
 
         mock_does_member_need_banking_data.assert_called_once_with(self.member)
         mock_get_member_payment_rhythm_object.assert_called_once_with(
@@ -139,7 +139,7 @@ class TestSubscriptionUpdateViewValidatorValidateBankingData(TapirUnitTest):
         params = self.build_default_params()
         params["payment_rhythm"] = None
 
-        SubscriptionUpdateViewValidator.validate_banking_data(**params)
+        ContractPrerequisitesValidator.validate_banking_data(**params)
 
         mock_does_member_need_banking_data.assert_called_once_with(self.member)
         mock_get_member_payment_rhythm_object.assert_called_once_with(
@@ -187,7 +187,7 @@ class TestSubscriptionUpdateViewValidatorValidateBankingData(TapirUnitTest):
         mock_is_payment_rhythm_allowed.return_value = True
         params = self.build_default_params()
 
-        SubscriptionUpdateViewValidator.validate_banking_data(**params)
+        ContractPrerequisitesValidator.validate_banking_data(**params)
 
         mock_does_member_need_banking_data.assert_called_once_with(self.member)
         mock_get_member_payment_rhythm_object.assert_called_once_with(
@@ -211,7 +211,7 @@ class TestSubscriptionUpdateViewValidatorValidateBankingData(TapirUnitTest):
         mock_is_payment_rhythm_allowed.return_value = True
         params = self.build_default_params()
 
-        SubscriptionUpdateViewValidator.validate_banking_data(**params)
+        ContractPrerequisitesValidator.validate_banking_data(**params)
 
         mock_does_member_need_banking_data.assert_called_once_with(self.member)
         mock_get_member_payment_rhythm_object.assert_called_once_with(
