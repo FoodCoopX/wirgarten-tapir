@@ -54,7 +54,7 @@ class ContractCreationResult:
 
 class ContractCreator:
     @classmethod
-    def validate_round_can_create_contracts(cls, bidding_round: BiddingRound) -> None:
+    def _validate_can_create_contracts(cls, bidding_round: BiddingRound) -> None:
         if bidding_round.status != BIDDING_ROUND_STATUS_CLOSED:
             raise ValidationError(
                 _("Verträge können erst nach Ende der Beitragsrunde erstellt werden.")
@@ -90,7 +90,11 @@ class ContractCreator:
         bid_level: int | None = None,
         create_auto_renewed_contracts: bool = False,
     ) -> ContractCreationResult:
-        cls.validate_round_can_create_contracts(bidding_round)
+        cls._validate_can_create_contracts(bidding_round)
+
+        bids = bidding_round.bids.select_related("member", "product")
+        if bid_ids:
+            bids = bids.filter(id__in=bid_ids)
 
         unconfirmed_bids = [bid for bid in bids if bid.admin_confirmed is None]
         if unconfirmed_bids:
@@ -115,10 +119,6 @@ class ContractCreator:
                 bidding_round, cache=cache
             )
         )
-
-        bids = bidding_round.bids.select_related("member", "product")
-        if bid_ids:
-            bids = bids.filter(id__in=bid_ids)
 
         errors: list[ContractCreationError] = []
         created_subscriptions: list[Subscription] = []

@@ -101,13 +101,13 @@ export interface RoundStatsBid {
    * @type {string}
    * @memberof RoundStatsBid
    */
-  amountPerMonth: string;
+  readonly amountPerMonth: string;
   /**
    *
    * @type {string}
    * @memberof RoundStatsBid
    */
-  amountPerYear: string;
+  readonly amountPerYear: string;
 }
 
 /**
@@ -176,7 +176,7 @@ export function RoundStatsBidToJSON(json: any): RoundStatsBid {
 }
 
 export function RoundStatsBidToJSONTyped(
-  value?: RoundStatsBid | null,
+  value?: Omit<RoundStatsBid, "amount_per_month" | "amount_per_year"> | null,
   ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {
@@ -203,7 +203,5 @@ export function RoundStatsBidToJSONTyped(
       value["updatedAt"] == null
         ? null
         : (value["updatedAt"] as any).toISOString(),
-    amount_per_month: value["amountPerMonth"],
-    amount_per_year: value["amountPerYear"],
   };
 }
