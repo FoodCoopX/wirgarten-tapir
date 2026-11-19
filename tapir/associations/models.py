@@ -71,7 +71,9 @@ class AssociationMembershipDeletedLogEntry(LogEntry):
     start_date = models.DateField()
     end_date = models.DateField(null=True)
 
-    def populate_membership(self, membership: AssociationMembership, actor: TapirUser):
+    def populate_membership(
+        self, membership: AssociationMembership, actor: TapirUser | None
+    ):
         self.populate(actor=actor, user=membership.member)
         self.type_name = membership.type.name
         self.start_date = membership.start_date

@@ -22,7 +22,7 @@ class AssociationMembershipChangeHandler:
         member: Member,
         association_membership_type: AssociationMembershipType,
         start_date: datetime.date,
-        actor: TapirUser,
+        actor: TapirUser | None,
         cache: dict,
     ):
         member_memberships = AssociationMembership.objects.filter(member=member)
