@@ -81,13 +81,15 @@ class TestBiddingRoundService(TapirIntegrationTest):
 
     def test_createRound_bidRangeWithThreeLevels_raisesValidationError(self):
         growing_period = GrowingPeriodFactory.create()
+        product_type = ProductTypeFactory.create()
+        end_at = self._end_at(growing_period)
 
         with pytest.raises(ValidationError):
             BiddingRoundService.create_round(
                 growing_period=growing_period,
                 name="Beitragsrunde Test",
-                end_at=self._end_at(growing_period),
-                product_type_id=ProductTypeFactory.create().id,
+                end_at=end_at,
+                product_type_id=product_type.id,
                 bidding_procedure=BIDDING_ROUND_PROCEDURE_BID_RANGE,
                 bid_levels=3,
                 cache={},
@@ -95,13 +97,15 @@ class TestBiddingRoundService(TapirIntegrationTest):
 
     def test_createRound_unknownProcedure_raisesValidationError(self):
         growing_period = GrowingPeriodFactory.create()
+        product_type = ProductTypeFactory.create()
+        end_at = self._end_at(growing_period)
 
         with pytest.raises(ValidationError):
             BiddingRoundService.create_round(
                 growing_period=growing_period,
                 name="Beitragsrunde Test",
-                end_at=self._end_at(growing_period),
-                product_type_id=ProductTypeFactory.create().id,
+                end_at=end_at,
+                product_type_id=product_type.id,
                 bidding_procedure="unknown",
                 bid_levels=1,
                 cache={},
