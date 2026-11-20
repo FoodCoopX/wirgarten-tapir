@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Form, ListGroup, Modal, Spinner } from "react-bootstrap";
 import { CoreApi, MemberExtraEmail } from "../../api-client";
 import TapirButton from "../../components/TapirButton.tsx";
+import TapirHelpButton from "../../components/TapirHelpButton.tsx";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
@@ -26,6 +27,8 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
   const api = useApi(CoreApi, csrfToken);
   const [extraEmails, setExtraEmails] = useState<MemberExtraEmail[]>([]);
   const [explanationText, setExplanationText] = useState("");
+  const [confirmationLinkValidityDays, setConfirmationLinkValidityDays] =
+    useState(0);
   const [newAddress, setNewAddress] = useState("");
   const [newFirstName, setNewFirstName] = useState("");
   const [newLastName, setNewLastName] = useState("");
@@ -51,6 +54,7 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
       .then((response) => {
         setExtraEmails(response.extraMails);
         setExplanationText(response.explanationText);
+        setConfirmationLinkValidityDays(response.confirmationLinkValidityDays);
       })
       .catch((error) =>
         handleRequestError(
@@ -169,11 +173,23 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
                 "d-flex flex-wrap justify-content-between align-items-center gap-2"
               }
             >
-              <small className={"text-muted"}>
-                {extraEmail.confirmedOn
-                  ? "Bestätigt am " + formatDateNumeric(extraEmail.confirmedOn)
-                  : "Nicht bestätigt"}
-              </small>
+              {extraEmail.confirmedOn ? (
+                <small className={"text-muted"}>
+                  Bestätigt am {formatDateNumeric(extraEmail.confirmedOn)}
+                </small>
+              ) : (
+                <div className={"d-flex align-items-center gap-1"}>
+                  <small className={"text-muted"}>Nicht bestätigt</small>
+                  <TapirHelpButton
+                    buttonSize={"sm"}
+                    text={
+                      "Der Bestätigungslink in der Mail ist " +
+                      confirmationLinkValidityDays +
+                      " Tage gültig. Ist er abgelaufen, die Adresse löschen und neu anlegen."
+                    }
+                  />
+                </div>
+              )}
               <div className={"d-flex gap-2"}>
                 {selectedForEdit == extraEmail ? (
                   <TapirButton

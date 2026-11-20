@@ -14602,7 +14602,10 @@ components:
             $ref: '#/components/schemas/MemberExtraEmail'
         explanation_text:
           type: string
+        confirmation_link_validity_days:
+          type: integer
       required:
+      - confirmation_link_validity_days
       - explanation_text
       - extra_mails
     MemberJokerInformation:

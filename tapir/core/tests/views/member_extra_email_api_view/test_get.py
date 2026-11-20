@@ -5,6 +5,7 @@ from django.utils import timezone
 from rest_framework import status
 
 from tapir.configuration.models import TapirParameter
+from tapir.core.config import EXTRA_EMAIL_CONFIRMATION_LINK_VALIDITY_DAYS
 from tapir.wirgarten.models import MemberExtraEmail
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
@@ -92,6 +93,7 @@ class TestMemberExtraEmailApiViewGet(TapirIntegrationTest):
                     },
                 ],
                 "explanation_text": "test text",
+                "confirmation_link_validity_days": EXTRA_EMAIL_CONFIRMATION_LINK_VALIDITY_DAYS,
             },
             response_content,
         )
