@@ -9,6 +9,9 @@ from tapir_mail.triggers.transactional_trigger import (
 )
 
 from tapir.configuration.models import TapirParameter
+from tapir.core.services.member_extra_email_confirmation_link_service import (
+    MemberExtraEmailConfirmationLinkService,
+)
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import MemberExtraEmail, MemberExtraEmailCreatedLogEntry
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -37,10 +40,12 @@ class TestMemberExtraEmailApiViewPost(TapirIntegrationTest):
 
         self.assertStatusCode(response, status.HTTP_400_BAD_REQUEST)
 
+    @patch.object(MemberExtraEmailConfirmationLinkService, "build_token", autospec=True)
     @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_default_createsUnconfirmedRecipientAndCreatesLogEntryAndFireTrigger(
-        self, mock_fire_action: Mock
+        self, mock_fire_action: Mock, mock_build_token: Mock
     ):
+        mock_build_token.return_value = "test_token"
         member = MemberFactory.create()
         self.client.force_login(member)
 
@@ -69,7 +74,8 @@ class TestMemberExtraEmailApiViewPost(TapirIntegrationTest):
         self.assertEqual(member.email, log_entry.user.email)
         self.assertEqual("test@example.com", log_entry.email)
 
-        confirmation_link = f"{settings.SITE_URL}{reverse("core:member_extra_email_confirm", kwargs={"secret": extra_email.secret})}"
+        confirmation_link = f"{settings.SITE_URL}{reverse("core:member_extra_email_confirm", kwargs={"token": "test_token"})}"
+        mock_build_token.assert_called_once_with(extra_email)
         mock_fire_action.assert_called_once_with(
             TransactionalTriggerData(
                 key=Events.EXTRA_MAIL_CONFIRMATION,
@@ -85,10 +91,12 @@ class TestMemberExtraEmailApiViewPost(TapirIntegrationTest):
             )
         )
 
+    @patch.object(MemberExtraEmailConfirmationLinkService, "build_token", autospec=True)
     @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_adminCreatesExtraMailForAnotherMember_createsRecipient(
-        self, mock_fire_action: Mock
+        self, mock_fire_action: Mock, mock_build_token: Mock
     ):
+        mock_build_token.return_value = "test_token"
         admin = MemberFactory.create(is_superuser=True)
         other_member = MemberFactory.create()
         self.client.force_login(admin)
@@ -119,7 +127,8 @@ class TestMemberExtraEmailApiViewPost(TapirIntegrationTest):
         self.assertEqual(other_member.email, log_entry.user.email)
         self.assertEqual("test@example.com", log_entry.email)
 
-        confirmation_link = f"{settings.SITE_URL}{reverse("core:member_extra_email_confirm", kwargs={"secret": extra_email.secret})}"
+        confirmation_link = f"{settings.SITE_URL}{reverse("core:member_extra_email_confirm", kwargs={"token": "test_token"})}"
+        mock_build_token.assert_called_once_with(extra_email)
         mock_fire_action.assert_called_once_with(
             TransactionalTriggerData(
                 key=Events.EXTRA_MAIL_CONFIRMATION,

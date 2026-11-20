@@ -1,3 +1,5 @@
+import datetime
+
 LEGAL_STATUS_ASSOCIATION = "association"
 LEGAL_STATUS_COOPERATIVE = "coop"
 LEGAL_STATUS_COMPANY = "company"
@@ -82,3 +84,5 @@ THEME_OPTIONS = [
     (THEME_WIRGARTEN, "WirGarten Lüneburg"),
     (THEME_TEST, "Test"),
 ]
+
+EXTRA_EMAIL_CONFIRMATION_LINK_VALIDITY = datetime.timedelta(days=7)
