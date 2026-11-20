@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { Form } from "react-bootstrap";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
+import NextStepButton from "../../components/mobile_wizard/NextStepButton.tsx";
+import { BUTTON_VARIANT } from "../../components/mobile_wizard/utils/BUTTON_VARIANT.ts";
 import TapirButton from "../../components/TapirButton.tsx";
 import TapirHelpButton from "../../components/TapirHelpButton.tsx";
 import { formatCoopShareLabel } from "../../utils/formatCoopShareLabel.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { getHtmlDescription } from "../../utils/getHtmlDescription.ts";
-import NextStepButton from "../components/NextStepButton.tsx";
 import TapirCheckbox from "../components/TapirCheckbox.tsx";
-import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import "../utils/flexColOnSmallScreen.css";
 import { getNumberOfCoopShareInstalments } from "../utils/getNumberOfCoopShareInstalments.ts";
 

@@ -1,34 +1,35 @@
 import React from "react";
 import { Badge, Dropdown, DropdownButton, ProgressBar } from "react-bootstrap";
-import "../../../tapir/core/static/core/bootstrap/5.3.8/css/bootstrap.min.css";
-import "../../../tapir/core/static/core/css/base.css";
-import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
-import TapirButton from "../../components/TapirButton.tsx";
-import { Phase } from "../types/Phase.ts";
-import { Step } from "../types/Step.ts";
-import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
-import { FOOTER_HEIGHT } from "../utils/DIMENSIONS.ts";
-import { getPhase } from "../utils/getPhase.ts";
+import TapirButton from "../TapirButton.tsx";
 import "./footer.css";
+import { MobileWizardPhase, MobileWizardStep } from "./types/MobileWizard.ts";
+import { BUTTON_VARIANT } from "./utils/BUTTON_VARIANT.ts";
+import { FOOTER_HEIGHT } from "./utils/DIMENSIONS.ts";
 
-interface BestellWizardMobileFooterProps {
-  steps: Step[];
-  currentStep: Step;
-  setCurrentStep: (step: Step) => void;
-  settings: BestellWizardSettings;
-  setTestData: () => void;
+interface MobileWizardFooterProps {
+  steps: MobileWizardStep[];
+  currentStep: MobileWizardStep;
+  setCurrentStep: (step: MobileWizardStep) => void;
+  getPhase: (step: MobileWizardStep) => MobileWizardPhase;
+  getPhaseLabel: (phase: MobileWizardPhase) => string;
+  getStepName: (step: MobileWizardStep) => string;
   showProgress: boolean;
   hideButtonsOnLastStep: boolean;
+  showTestMenu?: boolean;
+  onTestData?: () => void;
 }
 
-const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
+const MobileWizardFooter: React.FC<MobileWizardFooterProps> = ({
   steps,
   currentStep,
   setCurrentStep,
-  settings,
-  setTestData,
+  getPhase,
+  getPhaseLabel,
+  getStepName,
   showProgress,
   hideButtonsOnLastStep,
+  showTestMenu,
+  onTestData,
 }) => {
   function goToPreviousStep() {
     const currentIndex = steps.indexOf(currentStep);
@@ -39,7 +40,7 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
     setCurrentStep(steps[steps.indexOf(currentStep) - 1]);
   }
 
-  function isStepFirstInPhase(step: Step, index: number) {
+  function isStepFirstInPhase(step: MobileWizardStep, index: number) {
     const stepPhase = getPhase(step);
     for (let i = 0; i < index; i++) {
       if (getPhase(steps[i]) == stepPhase) {
@@ -49,102 +50,8 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
     return true;
   }
 
-  function getPhaseName(phase: Phase) {
-    switch (phase) {
-      case "intro":
-        return "Intro";
-      case "coop":
-        if (settings.legalStatus === "coop") return "Genossenschaft";
-        else return "Verein";
-      case "pickup_location":
-        return "Verteilstation";
-      case "solidarity":
-        return "Solibeitrag";
-      case "personal_data":
-        return "Persönliche Daten";
-      case "feedback":
-        return "Feedback";
-      case "confirmation":
-        return "Bestätigung";
-    }
-
-    for (const productType of settings.productTypes) {
-      if (productType.id === phase) {
-        return productType.name;
-      }
-    }
-
-    return phase;
-  }
-
-  function isProgressBarStepClickable(step: Step) {
+  function isProgressBarStepClickable(step: MobileWizardStep) {
     return steps.indexOf(step) < steps.indexOf(currentStep);
-  }
-
-  function getStepName(step: string) {
-    switch (step) {
-      case "1a_welcome":
-        return "1A: Willkommen";
-      case "1b_welcome_waiting_list":
-        return "1B: Willkommen (warteliste)";
-      case "2_first_name":
-        return "2: Erste Name";
-      case "3_product_type_choice":
-        return "3: Produkt-Type Auswahl";
-      case "3b_growing_period_choice":
-        return "3B: Vertragsperiode-Auswahl";
-      case "5a_pickup_location_intro":
-        return "5A: Verteilstation (Intro)";
-      case "5b_delivery_mode_choice":
-        return "5B: Abholung oder Hauslieferung";
-      case "5c_pickup_location_choice":
-        return "5C: Verteilstation (Auswahl)";
-      case "5d_home_delivery_choice":
-        return "5D: Hauslieferung (Auswahl)";
-      case "5e_pickup_location_confirm_waiting_list":
-        return "5E: Verteilstation (Bestätigung Warteliste)";
-      case "6a_coop_intro":
-        return "6A: Genossenschaft (Intro)";
-      case "6b_association_membership":
-        return "6B: Vereinsmitgliedschaft (Auswahl)";
-      case "6b_coop_shares":
-        return "6B: Genossenschaft (Auswahl)";
-      case "6c_coop_member_now":
-        return "6C: Genossenschaft (Bestätigung)";
-      case "7_solidarity_contribution":
-        return "7: Solidarbeitrag";
-      case "8_personal_data":
-        return "8: Persönliche Daten";
-      case "8b_delivery_address":
-        return "8B: Lieferadresse";
-      case "9_banking_data":
-        return "9: Bank Daten";
-      case "10_summary":
-        return "10: Zusammenfassung";
-      case "11_legal":
-        return "11: Legal";
-      case "12_channel":
-        return "12: Vertriebskanal";
-      case "13_feedback":
-        return "13: Feedback";
-      case "14_confirmation":
-        return "14: Bestätigung";
-      case "14b_confirmation_waiting_list":
-        return "14: Bestätigung (Warteliste)";
-    }
-    for (const productType of settings.productTypes) {
-      if (!step.includes(productType.id!)) {
-        continue;
-      }
-      if (step.includes("intro")) {
-        return "4A: " + productType.name + " (Intro)";
-      }
-      if (step.includes("order")) {
-        return "4B: " + productType.name + " (Bestellung)";
-      }
-      step = step.replace(productType.id!, productType.name);
-    }
-    return step;
   }
 
   return (
@@ -178,7 +85,7 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
               onClick={goToPreviousStep}
               text={"Zurück"}
             />
-            {settings.debug && (
+            {showTestMenu && onTestData && (
               <DropdownButton
                 title={
                   <span>
@@ -208,7 +115,7 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
                     </Dropdown.Item>
                   ))}
                 <Dropdown.Divider />
-                <Dropdown.Item onClick={setTestData}>
+                <Dropdown.Item onClick={onTestData}>
                   Test daten setzen
                 </Dropdown.Item>
               </DropdownButton>
@@ -242,7 +149,7 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
                         : "default",
                     }}
                   >
-                    {getPhaseName(getPhase(step))}
+                    {getPhaseLabel(getPhase(step))}
                   </Badge>
                 ) : (
                   <span
@@ -274,4 +181,4 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
   );
 };
 
-export default BestellWizardMobileFooter;
+export default MobileWizardFooter;

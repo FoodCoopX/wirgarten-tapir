@@ -1,8 +1,8 @@
 import React, { ReactNode, useEffect, useRef, useState } from "react";
-import StepTitle from "./StepTitle.tsx";
-import { replaceTokens } from "../utils/replaceTokens.ts";
 import "./bounce.css";
-import { CONTENT_HEIGHT } from "../utils/DIMENSIONS.ts";
+import StepTitle from "./StepTitle.tsx";
+import { CONTENT_HEIGHT } from "./utils/DIMENSIONS.ts";
+import { replaceTokens } from "./utils/replaceTokens.ts";
 
 interface StepBaseProps {
   title?: string;

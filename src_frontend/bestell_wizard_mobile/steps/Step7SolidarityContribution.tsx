@@ -4,8 +4,8 @@ import { AssociationMembershipType, PublicProductType } from "../../api-client";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
+import NextStepButton from "../../components/mobile_wizard/NextStepButton.tsx";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
-import NextStepButton from "../components/NextStepButton.tsx";
 import { getMonthlyPayment } from "../utils/getMonthlyPayment.ts";
 import { getProductSolidarityChoices } from "../utils/getProductSolidarityChoices.ts";
 

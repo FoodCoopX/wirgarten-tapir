@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "react-bootstrap";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
-import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
+import { BUTTON_VARIANT } from "../../components/mobile_wizard/utils/BUTTON_VARIANT.ts";
 
 interface BackToWebsiteButtonProps {
   settings: BestellWizardSettings;

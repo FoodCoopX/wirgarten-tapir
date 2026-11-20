@@ -13,7 +13,7 @@ import TapirButton from "../../components/TapirButton.tsx";
 import formatAddress from "../../utils/formatAddress.ts";
 import { getPickupLocationLatLng } from "../../utils/getPickupLocationLatLng.ts";
 import { buildDeliveryChargeBadge } from "../utils/buildDeliveryChargeBadge.tsx";
-import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
+import { BUTTON_VARIANT } from "../../components/mobile_wizard/utils/BUTTON_VARIANT.ts";
 import { getFirstDelivery } from "../utils/getFirstDelivery.ts";
 import { wouldTheOrderFitTheProductCapacities } from "../utils/wouldTheOrderFitTheProductCapacities.ts";
 import "./map.css";

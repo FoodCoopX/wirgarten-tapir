@@ -12,9 +12,9 @@ import { doesProductBelongsToProductType } from "../../bestell_wizard/utils/does
 import { formatShoppingCart } from "../../bestell_wizard/utils/formatShoppingCart.ts";
 import { isProductTypeOrdered } from "../../bestell_wizard/utils/isProductTypeOrdered.ts";
 import TapirButton from "../../components/TapirButton.tsx";
-import NextStepButton from "../components/NextStepButton.tsx";
+import NextStepButton from "../../components/mobile_wizard/NextStepButton.tsx";
+import { BUTTON_VARIANT } from "../../components/mobile_wizard/utils/BUTTON_VARIANT.ts";
 import Step4BProductOrder from "../components/Step4BProductOrder.tsx";
-import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 
 interface Step4BProductTypeOrderProps {
   settings: BestellWizardSettings;
