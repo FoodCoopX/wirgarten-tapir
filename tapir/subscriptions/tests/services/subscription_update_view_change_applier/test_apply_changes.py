@@ -4,8 +4,8 @@ from tapir.payments.services.member_credit_creator import MemberCreditCreator
 from tapir.subscriptions.services.apply_tapir_order_manager import (
     ApplyTapirOrderManager,
 )
-from tapir.subscriptions.services.contract_prerequisites_applier import (
-    ContractPrerequisitesApplier,
+from tapir.subscriptions.services.subscription_prerequisites_applier import (
+    SubscriptionPrerequisitesApplier,
 )
 from tapir.subscriptions.services.subscription_update_view_change_applier import (
     SubscriptionUpdateViewChangeApplier,
@@ -15,7 +15,7 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestSubscriptionUpdateViewChangeApplierApplyChanges(TapirUnitTest):
-    @patch.object(ContractPrerequisitesApplier, "apply_banking_data", autospec=True)
+    @patch.object(SubscriptionPrerequisitesApplier, "apply_banking_data", autospec=True)
     @patch.object(
         MemberCreditCreator, "create_member_credit_if_necessary", autospec=True
     )
@@ -27,11 +27,13 @@ class TestSubscriptionUpdateViewChangeApplierApplyChanges(TapirUnitTest):
         return_value=(True, []),
     )
     @patch.object(
-        ContractPrerequisitesApplier,
+        SubscriptionPrerequisitesApplier,
         "change_payment_rhythm_if_necessary",
         autospec=True,
     )
-    @patch.object(ContractPrerequisitesApplier, "apply_pickup_location", autospec=True)
+    @patch.object(
+        SubscriptionPrerequisitesApplier, "apply_pickup_location", autospec=True
+    )
     def test_applyChanges_default_callsAllServicesInOrder(
         self,
         mock_apply_pickup_location: MagicMock,
@@ -75,7 +77,7 @@ class TestSubscriptionUpdateViewChangeApplierApplyChanges(TapirUnitTest):
             [
                 call.apply_pickup_location(
                     member=member,
-                    contract_start_date=contract_start_date,
+                    subscription_start_date=contract_start_date,
                     desired_pickup_location_id="desired_id",
                     actor=actor,
                     cache=cache,

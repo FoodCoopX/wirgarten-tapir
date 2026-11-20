@@ -16,7 +16,7 @@ from tapir.subscriptions.services.automatic_subscription_renewal_service import 
 from tapir.subscriptions.services.unconfirmed_changes_provider import (
     UnconfirmedChangesProvider,
 )
-from tapir.subscriptions.types import ContractPrerequisitesInput
+from tapir.subscriptions.types import SubscriptionPrerequisitesInput
 from tapir.wirgarten.constants import WEEKLY
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
@@ -145,9 +145,8 @@ class TestAdminSizeChangeApplierApplyChange(TapirIntegrationTest):
                 change_date=change_date,
                 cache=cache,
             ),
-            prerequisites=ContractPrerequisitesInput(
+            prerequisites=SubscriptionPrerequisitesInput(
                 desired_pickup_location_id=None,
-                payment_rhythm=None,
                 iban=iban,
                 account_owner=account_owner,
                 sepa_mandate_confirmed=sepa_mandate_confirmed,

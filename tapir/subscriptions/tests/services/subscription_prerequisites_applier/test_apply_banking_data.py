@@ -1,8 +1,8 @@
 import datetime
 from unittest.mock import patch, MagicMock
 
-from tapir.subscriptions.services.contract_prerequisites_applier import (
-    ContractPrerequisitesApplier,
+from tapir.subscriptions.services.subscription_prerequisites_applier import (
+    SubscriptionPrerequisitesApplier,
 )
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.tests.factories import MemberFactory
@@ -10,7 +10,7 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest, mock_timezone
 
 
 @patch.object(Member, "save", autospec=True)
-class TestContractPrerequisitesApplierApplyBankingData(TapirUnitTest):
+class TestSubscriptionPrerequisitesApplierApplyBankingData(TapirUnitTest):
     def setUp(self):
         super().setUp()
         self.now = mock_timezone(
@@ -22,7 +22,7 @@ class TestContractPrerequisitesApplierApplyBankingData(TapirUnitTest):
     ):
         member = MemberFactory.build(iban="", account_owner="", sepa_consent=None)
 
-        ContractPrerequisitesApplier.apply_banking_data(
+        SubscriptionPrerequisitesApplier.apply_banking_data(
             member=member,
             iban="test_iban",
             account_owner="test_account_owner",
@@ -44,7 +44,7 @@ class TestContractPrerequisitesApplierApplyBankingData(TapirUnitTest):
             sepa_consent=None,
         )
 
-        ContractPrerequisitesApplier.apply_banking_data(
+        SubscriptionPrerequisitesApplier.apply_banking_data(
             member=member,
             iban=" ",
             account_owner="",

@@ -13,6 +13,9 @@
  */
 
 import type {
+  AdminSizeChangeDateOptions,
+  AdminSubscriptionChangeMemberData,
+  AdminSubscriptionChangeMemberSummary,
   BestellWizardCapacityCheckResponse,
   CancelSubscriptionsRequestRequest,
   CancelSubscriptionsViewResponse,
@@ -34,6 +37,9 @@ import type {
   UpdateSubscriptionsRequestRequest,
 } from "../models/index";
 import {
+  AdminSizeChangeDateOptionsFromJSON,
+  AdminSubscriptionChangeMemberDataFromJSON,
+  AdminSubscriptionChangeMemberSummaryFromJSON,
   BestellWizardCapacityCheckResponseFromJSON,
   CancelSubscriptionsRequestRequestToJSON,
   CancelSubscriptionsViewResponseFromJSON,
@@ -55,6 +61,18 @@ import {
   UpdateSubscriptionsRequestRequestToJSON,
 } from "../models/index";
 import * as runtime from "../runtime";
+
+export interface SubscriptionsApiAdminSizeChangeDateOptionsRetrieveRequest {
+  subscriptionId?: string;
+}
+
+export interface SubscriptionsApiAdminSubscriptionChangeMemberDataRetrieveRequest {
+  memberId?: string;
+}
+
+export interface SubscriptionsApiAdminSubscriptionChangeMemberSearchListRequest {
+  search?: string;
+}
 
 export interface SubscriptionsApiConfirmSubscriptionChangesCreateRequest {
   confirmSubscriptionChangesRequestRequest: ConfirmSubscriptionChangesRequestRequest;
@@ -128,6 +146,177 @@ export interface SubscriptionsSubscriptionsRetrieveRequest {
  *
  */
 export class SubscriptionsApi extends runtime.BaseAPI {
+  /**
+   */
+  async subscriptionsApiAdminSizeChangeDateOptionsRetrieveRaw(
+    requestParameters: SubscriptionsApiAdminSizeChangeDateOptionsRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<AdminSizeChangeDateOptions>> {
+    const queryParameters: any = {};
+
+    if (requestParameters["subscriptionId"] != null) {
+      queryParameters["subscription_id"] = requestParameters["subscriptionId"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/subscriptions/api/admin_size_change_date_options`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      AdminSizeChangeDateOptionsFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async subscriptionsApiAdminSizeChangeDateOptionsRetrieve(
+    requestParameters: SubscriptionsApiAdminSizeChangeDateOptionsRetrieveRequest = {},
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<AdminSizeChangeDateOptions> {
+    const response =
+      await this.subscriptionsApiAdminSizeChangeDateOptionsRetrieveRaw(
+        requestParameters,
+        initOverrides,
+      );
+    return await response.value();
+  }
+
+  /**
+   */
+  async subscriptionsApiAdminSubscriptionChangeMemberDataRetrieveRaw(
+    requestParameters: SubscriptionsApiAdminSubscriptionChangeMemberDataRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<AdminSubscriptionChangeMemberData>> {
+    const queryParameters: any = {};
+
+    if (requestParameters["memberId"] != null) {
+      queryParameters["member_id"] = requestParameters["memberId"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/subscriptions/api/admin_subscription_change_member_data`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      AdminSubscriptionChangeMemberDataFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async subscriptionsApiAdminSubscriptionChangeMemberDataRetrieve(
+    requestParameters: SubscriptionsApiAdminSubscriptionChangeMemberDataRetrieveRequest = {},
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<AdminSubscriptionChangeMemberData> {
+    const response =
+      await this.subscriptionsApiAdminSubscriptionChangeMemberDataRetrieveRaw(
+        requestParameters,
+        initOverrides,
+      );
+    return await response.value();
+  }
+
+  /**
+   */
+  async subscriptionsApiAdminSubscriptionChangeMemberSearchListRaw(
+    requestParameters: SubscriptionsApiAdminSubscriptionChangeMemberSearchListRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<Array<AdminSubscriptionChangeMemberSummary>>> {
+    const queryParameters: any = {};
+
+    if (requestParameters["search"] != null) {
+      queryParameters["search"] = requestParameters["search"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/subscriptions/api/admin_subscription_change_member_search`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      jsonValue.map(AdminSubscriptionChangeMemberSummaryFromJSON),
+    );
+  }
+
+  /**
+   */
+  async subscriptionsApiAdminSubscriptionChangeMemberSearchList(
+    requestParameters: SubscriptionsApiAdminSubscriptionChangeMemberSearchListRequest = {},
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<Array<AdminSubscriptionChangeMemberSummary>> {
+    const response =
+      await this.subscriptionsApiAdminSubscriptionChangeMemberSearchListRaw(
+        requestParameters,
+        initOverrides,
+      );
+    return await response.value();
+  }
+
   /**
    */
   async subscriptionsApiConfirmSubscriptionChangesCreateRaw(

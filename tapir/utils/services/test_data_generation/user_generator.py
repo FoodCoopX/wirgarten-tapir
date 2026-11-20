@@ -194,11 +194,13 @@ class UserGenerator:
 
         min_coop_shares = 0
         if not member_without_subscriptions:
-            min_coop_shares, needs_pickup_location = cls.create_contracts_for_member(
-                member=member,
-                base_products=products_from_base_type,
-                additional_products=additional_products,
-                cache=cache,
+            min_coop_shares, needs_pickup_location = (
+                cls.create_subscriptions_for_member(
+                    member=member,
+                    base_products=products_from_base_type,
+                    additional_products=additional_products,
+                    cache=cache,
+                )
             )
             if needs_pickup_location:
                 members_that_need_a_pickup_location.add(member)
@@ -240,7 +242,7 @@ class UserGenerator:
         return lower_boundary + datetime.timedelta(days=nb_days)
 
     @classmethod
-    def create_contracts_for_member(
+    def create_subscriptions_for_member(
         cls,
         member: Member,
         base_products: List[Product],
@@ -254,7 +256,7 @@ class UserGenerator:
         base_order_date = cls.get_random_date_in_range_biased_towards_lower_end(
             lower_boundary=member.date_joined.date(), upper_boundary=today
         )
-        base_start_date = cls.get_contract_start_date(
+        base_start_date = cls.get_subscription_start_date(
             order_date=base_order_date, cache=cache
         )
 
@@ -268,13 +270,13 @@ class UserGenerator:
         ):
             quantity = cls.get_random_quantity(product)
             chains.append(
-                cls.build_contract_chain(
+                cls.build_subscription_chain(
                     member=member,
                     product=product,
                     quantity=quantity,
                     start_date=base_start_date,
                     mandate_ref=mandate_ref,
-                    main_contracts_by_period_id=None,
+                    main_subscriptions_by_period_id=None,
                     cache=cache,
                 )
             )
@@ -282,8 +284,8 @@ class UserGenerator:
 
         if len(chains) > 0 and len(additional_products) > 0:
             main_chain = chains[0]
-            main_contracts_by_period_id = {
-                contract.period_id: contract for contract in main_chain
+            main_subscriptions_by_period_id = {
+                subscription.period_id: subscription for subscription in main_chain
             }
             number_of_additional_products = random.choices(
                 population=[0, 1, 2], weights=[50, 50, 1], k=1
@@ -292,13 +294,13 @@ class UserGenerator:
                 additional_products,
                 k=min(number_of_additional_products, len(additional_products)),
             ):
-                chain = cls.build_contract_chain(
+                chain = cls.build_subscription_chain(
                     member=member,
                     product=product,
                     quantity=cls.get_random_quantity(product),
                     start_date=max(
                         base_start_date,
-                        cls.get_contract_start_date(
+                        cls.get_subscription_start_date(
                             order_date=cls.get_random_date_in_range_biased_towards_lower_end(
                                 lower_boundary=base_order_date, upper_boundary=today
                             ),
@@ -306,16 +308,16 @@ class UserGenerator:
                         ),
                     ),
                     mandate_ref=mandate_ref,
-                    main_contracts_by_period_id=main_contracts_by_period_id,
+                    main_subscriptions_by_period_id=main_subscriptions_by_period_id,
                     cache=cache,
                 )
                 if len(chain) > 0:
                     chains.append(chain)
 
         Subscription.objects.bulk_create(
-            [contract for chain in chains for contract in chain]
+            [subscription for chain in chains for subscription in chain]
         )
-        cls.create_contract_log_entries(member=member, chains=chains, cache=cache)
+        cls.create_subscription_log_entries(member=member, chains=chains, cache=cache)
 
         needs_pickup_location = any(
             chain[0].product.type.delivery_cycle != NO_DELIVERY for chain in chains
@@ -329,7 +331,7 @@ class UserGenerator:
         return random.choices([1, 2, 3], weights=[100, 1, 1], k=1)[0]
 
     @classmethod
-    def get_contract_start_date(
+    def get_subscription_start_date(
         cls, order_date: datetime.date, cache: dict
     ) -> datetime.date:
         growing_period = TapirCache.get_growing_period_at_date(
@@ -361,21 +363,21 @@ class UserGenerator:
         return None
 
     @classmethod
-    def build_contract_chain(
+    def build_subscription_chain(
         cls,
         member: Member,
         product: Product,
         quantity: int,
         start_date: datetime.date,
         mandate_ref: MandateReference,
-        main_contracts_by_period_id: dict[str, Subscription] | None,
+        main_subscriptions_by_period_id: dict[str, Subscription] | None,
         cache: dict,
     ) -> list[Subscription]:
         today = get_today(cache=cache)
         growing_period = TapirCache.get_growing_period_at_date(
             reference_date=start_date, cache=cache
         )
-        contract = Subscription(
+        subscription = Subscription(
             member=member,
             product=product,
             period=growing_period,
@@ -396,36 +398,43 @@ class UserGenerator:
 
         chain = []
         while True:
-            main_contract = None
-            if main_contracts_by_period_id is not None:
-                main_contract = main_contracts_by_period_id.get(contract.period_id)
+            main_subscription = None
+            if main_subscriptions_by_period_id is not None:
+                main_subscription = main_subscriptions_by_period_id.get(
+                    subscription.period_id
+                )
                 if (
-                    main_contract is None
-                    or contract.start_date > main_contract.end_date
+                    main_subscription is None
+                    or subscription.start_date > main_subscription.end_date
                 ):
                     break
 
-            chain.append(contract)
-            if contract.start_date > today:
+            chain.append(subscription)
+            if subscription.start_date > today:
                 break
 
-            if main_contract is not None and main_contract.cancellation_ts is not None:
-                contract.cancellation_ts = main_contract.cancellation_ts
-                contract.cancellation_admin_confirmed = (
-                    main_contract.cancellation_admin_confirmed
-                )
-                contract.end_date = min(contract.end_date, main_contract.end_date)
-                break
-
-            is_current_period = contract.period.end_date >= today
-            if random.random() < cls.get_cancellation_probability(
-                contract=contract, today=today
+            if (
+                main_subscription is not None
+                and main_subscription.cancellation_ts is not None
             ):
-                cls.cancel_contract(
-                    contract=contract,
+                subscription.cancellation_ts = main_subscription.cancellation_ts
+                subscription.cancellation_admin_confirmed = (
+                    main_subscription.cancellation_admin_confirmed
+                )
+                subscription.end_date = min(
+                    subscription.end_date, main_subscription.end_date
+                )
+                break
+
+            is_current_period = subscription.period.end_date >= today
+            if random.random() < cls.get_cancellation_probability(
+                subscription=subscription, today=today
+            ):
+                cls.cancel_subscription(
+                    subscription=subscription,
                     cancellation_date=cls.get_random_date_in_range_biased_towards_lower_end(
-                        lower_boundary=contract.start_date,
-                        upper_boundary=min(contract.end_date, today),
+                        lower_boundary=subscription.start_date,
+                        upper_boundary=min(subscription.end_date, today),
                     ),
                     cache=cache,
                 )
@@ -434,53 +443,57 @@ class UserGenerator:
             if is_current_period:
                 break
 
-            contract = AutomaticSubscriptionRenewalService.build_renewed_subscription(
-                subscription=contract, cache=cache
+            subscription = (
+                AutomaticSubscriptionRenewalService.build_renewed_subscription(
+                    subscription=subscription, cache=cache
+                )
             )
 
         return chain
 
     @classmethod
     def get_cancellation_probability(
-        cls, contract: Subscription, today: datetime.date
+        cls, subscription: Subscription, today: datetime.date
     ) -> float:
-        elapsed_days = (min(contract.end_date, today) - contract.start_date).days
-        total_days = max(1, (contract.end_date - contract.start_date).days)
+        elapsed_days = (
+            min(subscription.end_date, today) - subscription.start_date
+        ).days
+        total_days = max(1, (subscription.end_date - subscription.start_date).days)
         return cls.YEARLY_CANCELLATION_PROBABILITY * elapsed_days / total_days
 
     @classmethod
-    def cancel_contract(
-        cls, contract: Subscription, cancellation_date: datetime.date, cache: dict
+    def cancel_subscription(
+        cls, subscription: Subscription, cancellation_date: datetime.date, cache: dict
     ):
-        contract.cancellation_ts = make_timezone_aware(
+        subscription.cancellation_ts = make_timezone_aware(
             datetime.datetime.combine(cancellation_date, datetime.time(hour=12))
         )
-        contract.cancellation_admin_confirmed = cls.get_confirmation_datetime(
+        subscription.cancellation_admin_confirmed = cls.get_confirmation_datetime(
             cancellation_date, cache=cache
         )
         if TrialPeriodManager.is_contract_in_trial(
-            contract=contract, reference_date=cancellation_date, cache=cache
+            contract=subscription, reference_date=cancellation_date, cache=cache
         ):
-            contract.end_date = min(
-                contract.end_date,
+            subscription.end_date = min(
+                subscription.end_date,
                 TrialPeriodManager.get_earliest_trial_cancellation_date(
-                    contract=contract, reference_date=cancellation_date, cache=cache
+                    contract=subscription, reference_date=cancellation_date, cache=cache
                 ),
             )
 
     @classmethod
-    def create_contract_log_entries(
+    def create_subscription_log_entries(
         cls, member: Member, chains: list[list[Subscription]], cache: dict
     ):
         log_entry_dates = []
         for chain in chains:
-            first_contract = chain[0]
+            first_subscription = chain[0]
             log_entry = SubscriptionChangeLogEntry().populate_subscription_changed(
                 actor=member,
                 user=member,
                 change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.ADDED,
-                subscriptions=[first_contract],
-                admin_confirmed=first_contract.admin_confirmed,
+                subscriptions=[first_subscription],
+                admin_confirmed=first_subscription.admin_confirmed,
             )
             log_entry.save()
             log_entry_dates.append(
@@ -488,25 +501,25 @@ class UserGenerator:
                     log_entry,
                     make_timezone_aware(
                         datetime.datetime.combine(
-                            min(first_contract.start_date, get_today(cache=cache)),
+                            min(first_subscription.start_date, get_today(cache=cache)),
                             datetime.time(hour=10),
                         )
                     ),
                 )
             )
 
-            cancelled_contract = chain[-1]
-            if cancelled_contract.cancellation_ts is None:
+            cancelled_subscription = chain[-1]
+            if cancelled_subscription.cancellation_ts is None:
                 continue
             log_entry = SubscriptionChangeLogEntry().populate_subscription_changed(
                 actor=member,
                 user=member,
                 change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.CANCELLED,
-                subscriptions=[cancelled_contract],
-                admin_confirmed=cancelled_contract.cancellation_admin_confirmed,
+                subscriptions=[cancelled_subscription],
+                admin_confirmed=cancelled_subscription.cancellation_admin_confirmed,
             )
             log_entry.save()
-            log_entry_dates.append((log_entry, cancelled_contract.cancellation_ts))
+            log_entry_dates.append((log_entry, cancelled_subscription.cancellation_ts))
 
         for log_entry, created_date in log_entry_dates:
             log_entry.created_date = created_date

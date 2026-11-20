@@ -5,11 +5,11 @@ from django.core.exceptions import ValidationError
 from tapir.subscriptions.services.admin_size_change_next_period_finder import (
     AdminSizeChangeNextPeriodFinder,
 )
-from tapir.subscriptions.services.contract_prerequisites_validator import (
-    ContractPrerequisitesValidator,
+from tapir.subscriptions.services.subscription_prerequisites_validator import (
+    SubscriptionPrerequisitesValidator,
 )
 from tapir.subscriptions.services.order_validator import OrderValidator
-from tapir.subscriptions.types import ContractPrerequisitesInput, TapirOrder
+from tapir.subscriptions.types import SubscriptionPrerequisitesInput, TapirOrder
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import Member, PickupLocation, Product, Subscription
 from tapir.wirgarten.utils import get_today
@@ -24,7 +24,7 @@ class AdminSizeChangeValidator:
         new_product: Product,
         change_date: datetime.date,
         order: TapirOrder,
-        prerequisites: ContractPrerequisitesInput,
+        prerequisites: SubscriptionPrerequisitesInput,
         cache: dict,
     ):
         cls.validate_subscription(
@@ -42,10 +42,10 @@ class AdminSizeChangeValidator:
             cache=cache,
         )
 
-        pickup_location = ContractPrerequisitesValidator.validate_pickup_location(
+        pickup_location = SubscriptionPrerequisitesValidator.validate_pickup_location(
             order=order,
             member=member,
-            contract_start_date=change_date,
+            subscription_start_date=change_date,
             desired_pickup_location_id=prerequisites.desired_pickup_location_id,
             cache=cache,
         )
@@ -65,12 +65,10 @@ class AdminSizeChangeValidator:
             cache=cache,
         )
 
-        ContractPrerequisitesValidator.validate_banking_data(
+        SubscriptionPrerequisitesValidator.validate_banking_data(
             member=member,
             account_owner=prerequisites.account_owner,
             iban=prerequisites.iban,
-            payment_rhythm=prerequisites.payment_rhythm,
-            cache=cache,
         )
         cls.validate_sepa_mandate(
             iban=prerequisites.iban,
@@ -198,7 +196,7 @@ class AdminSizeChangeValidator:
 
         OrderValidator.validate_capacities(
             order=order,
-            contract_start_date=next_growing_period.start_date,
+            subscription_start_date=next_growing_period.start_date,
             member=member,
             pickup_location=pickup_location,
             cache=cache,

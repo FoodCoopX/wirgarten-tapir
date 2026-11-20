@@ -17,6 +17,14 @@ apis/WaitingListApi.ts
 apis/index.ts
 index.ts
 models/AdminSetAssociationMembershipRequestRequest.ts
+models/AdminSizeChangeDateOption.ts
+models/AdminSizeChangeDateOptions.ts
+models/AdminSizeChangeWeekOption.ts
+models/AdminSubscriptionChangeMemberData.ts
+models/AdminSubscriptionChangeMemberSummary.ts
+models/AdminSubscriptionChangePrerequisitesStatus.ts
+models/AdminSubscriptionChangeSubscriptionUnit.ts
+models/AdminSubscriptionChangeSubscriptionUnitStatusEnum.ts
 models/AssignmentLogEntry.ts
 models/AssignmentLogEntryStatusEnum.ts
 models/AssociationMembership.ts
@@ -261,6 +269,7 @@ models/PreferredBreadsBulkUpdateRequest.ts
 models/PreferredLanguageEnum.ts
 models/PreviewRequest.ts
 models/PreviewResponse.ts
+models/PriceCategoryEnum.ts
 models/Product.ts
 models/ProductBasketSizeEquivalence.ts
 models/ProductBasketSizeEquivalenceRequest.ts

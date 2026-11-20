@@ -4,8 +4,8 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.subscriptions.services.contract_prerequisites_validator import (
-    ContractPrerequisitesValidator,
+from tapir.subscriptions.services.subscription_prerequisites_validator import (
+    SubscriptionPrerequisitesValidator,
 )
 from tapir.subscriptions.services.order_validator import OrderValidator
 from tapir.subscriptions.types import TapirOrder
@@ -53,10 +53,10 @@ class SubscriptionUpdateViewValidator:
             order=order, product_type_id=product_type.id, cache=cache
         )
 
-        pickup_location = ContractPrerequisitesValidator.validate_pickup_location(
+        pickup_location = SubscriptionPrerequisitesValidator.validate_pickup_location(
             order=order,
             desired_pickup_location_id=desired_pickup_location_id,
-            contract_start_date=contract_start_date,
+            subscription_start_date=contract_start_date,
             member=member,
             cache=cache,
         )
@@ -95,12 +95,11 @@ class SubscriptionUpdateViewValidator:
             cache=cache,
         )
 
-        ContractPrerequisitesValidator.validate_banking_data(
-            member=member,
-            account_owner=account_owner,
-            iban=iban,
-            payment_rhythm=payment_rhythm,
-            cache=cache,
+        SubscriptionPrerequisitesValidator.validate_banking_data(
+            member=member, account_owner=account_owner, iban=iban
+        )
+        SubscriptionPrerequisitesValidator.validate_payment_rhythm(
+            member=member, payment_rhythm=payment_rhythm, cache=cache
         )
 
     @classmethod

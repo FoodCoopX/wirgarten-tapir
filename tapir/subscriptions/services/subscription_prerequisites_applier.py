@@ -17,12 +17,12 @@ from tapir.wirgarten.models import Member
 from tapir.wirgarten.utils import get_today, get_now
 
 
-class ContractPrerequisitesApplier:
+class SubscriptionPrerequisitesApplier:
     @classmethod
     def apply_pickup_location(
         cls,
         member: Member,
-        contract_start_date: datetime.date,
+        subscription_start_date: datetime.date,
         desired_pickup_location_id: str,
         actor: TapirUser,
         cache: dict,
@@ -32,12 +32,12 @@ class ContractPrerequisitesApplier:
         if (
             desired_pickup_location_id
             != MemberPickupLocationGetter.get_member_pickup_location_id(
-                member=member, reference_date=contract_start_date
+                member=member, reference_date=subscription_start_date
             )
         ):
             MemberPickupLocationSetter.link_member_to_pickup_location(
                 member=member,
-                valid_from=contract_start_date,
+                valid_from=subscription_start_date,
                 pickup_location_id=desired_pickup_location_id,
                 actor=actor,
                 cache=cache,

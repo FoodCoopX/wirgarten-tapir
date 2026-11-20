@@ -5695,6 +5695,71 @@ paths:
               schema:
                 $ref: '#/components/schemas/UpdateMemberSolidarityContributionResponse'
           description: ''
+  /subscriptions/api/admin_size_change_date_options:
+    get:
+      operationId: subscriptions_api_admin_size_change_date_options_retrieve
+      parameters:
+      - in: query
+        name: subscription_id
+        schema:
+          type: string
+      tags:
+      - subscriptions
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminSizeChangeDateOptions'
+          description: ''
+  /subscriptions/api/admin_subscription_change_member_data:
+    get:
+      operationId: subscriptions_api_admin_subscription_change_member_data_retrieve
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - subscriptions
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminSubscriptionChangeMemberData'
+          description: ''
+  /subscriptions/api/admin_subscription_change_member_search:
+    get:
+      operationId: subscriptions_api_admin_subscription_change_member_search_list
+      parameters:
+      - in: query
+        name: search
+        schema:
+          type: string
+      tags:
+      - subscriptions
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AdminSubscriptionChangeMemberSummary'
+          description: ''
   /subscriptions/api/confirm_subscription_changes:
     post:
       operationId: subscriptions_api_confirm_subscription_changes_create
@@ -9042,6 +9107,138 @@ components:
       - member_id
       - membership_type_id
       - start_date
+    AdminSizeChangeDateOption:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+          nullable: true
+        enabled:
+          type: boolean
+      required:
+      - date
+      - enabled
+    AdminSizeChangeDateOptions:
+      type: object
+      properties:
+        next_possible_start:
+          $ref: '#/components/schemas/AdminSizeChangeDateOption'
+        weeks:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminSizeChangeWeekOption'
+        next_period_start:
+          $ref: '#/components/schemas/AdminSizeChangeDateOption'
+      required:
+      - next_period_start
+      - next_possible_start
+      - weeks
+    AdminSizeChangeWeekOption:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        is_before_next_possible_start:
+          type: boolean
+        has_no_delivery:
+          type: boolean
+      required:
+      - date
+      - has_no_delivery
+      - is_before_next_possible_start
+    AdminSubscriptionChangeMemberData:
+      type: object
+      properties:
+        member:
+          $ref: '#/components/schemas/AdminSubscriptionChangeMemberSummary'
+        subscription_units:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminSubscriptionChangeSubscriptionUnit'
+        prerequisites:
+          $ref: '#/components/schemas/AdminSubscriptionChangePrerequisitesStatus'
+        payment_rhythm:
+          type: string
+      required:
+      - member
+      - payment_rhythm
+      - prerequisites
+      - subscription_units
+    AdminSubscriptionChangeMemberSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        display_name:
+          type: string
+        member_number:
+          type: string
+          nullable: true
+      required:
+      - display_name
+      - id
+      - member_number
+    AdminSubscriptionChangePrerequisitesStatus:
+      type: object
+      properties:
+        pickup_location_name:
+          type: string
+          nullable: true
+        has_banking_data:
+          type: boolean
+      required:
+      - has_banking_data
+      - pickup_location_name
+    AdminSubscriptionChangeSubscriptionUnit:
+      type: object
+      properties:
+        subscription_id:
+          type: string
+        unit_number:
+          type: integer
+        product_type_id:
+          type: string
+        product_type_name:
+          type: string
+        product_id:
+          type: string
+        product_name:
+          type: string
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        status:
+          $ref: '#/components/schemas/AdminSubscriptionChangeSubscriptionUnitStatusEnum'
+        price_category:
+          $ref: '#/components/schemas/PriceCategoryEnum'
+      required:
+      - end_date
+      - price_category
+      - product_id
+      - product_name
+      - product_type_id
+      - product_type_name
+      - start_date
+      - status
+      - subscription_id
+      - unit_number
+    AdminSubscriptionChangeSubscriptionUnitStatusEnum:
+      enum:
+      - running
+      - planned
+      - cancelled
+      - ended
+      type: string
+      description: |-
+        * `running` - running
+        * `planned` - planned
+        * `cancelled` - cancelled
+        * `ended` - ended
     AssignmentLogEntry:
       type: object
       properties:
@@ -16473,6 +16670,16 @@ components:
           type: string
       required:
       - html
+    PriceCategoryEnum:
+      enum:
+      - standard
+      - personalised
+      - exempt
+      type: string
+      description: |-
+        * `standard` - standard
+        * `personalised` - personalised
+        * `exempt` - exempt
     Product:
       type: object
       properties:

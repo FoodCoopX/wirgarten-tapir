@@ -7,15 +7,8 @@ class AdminSizeChangeNextPeriodFinder:
     def get_next_period_with_subscriptions(
         cls, member: Member, subscription: Subscription, cache: dict
     ) -> GrowingPeriod | None:
-        next_growing_period = next(
-            (
-                growing_period
-                for growing_period in TapirCache.get_all_growing_periods_ascending(
-                    cache=cache
-                )
-                if growing_period.start_date > subscription.end_date
-            ),
-            None,
+        next_growing_period = TapirCache.get_first_growing_period_starting_after(
+            reference_date=subscription.end_date, cache=cache
         )
         if next_growing_period is None:
             return None

@@ -4,11 +4,11 @@ from unittest.mock import patch, MagicMock
 from tapir.subscriptions.services.admin_size_change_validator import (
     AdminSizeChangeValidator,
 )
-from tapir.subscriptions.services.contract_prerequisites_validator import (
-    ContractPrerequisitesValidator,
+from tapir.subscriptions.services.subscription_prerequisites_validator import (
+    SubscriptionPrerequisitesValidator,
 )
 from tapir.subscriptions.services.order_validator import OrderValidator
-from tapir.subscriptions.types import ContractPrerequisitesInput
+from tapir.subscriptions.types import SubscriptionPrerequisitesInput
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
     PickupLocationFactory,
@@ -19,11 +19,13 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 @patch.object(AdminSizeChangeValidator, "validate_sepa_mandate", autospec=True)
-@patch.object(ContractPrerequisitesValidator, "validate_banking_data", autospec=True)
+@patch.object(
+    SubscriptionPrerequisitesValidator, "validate_banking_data", autospec=True
+)
 @patch.object(AdminSizeChangeValidator, "validate_next_period_capacity", autospec=True)
 @patch.object(OrderValidator, "validate_order_general", autospec=True)
 @patch.object(
-    ContractPrerequisitesValidator,
+    SubscriptionPrerequisitesValidator,
     "validate_pickup_location",
     autospec=True,
     return_value=PickupLocationFactory.build(),
@@ -51,9 +53,8 @@ class TestAdminSizeChangeValidatorValidate(TapirUnitTest):
             new_product=self.new_product,
             change_date=self.change_date,
             order=self.order,
-            prerequisites=ContractPrerequisitesInput(
+            prerequisites=SubscriptionPrerequisitesInput(
                 desired_pickup_location_id="desired_id",
-                payment_rhythm="yearly",
                 iban="NL76RABO8675663943",
                 account_owner="test_account_owner",
                 sepa_mandate_confirmed=True,
@@ -96,7 +97,7 @@ class TestAdminSizeChangeValidatorValidate(TapirUnitTest):
         mock_validate_pickup_location.assert_called_once_with(
             order=self.order,
             member=self.member,
-            contract_start_date=self.change_date,
+            subscription_start_date=self.change_date,
             desired_pickup_location_id="desired_id",
             cache=self.cache,
         )
@@ -119,8 +120,6 @@ class TestAdminSizeChangeValidatorValidate(TapirUnitTest):
             member=self.member,
             account_owner="test_account_owner",
             iban="NL76RABO8675663943",
-            payment_rhythm="yearly",
-            cache=self.cache,
         )
         mock_validate_sepa_mandate.assert_called_once_with(
             iban="NL76RABO8675663943", sepa_mandate_confirmed=True

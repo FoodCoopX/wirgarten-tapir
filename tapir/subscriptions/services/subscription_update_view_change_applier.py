@@ -5,8 +5,8 @@ from tapir.payments.services.member_credit_creator import MemberCreditCreator
 from tapir.subscriptions.services.apply_tapir_order_manager import (
     ApplyTapirOrderManager,
 )
-from tapir.subscriptions.services.contract_prerequisites_applier import (
-    ContractPrerequisitesApplier,
+from tapir.subscriptions.services.subscription_prerequisites_applier import (
+    SubscriptionPrerequisitesApplier,
 )
 from tapir.subscriptions.types import TapirOrder
 from tapir.wirgarten.models import Member, ProductType
@@ -28,15 +28,15 @@ class SubscriptionUpdateViewChangeApplier:
         sepa_allowed: bool,
         cache: dict,
     ):
-        ContractPrerequisitesApplier.apply_pickup_location(
+        SubscriptionPrerequisitesApplier.apply_pickup_location(
             member=member,
-            contract_start_date=contract_start_date,
+            subscription_start_date=contract_start_date,
             desired_pickup_location_id=desired_pickup_location_id,
             actor=actor,
             cache=cache,
         )
 
-        ContractPrerequisitesApplier.change_payment_rhythm_if_necessary(
+        SubscriptionPrerequisitesApplier.change_payment_rhythm_if_necessary(
             payment_rhythm=payment_rhythm, member=member, actor=actor, cache=cache
         )
 
@@ -72,7 +72,7 @@ class SubscriptionUpdateViewChangeApplier:
             cache=cache,
         )
 
-        ContractPrerequisitesApplier.apply_banking_data(
+        SubscriptionPrerequisitesApplier.apply_banking_data(
             member=member,
             iban=iban,
             account_owner=account_owner,

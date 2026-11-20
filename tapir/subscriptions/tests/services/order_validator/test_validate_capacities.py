@@ -48,13 +48,13 @@ class TestOrderValidatorValidateCapacities(TapirUnitTest):
         self.product = ProductFactory.build()
         self.order = {self.product: 2}
         self.pickup_location = PickupLocationFactory.build()
-        self.contract_start_date = datetime.date(year=2027, month=6, day=7)
+        self.subscription_start_date = datetime.date(year=2027, month=6, day=7)
         self.cache = {}
 
     def _validate(self):
         OrderValidator.validate_capacities(
             order=self.order,
-            contract_start_date=self.contract_start_date,
+            subscription_start_date=self.subscription_start_date,
             member=self.member,
             pickup_location=self.pickup_location,
             cache=self.cache,
@@ -76,19 +76,19 @@ class TestOrderValidatorValidateCapacities(TapirUnitTest):
             pickup_location=self.pickup_location,
             order=self.order,
             already_registered_member=self.member,
-            subscription_start=self.contract_start_date,
+            subscription_start=self.subscription_start_date,
             cache=self.cache,
         )
         mock_get_product_type_ids_without_enough_capacity.assert_called_once_with(
             order_with_all_product_types=self.order,
             member_id=self.member.id,
-            subscription_start_date=self.contract_start_date,
+            subscription_start_date=self.subscription_start_date,
             cache=self.cache,
         )
         mock_does_product_have_enough_free_capacity.assert_called_once_with(
             product=self.product,
             member_id=self.member.id,
-            subscription_start_date=self.contract_start_date,
+            subscription_start_date=self.subscription_start_date,
             ordered_quantity=2,
             cache=self.cache,
         )

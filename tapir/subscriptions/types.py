@@ -6,9 +6,8 @@ type TapirOrder = dict[Product, int]
 
 
 @dataclass(frozen=True)
-class ContractPrerequisitesInput:
+class SubscriptionPrerequisitesInput:
     desired_pickup_location_id: str | None
-    payment_rhythm: str | None
     iban: str
     account_owner: str
     sepa_mandate_confirmed: bool

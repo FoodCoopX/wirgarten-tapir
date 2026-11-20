@@ -42,7 +42,7 @@ class OrderValidator:
 
         cls.validate_capacities(
             order=order,
-            contract_start_date=contract_start_date,
+            subscription_start_date=contract_start_date,
             member=member,
             pickup_location=pickup_location,
             cache=cache,
@@ -66,7 +66,7 @@ class OrderValidator:
     def validate_capacities(
         cls,
         order: TapirOrder,
-        contract_start_date: datetime.date,
+        subscription_start_date: datetime.date,
         member: Member | None,
         pickup_location: PickupLocation | None,
         cache: dict,
@@ -77,7 +77,7 @@ class OrderValidator:
             pickup_location=pickup_location,
             order=order,
             already_registered_member=member,
-            subscription_start=contract_start_date,
+            subscription_start=subscription_start_date,
             cache=cache,
         ):
             raise ValidationError(
@@ -88,7 +88,7 @@ class OrderValidator:
         product_type_ids_without_enough_capacity = GlobalCapacityChecker.get_product_type_ids_without_enough_capacity_for_order(
             order_with_all_product_types=order,
             member_id=member_id,
-            subscription_start_date=contract_start_date,
+            subscription_start_date=subscription_start_date,
             cache=cache,
         )
         if len(product_type_ids_without_enough_capacity) > 0:
@@ -100,7 +100,7 @@ class OrderValidator:
             if not ProductCapacityChecker.does_product_have_enough_free_capacity_to_add_order(
                 product=product,
                 member_id=member_id,
-                subscription_start_date=contract_start_date,
+                subscription_start_date=subscription_start_date,
                 ordered_quantity=quantity,
                 cache=cache,
             ):

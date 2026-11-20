@@ -247,3 +247,55 @@ class SubscriptionTrialChangeRequestSerializer(serializers.Serializer):
     subscription_id = serializers.CharField()
     trial_disabled = serializers.BooleanField()
     trial_end_date_override = serializers.DateField(allow_null=True, required=False)
+
+
+class AdminSubscriptionChangeMemberSummarySerializer(serializers.Serializer):
+    id = serializers.CharField()
+    display_name = serializers.CharField()
+    member_number = serializers.CharField(allow_null=True)
+
+
+class AdminSubscriptionChangeSubscriptionUnitSerializer(serializers.Serializer):
+    subscription_id = serializers.CharField()
+    unit_number = serializers.IntegerField()
+    product_type_id = serializers.CharField()
+    product_type_name = serializers.CharField()
+    product_id = serializers.CharField()
+    product_name = serializers.CharField()
+    start_date = serializers.DateField()
+    end_date = serializers.DateField()
+    status = serializers.ChoiceField(
+        choices=["running", "planned", "cancelled", "ended"]
+    )
+    price_category = serializers.ChoiceField(
+        choices=["standard", "personalised", "exempt"]
+    )
+
+
+class AdminSubscriptionChangePrerequisitesStatusSerializer(serializers.Serializer):
+    pickup_location_name = serializers.CharField(allow_null=True)
+    has_banking_data = serializers.BooleanField()
+
+
+class AdminSubscriptionChangeMemberDataSerializer(serializers.Serializer):
+    member = AdminSubscriptionChangeMemberSummarySerializer()
+    subscription_units = AdminSubscriptionChangeSubscriptionUnitSerializer(many=True)
+    prerequisites = AdminSubscriptionChangePrerequisitesStatusSerializer()
+    payment_rhythm = serializers.CharField()
+
+
+class AdminSizeChangeDateOptionSerializer(serializers.Serializer):
+    date = serializers.DateField(allow_null=True)
+    enabled = serializers.BooleanField()
+
+
+class AdminSizeChangeWeekOptionSerializer(serializers.Serializer):
+    date = serializers.DateField()
+    is_before_next_possible_start = serializers.BooleanField()
+    has_no_delivery = serializers.BooleanField()
+
+
+class AdminSizeChangeDateOptionsSerializer(serializers.Serializer):
+    next_possible_start = AdminSizeChangeDateOptionSerializer()
+    weeks = AdminSizeChangeWeekOptionSerializer(many=True)
+    next_period_start = AdminSizeChangeDateOptionSerializer()

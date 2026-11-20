@@ -2,8 +2,8 @@ from unittest.mock import patch, Mock
 
 from django.core.exceptions import ValidationError
 
-from tapir.subscriptions.services.contract_prerequisites_validator import (
-    ContractPrerequisitesValidator,
+from tapir.subscriptions.services.subscription_prerequisites_validator import (
+    SubscriptionPrerequisitesValidator,
 )
 from tapir.subscriptions.services.order_validator import OrderValidator
 from tapir.subscriptions.services.subscription_update_view_validator import (
@@ -61,7 +61,7 @@ class TestSubscriptionUpdateViewValidatorValidateEverything(TapirUnitTest):
     @patch.object(OrderValidator, "validate_cannot_reduce_size", autospec=True)
     @patch.object(OrderValidator, "validate_order_general", autospec=True)
     @patch.object(
-        ContractPrerequisitesValidator, "validate_pickup_location", autospec=True
+        SubscriptionPrerequisitesValidator, "validate_pickup_location", autospec=True
     )
     @patch.object(
         SubscriptionUpdateViewValidator,
@@ -69,10 +69,14 @@ class TestSubscriptionUpdateViewValidatorValidateEverything(TapirUnitTest):
         autospec=True,
     )
     @patch.object(
-        ContractPrerequisitesValidator, "validate_banking_data", autospec=True
+        SubscriptionPrerequisitesValidator, "validate_banking_data", autospec=True
+    )
+    @patch.object(
+        SubscriptionPrerequisitesValidator, "validate_payment_rhythm", autospec=True
     )
     def test_validateEverything_allValid_callsAllValidators(
         self,
+        mock_validate_payment_rhythm: Mock,
         mock_validate_banking_data: Mock,
         mock_validate_all_products_belong_to_product_type: Mock,
         mock_validate_pickup_location: Mock,
@@ -97,7 +101,7 @@ class TestSubscriptionUpdateViewValidatorValidateEverything(TapirUnitTest):
         mock_validate_pickup_location.assert_called_once_with(
             order=self.mock_order,
             desired_pickup_location_id="test_pickup_location_id",
-            contract_start_date=self.mock_contract_start_date,
+            subscription_start_date=self.mock_contract_start_date,
             member=self.mock_member,
             cache=self.mock_cache,
         )
@@ -133,6 +137,9 @@ class TestSubscriptionUpdateViewValidatorValidateEverything(TapirUnitTest):
             member=self.mock_member,
             account_owner="test_account_owner",
             iban="test_iban",
+        )
+        mock_validate_payment_rhythm.assert_called_once_with(
+            member=self.mock_member,
             payment_rhythm="test_payment_rhythm",
             cache=self.mock_cache,
         )

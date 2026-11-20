@@ -22,15 +22,13 @@ from tapir.wirgarten.models import Member, PickupLocation
 from tapir.wirgarten.utils import get_today
 
 
-class ContractPrerequisitesValidator:
+class SubscriptionPrerequisitesValidator:
     @classmethod
     def validate_banking_data(
         cls,
         member: Member,
         account_owner: str,
         iban: str,
-        payment_rhythm: str | None,
-        cache: dict,
     ):
         if MemberNeedsBankingDataChecker.does_member_need_banking_data(member):
             IBANValidator()(iban)
@@ -38,6 +36,10 @@ class ContractPrerequisitesValidator:
             if account_owner == "":
                 raise ValidationError("Das Feld 'Kontoinhaber*in' muss ausgefüllt sein")
 
+    @classmethod
+    def validate_payment_rhythm(
+        cls, member: Member, payment_rhythm: str | None, cache: dict
+    ):
         need_payment_rhythm = (
             TapirCache.get_member_payment_rhythm_object(
                 member=member,
@@ -65,7 +67,7 @@ class ContractPrerequisitesValidator:
         cls,
         order: TapirOrder,
         member: Member,
-        contract_start_date: datetime.date,
+        subscription_start_date: datetime.date,
         desired_pickup_location_id: str | None,
         cache: dict,
     ):
@@ -76,7 +78,7 @@ class ContractPrerequisitesValidator:
 
         current_pickup_location_id = (
             MemberPickupLocationGetter.get_member_pickup_location_id(
-                member=member, reference_date=contract_start_date
+                member=member, reference_date=subscription_start_date
             )
         )
         if (

@@ -31,7 +31,7 @@ class TestOrderValidatorValidateOrderGeneral(TapirUnitTest):
         self.product = ProductFactory.build()
         self.order = {self.product: 1}
         self.pickup_location = PickupLocationFactory.build()
-        self.contract_start_date = datetime.date(year=2027, month=6, day=7)
+        self.subscription_start_date = datetime.date(year=2027, month=6, day=7)
         self.cache = {}
         mock_parameter_value(
             cache=self.cache,
@@ -42,7 +42,7 @@ class TestOrderValidatorValidateOrderGeneral(TapirUnitTest):
     def _validate(self):
         OrderValidator.validate_order_general(
             order=self.order,
-            contract_start_date=self.contract_start_date,
+            contract_start_date=self.subscription_start_date,
             cache=self.cache,
             member=self.member,
             pickup_location=self.pickup_location,
@@ -55,7 +55,7 @@ class TestOrderValidatorValidateOrderGeneral(TapirUnitTest):
 
         mock_validate_capacities.assert_called_once_with(
             order=self.order,
-            contract_start_date=self.contract_start_date,
+            subscription_start_date=self.subscription_start_date,
             member=self.member,
             pickup_location=self.pickup_location,
             cache=self.cache,

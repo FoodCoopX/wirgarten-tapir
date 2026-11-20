@@ -6,8 +6,8 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
-from tapir.subscriptions.services.contract_prerequisites_applier import (
-    ContractPrerequisitesApplier,
+from tapir.subscriptions.services.subscription_prerequisites_applier import (
+    SubscriptionPrerequisitesApplier,
 )
 from tapir.wirgarten.tests.test_utils import mock_timezone
 
@@ -31,7 +31,7 @@ class TestChangePaymentRhythmIfNecessary(TapirUnitTest):
     def test_changePaymentRhythmIfNecessary_paymentRhythmIsNone_doesNothing(
         self, *mocks
     ):
-        ContractPrerequisitesApplier.change_payment_rhythm_if_necessary(
+        SubscriptionPrerequisitesApplier.change_payment_rhythm_if_necessary(
             payment_rhythm=None,
             member=Mock(),
             actor=Mock(),
@@ -55,7 +55,7 @@ class TestChangePaymentRhythmIfNecessary(TapirUnitTest):
         )
         mock_get_member_payment_rhythm.return_value = "monthly"
 
-        ContractPrerequisitesApplier.change_payment_rhythm_if_necessary(
+        SubscriptionPrerequisitesApplier.change_payment_rhythm_if_necessary(
             payment_rhythm="monthly",
             member=member,
             actor=Mock(),
@@ -85,7 +85,7 @@ class TestChangePaymentRhythmIfNecessary(TapirUnitTest):
         mock_get_date_of_next_payment_rhythm_change.return_value = rhythm_valid_from
         mock_get_member_payment_rhythm.return_value = "monthly"
 
-        ContractPrerequisitesApplier.change_payment_rhythm_if_necessary(
+        SubscriptionPrerequisitesApplier.change_payment_rhythm_if_necessary(
             payment_rhythm="yearly",
             member=member,
             actor=actor,

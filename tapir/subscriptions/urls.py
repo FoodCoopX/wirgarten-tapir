@@ -1,6 +1,7 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
 
+from tapir.subscriptions.views import admin_subscription_changes
 from tapir.subscriptions.views import cancellations
 from tapir.subscriptions.views import confirmations
 from tapir.subscriptions.views import member_profile
@@ -72,6 +73,21 @@ urlpatterns = [
         "api/subscription_trial_change",
         other.SubscriptionTrialChangeApiView.as_view(),
         name="subscription_trial_change",
+    ),
+    path(
+        "api/admin_subscription_change_member_search",
+        admin_subscription_changes.AdminSubscriptionChangeMemberSearchApiView.as_view(),
+        name="admin_subscription_change_member_search",
+    ),
+    path(
+        "api/admin_subscription_change_member_data",
+        admin_subscription_changes.AdminSubscriptionChangeMemberDataApiView.as_view(),
+        name="admin_subscription_change_member_data",
+    ),
+    path(
+        "api/admin_size_change_date_options",
+        admin_subscription_changes.AdminSizeChangeDateOptionsApiView.as_view(),
+        name="admin_size_change_date_options",
     ),
 ]
 

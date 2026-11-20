@@ -69,7 +69,7 @@ class TestAdminSizeChangeValidatorValidateNextPeriodCapacity(TapirUnitTest):
         )
         mock_validate_capacities.assert_called_once_with(
             order=self.order,
-            contract_start_date=self.next_growing_period.start_date,
+            subscription_start_date=self.next_growing_period.start_date,
             member=self.member,
             pickup_location=self.pickup_location,
             cache=self.cache,

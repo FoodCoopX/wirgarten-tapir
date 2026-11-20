@@ -12,10 +12,10 @@ from tapir.subscriptions.services.apply_tapir_order_manager import (
 from tapir.subscriptions.services.automatic_subscription_renewal_service import (
     AutomaticSubscriptionRenewalService,
 )
-from tapir.subscriptions.services.contract_prerequisites_applier import (
-    ContractPrerequisitesApplier,
+from tapir.subscriptions.services.subscription_prerequisites_applier import (
+    SubscriptionPrerequisitesApplier,
 )
-from tapir.subscriptions.types import ContractPrerequisitesInput, TapirOrder
+from tapir.subscriptions.types import SubscriptionPrerequisitesInput, TapirOrder
 from tapir.utils.services.tapir_cache_manager import TapirCacheManager
 from tapir.wirgarten.forms.subscription import cancel_or_delete_subscriptions
 from tapir.wirgarten.models import (
@@ -36,25 +36,18 @@ class AdminSizeChangeApplier:
         previous_subscription: Subscription,
         change_date: datetime.date,
         order: TapirOrder,
-        prerequisites: ContractPrerequisitesInput,
+        prerequisites: SubscriptionPrerequisitesInput,
         actor: TapirUser,
         cache: dict,
     ) -> list[Subscription]:
         if prerequisites.desired_pickup_location_id is not None:
-            ContractPrerequisitesApplier.apply_pickup_location(
+            SubscriptionPrerequisitesApplier.apply_pickup_location(
                 member=member,
-                contract_start_date=change_date,
+                subscription_start_date=change_date,
                 desired_pickup_location_id=prerequisites.desired_pickup_location_id,
                 actor=actor,
                 cache=cache,
             )
-
-        ContractPrerequisitesApplier.change_payment_rhythm_if_necessary(
-            payment_rhythm=prerequisites.payment_rhythm,
-            member=member,
-            actor=actor,
-            cache=cache,
-        )
 
         if change_date > previous_subscription.end_date:
             new_subscriptions = cls.apply_change_from_next_period(
@@ -66,7 +59,7 @@ class AdminSizeChangeApplier:
                 cache=cache,
             )
         else:
-            new_subscriptions = cls.apply_change_during_contract(
+            new_subscriptions = cls.apply_change_during_subscription(
                 member=member,
                 previous_subscription=previous_subscription,
                 change_date=change_date,
@@ -88,7 +81,7 @@ class AdminSizeChangeApplier:
             cache=cache,
         )
 
-        ContractPrerequisitesApplier.apply_banking_data(
+        SubscriptionPrerequisitesApplier.apply_banking_data(
             member=member,
             iban=prerequisites.iban,
             account_owner=prerequisites.account_owner,
@@ -99,7 +92,7 @@ class AdminSizeChangeApplier:
         return new_subscriptions
 
     @classmethod
-    def apply_change_during_contract(
+    def apply_change_during_subscription(
         cls,
         member: Member,
         previous_subscription: Subscription,

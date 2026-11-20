@@ -9,8 +9,8 @@ from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
 from tapir.subscriptions.services.order_validator import OrderValidator
-from tapir.subscriptions.services.contract_prerequisites_validator import (
-    ContractPrerequisitesValidator,
+from tapir.subscriptions.services.subscription_prerequisites_validator import (
+    SubscriptionPrerequisitesValidator,
 )
 from tapir.wirgarten.models import PickupLocation
 from tapir.wirgarten.tests.test_utils import TapirUnitTest
@@ -21,23 +21,23 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
     MemberPickupLocationGetter, "get_member_pickup_location_id", autospec=True
 )
 @patch.object(OrderValidator, "does_order_need_a_pickup_location", autospec=True)
-class TestContractPrerequisitesValidatorValidatePickupLocation(TapirUnitTest):
+class TestSubscriptionPrerequisitesValidatorValidatePickupLocation(TapirUnitTest):
     def build_default_params(self):
         self.order = Mock()
         self.member = Mock()
-        self.contract_start_date = Mock()
+        self.subscription_start_date = Mock()
         self.cache = Mock()
         return {
             "order": self.order,
             "member": self.member,
-            "contract_start_date": self.contract_start_date,
+            "subscription_start_date": self.subscription_start_date,
             "desired_pickup_location_id": "desired_id",
             "cache": self.cache,
         }
 
     def assert_raises_validation_error(self, error_message: str, **params):
         with self.assertRaisesMessage(ValidationError, error_message):
-            ContractPrerequisitesValidator.validate_pickup_location(**params)
+            SubscriptionPrerequisitesValidator.validate_pickup_location(**params)
 
     def test_validatePickupLocation_orderDoesNotNeedPickupLocation_returnsNone(
         self,
@@ -48,7 +48,7 @@ class TestContractPrerequisitesValidatorValidatePickupLocation(TapirUnitTest):
         mock_does_order_need_a_pickup_location.return_value = False
         params = self.build_default_params()
 
-        result = ContractPrerequisitesValidator.validate_pickup_location(**params)
+        result = SubscriptionPrerequisitesValidator.validate_pickup_location(**params)
 
         self.assertIsNone(result)
         mock_does_order_need_a_pickup_location.assert_called_once_with(
@@ -76,7 +76,7 @@ class TestContractPrerequisitesValidatorValidatePickupLocation(TapirUnitTest):
             order=self.order, cache=self.cache
         )
         mock_get_member_pickup_location_id.assert_called_once_with(
-            member=self.member, reference_date=self.contract_start_date
+            member=self.member, reference_date=self.subscription_start_date
         )
         mock_pickup_location_objects.get.assert_not_called()
 
@@ -93,7 +93,7 @@ class TestContractPrerequisitesValidatorValidatePickupLocation(TapirUnitTest):
         params = self.build_default_params()
         params["desired_pickup_location_id"] = "same_id"
 
-        result = ContractPrerequisitesValidator.validate_pickup_location(**params)
+        result = SubscriptionPrerequisitesValidator.validate_pickup_location(**params)
 
         self.assertEqual(mock_pickup_location, result)
 
@@ -101,7 +101,7 @@ class TestContractPrerequisitesValidatorValidatePickupLocation(TapirUnitTest):
             order=self.order, cache=self.cache
         )
         mock_get_member_pickup_location_id.assert_called_once_with(
-            member=self.member, reference_date=self.contract_start_date
+            member=self.member, reference_date=self.subscription_start_date
         )
         mock_pickup_location_objects.get.assert_called_once_with(id="same_id")
 
@@ -118,7 +118,7 @@ class TestContractPrerequisitesValidatorValidatePickupLocation(TapirUnitTest):
         params = self.build_default_params()
         params["desired_pickup_location_id"] = None
 
-        result = ContractPrerequisitesValidator.validate_pickup_location(**params)
+        result = SubscriptionPrerequisitesValidator.validate_pickup_location(**params)
 
         self.assertEqual(mock_pickup_location, result)
 
@@ -126,7 +126,7 @@ class TestContractPrerequisitesValidatorValidatePickupLocation(TapirUnitTest):
             order=self.order, cache=self.cache
         )
         mock_get_member_pickup_location_id.assert_called_once_with(
-            member=self.member, reference_date=self.contract_start_date
+            member=self.member, reference_date=self.subscription_start_date
         )
         mock_pickup_location_objects.get.assert_called_once_with(id="current_id")
 
@@ -142,7 +142,7 @@ class TestContractPrerequisitesValidatorValidatePickupLocation(TapirUnitTest):
         mock_pickup_location_objects.get.return_value = mock_pickup_location
         params = self.build_default_params()
 
-        result = ContractPrerequisitesValidator.validate_pickup_location(**params)
+        result = SubscriptionPrerequisitesValidator.validate_pickup_location(**params)
 
         self.assertEqual(mock_pickup_location, result)
 
@@ -150,7 +150,7 @@ class TestContractPrerequisitesValidatorValidatePickupLocation(TapirUnitTest):
             order=self.order, cache=self.cache
         )
         mock_get_member_pickup_location_id.assert_called_once_with(
-            member=self.member, reference_date=self.contract_start_date
+            member=self.member, reference_date=self.subscription_start_date
         )
         mock_pickup_location_objects.get.assert_called_once_with(id="desired_id")
 
@@ -171,7 +171,7 @@ class TestContractPrerequisitesValidatorValidatePickupLocation(TapirUnitTest):
             order=self.order, cache=self.cache
         )
         mock_get_member_pickup_location_id.assert_called_once_with(
-            member=self.member, reference_date=self.contract_start_date
+            member=self.member, reference_date=self.subscription_start_date
         )
         mock_pickup_location_objects.get.assert_not_called()
 
@@ -209,6 +209,6 @@ class TestContractPrerequisitesValidatorValidatePickupLocation(TapirUnitTest):
         params = self.build_default_params()
         params["desired_pickup_location_id"] = None
 
-        ContractPrerequisitesValidator.validate_pickup_location(**params)
+        SubscriptionPrerequisitesValidator.validate_pickup_location(**params)
 
         mock_validate.assert_not_called()

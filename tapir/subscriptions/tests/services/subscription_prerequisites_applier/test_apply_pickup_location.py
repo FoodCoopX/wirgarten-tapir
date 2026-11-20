@@ -10,8 +10,8 @@ from tapir.pickup_locations.services.member_pickup_location_getter import (
 from tapir.pickup_locations.services.member_pickup_location_setter import (
     MemberPickupLocationSetter,
 )
-from tapir.subscriptions.services.contract_prerequisites_applier import (
-    ContractPrerequisitesApplier,
+from tapir.subscriptions.services.subscription_prerequisites_applier import (
+    SubscriptionPrerequisitesApplier,
 )
 from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirUnitTest
@@ -27,7 +27,7 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
     MemberPickupLocationSetter, "link_member_to_pickup_location", autospec=True
 )
 @patch.object(MemberDeliveryAddressSetter, "save_delivery_address", autospec=True)
-class TestContractPrerequisitesApplierApplyPickupLocation(TapirUnitTest):
+class TestSubscriptionPrerequisitesApplierApplyPickupLocation(TapirUnitTest):
     def test_applyPickupLocation_desiredLocationDiffersFromCurrent_linksMemberToDesiredLocation(
         self,
         mock_save_delivery_address: MagicMock,
@@ -36,12 +36,12 @@ class TestContractPrerequisitesApplierApplyPickupLocation(TapirUnitTest):
     ):
         member = MemberFactory.build()
         actor = Mock()
-        contract_start_date = datetime.date(year=2027, month=3, day=1)
+        subscription_start_date = datetime.date(year=2027, month=3, day=1)
         cache = {}
 
-        ContractPrerequisitesApplier.apply_pickup_location(
+        SubscriptionPrerequisitesApplier.apply_pickup_location(
             member=member,
-            contract_start_date=contract_start_date,
+            subscription_start_date=subscription_start_date,
             desired_pickup_location_id="desired_id",
             actor=actor,
             cache=cache,
@@ -49,11 +49,11 @@ class TestContractPrerequisitesApplierApplyPickupLocation(TapirUnitTest):
 
         mock_save_delivery_address.assert_called_once_with(member=member, actor=actor)
         mock_get_member_pickup_location_id.assert_called_once_with(
-            member=member, reference_date=contract_start_date
+            member=member, reference_date=subscription_start_date
         )
         mock_link_member_to_pickup_location.assert_called_once_with(
             member=member,
-            valid_from=contract_start_date,
+            valid_from=subscription_start_date,
             pickup_location_id="desired_id",
             actor=actor,
             cache=cache,
@@ -68,9 +68,9 @@ class TestContractPrerequisitesApplierApplyPickupLocation(TapirUnitTest):
         member = MemberFactory.build()
         actor = Mock()
 
-        ContractPrerequisitesApplier.apply_pickup_location(
+        SubscriptionPrerequisitesApplier.apply_pickup_location(
             member=member,
-            contract_start_date=datetime.date(year=2027, month=3, day=1),
+            subscription_start_date=datetime.date(year=2027, month=3, day=1),
             desired_pickup_location_id="current_id",
             actor=actor,
             cache={},
