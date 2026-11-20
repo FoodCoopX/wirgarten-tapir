@@ -188,7 +188,7 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
                     text={
                       "Der Bestätigungslink in der Mail ist " +
                       formatDuration(confirmationLinkValidityMinutes) +
-                      " gültig. Ist er abgelaufen, die Adresse löschen und neu anlegen."
+                      " gültig. Ist er abgelaufen, ist diese zusätzliche Mailadresse zu löschen und neu anzulegen."
                     }
                   />
                 </div>
