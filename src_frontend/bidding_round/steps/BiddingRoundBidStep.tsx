@@ -8,7 +8,6 @@ import {
   RoundTexts,
 } from "../../api-client";
 import NextStepButton from "../../components/mobile_wizard/NextStepButton.tsx";
-import ProductCard from "../../components/mobile_wizard/ProductCard.tsx";
 import { BUTTON_VARIANT } from "../../components/mobile_wizard/utils/BUTTON_VARIANT.ts";
 import TapirButton from "../../components/TapirButton.tsx";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
@@ -20,7 +19,10 @@ import {
   parseEuroAmount,
   sanitizeEuroAmountInput,
 } from "../utils/amounts.ts";
-import { getLevelLabels } from "../utils/getLevelLabels.ts";
+import {
+  getAmountLevelLabels,
+  getBidRangeLabels,
+} from "../utils/getLevelLabels.ts";
 
 interface BiddingRoundBidStepProps {
   biddableProduct: BiddableProduct;
@@ -152,11 +154,9 @@ const BiddingRoundBidStep: React.FC<BiddingRoundBidStepProps> = ({
     );
   }
 
-  const levelLabels = getLevelLabels(
-    texts,
-    isBidRange,
-    requiredAmountLevels,
-  );
+  const levelLabels = isBidRange
+    ? getBidRangeLabels(texts)
+    : getAmountLevelLabels(texts, requiredAmountLevels);
 
   return (
     <>

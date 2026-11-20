@@ -1,17 +1,19 @@
 import { RoundTexts } from "../../api-client";
 
-export function getLevelLabels(
+export function getBidRangeLabels(texts: RoundTexts): string[] {
+  return [texts.bid.greenLabel, texts.bid.redLabel];
+}
+
+export function getAmountLevelLabels(
   texts: RoundTexts,
-  isBidRange: boolean,
   requiredAmountLevels: number,
 ): string[] {
-  return isBidRange
-    ? [texts.bid.greenLabel, texts.bid.redLabel]
-    : requiredAmountLevels === 1
-      ? [texts.bid.amountLabel]
-      : [
-          texts.bid.level1Label,
-          texts.bid.level2Label,
-          texts.bid.level3Label,
-        ].slice(0, requiredAmountLevels);
+  if (requiredAmountLevels === 1) {
+    return [texts.bid.amountLabel];
+  }
+  return [
+    texts.bid.level1Label,
+    texts.bid.level2Label,
+    texts.bid.level3Label,
+  ].slice(0, requiredAmountLevels);
 }
