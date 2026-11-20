@@ -10,6 +10,9 @@ from tapir.bidding_round.models import (
     BiddingRound,
     BiddingRoundCreatedSubscription,
 )
+from tapir.bidding_round.services.bidding_round_stats_service import (
+    BiddingRoundStatsService,
+)
 from tapir.payments.services.mandate_reference_provider import (
     MandateReferenceProvider,
 )
@@ -28,7 +31,9 @@ logger = logging.getLogger(__name__)
 
 class ContractCreator:
     @classmethod
-    def create_contracts_from_bids(cls, bidding_round, cache, bid_ids=None, actor=None):
+    def create_contracts_from_bids(
+        cls, bidding_round, cache, bid_ids=None, actor=None, bid_level=None
+    ):
         if bidding_round.status != BIDDING_ROUND_STATUS_CLOSED:
             raise ValidationError(
                 _("Verträge können erst nach Ende der Beitragsrunde erstellt werden.")
@@ -53,6 +58,16 @@ class ContractCreator:
             selected_ids = {str(bid_id) for bid_id in bid_ids}
             bids = [bid for bid in bids if str(bid.id) in selected_ids]
 
+        if bid_level is not None and bid_level not in range(
+            1, (bidding_round.bid_levels or 1) + 1
+        ):
+            raise ValidationError(_("Unbekannte Gebotsstufe."))
+        position = (
+            BiddingRoundStatsService.get_level_position(bid_level, bidding_round)
+            if bid_level is not None
+            else BiddingRoundStatsService.get_default_position(bidding_round)
+        )
+
         errors = []
         created_subscriptions = []
         for bid in bids:
@@ -60,7 +75,11 @@ class ContractCreator:
                 with transaction.atomic():
                     created_subscriptions.extend(
                         cls._create_contracts_for_bid(
-                            bid, bidding_round, actor=actor, cache=cache
+                            bid,
+                            bidding_round,
+                            actor=actor,
+                            cache=cache,
+                            position=position,
                         )
                     )
             except ValidationError as error:
@@ -86,7 +105,7 @@ class ContractCreator:
         return {"errors": errors, "subscriptions": created_subscriptions}
 
     @classmethod
-    def _create_contracts_for_bid(cls, bid, bidding_round, actor, cache):
+    def _create_contracts_for_bid(cls, bid, bidding_round, actor, cache, position):
         period = bidding_round.growing_period
 
         new_subscriptions = []
@@ -115,7 +134,7 @@ class ContractCreator:
             new_subscriptions.append(subscription)
 
         cls._assign_solidarity_contribution(
-            bid, new_subscriptions, period, actor, cache
+            bid, new_subscriptions, period, actor, cache, position, bidding_round
         )
         return new_subscriptions
 
@@ -167,7 +186,7 @@ class ContractCreator:
 
     @classmethod
     def _assign_solidarity_contribution(
-        cls, bid, new_subscriptions, period, actor, cache
+        cls, bid, new_subscriptions, period, actor, cache, position, bidding_round
     ):
         contract_monthly_total = sum(
             (
@@ -180,7 +199,10 @@ class ContractCreator:
         )
         bid_monthly_total = sum(
             (
-                (item.amount_1 or Decimal("0")) * item.quantity
+                BiddingRoundStatsService.get_effective_amount(
+                    item, position, bidding_round
+                )
+                * item.quantity
                 for item in bid.items.all()
             ),
             Decimal("0"),

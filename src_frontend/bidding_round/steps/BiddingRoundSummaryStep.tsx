@@ -4,12 +4,18 @@ import { Card } from "react-bootstrap";
 import { RoundTexts } from "../../api-client";
 import TapirButton from "../../components/TapirButton.tsx";
 import AmountRow from "../../components/mobile_wizard/AmountRow.tsx";
-import { getMonthlyTotal, getYearlyAmount } from "../utils/amounts.ts";
+import {
+  getMonthlyTotal,
+  getYearlyAmount,
+  parseEuroAmount,
+} from "../utils/amounts.ts";
 
 interface BiddingRoundSummaryStepProps {
   variantName: string;
   quantity: number;
-  amount: number;
+  amounts: string[];
+  requiredAmountLevels: number;
+  isBidRange: boolean;
   texts: RoundTexts;
   submitting: boolean;
   onSubmit: () => void;
@@ -18,13 +24,26 @@ interface BiddingRoundSummaryStepProps {
 const BiddingRoundSummaryStep: React.FC<BiddingRoundSummaryStepProps> = ({
   variantName,
   quantity,
-  amount,
+  amounts,
+  requiredAmountLevels,
+  isBidRange,
   texts,
   submitting,
   onSubmit,
 }) => {
-  const monthlyTotal = getMonthlyTotal(amount, quantity);
-  const yearlyTotal = getYearlyAmount(amount, quantity);
+  const levelLabels = isBidRange
+    ? [texts.bid.greenLabel, texts.bid.redLabel]
+    : [texts.bid.amountLabel];
+
+  const levelRows = Array.from({ length: requiredAmountLevels }, (_, index) => {
+    const amount = parseEuroAmount(amounts[index]);
+    return {
+      label: levelLabels[index] ?? "",
+      amount,
+      monthlyTotal: amount === null ? null : getMonthlyTotal(amount, quantity),
+      yearlyTotal: amount === null ? null : getYearlyAmount(amount, quantity),
+    };
+  });
 
   return (
     <>
@@ -41,26 +60,30 @@ const BiddingRoundSummaryStep: React.FC<BiddingRoundSummaryStepProps> = ({
             <span className={"text-muted"}>Anteile</span>
             <strong>{quantity}</strong>
           </div>
-          <AmountRow
-            label={"Betrag je Anteil"}
-            amount={amount}
-            unit={texts.bid.monthlyUnit}
-            strong
-          />
-          {quantity > 1 && (
-            <AmountRow
-              label={"Beitrag gesamt"}
-              amount={monthlyTotal}
-              unit={texts.bid.monthlyUnit}
-              strong
-            />
-          )}
-          <AmountRow
-            label={"Beitrag pro Jahr"}
-            amount={yearlyTotal}
-            unit={texts.bid.yearlyUnit}
-            strong
-          />
+          {levelRows.map((row) => (
+            <div key={row.label} className={"border-top pt-2"}>
+              <AmountRow
+                label={row.label}
+                amount={row.amount}
+                unit={texts.bid.monthlyUnit}
+                strong
+              />
+              {row.monthlyTotal !== null && quantity > 1 && (
+                <AmountRow
+                  label={"Beitrag gesamt"}
+                  amount={row.monthlyTotal}
+                  unit={texts.bid.monthlyUnit}
+                  strong
+                />
+              )}
+              <AmountRow
+                label={"Beitrag pro Jahr"}
+                amount={row.yearlyTotal}
+                unit={texts.bid.yearlyUnit}
+                strong
+              />
+            </div>
+          ))}
         </Card.Body>
       </Card>
 

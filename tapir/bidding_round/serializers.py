@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from tapir.bidding_round.config import OPTIONS_BIDDING_ROUND_PROCEDURE
+
 
 class RoundProductPriceInputSerializer(serializers.Serializer):
     product_id = serializers.CharField()
@@ -23,6 +25,10 @@ class RoundCreateSerializer(serializers.Serializer):
         required=False, allow_null=True, allow_blank=True
     )
     prices = RoundProductPriceInputSerializer(many=True, required=False)
+    bidding_procedure = serializers.ChoiceField(
+        choices=OPTIONS_BIDDING_ROUND_PROCEDURE, required=False
+    )
+    bid_levels = serializers.IntegerField(required=False, min_value=1, max_value=3)
 
 
 class RoundConfigSerializer(serializers.Serializer):
@@ -35,6 +41,10 @@ class RoundConfigSerializer(serializers.Serializer):
         required=False, allow_null=True, allow_blank=True
     )
     prices = RoundProductPriceInputSerializer(many=True, required=False)
+    bidding_procedure = serializers.ChoiceField(
+        choices=OPTIONS_BIDDING_ROUND_PROCEDURE, required=False
+    )
+    bid_levels = serializers.IntegerField(required=False, min_value=1, max_value=3)
 
 
 class BidSubmitItemSerializer(serializers.Serializer):
@@ -54,6 +64,7 @@ class BidSubmitSerializer(serializers.Serializer):
 
 class CreateContractsSerializer(serializers.Serializer):
     bid_ids = serializers.ListField(child=serializers.CharField(), required=False)
+    bid_level = serializers.IntegerField(required=False, min_value=1, max_value=3)
 
 
 class RoundProductPriceSerializer(serializers.Serializer):
@@ -76,6 +87,8 @@ class RoundSerializer(serializers.Serializer):
     name = serializers.CharField()
     display_name = serializers.CharField()
     status = serializers.CharField()
+    bidding_procedure = serializers.CharField()
+    bid_levels = serializers.IntegerField()
     start_at = serializers.DateTimeField(allow_null=True)
     end_at = serializers.DateTimeField()
     contracts_created_at = serializers.DateTimeField(allow_null=True)
@@ -92,6 +105,8 @@ class BidItemSerializer(serializers.Serializer):
     product_name = serializers.CharField()
     quantity = serializers.IntegerField()
     amount_1 = serializers.CharField(allow_null=True)
+    amount_2 = serializers.CharField(allow_null=True)
+    amount_3 = serializers.CharField(allow_null=True)
     amount_per_year = serializers.CharField()
 
 
@@ -124,6 +139,10 @@ class BidTextsSerializer(serializers.Serializer):
     amount_label = serializers.CharField()
     reference_value_hint = serializers.CharField()
     simple_explanation = serializers.CharField()
+    bid_range_explanation = serializers.CharField()
+    green_label = serializers.CharField()
+    yellow_label = serializers.CharField()
+    red_label = serializers.CharField()
     live_yearly_label = serializers.CharField()
     monthly_hint = serializers.CharField()
     monthly_unit = serializers.CharField()
@@ -185,7 +204,26 @@ class RoundStatsBidSerializer(serializers.Serializer):
     items = BidItemSerializer(many=True)
 
 
+class EvaluationLevelSerializer(serializers.Serializer):
+    reached_per_year = serializers.CharField()
+    coverage_percent = serializers.FloatField()
+    coverage_status = serializers.CharField()
+    bidder_average_per_month = serializers.CharField()
+
+
+class EvaluationLevelsSerializer(serializers.Serializer):
+    green = EvaluationLevelSerializer()
+    yellow = EvaluationLevelSerializer(required=False)
+    red = EvaluationLevelSerializer()
+
+
 class RoundResultsResponseSerializer(serializers.Serializer):
+    bidding_procedure = serializers.CharField()
+    bid_levels = serializers.IntegerField()
+    bid_range_position = serializers.FloatField()
+    recommended_level = serializers.IntegerField()
+    coverage_status = serializers.CharField()
+    levels = EvaluationLevelsSerializer()
     target_per_year = serializers.CharField()
     reached_per_year = serializers.CharField()
     coverage_percent = serializers.FloatField()

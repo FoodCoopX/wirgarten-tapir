@@ -1,6 +1,7 @@
 import pytest
 from django.db import IntegrityError, transaction
 
+from tapir.bidding_round.config import BIDDING_ROUND_PROCEDURE_BID_RANGE
 from tapir.bidding_round.models import BiddingRoundCreatedSubscription
 from tapir.bidding_round.tests.factories import (
     BidFactory,
@@ -54,4 +55,12 @@ class TestBiddingRoundModelConstraints(TapirIntegrationTest):
             with pytest.raises(IntegrityError):
                 BiddingRoundCreatedSubscription.objects.create(
                     round=bidding_round, subscription=subscription
+                )
+
+    def test_round_bidRangeRequiresTwoLevels(self):
+        with transaction.atomic():
+            with pytest.raises(IntegrityError):
+                BiddingRoundFactory.create(
+                    bidding_procedure=BIDDING_ROUND_PROCEDURE_BID_RANGE,
+                    bid_levels=3,
                 )

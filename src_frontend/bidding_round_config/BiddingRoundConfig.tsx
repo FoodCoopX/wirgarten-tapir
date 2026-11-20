@@ -13,6 +13,7 @@ import {
 } from "react-bootstrap";
 
 import { BiddingRoundsApi } from "../api-client/apis/BiddingRoundsApi.ts";
+import { BiddingProcedureEnum } from "../api-client/models/BiddingProcedureEnum.ts";
 import { GrowingPeriodOption } from "../api-client/models/GrowingPeriodOption.ts";
 import { PatchedRoundConfigRequest } from "../api-client/models/PatchedRoundConfigRequest.ts";
 import { ProductTypeOption } from "../api-client/models/ProductTypeOption.ts";
@@ -41,6 +42,8 @@ interface FormState {
   comment: string;
   productTypeId: string;
   targetAmountPerYear: string;
+  biddingProcedure: string;
+  bidLevels: string;
   prices: Record<string, PriceDraft>;
 }
 
@@ -52,6 +55,8 @@ const EMPTY_FORM: FormState = {
   comment: "",
   productTypeId: "",
   targetAmountPerYear: "",
+  biddingProcedure: "simple",
+  bidLevels: "1",
   prices: {},
 };
 
@@ -123,6 +128,9 @@ const BiddingRoundConfig: React.FC<BiddingRoundConfigProps> = ({
   function updateForm(field: keyof FormState, value: string) {
     setForm((current) => {
       const next = { ...current, [field]: value };
+      if (field === "biddingProcedure" && value === "bid_range") {
+        next.bidLevels = "2";
+      }
       if (field === "productTypeId") {
         const productType = productTypes.find((type) => type.id === value);
         const prices: Record<string, PriceDraft> = {};
@@ -193,6 +201,8 @@ const BiddingRoundConfig: React.FC<BiddingRoundConfigProps> = ({
       comment: round.comment,
       productTypeId: round.product?.productTypeId ?? "",
       targetAmountPerYear: round.product?.targetAmountPerYear ?? "",
+      biddingProcedure: round.biddingProcedure,
+      bidLevels: String(round.bidLevels),
       prices,
     });
     void loadProductTypes(round.growingPeriodId ?? "");
@@ -234,6 +244,15 @@ const BiddingRoundConfig: React.FC<BiddingRoundConfigProps> = ({
     if (JSON.stringify(currentPrices) !== JSON.stringify(prices)) {
       patch.prices = prices;
     }
+    if (form.biddingProcedure !== current.biddingProcedure) {
+      patch.biddingProcedure = (form.biddingProcedure ||
+        "simple") as BiddingProcedureEnum;
+    }
+    const formBidLevels =
+      form.biddingProcedure === "bid_range" ? 2 : Number(form.bidLevels) || 1;
+    if (formBidLevels !== current.bidLevels) {
+      patch.bidLevels = formBidLevels;
+    }
     return patch;
   }
 
@@ -261,6 +280,12 @@ const BiddingRoundConfig: React.FC<BiddingRoundConfigProps> = ({
             comment: form.comment,
             productTypeId: form.productTypeId || null,
             targetAmountPerYear: form.targetAmountPerYear || null,
+            biddingProcedure: (form.biddingProcedure ||
+              "simple") as BiddingProcedureEnum,
+            bidLevels:
+              form.biddingProcedure === "bid_range"
+                ? 2
+                : Number(form.bidLevels) || 1,
             prices,
           },
         });
@@ -432,6 +457,36 @@ const BiddingRoundConfig: React.FC<BiddingRoundConfigProps> = ({
                       {type.name}
                     </option>
                   ))}
+                </Form.Select>
+              </Form.Group>
+            </Col>
+            <Col md={3}>
+              <Form.Group>
+                <Form.Label>Verfahren</Form.Label>
+                <Form.Select
+                  value={form.biddingProcedure}
+                  onChange={(event) =>
+                    updateForm("biddingProcedure", event.target.value)
+                  }
+                >
+                  <option value="simple">Einfaches Verfahren</option>
+                  <option value="bid_range">Gebotsspanne</option>
+                </Form.Select>
+              </Form.Group>
+            </Col>
+            <Col md={3}>
+              <Form.Group>
+                <Form.Label>Gebotsstufen</Form.Label>
+                <Form.Select
+                  value={form.bidLevels}
+                  disabled={form.biddingProcedure === "bid_range"}
+                  onChange={(event) =>
+                    updateForm("bidLevels", event.target.value)
+                  }
+                >
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
                 </Form.Select>
               </Form.Group>
             </Col>

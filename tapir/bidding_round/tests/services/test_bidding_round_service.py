@@ -5,6 +5,7 @@ import pytest
 from django.core.exceptions import ValidationError
 
 from tapir.bidding_round.config import (
+    BIDDING_ROUND_PROCEDURE_BID_RANGE,
     BIDDING_ROUND_STATUS_ACTIVE,
     BIDDING_ROUND_STATUS_CLOSED,
     BIDDING_ROUND_STATUS_CONFIGURATION,
@@ -75,6 +76,38 @@ class TestBiddingRoundService(TapirIntegrationTest):
                 growing_period=GrowingPeriodFactory.create(),
                 name="Beitragsrunde Test",
                 end_at=None,
+                cache={},
+            )
+
+    def test_createRound_bidRangeWithThreeLevels_raisesValidationError(self):
+        growing_period = GrowingPeriodFactory.create()
+        product_type = ProductTypeFactory.create()
+        end_at = self._end_at(growing_period)
+
+        with pytest.raises(ValidationError):
+            BiddingRoundService.create_round(
+                growing_period=growing_period,
+                name="Beitragsrunde Test",
+                end_at=end_at,
+                product_type_id=product_type.id,
+                bidding_procedure=BIDDING_ROUND_PROCEDURE_BID_RANGE,
+                bid_levels=3,
+                cache={},
+            )
+
+    def test_createRound_unknownProcedure_raisesValidationError(self):
+        growing_period = GrowingPeriodFactory.create()
+        product_type = ProductTypeFactory.create()
+        end_at = self._end_at(growing_period)
+
+        with pytest.raises(ValidationError):
+            BiddingRoundService.create_round(
+                growing_period=growing_period,
+                name="Beitragsrunde Test",
+                end_at=end_at,
+                product_type_id=product_type.id,
+                bidding_procedure="unknown",
+                bid_levels=1,
                 cache={},
             )
 

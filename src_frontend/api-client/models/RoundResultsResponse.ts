@@ -12,6 +12,11 @@
  * Do not edit the class manually.
  */
 
+import type { EvaluationLevels } from "./EvaluationLevels";
+import {
+  EvaluationLevelsFromJSON,
+  EvaluationLevelsToJSON,
+} from "./EvaluationLevels";
 import type { RoundStatsBid } from "./RoundStatsBid";
 import { RoundStatsBidFromJSON, RoundStatsBidToJSON } from "./RoundStatsBid";
 
@@ -21,6 +26,42 @@ import { RoundStatsBidFromJSON, RoundStatsBidToJSON } from "./RoundStatsBid";
  * @interface RoundResultsResponse
  */
 export interface RoundResultsResponse {
+  /**
+   *
+   * @type {string}
+   * @memberof RoundResultsResponse
+   */
+  biddingProcedure: string;
+  /**
+   *
+   * @type {number}
+   * @memberof RoundResultsResponse
+   */
+  bidLevels: number;
+  /**
+   *
+   * @type {number}
+   * @memberof RoundResultsResponse
+   */
+  bidRangePosition: number;
+  /**
+   *
+   * @type {number}
+   * @memberof RoundResultsResponse
+   */
+  recommendedLevel: number;
+  /**
+   *
+   * @type {string}
+   * @memberof RoundResultsResponse
+   */
+  coverageStatus: string;
+  /**
+   *
+   * @type {EvaluationLevels}
+   * @memberof RoundResultsResponse
+   */
+  levels: EvaluationLevels;
   /**
    *
    * @type {string}
@@ -65,6 +106,16 @@ export interface RoundResultsResponse {
 export function instanceOfRoundResultsResponse(
   value: object,
 ): value is RoundResultsResponse {
+  if (!("biddingProcedure" in value) || value["biddingProcedure"] === undefined)
+    return false;
+  if (!("bidLevels" in value) || value["bidLevels"] === undefined) return false;
+  if (!("bidRangePosition" in value) || value["bidRangePosition"] === undefined)
+    return false;
+  if (!("recommendedLevel" in value) || value["recommendedLevel"] === undefined)
+    return false;
+  if (!("coverageStatus" in value) || value["coverageStatus"] === undefined)
+    return false;
+  if (!("levels" in value) || value["levels"] === undefined) return false;
   if (!("targetPerYear" in value) || value["targetPerYear"] === undefined)
     return false;
   if (!("reachedPerYear" in value) || value["reachedPerYear"] === undefined)
@@ -94,6 +145,12 @@ export function RoundResultsResponseFromJSONTyped(
     return json;
   }
   return {
+    biddingProcedure: json["bidding_procedure"],
+    bidLevels: json["bid_levels"],
+    bidRangePosition: json["bid_range_position"],
+    recommendedLevel: json["recommended_level"],
+    coverageStatus: json["coverage_status"],
+    levels: EvaluationLevelsFromJSON(json["levels"]),
     targetPerYear: json["target_per_year"],
     reachedPerYear: json["reached_per_year"],
     coveragePercent: json["coverage_percent"],
@@ -116,6 +173,12 @@ export function RoundResultsResponseToJSONTyped(
   }
 
   return {
+    bidding_procedure: value["biddingProcedure"],
+    bid_levels: value["bidLevels"],
+    bid_range_position: value["bidRangePosition"],
+    recommended_level: value["recommendedLevel"],
+    coverage_status: value["coverageStatus"],
+    levels: EvaluationLevelsToJSON(value["levels"]),
     target_per_year: value["targetPerYear"],
     reached_per_year: value["reachedPerYear"],
     coverage_percent: value["coveragePercent"],
