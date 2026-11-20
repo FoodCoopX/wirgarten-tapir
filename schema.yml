@@ -14565,9 +14565,6 @@ components:
           type: string
           format: date-time
           nullable: true
-        secret:
-          type: string
-          format: uuid
         member:
           type: string
       required:

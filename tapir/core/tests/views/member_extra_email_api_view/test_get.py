@@ -79,7 +79,6 @@ class TestMemberExtraEmailApiViewGet(TapirIntegrationTest):
                         "confirmed_on": response_content["extra_mails"][0][
                             "confirmed_on"
                         ],
-                        "secret": str(confirmed.secret),
                         "first_name": "confirmed_first_name",
                         "last_name": "confirmed_last_name",
                     },
@@ -88,7 +87,6 @@ class TestMemberExtraEmailApiViewGet(TapirIntegrationTest):
                         "member": member.id,
                         "email": "unconfirmed@example.com",
                         "confirmed_on": None,
-                        "secret": str(unconfirmed.secret),
                         "first_name": "unconfirmed_first_name",
                         "last_name": "unconfirmed_last_name",
                     },
