@@ -5704,13 +5704,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AdminSizeChangeRequestRequest'
+              $ref: '#/components/schemas/AdminSizeChangeRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/AdminSizeChangeRequestRequest'
+              $ref: '#/components/schemas/AdminSizeChangeRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/AdminSizeChangeRequestRequest'
+              $ref: '#/components/schemas/AdminSizeChangeRequest'
         required: true
       security:
       - tokenAuth: []
@@ -5732,13 +5732,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AdminSizeChangeRequestRequest'
+              $ref: '#/components/schemas/AdminSizeChangeRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/AdminSizeChangeRequestRequest'
+              $ref: '#/components/schemas/AdminSizeChangeRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/AdminSizeChangeRequestRequest'
+              $ref: '#/components/schemas/AdminSizeChangeRequest'
         required: true
       security:
       - tokenAuth: []
@@ -5770,7 +5770,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AdminSizeChangeDateOptions'
+                $ref: '#/components/schemas/AdminStartDateOptions'
           description: ''
   /subscriptions/api/admin_subscription_addition_apply:
     post:
@@ -5781,13 +5781,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AdminSubscriptionAdditionRequestRequest'
+              $ref: '#/components/schemas/AdminSubscriptionAdditionRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/AdminSubscriptionAdditionRequestRequest'
+              $ref: '#/components/schemas/AdminSubscriptionAdditionRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/AdminSubscriptionAdditionRequestRequest'
+              $ref: '#/components/schemas/AdminSubscriptionAdditionRequest'
         required: true
       security:
       - tokenAuth: []
@@ -5809,13 +5809,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AdminSubscriptionAdditionRequestRequest'
+              $ref: '#/components/schemas/AdminSubscriptionAdditionRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/AdminSubscriptionAdditionRequestRequest'
+              $ref: '#/components/schemas/AdminSubscriptionAdditionRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/AdminSubscriptionAdditionRequestRequest'
+              $ref: '#/components/schemas/AdminSubscriptionAdditionRequest'
         required: true
       security:
       - tokenAuth: []
@@ -5847,7 +5847,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AdminSizeChangeDateOptions'
+                $ref: '#/components/schemas/AdminStartDateOptions'
           description: ''
   /subscriptions/api/admin_subscription_change_member_data:
     get:
@@ -9240,34 +9240,7 @@ components:
       - member_id
       - membership_type_id
       - start_date
-    AdminSizeChangeDateOption:
-      type: object
-      properties:
-        date:
-          type: string
-          format: date
-          nullable: true
-        enabled:
-          type: boolean
-      required:
-      - date
-      - enabled
-    AdminSizeChangeDateOptions:
-      type: object
-      properties:
-        next_possible_start:
-          $ref: '#/components/schemas/AdminSizeChangeDateOption'
-        weeks:
-          type: array
-          items:
-            $ref: '#/components/schemas/AdminSizeChangeWeekOption'
-        next_period_start:
-          $ref: '#/components/schemas/AdminSizeChangeDateOption'
-      required:
-      - next_period_start
-      - next_possible_start
-      - weeks
-    AdminSizeChangeRequestRequest:
+    AdminSizeChangeRequest:
       type: object
       properties:
         member_id:
@@ -9300,7 +9273,34 @@ components:
       - new_product_id
       - sepa_mandate_confirmed
       - subscription_id
-    AdminSizeChangeWeekOption:
+    AdminStartDateOption:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+          nullable: true
+        enabled:
+          type: boolean
+      required:
+      - date
+      - enabled
+    AdminStartDateOptions:
+      type: object
+      properties:
+        next_possible_start:
+          $ref: '#/components/schemas/AdminStartDateOption'
+        weeks:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminStartDateWeekOption'
+        next_period_start:
+          $ref: '#/components/schemas/AdminStartDateOption'
+      required:
+      - next_period_start
+      - next_possible_start
+      - weeks
+    AdminStartDateWeekOption:
       type: object
       properties:
         date:
@@ -9314,7 +9314,7 @@ components:
       - date
       - has_no_delivery
       - is_before_next_possible_start
-    AdminSubscriptionAdditionRequestRequest:
+    AdminSubscriptionAdditionRequest:
       type: object
       properties:
         member_id:
@@ -9357,11 +9357,11 @@ components:
             $ref: '#/components/schemas/AdminSubscriptionChangeSubscriptionUnit'
         prerequisites:
           $ref: '#/components/schemas/AdminSubscriptionChangePrerequisitesStatus'
-        payment_rhythm:
+        payment_rhythm_label:
           type: string
       required:
       - member
-      - payment_rhythm
+      - payment_rhythm_label
       - prerequisites
       - subscription_units
     AdminSubscriptionChangeMemberSummary:

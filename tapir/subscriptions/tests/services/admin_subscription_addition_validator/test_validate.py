@@ -1,8 +1,8 @@
 import datetime
 from unittest.mock import patch, MagicMock
 
-from tapir.subscriptions.services.admin_size_change_validator import (
-    AdminSizeChangeValidator,
+from tapir.subscriptions.services.admin_start_date_validator import (
+    AdminStartDateValidator,
 )
 from tapir.subscriptions.services.admin_subscription_addition_validator import (
     AdminSubscriptionAdditionValidator,
@@ -15,7 +15,7 @@ from tapir.subscriptions.services.subscription_update_view_validator import (
     SubscriptionUpdateViewValidator,
 )
 from tapir.subscriptions.types import (
-    AdminSubscriptionAdditionRequest,
+    AdminSubscriptionAddition,
     SubscriptionPrerequisitesInput,
 )
 from tapir.wirgarten.tests.factories import (
@@ -26,7 +26,9 @@ from tapir.wirgarten.tests.factories import (
 from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
-@patch.object(AdminSizeChangeValidator, "validate_sepa_mandate", autospec=True)
+@patch.object(
+    SubscriptionPrerequisitesValidator, "validate_sepa_mandate", autospec=True
+)
 @patch.object(
     SubscriptionPrerequisitesValidator, "validate_banking_data", autospec=True
 )
@@ -47,19 +49,21 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
     "validate_start_date_not_after_last_period",
     autospec=True,
 )
-@patch.object(AdminSizeChangeValidator, "validate_change_date", autospec=True)
+@patch.object(AdminStartDateValidator, "validate_start_date", autospec=True)
 @patch.object(
     AdminSubscriptionAdditionValidator,
     "validate_no_subscription_of_same_product",
     autospec=True,
 )
-@patch.object(AdminSubscriptionAdditionValidator, "validate_product", autospec=True)
+@patch.object(
+    AdminSubscriptionAdditionValidator, "validate_product_and_quantity", autospec=True
+)
 class TestAdminSubscriptionAdditionValidatorValidate(TapirUnitTest):
     def test_validate_default_callsAllValidatorsWithCorrectParameters(
         self,
         mock_validate_product: MagicMock,
         mock_validate_no_subscription_of_same_product: MagicMock,
-        mock_validate_change_date: MagicMock,
+        mock_validate_start_date: MagicMock,
         mock_validate_start_date_not_after_last_period: MagicMock,
         mock_validate_optional_product: MagicMock,
         mock_validate_pickup_location: MagicMock,
@@ -72,7 +76,7 @@ class TestAdminSubscriptionAdditionValidatorValidate(TapirUnitTest):
         start_date = datetime.date(year=2027, month=6, day=7)
         cache = {}
 
-        addition = AdminSubscriptionAdditionRequest(
+        addition = AdminSubscriptionAddition(
             member=member,
             product=product,
             quantity=2,
@@ -91,8 +95,8 @@ class TestAdminSubscriptionAdditionValidatorValidate(TapirUnitTest):
         mock_validate_no_subscription_of_same_product.assert_called_once_with(
             member=member, product=product, start_date=start_date, cache=cache
         )
-        mock_validate_change_date.assert_called_once_with(
-            change_date=start_date, cache=cache
+        mock_validate_start_date.assert_called_once_with(
+            start_date=start_date, cache=cache
         )
         mock_validate_start_date_not_after_last_period.assert_called_once_with(
             start_date=start_date, cache=cache

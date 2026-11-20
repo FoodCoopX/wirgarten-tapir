@@ -26,7 +26,7 @@ class TestSubscriptionPrerequisitesApplierApplyBankingData(TapirUnitTest):
             member=member,
             iban="test_iban",
             account_owner="test_account_owner",
-            sepa_allowed=True,
+            sepa_consent_given=True,
             cache={},
         )
 
@@ -48,7 +48,7 @@ class TestSubscriptionPrerequisitesApplierApplyBankingData(TapirUnitTest):
             member=member,
             iban=" ",
             account_owner="",
-            sepa_allowed=False,
+            sepa_consent_given=False,
             cache={},
         )
 

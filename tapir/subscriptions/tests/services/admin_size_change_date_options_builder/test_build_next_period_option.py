@@ -3,11 +3,11 @@ from unittest.mock import patch, MagicMock
 
 from tapir.subscriptions.services.admin_size_change_date_options_builder import (
     AdminSizeChangeDateOptionsBuilder,
-    DateOption,
 )
 from tapir.subscriptions.services.admin_size_change_validator import (
     AdminSizeChangeValidator,
 )
+from tapir.subscriptions.types import DateOption
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.tests.factories import GrowingPeriodFactory, SubscriptionFactory
 from tapir.wirgarten.tests.test_utils import TapirUnitTest, mock_timezone

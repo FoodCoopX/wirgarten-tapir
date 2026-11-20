@@ -1,14 +1,13 @@
-from tapir.subscriptions.services.admin_size_change_date_options_builder import (
-    AdminSizeChangeDateOptionsBuilder,
-    DateOption,
-    SizeChangeDateOptions,
-)
 from tapir.subscriptions.services.admin_subscription_addition_validator import (
     AdminSubscriptionAdditionValidator,
 )
 from tapir.subscriptions.services.contract_start_date_calculator import (
     ContractStartDateCalculator,
 )
+from tapir.subscriptions.services.start_date_week_options_builder import (
+    StartDateWeekOptionsBuilder,
+)
+from tapir.subscriptions.types import DateOption, StartDateOptions
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import ProductType
 from tapir.wirgarten.utils import get_today
@@ -16,7 +15,7 @@ from tapir.wirgarten.utils import get_today
 
 class AdminSubscriptionAdditionDateOptionsBuilder:
     @classmethod
-    def build(cls, product_type: ProductType, cache: dict) -> SizeChangeDateOptions:
+    def build(cls, product_type: ProductType, cache: dict) -> StartDateOptions:
         today = get_today(cache=cache)
         next_possible_start = ContractStartDateCalculator.get_next_contract_start_date(
             reference_date=today, apply_buffer_time=True, cache=cache
@@ -28,13 +27,13 @@ class AdminSubscriptionAdditionDateOptionsBuilder:
             reference_date=today, cache=cache
         )
 
-        return SizeChangeDateOptions(
+        return StartDateOptions(
             next_possible_start=DateOption(
                 date=next_possible_start,
                 enabled=last_date is not None and next_possible_start <= last_date,
             ),
             weeks=(
-                AdminSizeChangeDateOptionsBuilder.build_week_options(
+                StartDateWeekOptionsBuilder.build_week_options(
                     product_type=product_type,
                     first_date=today,
                     last_date=last_date,

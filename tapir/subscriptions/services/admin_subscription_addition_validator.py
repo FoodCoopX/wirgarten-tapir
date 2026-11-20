@@ -2,8 +2,8 @@ import datetime
 
 from django.core.exceptions import ValidationError
 
-from tapir.subscriptions.services.admin_size_change_validator import (
-    AdminSizeChangeValidator,
+from tapir.subscriptions.services.admin_start_date_validator import (
+    AdminStartDateValidator,
 )
 from tapir.subscriptions.services.order_validator import OrderValidator
 from tapir.subscriptions.services.subscription_prerequisites_validator import (
@@ -12,23 +12,25 @@ from tapir.subscriptions.services.subscription_prerequisites_validator import (
 from tapir.subscriptions.services.subscription_update_view_validator import (
     SubscriptionUpdateViewValidator,
 )
-from tapir.subscriptions.types import AdminSubscriptionAdditionRequest
+from tapir.subscriptions.types import AdminSubscriptionAddition
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import Member, Product
 
 
 class AdminSubscriptionAdditionValidator:
     @classmethod
-    def validate(cls, addition: AdminSubscriptionAdditionRequest, cache: dict):
-        cls.validate_product(product=addition.product, quantity=addition.quantity)
+    def validate(cls, addition: AdminSubscriptionAddition, cache: dict):
+        cls.validate_product_and_quantity(
+            product=addition.product, quantity=addition.quantity
+        )
         cls.validate_no_subscription_of_same_product(
             member=addition.member,
             product=addition.product,
             start_date=addition.start_date,
             cache=cache,
         )
-        AdminSizeChangeValidator.validate_change_date(
-            change_date=addition.start_date, cache=cache
+        AdminStartDateValidator.validate_start_date(
+            start_date=addition.start_date, cache=cache
         )
         cls.validate_start_date_not_after_last_period(
             start_date=addition.start_date, cache=cache
@@ -63,13 +65,13 @@ class AdminSubscriptionAdditionValidator:
             account_owner=addition.prerequisites.account_owner,
             iban=addition.prerequisites.iban,
         )
-        AdminSizeChangeValidator.validate_sepa_mandate(
+        SubscriptionPrerequisitesValidator.validate_sepa_mandate(
             iban=addition.prerequisites.iban,
             sepa_mandate_confirmed=addition.prerequisites.sepa_mandate_confirmed,
         )
 
     @classmethod
-    def validate_product(cls, product: Product, quantity: int):
+    def validate_product_and_quantity(cls, product: Product, quantity: int):
         if quantity < 1:
             raise ValidationError("Die Anzahl der Anteile muss mindestens 1 sein.")
 

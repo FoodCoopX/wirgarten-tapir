@@ -32,11 +32,13 @@ class TestSubscriptionUpdateViewChangeApplierApplyChanges(TapirUnitTest):
         autospec=True,
     )
     @patch.object(
-        SubscriptionPrerequisitesApplier, "apply_pickup_location", autospec=True
+        SubscriptionPrerequisitesApplier,
+        "apply_delivery_address_and_pickup_location",
+        autospec=True,
     )
     def test_applyChanges_default_callsAllServicesInOrder(
         self,
-        mock_apply_pickup_location: MagicMock,
+        mock_apply_delivery_address_and_pickup_location: MagicMock,
         mock_change_payment_rhythm_if_necessary: MagicMock,
         mock_apply_order_single_product_type: MagicMock,
         mock_send_order_confirmation_mail: MagicMock,
@@ -44,7 +46,10 @@ class TestSubscriptionUpdateViewChangeApplierApplyChanges(TapirUnitTest):
         mock_apply_banking_data: MagicMock,
     ):
         manager = Mock()
-        manager.attach_mock(mock_apply_pickup_location, "apply_pickup_location")
+        manager.attach_mock(
+            mock_apply_delivery_address_and_pickup_location,
+            "apply_delivery_address_and_pickup_location",
+        )
         manager.attach_mock(
             mock_change_payment_rhythm_if_necessary, "change_payment_rhythm"
         )
@@ -75,7 +80,7 @@ class TestSubscriptionUpdateViewChangeApplierApplyChanges(TapirUnitTest):
 
         self.assertEqual(
             [
-                call.apply_pickup_location(
+                call.apply_delivery_address_and_pickup_location(
                     member=member,
                     subscription_start_date=contract_start_date,
                     desired_pickup_location_id="desired_id",
@@ -116,7 +121,7 @@ class TestSubscriptionUpdateViewChangeApplierApplyChanges(TapirUnitTest):
                     member=member,
                     iban="test_iban",
                     account_owner="test_account_owner",
-                    sepa_allowed=True,
+                    sepa_consent_given=True,
                     cache=cache,
                 ),
             ],

@@ -99,3 +99,10 @@ class SubscriptionPrerequisitesValidator:
             )
 
         return pickup_location
+
+    @classmethod
+    def validate_sepa_mandate(cls, iban: str, sepa_mandate_confirmed: bool):
+        if iban.strip() != "" and not sepa_mandate_confirmed:
+            raise ValidationError(
+                "Bitte bestätige, dass ein unterschriebenes SEPA-Mandat vorliegt."
+            )

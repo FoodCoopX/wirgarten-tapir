@@ -281,27 +281,27 @@ class AdminSubscriptionChangeMemberDataSerializer(serializers.Serializer):
     member = AdminSubscriptionChangeMemberSummarySerializer()
     subscription_units = AdminSubscriptionChangeSubscriptionUnitSerializer(many=True)
     prerequisites = AdminSubscriptionChangePrerequisitesStatusSerializer()
-    payment_rhythm = serializers.CharField()
+    payment_rhythm_label = serializers.CharField()
 
 
-class AdminSizeChangeDateOptionSerializer(serializers.Serializer):
+class AdminStartDateOptionSerializer(serializers.Serializer):
     date = serializers.DateField(allow_null=True)
     enabled = serializers.BooleanField()
 
 
-class AdminSizeChangeWeekOptionSerializer(serializers.Serializer):
+class AdminStartDateWeekOptionSerializer(serializers.Serializer):
     date = serializers.DateField()
     is_before_next_possible_start = serializers.BooleanField()
     has_no_delivery = serializers.BooleanField()
 
 
-class AdminSizeChangeDateOptionsSerializer(serializers.Serializer):
-    next_possible_start = AdminSizeChangeDateOptionSerializer()
-    weeks = AdminSizeChangeWeekOptionSerializer(many=True)
-    next_period_start = AdminSizeChangeDateOptionSerializer()
+class AdminStartDateOptionsSerializer(serializers.Serializer):
+    next_possible_start = AdminStartDateOptionSerializer()
+    weeks = AdminStartDateWeekOptionSerializer(many=True)
+    next_period_start = AdminStartDateOptionSerializer()
 
 
-class AdminSizeChangeRequestSerializer(serializers.Serializer):
+class AdminSizeChangeSerializer(serializers.Serializer):
     member_id = serializers.CharField()
     subscription_id = serializers.CharField()
     new_product_id = serializers.CharField()
@@ -312,7 +312,7 @@ class AdminSizeChangeRequestSerializer(serializers.Serializer):
     sepa_mandate_confirmed = serializers.BooleanField()
 
 
-class AdminSubscriptionAdditionRequestSerializer(serializers.Serializer):
+class AdminSubscriptionAdditionSerializer(serializers.Serializer):
     member_id = serializers.CharField()
     product_id = serializers.CharField()
     quantity = serializers.IntegerField()

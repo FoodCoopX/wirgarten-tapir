@@ -1,8 +1,8 @@
 import datetime
 from unittest.mock import patch, MagicMock
 
-from tapir.subscriptions.services.admin_size_change_next_period_finder import (
-    AdminSizeChangeNextPeriodFinder,
+from tapir.subscriptions.services.next_period_with_subscriptions_finder import (
+    NextPeriodWithSubscriptionsFinder,
 )
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.tests.factories import (
@@ -16,7 +16,9 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 @patch.object(TapirCache, "get_all_subscriptions_for_member", autospec=True)
 @patch.object(TapirCache, "get_all_growing_periods_ascending", autospec=True)
-class TestAdminSizeChangeNextPeriodFinderGetNextPeriodWithSubscriptions(TapirUnitTest):
+class TestNextPeriodWithSubscriptionsFinderGetNextPeriodWithSubscriptions(
+    TapirUnitTest
+):
     def setUp(self):
         super().setUp()
         self.member = MemberFactory.build()
@@ -41,7 +43,7 @@ class TestAdminSizeChangeNextPeriodFinderGetNextPeriodWithSubscriptions(TapirUni
         self.cache = {}
 
     def _get(self):
-        return AdminSizeChangeNextPeriodFinder.get_next_period_with_subscriptions(
+        return NextPeriodWithSubscriptionsFinder.get_next_period_with_subscriptions(
             member=self.member,
             product_type_id=self.subscription.product.type_id,
             reference_date=self.subscription.end_date,

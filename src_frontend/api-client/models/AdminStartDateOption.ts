@@ -15,44 +15,42 @@
 /**
  *
  * @export
- * @interface AdminSizeChangeDateOption
+ * @interface AdminStartDateOption
  */
-export interface AdminSizeChangeDateOption {
+export interface AdminStartDateOption {
   /**
    *
    * @type {string}
-   * @memberof AdminSizeChangeDateOption
+   * @memberof AdminStartDateOption
    */
   date: string | null;
   /**
    *
    * @type {boolean}
-   * @memberof AdminSizeChangeDateOption
+   * @memberof AdminStartDateOption
    */
   enabled: boolean;
 }
 
 /**
- * Check if a given object implements the AdminSizeChangeDateOption interface.
+ * Check if a given object implements the AdminStartDateOption interface.
  */
-export function instanceOfAdminSizeChangeDateOption(
+export function instanceOfAdminStartDateOption(
   value: object,
-): value is AdminSizeChangeDateOption {
+): value is AdminStartDateOption {
   if (!("date" in value) || value["date"] === undefined) return false;
   if (!("enabled" in value) || value["enabled"] === undefined) return false;
   return true;
 }
 
-export function AdminSizeChangeDateOptionFromJSON(
-  json: any,
-): AdminSizeChangeDateOption {
-  return AdminSizeChangeDateOptionFromJSONTyped(json, false);
+export function AdminStartDateOptionFromJSON(json: any): AdminStartDateOption {
+  return AdminStartDateOptionFromJSONTyped(json, false);
 }
 
-export function AdminSizeChangeDateOptionFromJSONTyped(
+export function AdminStartDateOptionFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
-): AdminSizeChangeDateOption {
+): AdminStartDateOption {
   if (json == null) {
     return json;
   }
@@ -62,14 +60,12 @@ export function AdminSizeChangeDateOptionFromJSONTyped(
   };
 }
 
-export function AdminSizeChangeDateOptionToJSON(
-  json: any,
-): AdminSizeChangeDateOption {
-  return AdminSizeChangeDateOptionToJSONTyped(json, false);
+export function AdminStartDateOptionToJSON(json: any): AdminStartDateOption {
+  return AdminStartDateOptionToJSONTyped(json, false);
 }
 
-export function AdminSizeChangeDateOptionToJSONTyped(
-  value?: AdminSizeChangeDateOption | null,
+export function AdminStartDateOptionToJSONTyped(
+  value?: AdminStartDateOption | null,
   ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {

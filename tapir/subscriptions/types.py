@@ -15,7 +15,7 @@ class SubscriptionPrerequisitesInput:
 
 
 @dataclass(frozen=True)
-class AdminSizeChangeRequest:
+class AdminSizeChange:
     member: Member
     subscription: Subscription
     new_product: Product
@@ -25,9 +25,29 @@ class AdminSizeChangeRequest:
 
 
 @dataclass(frozen=True)
-class AdminSubscriptionAdditionRequest:
+class AdminSubscriptionAddition:
     member: Member
     product: Product
     quantity: int
     start_date: datetime.date
     prerequisites: SubscriptionPrerequisitesInput
+
+
+@dataclass(frozen=True)
+class DateOption:
+    date: datetime.date | None
+    enabled: bool
+
+
+@dataclass(frozen=True)
+class WeekOption:
+    date: datetime.date
+    is_before_next_possible_start: bool
+    has_no_delivery: bool
+
+
+@dataclass(frozen=True)
+class StartDateOptions:
+    next_possible_start: DateOption
+    weeks: list[WeekOption]
+    next_period_start: DateOption

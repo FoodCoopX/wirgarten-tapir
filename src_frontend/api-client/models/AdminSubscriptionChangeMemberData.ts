@@ -57,7 +57,7 @@ export interface AdminSubscriptionChangeMemberData {
    * @type {string}
    * @memberof AdminSubscriptionChangeMemberData
    */
-  paymentRhythm: string;
+  paymentRhythmLabel: string;
 }
 
 /**
@@ -74,7 +74,10 @@ export function instanceOfAdminSubscriptionChangeMemberData(
     return false;
   if (!("prerequisites" in value) || value["prerequisites"] === undefined)
     return false;
-  if (!("paymentRhythm" in value) || value["paymentRhythm"] === undefined)
+  if (
+    !("paymentRhythmLabel" in value) ||
+    value["paymentRhythmLabel"] === undefined
+  )
     return false;
   return true;
 }
@@ -100,7 +103,7 @@ export function AdminSubscriptionChangeMemberDataFromJSONTyped(
     prerequisites: AdminSubscriptionChangePrerequisitesStatusFromJSON(
       json["prerequisites"],
     ),
-    paymentRhythm: json["payment_rhythm"],
+    paymentRhythmLabel: json["payment_rhythm_label"],
   };
 }
 
@@ -126,6 +129,6 @@ export function AdminSubscriptionChangeMemberDataToJSONTyped(
     prerequisites: AdminSubscriptionChangePrerequisitesStatusToJSON(
       value["prerequisites"],
     ),
-    payment_rhythm: value["paymentRhythm"],
+    payment_rhythm_label: value["paymentRhythmLabel"],
   };
 }

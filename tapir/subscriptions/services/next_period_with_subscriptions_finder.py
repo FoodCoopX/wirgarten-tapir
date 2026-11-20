@@ -4,7 +4,7 @@ from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import GrowingPeriod, Member
 
 
-class AdminSizeChangeNextPeriodFinder:
+class NextPeriodWithSubscriptionsFinder:
     @classmethod
     def get_next_period_with_subscriptions(
         cls,

@@ -13,9 +13,9 @@
  */
 
 import type {
-  AdminSizeChangeDateOptions,
-  AdminSizeChangeRequestRequest,
-  AdminSubscriptionAdditionRequestRequest,
+  AdminSizeChangeRequest,
+  AdminStartDateOptions,
+  AdminSubscriptionAdditionRequest,
   AdminSubscriptionChangeMemberData,
   AdminSubscriptionChangeMemberSummary,
   BestellWizardCapacityCheckResponse,
@@ -39,9 +39,9 @@ import type {
   UpdateSubscriptionsRequestRequest,
 } from "../models/index";
 import {
-  AdminSizeChangeDateOptionsFromJSON,
-  AdminSizeChangeRequestRequestToJSON,
-  AdminSubscriptionAdditionRequestRequestToJSON,
+  AdminSizeChangeRequestToJSON,
+  AdminStartDateOptionsFromJSON,
+  AdminSubscriptionAdditionRequestToJSON,
   AdminSubscriptionChangeMemberDataFromJSON,
   AdminSubscriptionChangeMemberSummaryFromJSON,
   BestellWizardCapacityCheckResponseFromJSON,
@@ -67,11 +67,11 @@ import {
 import * as runtime from "../runtime";
 
 export interface SubscriptionsApiAdminSizeChangeApplyCreateRequest {
-  adminSizeChangeRequestRequest: AdminSizeChangeRequestRequest;
+  adminSizeChangeRequest: AdminSizeChangeRequest;
 }
 
 export interface SubscriptionsApiAdminSizeChangeCheckCreateRequest {
-  adminSizeChangeRequestRequest: AdminSizeChangeRequestRequest;
+  adminSizeChangeRequest: AdminSizeChangeRequest;
 }
 
 export interface SubscriptionsApiAdminSizeChangeDateOptionsRetrieveRequest {
@@ -79,11 +79,11 @@ export interface SubscriptionsApiAdminSizeChangeDateOptionsRetrieveRequest {
 }
 
 export interface SubscriptionsApiAdminSubscriptionAdditionApplyCreateRequest {
-  adminSubscriptionAdditionRequestRequest: AdminSubscriptionAdditionRequestRequest;
+  adminSubscriptionAdditionRequest: AdminSubscriptionAdditionRequest;
 }
 
 export interface SubscriptionsApiAdminSubscriptionAdditionCheckCreateRequest {
-  adminSubscriptionAdditionRequestRequest: AdminSubscriptionAdditionRequestRequest;
+  adminSubscriptionAdditionRequest: AdminSubscriptionAdditionRequest;
 }
 
 export interface SubscriptionsApiAdminSubscriptionAdditionDateOptionsRetrieveRequest {
@@ -176,10 +176,10 @@ export class SubscriptionsApi extends runtime.BaseAPI {
     requestParameters: SubscriptionsApiAdminSizeChangeApplyCreateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<OrderConfirmationResponse>> {
-    if (requestParameters["adminSizeChangeRequestRequest"] == null) {
+    if (requestParameters["adminSizeChangeRequest"] == null) {
       throw new runtime.RequiredError(
-        "adminSizeChangeRequestRequest",
-        'Required parameter "adminSizeChangeRequestRequest" was null or undefined when calling subscriptionsApiAdminSizeChangeApplyCreate().',
+        "adminSizeChangeRequest",
+        'Required parameter "adminSizeChangeRequest" was null or undefined when calling subscriptionsApiAdminSizeChangeApplyCreate().',
       );
     }
 
@@ -209,8 +209,8 @@ export class SubscriptionsApi extends runtime.BaseAPI {
         method: "POST",
         headers: headerParameters,
         query: queryParameters,
-        body: AdminSizeChangeRequestRequestToJSON(
-          requestParameters["adminSizeChangeRequestRequest"],
+        body: AdminSizeChangeRequestToJSON(
+          requestParameters["adminSizeChangeRequest"],
         ),
       },
       initOverrides,
@@ -240,10 +240,10 @@ export class SubscriptionsApi extends runtime.BaseAPI {
     requestParameters: SubscriptionsApiAdminSizeChangeCheckCreateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<OrderConfirmationResponse>> {
-    if (requestParameters["adminSizeChangeRequestRequest"] == null) {
+    if (requestParameters["adminSizeChangeRequest"] == null) {
       throw new runtime.RequiredError(
-        "adminSizeChangeRequestRequest",
-        'Required parameter "adminSizeChangeRequestRequest" was null or undefined when calling subscriptionsApiAdminSizeChangeCheckCreate().',
+        "adminSizeChangeRequest",
+        'Required parameter "adminSizeChangeRequest" was null or undefined when calling subscriptionsApiAdminSizeChangeCheckCreate().',
       );
     }
 
@@ -273,8 +273,8 @@ export class SubscriptionsApi extends runtime.BaseAPI {
         method: "POST",
         headers: headerParameters,
         query: queryParameters,
-        body: AdminSizeChangeRequestRequestToJSON(
-          requestParameters["adminSizeChangeRequestRequest"],
+        body: AdminSizeChangeRequestToJSON(
+          requestParameters["adminSizeChangeRequest"],
         ),
       },
       initOverrides,
@@ -303,7 +303,7 @@ export class SubscriptionsApi extends runtime.BaseAPI {
   async subscriptionsApiAdminSizeChangeDateOptionsRetrieveRaw(
     requestParameters: SubscriptionsApiAdminSizeChangeDateOptionsRetrieveRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AdminSizeChangeDateOptions>> {
+  ): Promise<runtime.ApiResponse<AdminStartDateOptions>> {
     const queryParameters: any = {};
 
     if (requestParameters["subscriptionId"] != null) {
@@ -337,7 +337,7 @@ export class SubscriptionsApi extends runtime.BaseAPI {
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AdminSizeChangeDateOptionsFromJSON(jsonValue),
+      AdminStartDateOptionsFromJSON(jsonValue),
     );
   }
 
@@ -346,7 +346,7 @@ export class SubscriptionsApi extends runtime.BaseAPI {
   async subscriptionsApiAdminSizeChangeDateOptionsRetrieve(
     requestParameters: SubscriptionsApiAdminSizeChangeDateOptionsRetrieveRequest = {},
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AdminSizeChangeDateOptions> {
+  ): Promise<AdminStartDateOptions> {
     const response =
       await this.subscriptionsApiAdminSizeChangeDateOptionsRetrieveRaw(
         requestParameters,
@@ -361,10 +361,10 @@ export class SubscriptionsApi extends runtime.BaseAPI {
     requestParameters: SubscriptionsApiAdminSubscriptionAdditionApplyCreateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<OrderConfirmationResponse>> {
-    if (requestParameters["adminSubscriptionAdditionRequestRequest"] == null) {
+    if (requestParameters["adminSubscriptionAdditionRequest"] == null) {
       throw new runtime.RequiredError(
-        "adminSubscriptionAdditionRequestRequest",
-        'Required parameter "adminSubscriptionAdditionRequestRequest" was null or undefined when calling subscriptionsApiAdminSubscriptionAdditionApplyCreate().',
+        "adminSubscriptionAdditionRequest",
+        'Required parameter "adminSubscriptionAdditionRequest" was null or undefined when calling subscriptionsApiAdminSubscriptionAdditionApplyCreate().',
       );
     }
 
@@ -394,8 +394,8 @@ export class SubscriptionsApi extends runtime.BaseAPI {
         method: "POST",
         headers: headerParameters,
         query: queryParameters,
-        body: AdminSubscriptionAdditionRequestRequestToJSON(
-          requestParameters["adminSubscriptionAdditionRequestRequest"],
+        body: AdminSubscriptionAdditionRequestToJSON(
+          requestParameters["adminSubscriptionAdditionRequest"],
         ),
       },
       initOverrides,
@@ -426,10 +426,10 @@ export class SubscriptionsApi extends runtime.BaseAPI {
     requestParameters: SubscriptionsApiAdminSubscriptionAdditionCheckCreateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<OrderConfirmationResponse>> {
-    if (requestParameters["adminSubscriptionAdditionRequestRequest"] == null) {
+    if (requestParameters["adminSubscriptionAdditionRequest"] == null) {
       throw new runtime.RequiredError(
-        "adminSubscriptionAdditionRequestRequest",
-        'Required parameter "adminSubscriptionAdditionRequestRequest" was null or undefined when calling subscriptionsApiAdminSubscriptionAdditionCheckCreate().',
+        "adminSubscriptionAdditionRequest",
+        'Required parameter "adminSubscriptionAdditionRequest" was null or undefined when calling subscriptionsApiAdminSubscriptionAdditionCheckCreate().',
       );
     }
 
@@ -459,8 +459,8 @@ export class SubscriptionsApi extends runtime.BaseAPI {
         method: "POST",
         headers: headerParameters,
         query: queryParameters,
-        body: AdminSubscriptionAdditionRequestRequestToJSON(
-          requestParameters["adminSubscriptionAdditionRequestRequest"],
+        body: AdminSubscriptionAdditionRequestToJSON(
+          requestParameters["adminSubscriptionAdditionRequest"],
         ),
       },
       initOverrides,
@@ -490,7 +490,7 @@ export class SubscriptionsApi extends runtime.BaseAPI {
   async subscriptionsApiAdminSubscriptionAdditionDateOptionsRetrieveRaw(
     requestParameters: SubscriptionsApiAdminSubscriptionAdditionDateOptionsRetrieveRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AdminSizeChangeDateOptions>> {
+  ): Promise<runtime.ApiResponse<AdminStartDateOptions>> {
     const queryParameters: any = {};
 
     if (requestParameters["productTypeId"] != null) {
@@ -524,7 +524,7 @@ export class SubscriptionsApi extends runtime.BaseAPI {
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AdminSizeChangeDateOptionsFromJSON(jsonValue),
+      AdminStartDateOptionsFromJSON(jsonValue),
     );
   }
 
@@ -533,7 +533,7 @@ export class SubscriptionsApi extends runtime.BaseAPI {
   async subscriptionsApiAdminSubscriptionAdditionDateOptionsRetrieve(
     requestParameters: SubscriptionsApiAdminSubscriptionAdditionDateOptionsRetrieveRequest = {},
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AdminSizeChangeDateOptions> {
+  ): Promise<AdminStartDateOptions> {
     const response =
       await this.subscriptionsApiAdminSubscriptionAdditionDateOptionsRetrieveRaw(
         requestParameters,

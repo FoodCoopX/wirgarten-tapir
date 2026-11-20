@@ -28,7 +28,7 @@ class SubscriptionUpdateViewChangeApplier:
         sepa_allowed: bool,
         cache: dict,
     ):
-        SubscriptionPrerequisitesApplier.apply_pickup_location(
+        SubscriptionPrerequisitesApplier.apply_delivery_address_and_pickup_location(
             member=member,
             subscription_start_date=contract_start_date,
             desired_pickup_location_id=desired_pickup_location_id,
@@ -76,6 +76,6 @@ class SubscriptionUpdateViewChangeApplier:
             member=member,
             iban=iban,
             account_owner=account_owner,
-            sepa_allowed=sepa_allowed,
+            sepa_consent_given=sepa_allowed,
             cache=cache,
         )

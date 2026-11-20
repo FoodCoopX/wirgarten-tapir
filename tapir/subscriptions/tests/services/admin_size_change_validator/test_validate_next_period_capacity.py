@@ -1,8 +1,8 @@
 import datetime
 from unittest.mock import patch, MagicMock
 
-from tapir.subscriptions.services.admin_size_change_next_period_finder import (
-    AdminSizeChangeNextPeriodFinder,
+from tapir.subscriptions.services.next_period_with_subscriptions_finder import (
+    NextPeriodWithSubscriptionsFinder,
 )
 from tapir.subscriptions.services.admin_size_change_validator import (
     AdminSizeChangeValidator,
@@ -20,7 +20,7 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 @patch.object(OrderValidator, "validate_capacities", autospec=True)
 @patch.object(
-    AdminSizeChangeNextPeriodFinder,
+    NextPeriodWithSubscriptionsFinder,
     "get_next_period_with_subscriptions",
     autospec=True,
 )

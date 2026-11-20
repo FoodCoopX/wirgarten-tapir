@@ -17,7 +17,7 @@ from tapir.subscriptions.services.unconfirmed_changes_provider import (
     UnconfirmedChangesProvider,
 )
 from tapir.subscriptions.types import (
-    AdminSizeChangeRequest,
+    AdminSizeChange,
     SubscriptionPrerequisitesInput,
 )
 from tapir.wirgarten.constants import WEEKLY
@@ -138,7 +138,7 @@ class TestAdminSizeChangeApplierApplyChange(TapirIntegrationTest):
     ) -> list[Subscription]:
         cache = {}
         return AdminSizeChangeApplier.apply_change(
-            size_change=AdminSizeChangeRequest(
+            size_change=AdminSizeChange(
                 member=subscription.member,
                 subscription=subscription,
                 new_product=new_product,

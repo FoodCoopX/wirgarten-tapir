@@ -4,8 +4,8 @@ from unittest.mock import patch, MagicMock
 from tapir.deliveries.services.delivery_date_calculator import (
     DeliveryDateCalculator,
 )
-from tapir.subscriptions.services.admin_size_change_date_options_builder import (
-    AdminSizeChangeDateOptionsBuilder,
+from tapir.subscriptions.services.start_date_week_options_builder import (
+    StartDateWeekOptionsBuilder,
 )
 from tapir.wirgarten.constants import NO_DELIVERY, WEEKLY
 from tapir.wirgarten.tests.factories import ProductTypeFactory
@@ -15,7 +15,7 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
 @patch.object(
     DeliveryDateCalculator, "is_week_delivered", autospec=True, return_value=True
 )
-class TestAdminSizeChangeDateOptionsBuilderBuildWeekOptions(TapirUnitTest):
+class TestStartDateWeekOptionsBuilderBuildWeekOptions(TapirUnitTest):
     def setUp(self):
         super().setUp()
         self.product_type = ProductTypeFactory.build(delivery_cycle=WEEKLY[0])
@@ -26,7 +26,7 @@ class TestAdminSizeChangeDateOptionsBuilderBuildWeekOptions(TapirUnitTest):
         last_date: datetime.date,
         next_possible_start: datetime.date,
     ):
-        return AdminSizeChangeDateOptionsBuilder.build_week_options(
+        return StartDateWeekOptionsBuilder.build_week_options(
             product_type=self.product_type,
             first_date=first_date,
             last_date=last_date,

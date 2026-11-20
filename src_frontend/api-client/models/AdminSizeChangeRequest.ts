@@ -15,65 +15,65 @@
 /**
  *
  * @export
- * @interface AdminSizeChangeRequestRequest
+ * @interface AdminSizeChangeRequest
  */
-export interface AdminSizeChangeRequestRequest {
+export interface AdminSizeChangeRequest {
   /**
    *
    * @type {string}
-   * @memberof AdminSizeChangeRequestRequest
+   * @memberof AdminSizeChangeRequest
    */
   memberId: string;
   /**
    *
    * @type {string}
-   * @memberof AdminSizeChangeRequestRequest
+   * @memberof AdminSizeChangeRequest
    */
   subscriptionId: string;
   /**
    *
    * @type {string}
-   * @memberof AdminSizeChangeRequestRequest
+   * @memberof AdminSizeChangeRequest
    */
   newProductId: string;
   /**
    *
    * @type {string}
-   * @memberof AdminSizeChangeRequestRequest
+   * @memberof AdminSizeChangeRequest
    */
   changeDate: string;
   /**
    *
    * @type {string}
-   * @memberof AdminSizeChangeRequestRequest
+   * @memberof AdminSizeChangeRequest
    */
   pickupLocationId?: string | null;
   /**
    *
    * @type {string}
-   * @memberof AdminSizeChangeRequestRequest
+   * @memberof AdminSizeChangeRequest
    */
   accountOwner: string;
   /**
    *
    * @type {string}
-   * @memberof AdminSizeChangeRequestRequest
+   * @memberof AdminSizeChangeRequest
    */
   iban: string;
   /**
    *
    * @type {boolean}
-   * @memberof AdminSizeChangeRequestRequest
+   * @memberof AdminSizeChangeRequest
    */
   sepaMandateConfirmed: boolean;
 }
 
 /**
- * Check if a given object implements the AdminSizeChangeRequestRequest interface.
+ * Check if a given object implements the AdminSizeChangeRequest interface.
  */
-export function instanceOfAdminSizeChangeRequestRequest(
+export function instanceOfAdminSizeChangeRequest(
   value: object,
-): value is AdminSizeChangeRequestRequest {
+): value is AdminSizeChangeRequest {
   if (!("memberId" in value) || value["memberId"] === undefined) return false;
   if (!("subscriptionId" in value) || value["subscriptionId"] === undefined)
     return false;
@@ -92,16 +92,16 @@ export function instanceOfAdminSizeChangeRequestRequest(
   return true;
 }
 
-export function AdminSizeChangeRequestRequestFromJSON(
+export function AdminSizeChangeRequestFromJSON(
   json: any,
-): AdminSizeChangeRequestRequest {
-  return AdminSizeChangeRequestRequestFromJSONTyped(json, false);
+): AdminSizeChangeRequest {
+  return AdminSizeChangeRequestFromJSONTyped(json, false);
 }
 
-export function AdminSizeChangeRequestRequestFromJSONTyped(
+export function AdminSizeChangeRequestFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
-): AdminSizeChangeRequestRequest {
+): AdminSizeChangeRequest {
   if (json == null) {
     return json;
   }
@@ -120,14 +120,14 @@ export function AdminSizeChangeRequestRequestFromJSONTyped(
   };
 }
 
-export function AdminSizeChangeRequestRequestToJSON(
+export function AdminSizeChangeRequestToJSON(
   json: any,
-): AdminSizeChangeRequestRequest {
-  return AdminSizeChangeRequestRequestToJSONTyped(json, false);
+): AdminSizeChangeRequest {
+  return AdminSizeChangeRequestToJSONTyped(json, false);
 }
 
-export function AdminSizeChangeRequestRequestToJSONTyped(
-  value?: AdminSizeChangeRequestRequest | null,
+export function AdminSizeChangeRequestToJSONTyped(
+  value?: AdminSizeChangeRequest | null,
   ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {

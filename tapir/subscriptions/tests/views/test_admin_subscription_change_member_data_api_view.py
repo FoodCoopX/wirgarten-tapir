@@ -63,7 +63,7 @@ class TestAdminSubscriptionChangeMemberDataApiView(TapirIntegrationTest):
             {"pickup_location_name": None, "has_banking_data": True},
             data["prerequisites"],
         )
-        self.assertEqual("Monatlich", data["payment_rhythm"])
+        self.assertEqual("Monatlich", data["payment_rhythm_label"])
 
     def test_get_unknownMember_returns404(self):
         self._login_as_admin()

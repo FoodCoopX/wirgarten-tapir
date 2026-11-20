@@ -5,7 +5,7 @@ from tapir.subscriptions.services.apply_tapir_order_manager import (
 from tapir.subscriptions.services.subscription_prerequisites_applier import (
     SubscriptionPrerequisitesApplier,
 )
-from tapir.subscriptions.types import AdminSubscriptionAdditionRequest
+from tapir.subscriptions.types import AdminSubscriptionAddition
 from tapir.wirgarten.models import Subscription
 from tapir.wirgarten.service.member import send_contract_change_confirmation
 from tapir.wirgarten.utils import get_now
@@ -14,10 +14,10 @@ from tapir.wirgarten.utils import get_now
 class AdminSubscriptionAdditionApplier:
     @classmethod
     def apply_addition(
-        cls, addition: AdminSubscriptionAdditionRequest, actor: TapirUser, cache: dict
+        cls, addition: AdminSubscriptionAddition, actor: TapirUser, cache: dict
     ) -> list[Subscription]:
         if addition.prerequisites.desired_pickup_location_id is not None:
-            SubscriptionPrerequisitesApplier.apply_pickup_location(
+            SubscriptionPrerequisitesApplier.apply_delivery_address_and_pickup_location(
                 member=addition.member,
                 subscription_start_date=addition.start_date,
                 desired_pickup_location_id=addition.prerequisites.desired_pickup_location_id,
@@ -37,7 +37,7 @@ class AdminSubscriptionAdditionApplier:
             member=addition.member,
             iban=addition.prerequisites.iban,
             account_owner=addition.prerequisites.account_owner,
-            sepa_allowed=addition.prerequisites.sepa_mandate_confirmed,
+            sepa_consent_given=addition.prerequisites.sepa_mandate_confirmed,
             cache=cache,
         )
 
@@ -45,7 +45,7 @@ class AdminSubscriptionAdditionApplier:
 
     @classmethod
     def create_subscription(
-        cls, addition: AdminSubscriptionAdditionRequest, actor: TapirUser, cache: dict
+        cls, addition: AdminSubscriptionAddition, actor: TapirUser, cache: dict
     ) -> list[Subscription]:
         trial_disabled, trial_end_date_override = ApplyTapirOrderManager.get_trial_data(
             member=addition.member,

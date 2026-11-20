@@ -14,9 +14,9 @@ from tapir.payments.services.member_payment_rhythm_service import (
 from tapir.subscriptions.serializers import (
     AdminSubscriptionChangeMemberDataSerializer,
     AdminSubscriptionChangeMemberSummarySerializer,
-    AdminSizeChangeDateOptionsSerializer,
-    AdminSizeChangeRequestSerializer,
-    AdminSubscriptionAdditionRequestSerializer,
+    AdminStartDateOptionsSerializer,
+    AdminSizeChangeSerializer,
+    AdminSubscriptionAdditionSerializer,
     OrderConfirmationResponseSerializer,
 )
 from tapir.subscriptions.services.admin_size_change_applier import (
@@ -44,8 +44,8 @@ from tapir.subscriptions.services.admin_size_change_date_options_builder import 
     AdminSizeChangeDateOptionsBuilder,
 )
 from tapir.subscriptions.types import (
-    AdminSizeChangeRequest,
-    AdminSubscriptionAdditionRequest,
+    AdminSizeChange,
+    AdminSubscriptionAddition,
     SubscriptionPrerequisitesInput,
 )
 from tapir.wirgarten.models import Member, Product, ProductType, Subscription
@@ -106,7 +106,7 @@ class AdminSubscriptionChangeMemberDataApiView(APIView):
             "prerequisites": AdminSubscriptionChangeMemberDataBuilder.build_prerequisites_status(
                 member=member, cache=cache
             ),
-            "payment_rhythm": MemberPaymentRhythmService.get_rhythm_display_name(
+            "payment_rhythm_label": MemberPaymentRhythmService.get_rhythm_display_name(
                 MemberPaymentRhythmService.get_member_payment_rhythm(
                     member=member, reference_date=get_today(cache=cache), cache=cache
                 )
@@ -120,7 +120,7 @@ class AdminSizeChangeDateOptionsApiView(APIView):
 
     @extend_schema(
         parameters=[OpenApiParameter(name="subscription_id", type=str)],
-        responses={200: AdminSizeChangeDateOptionsSerializer},
+        responses={200: AdminStartDateOptionsSerializer},
     )
     def get(self, request):
         cache = {}
@@ -130,7 +130,7 @@ class AdminSizeChangeDateOptionsApiView(APIView):
         )
 
         return Response(
-            AdminSizeChangeDateOptionsSerializer(
+            AdminStartDateOptionsSerializer(
                 AdminSizeChangeDateOptionsBuilder.build(
                     subscription=subscription, cache=cache
                 )
@@ -142,8 +142,8 @@ class AdminSizeChangeBaseApiView(APIView):
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
 
     @staticmethod
-    def _build_size_change(request, cache: dict) -> AdminSizeChangeRequest:
-        serializer = AdminSizeChangeRequestSerializer(data=request.data)
+    def _build_size_change(request, cache: dict) -> AdminSizeChange:
+        serializer = AdminSizeChangeSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         validated_data = serializer.validated_data
 
@@ -158,7 +158,7 @@ class AdminSizeChangeBaseApiView(APIView):
         )
         change_date = validated_data["change_date"]
 
-        return AdminSizeChangeRequest(
+        return AdminSizeChange(
             member=member,
             subscription=subscription,
             new_product=new_product,
@@ -179,9 +179,7 @@ class AdminSizeChangeBaseApiView(APIView):
         )
 
     @staticmethod
-    def _get_validation_error(
-        size_change: AdminSizeChangeRequest, cache: dict
-    ) -> str | None:
+    def _get_validation_error(size_change: AdminSizeChange, cache: dict) -> str | None:
         try:
             AdminSizeChangeValidator.validate(size_change=size_change, cache=cache)
         except ValidationError as error:
@@ -191,7 +189,7 @@ class AdminSizeChangeBaseApiView(APIView):
 
 class AdminSizeChangeCheckApiView(AdminSizeChangeBaseApiView):
     @extend_schema(
-        request=AdminSizeChangeRequestSerializer,
+        request=AdminSizeChangeSerializer,
         responses={200: OrderConfirmationResponseSerializer},
     )
     def post(self, request):
@@ -209,7 +207,7 @@ class AdminSizeChangeCheckApiView(AdminSizeChangeBaseApiView):
 
 class AdminSizeChangeApplyApiView(AdminSizeChangeBaseApiView):
     @extend_schema(
-        request=AdminSizeChangeRequestSerializer,
+        request=AdminSizeChangeSerializer,
         responses={200: OrderConfirmationResponseSerializer},
     )
     def post(self, request):
@@ -240,7 +238,7 @@ class AdminSubscriptionAdditionDateOptionsApiView(APIView):
 
     @extend_schema(
         parameters=[OpenApiParameter(name="product_type_id", type=str)],
-        responses={200: AdminSizeChangeDateOptionsSerializer},
+        responses={200: AdminStartDateOptionsSerializer},
     )
     def get(self, request):
         cache = {}
@@ -249,7 +247,7 @@ class AdminSubscriptionAdditionDateOptionsApiView(APIView):
         )
 
         return Response(
-            AdminSizeChangeDateOptionsSerializer(
+            AdminStartDateOptionsSerializer(
                 AdminSubscriptionAdditionDateOptionsBuilder.build(
                     product_type=product_type, cache=cache
                 )
@@ -261,8 +259,8 @@ class AdminSubscriptionAdditionBaseApiView(APIView):
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
 
     @staticmethod
-    def _build_addition(request) -> AdminSubscriptionAdditionRequest:
-        serializer = AdminSubscriptionAdditionRequestSerializer(data=request.data)
+    def _build_addition(request) -> AdminSubscriptionAddition:
+        serializer = AdminSubscriptionAdditionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         validated_data = serializer.validated_data
 
@@ -273,7 +271,7 @@ class AdminSubscriptionAdditionBaseApiView(APIView):
         quantity = validated_data["quantity"]
         start_date = validated_data["start_date"]
 
-        return AdminSubscriptionAdditionRequest(
+        return AdminSubscriptionAddition(
             member=member,
             product=product,
             quantity=quantity,
@@ -288,7 +286,7 @@ class AdminSubscriptionAdditionBaseApiView(APIView):
 
     @staticmethod
     def _get_validation_error(
-        addition: AdminSubscriptionAdditionRequest, cache: dict
+        addition: AdminSubscriptionAddition, cache: dict
     ) -> str | None:
         try:
             AdminSubscriptionAdditionValidator.validate(addition=addition, cache=cache)
@@ -299,7 +297,7 @@ class AdminSubscriptionAdditionBaseApiView(APIView):
 
 class AdminSubscriptionAdditionCheckApiView(AdminSubscriptionAdditionBaseApiView):
     @extend_schema(
-        request=AdminSubscriptionAdditionRequestSerializer,
+        request=AdminSubscriptionAdditionSerializer,
         responses={200: OrderConfirmationResponseSerializer},
     )
     def post(self, request):
@@ -316,7 +314,7 @@ class AdminSubscriptionAdditionCheckApiView(AdminSubscriptionAdditionBaseApiView
 
 class AdminSubscriptionAdditionApplyApiView(AdminSubscriptionAdditionBaseApiView):
     @extend_schema(
-        request=AdminSubscriptionAdditionRequestSerializer,
+        request=AdminSubscriptionAdditionSerializer,
         responses={200: OrderConfirmationResponseSerializer},
     )
     def post(self, request):

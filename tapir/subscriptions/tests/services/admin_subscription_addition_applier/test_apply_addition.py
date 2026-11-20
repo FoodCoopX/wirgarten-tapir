@@ -7,7 +7,7 @@ from tapir.subscriptions.services.admin_subscription_addition_applier import (
     AdminSubscriptionAdditionApplier,
 )
 from tapir.subscriptions.types import (
-    AdminSubscriptionAdditionRequest,
+    AdminSubscriptionAddition,
     SubscriptionPrerequisitesInput,
 )
 from tapir.wirgarten.constants import WEEKLY
@@ -82,7 +82,7 @@ class TestAdminSubscriptionAdditionApplierApplyAddition(TapirIntegrationTest):
     ) -> list[Subscription]:
         cache = {}
         return AdminSubscriptionAdditionApplier.apply_addition(
-            addition=AdminSubscriptionAdditionRequest(
+            addition=AdminSubscriptionAddition(
                 member=self.member,
                 product=product,
                 quantity=quantity,

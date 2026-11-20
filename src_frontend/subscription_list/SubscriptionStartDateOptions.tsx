@@ -2,10 +2,7 @@ import dayjs from "dayjs";
 import isoWeek from "dayjs/plugin/isoWeek";
 import React, { useState } from "react";
 import { Form } from "react-bootstrap";
-import {
-  AdminSizeChangeDateOption,
-  AdminSizeChangeWeekOption,
-} from "../api-client";
+import { AdminStartDateOption, AdminStartDateWeekOption } from "../api-client";
 import { fromApiDate } from "../utils/apiDate.ts";
 import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
 
@@ -14,18 +11,18 @@ dayjs.extend(isoWeek);
 type DateOptionKind = "next_possible_start" | "week" | "next_period_start";
 
 interface SubscriptionStartDateOptionsProps {
-  nextPossibleStart: AdminSizeChangeDateOption;
-  weeks: AdminSizeChangeWeekOption[];
-  nextPeriodStart: AdminSizeChangeDateOption;
+  nextPossibleStart: AdminStartDateOption;
+  weeks: AdminStartDateWeekOption[];
+  nextPeriodStart: AdminStartDateOption;
   selectedDate: string | undefined;
   setSelectedDate: (date: string | undefined) => void;
 }
 
-function getIsoYear(week: AdminSizeChangeWeekOption): number {
+function getIsoYear(week: AdminStartDateWeekOption): number {
   return dayjs(fromApiDate(week.date)).isoWeekYear();
 }
 
-function formatWeek(week: AdminSizeChangeWeekOption): string {
+function formatWeek(week: AdminStartDateWeekOption): string {
   const weekNumber = dayjs(fromApiDate(week.date)).isoWeek();
   let result = `KW ${weekNumber} · ${formatDateNumeric(week.date)}`;
   if (week.isBeforeNextPossibleStart) {
@@ -69,7 +66,7 @@ const SubscriptionStartDateOptions: React.FC<
     }
   }
 
-  function buildDisabledReason(option: AdminSizeChangeDateOption) {
+  function buildDisabledReason(option: AdminStartDateOption) {
     if (option.date === null) {
       return "Es gibt keine folgende Vertragsperiode.";
     }
@@ -79,7 +76,7 @@ const SubscriptionStartDateOptions: React.FC<
     return undefined;
   }
 
-  function buildOptionLabel(label: string, option: AdminSizeChangeDateOption) {
+  function buildOptionLabel(label: string, option: AdminStartDateOption) {
     const disabledReason = buildDisabledReason(option);
     return (
       <>

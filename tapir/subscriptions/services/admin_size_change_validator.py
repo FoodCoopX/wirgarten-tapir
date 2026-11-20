@@ -2,14 +2,17 @@ import datetime
 
 from django.core.exceptions import ValidationError
 
-from tapir.subscriptions.services.admin_size_change_next_period_finder import (
-    AdminSizeChangeNextPeriodFinder,
+from tapir.subscriptions.services.admin_start_date_validator import (
+    AdminStartDateValidator,
+)
+from tapir.subscriptions.services.next_period_with_subscriptions_finder import (
+    NextPeriodWithSubscriptionsFinder,
 )
 from tapir.subscriptions.services.subscription_prerequisites_validator import (
     SubscriptionPrerequisitesValidator,
 )
 from tapir.subscriptions.services.order_validator import OrderValidator
-from tapir.subscriptions.types import AdminSizeChangeRequest, TapirOrder
+from tapir.subscriptions.types import AdminSizeChange, TapirOrder
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import Member, PickupLocation, Product, Subscription
 from tapir.wirgarten.utils import get_today
@@ -17,14 +20,16 @@ from tapir.wirgarten.utils import get_today
 
 class AdminSizeChangeValidator:
     @classmethod
-    def validate(cls, size_change: AdminSizeChangeRequest, cache: dict):
+    def validate(cls, size_change: AdminSizeChange, cache: dict):
         cls.validate_subscription(
             member=size_change.member,
             subscription=size_change.subscription,
             change_date=size_change.change_date,
             cache=cache,
         )
-        cls.validate_change_date(change_date=size_change.change_date, cache=cache)
+        AdminStartDateValidator.validate_start_date(
+            start_date=size_change.change_date, cache=cache
+        )
         cls.validate_new_product(
             subscription=size_change.subscription,
             new_product=size_change.new_product,
@@ -70,7 +75,7 @@ class AdminSizeChangeValidator:
             account_owner=size_change.prerequisites.account_owner,
             iban=size_change.prerequisites.iban,
         )
-        cls.validate_sepa_mandate(
+        SubscriptionPrerequisitesValidator.validate_sepa_mandate(
             iban=size_change.prerequisites.iban,
             sepa_mandate_confirmed=size_change.prerequisites.sepa_mandate_confirmed,
         )
@@ -114,24 +119,6 @@ class AdminSizeChangeValidator:
             reference_date=change_date, cache=cache
         )
         return growing_period is not None and growing_period.start_date == change_date
-
-    @classmethod
-    def validate_change_date(cls, change_date: datetime.date, cache: dict):
-        if change_date < get_today(cache=cache):
-            raise ValidationError(
-                "Das Datum der Änderung darf nicht in der Vergangenheit liegen."
-            )
-
-        if change_date.weekday() == 0:
-            return
-
-        growing_period = TapirCache.get_growing_period_at_date(
-            reference_date=change_date, cache=cache
-        )
-        if growing_period is None or growing_period.start_date != change_date:
-            raise ValidationError(
-                "Das Datum der Änderung muss ein Montag oder der Beginn einer Vertragsperiode sein."
-            )
 
     @classmethod
     def validate_new_product(cls, subscription: Subscription, new_product: Product):
@@ -184,7 +171,7 @@ class AdminSizeChangeValidator:
         cache: dict,
     ):
         next_growing_period = (
-            AdminSizeChangeNextPeriodFinder.get_next_period_with_subscriptions(
+            NextPeriodWithSubscriptionsFinder.get_next_period_with_subscriptions(
                 member=member,
                 product_type_id=product_type_id,
                 reference_date=reference_date,
@@ -201,10 +188,3 @@ class AdminSizeChangeValidator:
             pickup_location=pickup_location,
             cache=cache,
         )
-
-    @classmethod
-    def validate_sepa_mandate(cls, iban: str, sepa_mandate_confirmed: bool):
-        if iban.strip() != "" and not sepa_mandate_confirmed:
-            raise ValidationError(
-                "Bitte bestätige, dass ein unterschriebenes SEPA-Mandat vorliegt."
-            )

@@ -1,45 +1,22 @@
 import datetime
-from dataclasses import dataclass
-
-from tapir.deliveries.services.delivery_date_calculator import (
-    DeliveryDateCalculator,
-)
 from tapir.subscriptions.services.admin_size_change_validator import (
     AdminSizeChangeValidator,
 )
 from tapir.subscriptions.services.contract_start_date_calculator import (
     ContractStartDateCalculator,
 )
+from tapir.subscriptions.services.start_date_week_options_builder import (
+    StartDateWeekOptionsBuilder,
+)
+from tapir.subscriptions.types import DateOption, StartDateOptions
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.utils.shortcuts import get_monday
-from tapir.wirgarten.constants import NO_DELIVERY
-from tapir.wirgarten.models import ProductType, Subscription
+from tapir.wirgarten.models import Subscription
 from tapir.wirgarten.utils import get_today
-
-
-@dataclass(frozen=True)
-class DateOption:
-    date: datetime.date | None
-    enabled: bool
-
-
-@dataclass(frozen=True)
-class WeekOption:
-    date: datetime.date
-    is_before_next_possible_start: bool
-    has_no_delivery: bool
-
-
-@dataclass(frozen=True)
-class SizeChangeDateOptions:
-    next_possible_start: DateOption
-    weeks: list[WeekOption]
-    next_period_start: DateOption
 
 
 class AdminSizeChangeDateOptionsBuilder:
     @classmethod
-    def build(cls, subscription: Subscription, cache: dict) -> SizeChangeDateOptions:
+    def build(cls, subscription: Subscription, cache: dict) -> StartDateOptions:
         # The possible options are for when the change applies:
         # - According to normal contract start rules
         # - On a user-chosen week
@@ -48,14 +25,14 @@ class AdminSizeChangeDateOptionsBuilder:
         next_possible_start = ContractStartDateCalculator.get_next_contract_start_date(
             reference_date=get_today(cache=cache), apply_buffer_time=True, cache=cache
         )
-        return SizeChangeDateOptions(
+        return StartDateOptions(
             next_possible_start=DateOption(
                 date=next_possible_start,
                 enabled=subscription.start_date
                 <= next_possible_start
                 <= subscription.end_date,
             ),
-            weeks=cls.build_week_options(
+            weeks=StartDateWeekOptionsBuilder.build_week_options(
                 product_type=subscription.product.type,
                 first_date=max(get_today(cache=cache), subscription.start_date),
                 last_date=subscription.end_date,
@@ -66,37 +43,6 @@ class AdminSizeChangeDateOptionsBuilder:
                 subscription=subscription, cache=cache
             ),
         )
-
-    @classmethod
-    def build_week_options(
-        cls,
-        product_type: ProductType,
-        first_date: datetime.date,
-        last_date: datetime.date,
-        next_possible_start: datetime.date,
-        cache: dict,
-    ) -> list[WeekOption]:
-        monday = get_monday(first_date)
-        if monday < first_date:
-            monday += datetime.timedelta(weeks=1)
-
-        week_options = []
-        while monday <= last_date:
-            week_options.append(
-                WeekOption(
-                    date=monday,
-                    is_before_next_possible_start=monday < next_possible_start,
-                    has_no_delivery=product_type.delivery_cycle != NO_DELIVERY[0]
-                    and not DeliveryDateCalculator.is_week_delivered(
-                        product_type=product_type,
-                        delivery_date=monday,
-                        check_for_weeks_without_delivery=True,
-                        cache=cache,
-                    ),
-                )
-            )
-            monday += datetime.timedelta(weeks=1)
-        return week_options
 
     @classmethod
     def build_next_period_option(

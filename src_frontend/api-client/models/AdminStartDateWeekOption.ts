@@ -15,35 +15,35 @@
 /**
  *
  * @export
- * @interface AdminSizeChangeWeekOption
+ * @interface AdminStartDateWeekOption
  */
-export interface AdminSizeChangeWeekOption {
+export interface AdminStartDateWeekOption {
   /**
    *
    * @type {string}
-   * @memberof AdminSizeChangeWeekOption
+   * @memberof AdminStartDateWeekOption
    */
   date: string;
   /**
    *
    * @type {boolean}
-   * @memberof AdminSizeChangeWeekOption
+   * @memberof AdminStartDateWeekOption
    */
   isBeforeNextPossibleStart: boolean;
   /**
    *
    * @type {boolean}
-   * @memberof AdminSizeChangeWeekOption
+   * @memberof AdminStartDateWeekOption
    */
   hasNoDelivery: boolean;
 }
 
 /**
- * Check if a given object implements the AdminSizeChangeWeekOption interface.
+ * Check if a given object implements the AdminStartDateWeekOption interface.
  */
-export function instanceOfAdminSizeChangeWeekOption(
+export function instanceOfAdminStartDateWeekOption(
   value: object,
-): value is AdminSizeChangeWeekOption {
+): value is AdminStartDateWeekOption {
   if (!("date" in value) || value["date"] === undefined) return false;
   if (
     !("isBeforeNextPossibleStart" in value) ||
@@ -55,16 +55,16 @@ export function instanceOfAdminSizeChangeWeekOption(
   return true;
 }
 
-export function AdminSizeChangeWeekOptionFromJSON(
+export function AdminStartDateWeekOptionFromJSON(
   json: any,
-): AdminSizeChangeWeekOption {
-  return AdminSizeChangeWeekOptionFromJSONTyped(json, false);
+): AdminStartDateWeekOption {
+  return AdminStartDateWeekOptionFromJSONTyped(json, false);
 }
 
-export function AdminSizeChangeWeekOptionFromJSONTyped(
+export function AdminStartDateWeekOptionFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
-): AdminSizeChangeWeekOption {
+): AdminStartDateWeekOption {
   if (json == null) {
     return json;
   }
@@ -75,14 +75,14 @@ export function AdminSizeChangeWeekOptionFromJSONTyped(
   };
 }
 
-export function AdminSizeChangeWeekOptionToJSON(
+export function AdminStartDateWeekOptionToJSON(
   json: any,
-): AdminSizeChangeWeekOption {
-  return AdminSizeChangeWeekOptionToJSONTyped(json, false);
+): AdminStartDateWeekOption {
+  return AdminStartDateWeekOptionToJSONTyped(json, false);
 }
 
-export function AdminSizeChangeWeekOptionToJSONTyped(
-  value?: AdminSizeChangeWeekOption | null,
+export function AdminStartDateWeekOptionToJSONTyped(
+  value?: AdminStartDateWeekOption | null,
   ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {

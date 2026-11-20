@@ -1,6 +1,9 @@
 import datetime
 from unittest.mock import patch, MagicMock
 
+from tapir.subscriptions.services.admin_start_date_validator import (
+    AdminStartDateValidator,
+)
 from tapir.subscriptions.services.admin_size_change_validator import (
     AdminSizeChangeValidator,
 )
@@ -9,7 +12,7 @@ from tapir.subscriptions.services.subscription_prerequisites_validator import (
 )
 from tapir.subscriptions.services.order_validator import OrderValidator
 from tapir.subscriptions.types import (
-    AdminSizeChangeRequest,
+    AdminSizeChange,
     SubscriptionPrerequisitesInput,
 )
 from tapir.wirgarten.tests.factories import (
@@ -22,7 +25,9 @@ from tapir.wirgarten.tests.factories import (
 from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
-@patch.object(AdminSizeChangeValidator, "validate_sepa_mandate", autospec=True)
+@patch.object(
+    SubscriptionPrerequisitesValidator, "validate_sepa_mandate", autospec=True
+)
 @patch.object(
     SubscriptionPrerequisitesValidator, "validate_banking_data", autospec=True
 )
@@ -38,7 +43,7 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
     AdminSizeChangeValidator, "validate_no_other_cancelled_subscription", autospec=True
 )
 @patch.object(AdminSizeChangeValidator, "validate_new_product", autospec=True)
-@patch.object(AdminSizeChangeValidator, "validate_change_date", autospec=True)
+@patch.object(AdminStartDateValidator, "validate_start_date", autospec=True)
 @patch.object(AdminSizeChangeValidator, "validate_subscription", autospec=True)
 class TestAdminSizeChangeValidatorValidate(TapirUnitTest):
     def setUp(self):
@@ -58,7 +63,7 @@ class TestAdminSizeChangeValidatorValidate(TapirUnitTest):
 
     def _validate(self):
         AdminSizeChangeValidator.validate(
-            size_change=AdminSizeChangeRequest(
+            size_change=AdminSizeChange(
                 member=self.member,
                 subscription=self.subscription,
                 new_product=self.new_product,
@@ -77,7 +82,7 @@ class TestAdminSizeChangeValidatorValidate(TapirUnitTest):
     def test_validate_default_callsAllValidatorsWithCorrectParameters(
         self,
         mock_validate_subscription: MagicMock,
-        mock_validate_change_date: MagicMock,
+        mock_validate_start_date: MagicMock,
         mock_validate_new_product: MagicMock,
         mock_validate_no_other_cancelled_subscription: MagicMock,
         mock_validate_pickup_location: MagicMock,
@@ -94,8 +99,8 @@ class TestAdminSizeChangeValidatorValidate(TapirUnitTest):
             change_date=self.change_date,
             cache=self.cache,
         )
-        mock_validate_change_date.assert_called_once_with(
-            change_date=self.change_date, cache=self.cache
+        mock_validate_start_date.assert_called_once_with(
+            start_date=self.change_date, cache=self.cache
         )
         mock_validate_new_product.assert_called_once_with(
             subscription=self.subscription, new_product=self.new_product

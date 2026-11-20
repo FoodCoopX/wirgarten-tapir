@@ -19,7 +19,7 @@ from tapir.wirgarten.utils import get_today, get_now
 
 class SubscriptionPrerequisitesApplier:
     @classmethod
-    def apply_pickup_location(
+    def apply_delivery_address_and_pickup_location(
         cls,
         member: Member,
         subscription_start_date: datetime.date,
@@ -79,7 +79,7 @@ class SubscriptionPrerequisitesApplier:
         member: Member,
         iban: str,
         account_owner: str,
-        sepa_allowed: bool,
+        sepa_consent_given: bool,
         cache: dict,
     ):
         if iban.strip() != "":
@@ -88,7 +88,7 @@ class SubscriptionPrerequisitesApplier:
         if account_owner.strip() != "":
             member.account_owner = account_owner
 
-        if sepa_allowed:
+        if sepa_consent_given:
             member.sepa_consent = get_now(cache=cache)
 
         member.save()

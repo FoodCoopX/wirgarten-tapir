@@ -27,8 +27,10 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
     MemberPickupLocationSetter, "link_member_to_pickup_location", autospec=True
 )
 @patch.object(MemberDeliveryAddressSetter, "save_delivery_address", autospec=True)
-class TestSubscriptionPrerequisitesApplierApplyPickupLocation(TapirUnitTest):
-    def test_applyPickupLocation_desiredLocationDiffersFromCurrent_linksMemberToDesiredLocation(
+class TestSubscriptionPrerequisitesApplierApplyDeliveryAddressAndPickupLocation(
+    TapirUnitTest
+):
+    def test_applyDeliveryAddressAndPickupLocation_desiredLocationDiffersFromCurrent_linksMemberToDesiredLocation(
         self,
         mock_save_delivery_address: MagicMock,
         mock_link_member_to_pickup_location: MagicMock,
@@ -39,7 +41,7 @@ class TestSubscriptionPrerequisitesApplierApplyPickupLocation(TapirUnitTest):
         subscription_start_date = datetime.date(year=2027, month=3, day=1)
         cache = {}
 
-        SubscriptionPrerequisitesApplier.apply_pickup_location(
+        SubscriptionPrerequisitesApplier.apply_delivery_address_and_pickup_location(
             member=member,
             subscription_start_date=subscription_start_date,
             desired_pickup_location_id="desired_id",
@@ -59,7 +61,7 @@ class TestSubscriptionPrerequisitesApplierApplyPickupLocation(TapirUnitTest):
             cache=cache,
         )
 
-    def test_applyPickupLocation_desiredLocationIsCurrent_doesNotLinkAgain(
+    def test_applyDeliveryAddressAndPickupLocation_desiredLocationIsCurrent_doesNotLinkAgain(
         self,
         mock_save_delivery_address: MagicMock,
         mock_link_member_to_pickup_location: MagicMock,
@@ -68,7 +70,7 @@ class TestSubscriptionPrerequisitesApplierApplyPickupLocation(TapirUnitTest):
         member = MemberFactory.build()
         actor = Mock()
 
-        SubscriptionPrerequisitesApplier.apply_pickup_location(
+        SubscriptionPrerequisitesApplier.apply_delivery_address_and_pickup_location(
             member=member,
             subscription_start_date=datetime.date(year=2027, month=3, day=1),
             desired_pickup_location_id="current_id",

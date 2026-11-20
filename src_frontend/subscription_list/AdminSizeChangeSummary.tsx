@@ -53,7 +53,7 @@ const AdminSizeChangeSummary: React.FC<AdminSizeChangeSummaryProps> = ({
         <dt className={"col-4"}>Verteilort</dt>
         <dd className={"col-8"}>{pickupLocationName}</dd>
         <dt className={"col-4"}>Zahlungsintervall</dt>
-        <dd className={"col-8"}>{memberData.paymentRhythm}</dd>
+        <dd className={"col-8"}>{memberData.paymentRhythmLabel}</dd>
         <dt className={"col-4"}>Bankverbindung</dt>
         <dd className={"col-8"}>
           {memberData.prerequisites.hasBankingData

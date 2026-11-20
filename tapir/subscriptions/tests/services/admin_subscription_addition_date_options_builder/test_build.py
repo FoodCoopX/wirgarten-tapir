@@ -1,26 +1,26 @@
 import datetime
 from unittest.mock import patch, MagicMock
 
-from tapir.subscriptions.services.admin_size_change_date_options_builder import (
-    AdminSizeChangeDateOptionsBuilder,
-    DateOption,
-)
 from tapir.subscriptions.services.admin_subscription_addition_date_options_builder import (
     AdminSubscriptionAdditionDateOptionsBuilder,
 )
 from tapir.subscriptions.services.admin_subscription_addition_validator import (
     AdminSubscriptionAdditionValidator,
 )
+from tapir.subscriptions.services.start_date_week_options_builder import (
+    StartDateWeekOptionsBuilder,
+)
 from tapir.subscriptions.services.contract_start_date_calculator import (
     ContractStartDateCalculator,
 )
+from tapir.subscriptions.types import DateOption
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.tests.factories import GrowingPeriodFactory, ProductTypeFactory
 from tapir.wirgarten.tests.test_utils import TapirUnitTest, mock_timezone
 
 
 @patch.object(
-    AdminSizeChangeDateOptionsBuilder,
+    StartDateWeekOptionsBuilder,
     "build_week_options",
     autospec=True,
     return_value=[],

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Alert, Form, Modal, Spinner } from "react-bootstrap";
 import {
-  AdminSizeChangeDateOptions,
-  AdminSizeChangeRequestRequest,
+  AdminSizeChangeRequest,
+  AdminStartDateOptions,
   AdminSubscriptionChangeMemberData,
   AdminSubscriptionChangeSubscriptionUnit,
   PickupLocationsApi,
@@ -69,7 +69,7 @@ const AdminSubscriptionChangeModal: React.FC<
   const [memberData, setMemberData] =
     useState<AdminSubscriptionChangeMemberData>();
   const [unit, setUnit] = useState<AdminSubscriptionChangeSubscriptionUnit>();
-  const [dateOptions, setDateOptions] = useState<AdminSizeChangeDateOptions>();
+  const [dateOptions, setDateOptions] = useState<AdminStartDateOptions>();
   const [newProductId, setNewProductId] = useState<string>();
   const [changeDate, setChangeDate] = useState<string>();
   const [prerequisites, setPrerequisites] =
@@ -154,7 +154,7 @@ const AdminSubscriptionChangeModal: React.FC<
       setChecking(true);
       subscriptionsApi
         .subscriptionsApiAdminSizeChangeCheckCreate({
-          adminSizeChangeRequestRequest: buildRequest(),
+          adminSizeChangeRequest: buildRequest(),
         })
         .then((response) => {
           if (!cancelled) setCheckError(response.error);
@@ -177,7 +177,7 @@ const AdminSubscriptionChangeModal: React.FC<
     };
   }, [newProductId, changeDate, prerequisites, prerequisitesComplete]);
 
-  function buildRequest(): AdminSizeChangeRequestRequest {
+  function buildRequest(): AdminSizeChangeRequest {
     return {
       memberId: memberId!,
       subscriptionId: unit!.subscriptionId,
@@ -194,7 +194,7 @@ const AdminSubscriptionChangeModal: React.FC<
     setSaving(true);
     subscriptionsApi
       .subscriptionsApiAdminSizeChangeApplyCreate({
-        adminSizeChangeRequestRequest: buildRequest(),
+        adminSizeChangeRequest: buildRequest(),
       })
       .then((response) => {
         if (response.orderConfirmed) {

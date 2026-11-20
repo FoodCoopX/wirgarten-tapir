@@ -3,8 +3,8 @@ import datetime
 from tapir.accounts.models import TapirUser
 from tapir.bakery.services.breaddelivery_service import BreadDeliveryService
 from tapir.payments.services.member_credit_creator import MemberCreditCreator
-from tapir.subscriptions.services.admin_size_change_next_period_finder import (
-    AdminSizeChangeNextPeriodFinder,
+from tapir.subscriptions.services.next_period_with_subscriptions_finder import (
+    NextPeriodWithSubscriptionsFinder,
 )
 from tapir.subscriptions.services.apply_tapir_order_manager import (
     ApplyTapirOrderManager,
@@ -15,7 +15,7 @@ from tapir.subscriptions.services.automatic_subscription_renewal_service import 
 from tapir.subscriptions.services.subscription_prerequisites_applier import (
     SubscriptionPrerequisitesApplier,
 )
-from tapir.subscriptions.types import AdminSizeChangeRequest, TapirOrder
+from tapir.subscriptions.types import AdminSizeChange, TapirOrder
 from tapir.utils.services.tapir_cache_manager import TapirCacheManager
 from tapir.wirgarten.forms.subscription import cancel_or_delete_subscriptions
 from tapir.wirgarten.models import (
@@ -32,16 +32,16 @@ from tapir.wirgarten.utils import get_now
 class AdminSizeChangeApplier:
     @classmethod
     def apply_change(
-        cls, size_change: AdminSizeChangeRequest, actor: TapirUser, cache: dict
+        cls, size_change: AdminSizeChange, actor: TapirUser, cache: dict
     ) -> list[Subscription]:
         member = size_change.member
-        previous_subscription = size_change.subscription
+        subscription = size_change.subscription
         change_date = size_change.change_date
         order = size_change.order
         prerequisites = size_change.prerequisites
 
         if prerequisites.desired_pickup_location_id is not None:
-            SubscriptionPrerequisitesApplier.apply_pickup_location(
+            SubscriptionPrerequisitesApplier.apply_delivery_address_and_pickup_location(
                 member=member,
                 subscription_start_date=change_date,
                 desired_pickup_location_id=prerequisites.desired_pickup_location_id,
@@ -49,10 +49,10 @@ class AdminSizeChangeApplier:
                 cache=cache,
             )
 
-        if change_date > previous_subscription.end_date:
+        if change_date > subscription.end_date:
             new_subscriptions = cls.apply_change_from_next_period(
                 member=member,
-                previous_subscription=previous_subscription,
+                subscription=subscription,
                 change_date=change_date,
                 order=order,
                 actor=actor,
@@ -61,7 +61,7 @@ class AdminSizeChangeApplier:
         else:
             new_subscriptions = cls.apply_order_with_next_period_renewals(
                 member=member,
-                product_type=previous_subscription.product.type,
+                product_type=subscription.product.type,
                 change_date=change_date,
                 order=order,
                 actor=actor,
@@ -75,7 +75,7 @@ class AdminSizeChangeApplier:
         MemberCreditCreator.create_member_credit_if_necessary(
             member=member,
             actor=actor,
-            product_type_id_or_soli=previous_subscription.product.type_id,
+            product_type_id_or_soli=subscription.product.type_id,
             reference_date=change_date,
             comment="Produktanteilsgröße vom Admin durch die Vertragsliste geändert",
             cache=cache,
@@ -85,7 +85,7 @@ class AdminSizeChangeApplier:
             member=member,
             iban=prerequisites.iban,
             account_owner=prerequisites.account_owner,
-            sepa_allowed=prerequisites.sepa_mandate_confirmed,
+            sepa_consent_given=prerequisites.sepa_mandate_confirmed,
             cache=cache,
         )
 
@@ -107,7 +107,7 @@ class AdminSizeChangeApplier:
             .values_list("id", flat=True)
         )
         next_period_subscriptions_existed = (
-            AdminSizeChangeNextPeriodFinder.get_next_period_with_subscriptions(
+            NextPeriodWithSubscriptionsFinder.get_next_period_with_subscriptions(
                 member=member,
                 product_type_id=product_type.id,
                 reference_date=change_date,
@@ -154,7 +154,7 @@ class AdminSizeChangeApplier:
     def apply_change_from_next_period(
         cls,
         member: Member,
-        previous_subscription: Subscription,
+        subscription: Subscription,
         change_date: datetime.date,
         order: TapirOrder,
         actor: TapirUser,
@@ -163,46 +163,46 @@ class AdminSizeChangeApplier:
         cancel_or_delete_subscriptions(
             member=member,
             start_date=change_date,
-            product_type=previous_subscription.product.type,
+            product_type=subscription.product.type,
             actor=actor,
             cache=cache,
         )
 
         now = get_now(cache=cache)
-        previous_subscription.cancellation_ts = now
-        previous_subscription.cancellation_admin_confirmed = now
-        previous_subscription.save()
+        subscription.cancellation_ts = now
+        subscription.cancellation_admin_confirmed = now
+        subscription.save()
         SubscriptionChangeLogEntry().populate_subscription_changed(
             actor=actor,
             user=member,
             change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.CANCELLED,
-            subscriptions=[previous_subscription],
+            subscriptions=[subscription],
             admin_confirmed=now,
         ).save()
 
         current_subscriptions_by_product_id = {
-            subscription.product_id: subscription
-            for subscription in Subscription.objects.filter(
+            current_subscription.product_id: current_subscription
+            for current_subscription in Subscription.objects.filter(
                 member_id=member.id,
-                product__type_id=previous_subscription.product.type_id,
-                start_date__lte=previous_subscription.end_date,
-                end_date__gte=previous_subscription.end_date,
+                product__type_id=subscription.product.type_id,
+                start_date__lte=subscription.end_date,
+                end_date__gte=subscription.end_date,
             ).select_related("product__type")
         }
         next_period_subscriptions = []
         for product, quantity in order.items():
-            subscription = (
+            next_period_subscription = (
                 AutomaticSubscriptionRenewalService.build_renewed_subscription(
                     subscription=current_subscriptions_by_product_id.get(
-                        product.id, previous_subscription
+                        product.id, subscription
                     ),
                     cache=cache,
                 )
             )
-            subscription.product = product
-            subscription.quantity = quantity
-            subscription.price_override = None
-            next_period_subscriptions.append(subscription)
+            next_period_subscription.product = product
+            next_period_subscription.quantity = quantity
+            next_period_subscription.price_override = None
+            next_period_subscriptions.append(next_period_subscription)
 
         return cls.save_next_period_subscriptions(
             member=member,

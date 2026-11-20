@@ -15,65 +15,65 @@
 /**
  *
  * @export
- * @interface AdminSubscriptionAdditionRequestRequest
+ * @interface AdminSubscriptionAdditionRequest
  */
-export interface AdminSubscriptionAdditionRequestRequest {
+export interface AdminSubscriptionAdditionRequest {
   /**
    *
    * @type {string}
-   * @memberof AdminSubscriptionAdditionRequestRequest
+   * @memberof AdminSubscriptionAdditionRequest
    */
   memberId: string;
   /**
    *
    * @type {string}
-   * @memberof AdminSubscriptionAdditionRequestRequest
+   * @memberof AdminSubscriptionAdditionRequest
    */
   productId: string;
   /**
    *
    * @type {number}
-   * @memberof AdminSubscriptionAdditionRequestRequest
+   * @memberof AdminSubscriptionAdditionRequest
    */
   quantity: number;
   /**
    *
    * @type {string}
-   * @memberof AdminSubscriptionAdditionRequestRequest
+   * @memberof AdminSubscriptionAdditionRequest
    */
   startDate: string;
   /**
    *
    * @type {string}
-   * @memberof AdminSubscriptionAdditionRequestRequest
+   * @memberof AdminSubscriptionAdditionRequest
    */
   pickupLocationId?: string | null;
   /**
    *
    * @type {string}
-   * @memberof AdminSubscriptionAdditionRequestRequest
+   * @memberof AdminSubscriptionAdditionRequest
    */
   accountOwner: string;
   /**
    *
    * @type {string}
-   * @memberof AdminSubscriptionAdditionRequestRequest
+   * @memberof AdminSubscriptionAdditionRequest
    */
   iban: string;
   /**
    *
    * @type {boolean}
-   * @memberof AdminSubscriptionAdditionRequestRequest
+   * @memberof AdminSubscriptionAdditionRequest
    */
   sepaMandateConfirmed: boolean;
 }
 
 /**
- * Check if a given object implements the AdminSubscriptionAdditionRequestRequest interface.
+ * Check if a given object implements the AdminSubscriptionAdditionRequest interface.
  */
-export function instanceOfAdminSubscriptionAdditionRequestRequest(
+export function instanceOfAdminSubscriptionAdditionRequest(
   value: object,
-): value is AdminSubscriptionAdditionRequestRequest {
+): value is AdminSubscriptionAdditionRequest {
   if (!("memberId" in value) || value["memberId"] === undefined) return false;
   if (!("productId" in value) || value["productId"] === undefined) return false;
   if (!("quantity" in value) || value["quantity"] === undefined) return false;
@@ -89,16 +89,16 @@ export function instanceOfAdminSubscriptionAdditionRequestRequest(
   return true;
 }
 
-export function AdminSubscriptionAdditionRequestRequestFromJSON(
+export function AdminSubscriptionAdditionRequestFromJSON(
   json: any,
-): AdminSubscriptionAdditionRequestRequest {
-  return AdminSubscriptionAdditionRequestRequestFromJSONTyped(json, false);
+): AdminSubscriptionAdditionRequest {
+  return AdminSubscriptionAdditionRequestFromJSONTyped(json, false);
 }
 
-export function AdminSubscriptionAdditionRequestRequestFromJSONTyped(
+export function AdminSubscriptionAdditionRequestFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
-): AdminSubscriptionAdditionRequestRequest {
+): AdminSubscriptionAdditionRequest {
   if (json == null) {
     return json;
   }
@@ -117,14 +117,14 @@ export function AdminSubscriptionAdditionRequestRequestFromJSONTyped(
   };
 }
 
-export function AdminSubscriptionAdditionRequestRequestToJSON(
+export function AdminSubscriptionAdditionRequestToJSON(
   json: any,
-): AdminSubscriptionAdditionRequestRequest {
-  return AdminSubscriptionAdditionRequestRequestToJSONTyped(json, false);
+): AdminSubscriptionAdditionRequest {
+  return AdminSubscriptionAdditionRequestToJSONTyped(json, false);
 }
 
-export function AdminSubscriptionAdditionRequestRequestToJSONTyped(
-  value?: AdminSubscriptionAdditionRequestRequest | null,
+export function AdminSubscriptionAdditionRequestToJSONTyped(
+  value?: AdminSubscriptionAdditionRequest | null,
   ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {

@@ -18,11 +18,11 @@ apis/WaitingListApi.ts
 apis/index.ts
 index.ts
 models/AdminSetAssociationMembershipRequestRequest.ts
-models/AdminSizeChangeDateOption.ts
-models/AdminSizeChangeDateOptions.ts
-models/AdminSizeChangeRequestRequest.ts
-models/AdminSizeChangeWeekOption.ts
-models/AdminSubscriptionAdditionRequestRequest.ts
+models/AdminSizeChangeRequest.ts
+models/AdminStartDateOption.ts
+models/AdminStartDateOptions.ts
+models/AdminStartDateWeekOption.ts
+models/AdminSubscriptionAdditionRequest.ts
 models/AdminSubscriptionChangeMemberData.ts
 models/AdminSubscriptionChangeMemberSummary.ts
 models/AdminSubscriptionChangePrerequisitesStatus.ts
