@@ -1,9 +1,11 @@
 import { interpolateLevel } from "../../utils/resultsFormat.ts";
 
+export type AmountInput = string | number | null;
+
 export interface BidAmounts {
-  amount1?: string | number | null;
-  amount2?: string | number | null;
-  amount3?: string | number | null;
+  amount1?: AmountInput;
+  amount2?: AmountInput;
+  amount3?: AmountInput;
   quantity: number;
 }
 
@@ -186,6 +188,75 @@ export function buildUpliftedReachedByPosition(
   );
 }
 
+function baseBidReachedAt(
+  levels: FinancingProjectionData["levels"],
+  position: number,
+  isBidRange: boolean,
+): number {
+  const greenReached = Number(levels.green.reachedPerYear);
+  const redReached = Number(levels.red.reachedPerYear);
+  if (isBidRange) {
+    return interpolateTwoLevels(greenReached, redReached, position);
+  }
+  return interpolateLevel(
+    greenReached,
+    Number(levels.yellow?.reachedPerYear ?? greenReached),
+    redReached,
+    position,
+  );
+}
+
+function bidReachedAt(
+  options: ProjectionOptions,
+  position: number,
+  factor: number,
+  isBidRange: boolean,
+  baseBidReached: number,
+): number {
+  const upliftedBidReached =
+    options.surchargeOnBids && options.members
+      ? computeUpliftedBidReached(
+          options.members,
+          position,
+          factor,
+          true,
+          isBidRange,
+        )
+      : baseBidReached;
+  return options.bidReached ?? upliftedBidReached;
+}
+
+function applyAverageSurcharge(
+  base: number,
+  redAverage: number,
+  factor: number,
+  apply: boolean,
+  isBidRange: boolean,
+): number {
+  if (!apply) {
+    return base;
+  }
+  return isBidRange ? Math.min(base * factor, redAverage) : base * factor;
+}
+
+function averagePerShareAt(
+  baseAverage: number,
+  redAverage: number,
+  factor: number,
+  options: ProjectionOptions,
+  isBidRange: boolean,
+  bidderAveragePerMonth: number,
+): number {
+  const withSurcharge = applyAverageSurcharge(
+    baseAverage,
+    redAverage,
+    factor,
+    options.surchargeOnAverage ?? false,
+    isBidRange,
+  );
+  return Math.max(withSurcharge, bidderAveragePerMonth);
+}
+
 /**
  * Fair model: bidders pay their bid at the chosen solidarity level; everyone who
  * did not bid (auto-renewed members and members joining after the round) pays the
@@ -205,30 +276,16 @@ export function computeFinancingProjection(
 ): FinancingProjectionResult {
   const isBidRange = options.isBidRange ?? false;
   const levels = projection.levels;
-  const greenReached = Number(levels.green.reachedPerYear);
-  const redReached = Number(levels.red.reachedPerYear);
-  const baseBidReached = isBidRange
-    ? interpolateTwoLevels(greenReached, redReached, position)
-    : interpolateLevel(
-        greenReached,
-        Number(levels.yellow?.reachedPerYear ?? greenReached),
-        redReached,
-        position,
-      );
+  const baseBidReached = baseBidReachedAt(levels, position, isBidRange);
 
   const factor = options.surchargeFactor ?? 1;
-  const bidReached =
-    options.bidReached !== undefined
-      ? options.bidReached
-      : options.surchargeOnBids && options.members
-        ? computeUpliftedBidReached(
-            options.members,
-            position,
-            factor,
-            true,
-            isBidRange,
-          )
-        : baseBidReached;
+  const bidReached = bidReachedAt(
+    options,
+    position,
+    factor,
+    isBidRange,
+    baseBidReached,
+  );
 
   const bidShares = Number(projection.bidShares);
   const bidderAveragePerMonth =
@@ -244,22 +301,18 @@ export function computeFinancingProjection(
     ? autoShares + remainingShares
     : remainingShares;
 
-  // Base average derived so the target is covered at full capacity (no surcharge).
-  // With the non-bidder floor, non-bidders pay at least the bidders' average.
-  let baseAverage =
+  const baseAverageRaw =
     payerShares > 0
       ? (target - otherFixed - baseBidReached) / (payerShares * 12)
       : 0;
-  baseAverage = Math.max(baseAverage, bidderAveragePerMonth);
+  const baseAverage = Math.max(baseAverageRaw, bidderAveragePerMonth);
   const redAverage = Number(levels.red.averagePerSharePerMonth ?? baseAverage);
-  let averagePerSharePerMonth = options.surchargeOnAverage
-    ? isBidRange
-      ? Math.min(baseAverage * factor, redAverage)
-      : baseAverage * factor
-    : baseAverage;
-  // The floor always holds, even after the surcharge cap.
-  averagePerSharePerMonth = Math.max(
-    averagePerSharePerMonth,
+  const averagePerSharePerMonth = averagePerShareAt(
+    baseAverage,
+    redAverage,
+    factor,
+    options,
+    isBidRange,
     bidderAveragePerMonth,
   );
 
@@ -270,12 +323,9 @@ export function computeFinancingProjection(
   const total = bidReached + otherFixed + autoTotal + latecomerTotal;
   const coverage = target > 0 ? (total / target) * 100 : 0;
 
-  // Contributions from the members already in the round (without latecomers).
   const currentTotal = bidReached + otherFixed + autoTotal;
   const currentCoverage = target > 0 ? (currentTotal / target) * 100 : 0;
 
-  // Base model (without surcharge) and the surcharge share, so it can be shown
-  // as its own line in the breakdown.
   const baseAutoTotal = includeAutoRenewed ? autoShares * baseAverage * 12 : 0;
   const baseLatecomerTotal = remainingShares * baseAverage * 12;
   const baseTotal =

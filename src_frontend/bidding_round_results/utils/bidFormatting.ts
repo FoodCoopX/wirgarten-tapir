@@ -28,6 +28,20 @@ export function renderContractItems(
   return describeItems(items);
 }
 
+function amountForLevel(
+  level: 1 | 2 | 3,
+  isBidRange: boolean,
+  levels: ReturnType<typeof itemLevels>,
+): number {
+  if (level === 1) {
+    return levels.green;
+  }
+  if (isBidRange || level === 3) {
+    return levels.red;
+  }
+  return levels.yellow;
+}
+
 export function bidAmountForLevel(
   bid: Bid | null | undefined,
   level: 1 | 2 | 3,
@@ -36,14 +50,7 @@ export function bidAmountForLevel(
   if (!bid) return null;
   return (bid.items ?? []).reduce((sum: number, item) => {
     const levels = itemLevels(item, isBidRange);
-    const amount =
-      level === 1
-        ? levels.green
-        : isBidRange
-          ? levels.red
-          : level === 2
-            ? levels.yellow
-            : levels.red;
+    const amount = amountForLevel(level, isBidRange, levels);
     return sum + amount * item.quantity;
   }, 0);
 }

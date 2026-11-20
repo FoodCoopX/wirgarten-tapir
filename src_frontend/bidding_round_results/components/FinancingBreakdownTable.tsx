@@ -22,6 +22,37 @@ interface FinancingBreakdownTableProps {
   surchargeOnAverage: boolean;
 }
 
+function bidderLevelLabel(
+  isBidRange: boolean,
+  bidRangePosition: number,
+  bidLevels: number,
+): string {
+  if (isBidRange) {
+    return interpolate("Bietende (Niveau {position})", {
+      position: bidRangePosition,
+    });
+  }
+  if (bidLevels > 1) {
+    return interpolate("Bietende (Gebot {level})", {
+      level: levelFromPosition(bidRangePosition, bidLevels),
+    });
+  }
+  return "Bietende (Gebotsbetrag)";
+}
+
+function surchargeScopeLabel(onBids: boolean, onAverage: boolean): string {
+  if (onBids && onAverage) {
+    return " auf Gebote und Durchschnittsgebot";
+  }
+  if (onBids) {
+    return " auf Gebote";
+  }
+  if (onAverage) {
+    return " auf Durchschnittsgebot";
+  }
+  return " (inaktiv)";
+}
+
 const FinancingBreakdownTable: React.FC<FinancingBreakdownTableProps> = ({
   isBidRange,
   bidRangePosition,
@@ -38,15 +69,7 @@ const FinancingBreakdownTable: React.FC<FinancingBreakdownTableProps> = ({
       <tbody>
         <tr>
           <td>
-            {isBidRange
-              ? interpolate("Bietende (Niveau {position})", {
-                  position: bidRangePosition,
-                })
-              : bidLevels > 1
-                ? interpolate("Bietende (Gebot {level})", {
-                    level: levelFromPosition(bidRangePosition, bidLevels),
-                  })
-                : "Bietende (Gebotsbetrag)"}
+            {bidderLevelLabel(isBidRange, bidRangePosition, bidLevels)}
           </td>
           <td className="text-end">
             {formatEuro(dynamicProjection.baseBidReached)}
@@ -86,13 +109,7 @@ const FinancingBreakdownTable: React.FC<FinancingBreakdownTableProps> = ({
               {interpolate("Aufschlag (+{percent} %)", {
                 percent: surchargePercent,
               })}
-              {surchargeOnBids && surchargeOnAverage
-                ? " auf Gebote und Durchschnittsgebot"
-                : surchargeOnBids
-                  ? " auf Gebote"
-                  : surchargeOnAverage
-                    ? " auf Durchschnittsgebot"
-                    : " (inaktiv)"}
+              {surchargeScopeLabel(surchargeOnBids, surchargeOnAverage)}
             </td>
             <td className="text-end">
               +{formatEuro(dynamicProjection.surchargeTotal)}

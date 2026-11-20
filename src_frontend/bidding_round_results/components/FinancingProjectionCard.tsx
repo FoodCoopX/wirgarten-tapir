@@ -53,6 +53,111 @@ interface FinancingProjectionCardProps {
   onNewMembersPerMonthChange: (membersPerMonth: number) => void;
 }
 
+function bidLevelHint(isBidRange: boolean, bidLevels: number): string {
+  if (isBidRange) {
+    return " — auf dem gewählten Niveau";
+  }
+  if (bidLevels > 1) {
+    return " — auf der gewählten Stufe";
+  }
+  return "";
+}
+
+function lockedSurchargeScopeLabel(
+  onBids: boolean | undefined,
+  onAverage: boolean | undefined,
+): string {
+  if (onBids && onAverage) {
+    return "auf Gebote und Durchschnittsgebot";
+  }
+  if (onBids) {
+    return "auf Gebote";
+  }
+  if (onAverage) {
+    return "auf Durchschnittsgebot";
+  }
+  return "inaktiv";
+}
+
+interface FinancingIntroProps {
+  isBidRange: boolean;
+  bidLevels: number;
+  displayName: string;
+}
+
+const FinancingIntro: React.FC<FinancingIntroProps> = ({
+  isBidRange,
+  bidLevels,
+  displayName,
+}) => {
+  if (isBidRange) {
+    return (
+      <>
+        <p className="text-muted mt-2 mb-1">
+          {"Der Regler ist das"}{" "}
+          <strong>{"gewählte Solidaritätsniveau"}</strong>
+          {": eine Skala von"} <em>{"Grün (0, Wunsch)"}</em> {"bis"}{" "}
+          <em>{"Rot (100, Schmerzgrenze)"}</em>
+          {". Zu jedem Gebot gehören zwei Beträge —"}{" "}
+          <em>{"Wunsch (Grün)"}</em> {"und"}{" "}
+          <em>{"Schmerzgrenze (Rot)"}</em>
+          {
+            ". Die Regler-Position legt fest, mit welchem dieser Beträge gerechnet wird (dazwischen stufenlos interpoliert)."
+          }
+        </p>
+        <p className="text-muted small mb-2">
+          <strong>{"Warum solidarisch?"}</strong>{" "}
+          {"Je weiter der Regler in Richtung"} <em>{"Rot"}</em>
+          {
+            ", desto mehr zahlen die Bietenden (bis zur Schmerzgrenze) und desto stärker tragen sie den Bedarf mit — dadurch"
+          }{" "}
+          <strong>{"sinkt"}</strong>{" "}
+          {
+            "das Durchschnittsgebot für alle, die nicht geboten haben. In Richtung"
+          }{" "}
+          <em>{"Grün"}</em>{" "}
+          {
+            "zahlen die Bietenden nur ihren Wunsch, dann übernehmen die übrigen mehr. In beiden Fällen bleibt das Ziel bei voller Auslastung gedeckt."
+          }
+        </p>
+      </>
+    );
+  }
+  return (
+    <p className="text-muted mt-2 mb-2">
+      {bidLevels > 1 ? (
+        <>
+          {interpolate(
+            "Jedes Gebot hat mehrere Beträge (Gebot 1 bis Gebot {count}).",
+            { count: bidLevels },
+          )}{" "}
+          {
+            "Gebot 1 ist der Wunschbetrag; reicht er nicht, gilt automatisch die nächste Stufe. Die Bietenden zahlen den Betrag der gültigen Stufe; alle, die nicht geboten haben — Auto-Verlängerer und Mitglieder, die nach der"
+          }{" "}
+          {applyDisplayName("Beitragsrunde", displayName)}{" "}
+          {"— zahlen dasselbe"}{" "}
+          <strong>{"dynamische Durchschnittsgebot"}</strong>
+          {
+            ". Es ist so berechnet, dass bei voller Auslastung der Ziel-Deckungsbetrag gedeckt ist."
+          }
+        </>
+      ) : (
+        <>
+          {
+            "Jedes Gebot hat genau einen Betrag. Die Bietenden zahlen diesen Betrag; alle, die nicht geboten haben — Auto-Verlängerer und Mitglieder, die nach der"
+          }{" "}
+          {applyDisplayName("Beitragsrunde", displayName)}{" "}
+          {"— zahlen dasselbe"}{" "}
+          <strong>{"dynamische Durchschnittsgebot"}</strong>
+          {
+            ". Es ist so berechnet, dass bei voller Auslastung der Ziel-Deckungsbetrag gedeckt ist."
+          }
+        </>
+      )}
+    </p>
+  );
+};
+
 const FinancingProjectionCard: React.FC<FinancingProjectionCardProps> = ({
   data,
   displayName,
@@ -113,69 +218,11 @@ const FinancingProjectionCard: React.FC<FinancingProjectionCardProps> = ({
             }
           />
         </div>
-        {isBidRange ? (
-          <>
-            <p className="text-muted mt-2 mb-1">
-              {"Der Regler ist das"}{" "}
-              <strong>{"gewählte Solidaritätsniveau"}</strong>
-              {": eine Skala von"} <em>{"Grün (0, Wunsch)"}</em> {"bis"}{" "}
-              <em>{"Rot (100, Schmerzgrenze)"}</em>
-              {". Zu jedem Gebot gehören zwei Beträge —"}{" "}
-              <em>{"Wunsch (Grün)"}</em> {"und"}{" "}
-              <em>{"Schmerzgrenze (Rot)"}</em>
-              {
-                ". Die Regler-Position legt fest, mit welchem dieser Beträge gerechnet wird (dazwischen stufenlos interpoliert)."
-              }
-            </p>
-            <p className="text-muted small mb-2">
-              <strong>{"Warum solidarisch?"}</strong>{" "}
-              {"Je weiter der Regler in Richtung"} <em>{"Rot"}</em>
-              {
-                ", desto mehr zahlen die Bietenden (bis zur Schmerzgrenze) und desto stärker tragen sie den Bedarf mit — dadurch"
-              }{" "}
-              <strong>{"sinkt"}</strong>{" "}
-              {
-                "das Durchschnittsgebot für alle, die nicht geboten haben. In Richtung"
-              }{" "}
-              <em>{"Grün"}</em>{" "}
-              {
-                "zahlen die Bietenden nur ihren Wunsch, dann übernehmen die übrigen mehr. In beiden Fällen bleibt das Ziel bei voller Auslastung gedeckt."
-              }
-            </p>
-          </>
-        ) : (
-          <p className="text-muted mt-2 mb-2">
-            {bidLevels > 1 ? (
-              <>
-                {interpolate(
-                  "Jedes Gebot hat mehrere Beträge (Gebot 1 bis Gebot {count}).",
-                  { count: bidLevels },
-                )}{" "}
-                {
-                  "Gebot 1 ist der Wunschbetrag; reicht er nicht, gilt automatisch die nächste Stufe. Die Bietenden zahlen den Betrag der gültigen Stufe; alle, die nicht geboten haben — Auto-Verlängerer und Mitglieder, die nach der"
-                }{" "}
-                {applyDisplayName("Beitragsrunde", displayName)}{" "}
-                {"— zahlen dasselbe"}{" "}
-                <strong>{"dynamische Durchschnittsgebot"}</strong>
-                {
-                  ". Es ist so berechnet, dass bei voller Auslastung der Ziel-Deckungsbetrag gedeckt ist."
-                }
-              </>
-            ) : (
-              <>
-                {
-                  "Jedes Gebot hat genau einen Betrag. Die Bietenden zahlen diesen Betrag; alle, die nicht geboten haben — Auto-Verlängerer und Mitglieder, die nach der"
-                }{" "}
-                {applyDisplayName("Beitragsrunde", displayName)}{" "}
-                {"— zahlen dasselbe"}{" "}
-                <strong>{"dynamische Durchschnittsgebot"}</strong>
-                {
-                  ". Es ist so berechnet, dass bei voller Auslastung der Ziel-Deckungsbetrag gedeckt ist."
-                }
-              </>
-            )}
-          </p>
-        )}
+        <FinancingIntro
+          isBidRange={isBidRange}
+          bidLevels={bidLevels}
+          displayName={displayName}
+        />
         <div className="mt-1 mb-2">
           <Button
             variant="link"
@@ -198,11 +245,7 @@ const FinancingProjectionCard: React.FC<FinancingProjectionCardProps> = ({
           <li>
             <strong>{"Bietende Mitglieder"}</strong>{" "}
             {"zahlen ihr abgegebenes Gebot"}
-            {isBidRange
-              ? " — auf dem gewählten Niveau"
-              : bidLevels > 1
-                ? " — auf der gewählten Stufe"
-                : ""}{" "}
+            {bidLevelHint(isBidRange, bidLevels)}{" "}
             {"im Ø"}{" "}
             <strong>
               {formatEuro(dynamicProjection.bidderAveragePerMonth)}
@@ -400,9 +443,8 @@ const FinancingProjectionCard: React.FC<FinancingProjectionCardProps> = ({
             </Button>
           )}
           {isBidRange &&
-            coverageTarget &&
-            coverageTarget.position === 100 &&
-            !coverageTarget.targetCovered && (
+            coverageTarget?.position === 100 &&
+            !coverageTarget?.targetCovered && (
               <Alert variant="warning" className="mb-0 py-1">
                 {"Das Ziel ist auch mit dem roten Betrag nicht gedeckt."}
               </Alert>
@@ -425,13 +467,10 @@ const FinancingProjectionCard: React.FC<FinancingProjectionCardProps> = ({
                 percent: Number(data.lockedSurchargePercent ?? 0),
               })}
               {" ("}
-              {data.lockedSurchargeOnBids && data.lockedSurchargeOnAverage
-                ? "auf Gebote und Durchschnittsgebot"
-                : data.lockedSurchargeOnBids
-                  ? "auf Gebote"
-                  : data.lockedSurchargeOnAverage
-                    ? "auf Durchschnittsgebot"
-                    : "inaktiv"}
+              {lockedSurchargeScopeLabel(
+                data.lockedSurchargeOnBids,
+                data.lockedSurchargeOnAverage,
+              )}
               {")"}
             </div>
           )}

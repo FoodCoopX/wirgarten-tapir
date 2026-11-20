@@ -26,8 +26,10 @@ const ContractErrorsCard: React.FC<ContractErrorsCardProps> = ({ errors }) => {
             </tr>
           </thead>
           <tbody>
-            {errors.map((error, index) => (
-              <tr key={index}>
+            {errors.map((error) => (
+              <tr
+                key={`${error.memberId}:${error.productName ?? ""}:${error.error ?? ""}`}
+              >
                 <td>{error.memberName ?? error.memberId}</td>
                 <td>{error.productName ?? "–"}</td>
                 <td>{error.error ?? "–"}</td>

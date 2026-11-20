@@ -251,8 +251,10 @@ export const CreateContractsModal: React.FC<CreateContractsModalProps> = ({
                   </tr>
                 </thead>
                 <tbody>
-                  {checkErrors.map((error, index) => (
-                    <tr key={index}>
+                  {checkErrors.map((error) => (
+                    <tr
+                      key={`${error.memberId}:${error.productName ?? ""}:${error.error ?? ""}`}
+                    >
                       <td>{error.memberName ?? error.memberId}</td>
                       <td>{error.productName ?? "–"}</td>
                       <td>{error.error ?? "–"}</td>

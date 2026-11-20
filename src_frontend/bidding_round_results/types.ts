@@ -31,6 +31,7 @@ export type ContractCreationError = CreateContractsError;
  * back into a request payload on save.
  */
 export interface BidItemDraft {
+  draftId: string;
   roundProductTypeId: string;
   productId: string;
   quantity: number;

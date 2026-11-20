@@ -50,6 +50,7 @@ function emptyBidItems(
   if (!biddableProduct || !product) return [];
   return [
     {
+      draftId: crypto.randomUUID(),
       roundProductTypeId: biddableProduct.id,
       productId: product.id,
       quantity: 1,
@@ -60,6 +61,7 @@ function emptyBidItems(
 
 function bidToDraftItems(bid: Bid, isBidRange: boolean): BidItemDraft[] {
   return (bid.items ?? []).map((item) => ({
+    draftId: crypto.randomUUID(),
     roundProductTypeId: item.roundProductTypeId,
     productId: item.productId,
     quantity: item.quantity,
@@ -165,7 +167,7 @@ const BidEditModal: React.FC<BidEditModalProps> = ({
           ) : (
             items.map((item, index) => {
               return (
-                <div key={index} className={"border rounded p-3 mb-3"}>
+                <div key={item.draftId} className={"border rounded p-3 mb-3"}>
                   <div className="row">
                     <Form.Group className={"col-md-4 mb-2"}>
                       <Form.Label>{"Ernteanteil"}</Form.Label>
@@ -197,7 +199,7 @@ const BidEditModal: React.FC<BidEditModalProps> = ({
                           value={item.quantity}
                           onChange={(event) =>
                             updateBidItem(index, {
-                              quantity: parseInt(event.target.value),
+                              quantity: Number.parseInt(event.target.value, 10),
                             })
                           }
                         />
@@ -284,7 +286,7 @@ const BidEditModal: React.FC<BidEditModalProps> = ({
               onChange={(event) => setEnteredByAdmin(event.target.checked)}
             />
           </Form.Group>
-          {editingBid && editingBid.adminConfirmed && (
+          {editingBid?.adminConfirmed && (
             <div className={"mt-2"}>
               <span className={"text-success me-1"}>{"✓"}</span>
               {"Admin-bestätigt"}

@@ -106,7 +106,7 @@ export function useContractCreation({
     setCheckMessage(null);
     setCheckErrors([]);
     setShowContractsModal(true);
-    runCheckContracts();
+    void runCheckContracts();
   };
 
   const alignStandardPrices = async () => {

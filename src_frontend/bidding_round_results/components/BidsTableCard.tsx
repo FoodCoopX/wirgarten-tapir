@@ -47,6 +47,320 @@ interface BidsTableCardProps {
   onDeleteBid: (entry: BiddingRoundMemberRow) => void;
 }
 
+function renderAmountHeader(isBidRange: boolean, bidLevels: number) {
+  if (isBidRange) {
+    return <th className="text-nowrap">{"Grün/Rot (€/Monat)"}</th>;
+  }
+  if (bidLevels > 1) {
+    return (
+      <th className="text-nowrap">
+        {interpolate("Gebot 1 – {count} (€/Monat)", { count: bidLevels })}
+      </th>
+    );
+  }
+  return <th className="text-nowrap">{"Betrag (€/Monat)"}</th>;
+}
+
+function effectiveAmountHeader(
+  isBidRange: boolean,
+  bidRangePosition: number,
+  bidLevels: number,
+  surchargeOnBids: boolean,
+  surchargePercent: number,
+): string {
+  const level = levelFromPosition(bidRangePosition, bidLevels);
+  if (surchargeOnBids && surchargePercent > 0) {
+    return isBidRange
+      ? interpolate("Effektiv (Pos. {position}, +{percent} %)", {
+          position: bidRangePosition,
+          percent: surchargePercent,
+        })
+      : interpolate("Effektiv (Stufe {level}, +{percent} %)", {
+          level,
+          percent: surchargePercent,
+        });
+  }
+  return isBidRange
+    ? interpolate("Effektiv (Pos. {position})", {
+        position: bidRangePosition,
+      })
+    : interpolate("Effektiv (Stufe {level})", { level });
+}
+
+function renderStatusBadge(entry: BiddingRoundMemberRow) {
+  if (entry.hasBid) {
+    return <span className="badge bg-success">{"Gebot"}</span>;
+  }
+  if (entry.isAutoRenewed) {
+    return (
+      <span className="badge bg-info text-dark">{"Auto-verlängert"}</span>
+    );
+  }
+  return <span className="badge bg-secondary">{"Kein Gebot"}</span>;
+}
+
+function renderItems(entry: BiddingRoundMemberRow): string {
+  if (entry.hasBid) {
+    return renderMemberItems(entry.bid);
+  }
+  if (entry.isAutoRenewed) {
+    return renderContractItems(entry.autoRenewedItems ?? []);
+  }
+  return "–";
+}
+
+function bidLevelsFor(
+  isBidRange: boolean,
+  bidLevels: number,
+): readonly (1 | 2 | 3)[] {
+  if (isBidRange) {
+    return [1, 2] as const;
+  }
+  return Array.from({ length: bidLevels }, (_, i) => (i + 1) as 1 | 2 | 3);
+}
+
+function renderAmounts(
+  entry: BiddingRoundMemberRow,
+  isBidRange: boolean,
+  bidLevels: number,
+): string {
+  if (entry.bid) {
+    return bidLevelsFor(isBidRange, bidLevels)
+      .map((level) =>
+        formatEuro(bidAmountForLevel(entry.bid, level, isBidRange)),
+      )
+      .join(" / ");
+  }
+  if (entry.isAutoRenewed) {
+    return formatEuro(entry.autoRenewedAmountPerMonth);
+  }
+  return "–";
+}
+
+function renderEffectiveAmount(
+  entry: BiddingRoundMemberRow,
+  isBidRange: boolean,
+  bidRangePosition: number,
+  surchargeOnBids: boolean,
+  surchargeFactor: number,
+) {
+  if (entry.bid) {
+    const monthly = bidAmountAtPosition(
+      entry.bid,
+      bidRangePosition,
+      surchargeOnBids,
+      surchargeFactor,
+      isBidRange,
+    );
+    return (
+      <>
+        <div>
+          {formatEuro(monthly)} {"/ Monat"}
+        </div>
+        <div>
+          {formatEuro((monthly ?? 0) * 12)} {"/ Jahr"}
+        </div>
+      </>
+    );
+  }
+  if (entry.isAutoRenewed) {
+    return (
+      <>
+        <div>
+          {formatEuro(entry.autoRenewedAmountPerMonth)} {"/ Monat"}
+        </div>
+        <div>{formatEuro(entry.autoRenewedAmountPerYear)} {"/ Jahr"}</div>
+      </>
+    );
+  }
+  return "–";
+}
+
+function renderPickupLocation(entry: BiddingRoundMemberRow): string {
+  if (entry.bid) {
+    return entry.bid.pickupLocationName || "–";
+  }
+  if (entry.isAutoRenewed) {
+    return entry.autoRenewedPickupLocationName || "–";
+  }
+  return "–";
+}
+
+function renderUpdatedAt(entry: BiddingRoundMemberRow): string {
+  if (!entry.bid?.updatedAt) {
+    return "–";
+  }
+  return new Date(entry.bid.updatedAt).toLocaleDateString("de-DE");
+}
+
+function renderStatusCell(entry: BiddingRoundMemberRow) {
+  return (
+    <>
+      {entry.bid?.enteredByAdmin && (
+        <span className="badge bg-secondary me-1">{"von Admin erfasst"}</span>
+      )}
+      {entry.bid?.adminConfirmed ? (
+        <span className="text-success" title={"Admin-bestätigt"}>
+          {"✓"}
+        </span>
+      ) : (
+        entry.bid && (
+          <span className="badge bg-warning text-dark">{"unbestätigt"}</span>
+        )
+      )}
+    </>
+  );
+}
+
+interface BidsTableRowProps {
+  entry: BiddingRoundMemberRow;
+  isBidRange: boolean;
+  bidLevels: number;
+  bidRangePosition: number;
+  surchargeOnBids: boolean;
+  surchargeFactor: number;
+  selectedBidIds: string[];
+  selectedAutoRenewedMemberIds: string[];
+  onToggleBid: (bidId: string | null) => void;
+  onToggleAutoRenewedMember: (memberId: string) => void;
+  onCreateBid: (member?: BidMemberSelection) => void;
+  onEditBid: (entry: BiddingRoundMemberRow) => void;
+  onDeleteBid: (entry: BiddingRoundMemberRow) => void;
+}
+
+const BidsTableRow: React.FC<BidsTableRowProps> = ({
+  entry,
+  isBidRange,
+  bidLevels,
+  bidRangePosition,
+  surchargeOnBids,
+  surchargeFactor,
+  selectedBidIds,
+  selectedAutoRenewedMemberIds,
+  onToggleBid,
+  onToggleAutoRenewedMember,
+  onCreateBid,
+  onEditBid,
+  onDeleteBid,
+}) => {
+  return (
+    <tr>
+      <td>
+        {entry.bid && (
+          <Form.Check
+            checked={selectedBidIds.includes(entry.bid.id)}
+            onChange={() => onToggleBid(entry.bid?.id ?? null)}
+          />
+        )}
+        {!entry.hasBid && entry.isAutoRenewed && (
+          <Form.Check
+            checked={selectedAutoRenewedMemberIds.includes(entry.memberId)}
+            onChange={() => onToggleAutoRenewedMember(entry.memberId)}
+          />
+        )}
+      </td>
+      <td>
+        <a href={`/tapir/members/${entry.memberId}`}>{entry.memberName}</a>
+      </td>
+      <td>{renderStatusBadge(entry)}</td>
+      <td>{renderItems(entry)}</td>
+      <td>{renderAmounts(entry, isBidRange, bidLevels)}</td>
+      <td>
+        {renderEffectiveAmount(
+          entry,
+          isBidRange,
+          bidRangePosition,
+          surchargeOnBids,
+          surchargeFactor,
+        )}
+      </td>
+      <td>{renderPickupLocation(entry)}</td>
+      <td>{renderUpdatedAt(entry)}</td>
+      <td>{renderStatusCell(entry)}</td>
+      <td>
+        {entry.bid ? (
+          <div className="d-flex flex-row gap-1">
+            <Button
+              variant="outline-secondary"
+              size="sm"
+              onClick={() => onEditBid(entry)}
+            >
+              {"Bearbeiten"}
+            </Button>
+            <Button
+              variant="outline-danger"
+              size="sm"
+              onClick={() => onDeleteBid(entry)}
+            >
+              {"Löschen"}
+            </Button>
+          </div>
+        ) : (
+          <Button
+            variant="outline-success"
+            size="sm"
+            onClick={() =>
+              onCreateBid({
+                memberId: entry.memberId,
+                memberName: entry.memberName,
+              })
+            }
+          >
+            {"Gebot erfassen"}
+          </Button>
+        )}
+      </td>
+    </tr>
+  );
+};
+
+function contractsButtonTitle(
+  averageBidLocked: boolean,
+  hasContractSelection: boolean,
+): string | undefined {
+  if (!averageBidLocked) {
+    return "Sperren Sie das Durchschnittsgebot, bevor Sie Verträge erzeugen.";
+  }
+  if (!hasContractSelection) {
+    return "Wählen Sie zuerst mindestens ein Gebot oder einen Auto-Verlängerer aus.";
+  }
+  return undefined;
+}
+
+interface ContractsHintProps {
+  averageBidLocked: boolean;
+  canOpenContractsModal: boolean;
+  onLockAverageBid: () => void;
+}
+
+const ContractsHint: React.FC<ContractsHintProps> = ({
+  averageBidLocked,
+  canOpenContractsModal,
+  onLockAverageBid,
+}) => {
+  if (canOpenContractsModal) {
+    return null;
+  }
+  if (!averageBidLocked) {
+    return (
+      <Button
+        variant="link"
+        className="p-0 align-baseline"
+        onClick={onLockAverageBid}
+      >
+        {"Sperren Sie das Durchschnittsgebot, bevor Sie Verträge erzeugen."}
+      </Button>
+    );
+  }
+  return (
+    <span className="text-danger small">
+      {
+        "Wählen Sie zuerst mindestens ein Gebot oder einen Auto-Verlängerer aus."
+      }
+    </span>
+  );
+};
+
 const BidsTableCard: React.FC<BidsTableCardProps> = ({
   open,
   onToggle,
@@ -145,35 +459,15 @@ const BidsTableCard: React.FC<BidsTableCardProps> = ({
               <th>{"Mitglied"}</th>
               <th>{"Gebot"}</th>
               <th>{"Positionen"}</th>
-              {isBidRange ? (
-                <th className="text-nowrap">{"Grün/Rot (€/Monat)"}</th>
-              ) : bidLevels > 1 ? (
-                <th className="text-nowrap">
-                  {interpolate("Gebot 1 – {count} (€/Monat)", {
-                    count: bidLevels,
-                  })}
-                </th>
-              ) : (
-                <th className="text-nowrap">{"Betrag (€/Monat)"}</th>
-              )}
+              {renderAmountHeader(isBidRange, bidLevels)}
               <th className="text-nowrap">
-                {surchargeOnBids && surchargePercent > 0
-                  ? isBidRange
-                    ? interpolate("Effektiv (Pos. {position}, +{percent} %)", {
-                        position: bidRangePosition,
-                        percent: surchargePercent,
-                      })
-                    : interpolate("Effektiv (Stufe {level}, +{percent} %)", {
-                        level: levelFromPosition(bidRangePosition, bidLevels),
-                        percent: surchargePercent,
-                      })
-                  : isBidRange
-                    ? interpolate("Effektiv (Pos. {position})", {
-                        position: bidRangePosition,
-                      })
-                    : interpolate("Effektiv (Stufe {level})", {
-                        level: levelFromPosition(bidRangePosition, bidLevels),
-                      })}
+                {effectiveAmountHeader(
+                  isBidRange,
+                  bidRangePosition,
+                  bidLevels,
+                  surchargeOnBids,
+                  surchargePercent,
+                )}
               </th>
               <th className="text-nowrap">{"Abholort"}</th>
               <th>{"Aktualisiert"}</th>
@@ -183,175 +477,22 @@ const BidsTableCard: React.FC<BidsTableCardProps> = ({
           </thead>
           <tbody>
             {members.map((entry) => (
-              <tr key={entry.memberId}>
-                <td>
-                  {entry.bid && (
-                    <Form.Check
-                      checked={selectedBidIds.includes(entry.bid.id)}
-                      onChange={() => onToggleBid(entry.bid?.id ?? null)}
-                    />
-                  )}
-                  {!entry.hasBid && entry.isAutoRenewed && (
-                    <Form.Check
-                      checked={selectedAutoRenewedMemberIds.includes(
-                        entry.memberId,
-                      )}
-                      onChange={() => onToggleAutoRenewedMember(entry.memberId)}
-                    />
-                  )}
-                </td>
-                <td>
-                  <a href={`/tapir/members/${entry.memberId}`}>
-                    {entry.memberName}
-                  </a>
-                </td>
-                <td>
-                  {entry.hasBid ? (
-                    <span className="badge bg-success">{"Gebot"}</span>
-                  ) : entry.isAutoRenewed ? (
-                    <span className="badge bg-info text-dark">
-                      {"Auto-verlängert"}
-                    </span>
-                  ) : (
-                    <span className="badge bg-secondary">{"Kein Gebot"}</span>
-                  )}
-                </td>
-                <td>
-                  {entry.hasBid
-                    ? renderMemberItems(entry.bid)
-                    : entry.isAutoRenewed
-                      ? renderContractItems(entry.autoRenewedItems ?? [])
-                      : "–"}
-                </td>
-                <td>
-                  {entry.bid
-                    ? (isBidRange
-                        ? ([1, 2] as const)
-                        : Array.from(
-                            { length: bidLevels },
-                            (_, i) => (i + 1) as 1 | 2 | 3,
-                          )
-                      )
-                        .map((level) =>
-                          formatEuro(
-                            bidAmountForLevel(entry.bid, level, isBidRange),
-                          ),
-                        )
-                        .join(" / ")
-                    : entry.isAutoRenewed
-                      ? formatEuro(entry.autoRenewedAmountPerMonth)
-                      : "–"}
-                </td>
-                <td>
-                  {entry.bid ? (
-                    <>
-                      <div>
-                        {formatEuro(
-                          bidAmountAtPosition(
-                            entry.bid,
-                            bidRangePosition,
-                            surchargeOnBids,
-                            surchargeFactor,
-                            isBidRange,
-                          ),
-                        )}{" "}
-                        {"/ Monat"}
-                      </div>
-                      <div>
-                        {formatEuro(
-                          (bidAmountAtPosition(
-                            entry.bid,
-                            bidRangePosition,
-                            surchargeOnBids,
-                            surchargeFactor,
-                            isBidRange,
-                          ) ?? 0) * 12,
-                        )}{" "}
-                        {"/ Jahr"}
-                      </div>
-                    </>
-                  ) : entry.isAutoRenewed ? (
-                    <>
-                      <div>
-                        {formatEuro(entry.autoRenewedAmountPerMonth)}{" "}
-                        {"/ Monat"}
-                      </div>
-                      <div>
-                        {formatEuro(entry.autoRenewedAmountPerYear)} {"/ Jahr"}
-                      </div>
-                    </>
-                  ) : (
-                    "–"
-                  )}
-                </td>
-                <td>
-                  {entry.bid ? (
-                    <>
-                      <div>{entry.bid.pickupLocationName || "–"}</div>
-                    </>
-                  ) : entry.isAutoRenewed ? (
-                    entry.autoRenewedPickupLocationName || "–"
-                  ) : (
-                    "–"
-                  )}
-                </td>
-                <td>
-                  {entry.bid?.updatedAt
-                    ? new Date(entry.bid.updatedAt).toLocaleDateString("de-DE")
-                    : "–"}
-                </td>
-                <td>
-                  {entry.bid?.enteredByAdmin && (
-                    <span className="badge bg-secondary me-1">
-                      {"von Admin erfasst"}
-                    </span>
-                  )}
-                  {entry.bid?.adminConfirmed ? (
-                    <span className="text-success" title={"Admin-bestätigt"}>
-                      {"✓"}
-                    </span>
-                  ) : (
-                    entry.bid && (
-                      <span className="badge bg-warning text-dark">
-                        {"unbestätigt"}
-                      </span>
-                    )
-                  )}
-                </td>
-                <td>
-                  {entry.bid ? (
-                    <div className="d-flex flex-row gap-1">
-                      <Button
-                        variant="outline-secondary"
-                        size="sm"
-                        onClick={() => onEditBid(entry)}
-                      >
-                        {"Bearbeiten"}
-                      </Button>
-                      <Button
-                        variant="outline-danger"
-                        size="sm"
-                        onClick={() => onDeleteBid(entry)}
-                      >
-                        {"Löschen"}
-                      </Button>
-                    </div>
-                  ) : (
-                    <Button
-                      variant="outline-success"
-                      size="sm"
-                      onClick={() =>
-                        onCreateBid({
-                          memberId: entry.memberId,
-                          memberName: entry.memberName,
-                        })
-                      }
-                    >
-                      {"Gebot erfassen"}
-                    </Button>
-                  )}
-                </td>
-              </tr>
+              <BidsTableRow
+                key={entry.memberId}
+                entry={entry}
+                isBidRange={isBidRange}
+                bidLevels={bidLevels}
+                bidRangePosition={bidRangePosition}
+                surchargeOnBids={surchargeOnBids}
+                surchargeFactor={surchargeFactor}
+                selectedBidIds={selectedBidIds}
+                selectedAutoRenewedMemberIds={selectedAutoRenewedMemberIds}
+                onToggleBid={onToggleBid}
+                onToggleAutoRenewedMember={onToggleAutoRenewedMember}
+                onCreateBid={onCreateBid}
+                onEditBid={onEditBid}
+                onDeleteBid={onDeleteBid}
+              />
             ))}
           </tbody>
         </Table>
@@ -369,32 +510,15 @@ const BidsTableCard: React.FC<BidsTableCardProps> = ({
         variant="primary"
         onClick={onOpenContractsModal}
         disabled={!canOpenContractsModal}
-        title={
-          !averageBidLocked
-            ? "Sperren Sie das Durchschnittsgebot, bevor Sie Verträge erzeugen."
-            : !hasContractSelection
-              ? "Wählen Sie zuerst mindestens ein Gebot oder einen Auto-Verlängerer aus."
-              : undefined
-        }
+        title={contractsButtonTitle(averageBidLocked, hasContractSelection)}
       >
         {"Verträge aus ausgewählten Geboten"}
       </Button>{" "}
-      {!canOpenContractsModal &&
-        (!averageBidLocked ? (
-          <Button
-            variant="link"
-            className="p-0 align-baseline"
-            onClick={onLockAverageBid}
-          >
-            {"Sperren Sie das Durchschnittsgebot, bevor Sie Verträge erzeugen."}
-          </Button>
-        ) : (
-          <span className="text-danger small">
-            {
-              "Wählen Sie zuerst mindestens ein Gebot oder einen Auto-Verlängerer aus."
-            }
-          </span>
-        ))}
+      <ContractsHint
+        averageBidLocked={averageBidLocked}
+        canOpenContractsModal={canOpenContractsModal}
+        onLockAverageBid={onLockAverageBid}
+      />
       <a
         className="btn btn-outline-secondary"
         href={`/bidding_rounds/api/${roundId}/export.csv`}
