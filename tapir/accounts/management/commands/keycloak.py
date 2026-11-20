@@ -14,6 +14,7 @@ from tapir.accounts.services.keycloak_config import (
 )
 from tapir.accounts.services.keycloak_desired_state import build_desired_state
 from tapir.accounts.services.keycloak_reconciler import (
+    Check,
     KeycloakReconciler,
     KeycloakSetupError,
     ReconcileResult,
@@ -56,6 +57,22 @@ class Command(BaseCommand):
         if config_check.has_errors:
             self._fail_config(config_check, config, as_json)
 
+        config_warning_count = len(config_check.warnings)
+        configuration_check = Check(
+            section="configuration",
+            description="configuration",
+            status="warning" if config_warning_count else "ok",
+            details=(
+                "server URL, public URL, realm, client IDs, client secrets, "
+                "site URL, username source/format"
+                + (
+                    f"; {config_warning_count} warning(s)"
+                    if config_warning_count
+                    else ""
+                )
+            ),
+        )
+
         try:
             desired = build_desired_state()
             client = get_provisioner_client()
@@ -70,6 +87,7 @@ class Command(BaseCommand):
                 result.role_count = verification.role_count
                 result.group_role_present = verification.group_role_present
                 result.group_role_count = verification.group_role_count
+                result.checks = verification.checks
         except (KeycloakSetupError, ValueError, KeycloakError) as error:
             if as_json:
                 self.stdout.write(
@@ -81,6 +99,7 @@ class Command(BaseCommand):
             else:
                 self.stderr.write(self.style.ERROR(str(error)))
             sys.exit(2)
+        result.checks = [configuration_check, *result.checks]
 
         result.warnings = list(
             dict.fromkeys(
@@ -155,6 +174,15 @@ class Command(BaseCommand):
                 }
                 for change in result.changes
             ],
+            "checks": [
+                {
+                    "section": check.section,
+                    "description": check.description,
+                    "status": check.status,
+                    "details": check.details,
+                }
+                for check in result.checks
+            ],
             "warnings": result.warnings
             + [
                 change.message for change in result.changes if change.level == "warning"
@@ -181,6 +209,19 @@ class Command(BaseCommand):
             f"username={config['username_source']}/{config['username_format']}"
         )
 
+        self.stdout.write("Checks:")
+        for check in result.checks:
+            if check.status == "error":
+                style = self.style.ERROR
+            elif check.status == "warning":
+                style = self.style.WARNING
+            else:
+                style = self.style.SUCCESS
+            line = f"  [{check.status}] {check.description}"
+            if check.details:
+                line += f": {check.details}"
+            self.stdout.write(style(line))
+
         for change in result.changes:
             if change.level == "warning":
                 style = self.style.WARNING
@@ -193,11 +234,6 @@ class Command(BaseCommand):
 
         for warning in result.warnings:
             self.stdout.write(self.style.WARNING(f"  [warning] {warning}"))
-
-        self.stdout.write(f"roles: {result.role_present}/{result.role_count} present")
-        self.stdout.write(
-            "superuser: " f"{result.group_role_present}/{result.group_role_count} roles"
-        )
 
         if action == "sync" and not dry_run:
             if result.created_roles:

@@ -78,6 +78,14 @@ class Change:
     fixed: bool = False
 
 
+@dataclass(frozen=True)
+class Check:
+    section: str
+    description: str
+    status: str
+    details: str = ""
+
+
 @dataclass
 class ReconcileResult:
     changes: list[Change] = field(default_factory=list)
@@ -85,10 +93,23 @@ class ReconcileResult:
     created_roles: list[str] = field(default_factory=list)
     assigned_roles: list[str] = field(default_factory=list)
     created_clients: list[str] = field(default_factory=list)
+    checks: list[Check] = field(default_factory=list)
     role_count: int = 0
     role_present: int = 0
     group_role_count: int = 0
     group_role_present: int = 0
+    realm_setting_count: int = 0
+    realm_setting_present: int = 0
+    client_count: int = 0
+    client_present: int = 0
+    default_client_scope_count: int = 0
+    default_client_scope_present: int = 0
+    role_scope_mapping_count: int = 0
+    role_scope_mapping_present: int = 0
+    service_account_count: int = 0
+    service_account_present: int = 0
+    superuser_group_present: bool = False
+    runtime_secret_ok: bool = False
 
     @property
     def errors(self) -> list[Change]:
@@ -164,6 +185,20 @@ class KeycloakReconciler:
                     )
                 )
 
+        result.realm_setting_count = len(self.desired.realm_settings)
+        result.realm_setting_present = result.realm_setting_count - len(payload)
+        result.checks.append(
+            Check(
+                section="realm",
+                description="realm settings",
+                status="error" if payload else "ok",
+                details=(
+                    f"{result.realm_setting_present}/"
+                    f"{result.realm_setting_count} match: "
+                    + ", ".join(self.desired.realm_settings)
+                ),
+            )
+        )
         if not payload or dry_run:
             return
 
@@ -233,12 +268,35 @@ class KeycloakReconciler:
                     )
                 )
 
+        result.checks.append(
+            Check(
+                section="roles",
+                description="realm roles",
+                status=("ok" if result.role_present == result.role_count else "error"),
+                details=(
+                    f"{result.role_present}/{result.role_count} present: "
+                    + ", ".join(role.name for role in self.desired.realm_roles)
+                ),
+            )
+        )
+
     def _reconcile_superuser_group(
         self, result: ReconcileResult, dry_run: bool
     ) -> None:
         group = self._get_superuser_group(result, dry_run)
         if group is None:
+            result.superuser_group_present = False
+            result.checks.append(
+                Check(
+                    section="group",
+                    description="superuser group",
+                    status="error",
+                    details="missing",
+                )
+            )
             return
+
+        result.superuser_group_present = True
 
         current_roles = {
             role["name"]
@@ -287,6 +345,22 @@ class KeycloakReconciler:
                 )
             )
 
+        result.checks.append(
+            Check(
+                section="group",
+                description="superuser group",
+                status=(
+                    "ok"
+                    if result.group_role_present == result.group_role_count
+                    else "error"
+                ),
+                details=(
+                    f"present, {result.group_role_present}/"
+                    f"{result.group_role_count} roles"
+                ),
+            )
+        )
+
     def _get_superuser_group(
         self, result: ReconcileResult, dry_run: bool
     ) -> dict | None:
@@ -318,7 +392,14 @@ class KeycloakReconciler:
             if "clientId" in client
         }
         clients: dict[str, dict] = {}
-
+        result.client_count = len(self.desired.clients)
+        result.default_client_scope_count = sum(
+            len(spec.default_client_scopes) for spec in self.desired.clients
+        )
+        result.role_scope_mapping_count = sum(
+            len(mapping.roles) for mapping in self.desired.client_role_scope_mappings
+        )
+        client_ok = True
         for spec in self.desired.clients:
             current = existing.get(spec.client_id)
             if current is None:
@@ -330,6 +411,7 @@ class KeycloakReconciler:
                         fixed=not dry_run,
                     )
                 )
+                client_ok = False
                 if dry_run:
                     continue
                 self.client.create_client(spec.to_create_payload(), skip_exists=True)
@@ -350,6 +432,8 @@ class KeycloakReconciler:
             if not drift:
                 continue
 
+            client_ok = False
+
             for key, (actual, expected) in drift.items():
                 result.changes.append(
                     Change(
@@ -367,6 +451,62 @@ class KeycloakReconciler:
                     self.client.get_client_id(spec.client_id), payload
                 )
                 clients[spec.client_id] = self._get_client(spec.client_id)
+
+        result.client_present = len(clients)
+        result.checks.append(
+            Check(
+                section="clients",
+                description="clients",
+                status=(
+                    "ok"
+                    if client_ok and result.client_present == result.client_count
+                    else "error"
+                ),
+                details=(
+                    f"{result.client_present}/{result.client_count} present: "
+                    + ", ".join(spec.client_id for spec in self.desired.clients)
+                    + "; flags, redirect URIs, web origins checked"
+                ),
+            )
+        )
+        result.checks.append(
+            Check(
+                section="clients",
+                description="default client scopes",
+                status=(
+                    "ok"
+                    if result.default_client_scope_present
+                    == result.default_client_scope_count
+                    else "error"
+                ),
+                details=(
+                    f"{result.default_client_scope_present}/"
+                    f"{result.default_client_scope_count} "
+                    "(kc-admin-api on the clients that call the Admin API)"
+                ),
+            )
+        )
+        mapping_details = ", ".join(
+            f"{mapping.client_id} -> " f"{mapping.role_owner_client_id}/{role}"
+            for mapping in self.desired.client_role_scope_mappings
+            for role in mapping.roles
+        )
+        result.checks.append(
+            Check(
+                section="clients",
+                description="client role scope mappings",
+                status=(
+                    "ok"
+                    if result.role_scope_mapping_present
+                    == result.role_scope_mapping_count
+                    else "error"
+                ),
+                details=(
+                    f"{result.role_scope_mapping_present}/"
+                    f"{result.role_scope_mapping_count}: {mapping_details}"
+                ),
+            )
+        )
 
         return clients
 
@@ -397,8 +537,12 @@ class KeycloakReconciler:
             scope["name"]
             for scope in self.client.get_client_default_client_scopes(internal_id)
         }
+        present = set(current)
         missing = [name for name in spec.default_client_scopes if name not in current]
         if not missing:
+            result.default_client_scope_present += len(
+                present & set(spec.default_client_scopes)
+            )
             return
 
         available = {scope["name"]: scope for scope in self.client.get_client_scopes()}
@@ -437,6 +581,11 @@ class KeycloakReconciler:
                     "clientScopeId": scope["id"],
                 },
             )
+            present.add(name)
+
+        result.default_client_scope_present += len(
+            present & set(spec.default_client_scopes)
+        )
 
     def _reconcile_client_role_scope_mappings(
         self, spec: ClientSpec, result: ReconcileResult, dry_run: bool
@@ -456,6 +605,7 @@ class KeycloakReconciler:
                     client_uuid, owner_uuid
                 )
             }
+            present = set(current)
             missing = [name for name in mapping.roles if name not in current]
             for name in missing:
                 result.changes.append(
@@ -477,6 +627,7 @@ class KeycloakReconciler:
                 self.client.assign_client_roles_to_client_scope(
                     client_uuid, owner_uuid, representations
                 )
+                present.update(missing)
 
             extra = current - set(mapping.roles)
             if extra:
@@ -492,12 +643,19 @@ class KeycloakReconciler:
                     )
                 )
 
+            result.role_scope_mapping_present += len(present & set(mapping.roles))
+
     def _reconcile_service_accounts(
         self,
         result: ReconcileResult,
         dry_run: bool,
         clients: dict[str, dict],
     ) -> None:
+        result.service_account_count = sum(
+            len(role_names)
+            for mappings in self.desired.service_account_roles.values()
+            for role_names in mappings.values()
+        )
         for client_id, mappings in self.desired.service_account_roles.items():
             client = clients.get(client_id)
             if client is None:
@@ -538,6 +696,7 @@ class KeycloakReconciler:
                         user["id"], management_client_uuid
                     )
                 }
+                result.service_account_present += len(set(role_names) & current)
                 missing = [name for name in role_names if name not in current]
                 for name in missing:
                     result.changes.append(
@@ -560,6 +719,28 @@ class KeycloakReconciler:
                         user["id"], management_client_uuid, representations
                     )
 
+        service_account_details = ", ".join(
+            f"{client_id} -> {management_client_id}/{role}"
+            for client_id, mappings in self.desired.service_account_roles.items()
+            for management_client_id, role_names in mappings.items()
+            for role in role_names
+        )
+        result.checks.append(
+            Check(
+                section="service-accounts",
+                description="service account roles",
+                status=(
+                    "ok"
+                    if result.service_account_present == result.service_account_count
+                    else "error"
+                ),
+                details=(
+                    f"{result.service_account_present}/"
+                    f"{result.service_account_count}: {service_account_details}"
+                ),
+            )
+        )
+
     def _reconcile_runtime_secret(
         self,
         result: ReconcileResult,
@@ -569,15 +750,34 @@ class KeycloakReconciler:
         admin_config = settings.KEYCLOAK_ADMIN_CONFIG
         backend = clients.get(admin_config["CLIENT_ID"])
         if backend is None:
+            result.runtime_secret_ok = False
+            result.checks.append(
+                Check(
+                    section="runtime-secret",
+                    description="runtime client secret",
+                    status="error",
+                    details=f"skipped: {admin_config['CLIENT_ID']} is missing",
+                )
+            )
             return
 
         can_login, reason = can_authenticate(
             admin_config["CLIENT_ID"], admin_config["CLIENT_SECRET_KEY"]
         )
         if can_login:
+            result.runtime_secret_ok = True
+            result.checks.append(
+                Check(
+                    section="runtime-secret",
+                    description="runtime client secret",
+                    status="ok",
+                    details=f"{admin_config['CLIENT_ID']} can authenticate",
+                )
+            )
             return
 
         if reason == REASON_MISSING_ADMIN_API_SCOPE:
+            result.runtime_secret_ok = False
             result.changes.append(
                 Change(
                     level="error",
@@ -589,8 +789,20 @@ class KeycloakReconciler:
                     fixable=False,
                 )
             )
+            result.checks.append(
+                Check(
+                    section="runtime-secret",
+                    description="runtime client secret",
+                    status="error",
+                    details=(
+                        f"{admin_config['CLIENT_ID']} cannot call the Admin API: "
+                        f"{reason}"
+                    ),
+                )
+            )
             return
 
+        result.runtime_secret_ok = False
         result.changes.append(
             Change(
                 level="error",
@@ -603,6 +815,17 @@ class KeycloakReconciler:
             )
         )
         if dry_run or reason != REASON_AUTHENTICATION_FAILED:
+            result.checks.append(
+                Check(
+                    section="runtime-secret",
+                    description="runtime client secret",
+                    status="error",
+                    details=(
+                        f"{admin_config['CLIENT_ID']} cannot authenticate with "
+                        f"the configured secret ({reason})"
+                    ),
+                )
+            )
             return
 
         internal_id = backend.get("id") or self.client.get_client_id(
@@ -615,6 +838,7 @@ class KeycloakReconciler:
             admin_config["CLIENT_ID"], admin_config["CLIENT_SECRET_KEY"]
         )
         if not can_login:
+            result.runtime_secret_ok = False
             result.changes.append(
                 Change(
                     level="error",
@@ -626,10 +850,48 @@ class KeycloakReconciler:
                     fixable=False,
                 )
             )
+            result.checks.append(
+                Check(
+                    section="runtime-secret",
+                    description="runtime client secret",
+                    status="error",
+                    details=(
+                        f"{admin_config['CLIENT_ID']} still cannot authenticate "
+                        f"after setting the secret ({reason})"
+                    ),
+                )
+            )
+            return
+
+        result.runtime_secret_ok = True
+        result.checks.append(
+            Check(
+                section="runtime-secret",
+                description="runtime client secret",
+                status="ok",
+                details=(
+                    f"{admin_config['CLIENT_ID']} can authenticate after setting "
+                    "the secret"
+                ),
+            )
+        )
 
     def _collect_warnings(self, realm: dict, result: ReconcileResult) -> None:
         smtp = realm.get("smtpServer") or {}
-        if not smtp.get("host") or not smtp.get("from"):
+        smtp_configured = bool(smtp.get("host") and smtp.get("from"))
+        result.checks.append(
+            Check(
+                section="smtp",
+                description="SMTP server",
+                status="ok" if smtp_configured else "warning",
+                details=(
+                    "host and sender configured"
+                    if smtp_configured
+                    else "not configured"
+                ),
+            )
+        )
+        if not smtp_configured:
             result.changes.append(
                 Change(
                     level="warning",

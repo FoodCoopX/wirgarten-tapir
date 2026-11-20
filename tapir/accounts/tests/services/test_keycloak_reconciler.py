@@ -369,6 +369,60 @@ class TestKeycloakReconciler(TapirUnitTest):
                 for change in result.changes
             )
         )
+        check = next(
+            check for check in result.checks if check.description == "SMTP server"
+        )
+        self.assertEqual("warning", check.status)
+
+    def test_reconcile_converged_checksAreOk(self, _can_authenticate):
+        desired = build_desired_state()
+        fake = FakeKeycloakAdmin.converged(desired)
+
+        result = KeycloakReconciler(fake, desired).reconcile(dry_run=True)
+
+        descriptions = {check.description for check in result.checks}
+        self.assertEqual(
+            {
+                "realm settings",
+                "realm roles",
+                "superuser group",
+                "clients",
+                "default client scopes",
+                "client role scope mappings",
+                "service account roles",
+                "runtime client secret",
+                "SMTP server",
+            },
+            descriptions,
+        )
+        self.assertTrue(
+            all(check.status == "ok" for check in result.checks),
+            [check for check in result.checks if check.status != "ok"],
+        )
+
+    def test_reconcile_missingRoles_checkIsError(self, _can_authenticate):
+        desired = build_desired_state()
+        fake = FakeKeycloakAdmin.converged(desired)
+        fake.roles = {}
+
+        result = KeycloakReconciler(fake, desired).reconcile(dry_run=True)
+
+        check = next(
+            check for check in result.checks if check.description == "realm roles"
+        )
+        self.assertEqual("error", check.status)
+        self.assertIn("0/9", check.details)
+
+    def test_reconcile_missingClient_checkIsError(self, _can_authenticate):
+        desired = build_desired_state()
+        fake = FakeKeycloakAdmin.converged(desired)
+        fake.clients = []
+
+        result = KeycloakReconciler(fake, desired).reconcile(dry_run=True)
+
+        check = next(check for check in result.checks if check.description == "clients")
+        self.assertEqual("error", check.status)
+        self.assertIn("0/3", check.details)
 
     def test_reconcile_neverDeletesAnything(self, _can_authenticate):
         desired = build_desired_state()
@@ -466,6 +520,25 @@ class TestKeycloakReconciler(TapirUnitTest):
 
 @override_settings(**SETTINGS)
 class TestKeycloakReconcilerRuntimeSecret(TapirUnitTest):
+    @patch(
+        "tapir.accounts.services.keycloak_reconciler.can_authenticate",
+        return_value=(False, REASON_AUTHENTICATION_FAILED),
+    )
+    def test_reconcile_runtimeClientCannotAuthenticate_checkIsError(
+        self, _can_authenticate
+    ):
+        desired = build_desired_state()
+        fake = FakeKeycloakAdmin.converged(desired)
+
+        result = KeycloakReconciler(fake, desired).reconcile(dry_run=True)
+
+        check = next(
+            check
+            for check in result.checks
+            if check.description == "runtime client secret"
+        )
+        self.assertEqual("error", check.status)
+
     @patch(
         "tapir.accounts.services.keycloak_reconciler.can_authenticate",
         side_effect=[(False, REASON_AUTHENTICATION_FAILED), (True, None)],

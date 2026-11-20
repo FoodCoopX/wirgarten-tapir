@@ -273,10 +273,12 @@ docker compose exec web poetry run python manage.py keycloak check
 docker compose exec web poetry run python manage.py keycloak sync
 ```
 
-`check` is read-only and exits `1` when the realm drifts. `sync` creates missing settings and then
-verifies the result; it exits `0` when the realm is converged and `2` on a configuration or setup
-error. Both commands accept `--json` for automation. The JSON contains a `config` block with the
-effective server URL, public URL, realm, site URL and client IDs, but never secrets.
+`check` is read-only and exits `1` when the realm drifts. It prints a `Checks:` block that lists
+every realm setting, role, group, client, scope mapping, service account, runtime secret and SMTP
+check with its status. `sync` creates missing settings and then verifies the result; it exits `0`
+when the realm is converged and `2` on a configuration or setup error. Both commands accept
+`--json` for automation. The JSON contains a `config` block with the effective server URL, public
+URL, realm, site URL and client IDs, plus a `checks` array, but never secrets.
 
 `sync` is idempotent. Running it twice reports no changes the second time.
 
