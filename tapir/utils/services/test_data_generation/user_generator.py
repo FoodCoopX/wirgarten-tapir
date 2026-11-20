@@ -3,6 +3,7 @@ import json
 import os
 import pathlib
 import random
+from decimal import Decimal
 from math import floor
 from typing import List, Set
 
@@ -16,11 +17,15 @@ from tapir.associations.services.association_membership_change_handler import (
     AssociationMembershipChangeHandler,
 )
 from tapir.configuration.parameter import get_parameter_value
+from tapir.log.models import LogEntry
 from tapir.coop.services.coop_share_purchase_handler import CoopSharePurchaseHandler
 from tapir.payments.models import MemberPaymentRhythm
 from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
+)
+from tapir.subscriptions.services.automatic_subscription_renewal_service import (
+    AutomaticSubscriptionRenewalService,
 )
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.utils.config import Organization
@@ -38,8 +43,11 @@ from tapir.wirgarten.models import (
     Product,
     CoopShareTransaction,
     OrderFeedback,
+    MandateReference,
+    SubscriptionChangeLogEntry,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.service.products import get_next_growing_period
 from tapir.wirgarten.tasks import assign_member_numbers
 from tapir.wirgarten.utils import (
     get_today,
@@ -50,9 +58,15 @@ from tapir.wirgarten.utils import (
 
 
 class UserGenerator:
-    past_growing_period = None
-    current_growing_period = None
-    future_growing_period = None
+    YEARLY_CANCELLATION_PROBABILITY = 0.12
+    PRICE_OVERRIDE_PROBABILITY = 0.005
+    PRICE_EXEMPTION_PROBABILITY = 0.005
+    TRIAL_DISABLED_PROBABILITY = 0.02
+    PERIOD_START_ORDER_WINDOW = datetime.timedelta(weeks=12)
+    PERIOD_START_ORDER_PROBABILITY = 0.8
+    EXTRA_COOP_SHARES_PROBABILITY = 0.25
+    CREATED_BY_ADMIN_PROBABILITY = 0.3
+    MISSING_PAYMENT_RHYTHM_PROBABILITY = 0.02
 
     @classmethod
     def get_past_growing_period(cls, cache: dict):
@@ -60,14 +74,6 @@ class UserGenerator:
             cache,
             "past_growing_period",
             lambda: GrowingPeriod.objects.order_by("start_date").first(),
-        )
-
-    @classmethod
-    def get_future_growing_period(cls, cache):
-        return get_from_cache_or_compute(
-            cache,
-            "future_growing_period",
-            lambda: GrowingPeriod.objects.order_by("start_date").last(),
         )
 
     @staticmethod
@@ -102,12 +108,16 @@ class UserGenerator:
 
         cache = {}
 
-        products_from_required_types = Product.objects.filter(
-            type__must_be_subscribed_to=True
-        ).select_related("type")
-        products_from_optional_types = Product.objects.filter(
-            type__must_be_subscribed_to=False
-        ).select_related("type")
+        products_from_required_types = list(
+            Product.objects.filter(type__must_be_subscribed_to=True).select_related(
+                "type"
+            )
+        )
+        products_from_optional_types = list(
+            Product.objects.filter(type__must_be_subscribed_to=False).select_related(
+                "type"
+            )
+        )
 
         members_that_need_a_pickup_location = set()
 
@@ -121,7 +131,6 @@ class UserGenerator:
                 products_from_base_type=products_from_required_types,
                 additional_products=products_from_optional_types,
                 members_that_need_a_pickup_location=members_that_need_a_pickup_location,
-                required_products=products_from_required_types,
             )
             CoopShareTransaction.objects.filter(
                 valid_at__lte=get_today(cache=cache) - datetime.timedelta(days=60)
@@ -135,6 +144,8 @@ class UserGenerator:
         # The creation date of subscriptions is used when generating payments , so we have to set a realistic date.
         Subscription.objects.update(created_at=F("start_date"))
 
+        AutomaticSubscriptionRenewalService.renew_subscriptions_if_necessary()
+
     @classmethod
     def generate_user(
         cls,
@@ -144,7 +155,6 @@ class UserGenerator:
         products_from_base_type,
         additional_products,
         members_that_need_a_pickup_location,
-        required_products,
     ):
         json_user = JsonUser.from_parsed_user(parsed_user)
         json_user.date_joined = get_timezone_aware_datetime(
@@ -154,15 +164,21 @@ class UserGenerator:
             datetime.time(hour=random.randint(0, 23), minute=random.randint(0, 59)),
         )
 
+        member_without_subscriptions = random.random() < 0.20
+        created_by_admin = (
+            member_without_subscriptions
+            and random.random() < cls.CREATED_BY_ADMIN_PROBABILITY
+        )
+
         is_superuser = json_user.get_username() == "roberto.cortes"
         member = Member(
             is_superuser=is_superuser,
             is_staff=is_superuser,
             is_active=True,
             date_joined=json_user.date_joined,
-            iban=fake["de_DE"].iban(),
-            account_owner=json_user.get_full_name(),
-            sepa_consent=json_user.date_joined,
+            iban="" if created_by_admin else fake["de_DE"].iban(),
+            account_owner="" if created_by_admin else json_user.get_full_name(),
+            sepa_consent=None if created_by_admin else json_user.date_joined,
             privacy_consent=json_user.date_joined,
             withdrawal_consent=json_user.date_joined,
         )
@@ -176,35 +192,18 @@ class UserGenerator:
             initial_password=member.email.split("@")[0],
         )
 
-        member_without_subscriptions = random.random() < 0.20
         min_coop_shares = 0
         if not member_without_subscriptions:
-            min_coop_shares, needs_pickup_location = cls.create_subscriptions_for_user(
-                member,
-                create_subs_for_additional_products=False,
-                cache=cache,
-                products_from_base_type=products_from_base_type,
-                additional_products=additional_products,
+            min_coop_shares, needs_pickup_location = (
+                cls.create_subscriptions_for_member(
+                    member=member,
+                    base_products=products_from_base_type,
+                    additional_products=additional_products,
+                    cache=cache,
+                )
             )
-            if len(additional_products) > 0 and (min_coop_shares > 0):
-                _, needs_pickup_location_additional_products = (
-                    cls.create_subscriptions_for_user(
-                        member,
-                        create_subs_for_additional_products=True,
-                        cache=cache,
-                        products_from_base_type=products_from_base_type,
-                        additional_products=additional_products,
-                    )
-                )
-                needs_pickup_location = (
-                    needs_pickup_location or needs_pickup_location_additional_products
-                )
             if needs_pickup_location:
                 members_that_need_a_pickup_location.add(member)
-            if len(required_products) > 0:
-                cls.create_subscription_to_required_products(
-                    member=member, products=required_products, cache=cache
-                )
 
         if not member_without_subscriptions and random.random() < 0.3:
             cls.generate_feedback_for_member(member)
@@ -216,6 +215,12 @@ class UserGenerator:
             and not member_without_subscriptions
         ):
             cls.create_association_membership(member, cache=cache)
+
+        if created_by_admin or (
+            not member_without_subscriptions
+            and random.random() < cls.MISSING_PAYMENT_RHYTHM_PROBABILITY
+        ):
+            return
 
         MemberPaymentRhythmService.assign_payment_rhythm_to_member(
             member=member,
@@ -237,178 +242,302 @@ class UserGenerator:
         return lower_boundary + datetime.timedelta(days=nb_days)
 
     @classmethod
-    def create_subscriptions_for_user(
+    def create_subscriptions_for_member(
         cls,
         member: Member,
-        create_subs_for_additional_products: bool,
-        cache: dict,
-        products_from_base_type: List[Product],
+        base_products: List[Product],
         additional_products: List[Product],
-    ):
+        cache: dict,
+    ) -> tuple[int, bool]:
         mandate_ref = MandateReferenceProvider.get_or_create_mandate_reference(
             member, cache=cache
         )
-        future_growing_period = cls.get_future_growing_period(cache=cache)
-        start_date = cls.get_random_date_in_range_biased_towards_lower_end(
-            member.date_joined.date(), future_growing_period.end_date
+        today = get_today(cache=cache)
+        base_order_date = cls.get_random_date_in_range_biased_towards_lower_end(
+            lower_boundary=member.date_joined.date(), upper_boundary=today
         )
+        base_start_date = cls.get_subscription_start_date(
+            order_date=base_order_date, cache=cache
+        )
+
+        chains = []
+        min_coop_shares = 0
+        number_of_base_products = random.choices(
+            population=[1, 2], weights=[100, 1], k=1
+        )[0]
+        for product in random.sample(
+            base_products, k=min(number_of_base_products, len(base_products))
+        ):
+            quantity = cls.get_random_quantity(product)
+            chains.append(
+                cls.build_subscription_chain(
+                    member=member,
+                    product=product,
+                    quantity=quantity,
+                    start_date=base_start_date,
+                    mandate_ref=mandate_ref,
+                    main_subscriptions_by_period_id=None,
+                    cache=cache,
+                )
+            )
+            min_coop_shares += quantity * product.min_coop_shares
+
+        if len(chains) > 0 and len(additional_products) > 0:
+            main_chain = chains[0]
+            main_subscriptions_by_period_id = {
+                subscription.period_id: subscription for subscription in main_chain
+            }
+            number_of_additional_products = random.choices(
+                population=[0, 1, 2], weights=[50, 50, 1], k=1
+            )[0]
+            for product in random.sample(
+                additional_products,
+                k=min(number_of_additional_products, len(additional_products)),
+            ):
+                chain = cls.build_subscription_chain(
+                    member=member,
+                    product=product,
+                    quantity=cls.get_random_quantity(product),
+                    start_date=max(
+                        base_start_date,
+                        cls.get_subscription_start_date(
+                            order_date=cls.get_random_date_in_range_biased_towards_lower_end(
+                                lower_boundary=base_order_date, upper_boundary=today
+                            ),
+                            cache=cache,
+                        ),
+                    ),
+                    mandate_ref=mandate_ref,
+                    main_subscriptions_by_period_id=main_subscriptions_by_period_id,
+                    cache=cache,
+                )
+                if len(chain) > 0:
+                    chains.append(chain)
+
+        Subscription.objects.bulk_create(
+            [subscription for chain in chains for subscription in chain]
+        )
+        cls.create_subscription_log_entries(member=member, chains=chains, cache=cache)
+
+        needs_pickup_location = any(
+            chain[0].product.type.delivery_cycle != NO_DELIVERY for chain in chains
+        )
+        return min_coop_shares, needs_pickup_location
+
+    @classmethod
+    def get_random_quantity(cls, product: Product) -> int:
+        if product.type.single_subscription_only:
+            return 1
+        return random.choices([1, 2, 3], weights=[100, 1, 1], k=1)[0]
+
+    @classmethod
+    def get_subscription_start_date(
+        cls, order_date: datetime.date, cache: dict
+    ) -> datetime.date:
+        growing_period = TapirCache.get_growing_period_at_date(
+            reference_date=order_date, cache=cache
+        )
+        next_growing_period = get_next_growing_period(
+            reference_date=growing_period.end_date, cache=cache
+        )
+        if (
+            next_growing_period is not None
+            and next_growing_period.start_date - order_date
+            <= cls.PERIOD_START_ORDER_WINDOW
+            and random.random() < cls.PERIOD_START_ORDER_PROBABILITY
+        ):
+            return next_growing_period.start_date
+
+        next_monday = order_date + datetime.timedelta(days=-order_date.weekday() % 7)
+        if next_monday <= growing_period.end_date or next_growing_period is None:
+            return next_monday
+        return next_growing_period.start_date
+
+    @classmethod
+    def get_random_price_override(cls) -> Decimal | None:
+        value = random.random()
+        if value < cls.PRICE_EXEMPTION_PROBABILITY:
+            return Decimal(0)
+        if value < cls.PRICE_EXEMPTION_PROBABILITY + cls.PRICE_OVERRIDE_PROBABILITY:
+            return Decimal(random.randint(10, 60))
+        return None
+
+    @classmethod
+    def build_subscription_chain(
+        cls,
+        member: Member,
+        product: Product,
+        quantity: int,
+        start_date: datetime.date,
+        mandate_ref: MandateReference,
+        main_subscriptions_by_period_id: dict[str, Subscription] | None,
+        cache: dict,
+    ) -> list[Subscription]:
+        today = get_today(cache=cache)
         growing_period = TapirCache.get_growing_period_at_date(
             reference_date=start_date, cache=cache
         )
-        end_date = growing_period.end_date
-
-        choices = [1, 2]
-        weights = [100, 1]
-        if create_subs_for_additional_products:
-            choices = [0, 1, 2]
-            weights = [50, 50, 1]
-        number_product_subscriptions = random.choices(
-            population=choices, weights=weights, k=1
-        )[0]
-        already_subscribed_products_ids = set()
-
-        previous_growing_period = cls.get_past_growing_period(cache=cache)
-        current_growing_period = TapirCache.get_growing_period_at_date(
-            reference_date=get_today(cache=cache), cache=cache
-        )
-
-        min_shares = 0
-        needs_pickup_location = False
-        for _ in range(number_product_subscriptions):
-            if create_subs_for_additional_products:
-                possible_products = [
-                    product
-                    for product in additional_products
-                    if product.id not in already_subscribed_products_ids
-                ]
-            else:
-                possible_products = [
-                    product
-                    for product in products_from_base_type
-                    if product.id not in already_subscribed_products_ids
-                ]
-            product = random.choice(possible_products)
-            already_subscribed_products_ids.add(product.id)
-
-            quantity = random.choices([1, 2, 3], weights=[100, 1, 1], k=1)[0]
-            if product.type.single_subscription_only:
-                quantity = 1
-
-            if not create_subs_for_additional_products:
-                min_shares += quantity * product.min_coop_shares
-
-            subscription = Subscription.objects.create(
-                member=member,
-                product=product,
-                period=growing_period,
-                quantity=quantity,
-                start_date=start_date,
-                end_date=end_date,
-                mandate_ref=mandate_ref,
-                admin_confirmed=cls.get_confirmation_datetime(start_date, cache=cache),
-                notice_period_duration=get_parameter_value(
-                    ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD, cache=cache
-                ),
-                notice_period_unit=get_parameter_value(
-                    ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD_UNIT, cache=cache
-                ),
-            )
-
-            needs_pickup_location = (
-                needs_pickup_location or product.type.delivery_cycle != NO_DELIVERY
-            )
-
-            if growing_period != previous_growing_period:
-                continue
-
-            subscription_got_cancelled = random.random() < 0.25
-            if subscription_got_cancelled:
-                days_range = (subscription.end_date - subscription.start_date).days
-                subscription.cancellation_ts = make_timezone_aware(
-                    datetime.datetime.combine(
-                        subscription.start_date
-                        + datetime.timedelta(days=random.randint(0, days_range)),
-                        datetime.time(hour=12),
-                    )
-                )
-                if TrialPeriodManager.is_product_in_trial(
-                    product=subscription.product,
-                    member=member,
-                    cache=cache,
-                    reference_date=subscription.cancellation_ts.date(),
-                ):
-                    subscription.end_date = (
-                        TrialPeriodManager.get_earliest_trial_cancellation_date(
-                            subscription,
-                            reference_date=subscription.cancellation_ts.date(),
-                            cache=cache,
-                        )
-                    )
-                subscription.cancellation_admin_confirmed = (
-                    cls.get_confirmation_datetime(
-                        subscription.cancellation_ts.date(), cache=cache
-                    )
-                )
-                subscription.save()
-            else:
-                Subscription.objects.create(
-                    member=member,
-                    product=product,
-                    period=current_growing_period,
-                    quantity=quantity,
-                    start_date=current_growing_period.start_date,
-                    end_date=current_growing_period.end_date,
-                    mandate_ref=mandate_ref,
-                    admin_confirmed=cls.get_confirmation_datetime(
-                        start_date, cache=cache
-                    ),
-                    notice_period_duration=get_parameter_value(
-                        ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD, cache=cache
-                    ),
-                    notice_period_unit=get_parameter_value(
-                        ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD_UNIT,
-                        cache=cache,
-                    ),
-                )
-
-        return min_shares, needs_pickup_location
-
-    @classmethod
-    def create_subscription_to_required_products(
-        cls, member: Member, products: List[Product], cache: dict
-    ):
-        growing_period = TapirCache.get_growing_period_at_date(
-            reference_date=get_today(cache=cache), cache=cache
-        )
-
-        Subscription.objects.create(
+        subscription = Subscription(
             member=member,
-            product=random.choice(products),
-            start_date=growing_period.start_date,
+            product=product,
+            period=growing_period,
+            quantity=quantity,
+            start_date=start_date,
             end_date=growing_period.end_date,
-            period=None,
-            quantity=1,
-            mandate_ref=MandateReferenceProvider.get_or_create_mandate_reference(
-                member, cache=cache
-            ),
-            admin_confirmed=cls.get_confirmation_datetime(
-                growing_period.start_date, cache=cache
-            ),
+            mandate_ref=mandate_ref,
+            admin_confirmed=cls.get_confirmation_datetime(start_date, cache=cache),
             notice_period_duration=get_parameter_value(
                 ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD, cache=cache
             ),
             notice_period_unit=get_parameter_value(
                 ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD_UNIT, cache=cache
             ),
+            trial_disabled=random.random() < cls.TRIAL_DISABLED_PROBABILITY,
+            price_override=cls.get_random_price_override(),
+        )
+
+        chain = []
+        while True:
+            main_subscription = None
+            if main_subscriptions_by_period_id is not None:
+                main_subscription = main_subscriptions_by_period_id.get(
+                    subscription.period_id
+                )
+                if (
+                    main_subscription is None
+                    or subscription.start_date > main_subscription.end_date
+                ):
+                    break
+
+            chain.append(subscription)
+            if subscription.start_date > today:
+                break
+
+            if (
+                main_subscription is not None
+                and main_subscription.cancellation_ts is not None
+            ):
+                subscription.cancellation_ts = main_subscription.cancellation_ts
+                subscription.cancellation_admin_confirmed = (
+                    main_subscription.cancellation_admin_confirmed
+                )
+                subscription.end_date = min(
+                    subscription.end_date, main_subscription.end_date
+                )
+                break
+
+            is_current_period = subscription.period.end_date >= today
+            if random.random() < cls.get_cancellation_probability(
+                subscription=subscription, today=today
+            ):
+                cls.cancel_subscription(
+                    subscription=subscription,
+                    cancellation_date=cls.get_random_date_in_range_biased_towards_lower_end(
+                        lower_boundary=subscription.start_date,
+                        upper_boundary=min(subscription.end_date, today),
+                    ),
+                    cache=cache,
+                )
+                break
+
+            if is_current_period:
+                break
+
+            subscription = (
+                AutomaticSubscriptionRenewalService.build_renewed_subscription(
+                    subscription=subscription, cache=cache
+                )
+            )
+
+        return chain
+
+    @classmethod
+    def get_cancellation_probability(
+        cls, subscription: Subscription, today: datetime.date
+    ) -> float:
+        elapsed_days = (
+            min(subscription.end_date, today) - subscription.start_date
+        ).days
+        total_days = max(1, (subscription.end_date - subscription.start_date).days)
+        return cls.YEARLY_CANCELLATION_PROBABILITY * elapsed_days / total_days
+
+    @classmethod
+    def cancel_subscription(
+        cls, subscription: Subscription, cancellation_date: datetime.date, cache: dict
+    ):
+        subscription.cancellation_ts = make_timezone_aware(
+            datetime.datetime.combine(cancellation_date, datetime.time(hour=12))
+        )
+        subscription.cancellation_admin_confirmed = cls.get_confirmation_datetime(
+            cancellation_date, cache=cache
+        )
+        if TrialPeriodManager.is_contract_in_trial(
+            contract=subscription, reference_date=cancellation_date, cache=cache
+        ):
+            subscription.end_date = min(
+                subscription.end_date,
+                TrialPeriodManager.get_earliest_trial_cancellation_date(
+                    contract=subscription, reference_date=cancellation_date, cache=cache
+                ),
+            )
+
+    @classmethod
+    def create_subscription_log_entries(
+        cls, member: Member, chains: list[list[Subscription]], cache: dict
+    ):
+        log_entry_dates = []
+        for chain in chains:
+            first_subscription = chain[0]
+            log_entry = SubscriptionChangeLogEntry().populate_subscription_changed(
+                actor=member,
+                user=member,
+                change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.ADDED,
+                subscriptions=[first_subscription],
+                admin_confirmed=first_subscription.admin_confirmed,
+            )
+            log_entry.save()
+            log_entry_dates.append(
+                (
+                    log_entry,
+                    make_timezone_aware(
+                        datetime.datetime.combine(
+                            min(first_subscription.start_date, get_today(cache=cache)),
+                            datetime.time(hour=10),
+                        )
+                    ),
+                )
+            )
+
+            cancelled_subscription = chain[-1]
+            if cancelled_subscription.cancellation_ts is None:
+                continue
+            log_entry = SubscriptionChangeLogEntry().populate_subscription_changed(
+                actor=member,
+                user=member,
+                change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.CANCELLED,
+                subscriptions=[cancelled_subscription],
+                admin_confirmed=cancelled_subscription.cancellation_admin_confirmed,
+            )
+            log_entry.save()
+            log_entry_dates.append((log_entry, cancelled_subscription.cancellation_ts))
+
+        for log_entry, created_date in log_entry_dates:
+            log_entry.created_date = created_date
+        LogEntry.objects.bulk_update(
+            [
+                LogEntry(id=log_entry.id, created_date=created_date)
+                for log_entry, created_date in log_entry_dates
+            ],
+            ["created_date"],
         )
 
     @classmethod
     def create_coop_shares_for_user(cls, member: Member, min_shares: int, cache: dict):
         shares = min_shares
-        if random.random() < 0.5:
-            shares += random.randint(0, 10)
+        if random.random() < cls.EXTRA_COOP_SHARES_PROBABILITY:
+            shares += random.randint(1, 3)
 
-        shares = max(1, min_shares)
+        shares = max(1, shares)
 
         CoopSharePurchaseHandler.buy_cooperative_shares(
             quantity=shares,

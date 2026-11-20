@@ -40,35 +40,19 @@ class OrderValidator:
                     f"Bei {product.type.name}-Produkten sind nur Wartelisteneinträge möglich."
                 )
 
-        if cls.does_order_need_a_pickup_location(
-            order=order, cache=cache
-        ) and not PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
-            pickup_location=pickup_location,
+        cls.validate_capacities(
             order=order,
-            already_registered_member=member,
-            subscription_start=contract_start_date,
+            subscription_start_date=contract_start_date,
+            member=member,
+            pickup_location=pickup_location,
             cache=cache,
-        ):
-            raise ValidationError(
-                "Dein Abholort ist leider voll. Bitte wähle einen anderen Abholort aus."
-            )
+        )
 
         if pickup_location and pickup_location.id == get_parameter_value(
             ParameterKeys.DELIVERY_DONATION_FORWARD_TO_PICKUP_LOCATION, cache=cache
         ):
             raise ValidationError(
                 "Dieser Abholort kann nicht ausgewählt werden (das ist der Sonder-Abholort für Spenden)."
-            )
-
-        product_type_ids_without_enough_capacity = GlobalCapacityChecker.get_product_type_ids_without_enough_capacity_for_order(
-            order_with_all_product_types=order,
-            member_id=member.id if member is not None else None,
-            subscription_start_date=contract_start_date,
-            cache=cache,
-        )
-        if len(product_type_ids_without_enough_capacity) > 0:
-            raise ValidationError(
-                f"Folgende Produkt-Typen haben nicht genug Kapazität für diese Bestellung: {product_type_ids_without_enough_capacity}"
             )
 
         if not SingleSubscriptionValidator.are_single_subscription_products_are_ordered_at_most_once(
@@ -78,11 +62,45 @@ class OrderValidator:
                 "Manche Produkte, die nur einmal bestellt werden dürfen, sind mehrmals in der Bestellung."
             )
 
+    @classmethod
+    def validate_capacities(
+        cls,
+        order: TapirOrder,
+        subscription_start_date: datetime.date,
+        member: Member | None,
+        pickup_location: PickupLocation | None,
+        cache: dict,
+    ):
+        if cls.does_order_need_a_pickup_location(
+            order=order, cache=cache
+        ) and not PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
+            pickup_location=pickup_location,
+            order=order,
+            already_registered_member=member,
+            subscription_start=subscription_start_date,
+            cache=cache,
+        ):
+            raise ValidationError(
+                "Dein Abholort ist leider voll. Bitte wähle einen anderen Abholort aus."
+            )
+
+        member_id = member.id if member is not None else None
+        product_type_ids_without_enough_capacity = GlobalCapacityChecker.get_product_type_ids_without_enough_capacity_for_order(
+            order_with_all_product_types=order,
+            member_id=member_id,
+            subscription_start_date=subscription_start_date,
+            cache=cache,
+        )
+        if len(product_type_ids_without_enough_capacity) > 0:
+            raise ValidationError(
+                f"Folgende Produkt-Typen haben nicht genug Kapazität für diese Bestellung: {product_type_ids_without_enough_capacity}"
+            )
+
         for product, quantity in order.items():
             if not ProductCapacityChecker.does_product_have_enough_free_capacity_to_add_order(
                 product=product,
-                member_id=member.id if member is not None else None,
-                subscription_start_date=contract_start_date,
+                member_id=member_id,
+                subscription_start_date=subscription_start_date,
                 ordered_quantity=quantity,
                 cache=cache,
             ):

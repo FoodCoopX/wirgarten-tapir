@@ -536,6 +536,19 @@ class TapirCache:
         )
 
     @classmethod
+    def get_first_growing_period_starting_after(
+        cls, reference_date: datetime.date, cache: dict
+    ) -> GrowingPeriod | None:
+        return next(
+            (
+                growing_period
+                for growing_period in cls.get_all_growing_periods_ascending(cache=cache)
+                if growing_period.start_date > reference_date
+            ),
+            None,
+        )
+
+    @classmethod
     def get_growing_period_at_date(
         cls, reference_date: datetime.date, cache: dict
     ) -> GrowingPeriod | None:

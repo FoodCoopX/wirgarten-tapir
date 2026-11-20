@@ -23,7 +23,6 @@ from tapir.bakery.models import (
     PreferredBread,
     StoveSession,
 )
-from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.log.models import LogEntry
 from tapir.payments.models import MemberCredit
 from tapir.utils.config import Organization
@@ -71,7 +70,6 @@ from tapir.wirgarten.models import (
     OrderFeedback,
     LocationRoute,
 )
-from tapir.wirgarten.tests.factories import GrowingPeriodFactory
 
 
 class DataGenerator:
@@ -141,7 +139,7 @@ class DataGenerator:
         )
 
         print(f"Generating test data for {generate_test_data_for}...")
-        cls.generate_growing_periods(generate_test_data_for)
+        cls.generate_growing_periods()
         print("Creating products...")
         ProductGenerator.generate_product_data(generate_test_data_for)
         print("Creating pickup locations...")
@@ -170,66 +168,14 @@ class DataGenerator:
         print("Test data generation done")
 
     @classmethod
-    def generate_growing_periods(cls, generate_test_data_for: Organization):
-        today = datetime.date.today()
-        start_date_current_period = today.replace(
-            day=1,
-            month=cls.get_starting_month_for_growing_period(generate_test_data_for),
-        )
-        if start_date_current_period > today:
-            start_date_current_period = start_date_current_period.replace(
-                year=start_date_current_period.year - 1
-            )
-
-        end_date_current_period = start_date_current_period.replace(
-            year=start_date_current_period.year + 1
-        ) - datetime.timedelta(days=1)
-
-        # Current period
-        current_period = GrowingPeriodFactory.build(
-            start_date=start_date_current_period, end_date=end_date_current_period
-        )
-
-        # Previous period
-        previous_period = GrowingPeriodFactory.build(
-            start_date=start_date_current_period.replace(
-                year=start_date_current_period.year - 1
-            ),
-            end_date=end_date_current_period.replace(
-                year=end_date_current_period.year - 1
-            ),
-        )
-
-        # Next period
-        next_period = GrowingPeriodFactory.build(
-            start_date=start_date_current_period.replace(
-                year=start_date_current_period.year + 1
-            ),
-            end_date=end_date_current_period.replace(
-                year=end_date_current_period.year + 1
-            ),
-        )
-
+    def generate_growing_periods(cls):
+        current_year = datetime.date.today().year
         GrowingPeriod.objects.bulk_create(
-            [previous_period, current_period, next_period]
-        )
-
-    @classmethod
-    def get_starting_month_for_growing_period(
-        cls, generate_test_data_for: Organization
-    ):
-        if generate_test_data_for in [
-            Organization.BIOTOP,
-            Organization.VEREIN,
-            Organization.BAKERY,
-        ]:
-            return 1
-        if generate_test_data_for == Organization.WIRGARTEN:
-            return 7
-        if generate_test_data_for == Organization.L2G:
-            return 5
-        if generate_test_data_for == Organization.MM:
-            return 5
-        raise TapirImproperlyConfigured(
-            f"Unknown organization for test data generation: {generate_test_data_for}"
+            [
+                GrowingPeriod(
+                    start_date=datetime.date(year=year, month=1, day=1),
+                    end_date=datetime.date(year=year, month=12, day=31),
+                )
+                for year in [current_year - 1, current_year, current_year + 1]
+            ]
         )

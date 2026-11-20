@@ -1,6 +1,16 @@
 /* tslint:disable */
 /* eslint-disable */
 export * from "./AdminSetAssociationMembershipRequestRequest";
+export * from "./AdminSizeChangeRequest";
+export * from "./AdminStartDateOption";
+export * from "./AdminStartDateOptions";
+export * from "./AdminStartDateWeekOption";
+export * from "./AdminSubscriptionAdditionRequest";
+export * from "./AdminSubscriptionChangeMemberData";
+export * from "./AdminSubscriptionChangeMemberSummary";
+export * from "./AdminSubscriptionChangePrerequisitesStatus";
+export * from "./AdminSubscriptionChangeSubscriptionUnit";
+export * from "./AdminSubscriptionChangeSubscriptionUnitStatusEnum";
 export * from "./AssignmentLogEntry";
 export * from "./AssignmentLogEntryStatusEnum";
 export * from "./AssociationMembership";
@@ -245,6 +255,7 @@ export * from "./PreferredBreadStatistics";
 export * from "./PreferredLanguageEnum";
 export * from "./PreviewRequest";
 export * from "./PreviewResponse";
+export * from "./PriceCategoryEnum";
 export * from "./Product";
 export * from "./ProductBasketSizeEquivalence";
 export * from "./ProductBasketSizeEquivalenceRequest";
@@ -299,6 +310,7 @@ export * from "./Subscription";
 export * from "./SubscriptionChange";
 export * from "./SubscriptionChangeLogEntry";
 export * from "./SubscriptionDateChangeRequestRequest";
+export * from "./SubscriptionPrerequisitesInputRequest";
 export * from "./SubscriptionPriceOverrideChangeRequestRequest";
 export * from "./SubscriptionTrialChangeRequestRequest";
 export * from "./SubscriptionTrialFields";
