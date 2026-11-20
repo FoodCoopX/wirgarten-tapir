@@ -15,7 +15,6 @@ interface ContractsCardProps {
   onToggle: () => void;
   contracts: BiddingRoundContractRow[];
   growingPeriodId: string | null;
-  rollbackAvailable: boolean;
   rollbackUntracked: boolean;
   onRollback: (memberIds: string[], memberNames: string[]) => void;
 }

@@ -168,7 +168,6 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
             }
             contracts={results.contracts}
             growingPeriodId={results.data?.growingPeriodId ?? null}
-            rollbackAvailable={results.data?.rollbackAvailable ?? false}
             rollbackUntracked={results.data?.rollbackUntracked ?? false}
             onRollback={(memberIds, memberNames) =>
               rollback.openRollbackModal(memberIds, memberNames)

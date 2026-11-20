@@ -221,67 +221,21 @@ class RoundMemberEffectService:
             raise ValidationError(
                 "Für eine erzwungene Rücknahme ist eine Begründung erforderlich."
             )
-        selected_member_ids = (
-            None if member_ids is None else {str(member_id) for member_id in member_ids}
-        )
+        selected_member_ids = cls._selected_member_ids(member_ids)
 
         with transaction.atomic():
             locked_round = BiddingRound.objects.select_for_update().get(
                 pk=bidding_round.pk
             )
-            filter_args = (
-                {"member_id__in": selected_member_ids}
-                if selected_member_ids is not None
-                else {}
+            applied, skipped = cls._load_applied_effects(
+                locked_round, selected_member_ids
             )
-            effects = list(
-                locked_round.member_effects.select_related("member")
-                .filter(**filter_args)
-                .order_by("member_id")
-            )
-            if not effects:
-                if locked_round.contracts_created_at is not None:
-                    raise UntrackedRoundError(
-                        "Für diese Runde fehlt der aufgezeichnete Vorzustand. "
-                        "Bitte die Rücknahme manuell prüfen."
-                    )
-                raise NoEffectsError(
-                    "Für diese Runde gibt es keine Verträge zum Zurücknehmen."
-                )
-
-            applied = [
-                effect
-                for effect in effects
-                if effect.state == BiddingRoundMemberEffect.State.APPLIED
-            ]
-            skipped = [
-                cls._result(effect, state="skipped")
-                for effect in effects
-                if effect.state != BiddingRoundMemberEffect.State.APPLIED
-            ]
             if not applied:
                 return skipped
 
-            conflicts = []
-            diverged_effect_ids = set()
-            for effect in applied:
-                conflicts.extend(cls._cross_round_conflicts(effect))
-                if cls.diverges(effect):
-                    diverged_effect_ids.add(effect.pk)
-                    conflicts.append(
-                        {
-                            "kind": "diverged",
-                            "member_id": effect.member_id,
-                            "member_name": str(effect.member),
-                            "round_id": locked_round.id,
-                            "round_name": locked_round.name,
-                            "detail": (
-                                "Der aktuelle Stand weicht vom aufgezeichneten "
-                                "Zustand der Runde ab."
-                            ),
-                        }
-                    )
-
+            conflicts, diverged_effect_ids = cls._collect_rollback_conflicts(
+                applied, locked_round
+            )
             if conflicts:
                 has_cross_round = any(
                     conflict["kind"] == "cross_round" for conflict in conflicts
@@ -301,14 +255,80 @@ class RoundMemberEffectService:
                 for effect in applied
             ]
             results.extend(skipped)
-
-            if not locked_round.member_effects.filter(
-                state=BiddingRoundMemberEffect.State.APPLIED
-            ).exists():
-                locked_round.contracts_created_at = None
-                locked_round.save(update_fields=["contracts_created_at", "updated_at"])
+            cls._clear_contracts_created_at(locked_round)
 
         return results
+
+    @staticmethod
+    def _selected_member_ids(member_ids):
+        if member_ids is None:
+            return None
+        return {str(member_id) for member_id in member_ids}
+
+    @classmethod
+    def _load_applied_effects(cls, locked_round, selected_member_ids):
+        filter_args = (
+            {"member_id__in": selected_member_ids}
+            if selected_member_ids is not None
+            else {}
+        )
+        effects = list(
+            locked_round.member_effects.select_related("member")
+            .filter(**filter_args)
+            .order_by("member_id")
+        )
+        if not effects:
+            if locked_round.contracts_created_at is not None:
+                raise UntrackedRoundError(
+                    "Für diese Runde fehlt der aufgezeichnete Vorzustand. "
+                    "Bitte die Rücknahme manuell prüfen."
+                )
+            raise NoEffectsError(
+                "Für diese Runde gibt es keine Verträge zum Zurücknehmen."
+            )
+
+        applied = [
+            effect
+            for effect in effects
+            if effect.state == BiddingRoundMemberEffect.State.APPLIED
+        ]
+        skipped = [
+            cls._result(effect, state="skipped")
+            for effect in effects
+            if effect.state != BiddingRoundMemberEffect.State.APPLIED
+        ]
+        return applied, skipped
+
+    @classmethod
+    def _collect_rollback_conflicts(cls, applied, locked_round):
+        conflicts = []
+        diverged_effect_ids = set()
+        for effect in applied:
+            conflicts.extend(cls._cross_round_conflicts(effect))
+            if cls.diverges(effect):
+                diverged_effect_ids.add(effect.pk)
+                conflicts.append(
+                    {
+                        "kind": "diverged",
+                        "member_id": effect.member_id,
+                        "member_name": str(effect.member),
+                        "round_id": locked_round.id,
+                        "round_name": locked_round.name,
+                        "detail": (
+                            "Der aktuelle Stand weicht vom aufgezeichneten "
+                            "Zustand der Runde ab."
+                        ),
+                    }
+                )
+        return conflicts, diverged_effect_ids
+
+    @classmethod
+    def _clear_contracts_created_at(cls, locked_round) -> None:
+        if not locked_round.member_effects.filter(
+            state=BiddingRoundMemberEffect.State.APPLIED
+        ).exists():
+            locked_round.contracts_created_at = None
+            locked_round.save(update_fields=["contracts_created_at", "updated_at"])
 
     @classmethod
     def diverges(cls, effect) -> bool:
@@ -328,6 +348,16 @@ class RoundMemberEffectService:
         if not touched:
             return []
 
+        conflicts = cls._conflicts_from_other_effects(
+            effect, created, touched, previous
+        )
+        conflicts.extend(cls._conflicts_from_foreign_links(effect, created))
+        return cls._deduplicate_conflicts(conflicts)
+
+    @classmethod
+    def _conflicts_from_other_effects(
+        cls, effect, created, touched, previous
+    ) -> list[dict]:
         conflicts = []
         other_round_ids = BiddingRoundCreatedSubscription.objects.filter(
             subscription_id__in=touched
@@ -341,27 +371,39 @@ class RoundMemberEffectService:
             .select_related("round", "member")
         )
         for other in other_effects:
-            other_previous = cls._by_pk(other.previous_subscriptions)
-            other_applied = cls._by_pk(other.applied_subscriptions)
-            detail = None
-            if created & (set(other_previous) | set(other_applied)):
-                detail = (
-                    "Die andere Runde nutzt einen Vertrag, den diese Rücknahme "
-                    "löschen würde."
-                )
-            else:
-                for pk in touched - created:
-                    if pk in other_applied and other_applied[pk] != previous.get(pk):
-                        detail = (
-                            "Die andere Runde hat diesen Vertrag nach dieser Runde "
-                            "weiterverändert."
-                        )
-                        break
+            detail = cls._detail_for_other_effect(
+                created,
+                touched,
+                previous,
+                cls._by_pk(other.previous_subscriptions),
+                cls._by_pk(other.applied_subscriptions),
+            )
             if detail is not None:
                 conflicts.append(
                     cls._conflict(effect, other.round, other.member, detail)
                 )
+        return conflicts
 
+    @staticmethod
+    def _detail_for_other_effect(
+        created, touched, previous, other_previous, other_applied
+    ):
+        if created & (set(other_previous) | set(other_applied)):
+            return (
+                "Die andere Runde nutzt einen Vertrag, den diese Rücknahme "
+                "löschen würde."
+            )
+        for pk in touched - created:
+            if pk in other_applied and other_applied[pk] != previous.get(pk):
+                return (
+                    "Die andere Runde hat diesen Vertrag nach dieser Runde "
+                    "weiterverändert."
+                )
+        return None
+
+    @classmethod
+    def _conflicts_from_foreign_links(cls, effect, created) -> list[dict]:
+        conflicts = []
         foreign_links = (
             BiddingRoundCreatedSubscription.objects.filter(subscription_id__in=created)
             .exclude(round_id=effect.round_id)
@@ -376,6 +418,10 @@ class RoundMemberEffectService:
                     "Eine andere Runde hat diesen Vertrag erzeugt oder übernommen.",
                 )
             )
+        return conflicts
+
+    @staticmethod
+    def _deduplicate_conflicts(conflicts) -> list[dict]:
         unique = []
         seen = set()
         for conflict in conflicts:

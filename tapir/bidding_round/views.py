@@ -985,13 +985,10 @@ class RoundRollbackMembersView(BiddingRoundFeatureFlagMixin, APIView):
                 cache=cache,
             )
         except MemberRollbackConflict as error:
-            code = (
-                "cross_round"
-                if any(
-                    conflict["kind"] == "cross_round" for conflict in error.conflicts
-                )
-                else "diverged"
+            has_cross_round = any(
+                conflict["kind"] == "cross_round" for conflict in error.conflicts
             )
+            code = "cross_round" if has_cross_round else "diverged"
             return Response(
                 {
                     "error": str(error),
