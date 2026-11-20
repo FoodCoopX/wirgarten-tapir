@@ -49,6 +49,22 @@ function getRoundIdFromPath(): string {
   return parts[adminIndex + 1] ?? "";
 }
 
+function buildItem(
+  roundProductTypeId: string,
+  productId: string,
+  quantity: number,
+  amounts: string[],
+) {
+  return {
+    roundProductTypeId,
+    productId,
+    quantity,
+    amount1: amounts[0] || null,
+    amount2: amounts[1] || null,
+    amount3: amounts[2] || null,
+  };
+}
+
 const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
   csrfToken,
 }) => {
@@ -156,7 +172,7 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
       setManualQuantity(1);
       setShowManualBid(true);
     } catch (error) {
-      await handleRequestError(
+      handleRequestError(
         error,
         "Die Mitglieder konnten nicht geladen werden.",
         setToastDatas,
@@ -173,22 +189,6 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
     ]);
     setEditQuantity(bid.items[0]?.quantity ?? 1);
     setEditConfirmed(!!bid.adminConfirmed);
-  }
-
-  function buildItem(
-    roundProductTypeId: string,
-    productId: string,
-    quantity: number,
-    amounts: string[],
-  ) {
-    return {
-      roundProductTypeId,
-      productId,
-      quantity,
-      amount1: amounts[0] || null,
-      amount2: amounts[1] || null,
-      amount3: amounts[2] || null,
-    };
   }
 
   if (loading) {
