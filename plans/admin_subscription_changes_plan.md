@@ -10,6 +10,8 @@ Two new icons in the action bar of `/tapir/contracts` (`subscription_filter.html
 Reference: prototype on `codex/issue-1037-admin-contract-prototype-v2` (#1347), screenshots in
 `docs/prototypes/issue-1037/v2/`. The prototype is plain JS + a Django JSON view; it is only a UI reference. The
 implementation is React + DRF like the other buttons of that bar (`SubscriptionChangeDatesButton` etc.).
+The issue and the prototype are references: the result should be similar, but simple code comes first. Deviate
+from them wherever that keeps the frontend simpler.
 
 ## Anteilsgröße ändern
 
@@ -30,8 +32,8 @@ implementation is React + DRF like the other buttons of that bar (`SubscriptionC
    - Product type locked, new product select (same type, not deleted, ≠ current product). No quantity field.
    - Start date, three options:
      - a) next possible start (`ContractStartDateCalculator.get_next_contract_start_date(today, apply_buffer_time=True)`),
-     - b) a calendar week in the growing period of the selected subscription: year select, then week select showing
-       the Monday; only Mondays ≥ today. Weeks before the next possible start are allowed (admin override) and marked
+     - b) a calendar week in the growing period of the selected subscription: one week select grouped by ISO year,
+       showing the Monday; only Mondays ≥ today. Weeks before the next possible start are allowed (admin override) and marked
        with a hint that the buffer time is ignored. Weeks in which the product type is not
        delivered (`DeliveryDateCalculator.is_week_delivered`: weeks without delivery and delivery cycle) are allowed and
        marked with a hint as well, except for product types with `NO_DELIVERY`,
@@ -120,8 +122,8 @@ New files under `tapir/subscriptions/`:
 `src_frontend/subscription_list/`:
 
 - `AdminSubscriptionChangeButton.tsx`, `AdminSubscriptionChangeModal.tsx` (step state machine), shared pieces reused by
-  "Vertrag hinzufügen": `MemberSearchInput.tsx`, `SubscriptionStartDateOptions.tsx` (year → week, Monday shown in the option),
-  `MemberSubscriptionPrerequisitesCard.tsx` (pickup location / banking data, turns green once filled).
+  "Vertrag hinzufügen": `MemberSearchInput.tsx`, `SubscriptionStartDateOptions.tsx` (one week select grouped by ISO year, Monday and hints shown in the option),
+  `MemberSubscriptionPrerequisitesCard.tsx` (pickup location / banking data, check / cross per line).
 - Register in `subscription_list_entry.tsx`, mount span in `subscription_filter.html`.
 - Help texts via `TapirHelpButton`.
 - After saving: toast + page reload so the list shows the new subscriptions.
@@ -206,11 +208,11 @@ Mark a step as done by checking its box (`- [x]`).
   payment rhythm) and the date options service (a / b / c; Mondays ≥ today within the subscription for b; c relative to
   today; buffer and no-delivery hints; subscription-range restriction with the option c exception). Regenerated API
   client.
-- [ ] **7. Write endpoints**: check endpoint (live validation + capacity flags) and apply endpoint
+- [x] **7. Write endpoints**: check endpoint (live validation + capacity flags) and apply endpoint
   (`transaction.atomic()`). API tests: permission, validation error writes nothing, successful apply. Regenerated API
   client.
 - [ ] **8. Frontend shared components**: `MemberSearchInput` (with preselected member from the `contract` URL
-  parameter), `SubscriptionStartDateOptions` (year → week), `MemberSubscriptionPrerequisitesCard` (with the SEPA mandate
+  parameter), `SubscriptionStartDateOptions` (week select grouped by year), `MemberSubscriptionPrerequisitesCard` (with the SEPA mandate
   checkbox). Built for both icons, not mounted yet.
 - [ ] **9. Frontend "Anteilsgröße ändern"**: button, modal with the three steps, live check, summary warnings (price
   override, next-period subscriptions, mail), toast + reload. Mounted in `subscription_filter.html`.
