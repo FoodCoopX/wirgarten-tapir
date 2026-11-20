@@ -16,6 +16,7 @@ from tapir.subscriptions.services.subscription_prerequisites_applier import (
     SubscriptionPrerequisitesApplier,
 )
 from tapir.subscriptions.types import AdminSizeChange, TapirOrder
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.services.tapir_cache_manager import TapirCacheManager
 from tapir.wirgarten.forms.subscription import cancel_or_delete_subscriptions
 from tapir.wirgarten.models import (
@@ -167,7 +168,29 @@ class AdminSizeChangeApplier:
             actor=actor,
             cache=cache,
         )
+        TapirCacheManager.clear_category(
+            cache=cache, category=TapirCacheManager.CATEGORY_SUBSCRIPTIONS
+        )
+        cls.mark_as_cancelled_keeping_end_date(
+            member=member, subscription=subscription, actor=actor, cache=cache
+        )
 
+        return cls.save_next_period_subscriptions(
+            member=member,
+            subscriptions=cls.build_next_period_subscriptions(
+                member=member,
+                changed_subscription=subscription,
+                order=order,
+                cache=cache,
+            ),
+            actor=actor,
+            cache=cache,
+        )
+
+    @classmethod
+    def mark_as_cancelled_keeping_end_date(
+        cls, member: Member, subscription: Subscription, actor: TapirUser, cache: dict
+    ):
         now = get_now(cache=cache)
         subscription.cancellation_ts = now
         subscription.cancellation_admin_confirmed = now
@@ -180,36 +203,43 @@ class AdminSizeChangeApplier:
             admin_confirmed=now,
         ).save()
 
+    @classmethod
+    def build_next_period_subscriptions(
+        cls,
+        member: Member,
+        changed_subscription: Subscription,
+        order: TapirOrder,
+        cache: dict,
+    ) -> list[Subscription]:
+        # Each next-period subscription is a renewal of the member's current subscription of the same product.
+        # The new product has none, so it is a renewal of the changed subscription.
         current_subscriptions_by_product_id = {
             current_subscription.product_id: current_subscription
-            for current_subscription in Subscription.objects.filter(
-                member_id=member.id,
-                product__type_id=subscription.product.type_id,
-                start_date__lte=subscription.end_date,
-                end_date__gte=subscription.end_date,
-            ).select_related("product__type")
+            for current_subscription in TapirCache.get_all_subscriptions_for_member(
+                member_id=member.id, cache=cache
+            )
+            if current_subscription.product.type_id
+            == changed_subscription.product.type_id
+            and current_subscription.start_date
+            <= changed_subscription.end_date
+            <= current_subscription.end_date
         }
+
         next_period_subscriptions = []
         for product, quantity in order.items():
+            renewal_template = current_subscriptions_by_product_id.get(
+                product.id, changed_subscription
+            )
             next_period_subscription = (
                 AutomaticSubscriptionRenewalService.build_renewed_subscription(
-                    subscription=current_subscriptions_by_product_id.get(
-                        product.id, subscription
-                    ),
-                    cache=cache,
+                    subscription=renewal_template, cache=cache
                 )
             )
             next_period_subscription.product = product
             next_period_subscription.quantity = quantity
             next_period_subscription.price_override = None
             next_period_subscriptions.append(next_period_subscription)
-
-        return cls.save_next_period_subscriptions(
-            member=member,
-            subscriptions=next_period_subscriptions,
-            actor=actor,
-            cache=cache,
-        )
+        return next_period_subscriptions
 
     @classmethod
     def save_next_period_subscriptions(
