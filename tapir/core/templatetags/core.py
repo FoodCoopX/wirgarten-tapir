@@ -48,6 +48,19 @@ def get_sidebar_link_groups(request, cache: dict):
 
 
 def add_admin_links(groups, request, cache: dict):
+    members_group = _build_members_group(request)
+    if members_group is not None:
+        groups.append(members_group)
+
+    bakery_group = _build_bakery_group(request)
+    if bakery_group is not None:
+        groups.append(bakery_group)
+
+    groups.append(_build_admin_group(request, cache))
+    groups.append(_build_debug_group())
+
+
+def _build_debug_group() -> SidebarLinkGroup:
     debug_group = SidebarLinkGroup(name=_("Debug"))
     debug_group.add_link(
         display_name=_("Exportierte Dateien"),
@@ -70,13 +83,24 @@ def add_admin_links(groups, request, cache: dict):
             material_icon="reset_wrench",
             url=reverse_lazy("utils:reset_test_data"),
         )
+    return debug_group
 
+
+def _build_admin_group(request, cache: dict) -> SidebarLinkGroup:
     admin_group = SidebarLinkGroup(name=_("Administration"))
     admin_group.add_link(
         display_name=_("Dashboard"),
         material_icon="dashboard",
         url=reverse_lazy("wirgarten:admin_dashboard"),
     )
+    _add_configuration_links(admin_group, request, cache)
+    _add_communication_links(admin_group, request)
+    _add_payment_links(admin_group, request)
+    _add_export_links(admin_group, request)
+    return admin_group
+
+
+def _add_configuration_links(admin_group, request, cache: dict) -> None:
     if settings.ENABLE_JASMIN:
         admin_group.add_link(
             display_name=_("Kommissionierung"),
@@ -89,18 +113,7 @@ def add_admin_links(groups, request, cache: dict):
             material_icon="settings",
             url=reverse_lazy("configuration:parameters"),
         )
-    if (
-        request.user.has_perm(Permission.Coop.MANAGE)
-        and legal_status_is_association(cache=cache)
-        and get_parameter_value(
-            key=ParameterKeys.ASSOCIATIONS_ENABLE_ASSOCIATION_MEMBERSHIPS, cache=cache
-        )
-    ):
-        admin_group.add_link(
-            display_name=_("Vereinsmitgliedschaften"),
-            material_icon="id_card",
-            url=reverse_lazy("associations:association_memberships_config"),
-        )
+    _add_association_membership_link(admin_group, request, cache)
     if request.user.has_perm(Permission.Products.VIEW):
         admin_group.add_link(
             display_name=_("Vertragsperiode & Produktanteile"),
@@ -113,7 +126,41 @@ def add_admin_links(groups, request, cache: dict):
             material_icon="add_location_alt",
             url=reverse_lazy("wirgarten:pickup_locations"),
         )
+    _add_bidding_round_link(admin_group, request, cache)
 
+
+def _add_association_membership_link(admin_group, request, cache: dict) -> None:
+    if (
+        request.user.has_perm(Permission.Coop.MANAGE)
+        and legal_status_is_association(cache=cache)
+        and get_parameter_value(
+            key=ParameterKeys.ASSOCIATIONS_ENABLE_ASSOCIATION_MEMBERSHIPS, cache=cache
+        )
+    ):
+        admin_group.add_link(
+            display_name=_("Vereinsmitgliedschaften"),
+            material_icon="id_card",
+            url=reverse_lazy("associations:association_memberships_config"),
+        )
+
+
+def _add_bidding_round_link(admin_group, request, cache: dict) -> None:
+    if request.user.has_perm(Permission.Coop.MANAGE):
+        try:
+            bidding_round_enabled = get_parameter_value(
+                ParameterKeys.BIDDING_ROUND_ENABLED, cache=cache
+            )
+        except KeyError:
+            bidding_round_enabled = False
+        if bidding_round_enabled:
+            admin_group.add_link(
+                display_name=_("Beitragsrunden"),
+                material_icon="gavel",
+                url=reverse_lazy("bidding_rounds:bidding_rounds_config"),
+            )
+
+
+def _add_communication_links(admin_group, request) -> None:
     if request.user.has_perm(Permission.Email.MANAGE):
         admin_group.add_link(
             display_name=_("E-Mail"),
@@ -127,6 +174,8 @@ def add_admin_links(groups, request, cache: dict):
             url=reverse_lazy("core:mailing_lists"),
         )
 
+
+def _add_payment_links(admin_group, request) -> None:
     if request.user.has_perm(Permission.Payments.VIEW):
         admin_group.add_link(
             display_name=_("Lastschrift"),
@@ -139,6 +188,8 @@ def add_admin_links(groups, request, cache: dict):
             url=reverse_lazy("payments:credit_list"),
         )
 
+
+def _add_export_links(admin_group, request) -> None:
     if request.user.has_perm(Permission.Coop.MANAGE):
         admin_group.add_link(
             display_name=_("CSV-Exports"),
@@ -151,60 +202,60 @@ def add_admin_links(groups, request, cache: dict):
             url=reverse_lazy("generic_exports:pdf_export_editor"),
         )
 
-    if request.user.has_perm(Permission.Accounts.VIEW):
-        members_group = SidebarLinkGroup(name=_("Mitglieder"))
-        members_group.add_link(
-            display_name=(_("Mitglieder")),
-            material_icon="groups",
-            url=reverse_lazy("wirgarten:member_list"),
-        )
 
-        members_group.add_link(
-            display_name=_("Verträge"),
-            material_icon="contract",
-            url=reverse_lazy("wirgarten:subscription_list"),
-        )
+def _build_members_group(request) -> SidebarLinkGroup | None:
+    if not request.user.has_perm(Permission.Accounts.VIEW):
+        return None
 
-        members_group.add_link(
-            display_name=_("Zeichn. und Künd."),
-            material_icon="contract_edit",
-            url=reverse_lazy("wirgarten:contract_updates"),
-            notification_count=MemberDataToConfirmApiView.get_number_of_unconfirmed_changes(),
-        )
+    members_group = SidebarLinkGroup(name=_("Mitglieder"))
+    members_group.add_link(
+        display_name=(_("Mitglieder")),
+        material_icon="groups",
+        url=reverse_lazy("wirgarten:member_list"),
+    )
+    members_group.add_link(
+        display_name=_("Verträge"),
+        material_icon="contract",
+        url=reverse_lazy("wirgarten:subscription_list"),
+    )
+    members_group.add_link(
+        display_name=_("Zeichn. und Künd."),
+        material_icon="contract_edit",
+        url=reverse_lazy("wirgarten:contract_updates"),
+        notification_count=MemberDataToConfirmApiView.get_number_of_unconfirmed_changes(),
+    )
 
-        waitlist_entries = WaitingListEntry.objects.count()
-        members_group.add_link(
-            display_name=_("Warteliste"),
-            material_icon="pending_actions",
-            url=reverse_lazy("waiting_list:list"),
-            notification_count=waitlist_entries,
-        )
+    waitlist_entries = WaitingListEntry.objects.count()
+    members_group.add_link(
+        display_name=_("Warteliste"),
+        material_icon="pending_actions",
+        url=reverse_lazy("waiting_list:list"),
+        notification_count=waitlist_entries,
+    )
+    return members_group
 
-        groups.append(members_group)
 
-    if request.user.has_perm(Permission.Coop.MANAGE) and settings.BAKERY_ENABLED:
-        bakery_group = SidebarLinkGroup(name=_("Bäckerei"))
+def _build_bakery_group(request) -> SidebarLinkGroup | None:
+    if not (request.user.has_perm(Permission.Coop.MANAGE) and settings.BAKERY_ENABLED):
+        return None
 
-        bakery_group.add_link(
-            display_name=_("Wochenplan Brote"),
-            material_icon="calendar_view_month",
-            url=reverse_lazy("bakery:weekly-plan-breads"),
-        )
-
-        bakery_group.add_link(
-            display_name=_("Berichte"),
-            material_icon="download",
-            url=reverse_lazy("bakery:reports"),
-        )
-        bakery_group.add_link(
-            display_name=_("Zutaten & Labels & Brote"),
-            material_icon="bakery_dining",
-            url=reverse_lazy("bakery:ingredients-labels-breads"),
-        )
-        groups.append(bakery_group)
-
-    groups.append(admin_group)
-    groups.append(debug_group)
+    bakery_group = SidebarLinkGroup(name=_("Bäckerei"))
+    bakery_group.add_link(
+        display_name=_("Wochenplan Brote"),
+        material_icon="calendar_view_month",
+        url=reverse_lazy("bakery:weekly-plan-breads"),
+    )
+    bakery_group.add_link(
+        display_name=_("Berichte"),
+        material_icon="download",
+        url=reverse_lazy("bakery:reports"),
+    )
+    bakery_group.add_link(
+        display_name=_("Zutaten & Labels & Brote"),
+        material_icon="bakery_dining",
+        url=reverse_lazy("bakery:ingredients-labels-breads"),
+    )
+    return bakery_group
 
 
 @register.inclusion_tag(

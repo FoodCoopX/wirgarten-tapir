@@ -23,8 +23,26 @@ interface SubscriptionChangePriceModalProps {
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
 
-type PriceMode = "standard" | "custom" | "free";
-const ALL_MODES: PriceMode[] = ["standard", "custom", "free"];
+type PriceMode =
+  | "standard"
+  | "custom"
+  | "free"
+  | "bidding_round_bid"
+  | "bidding_round_auto_renewed";
+const BIDDING_ROUND_MODES = new Set<PriceMode>([
+  "bidding_round_bid",
+  "bidding_round_auto_renewed",
+]);
+const ALL_MODES: PriceMode[] = [
+  "standard",
+  "custom",
+  "free",
+  ...BIDDING_ROUND_MODES,
+];
+
+function isBiddingRoundMode(mode: PriceMode) {
+  return BIDDING_ROUND_MODES.has(mode);
+}
 
 function getPriceModeDisplay(mode: PriceMode) {
   switch (mode) {
@@ -34,6 +52,10 @@ function getPriceModeDisplay(mode: PriceMode) {
       return "Personalisierter Betrag";
     case "free":
       return "Beitragsbefreit";
+    case "bidding_round_bid":
+      return "Bietrunde: Gebot";
+    case "bidding_round_auto_renewed":
+      return "Bietrunde: Auto-Verlängert";
   }
 }
 
@@ -45,10 +67,21 @@ function getHelpText(mode: PriceMode) {
       return 'Bitte wähle die Höhe des Beitrages für den Vertrag im Textfeld aus. Die Abweichung vom eigentlichen Richtpreis verändert die Berechnung des Solidartopfes nicht. Du kannst unter "Mitglieder" gezielt nach Mitgliedern mit Verträgen mit personalisierten Beträgen suchen.';
     case "free":
       return 'Der Vertrag läuft ohne Beitrag. Dies verringert aber nicht den Solidar-Topf. Du kannst unter "Mitglieder" gezielt nach Mitgliedern mit beitragsbefreiten Verträgensuchen.';
+    case "bidding_round_bid":
+      return "Der Vertrag läuft zum Bietrundenbetrag. Die Differenz zum individuellen Gebot wird als Solidaritätsbeitrag gebucht. Dieser Modus wird durch die Bietrunde gesetzt und kann nicht manuell gewählt werden.";
+    case "bidding_round_auto_renewed":
+      return "Der Vertrag wurde automatisch verlängert. Der Vertragspreis ist mindestens der Non-Bidder-Floor; ein höherer bisheriger Betrag bleibt als Bestandsschutz erhalten. Dieser Modus wird durch die Bietrunde gesetzt und kann nicht manuell gewählt werden.";
   }
 }
 
-function getMode(override: string | null | undefined): PriceMode {
+function getMode(subscription: SubscriptionTrialFields): PriceMode {
+  if (subscription.priceMode === "bidding_round_bid") {
+    return "bidding_round_bid";
+  }
+  if (subscription.priceMode === "bidding_round_auto_renewed") {
+    return "bidding_round_auto_renewed";
+  }
+  const override = subscription.priceOverride;
   if (override === null || override === undefined) {
     return "standard";
   }
@@ -86,16 +119,7 @@ const SubscriptionChangePriceModal: React.FC<
             ? subscription.priceOverride.toString()
             : "",
         );
-        if (
-          subscription.priceOverride === null ||
-          subscription.priceOverride === undefined
-        ) {
-          setPriceMode("standard");
-        } else if (Number.parseFloat(subscription.priceOverride) === 0) {
-          setPriceMode("free");
-        } else {
-          setPriceMode("custom");
-        }
+        setPriceMode(getMode(subscription));
       })
       .catch((error) =>
         handleRequestError(
@@ -148,6 +172,12 @@ const SubscriptionChangePriceModal: React.FC<
       case "free":
         newPrice = 0;
         break;
+      case "bidding_round_bid":
+      case "bidding_round_auto_renewed":
+        newPrice = subscription.priceOverride
+          ? Number.parseFloat(subscription.priceOverride)
+          : null;
+        break;
     }
 
     setLoading(true);
@@ -157,6 +187,7 @@ const SubscriptionChangePriceModal: React.FC<
         subscriptionPriceOverrideChangeRequestRequest: {
           subscriptionId: subscriptionId,
           priceOverride: newPrice,
+          priceMode: priceMode,
         },
       })
       .then((response) => {
@@ -204,9 +235,7 @@ const SubscriptionChangePriceModal: React.FC<
                     {!!memberData.memberNo && "#" + memberData.memberNo}
                   </li>
                 )}
-                <li>
-                  {getPriceModeDisplay(getMode(subscription.priceOverride))}
-                </li>
+                <li>{getPriceModeDisplay(getMode(subscription))}</li>
               </ul>
             </div>
           </Col>
@@ -226,11 +255,17 @@ const SubscriptionChangePriceModal: React.FC<
                     onChange={() => setPriceMode(mode)}
                     type={"radio"}
                     checked={priceMode === mode}
+                    disabled={isBiddingRoundMode(mode)}
                   />
                   <TapirHelpButton buttonSize={"sm"} text={getHelpText(mode)} />
                 </div>
               ))}
             </Form.Group>
+            <p className="text-muted small mt-2 mb-0">
+              Die Modi „Bietrunde: Gebot“ und „Bietrunde: Auto-Verlängert“
+              werden durch die Bietrunde gesetzt und können hier nicht manuell
+              gewählt werden.
+            </p>
           </Col>
         </Row>
         {priceMode === "custom" && (
@@ -287,6 +322,7 @@ const SubscriptionChangePriceModal: React.FC<
           icon={"save"}
           text={"Preis ändern"}
           loading={loading}
+          disabled={isBiddingRoundMode(priceMode)}
           onClick={onConfirmChange}
         />
       </Modal.Footer>
