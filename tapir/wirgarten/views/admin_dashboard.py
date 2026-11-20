@@ -49,7 +49,6 @@ from tapir.wirgarten.service.products import (
     get_active_product_capacities,
     get_active_product_types,
     get_active_and_future_subscriptions,
-    get_next_growing_period,
     get_product_price,
 )
 from tapir.wirgarten.utils import (
@@ -176,8 +175,8 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
                 cache=self.cache,
             )
         )
-        next_growing_period = get_next_growing_period(
-            next_contract_start_date, cache=self.cache
+        next_growing_period = TapirCache.get_first_growing_period_starting_after(
+            reference_date=next_contract_start_date, cache=self.cache
         )
 
         context["next_contract_start_date"] = next_contract_start_date

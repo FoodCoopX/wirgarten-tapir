@@ -64,28 +64,6 @@ def get_available_product_types(
     ]
 
 
-def get_next_growing_period(
-    reference_date: datetime.date = None, cache: dict = None
-) -> GrowingPeriod | None:
-    if reference_date is None:
-        reference_date = get_today(cache=cache)
-
-    def compute():
-        return (
-            GrowingPeriod.objects.filter(start_date__gt=reference_date)
-            .order_by("start_date")
-            .first()
-        )
-
-    next_growing_periods_by_date_cache = get_from_cache_or_compute(
-        cache, "next_growing_periods_by_date", lambda: {}
-    )
-
-    return get_from_cache_or_compute(
-        next_growing_periods_by_date_cache, reference_date, compute
-    )
-
-
 @transaction.atomic
 def create_growing_period(
     start_date: datetime.date,

@@ -47,7 +47,6 @@ from tapir.wirgarten.models import (
     SubscriptionChangeLogEntry,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.service.products import get_next_growing_period
 from tapir.wirgarten.tasks import assign_member_numbers
 from tapir.wirgarten.utils import (
     get_today,
@@ -337,7 +336,7 @@ class UserGenerator:
         growing_period = TapirCache.get_growing_period_at_date(
             reference_date=order_date, cache=cache
         )
-        next_growing_period = get_next_growing_period(
+        next_growing_period = TapirCache.get_first_growing_period_starting_after(
             reference_date=growing_period.end_date, cache=cache
         )
         if (
