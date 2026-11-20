@@ -10,7 +10,10 @@ from tapir.bidding_round.config import (
     BIDDING_ROUND_STATUS_ACTIVE,
     BIDDING_ROUND_STATUS_CLOSED,
 )
-from tapir.bidding_round.models import BiddingRoundCreatedSubscription
+from tapir.bidding_round.models import (
+    BiddingRoundCreatedSubscription,
+    BiddingRoundMemberEffect,
+)
 from tapir.bidding_round.services.bidding_round_service import BiddingRoundService
 from tapir.bidding_round.services.contract_creator import ContractCreator
 from tapir.bidding_round.tests.factories import (
@@ -76,6 +79,15 @@ class TestContractCreator(TapirIntegrationTest):
         self.assertEqual(Decimal("15.00"), contribution.amount)
         bidding_round.refresh_from_db()
         self.assertIsNotNone(bidding_round.contracts_created_at)
+        effect = BiddingRoundMemberEffect.objects.get(
+            round=bidding_round, member=bid.member
+        )
+        self.assertEqual(BiddingRoundMemberEffect.Source.BID, effect.source)
+        self.assertEqual(BiddingRoundMemberEffect.State.APPLIED, effect.state)
+        self.assertIn(
+            subscription.pk,
+            [entry["pk"] for entry in effect.applied_subscriptions],
+        )
 
     def test_createContracts_withSeveralShares_usesTheBidQuantity(self):
         bidding_round, bid, product, period = self._create_closed_round_with_bid(
@@ -134,7 +146,7 @@ class TestContractCreator(TapirIntegrationTest):
         )
         self.assertEqual(Decimal("45.00"), contribution.amount)
 
-    def test_createContracts_calledTwice_raisesValidationError(self):
+    def test_createContracts_calledTwice_skipsAppliedMembers(self):
         bidding_round, bid, _product, _period = self._create_closed_round_with_bid(
             bid_amount=Decimal("80.00"), standard_price=Decimal("50.00")
         )
@@ -142,10 +154,51 @@ class TestContractCreator(TapirIntegrationTest):
             bidding_round, cache={}, actor=bid.member
         )
 
-        with pytest.raises(ValidationError):
-            ContractCreator.create_contracts_from_bids(
-                bidding_round, cache={}, actor=bid.member
-            )
+        result = ContractCreator.create_contracts_from_bids(
+            bidding_round, cache={}, actor=bid.member
+        )
+
+        self.assertEqual([], result["subscriptions"])
+        self.assertEqual([], result["errors"])
+        self.assertEqual(1, BiddingRoundCreatedSubscription.objects.count())
+        self.assertEqual(
+            1,
+            BiddingRoundMemberEffect.objects.filter(
+                round=bidding_round,
+                state=BiddingRoundMemberEffect.State.APPLIED,
+            ).count(),
+        )
+
+    def test_createContracts_withOneAppliedMember_createsOnlyTheRemaining(self):
+        bidding_round, bid, product, period = self._create_closed_round_with_bid(
+            bid_amount=Decimal("80.00"), standard_price=Decimal("50.00")
+        )
+        other_bid = BidFactory.create(round=bidding_round)
+        BidItemFactory.create(
+            bid=other_bid,
+            round_product_type=bidding_round.product_types.first(),
+            product=product,
+            amount_1=Decimal("90.00"),
+        )
+        other_bid.admin_confirmed = get_now(cache={})
+        other_bid.save()
+
+        ContractCreator.create_contracts_from_bids(
+            bidding_round, cache={}, bid_ids=[bid.id], actor=bid.member
+        )
+        result = ContractCreator.create_contracts_from_bids(
+            bidding_round,
+            cache={},
+            bid_ids=[bid.id, other_bid.id],
+            actor=bid.member,
+        )
+
+        self.assertEqual(1, len(result["subscriptions"]))
+        self.assertTrue(
+            Subscription.objects.filter(
+                member=other_bid.member, product=product, period=period
+            ).exists()
+        )
 
     def test_createContracts_whenAnotherRoundInPeriodHasContracts_raisesValidationError(
         self,
@@ -267,6 +320,52 @@ class TestContractCreator(TapirIntegrationTest):
                 member=non_bidder, start_date=period.start_date
             ).exists()
         )
+        effect = BiddingRoundMemberEffect.objects.get(
+            round=bidding_round, member=non_bidder
+        )
+        self.assertEqual(BiddingRoundMemberEffect.Source.AUTO_RENEWED, effect.source)
+        self.assertEqual(
+            [renewed_subscription.pk],
+            [entry["pk"] for entry in effect.applied_subscriptions],
+        )
+        self.assertEqual(0, len(effect.applied_contributions))
+
+    def test_createContracts_withNonBidderFloorOnly_recordsContributionEffect(self):
+        bidding_round, bid, product, period = self._create_closed_round_with_bid(
+            bid_amount=Decimal("80.00"), standard_price=Decimal("50.00")
+        )
+        non_bidder = MemberFactory.create()
+        previous_period = GrowingPeriodFactory.create(
+            start_date=period.start_date - datetime.timedelta(days=365),
+            end_date=period.start_date - datetime.timedelta(days=1),
+        )
+        current_subscription = SubscriptionFactory.create(
+            member=non_bidder,
+            product=product,
+            period=previous_period,
+            quantity=1,
+            start_date=previous_period.start_date,
+            end_date=previous_period.end_date,
+        )
+
+        with patch.object(
+            AutomaticSubscriptionRenewalService,
+            "get_subscriptions_that_will_be_renewed",
+            return_value={current_subscription},
+        ):
+            ContractCreator.create_contracts_from_bids(
+                bidding_round, cache={}, actor=bid.member
+            )
+
+        effect = BiddingRoundMemberEffect.objects.get(
+            round=bidding_round, member=non_bidder
+        )
+        self.assertEqual(
+            BiddingRoundMemberEffect.Source.NON_BIDDER_FLOOR, effect.source
+        )
+        self.assertEqual([], effect.applied_subscriptions)
+        self.assertEqual([], effect.previous_contributions)
+        self.assertEqual(1, len(effect.applied_contributions))
 
     def _create_closed_round_with_bid(
         self,
@@ -413,7 +512,7 @@ class TestContractCreator(TapirIntegrationTest):
         )
         self.assertEqual(Decimal("16.50"), contribution.amount)
 
-    def test_createContracts_lockedPositionIgnoresBidLevel(self):
+    def test_createContracts_usesLockedPosition(self):
         period = GrowingPeriodFactory.create(
             start_date=get_now(cache={}).date() + datetime.timedelta(days=30)
         )
@@ -454,7 +553,7 @@ class TestContractCreator(TapirIntegrationTest):
         bid.save()
 
         ContractCreator.create_contracts_from_bids(
-            bidding_round, cache={}, actor=bid.member, bid_level=3
+            bidding_round, cache={}, actor=bid.member
         )
 
         self.assertFalse(

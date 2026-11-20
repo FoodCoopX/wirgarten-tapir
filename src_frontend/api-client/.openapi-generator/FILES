@@ -329,6 +329,9 @@ models/ResultsTable.ts
 models/ResultsTableMember.ts
 models/ResultsTablePickupLocation.ts
 models/RhythmEnum.ts
+models/RollbackMembersRequest.ts
+models/RollbackMembersResponse.ts
+models/RollbackResult.ts
 models/Round.ts
 models/RoundCreateRequest.ts
 models/RoundProduct.ts

@@ -200,6 +200,18 @@ export interface RoundResultsResponse {
   contractsCreatedAt: Date | null;
   /**
    *
+   * @type {boolean}
+   * @memberof RoundResultsResponse
+   */
+  rollbackAvailable: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof RoundResultsResponse
+   */
+  rollbackUntracked: boolean;
+  /**
+   *
    * @type {string}
    * @memberof RoundResultsResponse
    */
@@ -348,6 +360,16 @@ export function instanceOfRoundResultsResponse(
   )
     return false;
   if (
+    !("rollbackAvailable" in value) ||
+    value["rollbackAvailable"] === undefined
+  )
+    return false;
+  if (
+    !("rollbackUntracked" in value) ||
+    value["rollbackUntracked"] === undefined
+  )
+    return false;
+  if (
     !("roundProductTypeId" in value) ||
     value["roundProductTypeId"] === undefined
   )
@@ -450,6 +472,8 @@ export function RoundResultsResponseFromJSONTyped(
       json["contracts_created_at"] == null
         ? null
         : new Date(json["contracts_created_at"]),
+    rollbackAvailable: json["rollback_available"],
+    rollbackUntracked: json["rollback_untracked"],
     roundProductTypeId: json["round_product_type_id"],
     includeAutoRenewed: json["include_auto_renewed"],
     autoRenewedPerYear: json["auto_renewed_per_year"],
@@ -515,6 +539,8 @@ export function RoundResultsResponseToJSONTyped(
       value["contractsCreatedAt"] == null
         ? null
         : (value["contractsCreatedAt"] as any).toISOString(),
+    rollback_available: value["rollbackAvailable"],
+    rollback_untracked: value["rollbackUntracked"],
     round_product_type_id: value["roundProductTypeId"],
     include_auto_renewed: value["includeAutoRenewed"],
     auto_renewed_per_year: value["autoRenewedPerYear"],
