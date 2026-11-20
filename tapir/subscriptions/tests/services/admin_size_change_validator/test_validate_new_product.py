@@ -26,7 +26,7 @@ class TestAdminSizeChangeValidatorValidateNewProduct(TapirUnitTest):
         )
 
     def test_validateNewProduct_productOfOtherType_raisesValidationError(self):
-        with self.assertRaisesMessage(ValidationError, "gleichen Vertragsart"):
+        with self.assertRaisesMessage(ValidationError, "gleichen Produktanteil"):
             AdminSizeChangeValidator.validate_new_product(
                 subscription=self.subscription, new_product=ProductFactory.build()
             )

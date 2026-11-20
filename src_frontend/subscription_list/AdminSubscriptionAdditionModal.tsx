@@ -106,7 +106,7 @@ const AdminSubscriptionAdditionModal: React.FC<
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der Produkte",
+          "Fehler beim Laden der Anteilsgrößen",
           setToastDatas,
         ),
       );
@@ -233,8 +233,8 @@ const AdminSubscriptionAdditionModal: React.FC<
     if (productAlreadySubscribed) {
       return (
         <Alert variant={"danger"} className={"mb-0"}>
-          Dieses Mitglied hat bereits einen Vertrag für dieses Produkt. Um die
-          Anzahl der Anteile zu ändern, wende dich bitte an die
+          Dieses Mitglied hat bereits einen Vertrag für diese Anteilsgröße. Um
+          die Anzahl der Anteile zu ändern, wende dich bitte an die
           FoodCoopX-Admins.
         </Alert>
       );
@@ -246,7 +246,7 @@ const AdminSubscriptionAdditionModal: React.FC<
 
     return (
       <Alert variant={"warning"} className={"mb-0"}>
-        <p>Dieses Mitglied hat bereits Verträge dieser Vertragsart:</p>
+        <p>Dieses Mitglied hat bereits Verträge dieses Produktanteils:</p>
         <ul>
           {existingUnitsOfType.map((unit) => (
             <li key={`${unit.subscriptionId}_${unit.unitNumber}`}>
@@ -272,14 +272,14 @@ const AdminSubscriptionAdditionModal: React.FC<
     return (
       <div className={"d-flex flex-column gap-3"}>
         <Form.Group>
-          <Form.Label>Vertragsart</Form.Label>
+          <Form.Label>Produktanteil</Form.Label>
           <Form.Select
             value={productTypeId ?? ""}
             onChange={(event) =>
               setProductTypeId(event.target.value || undefined)
             }
           >
-            <option value={""}>Vertragsart auswählen</option>
+            <option value={""}>Produktanteil auswählen</option>
             {productTypes.map((productType) => (
               <option key={productType.id} value={productType.id}>
                 {productType.name}
@@ -292,7 +292,7 @@ const AdminSubscriptionAdditionModal: React.FC<
           <>
             <div className={"d-flex flex-row gap-3"}>
               <Form.Group className={"flex-grow-1"}>
-                <Form.Label>Produktanteilsgröße</Form.Label>
+                <Form.Label>Anteilsgröße</Form.Label>
                 <Form.Select
                   value={productId ?? ""}
                   onChange={(event) =>

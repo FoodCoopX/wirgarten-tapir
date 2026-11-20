@@ -76,7 +76,7 @@ class AdminSubscriptionAdditionValidator:
             raise ValidationError("Die Anzahl der Anteile muss mindestens 1 sein.")
 
         if product.deleted:
-            raise ValidationError("Diese Produktanteilsgröße ist nicht mehr verfügbar.")
+            raise ValidationError("Diese Anteilsgröße ist nicht mehr verfügbar.")
 
     @classmethod
     def validate_no_subscription_of_same_product(

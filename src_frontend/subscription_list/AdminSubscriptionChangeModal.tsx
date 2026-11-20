@@ -40,8 +40,8 @@ const EMPTY_PREREQUISITES: SubscriptionPrerequisitesFormData = {
 const HELP_TEXT = (
   <>
     <p>
-      Ersetzt einen Anteil durch eine andere Produktanteilsgröße derselben
-      Vertragsart, ab einem bestimmten Datum.
+      Ersetzt einen Anteil durch eine andere Anteilsgröße desselben
+      Produktanteils, ab einem bestimmten Datum.
     </p>
     <p className={"mb-0"}>
       Der bisherige Vertrag wird als gekündigt markiert, die neuen Verträge
@@ -94,7 +94,7 @@ const AdminSubscriptionChangeModal: React.FC<
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der Produkte",
+          "Fehler beim Laden der Anteilsgrößen",
           setToastDatas,
         ),
       );

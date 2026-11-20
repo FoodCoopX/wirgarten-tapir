@@ -64,14 +64,14 @@ const AdminSizeChangeSummary: React.FC<AdminSizeChangeSummaryProps> = ({
       {hasPriceOverride && (
         <Alert variant={"warning"} className={"mb-0"}>
           Der personalisierte Betrag bzw. die Beitragsbefreiung wird für alle
-          Anteile dieser Vertragsart entfernt und muss danach neu gesetzt
+          Anteile dieses Produktanteils entfernt und muss danach neu gesetzt
           werden.
         </Alert>
       )}
       {hasNextPeriodSubscriptions && (
         <Alert variant={"warning"} className={"mb-0"}>
-          Die Verträge dieser Vertragsart in der nächsten Vertragsperiode werden
-          durch Verlängerungen der neuen Verträge ersetzt.
+          Die Verträge dieses Produktanteils in der nächsten Vertragsperiode
+          werden durch Verlängerungen der neuen Verträge ersetzt.
         </Alert>
       )}
       <Alert variant={"info"} className={"mb-0"}>

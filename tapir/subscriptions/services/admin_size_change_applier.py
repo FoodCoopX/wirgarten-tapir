@@ -78,7 +78,7 @@ class AdminSizeChangeApplier:
             actor=actor,
             product_type_id_or_soli=subscription.product.type_id,
             reference_date=change_date,
-            comment="Produktanteilsgröße vom Admin durch die Vertragsliste geändert",
+            comment="Anteilsgröße vom Admin durch die Vertragsliste geändert",
             cache=cache,
         )
 

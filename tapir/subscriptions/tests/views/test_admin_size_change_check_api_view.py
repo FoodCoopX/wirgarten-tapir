@@ -108,7 +108,7 @@ class TestAdminSizeChangeCheckApiView(TapirIntegrationTest):
         self.assertEqual(
             {
                 "order_confirmed": False,
-                "error": "Die neue Produktanteilsgröße muss sich von der bisherigen unterscheiden.",
+                "error": "Die neue Anteilsgröße muss sich von der bisherigen unterscheiden.",
             },
             response.json(),
         )

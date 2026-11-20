@@ -124,15 +124,15 @@ class AdminSizeChangeValidator:
     def validate_new_product(cls, subscription: Subscription, new_product: Product):
         if new_product.type_id != subscription.product.type_id:
             raise ValidationError(
-                "Die neue Produktanteilsgröße muss zur gleichen Vertragsart gehören."
+                "Die neue Anteilsgröße muss zum gleichen Produktanteil gehören."
             )
 
         if new_product.deleted:
-            raise ValidationError("Diese Produktanteilsgröße ist nicht mehr verfügbar.")
+            raise ValidationError("Diese Anteilsgröße ist nicht mehr verfügbar.")
 
         if new_product.id == subscription.product_id:
             raise ValidationError(
-                "Die neue Produktanteilsgröße muss sich von der bisherigen unterscheiden."
+                "Die neue Anteilsgröße muss sich von der bisherigen unterscheiden."
             )
 
     @classmethod
@@ -156,7 +156,7 @@ class AdminSizeChangeValidator:
                 and other_subscription.cancellation_ts is not None
             ):
                 raise ValidationError(
-                    f"Der Vertrag {other_subscription.long_str()} derselben Vertragsart ist gekündigt. "
+                    f"Der Vertrag {other_subscription.long_str()} desselben Produktanteils ist gekündigt. "
                     f"Eine Änderung würde die Kündigung aufheben."
                 )
 
