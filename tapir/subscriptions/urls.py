@@ -99,6 +99,21 @@ urlpatterns = [
         admin_subscription_changes.AdminSizeChangeApplyApiView.as_view(),
         name="admin_size_change_apply",
     ),
+    path(
+        "api/admin_subscription_addition_date_options",
+        admin_subscription_changes.AdminSubscriptionAdditionDateOptionsApiView.as_view(),
+        name="admin_subscription_addition_date_options",
+    ),
+    path(
+        "api/admin_subscription_addition_check",
+        admin_subscription_changes.AdminSubscriptionAdditionCheckApiView.as_view(),
+        name="admin_subscription_addition_check",
+    ),
+    path(
+        "api/admin_subscription_addition_apply",
+        admin_subscription_changes.AdminSubscriptionAdditionApplyApiView.as_view(),
+        name="admin_subscription_addition_apply",
+    ),
 ]
 
 router = DefaultRouter()

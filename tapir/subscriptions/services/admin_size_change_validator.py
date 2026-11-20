@@ -31,8 +31,11 @@ class AdminSizeChangeValidator:
         )
         cls.validate_no_other_cancelled_subscription(
             member=size_change.member,
-            subscription=size_change.subscription,
-            change_date=size_change.change_date,
+            product_type_id=size_change.subscription.product.type_id,
+            reference_date=min(
+                size_change.change_date, size_change.subscription.end_date
+            ),
+            excluded_subscription_id=size_change.subscription.id,
             cache=cache,
         )
 
@@ -50,14 +53,17 @@ class AdminSizeChangeValidator:
             member=size_change.member,
             pickup_location=pickup_location,
         )
-        cls.validate_next_period_capacity(
-            member=size_change.member,
-            subscription=size_change.subscription,
-            change_date=size_change.change_date,
-            order=size_change.order,
-            pickup_location=pickup_location,
-            cache=cache,
-        )
+        # A change from the next period already gets its capacity checked at the next period start by
+        # validate_order_general. Only a change during the subscription creates renewals that need this extra check.
+        if size_change.change_date <= size_change.subscription.end_date:
+            cls.validate_next_period_capacity(
+                member=size_change.member,
+                product_type_id=size_change.subscription.product.type_id,
+                reference_date=size_change.change_date,
+                order=size_change.order,
+                pickup_location=pickup_location,
+                cache=cache,
+            )
 
         SubscriptionPrerequisitesValidator.validate_banking_data(
             member=size_change.member,
@@ -146,19 +152,19 @@ class AdminSizeChangeValidator:
     def validate_no_other_cancelled_subscription(
         cls,
         member: Member,
-        subscription: Subscription,
-        change_date: datetime.date,
+        product_type_id: str,
+        reference_date: datetime.date,
+        excluded_subscription_id: str | None,
         cache: dict,
     ):
-        base_date = min(change_date, subscription.end_date)
         for other_subscription in TapirCache.get_all_subscriptions_for_member(
             member_id=member.id, cache=cache
         ):
             if (
-                other_subscription.id != subscription.id
-                and other_subscription.product.type_id == subscription.product.type_id
+                other_subscription.id != excluded_subscription_id
+                and other_subscription.product.type_id == product_type_id
                 and other_subscription.start_date
-                <= base_date
+                <= reference_date
                 <= other_subscription.end_date
                 and other_subscription.cancellation_ts is not None
             ):
@@ -171,18 +177,18 @@ class AdminSizeChangeValidator:
     def validate_next_period_capacity(
         cls,
         member: Member,
-        subscription: Subscription,
-        change_date: datetime.date,
+        product_type_id: str,
+        reference_date: datetime.date,
         order: TapirOrder,
         pickup_location: PickupLocation | None,
         cache: dict,
     ):
-        if change_date > subscription.end_date:
-            return
-
         next_growing_period = (
             AdminSizeChangeNextPeriodFinder.get_next_period_with_subscriptions(
-                member=member, subscription=subscription, cache=cache
+                member=member,
+                product_type_id=product_type_id,
+                reference_date=reference_date,
+                cache=cache,
             )
         )
         if next_growing_period is None:

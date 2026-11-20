@@ -62,7 +62,9 @@ class TestAdminSizeChangeDateOptionsBuilderBuild(TapirUnitTest):
             reference_date=self.now.date(), apply_buffer_time=True, cache=cache
         )
         mock_build_week_options.assert_called_once_with(
-            subscription=self.subscription,
+            product_type=self.subscription.product.type,
+            first_date=self.now.date(),
+            last_date=self.subscription.end_date,
             next_possible_start=next_possible_start,
             cache=cache,
         )
@@ -83,3 +85,23 @@ class TestAdminSizeChangeDateOptionsBuilderBuild(TapirUnitTest):
         )
 
         self.assertFalse(options.next_possible_start.enabled)
+
+    def test_build_subscriptionStartsAfterToday_weeksStartAtSubscriptionStart(
+        self,
+        mock_get_next_contract_start_date: MagicMock,
+        mock_build_week_options: MagicMock,
+        _: MagicMock,
+    ):
+        self.subscription.start_date = datetime.date(year=2027, month=7, day=12)
+        mock_get_next_contract_start_date.return_value = datetime.date(
+            year=2027, month=6, day=14
+        )
+
+        AdminSizeChangeDateOptionsBuilder.build(
+            subscription=self.subscription, cache={}
+        )
+
+        self.assertEqual(
+            datetime.date(year=2027, month=7, day=12),
+            mock_build_week_options.call_args.kwargs["first_date"],
+        )

@@ -22,6 +22,7 @@ models/AdminSizeChangeDateOption.ts
 models/AdminSizeChangeDateOptions.ts
 models/AdminSizeChangeRequestRequest.ts
 models/AdminSizeChangeWeekOption.ts
+models/AdminSubscriptionAdditionRequestRequest.ts
 models/AdminSubscriptionChangeMemberData.ts
 models/AdminSubscriptionChangeMemberSummary.ts
 models/AdminSubscriptionChangePrerequisitesStatus.ts

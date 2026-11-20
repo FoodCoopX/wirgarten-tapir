@@ -13,6 +13,7 @@ from tapir.subscriptions.types import (
     SubscriptionPrerequisitesInput,
 )
 from tapir.wirgarten.tests.factories import (
+    GrowingPeriodFactory,
     MemberFactory,
     PickupLocationFactory,
     ProductFactory,
@@ -43,7 +44,13 @@ class TestAdminSizeChangeValidatorValidate(TapirUnitTest):
     def setUp(self):
         super().setUp()
         self.member = MemberFactory.build()
-        self.subscription = SubscriptionFactory.build(member=self.member)
+        self.subscription = SubscriptionFactory.build(
+            member=self.member,
+            period=GrowingPeriodFactory.build(
+                start_date=datetime.date(year=2027, month=1, day=1),
+                end_date=datetime.date(year=2027, month=12, day=31),
+            ),
+        )
         self.new_product = ProductFactory.build()
         self.change_date = datetime.date(year=2027, month=6, day=7)
         self.order = {self.new_product: 1}
@@ -95,8 +102,9 @@ class TestAdminSizeChangeValidatorValidate(TapirUnitTest):
         )
         mock_validate_no_other_cancelled_subscription.assert_called_once_with(
             member=self.member,
-            subscription=self.subscription,
-            change_date=self.change_date,
+            product_type_id=self.subscription.product.type_id,
+            reference_date=self.change_date,
+            excluded_subscription_id=self.subscription.id,
             cache=self.cache,
         )
         mock_validate_pickup_location.assert_called_once_with(
@@ -115,8 +123,8 @@ class TestAdminSizeChangeValidatorValidate(TapirUnitTest):
         )
         mock_validate_next_period_capacity.assert_called_once_with(
             member=self.member,
-            subscription=self.subscription,
-            change_date=self.change_date,
+            product_type_id=self.subscription.product.type_id,
+            reference_date=self.change_date,
             order=self.order,
             pickup_location=mock_validate_pickup_location.return_value,
             cache=self.cache,
@@ -129,3 +137,20 @@ class TestAdminSizeChangeValidatorValidate(TapirUnitTest):
         mock_validate_sepa_mandate.assert_called_once_with(
             iban="NL76RABO8675663943", sepa_mandate_confirmed=True
         )
+
+    def test_validate_changeFromNextPeriod_doesNotValidateNextPeriodCapacity(
+        self,
+        _: MagicMock,
+        __: MagicMock,
+        ___: MagicMock,
+        ____: MagicMock,
+        _____: MagicMock,
+        ______: MagicMock,
+        mock_validate_next_period_capacity: MagicMock,
+        *___________: MagicMock,
+    ):
+        self.change_date = self.subscription.end_date + datetime.timedelta(days=1)
+
+        self._validate()
+
+        mock_validate_next_period_capacity.assert_not_called()

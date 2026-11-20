@@ -5772,6 +5772,83 @@ paths:
               schema:
                 $ref: '#/components/schemas/AdminSizeChangeDateOptions'
           description: ''
+  /subscriptions/api/admin_subscription_addition_apply:
+    post:
+      operationId: subscriptions_api_admin_subscription_addition_apply_create
+      tags:
+      - subscriptions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminSubscriptionAdditionRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AdminSubscriptionAdditionRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AdminSubscriptionAdditionRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderConfirmationResponse'
+          description: ''
+  /subscriptions/api/admin_subscription_addition_check:
+    post:
+      operationId: subscriptions_api_admin_subscription_addition_check_create
+      tags:
+      - subscriptions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminSubscriptionAdditionRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AdminSubscriptionAdditionRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AdminSubscriptionAdditionRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderConfirmationResponse'
+          description: ''
+  /subscriptions/api/admin_subscription_addition_date_options:
+    get:
+      operationId: subscriptions_api_admin_subscription_addition_date_options_retrieve
+      parameters:
+      - in: query
+        name: product_type_id
+        schema:
+          type: string
+      tags:
+      - subscriptions
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminSizeChangeDateOptions'
+          description: ''
   /subscriptions/api/admin_subscription_change_member_data:
     get:
       operationId: subscriptions_api_admin_subscription_change_member_data_retrieve
@@ -9237,6 +9314,38 @@ components:
       - date
       - has_no_delivery
       - is_before_next_possible_start
+    AdminSubscriptionAdditionRequestRequest:
+      type: object
+      properties:
+        member_id:
+          type: string
+          minLength: 1
+        product_id:
+          type: string
+          minLength: 1
+        quantity:
+          type: integer
+        start_date:
+          type: string
+          format: date
+        pickup_location_id:
+          type: string
+          nullable: true
+          minLength: 1
+        account_owner:
+          type: string
+        iban:
+          type: string
+        sepa_mandate_confirmed:
+          type: boolean
+      required:
+      - account_owner
+      - iban
+      - member_id
+      - product_id
+      - quantity
+      - sepa_mandate_confirmed
+      - start_date
     AdminSubscriptionChangeMemberData:
       type: object
       properties:

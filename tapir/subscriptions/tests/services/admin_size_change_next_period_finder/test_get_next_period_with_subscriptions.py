@@ -42,7 +42,10 @@ class TestAdminSizeChangeNextPeriodFinderGetNextPeriodWithSubscriptions(TapirUni
 
     def _get(self):
         return AdminSizeChangeNextPeriodFinder.get_next_period_with_subscriptions(
-            member=self.member, subscription=self.subscription, cache=self.cache
+            member=self.member,
+            product_type_id=self.subscription.product.type_id,
+            reference_date=self.subscription.end_date,
+            cache=self.cache,
         )
 
     def test_getNextPeriodWithSubscriptions_nextPeriodSubscriptionOfSameType_returnsNextPeriod(

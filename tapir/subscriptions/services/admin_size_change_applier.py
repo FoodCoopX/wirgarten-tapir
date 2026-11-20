@@ -20,6 +20,7 @@ from tapir.utils.services.tapir_cache_manager import TapirCacheManager
 from tapir.wirgarten.forms.subscription import cancel_or_delete_subscriptions
 from tapir.wirgarten.models import (
     Member,
+    ProductType,
     Subscription,
     SubscriptionChangeLogEntry,
 )
@@ -58,9 +59,9 @@ class AdminSizeChangeApplier:
                 cache=cache,
             )
         else:
-            new_subscriptions = cls.apply_change_during_subscription(
+            new_subscriptions = cls.apply_order_with_next_period_renewals(
                 member=member,
-                previous_subscription=previous_subscription,
+                product_type=previous_subscription.product.type,
                 change_date=change_date,
                 order=order,
                 actor=actor,
@@ -91,10 +92,10 @@ class AdminSizeChangeApplier:
         return new_subscriptions
 
     @classmethod
-    def apply_change_during_subscription(
+    def apply_order_with_next_period_renewals(
         cls,
         member: Member,
-        previous_subscription: Subscription,
+        product_type: ProductType,
         change_date: datetime.date,
         order: TapirOrder,
         actor: TapirUser,
@@ -102,15 +103,15 @@ class AdminSizeChangeApplier:
     ) -> list[Subscription]:
         ids_of_replaced_subscriptions = list(
             get_active_and_future_subscriptions(reference_date=change_date, cache=cache)
-            .filter(
-                member_id=member.id,
-                product__type_id=previous_subscription.product.type_id,
-            )
+            .filter(member_id=member.id, product__type_id=product_type.id)
             .values_list("id", flat=True)
         )
         next_period_subscriptions_existed = (
             AdminSizeChangeNextPeriodFinder.get_next_period_with_subscriptions(
-                member=member, subscription=previous_subscription, cache=cache
+                member=member,
+                product_type_id=product_type.id,
+                reference_date=change_date,
+                cache=cache,
             )
             is not None
         )
@@ -118,7 +119,7 @@ class AdminSizeChangeApplier:
         _, new_subscriptions = ApplyTapirOrderManager.apply_order_single_product_type(
             member=member,
             order=order,
-            product_type=previous_subscription.product.type,
+            product_type=product_type,
             contract_start_date=change_date,
             actor=actor,
             needs_admin_confirmation=False,

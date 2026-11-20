@@ -22,3 +22,12 @@ class AdminSizeChangeRequest:
     change_date: datetime.date
     order: TapirOrder
     prerequisites: SubscriptionPrerequisitesInput
+
+
+@dataclass(frozen=True)
+class AdminSubscriptionAdditionRequest:
+    member: Member
+    product: Product
+    quantity: int
+    start_date: datetime.date
+    prerequisites: SubscriptionPrerequisitesInput

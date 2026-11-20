@@ -310,3 +310,14 @@ class AdminSizeChangeRequestSerializer(serializers.Serializer):
     account_owner = serializers.CharField(allow_blank=True)
     iban = serializers.CharField(allow_blank=True)
     sepa_mandate_confirmed = serializers.BooleanField()
+
+
+class AdminSubscriptionAdditionRequestSerializer(serializers.Serializer):
+    member_id = serializers.CharField()
+    product_id = serializers.CharField()
+    quantity = serializers.IntegerField()
+    start_date = serializers.DateField()
+    pickup_location_id = serializers.CharField(required=False, allow_null=True)
+    account_owner = serializers.CharField(allow_blank=True)
+    iban = serializers.CharField(allow_blank=True)
+    sepa_mandate_confirmed = serializers.BooleanField()

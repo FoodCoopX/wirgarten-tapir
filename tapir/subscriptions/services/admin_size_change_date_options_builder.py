@@ -13,7 +13,7 @@ from tapir.subscriptions.services.contract_start_date_calculator import (
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.shortcuts import get_monday
 from tapir.wirgarten.constants import NO_DELIVERY
-from tapir.wirgarten.models import Subscription
+from tapir.wirgarten.models import ProductType, Subscription
 from tapir.wirgarten.utils import get_today
 
 
@@ -56,7 +56,9 @@ class AdminSizeChangeDateOptionsBuilder:
                 <= subscription.end_date,
             ),
             weeks=cls.build_week_options(
-                subscription=subscription,
+                product_type=subscription.product.type,
+                first_date=max(get_today(cache=cache), subscription.start_date),
+                last_date=subscription.end_date,
                 next_possible_start=next_possible_start,
                 cache=cache,
             ),
@@ -68,18 +70,18 @@ class AdminSizeChangeDateOptionsBuilder:
     @classmethod
     def build_week_options(
         cls,
-        subscription: Subscription,
+        product_type: ProductType,
+        first_date: datetime.date,
+        last_date: datetime.date,
         next_possible_start: datetime.date,
         cache: dict,
     ) -> list[WeekOption]:
-        first_date = max(get_today(cache=cache), subscription.start_date)
         monday = get_monday(first_date)
         if monday < first_date:
             monday += datetime.timedelta(weeks=1)
 
-        product_type = subscription.product.type
         week_options = []
-        while monday <= subscription.end_date:
+        while monday <= last_date:
             week_options.append(
                 WeekOption(
                     date=monday,

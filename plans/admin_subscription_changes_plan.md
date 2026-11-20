@@ -111,9 +111,9 @@ New files under `tapir/subscriptions/`:
   - Log the renewed subscriptions with a `SubscriptionChangeLogEntry` ADDED entry, since the deleted next-period
     subscriptions are part of the CANCELLED entry.
   - If the member had no next-period subscriptions of the type, nothing is created: the renewal task handles it later.
-- **Mail**: always sent, once, with all new subscriptions (current + next period), through
-  `ApplyTapirOrderManager.send_order_confirmation_mail` (subscription change mail for "Anteilsgröße ändern", order or
-  change mail for "Vertrag hinzufügen" depending on existing subscriptions).
+- **Mail**: always sent, once, with all new subscriptions (current + next period): the subscription change mail
+  (`send_contract_change_confirmation`) for both icons, also when the member had no subscription of the type before
+  (decided: an existing member gets no welcome mail of the order wizard).
 - Serializers without validation; regenerate the API client (`regenerate-api-client` skill).
 
 ### Frontend
@@ -151,14 +151,25 @@ Same modal component, mode `new`:
 
 1. Member search (shared).
 2. Product type, product, quantity (integer ≥ 1), same date options (without the subscription-range restriction;
-   options limited to the current and next growing period), prerequisites card with pickup location select (only
+   options limited to dates up to the end of the last existing growing period), prerequisites card with pickup location select (only
    locations with capacity for the order), banking data if missing. Collapsible list of existing shares.
 3. Summary + save.
 
-Apply: order = existing subscriptions of the type at the date + the new product × quantity, through the same
-`ApplyTapirOrderManager` path; same validator minus the subscription-specific rules. Same decisions as "Anteilsgröße
-ändern": mail always sent, auto-confirmed, next-period subscriptions of the type replaced by renewals of the new ones,
-`price_override` warning, SEPA mandate checkbox, preselected member.
+Apply: **always on top** of the existing subscriptions (decided). Only the new subscription (product × quantity) is
+created, through `ApplyTapirOrderManager.create_subscriptions`; no existing subscription is cancelled, ended or
+changed, so their `price_override` stays. No renewal is created at save time (decided): the renewal task renews the new
+subscription like any other, once its notice period has passed. Capacity is checked for the
+new subscription only, without member, so that it counts on top of all existing subscriptions. Same validator as "Anteilsgröße ändern" minus the
+subscription-specific rules and the cancelled-subscription rule. Same decisions otherwise: subscription change mail
+(listing only the new subscriptions), auto-confirmed, SEPA mandate checkbox, preselected member.
+
+Frontend: if the member already has subscriptions of the selected product type, show a warning: adding creates an
+additional contract next to the existing ones. To change an existing one instead, use "Anteilsgröße ändern" (size),
+"Vertragsstart-anpassen/Sonderkündigung" (dates) or the price button (personalised price).
+
+Blocked (decided): adding a product the member already has a subscription for that hasn't ended before the start date
+(no second row of the same product). Error: to change the quantity, ask the FoodCoopX admins. The frontend shows the
+same warning when such a product is selected.
 
 ## Decisions
 
@@ -213,7 +224,7 @@ Mark a step as done by checking its box (`- [x]`).
 - [x] **8. Frontend shared components**: `MemberSearchInput` (with preselected member from the `contract` URL
   parameter), `SubscriptionStartDateOptions` (week select grouped by year), `MemberSubscriptionPrerequisitesCard` (with the SEPA mandate
   checkbox). Built for both icons, not mounted yet.
-- [ ] **9. Frontend "Anteilsgröße ändern"**: button, modal with the three steps, live check, summary warnings (price
+- [x] **9. Frontend "Anteilsgröße ändern"**: button, modal with the three steps, live check, summary warnings (price
   override, next-period subscriptions, mail), reload. Mounted in `subscription_filter.html`.
 - [ ] **10. "Vertrag hinzufügen" backend**: order builder for an addition, validator variant (pickup location choice
   among locations with capacity), applier reusing steps 4/5, endpoints, tests, regenerated API client.

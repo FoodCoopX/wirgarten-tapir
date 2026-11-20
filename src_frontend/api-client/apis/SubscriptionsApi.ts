@@ -15,6 +15,7 @@
 import type {
   AdminSizeChangeDateOptions,
   AdminSizeChangeRequestRequest,
+  AdminSubscriptionAdditionRequestRequest,
   AdminSubscriptionChangeMemberData,
   AdminSubscriptionChangeMemberSummary,
   BestellWizardCapacityCheckResponse,
@@ -40,6 +41,7 @@ import type {
 import {
   AdminSizeChangeDateOptionsFromJSON,
   AdminSizeChangeRequestRequestToJSON,
+  AdminSubscriptionAdditionRequestRequestToJSON,
   AdminSubscriptionChangeMemberDataFromJSON,
   AdminSubscriptionChangeMemberSummaryFromJSON,
   BestellWizardCapacityCheckResponseFromJSON,
@@ -74,6 +76,18 @@ export interface SubscriptionsApiAdminSizeChangeCheckCreateRequest {
 
 export interface SubscriptionsApiAdminSizeChangeDateOptionsRetrieveRequest {
   subscriptionId?: string;
+}
+
+export interface SubscriptionsApiAdminSubscriptionAdditionApplyCreateRequest {
+  adminSubscriptionAdditionRequestRequest: AdminSubscriptionAdditionRequestRequest;
+}
+
+export interface SubscriptionsApiAdminSubscriptionAdditionCheckCreateRequest {
+  adminSubscriptionAdditionRequestRequest: AdminSubscriptionAdditionRequestRequest;
+}
+
+export interface SubscriptionsApiAdminSubscriptionAdditionDateOptionsRetrieveRequest {
+  productTypeId?: string;
 }
 
 export interface SubscriptionsApiAdminSubscriptionChangeMemberDataRetrieveRequest {
@@ -335,6 +349,193 @@ export class SubscriptionsApi extends runtime.BaseAPI {
   ): Promise<AdminSizeChangeDateOptions> {
     const response =
       await this.subscriptionsApiAdminSizeChangeDateOptionsRetrieveRaw(
+        requestParameters,
+        initOverrides,
+      );
+    return await response.value();
+  }
+
+  /**
+   */
+  async subscriptionsApiAdminSubscriptionAdditionApplyCreateRaw(
+    requestParameters: SubscriptionsApiAdminSubscriptionAdditionApplyCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<OrderConfirmationResponse>> {
+    if (requestParameters["adminSubscriptionAdditionRequestRequest"] == null) {
+      throw new runtime.RequiredError(
+        "adminSubscriptionAdditionRequestRequest",
+        'Required parameter "adminSubscriptionAdditionRequestRequest" was null or undefined when calling subscriptionsApiAdminSubscriptionAdditionApplyCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/subscriptions/api/admin_subscription_addition_apply`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: AdminSubscriptionAdditionRequestRequestToJSON(
+          requestParameters["adminSubscriptionAdditionRequestRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      OrderConfirmationResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async subscriptionsApiAdminSubscriptionAdditionApplyCreate(
+    requestParameters: SubscriptionsApiAdminSubscriptionAdditionApplyCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<OrderConfirmationResponse> {
+    const response =
+      await this.subscriptionsApiAdminSubscriptionAdditionApplyCreateRaw(
+        requestParameters,
+        initOverrides,
+      );
+    return await response.value();
+  }
+
+  /**
+   */
+  async subscriptionsApiAdminSubscriptionAdditionCheckCreateRaw(
+    requestParameters: SubscriptionsApiAdminSubscriptionAdditionCheckCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<OrderConfirmationResponse>> {
+    if (requestParameters["adminSubscriptionAdditionRequestRequest"] == null) {
+      throw new runtime.RequiredError(
+        "adminSubscriptionAdditionRequestRequest",
+        'Required parameter "adminSubscriptionAdditionRequestRequest" was null or undefined when calling subscriptionsApiAdminSubscriptionAdditionCheckCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/subscriptions/api/admin_subscription_addition_check`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: AdminSubscriptionAdditionRequestRequestToJSON(
+          requestParameters["adminSubscriptionAdditionRequestRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      OrderConfirmationResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async subscriptionsApiAdminSubscriptionAdditionCheckCreate(
+    requestParameters: SubscriptionsApiAdminSubscriptionAdditionCheckCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<OrderConfirmationResponse> {
+    const response =
+      await this.subscriptionsApiAdminSubscriptionAdditionCheckCreateRaw(
+        requestParameters,
+        initOverrides,
+      );
+    return await response.value();
+  }
+
+  /**
+   */
+  async subscriptionsApiAdminSubscriptionAdditionDateOptionsRetrieveRaw(
+    requestParameters: SubscriptionsApiAdminSubscriptionAdditionDateOptionsRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<AdminSizeChangeDateOptions>> {
+    const queryParameters: any = {};
+
+    if (requestParameters["productTypeId"] != null) {
+      queryParameters["product_type_id"] = requestParameters["productTypeId"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/subscriptions/api/admin_subscription_addition_date_options`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      AdminSizeChangeDateOptionsFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async subscriptionsApiAdminSubscriptionAdditionDateOptionsRetrieve(
+    requestParameters: SubscriptionsApiAdminSubscriptionAdditionDateOptionsRetrieveRequest = {},
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<AdminSizeChangeDateOptions> {
+    const response =
+      await this.subscriptionsApiAdminSubscriptionAdditionDateOptionsRetrieveRaw(
         requestParameters,
         initOverrides,
       );

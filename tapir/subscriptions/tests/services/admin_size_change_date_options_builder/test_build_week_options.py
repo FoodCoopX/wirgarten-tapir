@@ -8,13 +8,8 @@ from tapir.subscriptions.services.admin_size_change_date_options_builder import 
     AdminSizeChangeDateOptionsBuilder,
 )
 from tapir.wirgarten.constants import NO_DELIVERY, WEEKLY
-from tapir.wirgarten.tests.factories import (
-    GrowingPeriodFactory,
-    ProductFactory,
-    ProductTypeFactory,
-    SubscriptionFactory,
-)
-from tapir.wirgarten.tests.test_utils import TapirUnitTest, mock_timezone
+from tapir.wirgarten.tests.factories import ProductTypeFactory
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 @patch.object(
@@ -23,30 +18,29 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest, mock_timezone
 class TestAdminSizeChangeDateOptionsBuilderBuildWeekOptions(TapirUnitTest):
     def setUp(self):
         super().setUp()
-        self.growing_period = GrowingPeriodFactory.build(
-            start_date=datetime.date(year=2027, month=1, day=1),
-            end_date=datetime.date(year=2027, month=12, day=31),
-        )
         self.product_type = ProductTypeFactory.build(delivery_cycle=WEEKLY[0])
-        self.subscription = SubscriptionFactory.build(
-            period=self.growing_period,
-            product=ProductFactory.build(type=self.product_type),
-        )
 
-    def _build(self, next_possible_start: datetime.date):
+    def _build(
+        self,
+        first_date: datetime.date,
+        last_date: datetime.date,
+        next_possible_start: datetime.date,
+    ):
         return AdminSizeChangeDateOptionsBuilder.build_week_options(
-            subscription=self.subscription,
+            product_type=self.product_type,
+            first_date=first_date,
+            last_date=last_date,
             next_possible_start=next_possible_start,
             cache={},
         )
 
-    def test_buildWeekOptions_todayBeforePeriod_offersOnlyMondaysOfPeriod(
+    def test_buildWeekOptions_firstDateNotMonday_offersMondaysFromTheFollowingOne(
         self, _: MagicMock
     ):
-        mock_timezone(test=self, now=datetime.datetime(year=2026, month=11, day=19))
-
         weeks = self._build(
-            next_possible_start=datetime.date(year=2027, month=1, day=11)
+            first_date=datetime.date(year=2027, month=1, day=1),
+            last_date=datetime.date(year=2027, month=12, day=31),
+            next_possible_start=datetime.date(year=2027, month=1, day=11),
         )
 
         self.assertEqual(
@@ -61,38 +55,22 @@ class TestAdminSizeChangeDateOptionsBuilderBuildWeekOptions(TapirUnitTest):
         self.assertTrue(weeks[0].is_before_next_possible_start)
         self.assertFalse(weeks[1].is_before_next_possible_start)
 
-    def test_buildWeekOptions_todayInPeriod_onlyOffersDatesFromToday(
-        self, _: MagicMock
-    ):
-        mock_timezone(test=self, now=datetime.datetime(year=2027, month=6, day=2))
-
+    def test_buildWeekOptions_firstDateIsMonday_includesIt(self, _: MagicMock):
         weeks = self._build(
-            next_possible_start=datetime.date(year=2027, month=6, day=14)
+            first_date=datetime.date(year=2027, month=6, day=7),
+            last_date=datetime.date(year=2027, month=12, day=31),
+            next_possible_start=datetime.date(year=2027, month=6, day=14),
         )
 
         self.assertEqual(datetime.date(year=2027, month=6, day=7), weeks[0].date)
-        self.assertTrue(weeks[0].is_before_next_possible_start)
 
-    def test_buildWeekOptions_subscriptionStartsInPeriod_onlyOffersDatesFromSubscriptionStart(
+    def test_buildWeekOptions_lastDateBeforePeriodEnd_onlyOffersMondaysUntilLastDate(
         self, _: MagicMock
     ):
-        mock_timezone(test=self, now=datetime.datetime(year=2027, month=6, day=2))
-        self.subscription.start_date = datetime.date(year=2027, month=7, day=12)
-
         weeks = self._build(
-            next_possible_start=datetime.date(year=2027, month=6, day=14)
-        )
-
-        self.assertEqual(datetime.date(year=2027, month=7, day=12), weeks[0].date)
-
-    def test_buildWeekOptions_subscriptionEndsEarly_onlyOffersDatesWithinSubscription(
-        self, _: MagicMock
-    ):
-        mock_timezone(test=self, now=datetime.datetime(year=2027, month=6, day=2))
-        self.subscription.end_date = datetime.date(year=2027, month=6, day=20)
-
-        weeks = self._build(
-            next_possible_start=datetime.date(year=2027, month=6, day=7)
+            first_date=datetime.date(year=2027, month=6, day=2),
+            last_date=datetime.date(year=2027, month=6, day=20),
+            next_possible_start=datetime.date(year=2027, month=6, day=7),
         )
 
         self.assertEqual(
@@ -107,14 +85,14 @@ class TestAdminSizeChangeDateOptionsBuilderBuildWeekOptions(TapirUnitTest):
         self,
         mock_is_week_delivered: MagicMock,
     ):
-        mock_timezone(test=self, now=datetime.datetime(year=2027, month=6, day=2))
-        self.subscription.end_date = datetime.date(year=2027, month=6, day=20)
         mock_is_week_delivered.side_effect = lambda **kwargs: kwargs[
             "delivery_date"
         ] != datetime.date(year=2027, month=6, day=14)
 
         weeks = self._build(
-            next_possible_start=datetime.date(year=2027, month=6, day=7)
+            first_date=datetime.date(year=2027, month=6, day=2),
+            last_date=datetime.date(year=2027, month=6, day=20),
+            next_possible_start=datetime.date(year=2027, month=6, day=7),
         )
 
         self.assertEqual(
@@ -132,11 +110,12 @@ class TestAdminSizeChangeDateOptionsBuilderBuildWeekOptions(TapirUnitTest):
         self,
         mock_is_week_delivered: MagicMock,
     ):
-        mock_timezone(test=self, now=datetime.datetime(year=2027, month=6, day=2))
         self.product_type.delivery_cycle = NO_DELIVERY[0]
 
         weeks = self._build(
-            next_possible_start=datetime.date(year=2027, month=6, day=7)
+            first_date=datetime.date(year=2027, month=6, day=2),
+            last_date=datetime.date(year=2027, month=6, day=20),
+            next_possible_start=datetime.date(year=2027, month=6, day=7),
         )
 
         self.assertFalse(any(week.has_no_delivery for week in weeks))

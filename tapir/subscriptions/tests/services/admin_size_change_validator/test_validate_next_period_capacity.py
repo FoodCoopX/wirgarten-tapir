@@ -48,8 +48,8 @@ class TestAdminSizeChangeValidatorValidateNextPeriodCapacity(TapirUnitTest):
     def _validate(self, change_date: datetime.date):
         AdminSizeChangeValidator.validate_next_period_capacity(
             member=self.member,
-            subscription=self.subscription,
-            change_date=change_date,
+            product_type_id=self.subscription.product.type_id,
+            reference_date=change_date,
             order=self.order,
             pickup_location=self.pickup_location,
             cache=self.cache,
@@ -65,7 +65,10 @@ class TestAdminSizeChangeValidatorValidateNextPeriodCapacity(TapirUnitTest):
         self._validate(change_date=self.CHANGE_DATE)
 
         mock_get_next_period_with_subscriptions.assert_called_once_with(
-            member=self.member, subscription=self.subscription, cache=self.cache
+            member=self.member,
+            product_type_id=self.subscription.product.type_id,
+            reference_date=self.CHANGE_DATE,
+            cache=self.cache,
         )
         mock_validate_capacities.assert_called_once_with(
             order=self.order,
@@ -84,14 +87,4 @@ class TestAdminSizeChangeValidatorValidateNextPeriodCapacity(TapirUnitTest):
 
         self._validate(change_date=self.CHANGE_DATE)
 
-        mock_validate_capacities.assert_not_called()
-
-    def test_validateNextPeriodCapacity_changeFromNextPeriod_doesNotValidate(
-        self,
-        mock_get_next_period_with_subscriptions: MagicMock,
-        mock_validate_capacities: MagicMock,
-    ):
-        self._validate(change_date=datetime.date(year=2028, month=1, day=1))
-
-        mock_get_next_period_with_subscriptions.assert_not_called()
         mock_validate_capacities.assert_not_called()
