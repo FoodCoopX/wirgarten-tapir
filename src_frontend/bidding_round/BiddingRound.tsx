@@ -23,7 +23,11 @@ import BiddingRoundBidStep from "./steps/BiddingRoundBidStep.tsx";
 import BiddingRoundConfirmationStep from "./steps/BiddingRoundConfirmationStep.tsx";
 import BiddingRoundIntroStep from "./steps/BiddingRoundIntroStep.tsx";
 import BiddingRoundSummaryStep from "./steps/BiddingRoundSummaryStep.tsx";
-import { parseEuroAmount, toDotDecimal } from "./utils/amounts.ts";
+import {
+  parseEuroAmount,
+  scaleAmountsForVariant,
+  toDotDecimal,
+} from "./utils/amounts.ts";
 import {
   buildBiddingRoundSteps,
   getBiddingRoundPhase,
@@ -226,6 +230,22 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({
     return data?.biddableProduct?.products.find(
       (variant) => variant.id === selectedVariantId,
     );
+  }
+
+  function selectVariant(variantId: string) {
+    if (variantId === selectedVariantId) {
+      return;
+    }
+    const previousVariant = getSelectedVariant();
+    const nextVariant = data?.biddableProduct?.products.find(
+      (variant) => variant.id === variantId,
+    );
+    const previousReference = Number(previousVariant?.referenceValue ?? 0);
+    const nextReference = Number(nextVariant?.referenceValue ?? 0);
+    setAmounts((current) =>
+      scaleAmountsForVariant(current, previousReference, nextReference),
+    );
+    setSelectedVariantId(variantId);
   }
 
   function updateAmount(levelIndex: number, value: string) {
@@ -431,6 +451,7 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({
           isBidRange={isBidRange}
           texts={texts}
           currentPickupLocation={data.currentPickupLocation ?? null}
+          sharesEnabled={data?.bidOptions?.quantityEnabled ?? false}
           submitting={submitting}
           onSubmit={submitBid}
         />
@@ -471,12 +492,14 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({
         isBidRange={isBidRange}
         requiredAmountLevels={requiredAmountLevels}
         selectedVariantId={selectedVariantId}
-        onSelectVariant={setSelectedVariantId}
+        onSelectVariant={selectVariant}
         quantity={quantity}
         onQuantityChange={setQuantity}
         amounts={amounts}
         onAmountChange={updateAmount}
         currentPickupLocation={data.currentPickupLocation ?? null}
+        sharesEnabled={data?.bidOptions?.quantityEnabled ?? false}
+        carouselEnabled={data?.bidOptions?.carouselEnabled ?? false}
         goToNextStep={goToSummary}
         stepActive={step === currentStep}
       />
