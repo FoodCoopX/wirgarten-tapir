@@ -26,6 +26,8 @@ import { isSubscriptionUnitEditable } from "./utils/isSubscriptionUnitEditable.t
 
 type Step = "member" | "change" | "summary";
 
+type CheckResult = "pending" | "passed" | { error: string };
+
 const CHECK_DELAY_MS = 300;
 
 const EMPTY_PREREQUISITES: SubscriptionPrerequisitesFormData = {
@@ -75,8 +77,7 @@ const AdminSubscriptionChangeModal: React.FC<
   const [prerequisites, setPrerequisites] =
     useState<SubscriptionPrerequisitesFormData>(EMPTY_PREREQUISITES);
   const [checking, setChecking] = useState(false);
-  // undefined: not checked yet, null: check passed, string: check failed
-  const [checkError, setCheckError] = useState<string | null>();
+  const [checkResult, setCheckResult] = useState<CheckResult>("pending");
   const [saving, setSaving] = useState(false);
 
   const prerequisitesComplete =
@@ -85,7 +86,6 @@ const AdminSubscriptionChangeModal: React.FC<
       memberData.prerequisites,
       prerequisites,
     );
-  const checkPassed = checkError === null;
 
   useEffect(() => {
     subscriptionsApi
@@ -146,7 +146,7 @@ const AdminSubscriptionChangeModal: React.FC<
   }, [unit]);
 
   useEffect(() => {
-    setCheckError(undefined);
+    setCheckResult("pending");
     if (!newProductId || !changeDate || !prerequisitesComplete) return;
 
     let cancelled = false;
@@ -157,7 +157,13 @@ const AdminSubscriptionChangeModal: React.FC<
           adminSizeChangeRequest: buildRequest(),
         })
         .then((response) => {
-          if (!cancelled) setCheckError(response.error);
+          if (!cancelled) {
+            setCheckResult(
+              response.orderConfirmed
+                ? "passed"
+                : { error: response.error ?? "" },
+            );
+          }
         })
         .catch((error) =>
           handleRequestError(
@@ -201,7 +207,7 @@ const AdminSubscriptionChangeModal: React.FC<
           globalThis.location.reload();
           return;
         }
-        setCheckError(response.error);
+        setCheckResult({ error: response.error ?? "" });
         setStep("change");
       })
       .catch((error) =>
@@ -286,7 +292,9 @@ const AdminSubscriptionChangeModal: React.FC<
           showValidation={false}
         />
         {checking && <Spinner size={"sm"} />}
-        {checkError && <Alert variant={"danger"}>{checkError}</Alert>}
+        {typeof checkResult === "object" && (
+          <Alert variant={"danger"}>{checkResult.error}</Alert>
+        )}
       </div>
     );
   }
@@ -339,7 +347,7 @@ const AdminSubscriptionChangeModal: React.FC<
               variant={"primary"}
               icon={"arrow_forward"}
               text={"Weiter"}
-              disabled={checking || !checkPassed}
+              disabled={checking || checkResult !== "passed"}
               onClick={() => setStep("summary")}
             />
           </>
