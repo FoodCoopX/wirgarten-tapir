@@ -59,6 +59,8 @@ class BiddingRoundStatsService:
 
     @classmethod
     def get_default_position(cls, bidding_round, cache: dict) -> Decimal:
+        if bidding_round.average_bid_locked_at is not None:
+            return cls.clamp_position(bidding_round.locked_bid_range_position)
         if bidding_round.bidding_procedure == BIDDING_ROUND_PROCEDURE_BID_RANGE:
             return Decimal("50")
         return cls.get_level_position(
@@ -98,8 +100,87 @@ class BiddingRoundStatsService:
         return yellow + (red - yellow) * ((position - Decimal("50")) / Decimal("50"))
 
     @classmethod
+    def get_surcharge_factor(cls, bidding_round) -> Decimal:
+        if bidding_round.average_bid_locked_at is None:
+            return Decimal("1")
+        return Decimal("1") + Decimal(bidding_round.locked_surcharge_percent) / 100
+
+    @classmethod
+    def _apply_surcharge_and_cap(
+        cls, amount, bid_item, bidding_round, factor, surcharge_on_bids
+    ) -> Decimal:
+        if not surcharge_on_bids:
+            return amount
+        amount = amount * factor
+        if bidding_round.bidding_procedure == BIDDING_ROUND_PROCEDURE_BID_RANGE:
+            red = bid_item.amount_2 or bid_item.amount_1 or Decimal("0")
+            amount = min(amount, red)
+        return amount
+
+    @classmethod
     def get_effective_amount(cls, bid_item, position, bidding_round=None) -> Decimal:
-        return cls.get_amount_for_position(bid_item, position, bidding_round)
+        amount = cls.get_amount_for_position(bid_item, position, bidding_round)
+        if bidding_round is None:
+            return amount
+        return cls._apply_surcharge_and_cap(
+            amount,
+            bid_item,
+            bidding_round,
+            cls.get_surcharge_factor(bidding_round),
+            bool(
+                bidding_round.average_bid_locked_at is not None
+                and bidding_round.locked_surcharge_on_bids
+            ),
+        )
+
+    @classmethod
+    def build_locked_average_bid(
+        cls,
+        bidding_round,
+        position,
+        surcharge_percent,
+        surcharge_on_bids,
+        surcharge_on_average,
+        cache,
+    ) -> dict:
+        factor = (
+            Decimal("1") + Decimal(str(surcharge_percent or 0)) / 100
+            if surcharge_on_bids
+            else Decimal("1")
+        )
+        total_amount = Decimal("0")
+        total_shares = Decimal("0")
+        for item in cls._items(bidding_round, cache):
+            amount = cls.get_amount_for_position(item, position, bidding_round)
+            total_amount += (
+                cls._apply_surcharge_and_cap(
+                    amount,
+                    item,
+                    bidding_round,
+                    factor,
+                    bool(surcharge_on_bids),
+                )
+                * item.quantity
+            )
+            total_shares += (
+                cls._get_size(item.product, bidding_round, cache) * item.quantity
+            )
+        if total_shares == 0:
+            per_share_month = Decimal("0")
+        else:
+            per_share_month = total_amount / total_shares
+        if surcharge_on_average:
+            per_share_month = per_share_month * (
+                Decimal("1") + Decimal(str(surcharge_percent or 0)) / 100
+            )
+        return {
+            "bidder_amount_per_share_per_month": per_share_month.quantize(
+                Decimal("0.01")
+            ),
+            "bidder_amount_per_share_per_year": (per_share_month * 12).quantize(
+                Decimal("0.01")
+            ),
+        }
 
     @classmethod
     def get_reached_per_year(
@@ -286,6 +367,11 @@ class BiddingRoundStatsService:
 
     @classmethod
     def build_non_bidder_rate_per_share(cls, bidding_round, cache) -> Decimal:
+        if (
+            bidding_round.average_bid_locked_at is not None
+            and bidding_round.locked_bidder_average_per_share_per_month is not None
+        ):
+            return bidding_round.locked_bidder_average_per_share_per_month
         position = cls.get_default_position(bidding_round, cache)
         total_amount = Decimal("0")
         total_shares = Decimal("0")
@@ -294,7 +380,15 @@ class BiddingRoundStatsService:
             total_shares += cls._get_size(item.product, bidding_round, cache)
         if total_shares == 0:
             return Decimal("0")
-        return (total_amount / total_shares).quantize(Decimal("0.01"))
+        rate = total_amount / total_shares
+        if (
+            bidding_round.average_bid_locked_at is not None
+            and bidding_round.locked_surcharge_on_average
+        ):
+            rate = rate * (
+                Decimal("1") + Decimal(bidding_round.locked_surcharge_percent) / 100
+            )
+        return rate.quantize(Decimal("0.01"))
 
     @classmethod
     def build_extra_positions(cls, bidding_round, cache) -> dict:
@@ -421,6 +515,11 @@ class BiddingRoundStatsService:
     def get_bidder_average_per_share_per_month(
         cls, bidding_round, position=None, *, cache: dict
     ) -> Decimal:
+        if (
+            bidding_round.average_bid_locked_at is not None
+            and bidding_round.locked_bidder_average_per_share_per_month is not None
+        ):
+            return bidding_round.locked_bidder_average_per_share_per_month
         if position is None:
             position = cls.get_default_position(bidding_round, cache)
         total_amount = Decimal("0")
@@ -598,6 +697,13 @@ class BiddingRoundStatsService:
                     "member_id": bid.member_id,
                     "member_name": str(bid.member),
                     "email": bid.member.email,
+                    "entered_by_admin": bid.entered_by_admin,
+                    "admin_confirmed": (
+                        bid.admin_confirmed.isoformat() if bid.admin_confirmed else None
+                    ),
+                    "updated_at": (
+                        bid.updated_at.isoformat() if bid.updated_at else None
+                    ),
                     "amount_per_month": str(amount_per_month),
                     "amount_per_year": str(amount_per_month * 12),
                     "items": [
@@ -607,14 +713,20 @@ class BiddingRoundStatsService:
                 }
             )
 
+        rows.sort(key=lambda row: row["member_name"].lower())
+
         auto_renewed = (
             cls.get_auto_renewed_by_member(bidding_round, cache)
             if cls.are_auto_renewed_included(bidding_round, cache)
             else {}
         )
+        round_product_type = bidding_round.product_types.first()
         return {
             "bidding_procedure": bidding_round.bidding_procedure,
             "bid_levels": bidding_round.bid_levels,
+            "round_product_type_id": (
+                round_product_type.id if round_product_type is not None else None
+            ),
             "include_auto_renewed": bidding_round.include_auto_renewed,
             "auto_renewed_per_year": str(
                 sum(
@@ -640,7 +752,23 @@ class BiddingRoundStatsService:
             "coverage_percent": cls.get_coverage_percent(
                 bidding_round, position, cache=cache
             ),
+            "average_bid_locked_at": (
+                bidding_round.average_bid_locked_at.isoformat()
+                if bidding_round.average_bid_locked_at
+                else None
+            ),
+            "locked_bid_range_position": (
+                str(bidding_round.locked_bid_range_position)
+                if bidding_round.locked_bid_range_position is not None
+                else None
+            ),
+            "locked_surcharge_percent": str(bidding_round.locked_surcharge_percent),
+            "locked_surcharge_on_bids": bidding_round.locked_surcharge_on_bids,
+            "locked_surcharge_on_average": bidding_round.locked_surcharge_on_average,
             "bidder_count": cls.get_bidder_count(bidding_round),
+            "unconfirmed_bid_count": bidding_round.bids.filter(
+                admin_confirmed__isnull=True
+            ).count(),
             "bidder_average_per_month": str(
                 cls.get_bidder_average_per_month(bidding_round, position, cache=cache)
             ),

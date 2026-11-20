@@ -47,6 +47,24 @@ export interface RoundStatsBid {
   email: string;
   /**
    *
+   * @type {boolean}
+   * @memberof RoundStatsBid
+   */
+  enteredByAdmin: boolean;
+  /**
+   *
+   * @type {Date}
+   * @memberof RoundStatsBid
+   */
+  adminConfirmed: Date | null;
+  /**
+   *
+   * @type {Date}
+   * @memberof RoundStatsBid
+   */
+  updatedAt: Date | null;
+  /**
+   *
    * @type {string}
    * @memberof RoundStatsBid
    */
@@ -74,6 +92,11 @@ export function instanceOfRoundStatsBid(value: object): value is RoundStatsBid {
   if (!("memberName" in value) || value["memberName"] === undefined)
     return false;
   if (!("email" in value) || value["email"] === undefined) return false;
+  if (!("enteredByAdmin" in value) || value["enteredByAdmin"] === undefined)
+    return false;
+  if (!("adminConfirmed" in value) || value["adminConfirmed"] === undefined)
+    return false;
+  if (!("updatedAt" in value) || value["updatedAt"] === undefined) return false;
   if (!("amountPerMonth" in value) || value["amountPerMonth"] === undefined)
     return false;
   if (!("amountPerYear" in value) || value["amountPerYear"] === undefined)
@@ -98,6 +121,12 @@ export function RoundStatsBidFromJSONTyped(
     memberId: json["member_id"],
     memberName: json["member_name"],
     email: json["email"],
+    enteredByAdmin: json["entered_by_admin"],
+    adminConfirmed:
+      json["admin_confirmed"] == null
+        ? null
+        : new Date(json["admin_confirmed"]),
+    updatedAt: json["updated_at"] == null ? null : new Date(json["updated_at"]),
     amountPerMonth: json["amount_per_month"],
     amountPerYear: json["amount_per_year"],
     items: (json["items"] as Array<any>).map(BidItemFromJSON),
@@ -121,6 +150,15 @@ export function RoundStatsBidToJSONTyped(
     member_id: value["memberId"],
     member_name: value["memberName"],
     email: value["email"],
+    entered_by_admin: value["enteredByAdmin"],
+    admin_confirmed:
+      value["adminConfirmed"] == null
+        ? null
+        : (value["adminConfirmed"] as any).toISOString(),
+    updated_at:
+      value["updatedAt"] == null
+        ? null
+        : (value["updatedAt"] as any).toISOString(),
     amount_per_month: value["amountPerMonth"],
     amount_per_year: value["amountPerYear"],
     items: (value["items"] as Array<any>).map(BidItemToJSON),

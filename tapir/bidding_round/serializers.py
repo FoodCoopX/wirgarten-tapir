@@ -64,6 +64,48 @@ class BidSubmitSerializer(serializers.Serializer):
     items = BidSubmitItemSerializer(many=True)
 
 
+class BidAdminItemSerializer(serializers.Serializer):
+    round_product_type_id = serializers.CharField()
+    product_id = serializers.CharField()
+    quantity = serializers.IntegerField(
+        required=False, min_value=1, max_value=5, default=1
+    )
+    amount_1 = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    amount_2 = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    amount_3 = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+
+
+class BidAdminSerializer(serializers.Serializer):
+    member_id = serializers.CharField(required=False)
+    items = BidAdminItemSerializer(many=True, required=False)
+    entered_by_admin = serializers.BooleanField(required=False)
+    admin_confirmed = serializers.BooleanField(required=False)
+
+
+class BidAdminCreateSerializer(BidAdminSerializer):
+    member_id = serializers.CharField()
+    items = BidAdminItemSerializer(many=True)
+
+
+class ConfirmBidsSerializer(serializers.Serializer):
+    bid_ids = serializers.ListField(child=serializers.CharField(), required=False)
+
+
+class LockAverageBidSerializer(serializers.Serializer):
+    position = serializers.FloatField(min_value=0, max_value=100)
+    surcharge_percent = serializers.FloatField(
+        required=False, min_value=0, max_value=100, default=0
+    )
+    surcharge_on_bids = serializers.BooleanField(required=False, default=False)
+    surcharge_on_average = serializers.BooleanField(required=False, default=False)
+
+
+class MemberOptionSerializer(serializers.Serializer):
+    id = serializers.CharField()
+    name = serializers.CharField()
+    email = serializers.CharField()
+
+
 class CreateContractsSerializer(serializers.Serializer):
     bid_ids = serializers.ListField(child=serializers.CharField(), required=False)
     bid_level = serializers.IntegerField(required=False, min_value=1, max_value=3)
@@ -95,6 +137,12 @@ class RoundSerializer(serializers.Serializer):
     bidding_procedure = serializers.CharField()
     bid_levels = serializers.IntegerField()
     include_auto_renewed = serializers.BooleanField()
+    average_bid_locked_at = serializers.DateTimeField(allow_null=True)
+    locked_bid_range_position = serializers.CharField(allow_null=True)
+    locked_bidder_average_per_share_per_month = serializers.CharField(allow_null=True)
+    locked_surcharge_percent = serializers.CharField()
+    locked_surcharge_on_bids = serializers.BooleanField()
+    locked_surcharge_on_average = serializers.BooleanField()
     start_at = serializers.DateTimeField(allow_null=True)
     end_at = serializers.DateTimeField()
     contracts_created_at = serializers.DateTimeField(allow_null=True)
@@ -119,6 +167,8 @@ class BidItemSerializer(serializers.Serializer):
 class BidSerializer(serializers.Serializer):
     id = serializers.CharField()
     member_id = serializers.CharField()
+    entered_by_admin = serializers.BooleanField()
+    admin_confirmed = serializers.DateTimeField(allow_null=True)
     pickup_location_id = serializers.CharField(allow_null=True)
     updated_at = serializers.DateTimeField(allow_null=True)
     total_per_year = serializers.CharField()
@@ -205,6 +255,9 @@ class RoundStatsBidSerializer(serializers.Serializer):
     member_id = serializers.CharField()
     member_name = serializers.CharField()
     email = serializers.CharField()
+    entered_by_admin = serializers.BooleanField()
+    admin_confirmed = serializers.DateTimeField(allow_null=True)
+    updated_at = serializers.DateTimeField(allow_null=True)
     amount_per_month = serializers.CharField()
     amount_per_year = serializers.CharField()
     items = BidItemSerializer(many=True)
@@ -260,6 +313,7 @@ class ExtraPositionsSerializer(serializers.Serializer):
 
 
 class RoundResultsResponseSerializer(EvaluationAggregatesSerializer):
+    round_product_type_id = serializers.CharField(allow_null=True)
     include_auto_renewed = serializers.BooleanField()
     auto_renewed_per_year = serializers.CharField()
     auto_renewed = AutoRenewedMemberSerializer(many=True)
@@ -267,6 +321,13 @@ class RoundResultsResponseSerializer(EvaluationAggregatesSerializer):
     non_bidder_rate_per_share = serializers.CharField()
     reached_per_year = serializers.CharField()
     bidder_count = serializers.IntegerField()
+    bidder_average_per_month = serializers.CharField()
+    unconfirmed_bid_count = serializers.IntegerField()
+    average_bid_locked_at = serializers.DateTimeField(allow_null=True)
+    locked_bid_range_position = serializers.CharField(allow_null=True)
+    locked_surcharge_percent = serializers.CharField()
+    locked_surcharge_on_bids = serializers.BooleanField()
+    locked_surcharge_on_average = serializers.BooleanField()
     bids = RoundStatsBidSerializer(many=True)
 
 
