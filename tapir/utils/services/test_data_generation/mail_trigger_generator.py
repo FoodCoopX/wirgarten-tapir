@@ -27,6 +27,8 @@ class MailTriggerGenerator:
     @staticmethod
     def _create_released_version(key: str, layout_enabled: bool):
         name = TransactionalTrigger.transactional_trigger_registry[key]
+        if EmailConfiguration.objects.filter(name=name).exists():
+            return
         email_configuration = EmailConfiguration.objects.create(name=name)
         default_content = TransactionalTrigger.required_trigger_to_default_content_map[
             key

@@ -426,4 +426,5 @@ class BiddingRoundGenerator:
                 bidding_round,
                 [item],
                 cache=cache,
+                send_mail=False,
             )

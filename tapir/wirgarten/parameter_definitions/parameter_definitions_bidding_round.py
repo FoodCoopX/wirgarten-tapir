@@ -23,19 +23,43 @@ class ParameterDefinitionsBiddingRound:
             datatype=TapirParameterDatatype.BOOLEAN,
             initial_value=False,
             category=ParameterCategory.BIDDING_ROUND,
-            order_priority=10,
+            order_priority=12,
         )
 
         importer.parameter_definition(
             key=ParameterKeys.BIDDING_ROUND_URL_ENABLED,
             label=gettext_noop("Öffentliche Beitragsrunden-Seite aktivieren"),
             description=gettext_noop(
-                "Aktiviert nur die mitgliederseitigen Seiten und Endpunkte. Die Admin-Seiten bleiben erreichbar."
+                "Wenn deaktiviert, werden nicht angemeldete Besucher zum Login umgeleitet. Angemeldete Mitglieder erreichen die Seite weiterhin; die Admin-Seiten bleiben erreichbar."
             ),
             datatype=TapirParameterDatatype.BOOLEAN,
             initial_value=True,
             category=ParameterCategory.BIDDING_ROUND,
-            order_priority=9,
+            order_priority=11,
+        )
+
+        importer.parameter_definition(
+            key=ParameterKeys.BIDDING_ROUND_STATUS_ENABLED,
+            label=gettext_noop("Status anzeigen"),
+            description=gettext_noop(
+                "Zeigt den Zwischenstand der Beitragsrunde an. Wenn deaktiviert, ist der Status auch über die öffentliche API nicht abrufbar."
+            ),
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=True,
+            category=ParameterCategory.BIDDING_ROUND,
+            order_priority=11,
+        )
+
+        importer.parameter_definition(
+            key=ParameterKeys.BIDDING_ROUND_STATUS_PUBLIC_ENABLED,
+            label=gettext_noop("Status öffentlich anzeigen"),
+            description=gettext_noop(
+                "Erlaubt auch nicht angemeldeten Besuchern den Zwischenstand. Wenn deaktiviert, ist der Status nur für angemeldete Mitglieder abrufbar."
+            ),
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=True,
+            category=ParameterCategory.BIDDING_ROUND,
+            order_priority=10,
         )
 
         importer.parameter_definition(
@@ -216,6 +240,42 @@ class ParameterDefinitionsBiddingRound:
             ),
             datatype=TapirParameterDatatype.STRING,
             initial_value="Rot (Schmerzgrenze)",
+            category=ParameterCategory.BIDDING_ROUND,
+            order_priority=5,
+        )
+
+        importer.parameter_definition(
+            key=ParameterKeys.BIDDING_ROUND_BID_LEVEL_1_LABEL,
+            label=gettext_noop("Beitragsrunde: Beschriftung Gebotsstufe 1"),
+            description=gettext_noop(
+                "Beschriftung der ersten Gebotsstufe im einfachen Gebot."
+            ),
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Gebot 1",
+            category=ParameterCategory.BIDDING_ROUND,
+            order_priority=5,
+        )
+
+        importer.parameter_definition(
+            key=ParameterKeys.BIDDING_ROUND_BID_LEVEL_2_LABEL,
+            label=gettext_noop("Beitragsrunde: Beschriftung Gebotsstufe 2"),
+            description=gettext_noop(
+                "Beschriftung der zweiten Gebotsstufe im einfachen Gebot."
+            ),
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Gebot 2",
+            category=ParameterCategory.BIDDING_ROUND,
+            order_priority=5,
+        )
+
+        importer.parameter_definition(
+            key=ParameterKeys.BIDDING_ROUND_BID_LEVEL_3_LABEL,
+            label=gettext_noop("Beitragsrunde: Beschriftung Gebotsstufe 3"),
+            description=gettext_noop(
+                "Beschriftung der dritten Gebotsstufe im einfachen Gebot."
+            ),
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Gebot 3",
             category=ParameterCategory.BIDDING_ROUND,
             order_priority=5,
         )

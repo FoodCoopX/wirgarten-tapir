@@ -6,7 +6,11 @@ import BiddingRound from "./BiddingRound.tsx";
 const domNode = document.getElementById("bidding_round-root");
 if (domNode) {
   const root = createRoot(domNode);
-  root.render(<BiddingRound csrfToken={getCsrfToken()} />);
+  const skipIntro =
+    new URLSearchParams(window.location.search).get("skip_intro") === "1";
+  root.render(
+    <BiddingRound csrfToken={getCsrfToken()} skipIntro={skipIntro} />,
+  );
 } else {
   console.error("Failed to render bidding_round from React");
 }

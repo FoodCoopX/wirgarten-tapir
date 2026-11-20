@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Spinner } from "react-bootstrap";
 
 import {
@@ -36,6 +36,7 @@ import {
 
 interface BiddingRoundProps {
   csrfToken: string;
+  skipIntro?: boolean;
 }
 
 const BID_RANGE_PROCEDURE = "bid_range";
@@ -54,6 +55,9 @@ const EMPTY_TEXTS: RoundTexts = {
     referenceValueHint: "",
     simpleExplanation: "",
     bidRangeExplanation: "",
+    level1Label: "",
+    level2Label: "",
+    level3Label: "",
     greenLabel: "",
     yellowLabel: "",
     redLabel: "",
@@ -67,7 +71,10 @@ const EMPTY_TEXTS: RoundTexts = {
   },
 };
 
-const BiddingRound: React.FC<BiddingRoundProps> = ({ csrfToken }) => {
+const BiddingRound: React.FC<BiddingRoundProps> = ({
+  csrfToken,
+  skipIntro,
+}) => {
   const api = useApi(BiddingRoundsApi, csrfToken);
   const bestellWizardApi = useApi(BestellWizardApi, csrfToken);
 
@@ -78,6 +85,7 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({ csrfToken }) => {
     useState<BestellWizardSettings>(buildEmptySettings());
   const [loading, setLoading] = useState(true);
   const [steps, setSteps] = useState<MobileWizardStep[]>(["loading"]);
+  const skipIntroApplied = useRef(false);
   const [currentStep, setCurrentStep] = useState<MobileWizardStep>("loading");
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(
     null,
@@ -115,7 +123,15 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({ csrfToken }) => {
       );
     }
 
-    if (publicData?.round && publicData.roundStatus === "active") {
+    const statusVisible =
+      (publicData?.statusEnabled ?? true) &&
+      (Boolean(publicData?.isAuthenticated) ||
+        (publicData?.statusPublicEnabled ?? true));
+    if (
+      publicData?.round &&
+      publicData.roundStatus === "active" &&
+      statusVisible
+    ) {
       try {
         setLiveEvaluation(
           await api.biddingRoundsApiPublicResultsRetrieve({
@@ -183,10 +199,20 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({ csrfToken }) => {
       hasProductIntro,
     });
     setSteps(newSteps);
-    setCurrentStep((current) =>
-      newSteps.includes(current) ? current : newSteps[0],
-    );
-  }, [loading, data, settings, hasActiveRound, isAuthenticated]);
+    setCurrentStep((current) => {
+      if (
+        !skipIntroApplied.current &&
+        skipIntro &&
+        hasActiveRound &&
+        isAuthenticated &&
+        productTypeId
+      ) {
+        skipIntroApplied.current = true;
+        return productTypeId + "_bid";
+      }
+      return newSteps.includes(current) ? current : newSteps[0];
+    });
+  }, [loading, data, settings, hasActiveRound, isAuthenticated, skipIntro]);
 
   function goToNextStep() {
     const currentIndex = steps.indexOf(currentStep);

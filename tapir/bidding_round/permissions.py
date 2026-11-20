@@ -21,7 +21,8 @@ class BiddingRoundFeatureFlagMixin:
 
     This keeps the view's own ``permission_classes`` (and therefore the global
     ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
-    the public (member-facing) endpoints.
+    the public (member-facing) endpoints, which require authentication while the public
+    URL flag is off.
     """
 
     require_public_url = False
@@ -30,8 +31,9 @@ class BiddingRoundFeatureFlagMixin:
         cache = {}
         if not BiddingRoundViewService.is_feature_flag_enabled(cache):
             raise Http404
-        if self.require_public_url and not (
-            BiddingRoundViewService.is_public_url_enabled(cache)
+        if (
+            self.require_public_url
+            and not BiddingRoundViewService.public_access_allowed(request.user, cache)
         ):
             raise Http404
         return super().initial(request, *args, **kwargs)
