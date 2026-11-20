@@ -68,9 +68,7 @@ class TestSubscriptionPrerequisitesValidatorValidatePickupLocation(TapirUnitTest
         params = self.build_default_params()
         params["desired_pickup_location_id"] = "different_desired_id"
 
-        self.assert_raises_validation_error(
-            "Du hast schon einen Abholort", **params
-        )
+        self.assert_raises_validation_error("Du hast schon einen Abholort", **params)
 
         mock_does_order_need_a_pickup_location.assert_called_once_with(
             order=self.order, cache=self.cache
