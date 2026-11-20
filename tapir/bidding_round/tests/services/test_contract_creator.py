@@ -292,7 +292,7 @@ class TestContractCreator(TapirIntegrationTest):
             bidding_round, cache={}, bid_level=2, actor=bid.member
         )
 
-        self.assertEqual([], result["errors"])
+        self.assertEqual([], result.errors)
         subscription = Subscription.objects.get(member=bid.member, product=product)
         self.assertEqual(
             Decimal("90.00"),

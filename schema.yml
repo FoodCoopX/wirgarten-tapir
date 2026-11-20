@@ -10632,9 +10632,13 @@ components:
           nullable: true
         amount_2:
           type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
           nullable: true
         amount_3:
           type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
           nullable: true
         amount_per_year:
           type: string
@@ -18640,9 +18644,13 @@ components:
           nullable: true
         amount_2:
           type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
           nullable: true
         amount_3:
           type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
           nullable: true
         amount_per_month:
           type: string

@@ -58,7 +58,7 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
 
   useEffect(() => {
-    load();
+    void load();
   }, []);
 
   async function load() {
