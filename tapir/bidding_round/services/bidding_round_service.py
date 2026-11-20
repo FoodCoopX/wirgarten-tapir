@@ -1,4 +1,5 @@
 import datetime
+from dataclasses import dataclass
 from decimal import Decimal
 
 from django.core.exceptions import ValidationError
@@ -46,6 +47,18 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import get_now
+
+
+@dataclass
+class BidConsents:
+    sepa_allowed: bool = False
+    account_owner: str | None = None
+    iban: str | None = None
+    payment_rhythm: str | None = None
+    privacy_policy_read: bool = False
+    cancellation_policy_read: bool = False
+    contract_accepted: bool = False
+    enforce_consents: bool = False
 
 
 class BiddingRoundService:
@@ -587,18 +600,12 @@ class BiddingRoundService:
         items: list[dict],
         cache: dict,
         send_mail: bool = True,
-        sepa_allowed: bool = False,
-        account_owner: str | None = None,
-        iban: str | None = None,
-        payment_rhythm: str | None = None,
-        privacy_policy_read: bool = False,
-        cancellation_policy_read: bool = False,
-        contract_accepted: bool = False,
-        enforce_consents: bool = False,
+        consents: BidConsents | None = None,
         feedback: str | None = None,
     ) -> Bid:
         if not isinstance(member, Member):
             raise ValidationError(_("Nur Mitglieder können ein Gebot abgeben."))
+        consents = consents or BidConsents()
 
         with transaction.atomic():
             bidding_round = BiddingRound.objects.select_for_update().get(
@@ -611,14 +618,14 @@ class BiddingRoundService:
                     )
                 )
             BidValidator.validate(bidding_round, items, cache=cache)
-            if enforce_consents:
+            if consents.enforce_consents:
                 cls._validate_member_consents(
                     member=member,
-                    privacy_policy_read=privacy_policy_read,
-                    cancellation_policy_read=cancellation_policy_read,
-                    contract_accepted=contract_accepted,
-                    sepa_allowed=sepa_allowed,
-                    iban=iban,
+                    privacy_policy_read=consents.privacy_policy_read,
+                    cancellation_policy_read=consents.cancellation_policy_read,
+                    contract_accepted=consents.contract_accepted,
+                    sepa_allowed=consents.sepa_allowed,
+                    iban=consents.iban,
                     cache=cache,
                 )
             bid, created = Bid.objects.get_or_create(member=member, round=bidding_round)
@@ -626,12 +633,12 @@ class BiddingRoundService:
             cls._replace_bid_items(bid, items)
             cls._apply_member_consents(
                 member=member,
-                sepa_allowed=sepa_allowed,
-                account_owner=account_owner,
-                iban=iban,
-                payment_rhythm=payment_rhythm,
-                privacy_policy_read=privacy_policy_read,
-                cancellation_policy_read=cancellation_policy_read,
+                sepa_allowed=consents.sepa_allowed,
+                account_owner=consents.account_owner,
+                iban=consents.iban,
+                payment_rhythm=consents.payment_rhythm,
+                privacy_policy_read=consents.privacy_policy_read,
+                cancellation_policy_read=consents.cancellation_policy_read,
                 bidding_round=bidding_round,
                 cache=cache,
             )

@@ -49,7 +49,10 @@ from tapir.bidding_round.serializers import (
 from tapir.bidding_round.services.bidding_round_csv_export_service import (
     BiddingRoundCsvExportService,
 )
-from tapir.bidding_round.services.bidding_round_service import BiddingRoundService
+from tapir.bidding_round.services.bidding_round_service import (
+    BidConsents,
+    BiddingRoundService,
+)
 from tapir.bidding_round.services.bidding_round_stats_service import (
     BiddingRoundStatsService,
 )
@@ -519,16 +522,18 @@ class MemberBidView(BiddingRoundFeatureFlagMixin, APIView):
                 bidding_round,
                 validated["items"],
                 cache=cache,
-                sepa_allowed=validated.get("sepa_allowed", False),
-                account_owner=validated.get("account_owner"),
-                iban=validated.get("iban"),
-                payment_rhythm=validated.get("payment_rhythm"),
-                privacy_policy_read=validated.get("privacy_policy_read", False),
-                cancellation_policy_read=validated.get(
-                    "cancellation_policy_read", False
+                consents=BidConsents(
+                    sepa_allowed=validated.get("sepa_allowed", False),
+                    account_owner=validated.get("account_owner"),
+                    iban=validated.get("iban"),
+                    payment_rhythm=validated.get("payment_rhythm"),
+                    privacy_policy_read=validated.get("privacy_policy_read", False),
+                    cancellation_policy_read=validated.get(
+                        "cancellation_policy_read", False
+                    ),
+                    contract_accepted=validated.get("contract_accepted", False),
+                    enforce_consents=True,
                 ),
-                contract_accepted=validated.get("contract_accepted", False),
-                enforce_consents=True,
                 feedback=validated.get("feedback"),
             )
         except ValidationError as error:

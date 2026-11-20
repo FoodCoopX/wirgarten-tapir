@@ -11,7 +11,10 @@ from tapir.bidding_round.config import (
     BIDDING_ROUND_STATUS_CONFIGURATION,
 )
 from tapir.bidding_round.models import Bid, BiddingRound
-from tapir.bidding_round.services.bidding_round_service import BiddingRoundService
+from tapir.bidding_round.services.bidding_round_service import (
+    BidConsents,
+    BiddingRoundService,
+)
 from tapir.bidding_round.tests.factories import (
     BidFactory,
     BiddingRoundFactory,
@@ -333,8 +336,10 @@ class TestBiddingRoundService(TapirIntegrationTest):
                     }
                 ],
                 cache={},
-                enforce_consents=True,
-                privacy_policy_read=False,
+                consents=BidConsents(
+                    enforce_consents=True,
+                    privacy_policy_read=False,
+                ),
             )
 
     def _create_active_round(self):

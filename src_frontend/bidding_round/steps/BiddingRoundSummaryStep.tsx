@@ -40,6 +40,23 @@ interface BiddingRoundSummaryStepProps {
 }
 
 type LevelRow = BidLevelCost & { label: string };
+
+function buildHeaderText(
+  productName: string,
+  variantName: string,
+  texts: RoundTexts,
+  totalRange: ReturnType<typeof getBidTotalRange>,
+): string {
+  const title = `${productName} ${variantName}`;
+  if (totalRange === null) {
+    return title;
+  }
+  if (totalRange.min === totalRange.max) {
+    return `${title} ${formatAmountNumber(totalRange.min)} ${texts.bid.monthlyUnit}`;
+  }
+  return `${title} ${formatAmountNumber(totalRange.min)}-${formatAmountNumber(totalRange.max)} ${texts.bid.monthlyUnit}`;
+}
+
 const BiddingRoundSummaryStep: React.FC<BiddingRoundSummaryStepProps> = ({
   productName,
   variantName,
@@ -83,15 +100,12 @@ const BiddingRoundSummaryStep: React.FC<BiddingRoundSummaryStepProps> = ({
     deliveryCharge,
   );
 
-  const hasSingleTotal =
-    totalRange !== null && totalRange.min === totalRange.max;
-
-  const headerText =
-    totalRange === null
-      ? `${productName} ${variantName}`
-      : hasSingleTotal
-        ? `${productName} ${variantName} ${formatAmountNumber(totalRange.min)} ${texts.bid.monthlyUnit}`
-        : `${productName} ${variantName} ${formatAmountNumber(totalRange.min)}-${formatAmountNumber(totalRange.max)} ${texts.bid.monthlyUnit}`;
+  const headerText = buildHeaderText(
+    productName,
+    variantName,
+    texts,
+    totalRange,
+  );
 
   const [selectedRow, ...otherRows] = levelRows;
 
