@@ -76,11 +76,9 @@ class BiddingRoundView(BiddingRoundCacheMixin, TemplateView):
     template_name = "bidding_round/bidding_round.html"
 
     def get(self, request, *args, **kwargs):
-        if not BiddingRoundViewService.is_feature_flag_enabled(
-            self.cache
-        ) or not BiddingRoundViewService.is_public_url_enabled(self.cache):
+        if not BiddingRoundViewService.is_feature_flag_enabled(self.cache):
             raise Http404
-        if not BiddingRoundViewService.public_access_allowed(request.user, cache):
+        if not BiddingRoundViewService.public_access_allowed(request.user, self.cache):
             return redirect_to_login(request.get_full_path())
         return super().get(request, *args, **kwargs)
 

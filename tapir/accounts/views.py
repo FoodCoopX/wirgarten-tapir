@@ -12,6 +12,7 @@ from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy, reverse
 from django.utils import timezone
 from django.views import View
+from django.views.decorators.http import require_GET
 from django.views.generic import FormView
 from drf_spectacular.utils import extend_schema
 from rest_framework import permissions, status
@@ -35,6 +36,7 @@ from tapir.accounts.tasks import send_verification_emails
 from tapir.wirgarten.constants import Permission
 
 
+@require_GET
 def keycloak_login_redirect(request):
     next_url = request.GET.get("next")
     url = "/accounts/oidc/keycloak/login"

@@ -152,7 +152,7 @@ class ParameterDefinitionsBiddingRound:
             datatype=TapirParameterDatatype.STRING,
             initial_value="Abholort",
             category=ParameterCategory.BIDDING_ROUND,
-            order_priority=24,
+            order_priority=19,
             meta=ParameterMeta(show_only_when=_show_only_when_enabled),
         )
 
