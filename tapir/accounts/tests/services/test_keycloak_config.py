@@ -176,3 +176,25 @@ class TestKeycloakConfig(TapirUnitTest):
         self.assertEqual("tapir-provisioner", summary["provisioner_client_id"])
         self.assertNotIn("backend-secret", serialized)
         self.assertNotIn("provisioner-secret", serialized)
+
+    @override_settings(
+        KEYCLOAK_USERNAME_SOURCE="customernumber",
+        KEYCLOAK_REGISTRATION_EMAIL_AS_USERNAME=True,
+        KEYCLOAK_EDIT_USERNAME_ALLOWED=True,
+    )
+    def test_checkKeycloakConfig_customernumberUsernameFlags_returnsWarnings(self):
+        check = check_keycloak_config()
+        variables = {issue.variable for issue in check.warnings}
+
+        self.assertIn("KEYCLOAK_REGISTRATION_EMAIL_AS_USERNAME", variables)
+        self.assertIn("KEYCLOAK_EDIT_USERNAME_ALLOWED", variables)
+
+    @override_settings(
+        KEYCLOAK_USERNAME_SOURCE="customernumber",
+        KEYCLOAK_USERNAME_FORMAT="formatted",
+    )
+    def test_buildKeycloakConfigSummary_customernumber_containsUsernamePolicy(self):
+        summary = build_keycloak_config_summary()
+
+        self.assertEqual("customernumber", summary["username_source"])
+        self.assertEqual("formatted", summary["username_format"])

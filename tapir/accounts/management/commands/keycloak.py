@@ -177,7 +177,8 @@ class Command(BaseCommand):
             "  target: "
             f"public={config['public_url']}, site={config['site_url']}, "
             f"clients={config['client_id']}, {config['frontend_client_id']}, "
-            f"{config['provisioner_client_id']}"
+            f"{config['provisioner_client_id']}, "
+            f"username={config['username_source']}/{config['username_format']}"
         )
 
         for change in result.changes:

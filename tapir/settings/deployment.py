@@ -211,7 +211,26 @@ KEYCLOAK_SKIP_VERIFICATION_EMAIL = env.bool(
     "KEYCLOAK_SKIP_VERIFICATION_EMAIL", default=False
 )
 
+# Keycloak username policy for newly created users. The customernumber is
+# Member.member_no; raw uses "17", formatted uses the Tapir prefix/zero-padding
+# ("BT0017"). Django's TapirUser.username always stays the e-mail address.
+KEYCLOAK_USERNAME_SOURCE = env.str("KEYCLOAK_USERNAME_SOURCE", default="email")
+if KEYCLOAK_USERNAME_SOURCE not in ("email", "customernumber"):
+    raise ImproperlyConfigured(
+        f"Unknown KEYCLOAK_USERNAME_SOURCE '{KEYCLOAK_USERNAME_SOURCE}', "
+        "expected 'email' or 'customernumber'"
+    )
+
+KEYCLOAK_USERNAME_FORMAT = env.str("KEYCLOAK_USERNAME_FORMAT", default="raw")
+if KEYCLOAK_USERNAME_FORMAT not in ("raw", "formatted"):
+    raise ImproperlyConfigured(
+        f"Unknown KEYCLOAK_USERNAME_FORMAT '{KEYCLOAK_USERNAME_FORMAT}', "
+        "expected 'raw' or 'formatted'"
+    )
+
 # Optional overrides for the managed realm settings and the superuser group.
+# With KEYCLOAK_USERNAME_SOURCE=customernumber, both username flags should
+# normally be false.
 KEYCLOAK_REGISTRATION_EMAIL_AS_USERNAME = env.bool(
     "KEYCLOAK_REGISTRATION_EMAIL_AS_USERNAME", default=True
 )

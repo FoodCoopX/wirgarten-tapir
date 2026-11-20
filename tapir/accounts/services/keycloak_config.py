@@ -55,6 +55,8 @@ def build_keycloak_config_summary() -> dict:
         "frontend_client_id": admin_config["FRONTEND_CLIENT_ID"],
         "provisioner_client_id": provisioner_config["CLIENT_ID"],
         "site_url": settings.SITE_URL.rstrip("/"),
+        "username_source": settings.KEYCLOAK_USERNAME_SOURCE,
+        "username_format": settings.KEYCLOAK_USERNAME_FORMAT,
         "debug": bool(settings.DEBUG),
     }
 
@@ -166,6 +168,19 @@ def check_keycloak_config() -> KeycloakConfigCheck:
                 "has a different origin than KEYCLOAK_ADMIN_SERVER_URL; the OIDC "
                 "login uses the admin URL while the password redirect and CSP use "
                 "the public URL",
+            )
+
+    if settings.KEYCLOAK_USERNAME_SOURCE == "customernumber":
+        if settings.KEYCLOAK_REGISTRATION_EMAIL_AS_USERNAME:
+            warning(
+                "KEYCLOAK_REGISTRATION_EMAIL_AS_USERNAME",
+                "should be false when the Keycloak username is the customernumber",
+            )
+        if settings.KEYCLOAK_EDIT_USERNAME_ALLOWED:
+            warning(
+                "KEYCLOAK_EDIT_USERNAME_ALLOWED",
+                "should be false when the Keycloak username is managed from the "
+                "customernumber",
             )
 
     return KeycloakConfigCheck(errors=tuple(errors), warnings=tuple(warnings))
