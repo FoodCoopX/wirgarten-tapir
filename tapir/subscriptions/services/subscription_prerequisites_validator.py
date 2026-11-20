@@ -86,7 +86,7 @@ class SubscriptionPrerequisitesValidator:
             and desired_pickup_location_id is not None
             and current_pickup_location_id != desired_pickup_location_id
         ):
-            raise ValidationError("Du hast schon eine Verteilstation")
+            raise ValidationError("Du hast schon einen Abholort")
 
         pickup_location_id = current_pickup_location_id or desired_pickup_location_id
         if pickup_location_id is None:

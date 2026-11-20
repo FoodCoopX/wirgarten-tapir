@@ -230,7 +230,7 @@ Mark a step as done by checking its box (`- [x]`).
   among locations with capacity), applier reusing steps 4/5, endpoints, tests, regenerated API client.
 - [x] **11. "Vertrag hinzufügen" frontend**: `new` mode of the modal (product type, product, quantity, pickup location
   select, collapsible existing shares), mounted next to "Anteilsgröße ändern".
-- [ ] **12. Documentation review**: check `docs/` (mkdocs) for pages to update or add, e.g. an admin page under
+- [x] **12. Documentation review**: check `docs/` (mkdocs) for pages to update or add, e.g. an admin page under
   `docs/admins/` for both icons (dates, mail, price override, next-period subscriptions, SEPA mandate) and the effects
   on payments in `docs/admins/payments/`. Also check the help texts in the modals and the agent rules in
   `.agents/rules/`.

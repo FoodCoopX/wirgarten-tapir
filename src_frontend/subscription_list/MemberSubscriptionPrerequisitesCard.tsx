@@ -39,7 +39,7 @@ const MemberSubscriptionPrerequisitesCard: React.FC<
         <div>
           <div className={"d-flex flex-row gap-2 align-items-center"}>
             <StatusIcon complete={pickupLocationComplete} />
-            <strong>Verteilort</strong>
+            <strong>Abholort</strong>
             {status.pickupLocationName !== null && (
               <span>{status.pickupLocationName}</span>
             )}
@@ -56,7 +56,7 @@ const MemberSubscriptionPrerequisitesCard: React.FC<
               }
               isInvalid={showValidation && !formData.pickupLocationId}
             >
-              <option value={""}>Verteilort auswählen</option>
+              <option value={""}>Abholort auswählen</option>
               {pickupLocations.map((pickupLocation) => (
                 <option key={pickupLocation.id} value={pickupLocation.id}>
                   {pickupLocation.name}
