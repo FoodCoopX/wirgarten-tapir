@@ -45,10 +45,12 @@ class AdminSubscriptionChangeMemberDataBuilder:
     STATUS_PLANNED = "planned"
     STATUS_CANCELLED = "cancelled"
     STATUS_ENDED = "ended"
+    STATUSES = [STATUS_RUNNING, STATUS_PLANNED, STATUS_CANCELLED, STATUS_ENDED]
 
     PRICE_STANDARD = "standard"
     PRICE_PERSONALISED = "personalised"
     PRICE_EXEMPT = "exempt"
+    PRICE_CATEGORIES = [PRICE_STANDARD, PRICE_PERSONALISED, PRICE_EXEMPT]
 
     @classmethod
     def build_member_summary(cls, member: Member, cache: dict) -> MemberSummary:

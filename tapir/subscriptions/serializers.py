@@ -26,6 +26,9 @@ from tapir.wirgarten.models import (
     SubscriptionChangeLogEntry,
 )
 from tapir.wirgarten.utils import get_today
+from tapir.subscriptions.services.admin_subscription_change_member_data_builder import (
+    AdminSubscriptionChangeMemberDataBuilder,
+)
 
 
 class ProductForCancellationSerializer(serializers.Serializer):
@@ -265,10 +268,10 @@ class AdminSubscriptionChangeSubscriptionUnitSerializer(serializers.Serializer):
     start_date = serializers.DateField()
     end_date = serializers.DateField()
     status = serializers.ChoiceField(
-        choices=["running", "planned", "cancelled", "ended"]
+        choices=AdminSubscriptionChangeMemberDataBuilder.STATUSES
     )
     price_category = serializers.ChoiceField(
-        choices=["standard", "personalised", "exempt"]
+        choices=AdminSubscriptionChangeMemberDataBuilder.PRICE_CATEGORIES
     )
 
 
