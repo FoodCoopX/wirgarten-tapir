@@ -4,6 +4,9 @@ from django.test import override_settings
 
 from tapir.accounts.services.email_verification_service import EmailVerificationService
 from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
+from tapir.accounts.services.keycloak_username_service import (
+    KeycloakUsernameUnavailable,
+)
 from tapir.log.models import TextLogEntry
 from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
@@ -70,3 +73,12 @@ class TestSendVerificationEmail(TapirIntegrationTest):
         )
         self.assertEqual(user.email, log_entry.user.email)
         self.assertEqual(actor.email, log_entry.actor.email)
+
+    @override_settings(KEYCLOAK_SKIP_VERIFICATION_EMAIL=False)
+    def test_sendVerificationEmail_missingKeycloakId_raises(self):
+        user = MemberFactory.create(keycloak_id=None)
+
+        with self.assertRaises(KeycloakUsernameUnavailable):
+            EmailVerificationService.send_verification_email(user=user, actor=None)
+
+        self.assertFalse(TextLogEntry.objects.exists())

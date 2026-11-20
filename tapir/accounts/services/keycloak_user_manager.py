@@ -8,6 +8,9 @@ from django.conf import settings
 from keycloak import KeycloakAdmin
 
 from tapir.accounts.services.keycloak_client_factory import get_runtime_client
+from tapir.accounts.services.keycloak_username_service import (
+    KeycloakUsernameService,
+)
 
 if TYPE_CHECKING:
     from tapir.accounts.models import KeycloakUser
@@ -23,8 +26,9 @@ class KeycloakUserManager:
         if user.keycloak_id:
             return
 
+        username = KeycloakUsernameService.build_username(user)
         data: dict = {
-            "username": user.email,
+            "username": username,
             "email": user.email,
             "firstName": user.first_name,
             "lastName": user.last_name,
@@ -58,6 +62,11 @@ class KeycloakUserManager:
         keycloak_client.update_user(user_id=user.keycloak_id, payload=data)
 
     @classmethod
+    def find_keycloak_user_by_email(cls, email: str) -> dict | None:
+        keycloak_client = cls.get_keycloak_client()
+        users = keycloak_client.get_users(query={"email": email, "exact": True})
+        return users[0] if users else None
+
     @functools.cache
     def get_keycloak_client(cls) -> KeycloakAdmin:
         return get_runtime_client()

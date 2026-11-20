@@ -35,7 +35,11 @@ class TestMailChangeService(TapirIntegrationTest):
         self.assertEqual("new@example.com", user.email)
 
         mock_client.update_user.assert_called_once_with(
-            user_id="1234", payload={"email": "new@example.com"}
+            user_id="1234",
+            payload={
+                "email": "new@example.com",
+                "username": "new@example.com",
+            },
         )
 
         mock_fire_action.assert_called_once_with(
@@ -64,7 +68,11 @@ class TestMailChangeService(TapirIntegrationTest):
         self.assertEqual("old@example.com", user.email)
 
         mock_client.update_user.assert_called_once_with(
-            user_id="1234", payload={"email": "new@example.com"}
+            user_id="1234",
+            payload={
+                "email": "new@example.com",
+                "username": "new@example.com",
+            },
         )
 
     def test_applyMailChange_default_oldEmailRequestsDeleted(self):

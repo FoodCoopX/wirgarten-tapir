@@ -140,39 +140,51 @@ def mock_keycloak(test: TapirIntegrationTest):
     test.mock_keycloak_client = Mock()
     test.mock_get_keycloak_client.return_value = test.mock_keycloak_client
 
-    keycloak_ids = {}
-    test.mock_keycloak_client.get_user_id.side_effect = lambda email: keycloak_ids.get(
-        email, None
-    )
+    keycloak_users: dict[str, dict] = {}
 
-    test.mock_keycloak_client.create_user.side_effect = (
-        lambda data: mock_set_and_return_new_keycloak_id(
-            email=data["email"], keycloak_ids=keycloak_ids
-        )
-    )
+    def get_user_id(value: str):
+        for user in keycloak_users.values():
+            if user["username"] == value or user["email"] == value:
+                return user["id"]
+        return None
 
-    test.mock_keycloak_client.delete_user.side_effect = lambda keycloak_id: delete_user(
-        keycloak_id_to_delete=keycloak_id, keycloak_ids=keycloak_ids
-    )
+    def get_users(query: dict | None = None):
+        query = query or {}
+        email = query.get("email")
+        return [
+            user
+            for user in keycloak_users.values()
+            if email is None or user["email"] == email
+        ]
 
+    def create_user(data: dict):
+        if any(user["email"] == data["email"] for user in keycloak_users.values()):
+            raise TapirMockKeycloakException(
+                f"This email address is already in use: {data['email']}"
+            )
+        if any(
+            user["username"] == data.get("username", data["email"])
+            for user in keycloak_users.values()
+        ):
+            raise TapirMockKeycloakException(
+                f"This username is already in use: {data.get('username')}"
+            )
+        keycloak_id = f"Mock Keycloak ID for {data['email']}"
+        keycloak_users[keycloak_id] = {
+            "id": keycloak_id,
+            "username": data.get("username", data["email"]),
+            "email": data["email"],
+        }
+        return keycloak_id
 
-def mock_set_and_return_new_keycloak_id(email: str, keycloak_ids: dict) -> str:
-    if email in keycloak_ids:
-        raise TapirMockKeycloakException(
-            f"This email address is already in use: {email}"
-        )
-    keycloak_ids[email] = f"Mock Keycloak ID for {email}"
-    return keycloak_ids[email]
+    def delete_user(keycloak_id: str):
+        if keycloak_id not in keycloak_users:
+            raise TapirMockKeycloakException(
+                f"No user found for keycloak ID {keycloak_id}"
+            )
+        del keycloak_users[keycloak_id]
 
-
-def delete_user(keycloak_id_to_delete: str, keycloak_ids: dict):
-    found_email = None
-    for email, keycloak_id in keycloak_ids.items():
-        if keycloak_id == keycloak_id_to_delete:
-            found_email = email
-            break
-    if not found_email:
-        raise TapirMockKeycloakException(
-            f"No email found for keycloak ID {keycloak_id_to_delete}"
-        )
-    del keycloak_ids[found_email]
+    test.mock_keycloak_client.get_user_id.side_effect = get_user_id
+    test.mock_keycloak_client.get_users.side_effect = get_users
+    test.mock_keycloak_client.create_user.side_effect = create_user
+    test.mock_keycloak_client.delete_user.side_effect = delete_user

@@ -47,6 +47,7 @@ from tapir.wirgarten.models import (
     SubscriptionChangeLogEntry,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.wirgarten.tasks import assign_member_numbers
 from tapir.wirgarten.utils import (
     get_today,
@@ -186,6 +187,9 @@ class UserGenerator:
         member.save()
         member.created_at = json_user.date_joined
         member.save()
+        MemberNumberService.assign_member_number_if_eligible(
+            member, cache=cache, actor=None
+        )
         KeycloakUserManager.create_keycloak_user_if_necessary(
             user=member,
             initial_password=member.email.split("@")[0],
