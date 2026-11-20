@@ -397,3 +397,6 @@ class ParameterKeys:
     ASSOCIATIONS_ENABLE_ASSOCIATION_MEMBERSHIPS = (
         f"{PREFIX}.associations.enable_supporting_membership"
     )
+    ASSOCIATIONS_MEMBERSHIP_FEE_WAIVED_WITH_PRODUCTS = (
+        f"{PREFIX}.associations.membership_fee_waived_with_products"
+    )

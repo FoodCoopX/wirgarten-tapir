@@ -21,6 +21,7 @@ from tapir.bidding_round.services.bidding_round_contract_row_service import (
 from tapir.bidding_round.services.bidding_round_view_service import (
     BiddingRoundViewService,
 )
+from tapir.configuration.parameter import get_parameter_value
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
@@ -34,6 +35,7 @@ from tapir.wirgarten.models import (
     PickupLocationCapability,
     Subscription,
 )
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import get_product_price
 from tapir.wirgarten.utils import legal_status_is_association
 
@@ -531,6 +533,16 @@ class BiddingRoundStatsService:
         except KeyError:
             is_association = False
         if not is_association:
+            return position
+
+        try:
+            membership_fee_waived = get_parameter_value(
+                key=ParameterKeys.ASSOCIATIONS_MEMBERSHIP_FEE_WAIVED_WITH_PRODUCTS,
+                cache=cache,
+            )
+        except KeyError:
+            membership_fee_waived = False
+        if membership_fee_waived:
             return position
 
         membership_type = (

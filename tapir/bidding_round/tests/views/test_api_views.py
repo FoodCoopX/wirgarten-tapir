@@ -223,6 +223,32 @@ class TestPublicDataView(BiddingRoundApiTestBase):
             response.data["association_membership"],
         )
 
+    def test_publicData_membershipFeeWaivedWithProducts_returnsNull(self):
+        self._enable()
+        bidding_round = create_open_round()
+        membership_type = AssociationMembershipTypeFactory.create(name="Fördermitglied")
+        AssociationMembershipTypePriceFactory.create(
+            type=membership_type,
+            valid_from=bidding_round.growing_period.start_date,
+            price=Decimal("12.00"),
+        )
+        member = MemberFactory.create()
+        AssociationMembershipFactory.create(
+            member=member,
+            type=membership_type,
+            start_date=bidding_round.growing_period.start_date,
+            end_date=None,
+        )
+        self._set_parameter(
+            ParameterKeys.ASSOCIATIONS_MEMBERSHIP_FEE_WAIVED_WITH_PRODUCTS, True
+        )
+        self.client.force_login(member)
+
+        response = self.client.get(reverse("bidding_rounds:public_data"))
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assertIsNone(response.data["association_membership"])
+
     def test_publicData_withoutActiveAssociationMembership_returnsNull(self):
         self._enable()
         bidding_round = create_open_round()
