@@ -17,6 +17,14 @@ interface RollbackModalProps {
   onRun: () => void;
 }
 
+function conflictKey(conflict: RollbackConflict): string {
+  return [
+    conflict.kind ?? "",
+    conflict.member_name ?? conflict.memberName ?? "",
+    conflict.round_name ?? conflict.roundName ?? "",
+  ].join(":");
+}
+
 const RollbackModal: React.FC<RollbackModalProps> = ({
   show,
   onHide,
@@ -61,8 +69,8 @@ const RollbackModal: React.FC<RollbackModalProps> = ({
               </tr>
             </thead>
             <tbody>
-              {conflicts.map((conflict, index) => (
-                <tr key={index}>
+              {conflicts.map((conflict) => (
+                <tr key={conflictKey(conflict)}>
                   <td>{conflict.member_name ?? conflict.memberName}</td>
                   <td>{conflict.round_name ?? conflict.roundName ?? "–"}</td>
                   <td>{conflict.detail ?? "–"}</td>
