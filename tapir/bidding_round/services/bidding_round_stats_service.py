@@ -432,7 +432,6 @@ class BiddingRoundStatsService:
         )
 
         contributions = {}
-        reference_date = bidding_round.growing_period.start_date
         for subscription in subscriptions:
             if subscription.member_id in bid_member_ids:
                 continue
@@ -1181,8 +1180,22 @@ class BiddingRoundStatsService:
         )
         if bids is None:
             bids = list(bidding_round.bids.prefetch_related("items__product").all())
-        reference_date = bidding_round.growing_period.start_date
 
+        demand_by_location = cls._build_demand_by_location(bids, bidding_round, cache)
+        cls._add_auto_renewed_demand(
+            demand_by_location,
+            bidding_round,
+            auto_renewed_by_member,
+            cache,
+        )
+        capacity_by_location = cls._build_capacity_by_location(product_type_ids)
+        result = cls._build_capacity_rows(demand_by_location, capacity_by_location)
+        cache[cache_key] = result
+        return result
+
+    @classmethod
+    def _build_demand_by_location(cls, bids, bidding_round, cache) -> dict:
+        reference_date = bidding_round.growing_period.start_date
         demand_by_location = {}
         for bid in bids:
             shares = sum(
@@ -1203,20 +1216,28 @@ class BiddingRoundStatsService:
                 demand_by_location[pickup_location_id] = (
                     demand_by_location.get(pickup_location_id, Decimal("0")) + shares
                 )
+        return demand_by_location
 
-        if bidding_round.include_auto_renewed:
-            if auto_renewed_by_member is None:
-                auto_renewed_by_member = cls.get_auto_renewed_by_member(
-                    bidding_round, cache=cache
-                )
-            for entry in auto_renewed_by_member.values():
-                pickup_location_id = entry.get("pickup_location_id")
-                if not pickup_location_id:
-                    continue
-                demand_by_location[pickup_location_id] = demand_by_location.get(
-                    pickup_location_id, Decimal("0")
-                ) + entry.get("shares", Decimal("0"))
+    @classmethod
+    def _add_auto_renewed_demand(
+        cls, demand_by_location, bidding_round, auto_renewed_by_member, cache
+    ) -> None:
+        if not bidding_round.include_auto_renewed:
+            return
+        if auto_renewed_by_member is None:
+            auto_renewed_by_member = cls.get_auto_renewed_by_member(
+                bidding_round, cache=cache
+            )
+        for entry in auto_renewed_by_member.values():
+            pickup_location_id = entry.get("pickup_location_id")
+            if not pickup_location_id:
+                continue
+            demand_by_location[pickup_location_id] = demand_by_location.get(
+                pickup_location_id, Decimal("0")
+            ) + entry.get("shares", Decimal("0"))
 
+    @staticmethod
+    def _build_capacity_by_location(product_type_ids) -> dict:
         capacity_by_location = {}
         for capability in PickupLocationCapability.objects.filter(
             product_type_id__in=product_type_ids
@@ -1225,7 +1246,10 @@ class BiddingRoundStatsService:
                 capacity_by_location.get(capability.pickup_location_id, Decimal("0"))
                 + (capability.max_capacity or Decimal("0"))
             )
+        return capacity_by_location
 
+    @staticmethod
+    def _build_capacity_rows(demand_by_location, capacity_by_location) -> list:
         result = []
         for pickup_location in PickupLocation.objects.all():
             capacity = capacity_by_location.get(pickup_location.id, Decimal("0"))
@@ -1240,7 +1264,6 @@ class BiddingRoundStatsService:
                     ),
                 }
             )
-        cache[cache_key] = result
         return result
 
     @classmethod

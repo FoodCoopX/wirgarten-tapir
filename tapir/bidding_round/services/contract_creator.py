@@ -219,6 +219,30 @@ class ContractCreator:
     def _create_auto_renewed_contracts(
         cls, bidding_round, cache, member_ids=None
     ) -> list:
+        context = cls._build_auto_renewal_context(bidding_round, member_ids, cache)
+        if context is None:
+            return []
+        bid_member_ids, product_type_ids, selected_member_ids, subscriptions = context
+
+        created = []
+        for subscription in subscriptions:
+            if not cls._should_renew_subscription(
+                subscription,
+                bid_member_ids,
+                product_type_ids,
+                selected_member_ids,
+                bidding_round,
+            ):
+                continue
+            renewed_subscription = cls._create_renewed_subscription(
+                subscription, bidding_round, cache
+            )
+            if renewed_subscription is not None:
+                created.append(renewed_subscription)
+        return created
+
+    @classmethod
+    def _build_auto_renewal_context(cls, bidding_round, member_ids, cache):
         bid_member_ids = set(bidding_round.bids.values_list("member_id", flat=True))
         product_type_ids = set(
             bidding_round.product_types.values_list("product_type_id", flat=True)
@@ -229,53 +253,67 @@ class ContractCreator:
                 cache=cache,
             )
         except KeyError:
-            return []
-
+            return None
         selected_member_ids = (
             {str(member_id) for member_id in member_ids}
             if member_ids is not None
             else None
         )
-        created = []
-        for subscription in renewing_subscriptions:
-            if subscription.member_id in bid_member_ids:
-                continue
-            if subscription.product.type_id not in product_type_ids:
-                continue
-            if (
-                selected_member_ids is not None
-                and subscription.member_id not in selected_member_ids
-            ):
-                continue
-            if Subscription.objects.filter(
-                member_id=subscription.member_id,
-                period=bidding_round.growing_period,
-                product_id=subscription.product_id,
-                cancellation_ts__isnull=True,
-            ).exists():
-                continue
-            renewed_subscription = (
-                AutomaticSubscriptionRenewalService.build_renewed_subscription(
-                    subscription, cache=cache
-                )
+        return (
+            bid_member_ids,
+            product_type_ids,
+            selected_member_ids,
+            renewing_subscriptions,
+        )
+
+    @classmethod
+    def _should_renew_subscription(
+        cls,
+        subscription,
+        bid_member_ids,
+        product_type_ids,
+        selected_member_ids,
+        bidding_round,
+    ) -> bool:
+        if subscription.member_id in bid_member_ids:
+            return False
+        if subscription.product.type_id not in product_type_ids:
+            return False
+        if (
+            selected_member_ids is not None
+            and subscription.member_id not in selected_member_ids
+        ):
+            return False
+        return not Subscription.objects.filter(
+            member_id=subscription.member_id,
+            period=bidding_round.growing_period,
+            product_id=subscription.product_id,
+            cancellation_ts__isnull=True,
+        ).exists()
+
+    @classmethod
+    def _create_renewed_subscription(cls, subscription, bidding_round, cache):
+        renewed_subscription = (
+            AutomaticSubscriptionRenewalService.build_renewed_subscription(
+                subscription, cache=cache
             )
-            if renewed_subscription.period_id != bidding_round.growing_period_id:
-                continue
-            if subscription.price_override == 0:
-                renewed_subscription.price_override = Decimal("0")
-            else:
-                renewed_subscription.price_override = None
-            renewed_subscription.price_mode = (
-                Subscription.PriceMode.BIDDING_ROUND_AUTO_RENEWED
-            )
-            renewed_subscription.save()
-            BiddingRoundCreatedSubscription.objects.create(
-                round=bidding_round,
-                subscription=renewed_subscription,
-                is_bidder_contract=False,
-            )
-            created.append(renewed_subscription)
-        return created
+        )
+        if renewed_subscription.period_id != bidding_round.growing_period_id:
+            return None
+        if subscription.price_override == 0:
+            renewed_subscription.price_override = Decimal("0")
+        else:
+            renewed_subscription.price_override = None
+        renewed_subscription.price_mode = (
+            Subscription.PriceMode.BIDDING_ROUND_AUTO_RENEWED
+        )
+        renewed_subscription.save()
+        BiddingRoundCreatedSubscription.objects.create(
+            round=bidding_round,
+            subscription=renewed_subscription,
+            is_bidder_contract=False,
+        )
+        return renewed_subscription
 
     @classmethod
     def _create_contracts_for_bid(cls, bid, bidding_round, actor, cache, position):
