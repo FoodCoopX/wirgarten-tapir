@@ -136,6 +136,7 @@ Services: `web` (8000), `vite` (5173), `keycloak` (8080), `db` (5432), `redis` (
 - **Test data generation**: when adding or updating a feature, ask whether test data generation
   (`tapir/utils/services/test_data_generation/`, `populate` command) should be updated. Never write automated tests for
   test data generation.
+- **Vocabulary**: name domain concepts in code, frontend texts and docs as in [docs/dev/glossary.md](docs/dev/glossary.md).
 - **Docs language**: admin documentation (`docs/admins/`) is written in German, developer documentation (`docs/dev/`) in
   English.
 - **Formatting**: Black / Prettier / DjHTML, enforced by pre-commit (`poetry run pre-commit install`).
