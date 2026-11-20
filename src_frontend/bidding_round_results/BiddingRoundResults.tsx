@@ -86,7 +86,7 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
 
   function selectLevel(level: number) {
     setSelectedLevel(level);
-    load((level - 1) * 50);
+    void load((level - 1) * 50);
   }
 
   async function runAction(action: () => Promise<unknown>, message: string) {
