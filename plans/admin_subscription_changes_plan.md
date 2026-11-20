@@ -226,9 +226,9 @@ Mark a step as done by checking its box (`- [x]`).
   checkbox). Built for both icons, not mounted yet.
 - [x] **9. Frontend "Anteilsgröße ändern"**: button, modal with the three steps, live check, summary warnings (price
   override, next-period subscriptions, mail), reload. Mounted in `subscription_filter.html`.
-- [ ] **10. "Vertrag hinzufügen" backend**: order builder for an addition, validator variant (pickup location choice
+- [x] **10. "Vertrag hinzufügen" backend**: order builder for an addition, validator variant (pickup location choice
   among locations with capacity), applier reusing steps 4/5, endpoints, tests, regenerated API client.
-- [ ] **11. "Vertrag hinzufügen" frontend**: `new` mode of the modal (product type, product, quantity, pickup location
+- [x] **11. "Vertrag hinzufügen" frontend**: `new` mode of the modal (product type, product, quantity, pickup location
   select, collapsible existing shares), mounted next to "Anteilsgröße ändern".
 - [ ] **12. Documentation review**: check `docs/` (mkdocs) for pages to update or add, e.g. an admin page under
   `docs/admins/` for both icons (dates, mail, price override, next-period subscriptions, SEPA mandate) and the effects

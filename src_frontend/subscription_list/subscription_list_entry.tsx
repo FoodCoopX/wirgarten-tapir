@@ -1,5 +1,6 @@
 import { createRoot } from "react-dom/client";
 import { getCsrfToken } from "../utils/getCsrfToken.ts";
+import AdminSubscriptionAdditionButton from "./AdminSubscriptionAdditionButton.tsx";
 import AdminSubscriptionChangeButton from "./AdminSubscriptionChangeButton.tsx";
 import SubscriptionChangeDatesButton from "./SubscriptionChangeDatesButton.tsx";
 import SubscriptionChangePriceButton from "./SubscriptionChangePriceButton.tsx";
@@ -43,4 +44,13 @@ const domNodeAdminSubscriptionChangeButton = document.getElementById(
 if (domNodeAdminSubscriptionChangeButton) {
   const root = createRoot(domNodeAdminSubscriptionChangeButton);
   root.render(<AdminSubscriptionChangeButton csrfToken={getCsrfToken()} />);
+}
+
+const domNodeAdminSubscriptionAdditionButton = document.getElementById(
+  "admin_subscription_addition_button",
+);
+
+if (domNodeAdminSubscriptionAdditionButton) {
+  const root = createRoot(domNodeAdminSubscriptionAdditionButton);
+  root.render(<AdminSubscriptionAdditionButton csrfToken={getCsrfToken()} />);
 }
