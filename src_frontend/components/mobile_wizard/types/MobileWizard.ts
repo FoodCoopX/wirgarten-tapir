@@ -1,3 +1,3 @@
-export type MobileWizardStep = string & {};
+export type MobileWizardStep = string;
 
-export type MobileWizardPhase = string & {};
+export type MobileWizardPhase = string;
