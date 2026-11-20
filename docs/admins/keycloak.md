@@ -22,12 +22,15 @@ Extra roles in the `superuser` group and extra role scope mappings are reported 
 | ------------------------------ | ------- |
 | `enabled`                      | `true`  |
 | `registrationAllowed`          | `false` |
-| `registrationEmailAsUsername`  | `true`  |
+| `registrationEmailAsUsername`  | `true` (`KEYCLOAK_REGISTRATION_EMAIL_AS_USERNAME`) |
 | `loginWithEmailAllowed`        | `true`  |
 | `duplicateEmailsAllowed`       | `false` |
-| `editUsernameAllowed`          | `false` |
+| `editUsernameAllowed`          | `false` (`KEYCLOAK_EDIT_USERNAME_ALLOWED`) |
 | `resetPasswordAllowed`         | `true`  |
 | `verifyEmail`                  | `true`  |
+
+With `KEYCLOAK_USERNAME_SOURCE=customernumber`, set both username flags to `false`; `check` warns
+otherwise. E-mail login keeps working because `loginWithEmailAllowed` stays `true`.
 
 ### Realm roles and the superuser group
 
@@ -48,6 +51,47 @@ email.manage
 
 It also creates the `superuser` group and assigns all nine roles to it. Tapir puts superusers into
 that group when it creates their Keycloak user.
+
+### Keycloak usernames
+
+`KEYCLOAK_USERNAME_SOURCE` controls the username of **newly created** Keycloak users:
+
+| Value            | Keycloak username |
+| ---------------- | ----------------- |
+| `email` (default) | The Tapir user's e-mail address; this is the previous behaviour. |
+| `customernumber`  | `Member.member_no`; the Tapir member number. |
+
+`KEYCLOAK_USERNAME_FORMAT` selects the representation of the customernumber:
+
+| Value        | Example | Meaning |
+| ------------ | ------- | ------- |
+| `raw` (default) | `17` | The integer value without prefix or padding. |
+| `formatted`  | `BT0017` | `MemberNumberService.format_member_number()` with the Tapir prefix and zero-padding. |
+
+Django's `TapirUser.username` remains the e-mail address in both modes. Only the Keycloak username
+changes. The adapter and duplicate-e-mail checks find Keycloak users by e-mail, so e-mail login and
+e-mail changes keep working.
+
+Members without a customernumber are not created in Keycloak when the source is `customernumber`.
+The waiting-list confirmation, the bestell wizard and the member create modal assign a member number
+before creating the Keycloak user. Resend-verification, e-mail change and `send_verify_emails`
+return or log a clear error until a number exists. Non-Member accounts created by `create_admin`
+keep the e-mail as Keycloak username because they have no `member_no`.
+
+Existing Keycloak users are not migrated. Only users created after the setting is enabled use the
+new username. To use customernumber usernames, configure:
+
+```dotenv
+KEYCLOAK_USERNAME_SOURCE=customernumber
+KEYCLOAK_USERNAME_FORMAT=raw
+KEYCLOAK_REGISTRATION_EMAIL_AS_USERNAME=0
+KEYCLOAK_EDIT_USERNAME_ALLOWED=0
+```
+
+The sample declarative user profile in this repository has a `username` minimum length of 3 and a
+required `customernumber` attribute. A short raw number such as `17` fails the minimum length; use
+`formatted` or lower the minimum. The username change does not populate the profile's
+`customernumber` attribute; populate it separately or remove that requirement from the profile.
 
 ### Clients and role mappings
 
@@ -112,10 +156,12 @@ in the repository root.
 | `KEYCLOAK_PROVISIONER_CLIENT_ID`     | `tapir-provisioner`      | Client used by `manage.py keycloak`. Must exist before the first `sync`. |
 | `KEYCLOAK_PROVISIONER_CLIENT_SECRET_KEY` | `**********`         | Secret for the provisioner client. Must match Keycloak before `sync`. |
 | `KEYCLOAK_SKIP_VERIFICATION_EMAIL`   | `false`                  | Skip the verification email Tapir sends through Keycloak. |
-| `KEYCLOAK_REGISTRATION_EMAIL_AS_USERNAME` | `true`              | Managed realm setting. Override when the realm uses a different policy. |
-| `KEYCLOAK_EDIT_USERNAME_ALLOWED`     | `false`                  | Managed realm setting. Override when users may edit their username. |
+| `KEYCLOAK_REGISTRATION_EMAIL_AS_USERNAME` | `true`              | Realm setting. Set to `0` when usernames are customernumbers. |
+| `KEYCLOAK_EDIT_USERNAME_ALLOWED`     | `false`                  | Realm setting. Keep `0` when usernames are managed by Tapir. |
 | `KEYCLOAK_VERIFY_EMAIL`              | `true`                   | Managed realm setting. Override when the realm uses a different e-mail verification policy. |
 | `KEYCLOAK_SUPERUSER_GROUP_NAME`      | `superuser`              | Group that receives all Tapir realm roles and is assigned to superusers. |
+| `KEYCLOAK_USERNAME_SOURCE`           | `email`                  | Keycloak username for new users: `email` or `customernumber`. |
+| `KEYCLOAK_USERNAME_FORMAT`           | `raw`                    | Customernumber format: `raw` (`17`) or `formatted` (`BT0017`). |
 | `SITE_URL`                           | `http://localhost:8000`  | Public URL of Tapir. Redirect URIs and web origins are derived from it. |
 | `DEBUG`                              | `false`                  | Adds localhost redirect URIs and disables the local-default warnings. |
 
@@ -277,3 +323,8 @@ remapped public URL.
 | `KEYCLOAK_PROVISIONER_CLIENT_SECRET_KEY is still the placeholder value` | Set a real secret in Keycloak and in the environment. |
 | `Invalid redirect URI` in the browser | Make `SITE_URL` match the canonical browser URL, and proxy other hostnames to that URL. |
 | `SSL: CERTIFICATE_VERIFY_FAILED` | Add the private CA to the trust store or set `REQUESTS_CA_BUNDLE`. |
+| `Keycloak username is still the e-mail` | Existing users are not migrated; only new users use `KEYCLOAK_USERNAME_SOURCE`. |
+| `Keycloak user is not created: no member number` | Assign a member number first; `manage.py backfill_member_numbers` can help. |
+| `Invalid username` / Keycloak username policy | Use `KEYCLOAK_USERNAME_FORMAT=formatted` or lower the profile's username minimum length. |
+| `Admin cannot log in` | `create_admin` creates a non-Member account and keeps the e-mail username; check `loginWithEmailAllowed`. |
+| `User profile requires customernumber` | The username change does not write that profile attribute; populate it separately or adjust the profile. |

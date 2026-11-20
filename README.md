@@ -44,10 +44,11 @@ Every repetitive task has a `make` target — run `make help` to see them. They 
 If you prefer typing the commands yourself, look at the [Makefile](Makefile): it is short and
 deliberately readable.
 
-You should now have a local instance accessible at http://localhost:8000/. You can log in as admin with username
-`roberto.cortes@example.com` and password `roberto.cortes`.
+You should now have a local instance accessible at http://localhost:8000/. You can log in as admin with the e-mail
+address `roberto.cortes@example.com` and password `roberto.cortes`.
 
-You can log in as any user using the same pattern: `[name]@example.come` as username and `[name]` as password
+You can log in as any user with their e-mail address and the local password pattern. If
+`KEYCLOAK_USERNAME_SOURCE=customernumber` is enabled, the member number also works as the Keycloak username.
 
 ### Django outside of Docker
 
@@ -71,6 +72,11 @@ tokens that carry the `kc-admin-api` scope. The repository ships a minimal boots
 (`docker/keycloak/import/tapir-realm.json`) with the `tapir-provisioner` client and that default client scope.
 `keycloak-sync` creates the runtime clients, the nine Tapir roles, the `superuser` group and the service-account
 mappings, and assigns the `kc-admin-api` scope to the clients that call the admin API.
+
+`KEYCLOAK_USERNAME_SOURCE` and `KEYCLOAK_USERNAME_FORMAT` control the Keycloak username of newly created users. The
+default is the e-mail address; `customernumber` uses `Member.member_no`, either raw (`17`) or formatted (`BT0017`).
+Existing Keycloak users are not migrated. The Django `TapirUser.username` always stays the e-mail address, so e-mail
+login keeps working.
 
 For the local Docker stack, check and repair the realm with:
 
