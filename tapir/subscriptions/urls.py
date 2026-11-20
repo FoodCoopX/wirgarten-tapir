@@ -89,6 +89,16 @@ urlpatterns = [
         admin_subscription_changes.AdminSizeChangeDateOptionsApiView.as_view(),
         name="admin_size_change_date_options",
     ),
+    path(
+        "api/admin_size_change_check",
+        admin_subscription_changes.AdminSizeChangeCheckApiView.as_view(),
+        name="admin_size_change_check",
+    ),
+    path(
+        "api/admin_size_change_apply",
+        admin_subscription_changes.AdminSizeChangeApplyApiView.as_view(),
+        name="admin_size_change_apply",
+    ),
 ]
 
 router = DefaultRouter()

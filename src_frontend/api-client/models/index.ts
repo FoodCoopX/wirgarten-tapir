@@ -3,6 +3,7 @@
 export * from "./AdminSetAssociationMembershipRequestRequest";
 export * from "./AdminSizeChangeDateOption";
 export * from "./AdminSizeChangeDateOptions";
+export * from "./AdminSizeChangeRequestRequest";
 export * from "./AdminSizeChangeWeekOption";
 export * from "./AdminSubscriptionChangeMemberData";
 export * from "./AdminSubscriptionChangeMemberSummary";

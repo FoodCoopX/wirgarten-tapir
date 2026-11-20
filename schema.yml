@@ -5695,6 +5695,62 @@ paths:
               schema:
                 $ref: '#/components/schemas/UpdateMemberSolidarityContributionResponse'
           description: ''
+  /subscriptions/api/admin_size_change_apply:
+    post:
+      operationId: subscriptions_api_admin_size_change_apply_create
+      tags:
+      - subscriptions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminSizeChangeRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AdminSizeChangeRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AdminSizeChangeRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderConfirmationResponse'
+          description: ''
+  /subscriptions/api/admin_size_change_check:
+    post:
+      operationId: subscriptions_api_admin_size_change_check_create
+      tags:
+      - subscriptions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminSizeChangeRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AdminSizeChangeRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AdminSizeChangeRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderConfirmationResponse'
+          description: ''
   /subscriptions/api/admin_size_change_date_options:
     get:
       operationId: subscriptions_api_admin_size_change_date_options_retrieve
@@ -9134,6 +9190,39 @@ components:
       - next_period_start
       - next_possible_start
       - weeks
+    AdminSizeChangeRequestRequest:
+      type: object
+      properties:
+        member_id:
+          type: string
+          minLength: 1
+        subscription_id:
+          type: string
+          minLength: 1
+        new_product_id:
+          type: string
+          minLength: 1
+        change_date:
+          type: string
+          format: date
+        pickup_location_id:
+          type: string
+          nullable: true
+          minLength: 1
+        account_owner:
+          type: string
+        iban:
+          type: string
+        sepa_mandate_confirmed:
+          type: boolean
+      required:
+      - account_owner
+      - change_date
+      - iban
+      - member_id
+      - new_product_id
+      - sepa_mandate_confirmed
+      - subscription_id
     AdminSizeChangeWeekOption:
       type: object
       properties:

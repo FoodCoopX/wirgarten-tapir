@@ -8,7 +8,10 @@ from tapir.subscriptions.services.subscription_prerequisites_validator import (
     SubscriptionPrerequisitesValidator,
 )
 from tapir.subscriptions.services.order_validator import OrderValidator
-from tapir.subscriptions.types import SubscriptionPrerequisitesInput
+from tapir.subscriptions.types import (
+    AdminSizeChangeRequest,
+    SubscriptionPrerequisitesInput,
+)
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
     PickupLocationFactory,
@@ -48,16 +51,18 @@ class TestAdminSizeChangeValidatorValidate(TapirUnitTest):
 
     def _validate(self):
         AdminSizeChangeValidator.validate(
-            member=self.member,
-            subscription=self.subscription,
-            new_product=self.new_product,
-            change_date=self.change_date,
-            order=self.order,
-            prerequisites=SubscriptionPrerequisitesInput(
-                desired_pickup_location_id="desired_id",
-                iban="NL76RABO8675663943",
-                account_owner="test_account_owner",
-                sepa_mandate_confirmed=True,
+            size_change=AdminSizeChangeRequest(
+                member=self.member,
+                subscription=self.subscription,
+                new_product=self.new_product,
+                change_date=self.change_date,
+                order=self.order,
+                prerequisites=SubscriptionPrerequisitesInput(
+                    desired_pickup_location_id="desired_id",
+                    iban="NL76RABO8675663943",
+                    account_owner="test_account_owner",
+                    sepa_mandate_confirmed=True,
+                ),
             ),
             cache=self.cache,
         )

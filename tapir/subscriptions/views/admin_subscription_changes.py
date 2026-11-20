@@ -1,3 +1,5 @@
+from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import permissions
@@ -13,6 +15,17 @@ from tapir.subscriptions.serializers import (
     AdminSubscriptionChangeMemberDataSerializer,
     AdminSubscriptionChangeMemberSummarySerializer,
     AdminSizeChangeDateOptionsSerializer,
+    AdminSizeChangeRequestSerializer,
+    OrderConfirmationResponseSerializer,
+)
+from tapir.subscriptions.services.admin_size_change_applier import (
+    AdminSizeChangeApplier,
+)
+from tapir.subscriptions.services.admin_size_change_order_builder import (
+    AdminSizeChangeOrderBuilder,
+)
+from tapir.subscriptions.services.admin_size_change_validator import (
+    AdminSizeChangeValidator,
 )
 from tapir.subscriptions.services.admin_subscription_change_member_data_builder import (
     AdminSubscriptionChangeMemberDataBuilder,
@@ -20,7 +33,11 @@ from tapir.subscriptions.services.admin_subscription_change_member_data_builder 
 from tapir.subscriptions.services.admin_size_change_date_options_builder import (
     AdminSizeChangeDateOptionsBuilder,
 )
-from tapir.wirgarten.models import Member, Subscription
+from tapir.subscriptions.types import (
+    AdminSizeChangeRequest,
+    SubscriptionPrerequisitesInput,
+)
+from tapir.wirgarten.models import Member, Product, Subscription
 from tapir.wirgarten.utils import get_today
 
 
@@ -104,5 +121,102 @@ class AdminSizeChangeDateOptionsApiView(APIView):
                 AdminSizeChangeDateOptionsBuilder.build(
                     subscription=subscription, cache=cache
                 )
+            ).data
+        )
+
+
+class AdminSizeChangeBaseApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @staticmethod
+    def _build_size_change(request, cache: dict) -> AdminSizeChangeRequest:
+        serializer = AdminSizeChangeRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        validated_data = serializer.validated_data
+
+        member = get_object_or_404(Member, id=validated_data["member_id"])
+        subscription = get_object_or_404(
+            Subscription.objects.select_related("member", "product__type"),
+            id=validated_data["subscription_id"],
+        )
+        new_product = get_object_or_404(
+            Product.objects.select_related("type"),
+            id=validated_data["new_product_id"],
+        )
+        change_date = validated_data["change_date"]
+
+        return AdminSizeChangeRequest(
+            member=member,
+            subscription=subscription,
+            new_product=new_product,
+            change_date=change_date,
+            order=AdminSizeChangeOrderBuilder.build_order(
+                member=member,
+                subscription=subscription,
+                new_product=new_product,
+                change_date=change_date,
+                cache=cache,
+            ),
+            prerequisites=SubscriptionPrerequisitesInput(
+                desired_pickup_location_id=validated_data.get("pickup_location_id"),
+                iban=validated_data["iban"].strip(),
+                account_owner=validated_data["account_owner"].strip(),
+                sepa_mandate_confirmed=validated_data["sepa_mandate_confirmed"],
+            ),
+        )
+
+    @staticmethod
+    def _get_validation_error(
+        size_change: AdminSizeChangeRequest, cache: dict
+    ) -> str | None:
+        try:
+            AdminSizeChangeValidator.validate(size_change=size_change, cache=cache)
+        except ValidationError as error:
+            return " ".join(error.messages)
+        return None
+
+
+class AdminSizeChangeCheckApiView(AdminSizeChangeBaseApiView):
+    @extend_schema(
+        request=AdminSizeChangeRequestSerializer,
+        responses={200: OrderConfirmationResponseSerializer},
+    )
+    def post(self, request):
+        cache = {}
+        error = self._get_validation_error(
+            size_change=self._build_size_change(request=request, cache=cache),
+            cache=cache,
+        )
+        return Response(
+            OrderConfirmationResponseSerializer(
+                {"order_confirmed": error is None, "error": error}
+            ).data
+        )
+
+
+class AdminSizeChangeApplyApiView(AdminSizeChangeBaseApiView):
+    @extend_schema(
+        request=AdminSizeChangeRequestSerializer,
+        responses={200: OrderConfirmationResponseSerializer},
+    )
+    def post(self, request):
+        cache = {}
+        size_change = self._build_size_change(request=request, cache=cache)
+        error = self._get_validation_error(size_change=size_change, cache=cache)
+        if error is not None:
+            return Response(
+                OrderConfirmationResponseSerializer(
+                    {"order_confirmed": False, "error": error}
+                ).data
+            )
+
+        with transaction.atomic():
+            AdminSizeChangeApplier.apply_change(
+                size_change=size_change, actor=request.user, cache=cache
+            )
+
+        return Response(
+            OrderConfirmationResponseSerializer(
+                {"order_confirmed": True, "error": None}
             ).data
         )

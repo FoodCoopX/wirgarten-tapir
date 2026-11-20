@@ -1,3 +1,4 @@
+.openapi-generator-ignore
 apis/AccountsApi.ts
 apis/AssociationsApi.ts
 apis/BakeryApi.ts
@@ -19,6 +20,7 @@ index.ts
 models/AdminSetAssociationMembershipRequestRequest.ts
 models/AdminSizeChangeDateOption.ts
 models/AdminSizeChangeDateOptions.ts
+models/AdminSizeChangeRequestRequest.ts
 models/AdminSizeChangeWeekOption.ts
 models/AdminSubscriptionChangeMemberData.ts
 models/AdminSubscriptionChangeMemberSummary.ts

@@ -15,7 +15,7 @@ from tapir.subscriptions.services.automatic_subscription_renewal_service import 
 from tapir.subscriptions.services.subscription_prerequisites_applier import (
     SubscriptionPrerequisitesApplier,
 )
-from tapir.subscriptions.types import SubscriptionPrerequisitesInput, TapirOrder
+from tapir.subscriptions.types import AdminSizeChangeRequest, TapirOrder
 from tapir.utils.services.tapir_cache_manager import TapirCacheManager
 from tapir.wirgarten.forms.subscription import cancel_or_delete_subscriptions
 from tapir.wirgarten.models import (
@@ -31,15 +31,14 @@ from tapir.wirgarten.utils import get_now
 class AdminSizeChangeApplier:
     @classmethod
     def apply_change(
-        cls,
-        member: Member,
-        previous_subscription: Subscription,
-        change_date: datetime.date,
-        order: TapirOrder,
-        prerequisites: SubscriptionPrerequisitesInput,
-        actor: TapirUser,
-        cache: dict,
+        cls, size_change: AdminSizeChangeRequest, actor: TapirUser, cache: dict
     ) -> list[Subscription]:
+        member = size_change.member
+        previous_subscription = size_change.subscription
+        change_date = size_change.change_date
+        order = size_change.order
+        prerequisites = size_change.prerequisites
+
         if prerequisites.desired_pickup_location_id is not None:
             SubscriptionPrerequisitesApplier.apply_pickup_location(
                 member=member,

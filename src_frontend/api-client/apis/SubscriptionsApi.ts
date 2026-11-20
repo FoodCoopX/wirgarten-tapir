@@ -14,6 +14,7 @@
 
 import type {
   AdminSizeChangeDateOptions,
+  AdminSizeChangeRequestRequest,
   AdminSubscriptionChangeMemberData,
   AdminSubscriptionChangeMemberSummary,
   BestellWizardCapacityCheckResponse,
@@ -38,6 +39,7 @@ import type {
 } from "../models/index";
 import {
   AdminSizeChangeDateOptionsFromJSON,
+  AdminSizeChangeRequestRequestToJSON,
   AdminSubscriptionChangeMemberDataFromJSON,
   AdminSubscriptionChangeMemberSummaryFromJSON,
   BestellWizardCapacityCheckResponseFromJSON,
@@ -61,6 +63,14 @@ import {
   UpdateSubscriptionsRequestRequestToJSON,
 } from "../models/index";
 import * as runtime from "../runtime";
+
+export interface SubscriptionsApiAdminSizeChangeApplyCreateRequest {
+  adminSizeChangeRequestRequest: AdminSizeChangeRequestRequest;
+}
+
+export interface SubscriptionsApiAdminSizeChangeCheckCreateRequest {
+  adminSizeChangeRequestRequest: AdminSizeChangeRequestRequest;
+}
 
 export interface SubscriptionsApiAdminSizeChangeDateOptionsRetrieveRequest {
   subscriptionId?: string;
@@ -146,6 +156,134 @@ export interface SubscriptionsSubscriptionsRetrieveRequest {
  *
  */
 export class SubscriptionsApi extends runtime.BaseAPI {
+  /**
+   */
+  async subscriptionsApiAdminSizeChangeApplyCreateRaw(
+    requestParameters: SubscriptionsApiAdminSizeChangeApplyCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<OrderConfirmationResponse>> {
+    if (requestParameters["adminSizeChangeRequestRequest"] == null) {
+      throw new runtime.RequiredError(
+        "adminSizeChangeRequestRequest",
+        'Required parameter "adminSizeChangeRequestRequest" was null or undefined when calling subscriptionsApiAdminSizeChangeApplyCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/subscriptions/api/admin_size_change_apply`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: AdminSizeChangeRequestRequestToJSON(
+          requestParameters["adminSizeChangeRequestRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      OrderConfirmationResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async subscriptionsApiAdminSizeChangeApplyCreate(
+    requestParameters: SubscriptionsApiAdminSizeChangeApplyCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<OrderConfirmationResponse> {
+    const response = await this.subscriptionsApiAdminSizeChangeApplyCreateRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async subscriptionsApiAdminSizeChangeCheckCreateRaw(
+    requestParameters: SubscriptionsApiAdminSizeChangeCheckCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<OrderConfirmationResponse>> {
+    if (requestParameters["adminSizeChangeRequestRequest"] == null) {
+      throw new runtime.RequiredError(
+        "adminSizeChangeRequestRequest",
+        'Required parameter "adminSizeChangeRequestRequest" was null or undefined when calling subscriptionsApiAdminSizeChangeCheckCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/subscriptions/api/admin_size_change_check`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: AdminSizeChangeRequestRequestToJSON(
+          requestParameters["adminSizeChangeRequestRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      OrderConfirmationResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async subscriptionsApiAdminSizeChangeCheckCreate(
+    requestParameters: SubscriptionsApiAdminSizeChangeCheckCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<OrderConfirmationResponse> {
+    const response = await this.subscriptionsApiAdminSizeChangeCheckCreateRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
   /**
    */
   async subscriptionsApiAdminSizeChangeDateOptionsRetrieveRaw(

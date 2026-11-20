@@ -299,3 +299,14 @@ class AdminSizeChangeDateOptionsSerializer(serializers.Serializer):
     next_possible_start = AdminSizeChangeDateOptionSerializer()
     weeks = AdminSizeChangeWeekOptionSerializer(many=True)
     next_period_start = AdminSizeChangeDateOptionSerializer()
+
+
+class AdminSizeChangeRequestSerializer(serializers.Serializer):
+    member_id = serializers.CharField()
+    subscription_id = serializers.CharField()
+    new_product_id = serializers.CharField()
+    change_date = serializers.DateField()
+    pickup_location_id = serializers.CharField(required=False, allow_null=True)
+    account_owner = serializers.CharField(allow_blank=True)
+    iban = serializers.CharField(allow_blank=True)
+    sepa_mandate_confirmed = serializers.BooleanField()

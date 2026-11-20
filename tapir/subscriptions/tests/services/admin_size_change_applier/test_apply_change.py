@@ -16,7 +16,10 @@ from tapir.subscriptions.services.automatic_subscription_renewal_service import 
 from tapir.subscriptions.services.unconfirmed_changes_provider import (
     UnconfirmedChangesProvider,
 )
-from tapir.subscriptions.types import SubscriptionPrerequisitesInput
+from tapir.subscriptions.types import (
+    AdminSizeChangeRequest,
+    SubscriptionPrerequisitesInput,
+)
 from tapir.wirgarten.constants import WEEKLY
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
@@ -135,21 +138,24 @@ class TestAdminSizeChangeApplierApplyChange(TapirIntegrationTest):
     ) -> list[Subscription]:
         cache = {}
         return AdminSizeChangeApplier.apply_change(
-            member=subscription.member,
-            previous_subscription=subscription,
-            change_date=change_date,
-            order=AdminSizeChangeOrderBuilder.build_order(
+            size_change=AdminSizeChangeRequest(
                 member=subscription.member,
                 subscription=subscription,
                 new_product=new_product,
                 change_date=change_date,
-                cache=cache,
-            ),
-            prerequisites=SubscriptionPrerequisitesInput(
-                desired_pickup_location_id=None,
-                iban=iban,
-                account_owner=account_owner,
-                sepa_mandate_confirmed=sepa_mandate_confirmed,
+                order=AdminSizeChangeOrderBuilder.build_order(
+                    member=subscription.member,
+                    subscription=subscription,
+                    new_product=new_product,
+                    change_date=change_date,
+                    cache=cache,
+                ),
+                prerequisites=SubscriptionPrerequisitesInput(
+                    desired_pickup_location_id=None,
+                    iban=iban,
+                    account_owner=account_owner,
+                    sepa_mandate_confirmed=sepa_mandate_confirmed,
+                ),
             ),
             actor=MemberFactory.create(is_superuser=True),
             cache=cache,

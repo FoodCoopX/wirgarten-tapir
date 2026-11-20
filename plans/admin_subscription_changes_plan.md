@@ -64,9 +64,9 @@ New files under `tapir/subscriptions/`:
 - `views/admin_subscription_changes.py`, permission `HasCoopManagePermission`:
   - `AdminSubscriptionChangeMemberDataApiView` (GET `member_id`): member summary + unit rows + status of pickup location /
     banking data + effective payment rhythm + the three date options (dates, enabled flag, reason).
-  - `AdminSubscriptionChangeCheckApiView` (POST): runs the validator, returns `{ok, error}` + capacity flags. Used for the
-    live check in step 2.
-  - `AdminSubscriptionChangeApplyApiView` (POST): validates again, applies under `transaction.atomic()`.
+  - `AdminSizeChangeCheckApiView` (POST): runs the validator, returns `OrderConfirmationResponseSerializer` (`{order_confirmed, error}`). Capacity problems come back as the
+    validator's error message, no separate flags. Used for the live check in step 2.
+  - `AdminSizeChangeApplyApiView` (POST): validates again, applies under `transaction.atomic()`, returns the same response.
   - Member search: reuse `MemberSearchService.filter_queryset` through a small search endpoint (or the existing member
     list API if it already supports `search`; check before adding one).
 - `services/admin_size_change_order_builder.py`: builds the full `TapirOrder` of the product type at the change date from
@@ -202,9 +202,9 @@ Mark a step as done by checking its box (`- [x]`).
   overwriting any different next-period choice. Change from next period (option c) → previous subscription cancelled with
   its end date kept, next-period order = renewal with the swap. Both: capacity at the next period start, log, single
   mail. Tests as listed in "Tests". Isolated because it is the trickiest rule.
-- [ ] **6. Read endpoints**: member search, member data (unit rows, price badges, prerequisites status) and the date
-  options service (a / b / c; Monday or growing period start, ≥ today; weeks of the selected subscription's period;
-  buffer and week-without-delivery hints; subscription-range restriction with the option c exception). Regenerated API
+- [x] **6. Read endpoints**: member search, member data (unit rows, price badges, prerequisites status, effective
+  payment rhythm) and the date options service (a / b / c; Mondays ≥ today within the subscription for b; c relative to
+  today; buffer and no-delivery hints; subscription-range restriction with the option c exception). Regenerated API
   client.
 - [ ] **7. Write endpoints**: check endpoint (live validation + capacity flags) and apply endpoint
   (`transaction.atomic()`). API tests: permission, validation error writes nothing, successful apply. Regenerated API

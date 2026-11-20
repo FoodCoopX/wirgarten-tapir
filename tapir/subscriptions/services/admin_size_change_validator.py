@@ -9,7 +9,7 @@ from tapir.subscriptions.services.subscription_prerequisites_validator import (
     SubscriptionPrerequisitesValidator,
 )
 from tapir.subscriptions.services.order_validator import OrderValidator
-from tapir.subscriptions.types import SubscriptionPrerequisitesInput, TapirOrder
+from tapir.subscriptions.types import AdminSizeChangeRequest, TapirOrder
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import Member, PickupLocation, Product, Subscription
 from tapir.wirgarten.utils import get_today
@@ -17,62 +17,56 @@ from tapir.wirgarten.utils import get_today
 
 class AdminSizeChangeValidator:
     @classmethod
-    def validate(
-        cls,
-        member: Member,
-        subscription: Subscription,
-        new_product: Product,
-        change_date: datetime.date,
-        order: TapirOrder,
-        prerequisites: SubscriptionPrerequisitesInput,
-        cache: dict,
-    ):
+    def validate(cls, size_change: AdminSizeChangeRequest, cache: dict):
         cls.validate_subscription(
-            member=member,
-            subscription=subscription,
-            change_date=change_date,
+            member=size_change.member,
+            subscription=size_change.subscription,
+            change_date=size_change.change_date,
             cache=cache,
         )
-        cls.validate_change_date(change_date=change_date, cache=cache)
-        cls.validate_new_product(subscription=subscription, new_product=new_product)
+        cls.validate_change_date(change_date=size_change.change_date, cache=cache)
+        cls.validate_new_product(
+            subscription=size_change.subscription,
+            new_product=size_change.new_product,
+        )
         cls.validate_no_other_cancelled_subscription(
-            member=member,
-            subscription=subscription,
-            change_date=change_date,
+            member=size_change.member,
+            subscription=size_change.subscription,
+            change_date=size_change.change_date,
             cache=cache,
         )
 
         pickup_location = SubscriptionPrerequisitesValidator.validate_pickup_location(
-            order=order,
-            member=member,
-            subscription_start_date=change_date,
-            desired_pickup_location_id=prerequisites.desired_pickup_location_id,
+            order=size_change.order,
+            member=size_change.member,
+            subscription_start_date=size_change.change_date,
+            desired_pickup_location_id=size_change.prerequisites.desired_pickup_location_id,
             cache=cache,
         )
         OrderValidator.validate_order_general(
-            order=order,
-            contract_start_date=change_date,
+            order=size_change.order,
+            contract_start_date=size_change.change_date,
             cache=cache,
-            member=member,
+            member=size_change.member,
             pickup_location=pickup_location,
         )
         cls.validate_next_period_capacity(
-            member=member,
-            subscription=subscription,
-            change_date=change_date,
-            order=order,
+            member=size_change.member,
+            subscription=size_change.subscription,
+            change_date=size_change.change_date,
+            order=size_change.order,
             pickup_location=pickup_location,
             cache=cache,
         )
 
         SubscriptionPrerequisitesValidator.validate_banking_data(
-            member=member,
-            account_owner=prerequisites.account_owner,
-            iban=prerequisites.iban,
+            member=size_change.member,
+            account_owner=size_change.prerequisites.account_owner,
+            iban=size_change.prerequisites.iban,
         )
         cls.validate_sepa_mandate(
-            iban=prerequisites.iban,
-            sepa_mandate_confirmed=prerequisites.sepa_mandate_confirmed,
+            iban=size_change.prerequisites.iban,
+            sepa_mandate_confirmed=size_change.prerequisites.sepa_mandate_confirmed,
         )
 
     @classmethod
