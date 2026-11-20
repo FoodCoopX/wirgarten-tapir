@@ -119,6 +119,7 @@ class BiddingRoundGenerator:
                         MIN_AMOUNT_PER_SIZE
                         * cls._get_size_or_one(product, growing_period, cache)
                     ),
+                    "size": str(cls._get_size_or_one(product, growing_period, cache)),
                 }
                 for product in products
             ],

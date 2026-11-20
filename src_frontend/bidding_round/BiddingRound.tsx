@@ -83,7 +83,7 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({ csrfToken }) => {
   const hasActiveRound = Boolean(data?.round) && data?.roundStatus === "active";
 
   useEffect(() => {
-    load();
+    void load();
   }, []);
 
   async function load() {

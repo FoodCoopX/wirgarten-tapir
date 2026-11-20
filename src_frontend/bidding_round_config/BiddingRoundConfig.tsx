@@ -78,7 +78,7 @@ const BiddingRoundConfig: React.FC<BiddingRoundConfigProps> = ({
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
 
   useEffect(() => {
-    load();
+    void load();
   }, []);
 
   async function load() {
@@ -138,7 +138,7 @@ const BiddingRoundConfig: React.FC<BiddingRoundConfigProps> = ({
       return next;
     });
     if (field === "growingPeriodId") {
-      loadProductTypes(value);
+      void loadProductTypes(value);
     }
   }
 
@@ -195,7 +195,7 @@ const BiddingRoundConfig: React.FC<BiddingRoundConfigProps> = ({
       targetAmountPerYear: round.product?.targetAmountPerYear ?? "",
       prices,
     });
-    loadProductTypes(round.growingPeriodId ?? "");
+    void loadProductTypes(round.growingPeriodId ?? "");
     setShowModal(true);
   }
 
