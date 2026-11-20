@@ -1,4 +1,6 @@
 import datetime
+from decimal import Decimal
+from unittest.mock import ANY, patch
 
 from django.urls import reverse
 from rest_framework import status
@@ -8,6 +10,9 @@ from tapir.bidding_round.config import (
     BIDDING_ROUND_STATUS_CLOSED,
 )
 from tapir.bidding_round.services.bidding_round_service import BiddingRoundService
+from tapir.bidding_round.services.bidding_round_delivery_charge_service import (
+    BiddingRoundDeliveryChargeService,
+)
 from tapir.bidding_round.tests.factories import BiddingRoundProductPriceFactory
 from tapir.bidding_round.tests.helpers import (
     bid_payload,
@@ -20,6 +25,8 @@ from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     GrowingPeriodFactory,
     MemberFactory,
+    MemberPickupLocationFactory,
+    PickupLocationFactory,
     ProductCapacityFactory,
     ProductFactory,
     ProductTypeFactory,
@@ -48,6 +55,47 @@ class TestPublicDataView(BiddingRoundApiTestBase):
         self.assertStatusCode(response, status.HTTP_200_OK)
         self.assertEqual("ended", response.data["round_status"])
         self.assertIsNone(response.data["round"])
+
+    def test_publicData_withMemberPickupLocation_returnsLocationAndCharge(self):
+        self._enable()
+        bidding_round = create_open_round()
+        member = MemberFactory.create()
+        pickup_location = PickupLocationFactory.create(name="Testhof")
+        MemberPickupLocationFactory.create(
+            member=member,
+            pickup_location=pickup_location,
+            valid_from=bidding_round.growing_period.start_date
+            - datetime.timedelta(days=1),
+        )
+        self.client.force_login(member)
+
+        with patch.object(
+            BiddingRoundDeliveryChargeService,
+            "get_yearly_delivery_charge",
+            return_value=Decimal("12.00"),
+        ) as mock_charge:
+            response = self.client.get(reverse("bidding_rounds:public_data"))
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        location = response.data["current_pickup_location"]
+        self.assertEqual("Testhof", location["name"])
+        self.assertEqual("12.00", location["yearly_delivery_charge"])
+        mock_charge.assert_called_once_with(
+            pickup_location_id=pickup_location.id,
+            product_type=bidding_round.product_types.first().product_type,
+            growing_period=bidding_round.growing_period,
+            cache=ANY,
+        )
+
+    def test_publicData_withoutPickupLocation_returnsNull(self):
+        self._enable()
+        create_open_round()
+        self.client.force_login(MemberFactory.create())
+
+        response = self.client.get(reverse("bidding_rounds:public_data"))
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assertIsNone(response.data["current_pickup_location"])
 
     def test_publicData_withActiveRound_returnsRoundAndProduct(self):
         self._enable()

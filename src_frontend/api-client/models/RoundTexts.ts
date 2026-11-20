@@ -62,6 +62,12 @@ export interface RoundTexts {
    * @type {string}
    * @memberof RoundTexts
    */
+  pickupLocationTitle: string;
+  /**
+   *
+   * @type {string}
+   * @memberof RoundTexts
+   */
   submitLabel: string;
   /**
    *
@@ -83,6 +89,11 @@ export function instanceOfRoundTexts(value: object): value is RoundTexts {
     return false;
   if (!("loginText" in value) || value["loginText"] === undefined) return false;
   if (!("summaryTitle" in value) || value["summaryTitle"] === undefined)
+    return false;
+  if (
+    !("pickupLocationTitle" in value) ||
+    value["pickupLocationTitle"] === undefined
+  )
     return false;
   if (!("submitLabel" in value) || value["submitLabel"] === undefined)
     return false;
@@ -108,6 +119,7 @@ export function RoundTextsFromJSONTyped(
     loginTitle: json["login_title"],
     loginText: json["login_text"],
     summaryTitle: json["summary_title"],
+    pickupLocationTitle: json["pickup_location_title"],
     submitLabel: json["submit_label"],
     bid: BidTextsFromJSON(json["bid"]),
   };
@@ -132,6 +144,7 @@ export function RoundTextsToJSONTyped(
     login_title: value["loginTitle"],
     login_text: value["loginText"],
     summary_title: value["summaryTitle"],
+    pickup_location_title: value["pickupLocationTitle"],
     submit_label: value["submitLabel"],
     bid: BidTextsToJSON(value["bid"]),
   };

@@ -146,6 +146,9 @@ class ParameterKeys:
     BIDDING_ROUND_PUBLIC_LOGIN_TITLE = f"{PREFIX}.bidding_round.public.login_title"
     BIDDING_ROUND_PUBLIC_LOGIN_TEXT = f"{PREFIX}.bidding_round.public.login_text"
     BIDDING_ROUND_PUBLIC_SUMMARY_TITLE = f"{PREFIX}.bidding_round.public.summary_title"
+    BIDDING_ROUND_PUBLIC_PICKUP_LOCATION_TITLE = (
+        f"{PREFIX}.bidding_round.public.pickup_location_title"
+    )
     BIDDING_ROUND_PUBLIC_SUBMIT_LABEL = f"{PREFIX}.bidding_round.public.submit_label"
     BIDDING_ROUND_BID_AMOUNT_LABEL = f"{PREFIX}.bidding_round.bid.amount_label"
     BIDDING_ROUND_BID_REFERENCE_VALUE_HINT = (
