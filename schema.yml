@@ -2951,6 +2951,11 @@ paths:
         ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
         the public (member-facing) endpoints.
       parameters:
+      - in: query
+        name: position
+        schema:
+          type: number
+          format: double
       - in: path
         name: round_id
         schema:

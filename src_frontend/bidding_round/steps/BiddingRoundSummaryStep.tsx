@@ -9,6 +9,7 @@ import {
   getYearlyAmount,
   parseEuroAmount,
 } from "../utils/amounts.ts";
+import { getLevelLabels } from "../utils/levelLabels.ts";
 
 interface BiddingRoundSummaryStepProps {
   variantName: string;
@@ -31,9 +32,7 @@ const BiddingRoundSummaryStep: React.FC<BiddingRoundSummaryStepProps> = ({
   submitting,
   onSubmit,
 }) => {
-  const levelLabels = isBidRange
-    ? [texts.bid.greenLabel, texts.bid.redLabel]
-    : [texts.bid.amountLabel];
+  const levelLabels = getLevelLabels(isBidRange, requiredAmountLevels, texts);
 
   const levelRows = Array.from({ length: requiredAmountLevels }, (_, index) => {
     const amount = parseEuroAmount(amounts[index]);
@@ -66,6 +65,7 @@ const BiddingRoundSummaryStep: React.FC<BiddingRoundSummaryStepProps> = ({
                 label={row.label}
                 amount={row.amount}
                 unit={texts.bid.monthlyUnit}
+                hint={quantity > 1 ? "pro Anteil" : undefined}
                 strong
               />
               {row.monthlyTotal !== null && quantity > 1 && (
