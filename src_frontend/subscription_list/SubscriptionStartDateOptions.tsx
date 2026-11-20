@@ -46,7 +46,12 @@ const SubscriptionStartDateOptions: React.FC<
   selectedDate,
   setSelectedDate,
 }) => {
-  const [kind, setKind] = useState<DateOptionKind>();
+  const [kind, setKind] = useState<DateOptionKind | undefined>(() => {
+    if (selectedDate === undefined) return undefined;
+    if (selectedDate === nextPossibleStart.date) return "next_possible_start";
+    if (selectedDate === nextPeriodStart.date) return "next_period_start";
+    return "week";
+  });
   const years = [...new Set(weeks.map(getIsoYear))];
 
   function selectKind(newKind: DateOptionKind) {
@@ -115,24 +120,27 @@ const SubscriptionStartDateOptions: React.FC<
         }
       />
       {kind === "week" && (
-        <Form.Select
-          className={"ms-4"}
-          value={selectedDate ?? ""}
-          onChange={(event) => setSelectedDate(event.target.value || undefined)}
-        >
-          <option value={""}>Woche auswählen</option>
-          {years.map((year) => (
-            <optgroup key={year} label={String(year)}>
-              {weeks
-                .filter((week) => getIsoYear(week) === year)
-                .map((week) => (
-                  <option key={week.date} value={week.date}>
-                    {formatWeek(week)}
-                  </option>
-                ))}
-            </optgroup>
-          ))}
-        </Form.Select>
+        <div className={"ps-4"}>
+          <Form.Select
+            value={selectedDate ?? ""}
+            onChange={(event) =>
+              setSelectedDate(event.target.value || undefined)
+            }
+          >
+            <option value={""}>Woche auswählen</option>
+            {years.map((year) => (
+              <optgroup key={year} label={String(year)}>
+                {weeks
+                  .filter((week) => getIsoYear(week) === year)
+                  .map((week) => (
+                    <option key={week.date} value={week.date}>
+                      {formatWeek(week)}
+                    </option>
+                  ))}
+              </optgroup>
+            ))}
+          </Form.Select>
+        </div>
       )}
       <Form.Check
         type={"radio"}

@@ -95,8 +95,10 @@ class AdminSubscriptionChangeMemberDataApiView(APIView):
             "prerequisites": AdminSubscriptionChangeMemberDataBuilder.build_prerequisites_status(
                 member=member, cache=cache
             ),
-            "payment_rhythm": MemberPaymentRhythmService.get_member_payment_rhythm(
-                member=member, reference_date=get_today(cache=cache), cache=cache
+            "payment_rhythm": MemberPaymentRhythmService.get_rhythm_display_name(
+                MemberPaymentRhythmService.get_member_payment_rhythm(
+                    member=member, reference_date=get_today(cache=cache), cache=cache
+                )
             ),
         }
         return Response(AdminSubscriptionChangeMemberDataSerializer(data).data)

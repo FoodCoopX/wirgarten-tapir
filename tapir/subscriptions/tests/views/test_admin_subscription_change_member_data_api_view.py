@@ -3,7 +3,6 @@ import datetime
 from django.urls import reverse
 from rest_framework import status
 
-from tapir.payments.models import MemberPaymentRhythm
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     GrowingPeriodFactory,
@@ -64,7 +63,7 @@ class TestAdminSubscriptionChangeMemberDataApiView(TapirIntegrationTest):
             {"pickup_location_name": None, "has_banking_data": True},
             data["prerequisites"],
         )
-        self.assertEqual(MemberPaymentRhythm.Rhythm.MONTHLY, data["payment_rhythm"])
+        self.assertEqual("Monatlich", data["payment_rhythm"])
 
     def test_get_unknownMember_returns404(self):
         self._login_as_admin()

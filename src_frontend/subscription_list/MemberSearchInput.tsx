@@ -146,7 +146,7 @@ const MemberSearchInput: React.FC<MemberSearchInputProps> = ({
         <span className={"text-muted"}>Kein Mitglied gefunden.</span>
       )}
       {results.length > 0 && (
-        <ListGroup>
+        <ListGroup style={{ maxHeight: "300px", overflowY: "auto" }}>
           {results.map((member) => (
             <ListGroup.Item
               key={member.id}

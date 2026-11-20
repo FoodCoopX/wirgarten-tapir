@@ -23,11 +23,11 @@ from them wherever that keeps the frontend simpler.
      Mitglied" goes back to the search.
    - After selection: list of the member's subscriptions, **one row per unit** (a subscription with quantity 3 gives
      3 selectable rows). Product type · product, dates, badge "Laufend / geplant" / "Gekündigt" / "Beendet".
-     Cancelled or ended subscriptions are greyed out with "Dieser Vertrag ist bereits gekündigt und kann daher nicht
-     bearbeitet werden".
+     Cancelled or ended subscriptions are greyed out with "Dieser Vertrag ist bereits gekündigt / beendet und kann
+     daher nicht bearbeitet werden".
    - Badge "Personalisierter Betrag" / "Beitragsbefreit" from `price_override` (no amount).
-   - Status lines: pickup location, banking data (check / cross). The payment rhythm is not a prerequisite: every
-     member has one (`PAYMENT_DEFAULT_RHYTHM` as fallback).
+   - No status lines here (simplification): the prerequisites card of step 2 shows them. The payment rhythm is not a
+     prerequisite: every member has one (`PAYMENT_DEFAULT_RHYTHM` as fallback).
 2. **Anteilsgröße & Datum**
    - Product type locked, new product select (same type, not deleted, ≠ current product). No quantity field.
    - Start date, three options:
@@ -49,14 +49,13 @@ from them wherever that keeps the frontend simpler.
      present; if one is missing, show the input (same as "Vertrag hinzufügen").
    - When banking data is entered: required checkbox "Ein unterschriebenes SEPA-Mandat liegt vor". Checked →
      `sepa_consent` set to now, as in the member-profile flow.
-3. **Zusammenfassung**: Bisher → Neu, wirksam ab, Vertragsende, pickup location, payment rhythm (read-only, effective rhythm from
-   `MemberPaymentRhythmService.get_member_payment_rhythm`), banking data, preview of
-   the log entry. "Speichern" applies.
+3. **Zusammenfassung**: Bisher → Neu, wirksam ab, pickup location, payment rhythm (read-only, label of the effective
+   rhythm from `MemberPaymentRhythmService.get_member_payment_rhythm`), banking data. No Vertragsende and no log entry
+   preview (simplification). "Speichern" applies.
    - Warning if a subscription of the type has a `price_override`: the personalised price / exemption is removed, also
      for the unchanged units, and must be set again with the price button.
-   - If next-period subscriptions of the type exist: they are replaced by renewals of the new subscriptions. The
-     summary lists the next-period subscriptions before and after, so the admin sees when a different next-period
-     choice of the member is overwritten.
+   - If next-period subscriptions of the type exist: a warning says they are replaced by renewals of the
+     new subscriptions (simplification: no before / after list).
    - Note that the member receives a confirmation mail.
 
 ### Backend
@@ -121,12 +120,12 @@ New files under `tapir/subscriptions/`:
 
 `src_frontend/subscription_list/`:
 
-- `AdminSubscriptionChangeButton.tsx`, `AdminSubscriptionChangeModal.tsx` (step state machine), shared pieces reused by
-  "Vertrag hinzufügen": `MemberSearchInput.tsx`, `SubscriptionStartDateOptions.tsx` (one week select grouped by ISO year, Monday and hints shown in the option),
+- `AdminSubscriptionChangeButton.tsx`, `AdminSubscriptionChangeModal.tsx` (step state machine), `AdminSizeChangeSummary.tsx`, shared pieces reused by
+  "Vertrag hinzufügen": `MemberSearchInput.tsx`, `SubscriptionUnitList.tsx`, `SubscriptionStartDateOptions.tsx` (one week select grouped by ISO year, Monday and hints shown in the option),
   `MemberSubscriptionPrerequisitesCard.tsx` (pickup location / banking data, check / cross per line).
 - Register in `subscription_list_entry.tsx`, mount span in `subscription_filter.html`.
 - Help texts via `TapirHelpButton`.
-- After saving: toast + page reload so the list shows the new subscriptions.
+- After saving: page reload so the list shows the new subscriptions (no toast: the reload would hide it).
 
 ### Tests
 
@@ -211,11 +210,11 @@ Mark a step as done by checking its box (`- [x]`).
 - [x] **7. Write endpoints**: check endpoint (live validation + capacity flags) and apply endpoint
   (`transaction.atomic()`). API tests: permission, validation error writes nothing, successful apply. Regenerated API
   client.
-- [ ] **8. Frontend shared components**: `MemberSearchInput` (with preselected member from the `contract` URL
+- [x] **8. Frontend shared components**: `MemberSearchInput` (with preselected member from the `contract` URL
   parameter), `SubscriptionStartDateOptions` (week select grouped by year), `MemberSubscriptionPrerequisitesCard` (with the SEPA mandate
   checkbox). Built for both icons, not mounted yet.
 - [ ] **9. Frontend "Anteilsgröße ändern"**: button, modal with the three steps, live check, summary warnings (price
-  override, next-period subscriptions, mail), toast + reload. Mounted in `subscription_filter.html`.
+  override, next-period subscriptions, mail), reload. Mounted in `subscription_filter.html`.
 - [ ] **10. "Vertrag hinzufügen" backend**: order builder for an addition, validator variant (pickup location choice
   among locations with capacity), applier reusing steps 4/5, endpoints, tests, regenerated API client.
 - [ ] **11. "Vertrag hinzufügen" frontend**: `new` mode of the modal (product type, product, quantity, pickup location
