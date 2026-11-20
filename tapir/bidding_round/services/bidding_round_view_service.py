@@ -3,6 +3,9 @@ from decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext
 
+from tapir.associations.services.association_membership_price_type_getter import (
+    AssociationMembershipTypePriceGetter,
+)
 from tapir.bidding_round.config import BIDDING_ROUND_PROCEDURE_BID_RANGE
 from tapir.bidding_round.models import BiddingRoundProductPrice
 from tapir.bidding_round.services.bidding_round_delivery_charge_service import (
@@ -16,6 +19,7 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import Product, Subscription
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
@@ -93,16 +97,46 @@ class BiddingRoundViewService:
         )
 
     @classmethod
+    def is_feedback_enabled(cls, cache) -> bool:
+        return cls._get_boolean_parameter(
+            ParameterKeys.BIDDING_ROUND_FEEDBACK_ENABLED, True, cache
+        )
+
+    @classmethod
+    def is_auto_renewal_enabled(cls, cache) -> bool:
+        return cls._get_boolean_parameter(
+            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, False, cache
+        )
+
+    @classmethod
     def build_member_data(cls, member, bidding_round, cache) -> dict:
         if member is None:
             return {}
+        reference_date = bidding_round.growing_period.start_date
+        association_membership = TapirCache.get_member_association_membership_at_date(
+            cache=cache, member=member, reference_date=reference_date
+        )
         return {
             "account_owner": member.account_owner,
             "iban": member.iban,
             "payment_rhythm": MemberPaymentRhythmService.get_member_payment_rhythm(
                 member=member,
-                reference_date=bidding_round.growing_period.start_date,
+                reference_date=reference_date,
                 cache=cache,
+            ),
+            "association_membership": (
+                {
+                    "name": association_membership.type.name,
+                    "price": str(
+                        AssociationMembershipTypePriceGetter.get_price(
+                            membership_type=association_membership.type,
+                            reference_date=reference_date,
+                            cache=cache,
+                        )
+                    ),
+                }
+                if association_membership is not None
+                else None
             ),
         }
 
@@ -308,6 +342,9 @@ class BiddingRoundViewService:
                 ParameterKeys.BIDDING_ROUND_PUBLIC_PICKUP_LOCATION_TITLE
             ),
             "submit_label": ParameterKeys.BIDDING_ROUND_PUBLIC_SUBMIT_LABEL,
+            "final_submit_label": (
+                ParameterKeys.BIDDING_ROUND_PUBLIC_FINAL_SUBMIT_LABEL
+            ),
         }
         bid_string_id_to_parameter_key_map = {
             "amount_label": ParameterKeys.BIDDING_ROUND_BID_AMOUNT_LABEL,

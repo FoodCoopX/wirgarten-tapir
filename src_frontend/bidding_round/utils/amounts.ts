@@ -33,6 +33,78 @@ export function getYearlyAmount(amount: number, quantity: number): number {
   return getMonthlyTotal(amount, quantity) * 12;
 }
 
+
+export interface BidLevelCost {
+  amount: number | null;
+  bidMonthly: number | null;
+  bidYearly: number | null;
+  membershipMonthly: number | null;
+  deliveryMonthly: number | null;
+  deliveryYearly: number | null;
+  totalMonthly: number | null;
+  totalYearly: number | null;
+}
+
+export function getBidLevelCost(
+  amount: number | null,
+  quantity: number,
+  membershipPrice: number | null,
+  deliveryYearly: number | null,
+): BidLevelCost {
+  const membershipMonthly =
+    membershipPrice !== null && membershipPrice > 0 ? membershipPrice : null;
+  const delivery =
+    deliveryYearly !== null && deliveryYearly > 0 ? deliveryYearly : null;
+  const deliveryMonthly = delivery === null ? null : delivery / 12;
+  const bidMonthly = amount === null ? null : getMonthlyTotal(amount, quantity);
+  const bidYearly = amount === null ? null : getYearlyAmount(amount, quantity);
+
+  return {
+    amount,
+    bidMonthly,
+    bidYearly,
+    membershipMonthly,
+    deliveryMonthly,
+    deliveryYearly: delivery,
+    totalMonthly:
+      bidMonthly === null
+        ? null
+        : bidMonthly + (membershipMonthly ?? 0) + (deliveryMonthly ?? 0),
+    totalYearly:
+      bidYearly === null
+        ? null
+        : bidYearly + (membershipMonthly ?? 0) * 12 + (delivery ?? 0),
+  };
+}
+
+export function getBidTotalRange(
+  amounts: string[],
+  requiredAmountLevels: number,
+  quantity: number,
+  membershipPrice: number | null,
+  deliveryYearly: number | null,
+): { min: number; max: number } | null {
+  const totals: number[] = [];
+
+  for (let index = 0; index < requiredAmountLevels; index += 1) {
+    const cost = getBidLevelCost(
+      parseEuroAmount(amounts[index]),
+      quantity,
+      membershipPrice,
+      deliveryYearly,
+    );
+    if (cost.bidMonthly !== null) {
+      totals.push(cost.bidMonthly + (cost.membershipMonthly ?? 0));
+    }
+  }
+
+  if (totals.length === 0) {
+    return null;
+  }
+
+  return { min: Math.min(...totals), max: Math.max(...totals) };
+}
+
 export function scaleAmountsForVariant(
   amounts: string[],
   previousReference: number,

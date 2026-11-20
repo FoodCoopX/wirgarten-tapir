@@ -77,6 +77,12 @@ export interface RoundTexts {
   submitLabel: string;
   /**
    *
+   * @type {string}
+   * @memberof RoundTexts
+   */
+  finalSubmitLabel: string;
+  /**
+   *
    * @type {BidTexts}
    * @memberof RoundTexts
    */
@@ -105,6 +111,8 @@ export function instanceOfRoundTexts(value: object): value is RoundTexts {
     return false;
   if (!("submitLabel" in value) || value["submitLabel"] === undefined)
     return false;
+  if (!("finalSubmitLabel" in value) || value["finalSubmitLabel"] === undefined)
+    return false;
   if (!("bid" in value) || value["bid"] === undefined) return false;
   return true;
 }
@@ -130,6 +138,7 @@ export function RoundTextsFromJSONTyped(
     privacyTitle: json["privacy_title"],
     pickupLocationTitle: json["pickup_location_title"],
     submitLabel: json["submit_label"],
+    finalSubmitLabel: json["final_submit_label"],
     bid: BidTextsFromJSON(json["bid"]),
   };
 }
@@ -156,6 +165,7 @@ export function RoundTextsToJSONTyped(
     privacy_title: value["privacyTitle"],
     pickup_location_title: value["pickupLocationTitle"],
     submit_label: value["submitLabel"],
+    final_submit_label: value["finalSubmitLabel"],
     bid: BidTextsToJSON(value["bid"]),
   };
 }
