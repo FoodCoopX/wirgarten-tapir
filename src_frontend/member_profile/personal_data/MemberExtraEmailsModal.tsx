@@ -7,6 +7,7 @@ import TapirHelpButton from "../../components/TapirHelpButton.tsx";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
+import { formatDuration } from "../../utils/formatDuration.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 
 interface MemberExtraEmailsModalProps {
@@ -27,7 +28,7 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
   const api = useApi(CoreApi, csrfToken);
   const [extraEmails, setExtraEmails] = useState<MemberExtraEmail[]>([]);
   const [explanationText, setExplanationText] = useState("");
-  const [confirmationLinkValidityDays, setConfirmationLinkValidityDays] =
+  const [confirmationLinkValidityMinutes, setConfirmationLinkValidityMinutes] =
     useState(0);
   const [newAddress, setNewAddress] = useState("");
   const [newFirstName, setNewFirstName] = useState("");
@@ -54,7 +55,9 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
       .then((response) => {
         setExtraEmails(response.extraMails);
         setExplanationText(response.explanationText);
-        setConfirmationLinkValidityDays(response.confirmationLinkValidityDays);
+        setConfirmationLinkValidityMinutes(
+          response.confirmationLinkValidityMinutes,
+        );
       })
       .catch((error) =>
         handleRequestError(
@@ -184,8 +187,8 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
                     buttonSize={"sm"}
                     text={
                       "Der Bestätigungslink in der Mail ist " +
-                      confirmationLinkValidityDays +
-                      " Tage gültig. Ist er abgelaufen, die Adresse löschen und neu anlegen."
+                      formatDuration(confirmationLinkValidityMinutes) +
+                      " gültig. Ist er abgelaufen, die Adresse löschen und neu anlegen."
                     }
                   />
                 </div>

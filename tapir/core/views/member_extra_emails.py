@@ -20,7 +20,7 @@ from tapir_mail.triggers.transactional_trigger import (
 )
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.core.config import EXTRA_EMAIL_CONFIRMATION_LINK_VALIDITY_DAYS
+from tapir.core.config import EXTRA_EMAIL_CONFIRMATION_LINK_VALIDITY
 from tapir.core.services.member_extra_email_confirmation_link_service import (
     MemberExtraEmailConfirmationLinkService,
 )
@@ -77,7 +77,9 @@ class MemberExtraEmailApiView(APIView):
                         ParameterKeys.EXPLANATION_TEXT_EXTRA_MAIL_ADDRESSES,
                         cache=self.cache,
                     ),
-                    "confirmation_link_validity_days": EXTRA_EMAIL_CONFIRMATION_LINK_VALIDITY_DAYS,
+                    "confirmation_link_validity_minutes": int(
+                        EXTRA_EMAIL_CONFIRMATION_LINK_VALIDITY.total_seconds() // 60
+                    ),
                 }
             ).data
         )

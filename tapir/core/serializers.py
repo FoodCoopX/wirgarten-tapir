@@ -11,7 +11,7 @@ class MemberMailCategoryRequestSerializer(serializers.Serializer):
 class MemberExtraMailDataSerializer(serializers.Serializer):
     extra_mails = MemberExtraEmailSerializer(many=True)
     explanation_text = serializers.CharField()
-    confirmation_link_validity_days = serializers.IntegerField()
+    confirmation_link_validity_minutes = serializers.IntegerField()
 
 
 class MemberExtraEmailCreateRequest(serializers.Serializer):

@@ -1,9 +1,7 @@
-import datetime
-
 from django.core.signing import BadSignature, TimestampSigner
 from django.http import Http404
 
-from tapir.core.config import EXTRA_EMAIL_CONFIRMATION_LINK_VALIDITY_DAYS
+from tapir.core.config import EXTRA_EMAIL_CONFIRMATION_LINK_VALIDITY
 from tapir.wirgarten.models import MemberExtraEmail
 
 
@@ -19,9 +17,7 @@ class MemberExtraEmailConfirmationLinkService:
         try:
             extra_email_id = TimestampSigner(salt=cls.SALT).unsign(
                 token,
-                max_age=datetime.timedelta(
-                    days=EXTRA_EMAIL_CONFIRMATION_LINK_VALIDITY_DAYS
-                ),
+                max_age=EXTRA_EMAIL_CONFIRMATION_LINK_VALIDITY,
             )
         except BadSignature:
             # also raised for expired links (SignatureExpired)
