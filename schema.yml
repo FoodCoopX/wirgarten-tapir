@@ -9255,23 +9255,13 @@ components:
         change_date:
           type: string
           format: date
-        pickup_location_id:
-          type: string
-          nullable: true
-          minLength: 1
-        account_owner:
-          type: string
-        iban:
-          type: string
-        sepa_mandate_confirmed:
-          type: boolean
+        prerequisites:
+          $ref: '#/components/schemas/SubscriptionPrerequisitesInputRequest'
       required:
-      - account_owner
       - change_date
-      - iban
       - member_id
       - new_product_id
-      - sepa_mandate_confirmed
+      - prerequisites
       - subscription_id
     AdminStartDateOption:
       type: object
@@ -9328,23 +9318,13 @@ components:
         start_date:
           type: string
           format: date
-        pickup_location_id:
-          type: string
-          nullable: true
-          minLength: 1
-        account_owner:
-          type: string
-        iban:
-          type: string
-        sepa_mandate_confirmed:
-          type: boolean
+        prerequisites:
+          $ref: '#/components/schemas/SubscriptionPrerequisitesInputRequest'
       required:
-      - account_owner
-      - iban
       - member_id
+      - prerequisites
       - product_id
       - quantity
-      - sepa_mandate_confirmed
       - start_date
     AdminSubscriptionChangeMemberData:
       type: object
@@ -18293,6 +18273,23 @@ components:
       - start_week
       - subscription_id
       - update_end_date_of_other_contracts
+    SubscriptionPrerequisitesInputRequest:
+      type: object
+      properties:
+        pickup_location_id:
+          type: string
+          nullable: true
+          minLength: 1
+        account_owner:
+          type: string
+        iban:
+          type: string
+        sepa_mandate_confirmed:
+          type: boolean
+      required:
+      - account_owner
+      - iban
+      - sepa_mandate_confirmed
     SubscriptionPriceOverrideChangeRequestRequest:
       type: object
       properties:

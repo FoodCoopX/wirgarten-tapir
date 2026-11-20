@@ -304,15 +304,19 @@ class AdminStartDateOptionsSerializer(serializers.Serializer):
     next_period_start = AdminStartDateOptionSerializer()
 
 
+class SubscriptionPrerequisitesInputSerializer(serializers.Serializer):
+    pickup_location_id = serializers.CharField(required=False, allow_null=True)
+    account_owner = serializers.CharField(allow_blank=True)
+    iban = serializers.CharField(allow_blank=True)
+    sepa_mandate_confirmed = serializers.BooleanField()
+
+
 class AdminSizeChangeSerializer(serializers.Serializer):
     member_id = serializers.CharField()
     subscription_id = serializers.CharField()
     new_product_id = serializers.CharField()
     change_date = serializers.DateField()
-    pickup_location_id = serializers.CharField(required=False, allow_null=True)
-    account_owner = serializers.CharField(allow_blank=True)
-    iban = serializers.CharField(allow_blank=True)
-    sepa_mandate_confirmed = serializers.BooleanField()
+    prerequisites = SubscriptionPrerequisitesInputSerializer()
 
 
 class AdminSubscriptionAdditionSerializer(serializers.Serializer):
@@ -320,7 +324,4 @@ class AdminSubscriptionAdditionSerializer(serializers.Serializer):
     product_id = serializers.CharField()
     quantity = serializers.IntegerField()
     start_date = serializers.DateField()
-    pickup_location_id = serializers.CharField(required=False, allow_null=True)
-    account_owner = serializers.CharField(allow_blank=True)
-    iban = serializers.CharField(allow_blank=True)
-    sepa_mandate_confirmed = serializers.BooleanField()
+    prerequisites = SubscriptionPrerequisitesInputSerializer()

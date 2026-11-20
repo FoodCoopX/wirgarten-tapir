@@ -52,6 +52,17 @@ from tapir.wirgarten.models import Member, Product, ProductType, Subscription
 from tapir.wirgarten.utils import get_today
 
 
+def build_prerequisites_input(
+    prerequisites_data: dict,
+) -> SubscriptionPrerequisitesInput:
+    return SubscriptionPrerequisitesInput(
+        desired_pickup_location_id=prerequisites_data.get("pickup_location_id"),
+        iban=prerequisites_data["iban"].strip(),
+        account_owner=prerequisites_data["account_owner"].strip(),
+        sepa_mandate_confirmed=prerequisites_data["sepa_mandate_confirmed"],
+    )
+
+
 class AdminSubscriptionChangeMemberSearchApiView(APIView):
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
     MAX_RESULTS = 20
@@ -170,12 +181,7 @@ class AdminSizeChangeBaseApiView(APIView):
                 change_date=change_date,
                 cache=cache,
             ),
-            prerequisites=SubscriptionPrerequisitesInput(
-                desired_pickup_location_id=validated_data.get("pickup_location_id"),
-                iban=validated_data["iban"].strip(),
-                account_owner=validated_data["account_owner"].strip(),
-                sepa_mandate_confirmed=validated_data["sepa_mandate_confirmed"],
-            ),
+            prerequisites=build_prerequisites_input(validated_data["prerequisites"]),
         )
 
     @staticmethod
@@ -276,12 +282,7 @@ class AdminSubscriptionAdditionBaseApiView(APIView):
             product=product,
             quantity=quantity,
             start_date=start_date,
-            prerequisites=SubscriptionPrerequisitesInput(
-                desired_pickup_location_id=validated_data.get("pickup_location_id"),
-                iban=validated_data["iban"].strip(),
-                account_owner=validated_data["account_owner"].strip(),
-                sepa_mandate_confirmed=validated_data["sepa_mandate_confirmed"],
-            ),
+            prerequisites=build_prerequisites_input(validated_data["prerequisites"]),
         )
 
     @staticmethod

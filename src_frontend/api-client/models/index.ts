@@ -310,6 +310,7 @@ export * from "./Subscription";
 export * from "./SubscriptionChange";
 export * from "./SubscriptionChangeLogEntry";
 export * from "./SubscriptionDateChangeRequestRequest";
+export * from "./SubscriptionPrerequisitesInputRequest";
 export * from "./SubscriptionPriceOverrideChangeRequestRequest";
 export * from "./SubscriptionTrialChangeRequestRequest";
 export * from "./SubscriptionTrialFields";

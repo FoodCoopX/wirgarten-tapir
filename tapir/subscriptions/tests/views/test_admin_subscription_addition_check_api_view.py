@@ -65,11 +65,13 @@ class TestAdminSubscriptionAdditionCheckApiView(TapirIntegrationTest):
                 "product_id": self.product.id,
                 "quantity": quantity,
                 "start_date": self.START_DATE,
-                "account_owner": "",
-                "iban": "",
-                "sepa_mandate_confirmed": False,
+                "prerequisites": {
+                    "account_owner": "",
+                    "iban": "",
+                    "sepa_mandate_confirmed": False,
+                },
             },
-            format="json",
+            content_type="application/json",
         )
 
     def test_post_normalMember_returns403(self):

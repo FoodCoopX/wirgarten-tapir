@@ -189,10 +189,7 @@ const AdminSubscriptionChangeModal: React.FC<
       subscriptionId: unit!.subscriptionId,
       newProductId: newProductId!,
       changeDate: changeDate!,
-      pickupLocationId: prerequisites.pickupLocationId ?? null,
-      accountOwner: prerequisites.accountOwner,
-      iban: prerequisites.iban,
-      sepaMandateConfirmed: prerequisites.sepaMandateConfirmed,
+      prerequisites,
     };
   }
 

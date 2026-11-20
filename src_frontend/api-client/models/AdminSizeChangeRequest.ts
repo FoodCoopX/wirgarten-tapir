@@ -12,6 +12,12 @@
  * Do not edit the class manually.
  */
 
+import type { SubscriptionPrerequisitesInputRequest } from "./SubscriptionPrerequisitesInputRequest";
+import {
+  SubscriptionPrerequisitesInputRequestFromJSON,
+  SubscriptionPrerequisitesInputRequestToJSON,
+} from "./SubscriptionPrerequisitesInputRequest";
+
 /**
  *
  * @export
@@ -44,28 +50,10 @@ export interface AdminSizeChangeRequest {
   changeDate: string;
   /**
    *
-   * @type {string}
+   * @type {SubscriptionPrerequisitesInputRequest}
    * @memberof AdminSizeChangeRequest
    */
-  pickupLocationId?: string | null;
-  /**
-   *
-   * @type {string}
-   * @memberof AdminSizeChangeRequest
-   */
-  accountOwner: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AdminSizeChangeRequest
-   */
-  iban: string;
-  /**
-   *
-   * @type {boolean}
-   * @memberof AdminSizeChangeRequest
-   */
-  sepaMandateConfirmed: boolean;
+  prerequisites: SubscriptionPrerequisitesInputRequest;
 }
 
 /**
@@ -81,13 +69,7 @@ export function instanceOfAdminSizeChangeRequest(
     return false;
   if (!("changeDate" in value) || value["changeDate"] === undefined)
     return false;
-  if (!("accountOwner" in value) || value["accountOwner"] === undefined)
-    return false;
-  if (!("iban" in value) || value["iban"] === undefined) return false;
-  if (
-    !("sepaMandateConfirmed" in value) ||
-    value["sepaMandateConfirmed"] === undefined
-  )
+  if (!("prerequisites" in value) || value["prerequisites"] === undefined)
     return false;
   return true;
 }
@@ -110,13 +92,9 @@ export function AdminSizeChangeRequestFromJSONTyped(
     subscriptionId: json["subscription_id"],
     newProductId: json["new_product_id"],
     changeDate: json["change_date"],
-    pickupLocationId:
-      json["pickup_location_id"] == null
-        ? undefined
-        : json["pickup_location_id"],
-    accountOwner: json["account_owner"],
-    iban: json["iban"],
-    sepaMandateConfirmed: json["sepa_mandate_confirmed"],
+    prerequisites: SubscriptionPrerequisitesInputRequestFromJSON(
+      json["prerequisites"],
+    ),
   };
 }
 
@@ -139,9 +117,8 @@ export function AdminSizeChangeRequestToJSONTyped(
     subscription_id: value["subscriptionId"],
     new_product_id: value["newProductId"],
     change_date: value["changeDate"],
-    pickup_location_id: value["pickupLocationId"],
-    account_owner: value["accountOwner"],
-    iban: value["iban"],
-    sepa_mandate_confirmed: value["sepaMandateConfirmed"],
+    prerequisites: SubscriptionPrerequisitesInputRequestToJSON(
+      value["prerequisites"],
+    ),
   };
 }

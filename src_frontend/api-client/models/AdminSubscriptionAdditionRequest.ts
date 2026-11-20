@@ -12,6 +12,12 @@
  * Do not edit the class manually.
  */
 
+import type { SubscriptionPrerequisitesInputRequest } from "./SubscriptionPrerequisitesInputRequest";
+import {
+  SubscriptionPrerequisitesInputRequestFromJSON,
+  SubscriptionPrerequisitesInputRequestToJSON,
+} from "./SubscriptionPrerequisitesInputRequest";
+
 /**
  *
  * @export
@@ -44,28 +50,10 @@ export interface AdminSubscriptionAdditionRequest {
   startDate: string;
   /**
    *
-   * @type {string}
+   * @type {SubscriptionPrerequisitesInputRequest}
    * @memberof AdminSubscriptionAdditionRequest
    */
-  pickupLocationId?: string | null;
-  /**
-   *
-   * @type {string}
-   * @memberof AdminSubscriptionAdditionRequest
-   */
-  accountOwner: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AdminSubscriptionAdditionRequest
-   */
-  iban: string;
-  /**
-   *
-   * @type {boolean}
-   * @memberof AdminSubscriptionAdditionRequest
-   */
-  sepaMandateConfirmed: boolean;
+  prerequisites: SubscriptionPrerequisitesInputRequest;
 }
 
 /**
@@ -78,13 +66,7 @@ export function instanceOfAdminSubscriptionAdditionRequest(
   if (!("productId" in value) || value["productId"] === undefined) return false;
   if (!("quantity" in value) || value["quantity"] === undefined) return false;
   if (!("startDate" in value) || value["startDate"] === undefined) return false;
-  if (!("accountOwner" in value) || value["accountOwner"] === undefined)
-    return false;
-  if (!("iban" in value) || value["iban"] === undefined) return false;
-  if (
-    !("sepaMandateConfirmed" in value) ||
-    value["sepaMandateConfirmed"] === undefined
-  )
+  if (!("prerequisites" in value) || value["prerequisites"] === undefined)
     return false;
   return true;
 }
@@ -107,13 +89,9 @@ export function AdminSubscriptionAdditionRequestFromJSONTyped(
     productId: json["product_id"],
     quantity: json["quantity"],
     startDate: json["start_date"],
-    pickupLocationId:
-      json["pickup_location_id"] == null
-        ? undefined
-        : json["pickup_location_id"],
-    accountOwner: json["account_owner"],
-    iban: json["iban"],
-    sepaMandateConfirmed: json["sepa_mandate_confirmed"],
+    prerequisites: SubscriptionPrerequisitesInputRequestFromJSON(
+      json["prerequisites"],
+    ),
   };
 }
 
@@ -136,9 +114,8 @@ export function AdminSubscriptionAdditionRequestToJSONTyped(
     product_id: value["productId"],
     quantity: value["quantity"],
     start_date: value["startDate"],
-    pickup_location_id: value["pickupLocationId"],
-    account_owner: value["accountOwner"],
-    iban: value["iban"],
-    sepa_mandate_confirmed: value["sepaMandateConfirmed"],
+    prerequisites: SubscriptionPrerequisitesInputRequestToJSON(
+      value["prerequisites"],
+    ),
   };
 }

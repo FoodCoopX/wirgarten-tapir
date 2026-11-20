@@ -69,11 +69,13 @@ class TestAdminSizeChangeCheckApiView(TapirIntegrationTest):
                 "subscription_id": self.subscription.id,
                 "new_product_id": new_product.id,
                 "change_date": self.CHANGE_DATE,
-                "account_owner": "",
-                "iban": "",
-                "sepa_mandate_confirmed": False,
+                "prerequisites": {
+                    "account_owner": "",
+                    "iban": "",
+                    "sepa_mandate_confirmed": False,
+                },
             },
-            format="json",
+            content_type="application/json",
         )
 
     def test_post_normalMember_returns403(self):
