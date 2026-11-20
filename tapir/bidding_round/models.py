@@ -44,6 +44,7 @@ class BiddingRound(TapirModel):
         default=BIDDING_ROUND_PROCEDURE_SIMPLE,
     )
     bid_levels = models.PositiveSmallIntegerField(default=1)
+    include_auto_renewed = models.BooleanField(default=True)
     start_at = models.DateTimeField(null=True)
     end_at = models.DateTimeField(null=False)
     contracts_created_at = models.DateTimeField(null=True)

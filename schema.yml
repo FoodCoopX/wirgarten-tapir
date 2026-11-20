@@ -9714,6 +9714,22 @@ components:
       - description_in_bestell_wizard
       - name
       - order_in_bestell_wizard
+    AutoRenewedMember:
+      type: object
+      properties:
+        member_id:
+          type: string
+        member_name:
+          type: string
+        monthly_reference:
+          type: string
+        yearly_reference:
+          type: string
+      required:
+      - member_id
+      - member_name
+      - monthly_reference
+      - yearly_reference
     AutomatedExportCycleEnum:
       enum:
       - yearly
@@ -12034,6 +12050,9 @@ components:
           type: integer
           maximum: 3
           minimum: 1
+        create_auto_renewed_contracts:
+          type: boolean
+          default: false
     CreateContractsResponse:
       type: object
       properties:
@@ -13760,6 +13779,29 @@ components:
       - tax_rate_change_date
       - title_bestellwizard_intro
       - title_bestellwizard_product_choice
+    ExtraPosition:
+      type: object
+      properties:
+        label:
+          type: string
+        reached_per_year:
+          type: string
+        applicable:
+          type: boolean
+      required:
+      - applicable
+      - label
+      - reached_per_year
+    ExtraPositions:
+      type: object
+      properties:
+        membership:
+          $ref: '#/components/schemas/ExtraPosition'
+        delivery_charge:
+          $ref: '#/components/schemas/ExtraPosition'
+      required:
+      - delivery_charge
+      - membership
     FuturePaymentsResponse:
       type: object
       properties:
@@ -16047,6 +16089,8 @@ components:
           type: integer
           maximum: 3
           minimum: 1
+        include_auto_renewed:
+          type: boolean
     PatchedSaveExtendedProductTypeRequest:
       type: object
       properties:
@@ -18058,6 +18102,8 @@ components:
           type: string
         bid_levels:
           type: integer
+        include_auto_renewed:
+          type: boolean
         start_at:
           type: string
           format: date-time
@@ -18090,6 +18136,7 @@ components:
       - growing_period_id
       - has_bids
       - id
+      - include_auto_renewed
       - name
       - product
       - start_at
@@ -18130,6 +18177,8 @@ components:
           type: integer
           maximum: 3
           minimum: 1
+        include_auto_renewed:
+          type: boolean
       required:
       - end_at
       - name
@@ -18215,6 +18264,18 @@ components:
           type: string
         levels:
           $ref: '#/components/schemas/EvaluationLevels'
+        include_auto_renewed:
+          type: boolean
+        auto_renewed_per_year:
+          type: string
+        auto_renewed:
+          type: array
+          items:
+            $ref: '#/components/schemas/AutoRenewedMember'
+        extra_positions:
+          $ref: '#/components/schemas/ExtraPositions'
+        non_bidder_rate_per_share:
+          type: string
         reached_per_year:
           type: string
         bidder_count:
@@ -18224,6 +18285,8 @@ components:
           items:
             $ref: '#/components/schemas/RoundStatsBid'
       required:
+      - auto_renewed
+      - auto_renewed_per_year
       - bid_levels
       - bid_range_position
       - bidder_average_per_month
@@ -18232,7 +18295,10 @@ components:
       - bids
       - coverage_percent
       - coverage_status
+      - extra_positions
+      - include_auto_renewed
       - levels
+      - non_bidder_rate_per_share
       - reached_per_year
       - recommended_level
       - target_per_year

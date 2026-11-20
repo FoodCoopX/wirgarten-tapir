@@ -83,6 +83,12 @@ export interface PatchedRoundConfigRequest {
    * @memberof PatchedRoundConfigRequest
    */
   bidLevels?: number;
+  /**
+   *
+   * @type {boolean}
+   * @memberof PatchedRoundConfigRequest
+   */
+  includeAutoRenewed?: boolean;
 }
 
 /**
@@ -129,6 +135,10 @@ export function PatchedRoundConfigRequestFromJSONTyped(
         ? undefined
         : BiddingProcedureEnumFromJSON(json["bidding_procedure"]),
     bidLevels: json["bid_levels"] == null ? undefined : json["bid_levels"],
+    includeAutoRenewed:
+      json["include_auto_renewed"] == null
+        ? undefined
+        : json["include_auto_renewed"],
   };
 }
 
@@ -164,5 +174,6 @@ export function PatchedRoundConfigRequestToJSONTyped(
           ),
     bidding_procedure: BiddingProcedureEnumToJSON(value["biddingProcedure"]),
     bid_levels: value["bidLevels"],
+    include_auto_renewed: value["includeAutoRenewed"],
   };
 }

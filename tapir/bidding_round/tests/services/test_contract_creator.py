@@ -1,5 +1,6 @@
 import datetime
 from decimal import Decimal
+from unittest.mock import patch
 
 import pytest
 from django.core.exceptions import ValidationError
@@ -21,12 +22,13 @@ from tapir.bidding_round.tests.factories import (
 )
 from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.wirgarten.models import Subscription
-from tapir.subscriptions.services.subscription_price_calculator import (
-    SubscriptionPriceCalculator,
+from tapir.subscriptions.services.automatic_subscription_renewal_service import (
+    AutomaticSubscriptionRenewalService,
 )
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     GrowingPeriodFactory,
+    MandateReferenceFactory,
     MemberFactory,
     ProductFactory,
     ProductPriceFactory,
@@ -47,13 +49,24 @@ class TestContractCreator(TapirIntegrationTest):
         with pytest.raises(ValidationError):
             ContractCreator.create_contracts_from_bids(bidding_round, cache={})
 
+    def _add_lower_bid(self, bidding_round, product, quantity=1):
+        other_bid = BidFactory.create(round=bidding_round)
+        BidItemFactory.create(
+            bid=other_bid,
+            round_product_type=bidding_round.product_types.first(),
+            product=product,
+            quantity=quantity,
+            amount_1=Decimal("50.00"),
+        )
+
     def test_createContracts_createsSubscriptionAndContribution(self):
         bidding_round, bid, product, period = self._create_closed_round_with_bid(
             bid_amount=Decimal("80.00"), standard_price=Decimal("50.00")
         )
+        self._add_lower_bid(bidding_round, product)
 
         result = ContractCreator.create_contracts_from_bids(
-            bidding_round, cache={}, actor=bid.member
+            bidding_round, cache={}, actor=bid.member, bid_ids=[bid.id]
         )
 
         self.assertEqual([], result["errors"])
@@ -66,21 +79,10 @@ class TestContractCreator(TapirIntegrationTest):
                 round=bidding_round, subscription=subscription
             ).exists()
         )
-        self.assertFalse(
-            SolidarityContribution.objects.filter(
-                member=bid.member, start_date=period.start_date
-            ).exists()
+        contribution = SolidarityContribution.objects.get(
+            member=bid.member, start_date=period.start_date
         )
-        self.assertIsNone(subscription.price_override)
-        self.assertEqual(
-            Subscription.PriceMode.BIDDING_ROUND_BID, subscription.price_mode
-        )
-        self.assertEqual(
-            Decimal("80.00"),
-            SubscriptionPriceCalculator.get_monthly_price(
-                subscription, reference_date=period.start_date, cache={}
-            ),
-        )
+        self.assertEqual(Decimal("15.00"), contribution.amount)
         bidding_round.refresh_from_db()
         self.assertIsNotNone(bidding_round.contracts_created_at)
 
@@ -90,24 +92,18 @@ class TestContractCreator(TapirIntegrationTest):
             standard_price=Decimal("50.00"),
             quantity=2,
         )
+        self._add_lower_bid(bidding_round, product, quantity=2)
 
         ContractCreator.create_contracts_from_bids(
-            bidding_round, cache={}, actor=bid.member
+            bidding_round, cache={}, actor=bid.member, bid_ids=[bid.id]
         )
 
         subscription = Subscription.objects.get(member=bid.member, product=product)
         self.assertEqual(2, subscription.quantity)
-        self.assertFalse(
-            SolidarityContribution.objects.filter(
-                member=bid.member, start_date=period.start_date
-            ).exists()
+        contribution = SolidarityContribution.objects.get(
+            member=bid.member, start_date=period.start_date
         )
-        self.assertEqual(
-            Decimal("160.00"),
-            SubscriptionPriceCalculator.get_monthly_price(
-                subscription, reference_date=period.start_date, cache={}
-            ),
-        )
+        self.assertEqual(Decimal("30.00"), contribution.amount)
 
     def test_createContracts_withExistingSubscription_reusesItWithoutDeleting(self):
         bidding_round, bid, product, period = self._create_closed_round_with_bid(
@@ -123,9 +119,10 @@ class TestContractCreator(TapirIntegrationTest):
             start_date=period.start_date,
             end_date=period.end_date,
         )
+        self._add_lower_bid(bidding_round, product, quantity=3)
 
         ContractCreator.create_contracts_from_bids(
-            bidding_round, cache={}, actor=bid.member
+            bidding_round, cache={}, actor=bid.member, bid_ids=[bid.id]
         )
 
         existing.refresh_from_db()
@@ -141,11 +138,10 @@ class TestContractCreator(TapirIntegrationTest):
                 round=bidding_round, subscription=existing
             ).exists()
         )
-        self.assertFalse(
-            SolidarityContribution.objects.filter(
-                member=bid.member, start_date=period.start_date
-            ).exists()
+        contribution = SolidarityContribution.objects.get(
+            member=bid.member, start_date=period.start_date
         )
+        self.assertEqual(Decimal("45.00"), contribution.amount)
 
     def test_createContracts_calledTwice_raisesValidationError(self):
         bidding_round, bid, _product, _period = self._create_closed_round_with_bid(
@@ -214,6 +210,62 @@ class TestContractCreator(TapirIntegrationTest):
             member=bid.member, start_date=period.start_date
         )
         self.assertEqual(Decimal("10.00"), contribution.amount)
+
+    def test_createContracts_withAutoRenewed_createsContractAndFloor(self):
+        bidding_round, bid, product, period = self._create_closed_round_with_bid(
+            bid_amount=Decimal("80.00"), standard_price=Decimal("50.00")
+        )
+        non_bidder = MemberFactory.create()
+        previous_period = GrowingPeriodFactory.create(
+            start_date=period.start_date - datetime.timedelta(days=365),
+            end_date=period.start_date - datetime.timedelta(days=1),
+        )
+        current_subscription = SubscriptionFactory.create(
+            member=non_bidder,
+            product=product,
+            period=previous_period,
+            quantity=1,
+            start_date=previous_period.start_date,
+            end_date=previous_period.end_date,
+        )
+        renewed_subscription = SubscriptionFactory.build(
+            member=non_bidder,
+            product=product,
+            period=period,
+            quantity=1,
+            start_date=period.start_date,
+            end_date=period.end_date,
+            mandate_ref=MandateReferenceFactory.create(member=non_bidder),
+        )
+
+        with (
+            patch.object(
+                AutomaticSubscriptionRenewalService,
+                "get_subscriptions_that_will_be_renewed",
+                return_value={current_subscription},
+            ),
+            patch.object(
+                AutomaticSubscriptionRenewalService,
+                "build_renewed_subscription",
+                return_value=renewed_subscription,
+            ),
+        ):
+            ContractCreator.create_contracts_from_bids(
+                bidding_round,
+                cache={},
+                actor=bid.member,
+                create_auto_renewed_contracts=True,
+            )
+
+        self.assertTrue(
+            BiddingRoundCreatedSubscription.objects.filter(
+                round=bidding_round, subscription=renewed_subscription
+            ).exists()
+        )
+        contribution = SolidarityContribution.objects.get(
+            member=non_bidder, start_date=period.start_date
+        )
+        self.assertEqual(Decimal("30.00"), contribution.amount)
 
     def _create_closed_round_with_bid(self, bid_amount, standard_price, quantity=1):
         period = GrowingPeriodFactory.create(

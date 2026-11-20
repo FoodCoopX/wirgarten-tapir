@@ -1,4 +1,5 @@
 import datetime
+from decimal import Decimal, ROUND_CEILING
 
 from tapir.bestell_wizard.models import ProductTypeAccordionInBestellWizard
 from tapir.core.exceptions import TapirImproperlyConfigured
@@ -14,8 +15,10 @@ from tapir.wirgarten.models import (
     GrowingPeriod,
     ProductPrice,
     ProductCapacity,
+    Subscription,
     TaxRate,
 )
+from tapir.wirgarten.service.products import get_product_price
 from tapir.wirgarten.utils import get_today
 
 BREAD_PRODUCT_TYPE_NAME = "Brotanteil"
@@ -527,6 +530,47 @@ class ProductGenerator:
         cls.generate_product_capacities()
         if organization is Organization.VIERLANDE:
             VierlandeGenerator.update_product_capacities()
+
+    @classmethod
+    def update_harvest_share_capacities(cls, organization: Organization):
+        if organization is Organization.VIERLANDE:
+            return
+        product_type = ProductType.objects.filter(name="Ernteanteile").first()
+        if product_type is None:
+            return
+        today = get_today(cache={})
+        current_period = (
+            GrowingPeriod.objects.filter(start_date__lte=today, end_date__gte=today)
+            .order_by("start_date")
+            .first()
+        )
+        if current_period is None:
+            return
+        subscriptions = Subscription.objects.filter(
+            period=current_period,
+            product__type=product_type,
+            cancellation_ts__isnull=True,
+        ).select_related("product")
+        total_shares = Decimal("0")
+        for subscription in subscriptions:
+            product_price = get_product_price(
+                product=subscription.product,
+                reference_date=current_period.start_date,
+                cache={},
+            )
+            size = (
+                Decimal(str(product_price.size))
+                if product_price is not None and product_price.size
+                else Decimal("1")
+            )
+            total_shares += size * subscription.quantity
+        if total_shares <= 0:
+            return
+        capacity = total_shares.to_integral_value(rounding=ROUND_CEILING)
+        ProductCapacity.objects.filter(
+            product_type=product_type,
+            period__start_date__gte=current_period.start_date,
+        ).update(capacity=capacity)
 
     @classmethod
     def generate_products_mm(cls, product_type_ernteanteile: ProductType):
