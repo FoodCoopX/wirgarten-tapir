@@ -41,6 +41,7 @@ models/Bid.ts
 models/BidAdminCreateRequest.ts
 models/BidAdminItemRequest.ts
 models/BidItem.ts
+models/BidOptions.ts
 models/BidProductVariant.ts
 models/BidSubmitItemRequest.ts
 models/BidSubmitRequest.ts

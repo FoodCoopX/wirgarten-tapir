@@ -150,9 +150,13 @@ class PublicDataView(BiddingRoundFeatureFlagMixin, APIView):
                 cache
             ),
             "bid_options": BiddingRoundViewService.build_bid_options(cache),
+            "sepa_enabled": BiddingRoundViewService.is_sepa_enabled(cache),
         }
 
         if bidding_round and member:
+            response_data.update(
+                BiddingRoundViewService.build_member_data(member, bidding_round, cache)
+            )
             response_data["current_pickup_location"] = (
                 BiddingRoundViewService.build_current_pickup_location(
                     bidding_round, member, cache
@@ -505,12 +509,23 @@ class MemberBidView(BiddingRoundFeatureFlagMixin, APIView):
         bidding_round = get_object_or_404(BiddingRound, id=round_id)
         serializer = BidSubmitSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        validated = serializer.validated_data
         try:
             BiddingRoundService.save_bid(
                 member,
                 bidding_round,
-                serializer.validated_data["items"],
+                validated["items"],
                 cache=cache,
+                sepa_allowed=validated.get("sepa_allowed", False),
+                account_owner=validated.get("account_owner"),
+                iban=validated.get("iban"),
+                payment_rhythm=validated.get("payment_rhythm"),
+                privacy_policy_read=validated.get("privacy_policy_read", False),
+                cancellation_policy_read=validated.get(
+                    "cancellation_policy_read", False
+                ),
+                contract_accepted=validated.get("contract_accepted", False),
+                enforce_consents=True,
             )
         except ValidationError as error:
             return Response(

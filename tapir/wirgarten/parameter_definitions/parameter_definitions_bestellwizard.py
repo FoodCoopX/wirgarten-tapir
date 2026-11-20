@@ -69,11 +69,38 @@ class ParameterDefinitionsBestellwizard:
         bestellwizard_parameter_order -= 1
 
         importer.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_SEPA_MANDAT_CHECKBOX_LABEL,
+            label="Label zu Checkbox zum SEPA-Mandat bei der Persönliche-Daten-Seite",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Ja, ich erteile dem Betrieb ein SEPA-Lastschriftmandat.",
+            description=HTML_ALLOWED_TEXT
+            + ". Wird als Beschriftung der Checkbox angezeigt.",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+            meta=ParameterMeta(textarea=True),
+        )
+        bestellwizard_parameter_order -= 1
+
+        importer.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_SEPA_MANDAT_CHECKBOX_TEXT,
-            label="Text zum Checkbox zum SEPA-Mandat bei der Persönliche-Daten-Seite",
+            label="Erklärungstext unter dem Checkbox zum SEPA-Mandat bei der Persönliche-Daten-Seite",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Ich ermächtige den Betrieb die monatlichen Beträge für weitere Verträge mittels Lastschrift von meinem Bankkonto einzuziehen. Zugleich weise ich mein Kreditinstitut an, die gezogene Lastschrift einzulösen.",
-            description=HTML_ALLOWED_TEXT,
+            description=HTML_ALLOWED_TEXT
+            + ". Wird im ausklappbaren Bereich unter der Checkbox angezeigt.",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+            meta=ParameterMeta(textarea=True),
+        )
+        bestellwizard_parameter_order -= 1
+
+        importer.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_CONTRACT_POLICY_CHECKBOX_LABEL,
+            label="Label zu Checkbox zu Vertragsgrundsätze",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Ja, ich stimme den Vertragsgrundsätzen und der Gebührenordnung zu.",
+            description=HTML_ALLOWED_TEXT
+            + ". Wird als Beschriftung der Checkbox angezeigt.",
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
             meta=ParameterMeta(textarea=True),
@@ -82,10 +109,11 @@ class ParameterDefinitionsBestellwizard:
 
         importer.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_CONTRACT_POLICY_CHECKBOX_TEXT,
-            label="Text zum Checkbox zu Vertragsgrundsätze",
+            label="Erklärungstext unter dem Checkbox zu Vertragsgrundsätze",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Ich habe die Vertragsgrundsätze/Gebührenordnung gelesen und akzeptiere diese.",
-            description=HTML_ALLOWED_TEXT,
+            description=HTML_ALLOWED_TEXT
+            + ". Wird im ausklappbaren Bereich unter der Checkbox angezeigt. Leer lassen, um die Checkbox auszublenden.",
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
             meta=ParameterMeta(textarea=True),
