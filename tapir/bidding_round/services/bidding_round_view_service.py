@@ -12,16 +12,17 @@ from tapir.bidding_round.services.bidding_round_delivery_charge_service import (
     BiddingRoundDeliveryChargeService,
 )
 from tapir.configuration.parameter import get_parameter_value
-from tapir.pickup_locations.services.member_pickup_location_getter import (
-    MemberPickupLocationGetter,
-)
-from tapir.configuration.parameter import get_parameter_value
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
+from tapir.pickup_locations.serializers import PublicPickupLocationSerializer
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
+)
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.wirgarten.models import Product, Subscription
+from tapir.wirgarten.models import PickupLocation, Product, Subscription
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.service.products import get_product_price
 
 
 class BiddingRoundViewService:
@@ -223,10 +224,6 @@ class BiddingRoundViewService:
         }
 
     @classmethod
-    def _get_round_product_type(cls, bidding_round):
-        return bidding_round.product_types.select_related("product_type").first()
-
-    @classmethod
     def _get_products_with_prices(cls, round_product_type) -> list[tuple]:
         prices_by_product_id = {
             price.product_id: price
@@ -262,8 +259,26 @@ class BiddingRoundViewService:
         }
 
     @classmethod
-    def serialize_bid_item(cls, bid_item) -> dict:
-        counting_amount = cls._counting_amount(bid_item)
+    def serialize_bid_item(
+        cls,
+        bid_item,
+        effective_position=None,
+        *,
+        cache: dict,
+        bidding_round=None,
+    ) -> dict:
+        if bidding_round is None:
+            bidding_round = bid_item.bid.round
+        if effective_position is None:
+            effective_amount = cls._counting_amount(bid_item)
+        else:
+            from tapir.bidding_round.services.bidding_round_stats_service import (
+                BiddingRoundStatsService,
+            )
+
+            effective_amount = BiddingRoundStatsService.get_effective_amount(
+                bid_item, effective_position, bidding_round
+            )
         return {
             "round_product_type_id": bid_item.round_product_type_id,
             "product_type_name": bid_item.round_product_type.product_type.name,
@@ -279,7 +294,8 @@ class BiddingRoundViewService:
             "amount_3": (
                 str(bid_item.amount_3) if bid_item.amount_3 is not None else None
             ),
-            "amount_per_year": str(counting_amount * bid_item.quantity * 12),
+            "effective_amount": str(effective_amount),
+            "amount_per_year": str(effective_amount * bid_item.quantity * 12),
         }
 
     @staticmethod
@@ -295,20 +311,40 @@ class BiddingRoundViewService:
         )
 
     @classmethod
-    def serialize_bid(cls, bid, cache: dict) -> dict | None:
+    def serialize_bid(cls, bid, effective_position=None, *, cache: dict) -> dict | None:
         if bid is None:
             return None
+        reference_date = bid.round.growing_period.start_date
         pickup_location_id = (
             MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
                 member_id=bid.member_id,
-                reference_date=bid.round.growing_period.start_date,
+                reference_date=reference_date,
                 cache=cache,
             )
         )
-        items = list(
-            bid.items.select_related(
-                "round_product_type__product_type", "product"
-            ).all()
+        pickup_location = TapirCache.get_pickup_location_by_id(
+            cache=cache, pickup_location_id=pickup_location_id
+        )
+        items = list(bid.items.all())
+        serialized_items = [
+            cls.serialize_bid_item(
+                item,
+                effective_position=effective_position,
+                cache=cache,
+                bidding_round=bid.round,
+            )
+            for item in items
+        ]
+        effective_amount = sum(
+            (
+                Decimal(item["effective_amount"]) * item["quantity"]
+                for item in serialized_items
+            ),
+            Decimal("0"),
+        )
+        total_per_year = sum(
+            (Decimal(item["amount_per_year"]) for item in serialized_items),
+            Decimal("0"),
         )
         return {
             "id": bid.id,
@@ -318,14 +354,14 @@ class BiddingRoundViewService:
                 bid.admin_confirmed.isoformat() if bid.admin_confirmed else None
             ),
             "pickup_location_id": pickup_location_id,
-            "updated_at": bid.updated_at.isoformat() if bid.updated_at else None,
-            "total_per_year": str(
-                sum(
-                    (cls._counting_amount(item) * item.quantity * 12 for item in items),
-                    Decimal("0"),
-                )
+            "pickup_location_name": (
+                pickup_location.name if pickup_location is not None else None
             ),
-            "items": [cls.serialize_bid_item(item) for item in items],
+            "updated_at": bid.updated_at.isoformat() if bid.updated_at else None,
+            "effective_amount": str(effective_amount),
+            "total_per_year": str(total_per_year),
+            "amount_per_year": str(total_per_year),
+            "items": serialized_items,
         }
 
     @classmethod
@@ -393,21 +429,39 @@ class BiddingRoundViewService:
         current_quantities = cls._get_current_quantities(
             member, [product for product, _price in products_with_prices]
         )
+        capacity = TapirCache.get_product_type_capacity_at_date(
+            cache=cache,
+            product_type=round_product_type.product_type,
+            reference_date=bidding_round.growing_period.start_date,
+        )
         return {
             "id": round_product_type.id,
             "product_type_id": round_product_type.product_type_id,
             "product_type_name": round_product_type.product_type.name,
+            "capacity_id": capacity.id if capacity is not None else None,
             "products": [
                 {
                     "id": product.id,
                     "name": product.name,
                     **cls._serialize_price_values(price),
+                    "standard_price": cls._get_standard_price(
+                        product, bidding_round, cache
+                    ),
                     "current_quantity": current_quantities.get(product.id),
                     "image_url": product.url_of_image_in_bestellwizard or None,
                 }
                 for product, price in products_with_prices
             ],
         }
+
+    @classmethod
+    def _get_standard_price(cls, product, bidding_round, cache) -> str | None:
+        product_price = get_product_price(
+            product,
+            reference_date=bidding_round.growing_period.start_date,
+            cache=cache,
+        )
+        return str(product_price.price) if product_price is not None else None
 
     @classmethod
     def _get_current_quantities(cls, member, products) -> dict:
@@ -456,6 +510,83 @@ class BiddingRoundViewService:
             "quantity_enabled": cls.is_bid_shares_enabled(cache),
             "carousel_enabled": cls.is_bid_carousel_enabled(cache),
         }
+
+    @classmethod
+    def build_pickup_locations(cls, bidding_round, cache) -> list:
+        from tapir.bidding_round.services.bidding_round_stats_service import (
+            BiddingRoundStatsService,
+        )
+
+        round_product_type = cls._get_round_product_type(bidding_round)
+        product_type = (
+            round_product_type.product_type if round_product_type is not None else None
+        )
+        growing_period = bidding_round.growing_period
+        utilization = BiddingRoundStatsService.build_public_pickup_location_utilization(
+            bidding_round, cache=cache
+        )
+
+        locations = list(PickupLocation.objects.prefetch_related("opening_times").all())
+        serializer_context = {
+            "cache": cache,
+            "reference_date_for_delivery_charge": growing_period.start_date,
+        }
+        serialized_locations = list(
+            PublicPickupLocationSerializer(
+                locations, many=True, context=serializer_context
+            ).data
+        )
+
+        result = []
+        for location, serialized_location in zip(locations, serialized_locations):
+            entry = dict(serialized_location)
+            if product_type is not None:
+                entry["yearly_delivery_charge"] = str(
+                    BiddingRoundDeliveryChargeService.get_yearly_delivery_charge(
+                        pickup_location_id=location.id,
+                        product_type=product_type,
+                        growing_period=growing_period,
+                        cache=cache,
+                    )
+                )
+            else:
+                entry["yearly_delivery_charge"] = "0.00"
+            entry["utilization"] = utilization.get(location.id)
+            result.append(entry)
+        return result
+
+    @classmethod
+    def parse_bool(cls, value):
+        if value is None:
+            return None
+        return value.lower() in ("true", "1", "yes")
+
+    @classmethod
+    def filter_and_sort_members(cls, members, filter_, sort):
+        if filter_ == "active_in_contract_period":
+            members = [
+                member
+                for member in members
+                if member.get("is_active_in_contract_period", True)
+            ]
+        elif filter_ == "has_bid":
+            members = [member for member in members if member["has_bid"]]
+        elif filter_ == "no_bid":
+            members = [
+                member
+                for member in members
+                if not member["has_bid"]
+                and member.get("is_active_in_contract_period", True)
+            ]
+        elif filter_ == "auto_renewed":
+            members = [member for member in members if member["is_auto_renewed"]]
+        if sort == "date":
+            return sorted(
+                members,
+                key=lambda member: (member["bid"] or {}).get("updated_at") or "",
+                reverse=True,
+            )
+        return sorted(members, key=lambda member: member["member_name"].lower())
 
     @classmethod
     def serialize_validation_error(cls, error: ValidationError) -> str:

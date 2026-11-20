@@ -47,6 +47,12 @@ export interface RoundStatsBid {
   email: string;
   /**
    *
+   * @type {string}
+   * @memberof RoundStatsBid
+   */
+  pickupLocationName: string | null;
+  /**
+   *
    * @type {boolean}
    * @memberof RoundStatsBid
    */
@@ -63,6 +69,12 @@ export interface RoundStatsBid {
    * @memberof RoundStatsBid
    */
   updatedAt: Date | null;
+  /**
+   *
+   * @type {string}
+   * @memberof RoundStatsBid
+   */
+  effectiveAmount: string;
   /**
    *
    * @type {string}
@@ -92,11 +104,18 @@ export function instanceOfRoundStatsBid(value: object): value is RoundStatsBid {
   if (!("memberName" in value) || value["memberName"] === undefined)
     return false;
   if (!("email" in value) || value["email"] === undefined) return false;
+  if (
+    !("pickupLocationName" in value) ||
+    value["pickupLocationName"] === undefined
+  )
+    return false;
   if (!("enteredByAdmin" in value) || value["enteredByAdmin"] === undefined)
     return false;
   if (!("adminConfirmed" in value) || value["adminConfirmed"] === undefined)
     return false;
   if (!("updatedAt" in value) || value["updatedAt"] === undefined) return false;
+  if (!("effectiveAmount" in value) || value["effectiveAmount"] === undefined)
+    return false;
   if (!("amountPerMonth" in value) || value["amountPerMonth"] === undefined)
     return false;
   if (!("amountPerYear" in value) || value["amountPerYear"] === undefined)
@@ -121,12 +140,14 @@ export function RoundStatsBidFromJSONTyped(
     memberId: json["member_id"],
     memberName: json["member_name"],
     email: json["email"],
+    pickupLocationName: json["pickup_location_name"],
     enteredByAdmin: json["entered_by_admin"],
     adminConfirmed:
       json["admin_confirmed"] == null
         ? null
         : new Date(json["admin_confirmed"]),
     updatedAt: json["updated_at"] == null ? null : new Date(json["updated_at"]),
+    effectiveAmount: json["effective_amount"],
     amountPerMonth: json["amount_per_month"],
     amountPerYear: json["amount_per_year"],
     items: (json["items"] as Array<any>).map(BidItemFromJSON),
@@ -150,6 +171,7 @@ export function RoundStatsBidToJSONTyped(
     member_id: value["memberId"],
     member_name: value["memberName"],
     email: value["email"],
+    pickup_location_name: value["pickupLocationName"],
     entered_by_admin: value["enteredByAdmin"],
     admin_confirmed:
       value["adminConfirmed"] == null
@@ -159,6 +181,7 @@ export function RoundStatsBidToJSONTyped(
       value["updatedAt"] == null
         ? null
         : (value["updatedAt"] as any).toISOString(),
+    effective_amount: value["effectiveAmount"],
     amount_per_month: value["amountPerMonth"],
     amount_per_year: value["amountPerYear"],
     items: (value["items"] as Array<any>).map(BidItemToJSON),

@@ -204,7 +204,11 @@ class BidItem(TapirModel):
 
 class BiddingRoundCreatedSubscription(TapirModel):
     """Links a subscription created by a bidding round to that round, so the created
-    contracts can be listed. A subscription can be linked once per round."""
+    contracts can be listed. A subscription can be linked once per round.
+    ``is_bidder_contract`` marks contracts created from a bid, as opposed to
+    auto-renewed contracts. ``was_reused`` marks links to subscriptions that already
+    existed before contract creation; ``original_quantity`` keeps their quantity from
+    before the round."""
 
     round = models.ForeignKey(
         BiddingRound, on_delete=models.CASCADE, related_name="created_subscriptions"
@@ -212,6 +216,9 @@ class BiddingRoundCreatedSubscription(TapirModel):
     subscription = models.ForeignKey(
         Subscription, on_delete=models.CASCADE, related_name="+"
     )
+    is_bidder_contract = models.BooleanField(default=False)
+    was_reused = models.BooleanField(default=False)
+    original_quantity = models.PositiveSmallIntegerField(null=True)
 
     class Meta:
         constraints = [
