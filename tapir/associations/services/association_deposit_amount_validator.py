@@ -10,12 +10,12 @@ from tapir.wirgarten.utils import format_currency
 
 class AssociationDepositAmountValidator:
     @staticmethod
-    def validate_positive_amount(amount: Decimal):
+    def validate_positive_amount(amount: Decimal) -> None:
         DecimalValidator(max_digits=8, decimal_places=2)(amount)
         MinValueValidator(Decimal("0.01"))(amount)
 
     @staticmethod
-    def validate_regular_deposit_amount(amount: Decimal, cache: dict):
+    def validate_regular_deposit_amount(amount: Decimal, cache: dict) -> None:
         DecimalValidator(max_digits=8, decimal_places=2)(amount)
         minimum = Decimal(
             str(

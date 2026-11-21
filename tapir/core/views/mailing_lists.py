@@ -221,7 +221,7 @@ class MailingListRecipientListView(APIView):
         )
         recipients = [
             {
-                "address": recipient.address,
+                "address": str(recipient.address),
                 "user_confirmed": True,
             }
             for recipient in mailing_list.members
@@ -325,7 +325,7 @@ class MailingListUnsubscribeRecipientView(APIView):
             list_name=serializer.validated_data["list_name"], cache=cache
         )
         address = serializer.validated_data["address"]
-        if address in {member.address for member in mailing_list.members}:
+        if address in {str(member.address) for member in mailing_list.members}:
             mailing_list.unsubscribe(
                 email=serializer.validated_data["address"], pre_confirmed=True
             )

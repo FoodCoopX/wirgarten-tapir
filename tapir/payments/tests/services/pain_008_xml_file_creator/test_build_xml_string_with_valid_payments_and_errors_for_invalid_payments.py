@@ -23,7 +23,7 @@ class TestBuildXmlStringWithValidPaymentsAndErrorsForInvalidPayments(TapirUnitTe
 
         mock_build_xml_string.return_value = "test_string"
 
-        xml_string, errors, _ = (
+        xml_string, errors = (
             Pain008XmlFileCreator.build_xml_string_with_valid_payments_and_errors_for_invalid_payments(
                 payments=all_payments, collection_date=collection_date, cache=cache
             )
@@ -68,7 +68,7 @@ class TestBuildXmlStringWithValidPaymentsAndErrorsForInvalidPayments(TapirUnitTe
         mock_validate_single_payment.side_effect = raise_exception_if_failed_payment
         mock_build_xml_string.return_value = "test_string"
 
-        xml_string, errors, _ = (
+        xml_string, errors = (
             Pain008XmlFileCreator.build_xml_string_with_valid_payments_and_errors_for_invalid_payments(
                 payments=all_payments, collection_date=collection_date, cache=cache
             )
@@ -108,7 +108,7 @@ class TestBuildXmlStringWithValidPaymentsAndErrorsForInvalidPayments(TapirUnitTe
             "Error"
         )
 
-        xml_string, errors, _ = (
+        xml_string, errors = (
             Pain008XmlFileCreator.build_xml_string_with_valid_payments_and_errors_for_invalid_payments(
                 payments=all_payments, collection_date=collection_date, cache=cache
             )

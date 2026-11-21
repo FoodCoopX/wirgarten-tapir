@@ -9,6 +9,7 @@ import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 import formatSubscription from "../../utils/formatSubscription.ts";
 import { getMaximumDate } from "../../utils/getMaximumDate.ts";
 import { getMinimumDate } from "../../utils/getMinimumDate.ts";
+import CalculationExplanation from "./CalculationExplanation.tsx";
 
 interface PaymentProps {
   extendedPayment: ExtendedPayment;
@@ -232,6 +233,9 @@ const PaymentComponent: React.FC<PaymentProps> = ({
         <Badge bg={getBadgeBackground(extendedPayment.payment)}>
           {getBadgeText(extendedPayment.payment)}
         </Badge>
+        <CalculationExplanation
+          text={extendedPayment.payment.calculationExplanation}
+        />
       </div>
     </div>
   );

@@ -51,7 +51,6 @@ from tapir.wirgarten.service.products import (
     get_active_subscriptions,
     get_available_product_types,
     get_active_and_future_subscriptions,
-    get_next_growing_period,
 )
 from tapir.wirgarten.utils import (
     format_date,
@@ -59,6 +58,7 @@ from tapir.wirgarten.utils import (
     legal_status_is_association,
     legal_status_is_cooperative,
 )
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.user_utils import UserUtils
 from tapir.wirgarten.views.mixin import PermissionOrSelfRequiredMixin
 
@@ -83,7 +83,9 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             self.object, today, include_future_subscriptions=True, cache=cache
         )
         context["bakery_enabled"] = settings.BAKERY_ENABLED
-        next_growing_period = get_next_growing_period()
+        next_growing_period = TapirCache.get_first_growing_period_starting_after(
+            reference_date=get_today(cache=cache), cache=cache
+        )
         for subscriptions in context["subscriptions"].values():
             for subscription in subscriptions:
                 price_at_renewal_date = 0
@@ -304,7 +306,9 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         if not get_active_subscriptions().filter(member_id=self.object.id).exists():
             return
 
-        next_growing_period = get_next_growing_period(today, cache=cache)
+        next_growing_period = TapirCache.get_first_growing_period_starting_after(
+            reference_date=today, cache=cache
+        )
         if not (
             next_growing_period
             and (today + relativedelta(months=3)) >= next_growing_period.start_date

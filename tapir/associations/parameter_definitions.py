@@ -19,7 +19,9 @@ if typing.TYPE_CHECKING:
 
 class ParameterDefinitionsAssociationDeposit:
     @classmethod
-    def define_all_parameters_association_deposit(cls, importer: ParameterDefinitions):
+    def define_all_parameters_association_deposit(
+        cls, importer: ParameterDefinitions
+    ) -> None:
         def deposit_increments_enabled(cache: dict) -> bool:
             return association_deposits_enabled(cache) and (
                 get_parameter_value(
@@ -41,10 +43,9 @@ class ParameterDefinitionsAssociationDeposit:
             label="Vereinseinlagen aktivieren",
             datatype=TapirParameterDatatype.BOOLEAN,
             initial_value=False,
-            description="Zusätzliche rückzahlbare Einlage bei neuen Mitgliedschaften. "
-            "Bestehende Vereins- und Erntebeiträge bleiben unabhängig bestehen. "
+            description="Rückzahlbare Einlage unabhängig von Vereins- und Erntebeiträgen. "
             "Die Aktivierung erzeugt keine Forderungen für bestehende Mitglieder. "
-            "Deaktiviert werden keine neuen Einlagen-Bankdateien erstellt; die Historie bleibt erhalten.",
+            "Bestehende Einlagen bleiben bei Deaktivierung erhalten.",
             category=ParameterCategory.BUSINESS,
             order_priority=-99,
             meta=ParameterMeta(show_only_when=legal_status_is_association),

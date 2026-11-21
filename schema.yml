@@ -3279,6 +3279,49 @@ paths:
               schema:
                 type: string
           description: ''
+  /core/api/member_data_disclosure:
+    get:
+      operationId: core_api_member_data_disclosure_retrieve
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - core
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberDataDisclosure'
+          description: ''
+  /core/api/member_data_disclosure_pdf:
+    get:
+      operationId: core_api_member_data_disclosure_pdf_retrieve
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - core
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+                format: binary
+          description: ''
   /core/api/member_extra_emails:
     get:
       operationId: core_api_member_extra_emails_retrieve
@@ -5581,7 +5624,6 @@ paths:
         name: id
         schema:
           type: string
-        description: Ein eindeutiger Wert, der pickup location identifiziert.
         required: true
       tags:
       - pickup_locations
@@ -5749,6 +5791,204 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UpdateMemberSolidarityContributionResponse'
+          description: ''
+  /subscriptions/api/admin_size_change_apply:
+    post:
+      operationId: subscriptions_api_admin_size_change_apply_create
+      tags:
+      - subscriptions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminSizeChangeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AdminSizeChangeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AdminSizeChangeRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderConfirmationResponse'
+          description: ''
+  /subscriptions/api/admin_size_change_check:
+    post:
+      operationId: subscriptions_api_admin_size_change_check_create
+      tags:
+      - subscriptions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminSizeChangeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AdminSizeChangeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AdminSizeChangeRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderConfirmationResponse'
+          description: ''
+  /subscriptions/api/admin_size_change_date_options:
+    get:
+      operationId: subscriptions_api_admin_size_change_date_options_retrieve
+      parameters:
+      - in: query
+        name: subscription_id
+        schema:
+          type: string
+      tags:
+      - subscriptions
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminStartDateOptions'
+          description: ''
+  /subscriptions/api/admin_subscription_addition_apply:
+    post:
+      operationId: subscriptions_api_admin_subscription_addition_apply_create
+      tags:
+      - subscriptions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminSubscriptionAdditionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AdminSubscriptionAdditionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AdminSubscriptionAdditionRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderConfirmationResponse'
+          description: ''
+  /subscriptions/api/admin_subscription_addition_check:
+    post:
+      operationId: subscriptions_api_admin_subscription_addition_check_create
+      tags:
+      - subscriptions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminSubscriptionAdditionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AdminSubscriptionAdditionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AdminSubscriptionAdditionRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderConfirmationResponse'
+          description: ''
+  /subscriptions/api/admin_subscription_addition_date_options:
+    get:
+      operationId: subscriptions_api_admin_subscription_addition_date_options_retrieve
+      parameters:
+      - in: query
+        name: product_type_id
+        schema:
+          type: string
+      tags:
+      - subscriptions
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminStartDateOptions'
+          description: ''
+  /subscriptions/api/admin_subscription_change_member_data:
+    get:
+      operationId: subscriptions_api_admin_subscription_change_member_data_retrieve
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - subscriptions
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminSubscriptionChangeMemberData'
+          description: ''
+  /subscriptions/api/admin_subscription_change_member_search:
+    get:
+      operationId: subscriptions_api_admin_subscription_change_member_search_list
+      parameters:
+      - in: query
+        name: search
+        schema:
+          type: string
+      tags:
+      - subscriptions
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AdminSubscriptionChangeMemberSummary'
           description: ''
   /subscriptions/api/confirm_subscription_changes:
     post:
@@ -9097,6 +9337,183 @@ components:
       - member_id
       - membership_type_id
       - start_date
+    AdminSizeChangeRequest:
+      type: object
+      properties:
+        member_id:
+          type: string
+          minLength: 1
+        subscription_id:
+          type: string
+          minLength: 1
+        new_product_id:
+          type: string
+          minLength: 1
+        change_date:
+          type: string
+          format: date
+        prerequisites:
+          $ref: '#/components/schemas/SubscriptionPrerequisitesInputRequest'
+      required:
+      - change_date
+      - member_id
+      - new_product_id
+      - prerequisites
+      - subscription_id
+    AdminStartDateOption:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+          nullable: true
+        enabled:
+          type: boolean
+      required:
+      - date
+      - enabled
+    AdminStartDateOptions:
+      type: object
+      properties:
+        next_possible_start:
+          $ref: '#/components/schemas/AdminStartDateOption'
+        weeks:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminStartDateWeekOption'
+        next_period_start:
+          $ref: '#/components/schemas/AdminStartDateOption'
+      required:
+      - next_period_start
+      - next_possible_start
+      - weeks
+    AdminStartDateWeekOption:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        is_before_next_possible_start:
+          type: boolean
+        has_no_delivery:
+          type: boolean
+      required:
+      - date
+      - has_no_delivery
+      - is_before_next_possible_start
+    AdminSubscriptionAdditionRequest:
+      type: object
+      properties:
+        member_id:
+          type: string
+          minLength: 1
+        product_id:
+          type: string
+          minLength: 1
+        quantity:
+          type: integer
+        start_date:
+          type: string
+          format: date
+        prerequisites:
+          $ref: '#/components/schemas/SubscriptionPrerequisitesInputRequest'
+      required:
+      - member_id
+      - prerequisites
+      - product_id
+      - quantity
+      - start_date
+    AdminSubscriptionChangeMemberData:
+      type: object
+      properties:
+        member:
+          $ref: '#/components/schemas/AdminSubscriptionChangeMemberSummary'
+        subscription_units:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminSubscriptionChangeSubscriptionUnit'
+        prerequisites:
+          $ref: '#/components/schemas/AdminSubscriptionChangePrerequisitesStatus'
+        payment_rhythm_label:
+          type: string
+      required:
+      - member
+      - payment_rhythm_label
+      - prerequisites
+      - subscription_units
+    AdminSubscriptionChangeMemberSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        display_name:
+          type: string
+        member_number:
+          type: string
+          nullable: true
+      required:
+      - display_name
+      - id
+      - member_number
+    AdminSubscriptionChangePrerequisitesStatus:
+      type: object
+      properties:
+        pickup_location_name:
+          type: string
+          nullable: true
+        has_banking_data:
+          type: boolean
+      required:
+      - has_banking_data
+      - pickup_location_name
+    AdminSubscriptionChangeSubscriptionUnit:
+      type: object
+      properties:
+        subscription_id:
+          type: string
+        unit_number:
+          type: integer
+        product_type_id:
+          type: string
+        product_type_name:
+          type: string
+        product_id:
+          type: string
+        product_name:
+          type: string
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        status:
+          $ref: '#/components/schemas/AdminSubscriptionChangeSubscriptionUnitStatusEnum'
+        price_category:
+          $ref: '#/components/schemas/PriceCategoryEnum'
+      required:
+      - end_date
+      - price_category
+      - product_id
+      - product_name
+      - product_type_id
+      - product_type_name
+      - start_date
+      - status
+      - subscription_id
+      - unit_number
+    AdminSubscriptionChangeSubscriptionUnitStatusEnum:
+      enum:
+      - running
+      - planned
+      - cancelled
+      - ended
+      type: string
+      description: |-
+        * `running` - running
+        * `planned` - planned
+        * `cancelled` - cancelled
+        * `ended` - ended
     AssignmentLogEntry:
       type: object
       properties:
@@ -14085,6 +14502,119 @@ components:
             minLength: 1
       required:
       - credit_ids
+    MemberDataDisclosure:
+      type: object
+      properties:
+        generated_at:
+          type: string
+          format: date-time
+        member:
+          $ref: '#/components/schemas/MemberDataMember'
+        sections:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemberDataSection'
+        log_overview:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemberDataLogOverview'
+        mail_overview:
+          $ref: '#/components/schemas/MemberDataMailOverview'
+        pdf_url:
+          type: string
+      required:
+      - generated_at
+      - log_overview
+      - mail_overview
+      - member
+      - pdf_url
+      - sections
+    MemberDataField:
+      type: object
+      properties:
+        name:
+          type: string
+        label:
+          type: string
+        value:
+          type: string
+          nullable: true
+      required:
+      - label
+      - name
+      - value
+    MemberDataLogOverview:
+      type: object
+      properties:
+        type:
+          type: string
+        count:
+          type: integer
+        first:
+          type: string
+          format: date-time
+        last:
+          type: string
+          format: date-time
+      required:
+      - count
+      - first
+      - last
+      - type
+    MemberDataMailOverview:
+      type: object
+      properties:
+        count:
+          type: integer
+        first:
+          type: string
+          format: date-time
+          nullable: true
+        last:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - count
+      - first
+      - last
+    MemberDataMember:
+      type: object
+      properties:
+        id:
+          type: string
+        member_no:
+          type: integer
+          nullable: true
+        name:
+          type: string
+      required:
+      - id
+      - member_no
+      - name
+    MemberDataSection:
+      type: object
+      properties:
+        key:
+          type: string
+        title:
+          type: string
+        purpose:
+          type: string
+        retention:
+          type: string
+        records:
+          type: array
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/MemberDataField'
+      required:
+      - key
+      - purpose
+      - records
+      - retention
+      - title
     MemberDataToConfirm:
       type: object
       properties:
@@ -15635,8 +16165,6 @@ components:
           format: date
         status:
           $ref: '#/components/schemas/PaymentStatusEnum'
-        edited:
-          type: boolean
         excluded_from_export:
           type: boolean
         type:
@@ -15655,6 +16183,8 @@ components:
           maximum: 32767
           minimum: 0
           nullable: true
+        calculation_explanation:
+          type: string
         mandate_ref:
           type: string
         transaction:
@@ -16646,6 +17176,16 @@ components:
           type: string
       required:
       - html
+    PriceCategoryEnum:
+      enum:
+      - standard
+      - personalised
+      - exempt
+      type: string
+      description: |-
+        * `standard` - standard
+        * `personalised` - personalised
+        * `exempt` - exempt
     Product:
       type: object
       properties:
@@ -18073,6 +18613,23 @@ components:
       - start_week
       - subscription_id
       - update_end_date_of_other_contracts
+    SubscriptionPrerequisitesInputRequest:
+      type: object
+      properties:
+        pickup_location_id:
+          type: string
+          nullable: true
+          minLength: 1
+        account_owner:
+          type: string
+        iban:
+          type: string
+        sepa_mandate_confirmed:
+          type: boolean
+      required:
+      - account_owner
+      - iban
+      - sepa_mandate_confirmed
     SubscriptionPriceOverrideChangeRequestRequest:
       type: object
       properties:

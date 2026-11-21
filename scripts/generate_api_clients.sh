@@ -4,6 +4,7 @@
 # Only regenerate if schema.yml has changed (using content hash)
 
 SCHEMA_HASH_FILE=".schema.hash"
+API_CLIENT_DIR="./src_frontend/api-client"
 CURRENT_HASH=$(md5sum schema.yml | cut -d' ' -f1)
 
 if [ -f "$SCHEMA_HASH_FILE" ]; then
@@ -13,12 +14,15 @@ else
 fi
 
 if [ "$CURRENT_HASH" != "$PREV_HASH" ]; then
+  # The generator doesn't delete files of models or APIs that are no longer in the schema.
+  rm -rf "$API_CLIENT_DIR"
+
   # --type-mappings=date=string: date-only fields become "YYYY-MM-DD" strings instead of Date,
   # see docs/dev/frontend_dates.md
   npx openapi-generator-cli generate \
     -i schema.yml \
     -g typescript-fetch \
-    -o ./src_frontend/api-client \
+    -o "$API_CLIENT_DIR" \
     --additional-properties=sortParamsByRequiredFlag=false,sortModelPropertiesByRequiredFlag=false \
     --type-mappings=date=string
 
