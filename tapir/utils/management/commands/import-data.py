@@ -278,7 +278,7 @@ class Command(BaseCommand):
                     match import_type:
                         case "deposits":
                             import_status = AssociationDepositImporter.import_deposit(
-                                row, cache
+                                row=row, cache=cache
                             )
                         case "members":
                             import_status = MemberImporter.import_member(
