@@ -93,11 +93,11 @@ class TestAssociationDepositImporter(TapirIntegrationTest):
             {"Nr": str(requested.member.member_no), "Einlage Status": "offen"},
         ]
         for row in rows:
-            AssociationDepositImporter.import_deposit(row, {})
-            AssociationDepositImporter.import_deposit(row, {})
+            AssociationDepositImporter.import_deposit(row=row, cache={})
+            AssociationDepositImporter.import_deposit(row=row, cache={})
         with self.assertRaises(ValidationError):
             AssociationDepositImporter.import_deposit(
-                {**rows[0], "Einlage Offen": "60"}, {}
+                row={**rows[0], "Einlage Offen": "60"}, cache={}
             )
         overview = AssociationDepositOverviewProvider.annotate_members(
             Member.objects.all()
@@ -121,11 +121,11 @@ class TestAssociationDepositImporter(TapirIntegrationTest):
             start_date=datetime.date(2024, 1, 1), end_date=datetime.date(2024, 12, 31)
         )
         row = {"Nr": str(former.member.member_no), "Einlage Erhalten": "200"}
-        AssociationDepositImporter.import_deposit(row, {})
+        AssociationDepositImporter.import_deposit(row=row, cache={})
         AssociationMembershipFactory(
             member=former.member, start_date=datetime.date(2025, 3, 1)
         )
-        AssociationDepositImporter.import_deposit(row, {})
+        AssociationDepositImporter.import_deposit(row=row, cache={})
         self.assertEqual(
             1, AssociationDeposit.objects.filter(member=former.member).count()
         )
@@ -140,21 +140,21 @@ class TestAssociationDepositImporter(TapirIntegrationTest):
         current = AssociationMembershipFactory(start_date=datetime.date(2026, 1, 1))
         member = current.member
         AssociationMembershipChangeHandler.start_membership(
-            member,
-            AssociationMembershipTypeFactory(),
-            datetime.date(2026, 12, 1),
-            member,
-            {},
+            member=member,
+            association_membership_type=AssociationMembershipTypeFactory(),
+            start_date=datetime.date(2026, 12, 1),
+            actor=member,
+            cache={},
         )
         row = {"Nr": str(member.member_no), "Einlage Erhalten": "200"}
-        AssociationDepositImporter.import_deposit(row, {})
+        AssociationDepositImporter.import_deposit(row=row, cache={})
         self.assertEqual(member.pk, AssociationDeposit.objects.get().member_id)
         mock_timezone(self, datetime.datetime(2027, 1, 5, 12))
-        AssociationDepositImporter.import_deposit(row, {})
+        AssociationDepositImporter.import_deposit(row=row, cache={})
         self.assertEqual(1, AssociationDeposit.objects.count())
         self.assertEqual(
             Decimal("200"),
-            AssociationDepositMemberService.get_details(member, {})["amount"],
+            AssociationDepositMemberService.get_details(member=member, cache={})["amount"],
         )
         self.assertFalse(
             AssociationDepositDepartureExport.get_memberships(
