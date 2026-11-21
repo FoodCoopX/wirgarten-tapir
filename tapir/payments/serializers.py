@@ -4,6 +4,7 @@ from rest_framework import serializers
 
 from tapir.associations.serializers import AssociationMembershipSerializer
 from tapir.deliveries.serializers import SubscriptionSerializer
+from tapir.payments.config import get_payment_type_label
 from tapir.payments.models import (
     MemberPaymentRhythm,
     MemberCredit,
@@ -24,7 +25,12 @@ from tapir.wirgarten.models import Member, Payment, PaymentTransaction
 class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
-        fields = "__all__"
+        exclude = ["association_deposit"]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["type"] = get_payment_type_label(data["type"])
+        return data
 
     amount = serializers.FloatField()
 
@@ -125,6 +131,11 @@ class PaymentTransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = PaymentTransaction
         fields = "__all__"
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["type"] = get_payment_type_label(data["type"])
+        return data
 
     payments_count = serializers.SerializerMethodField()
     payments_sum = serializers.SerializerMethodField()

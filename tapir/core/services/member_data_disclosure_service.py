@@ -14,7 +14,7 @@ from django.utils.text import capfirst
 from tapir.accounts.models import EmailChangeRequest
 from tapir.bakery.models import PreferredBread
 from tapir.deliveries.models import DeliveryDonation, Joker
-from tapir.associations.models import AssociationMembership
+from tapir.associations.models import AssociationDeposit, AssociationMembership
 from tapir.configuration.parameter import get_parameter_value
 from tapir.log.models import EmailLogEntry, LogEntry
 from tapir.payments.models import MemberCredit, MemberPaymentRhythm
@@ -162,6 +162,16 @@ DATA_SOURCES = [
         is_enabled=legal_status_is_association,
     ),
     DataSource(
+        key="association_deposits",
+        title="Vereinseinlagen",
+        purpose="Verwaltung der Vereinseinlage und ihrer Zahlungen.",
+        retention=RETENTION_BOOKKEEPING,
+        model=AssociationDeposit,
+        member_lookup="member",
+        exclude=frozenset({"member"}),
+        is_enabled=legal_status_is_association,
+    ),
+    DataSource(
         key="solidarity_contributions",
         title="Solidarbeitrag",
         purpose="Abwicklung des Solidarbeitrags.",
@@ -176,7 +186,14 @@ DATA_SOURCES = [
         retention=RETENTION_BOOKKEEPING,
         model=Payment,
         member_lookup="mandate_ref__member",
-        exclude=frozenset({"mandate_ref", "transaction", "coop_share_transaction"}),
+        exclude=frozenset(
+            {
+                "mandate_ref",
+                "transaction",
+                "coop_share_transaction",
+                "association_deposit",
+            }
+        ),
     ),
     DataSource(
         key="payment_rhythm",
