@@ -3,6 +3,7 @@ from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -24,10 +25,13 @@ class MemberAssociationDepositView(APIView):
         parameters=[OpenApiParameter("member_id", str, OpenApiParameter.PATH)],
         responses={200: AssociationDepositDetailsSerializer},
     )
-    def get(self, request, member_id):
+    def get(self, request: Request, member_id: str) -> Response:
+        cache = {}
         check_permission_or_self(pk=member_id, request=request)
         member = get_object_or_404(Member, pk=member_id)
-        details = AssociationDepositMemberService.get_details(member, {})
+        details = AssociationDepositMemberService.get_details(
+            member=member, cache=cache
+        )
         details["can_increase"] &= request.user.pk == member_id
         return Response(AssociationDepositDetailsSerializer(details).data)
 
@@ -36,7 +40,8 @@ class MemberAssociationDepositView(APIView):
         request=IncreaseAssociationDepositRequestSerializer,
         responses={200: AssociationDepositDetailsSerializer},
     )
-    def post(self, request, member_id):
+    def post(self, request: Request, member_id: str) -> Response:
+        cache = {}
         if request.user.pk != member_id:
             raise PermissionDenied
         member = get_object_or_404(Member, pk=member_id)
@@ -46,16 +51,20 @@ class MemberAssociationDepositView(APIView):
             raise ValidationError(
                 {"confirmation": "Bitte bestätige die einmalige Lastschrift."}
             )
-        cache = {}
         try:
-            AssociationDepositMemberService.increase(
-                member,
-                serializer.validated_data["total_amount"],
-                serializer.validated_data["previous_amount"],
-                request.user,
-                cache,
+            amount = AssociationDepositMemberService.validate_increase(
+                member=member,
+                total_amount=serializer.validated_data["total_amount"],
+                previous_amount=serializer.validated_data["previous_amount"],
+                cache=cache,
             )
         except DjangoValidationError as error:
             raise ValidationError(error.messages) from error
-        details = AssociationDepositMemberService.get_details(member, cache)
+        if amount:
+            AssociationDepositMemberService.increase(
+                member=member, amount=amount, actor=request.user, cache=cache
+            )
+        details = AssociationDepositMemberService.get_details(
+            member=member, cache=cache
+        )
         return Response(AssociationDepositDetailsSerializer(details).data)
