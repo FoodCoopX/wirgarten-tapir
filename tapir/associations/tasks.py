@@ -43,8 +43,6 @@ def trigger_association_membership_ends_today_mails():
                         "membership_type_name": membership.type.name,
                         "end_date_set_on": format_date(
                             membership.cancellation_ts.date()
-                            if membership.cancellation_ts is not None
-                            else None
                         ),
                     }
                     | AssociationDepositMailTokenProvider.build_tokens(
