@@ -161,6 +161,25 @@ class TestUpdateSubscriptionsApiView(TapirIntegrationTest):
         self.assertEqual("new account owner", member.account_owner)
         self.assertEqual("NL76RABO8675663943", member.iban)
 
+    def test_post_existingMandateWithoutNewBankingData_preservesConsent(self):
+        original_consent = self.now - datetime.timedelta(days=30)
+        member = MemberFactory.create(
+            iban="NL76RABO8675663943",
+            account_owner="Original account owner",
+            sepa_consent=original_consent,
+        )
+        self.client.force_login(member)
+        data = self.build_valid_post_data_for_member(member.id)
+        data.update(iban="", account_owner="", sepa_allowed=False)
+
+        response_content = self.send_request_and_assert_response_200(data=data)
+
+        self.assert_order_confirmed(response_content)
+        member.refresh_from_db()
+        self.assertEqual(original_consent, member.sepa_consent)
+        self.assertEqual("Original account owner", member.account_owner)
+        self.assertEqual("NL76RABO8675663943", member.iban)
+
     @patch.object(SubscriptionUpdateViewChangeApplier, "apply_changes", autospec=True)
     def test_post_orderIsInvalid_noChangesApplied(self, mock_apply_changes: Mock):
         member = MemberFactory.create()

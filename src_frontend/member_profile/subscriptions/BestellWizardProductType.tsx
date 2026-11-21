@@ -55,6 +55,7 @@ import { isSubscriptionActive } from "../../utils/isSubscriptionActive.ts";
 interface BestellWizardProductTypeProps {
   csrfToken: string;
   memberId: string;
+  memberUrl: string;
   firstName: string;
   lastName: string;
   needsBankingData: boolean;
@@ -64,6 +65,7 @@ interface BestellWizardProductTypeProps {
 const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
   csrfToken,
   memberId,
+  memberUrl,
   firstName,
   lastName,
   needsBankingData,
@@ -167,6 +169,9 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
           for (const productType of newSettings.productTypes) {
             productType.mustBeSubscribedTo = true;
           }
+          if (!needsBankingData) {
+            newSettings.strings.step9Title = "Zahlung und Vertragsgrundsätze";
+          }
           setSettings(newSettings);
           setSettingsLoaded(true);
 
@@ -257,7 +262,13 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
     const newSteps = buildStepsFor(deliveryMode);
     setSteps(newSteps);
     setCurrentStep(newSteps[0]);
-  }, [settingsLoaded, needsBankingData, productType, mustAddPickupLocation]);
+  }, [
+    settingsLoaded,
+    needsBankingData,
+    productType,
+    mustAddPickupLocation,
+    canChangePaymentRhythm,
+  ]);
 
   function getHomeDeliveryLocations() {
     return getPickupLocationsForDeliveryMode(
@@ -293,7 +304,15 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
       }
     }
 
-    newSteps.push("9_banking_data", "10_summary", "11_legal");
+    if (
+      needsBankingData ||
+      settings.labelCheckboxContractPolicy.trim() !== "" ||
+      (canChangePaymentRhythm &&
+        Object.keys(settings.paymentRhythmChoices).length > 1)
+    ) {
+      newSteps.push("9_banking_data");
+    }
+    newSteps.push("10_summary", "11_legal");
     return newSteps;
   }
 
@@ -389,10 +408,6 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
     );
   }, [shoppingCart, selectedGrowingPeriod]);
 
-  useEffect(() => {
-    setSepaAllowed(!needsBankingData);
-  }, [needsBankingData]);
-
   function goToNextStep() {
     const currentIndex = steps.indexOf(currentStep);
     if (currentIndex + 1 >= steps.length) {
@@ -427,8 +442,8 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
             pickupLocationsWithCapacityFull,
           )!.id,
           growingPeriodId: selectedGrowingPeriod!.id!,
-          iban: personalData.iban,
-          accountOwner: personalData.accountOwner,
+          iban: needsBankingData ? personalData.iban : "",
+          accountOwner: needsBankingData ? personalData.accountOwner : "",
           paymentRhythm: personalData.paymentRhythm,
           deliveryAddress:
             mustAddPickupLocation && isHomeDeliverySelected()
@@ -593,6 +608,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
             contractAccepted={contractAccepted}
             setContractAccepted={setContractAccepted}
             autoFillAccountOwnerFromName={false}
+            needsBankingData={needsBankingData}
             settings={settings}
             shoppingCart={shoppingCart}
             solidarityContribution={0}
@@ -632,6 +648,9 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
             waitingListEntryDetails={undefined}
             contractStartDate={contractStartDate}
             singleProductType={productType}
+            bankingDataUrl={
+              needsBankingData ? undefined : `${memberUrl}#member-payment-data`
+            }
             selectedGrowingPeriod={selectedGrowingPeriod}
             hideTrialPeriod={memberAlreadyHasASubscriptionForThisProductType}
             stepActive={step === currentStep}

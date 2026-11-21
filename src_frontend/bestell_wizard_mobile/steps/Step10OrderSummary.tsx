@@ -70,6 +70,7 @@ interface Step10OrderSummaryProps {
   stepActive: boolean;
   setCurrentStep: (step: Step) => void;
   deliveryAddress?: DeliveryAddressRequest;
+  bankingDataUrl?: string;
 }
 
 const PaymentRow: React.FC<{
@@ -113,6 +114,7 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
   stepActive,
   setCurrentStep,
   deliveryAddress,
+  bankingDataUrl,
 }) => {
   function getRelevantPickupLocation(): PublicPickupLocation | undefined {
     if (waitingListEntryDetails === undefined) {
@@ -711,6 +713,16 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                 </AccordionBody>
               </Accordion.Item>
             </Accordion>
+          )}
+          {bankingDataUrl && isAtLeastOneProductOrdered(shoppingCart) && (
+            <a
+              href={bankingDataUrl}
+              target="_blank"
+              rel="noopener"
+              className="small"
+            >
+              Bankverbindung ändern (neuer Tab)
+            </a>
           )}
         </div>
       </div>

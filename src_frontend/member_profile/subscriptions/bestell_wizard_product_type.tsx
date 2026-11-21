@@ -9,6 +9,7 @@ if (domNode) {
   root.render(
     <BestellWizardProductType
       memberId={domNode.dataset.memberId!}
+      memberUrl={domNode.dataset.memberUrl!}
       firstName={domNode.dataset.firstName!}
       lastName={domNode.dataset.lastName!}
       needsBankingData={domNode.dataset.needsBankingData === "True"}

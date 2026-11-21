@@ -31,6 +31,7 @@ interface Step9BankingDataProps {
   nextButtonText?: string;
   canChangePaymentRhythm: boolean;
   autoFillAccountOwnerFromName: boolean;
+  needsBankingData?: boolean;
 }
 
 function getPlaceholder(key: keyof PersonalData) {
@@ -62,6 +63,7 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
   nextButtonText,
   canChangePaymentRhythm,
   autoFillAccountOwnerFromName,
+  needsBankingData = true,
 }) => {
   const [accountOwnerSetManually, setAccountOwnerSetManually] = useState(false);
   const [paymentRhythmModalOpen, setPaymentRhythmModalOpen] = useState(false);
@@ -74,7 +76,11 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
   }, [stepActive]);
 
   useEffect(() => {
-    if (!autoFillAccountOwnerFromName || accountOwnerSetManually) {
+    if (
+      !needsBankingData ||
+      !autoFillAccountOwnerFromName ||
+      accountOwnerSetManually
+    ) {
       return;
     }
 
@@ -90,19 +96,16 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
 
   function validate() {
     setShowValidation(true);
-    if (personalData.accountOwner.length === 0) {
-      return;
-    }
-
-    if (!isIbanValid(personalData.iban)) {
+    if (
+      needsBankingData &&
+      (!personalData.accountOwner ||
+        !isIbanValid(personalData.iban) ||
+        !sepaAllowed)
+    ) {
       return;
     }
 
     if (mustShowCheckboxContractAccepted() && !contractAccepted) {
-      return;
-    }
-
-    if (!sepaAllowed) {
       return;
     }
 
@@ -119,32 +122,36 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
   return (
     <>
       <div className={"d-flex flex-column gap-2"} style={{ width: "100%" }}>
-        <PersonalDataFormControl
-          personalData={personalData}
-          setPersonalData={(newData) => {
-            setAccountOwnerSetManually(true);
-            setPersonalData(newData);
-          }}
-          field={"accountOwner"}
-          placeholder={getPlaceholder("accountOwner")}
-          type={"text"}
-          showValidation={showValidation}
-          isValid={personalData.accountOwner.length > 0}
-        />
-        <PersonalDataFormControl
-          personalData={personalData}
-          setPersonalData={setPersonalData}
-          field={"iban"}
-          placeholder={getPlaceholder("iban")}
-          type={"text"}
-          showValidation={showValidation}
-          isValid={isIbanValid(personalData.iban)}
-          extraText={
-            showValidation && !isIbanValid(personalData.iban)
-              ? "Ungültige IBAN"
-              : ""
-          }
-        />
+        {needsBankingData && (
+          <>
+            <PersonalDataFormControl
+              personalData={personalData}
+              setPersonalData={(newData) => {
+                setAccountOwnerSetManually(true);
+                setPersonalData(newData);
+              }}
+              field={"accountOwner"}
+              placeholder={getPlaceholder("accountOwner")}
+              type={"text"}
+              showValidation={showValidation}
+              isValid={personalData.accountOwner.length > 0}
+            />
+            <PersonalDataFormControl
+              personalData={personalData}
+              setPersonalData={setPersonalData}
+              field={"iban"}
+              placeholder={getPlaceholder("iban")}
+              type={"text"}
+              showValidation={showValidation}
+              isValid={isIbanValid(personalData.iban)}
+              extraText={
+                showValidation && !isIbanValid(personalData.iban)
+                  ? "Ungültige IBAN"
+                  : ""
+              }
+            />
+          </>
+        )}
         {atLeastOneMonthlyPayment(
           shoppingCart,
           productTypesInWaitingList,
@@ -181,13 +188,15 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
             </div>
           )}
         <div className={"d-flex flex-column gap-2 mx-2"}>
-          <TapirCheckbox
-            onChange={setSepaAllowed}
-            checked={sepaAllowed}
-            label={settings.labelCheckboxSepaMandat}
-            controlId={"sepa"}
-            showError={showValidation && !sepaAllowed}
-          />
+          {needsBankingData && (
+            <TapirCheckbox
+              onChange={setSepaAllowed}
+              checked={sepaAllowed}
+              label={settings.labelCheckboxSepaMandat}
+              controlId={"sepa"}
+              showError={showValidation && !sepaAllowed}
+            />
+          )}
           {mustShowCheckboxContractAccepted() && (
             <TapirCheckbox
               onChange={setContractAccepted}
