@@ -361,7 +361,7 @@ class MemberListView(PermissionRequiredMixin, FilterView):
             == LEGAL_STATUS_ASSOCIATION
         )
         context["show_deposits"] = AssociationDepositOverviewProvider.can_view(
-            self.request.user, self.cache
+            user=self.request.user, cache=self.cache
         )
         context["cache"] = self.cache
         context["delivery_charge_enabled"] = get_parameter_value(
@@ -374,7 +374,7 @@ class MemberListView(PermissionRequiredMixin, FilterView):
         kwargs = super().get_filterset_kwargs(filterset_class)
         kwargs["cache"] = self.cache
         kwargs["show_deposits"] = AssociationDepositOverviewProvider.can_view(
-            self.request.user, self.cache
+            user=self.request.user, cache=self.cache
         )
         return kwargs
 
