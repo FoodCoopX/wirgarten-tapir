@@ -38,12 +38,21 @@ class AssociationDepositOverviewProvider:
             .annotate(total=Sum("amount"))
         )
         exported = agreed.filter(transaction__isnull=False)
+        deposits = AssociationDeposit.objects.filter(member_id=member_id)
+        opening_balance = Coalesce(
+            Subquery(deposits.values("opening_balance")), Decimal("0")
+        )
+        outstanding = Coalesce(
+            Subquery(deposits.values("imported_outstanding_amount")), Decimal("0")
+        )
         return queryset.annotate(
+            deposit_imported_outstanding=outstanding,
             deposit_agreement_requested=Exists(
-                AssociationDeposit.objects.filter(
-                    member_id=member_id, payments__isnull=True
-                )
+                deposits.filter(payments__isnull=True, opening_balance__isnull=True)
             ),
-            deposit_agreed=Coalesce(Subquery(agreed.values("total")), Decimal("0")),
-            deposit_exported=Coalesce(Subquery(exported.values("total")), Decimal("0")),
+            deposit_agreed=Coalesce(Subquery(agreed.values("total")), Decimal("0"))
+            + opening_balance
+            + outstanding,
+            deposit_exported=Coalesce(Subquery(exported.values("total")), Decimal("0"))
+            + opening_balance,
         )
