@@ -259,9 +259,7 @@ class MemberFilter(FilterSet):
             queryset, ["first_name", "last_name"], cache=self.cache
         )
         if self.show_deposits:
-            queryset = AssociationDepositOverviewProvider.annotate_members(
-                queryset, self.cache
-            )
+            queryset = AssociationDepositOverviewProvider.annotate_members(queryset)
         return super().filter_queryset(queryset)
 
     def filter_deposit_status(self, queryset, name, value):
