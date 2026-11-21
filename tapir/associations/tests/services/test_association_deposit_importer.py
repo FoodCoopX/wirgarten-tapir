@@ -154,7 +154,9 @@ class TestAssociationDepositImporter(TapirIntegrationTest):
         self.assertEqual(1, AssociationDeposit.objects.count())
         self.assertEqual(
             Decimal("200"),
-            AssociationDepositMemberService.get_details(member=member, cache={})["amount"],
+            AssociationDepositMemberService.get_details(member=member, cache={})[
+                "amount"
+            ],
         )
         self.assertFalse(
             AssociationDepositDepartureExport.get_memberships(
