@@ -13,7 +13,6 @@ from tapir.wirgarten.models import GrowingPeriod, Subscription
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
     get_active_subscriptions,
-    get_next_growing_period,
 )
 from tapir.wirgarten.utils import get_today
 
@@ -47,7 +46,9 @@ class AutomaticSubscriptionRenewalService:
         if subscription.cancellation_ts is not None:
             return False
 
-        next_growing_period = get_next_growing_period(cache=cache)
+        next_growing_period = TapirCache.get_first_growing_period_starting_after(
+            reference_date=get_today(cache=cache), cache=cache
+        )
         if not next_growing_period:
             return False
 
@@ -84,7 +85,7 @@ class AutomaticSubscriptionRenewalService:
 
     @classmethod
     def build_renewed_subscription(cls, subscription: Subscription, cache: dict):
-        next_growing_period = get_next_growing_period(
+        next_growing_period = TapirCache.get_first_growing_period_starting_after(
             reference_date=subscription.end_date, cache=cache
         )
 

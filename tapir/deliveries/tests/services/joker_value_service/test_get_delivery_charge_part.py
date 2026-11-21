@@ -35,7 +35,7 @@ class TestGetDeliveryChargePart(TapirUnitTest):
         cache = {}
 
         part = JokerValueService._get_delivery_charge_part(
-            member=member, joker_date=self.JOKER_DATE, cache=cache
+            member=member, delivery_date=self.JOKER_DATE, cache=cache
         )
 
         self.assertEqual(Decimal("1.5"), part.value)
@@ -58,7 +58,7 @@ class TestGetDeliveryChargePart(TapirUnitTest):
         mock_get_delivery_charge_at_date.return_value = Decimal(0)
 
         part = JokerValueService._get_delivery_charge_part(
-            member=MemberFactory.build(), joker_date=self.JOKER_DATE, cache={}
+            member=MemberFactory.build(), delivery_date=self.JOKER_DATE, cache={}
         )
 
         self.assertIsNone(part)
@@ -71,7 +71,7 @@ class TestGetDeliveryChargePart(TapirUnitTest):
         mock_get_member_pickup_location_id.return_value = None
 
         part = JokerValueService._get_delivery_charge_part(
-            member=MemberFactory.build(), joker_date=self.JOKER_DATE, cache={}
+            member=MemberFactory.build(), delivery_date=self.JOKER_DATE, cache={}
         )
 
         self.assertIsNone(part)

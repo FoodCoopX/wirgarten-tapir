@@ -123,7 +123,7 @@ class TestBuildPaymentsForSubscriptionsInTrial(TapirIntegrationTest):
                     cache=cache,
                     generated_payments=generated_payments,
                     in_trial=True,
-                    total_to_pay_function=MonthPaymentBuilderSubscriptions.get_total_to_pay,
+                    calculation_parts_function=MonthPaymentBuilderSubscriptions.get_calculation_parts,
                     allow_negative_amounts=False,
                 ),
                 call(
@@ -135,7 +135,7 @@ class TestBuildPaymentsForSubscriptionsInTrial(TapirIntegrationTest):
                     cache=cache,
                     generated_payments=generated_payments,
                     in_trial=True,
-                    total_to_pay_function=MonthPaymentBuilderSubscriptions.get_total_to_pay,
+                    calculation_parts_function=MonthPaymentBuilderSubscriptions.get_calculation_parts,
                     allow_negative_amounts=False,
                 ),
                 call(
@@ -147,7 +147,7 @@ class TestBuildPaymentsForSubscriptionsInTrial(TapirIntegrationTest):
                     cache=cache,
                     generated_payments=generated_payments,
                     in_trial=True,
-                    total_to_pay_function=MonthPaymentBuilderSubscriptions.get_total_to_pay,
+                    calculation_parts_function=MonthPaymentBuilderSubscriptions.get_calculation_parts,
                     allow_negative_amounts=False,
                 ),
             ],
