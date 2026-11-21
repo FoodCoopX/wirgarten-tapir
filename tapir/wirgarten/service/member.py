@@ -269,7 +269,9 @@ def send_investing_membership_confirmation(
                 solidarity_contribution=solidarity_contribution,
                 cache=cache,
             )
-            | AssociationDepositMailTokenProvider.build_tokens(member, cache),
+            | AssociationDepositMailTokenProvider.build_tokens(
+                member=member, cache=cache
+            ),
         ),
     )
 
@@ -318,7 +320,9 @@ def send_product_order_confirmation(
         Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION,
         Events.WAITING_LIST_ORDER_CONFIRMATION,
     ):
-        token_data |= AssociationDepositMailTokenProvider.build_tokens(member, cache)
+        token_data |= AssociationDepositMailTokenProvider.build_tokens(
+            member=member, cache=cache
+        )
 
     TransactionalTrigger.fire_action(
         trigger_data=TransactionalTriggerData(
