@@ -19,6 +19,8 @@ through the matrix channel or by tagging me in issues or PRs.
     - Payments are quite complex, meaning the payment builder services are complex too, but maybe they can be improved
       on
 - We can probably squash many migrations, hoping to make setting up a new local instance from a blank state faster
+    - We must wait until the LNP instance is migrated to the master version first, they are still on tapir2.0 prod (but
+      it's the last one on that branch)
 - The mail module is currently a separate private repo, but it's only used by Tapir. It should be integrated directly
   into Tapir instead
     - Hopefully the build if the frontend part of the mail module can use the same process as Tapir

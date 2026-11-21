@@ -17,7 +17,7 @@ from tapir.wirgarten.utils import get_today, legal_status_is_association
 class AssociationDepositImporter:
     @classmethod
     @transaction.atomic
-    def import_deposit(cls, row: dict[str, str], cache: dict):
+    def import_deposit(cls, row: dict[str, str], cache: dict) -> str:
         if DataImportUtils.is_row_empty(row):
             return MEMBER_IMPORT_STATUS_SKIPPED
         if not legal_status_is_association(cache=cache):

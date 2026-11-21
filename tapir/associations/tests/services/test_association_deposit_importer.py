@@ -100,7 +100,7 @@ class TestAssociationDepositImporter(TapirIntegrationTest):
                 {**rows[0], "Einlage Offen": "60"}, {}
             )
         overview = AssociationDepositOverviewProvider.annotate_members(
-            Member.objects.all(), {}
+            Member.objects.all()
         )
         balance = overview.get(pk=membership.member_id)
         self.assertEqual(Decimal("200"), balance.deposit_agreed)

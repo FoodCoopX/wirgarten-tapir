@@ -89,7 +89,11 @@ const AssociationMembershipCard: React.FC<AssociationMembershipCardProps> = ({
               )}
             </>
           )}
-          <AssociationDeposit memberId={memberId} csrfToken={csrfToken} />
+          <AssociationDeposit
+            memberId={memberId}
+            csrfToken={csrfToken}
+            setToastDatas={setToastDatas}
+          />
         </Card.Body>
         {orderWizardUrl && (
           <Card.Footer>

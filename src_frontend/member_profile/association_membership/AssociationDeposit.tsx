@@ -1,20 +1,26 @@
-import { useEffect, useState } from "react";
-import { Button, Form } from "react-bootstrap";
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
+import { Form } from "react-bootstrap";
 import {
   type AssociationDepositDetails,
   AssociationsApi,
 } from "../../api-client";
+import TapirButton from "../../components/TapirButton";
 import { useApi } from "../../hooks/useApi";
+import { ToastData } from "../../types/ToastData";
+import { formatCurrency } from "../../utils/formatCurrency";
+import { handleRequestError } from "../../utils/handleRequestError";
 import { isValidDepositAmount } from "../../utils/isValidDepositAmount";
 
 interface AssociationDepositProps {
   memberId: string;
   csrfToken: string;
+  setToastDatas: Dispatch<SetStateAction<ToastData[]>>;
 }
 
 export function AssociationDeposit({
   memberId,
   csrfToken,
+  setToastDatas,
 }: AssociationDepositProps) {
   const api = useApi(AssociationsApi, csrfToken);
   const [details, setDetails] = useState<AssociationDepositDetails>();
@@ -22,24 +28,22 @@ export function AssociationDeposit({
   const [confirmed, setConfirmed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
-  const [error, setError] = useState(false);
-  const money = new Intl.NumberFormat("de-DE", {
-    style: "currency",
-    currency: "EUR",
-  });
 
   useEffect(() => {
     api
       .associationsApiMemberAssociationDepositRetrieve({ memberId })
       .then(setDetails)
-      .catch(() => {
-        setError(true);
-        setMessage("Die Vereinseinlage konnte nicht geladen werden.");
-      });
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Die Vereinseinlage konnte nicht geladen werden.",
+          setToastDatas,
+        ),
+      );
   }, [memberId]);
 
   if (!details?.visible) {
-    return error ? <p role="alert">{message}</p> : null;
+    return null;
   }
 
   const newTotal = Number(total);
@@ -51,7 +55,6 @@ export function AssociationDeposit({
   function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
-    setError(false);
     setMessage("");
     api
       .associationsApiMemberAssociationDepositCreate({
@@ -68,10 +71,13 @@ export function AssociationDeposit({
         setConfirmed(false);
         setMessage("Die Erhöhung wurde für den nächsten Einzug vorgemerkt.");
       })
-      .catch(() => {
-        setError(true);
-        setMessage("Die Einlage konnte nicht erhöht werden.");
-      })
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Die Einlage konnte nicht erhöht werden.",
+          setToastDatas,
+        ),
+      )
       .finally(() => setBusy(false));
   }
 
@@ -81,7 +87,7 @@ export function AssociationDeposit({
       <p>
         {details.agreementRequested
           ? "Individuelle Vereinbarung erbeten"
-          : money.format(details.amount)}
+          : formatCurrency(details.amount)}
       </p>
       {details.canIncrease && (
         <Form onSubmit={submit}>
@@ -103,17 +109,21 @@ export function AssociationDeposit({
             <Form.Check
               id="association-deposit-confirmation"
               className="mb-2"
-              label={`Ich bestätige die einmalige Lastschrift über ${money.format(difference)}.`}
+              label={`Ich bestätige die einmalige Lastschrift über ${formatCurrency(difference)}.`}
               checked={confirmed}
               onChange={(event) => setConfirmed(event.target.checked)}
             />
           )}
-          <Button type="submit" disabled={!valid || !confirmed || busy}>
-            Einlage erhöhen
-          </Button>
+          <TapirButton
+            variant="primary"
+            type="submit"
+            text="Einlage erhöhen"
+            disabled={!valid || !confirmed}
+            loading={busy}
+          />
         </Form>
       )}
-      {message && <p role={error ? "alert" : "status"}>{message}</p>}
+      {message && <p role="status">{message}</p>}
     </section>
   );
 }

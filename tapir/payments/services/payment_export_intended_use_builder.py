@@ -2,6 +2,7 @@ from tapir.associations.services.association_membership_price_type_getter import
     AssociationMembershipTypePriceGetter,
 )
 from tapir.configuration.parameter import get_parameter_value
+from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.payments.config import (
     PAYMENT_TYPE_ASSOCIATION_DEPOSIT,
     PAYMENT_TYPE_COOP_SHARES,
@@ -24,7 +25,7 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 class PaymentExportIntendedUseBuilder:
     @classmethod
     def build_intended_use(cls, payment: Payment, is_contracts: bool, cache: dict):
-        if payment.type != PAYMENT_TYPE_ASSOCIATION_DEPOSIT and get_parameter_value(
+        if get_parameter_value(
             key=ParameterKeys.PAYMENT_INTENDED_USE_ENABLE_CUSTOM, cache=cache
         ):
             return cls._build_intended_use_from_pattern(
@@ -50,6 +51,10 @@ class PaymentExportIntendedUseBuilder:
     def _build_intended_use_from_pattern(
         cls, payment: Payment, is_contracts: bool, cache: dict
     ):
+        if payment.type == PAYMENT_TYPE_ASSOCIATION_DEPOSIT:
+            raise TapirImproperlyConfigured(
+                "Konfigurierbare Verwendungszwecke für Vereinseinlagen werden noch nicht unterstützt."
+            )
         if is_contracts:
             parameter_key = cls._get_intended_use_case(payment=payment, cache=cache)
             return IntendedUsePatternExpander.expand_pattern_contracts(

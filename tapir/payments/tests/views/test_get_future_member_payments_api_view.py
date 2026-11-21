@@ -156,6 +156,11 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         )
         for index, extended_payment in enumerate(response_content):
             self.assertEqual(10, extended_payment["payment"]["amount"])
+            self.assertTrue(
+                extended_payment["payment"]["calculation_explanation"].endswith(
+                    "10,00 € monatlich (voller Monat)\nSumme: 10,00 €"
+                )
+            )
             self.assertEqual(
                 datetime.date(year=2020, month=index + 1, day=15),
                 datetime.datetime.strptime(

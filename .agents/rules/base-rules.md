@@ -106,6 +106,9 @@ Services: `web` (8000), `vite` (5173), `keycloak` (8080), `db` (5432), `redis` (
 - **Models** inherit `tapir.core.models.TapirModel` (nanoid IDs prevent cross-model ID mixups; `created_at`/
   `updated_at`). Keep model classes to their own fields; helper methods only if they reference just that object's
   fields.
+- **Member data disclosure**: when you add or change a model that stores data about a member (a foreign key to
+  `Member`/`TapirUser`, or personal data), check `tapir/core/services/member_data_disclosure_service.py`: add a
+  `DataSource`, update its fields, or exclude fields that must not be shown (secrets, tokens, other members' data).
 - **Business logic in service classes** under `tapir/<app>/services/`, not in views or models.
 - **`cache` parameter**: a plain `dict` passed through service functions as a per-request query cache. Create it at the
   origin (view `__init__`, first lines of a command) and pass it down. Request-scoped, so usually no invalidation; if
@@ -119,15 +122,24 @@ Services: `web` (8000), `vite` (5173), `keycloak` (8080), `db` (5432), `redis` (
   `setUpTestData` runs earlier, so **users cannot be created in `setUpTestData`**. Run via `make test-fast` /
   `make test-app APP=<app>`.
 - **Test naming**: one file per tested class/function, `test_<snake_case_name>.py`, class `Test<ClassOrFunctionName>`.
+  **Only one test class per file**: never add a second class to an existing file. To split a service's tests by method,
+  use a directory named after the service with one file per method
+  (e.g. `tests/services/member_pickup_location_cleaner/test_should_clean_pickup_location.py`).
   Methods follow `test_<method>_<condition>_<expectedResult>`, each part in camelCase, e.g.
   `test_validateInstalments_moreSharesThanTheMinimum_raisesError`. Use `default` as condition for the nominal case
   (`test_patch_default_callsProductUpdated`); for views, `<method>` is the HTTP verb (`test_get_loggedInAsNormalMember_returns403`).
 - **Mock parameter naming**: the test parameter receiving a patched function or method is named
   `mock_<name_of_the_function>`, e.g. `mock_get_payment_export_exclusion_periods_for_member` for
   `@patch.object(TapirCache, "get_payment_export_exclusion_periods_for_member", ...)`.
+- **Mock return values**: set `return_value` / `side_effect` in the test body (`mock_x.return_value = ...`), never in
+  the `@patch` / `@patch.object` decorator. Exception: class-level decorators, which may set a default for all tests.
 - **Annotate API views** with `@extend_schema(...)` and run `make schema`.
 - **Admin docs**: when adding, changing or removing an admin-visible feature, ask whether the admin documentation in
   `docs/admins/` should be updated.
+- **Test data generation**: when adding or updating a feature, ask whether test data generation
+  (`tapir/utils/services/test_data_generation/`, `populate` command) should be updated. Never write automated tests for
+  test data generation.
+- **Vocabulary**: name domain concepts in code, frontend texts and docs as in [docs/dev/glossary.md](docs/dev/glossary.md).
 - **Docs language**: admin documentation (`docs/admins/`) is written in German, developer documentation (`docs/dev/`) in
   English.
 - **Formatting**: Black / Prettier / DjHTML, enforced by pre-commit (`poetry run pre-commit install`).

@@ -71,8 +71,26 @@ class TestMemberAssociationDepositView(TapirIntegrationTest):
                         self.url, data, content_type="application/json"
                     ).status_code,
                 )
-        self.assertEqual(1, AssociationDeposit.objects.count())
+        self.assertEqual(
+            [Decimal("200")],
+            list(
+                AssociationDeposit.objects.get().payments.values_list(
+                    "amount", flat=True
+                )
+            ),
+        )
 
     def test_get_otherMember_returns403(self):
         self.client.force_login(MemberFactory())
         self.assertEqual(403, self.client.get(self.url).status_code)
+
+    def test_post_otherMember_returns403(self):
+        self.client.force_login(MemberFactory())
+
+        response = self.client.post(
+            self.url,
+            {"total_amount": "250", "previous_amount": "200", "confirmation": True},
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 403)

@@ -1,3 +1,4 @@
+.openapi-generator-ignore
 apis/AccountsApi.ts
 apis/AssociationsApi.ts
 apis/BakeryApi.ts
@@ -17,6 +18,16 @@ apis/WaitingListApi.ts
 apis/index.ts
 index.ts
 models/AdminSetAssociationMembershipRequestRequest.ts
+models/AdminSizeChangeRequest.ts
+models/AdminStartDateOption.ts
+models/AdminStartDateOptions.ts
+models/AdminStartDateWeekOption.ts
+models/AdminSubscriptionAdditionRequest.ts
+models/AdminSubscriptionChangeMemberData.ts
+models/AdminSubscriptionChangeMemberSummary.ts
+models/AdminSubscriptionChangePrerequisitesStatus.ts
+models/AdminSubscriptionChangeSubscriptionUnit.ts
+models/AdminSubscriptionChangeSubscriptionUnitStatusEnum.ts
 models/AssignmentLogEntry.ts
 models/AssignmentLogEntryStatusEnum.ts
 models/AssociationDepositDetails.ts
@@ -151,6 +162,12 @@ models/MemberBankDataResponse.ts
 models/MemberCredit.ts
 models/MemberCreditCreateRequest.ts
 models/MemberCreditSettleRequest.ts
+models/MemberDataDisclosure.ts
+models/MemberDataField.ts
+models/MemberDataLogOverview.ts
+models/MemberDataMailOverview.ts
+models/MemberDataMember.ts
+models/MemberDataSection.ts
 models/MemberDataToConfirm.ts
 models/MemberDeliveryAddress.ts
 models/MemberDeliveryCountry.ts
@@ -265,6 +282,7 @@ models/PreferredBreadsBulkUpdateRequest.ts
 models/PreferredLanguageEnum.ts
 models/PreviewRequest.ts
 models/PreviewResponse.ts
+models/PriceCategoryEnum.ts
 models/Product.ts
 models/ProductBasketSizeEquivalence.ts
 models/ProductBasketSizeEquivalenceRequest.ts
@@ -319,6 +337,7 @@ models/Subscription.ts
 models/SubscriptionChange.ts
 models/SubscriptionChangeLogEntry.ts
 models/SubscriptionDateChangeRequestRequest.ts
+models/SubscriptionPrerequisitesInputRequest.ts
 models/SubscriptionPriceOverrideChangeRequestRequest.ts
 models/SubscriptionTrialChangeRequestRequest.ts
 models/SubscriptionTrialFields.ts

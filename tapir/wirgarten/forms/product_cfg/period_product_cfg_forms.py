@@ -55,16 +55,18 @@ class ProductForm(forms.Form):
             initial=initial_id, widget=forms.HiddenInput()
         )
         self.fields["name"] = forms.CharField(
-            initial=initial_name, required=True, label=_("Produkt Name")
+            initial=initial_name, required=True, label=_("Name der Anteilsgröße")
         )
         self.fields["price"] = forms.FloatField(
             initial=initial_price, required=True, label=_("Preis")
         )
         self.fields["size"] = forms.FloatField(
-            initial=initial_size, required=True, label=_("Größe")
+            initial=initial_size,
+            required=True,
+            label=_("Größe (im Verhältnis zur Basis-Anteilsgröße)"),
         )
         self.fields["base"] = forms.BooleanField(
-            initial=False, required=False, label=_("Basisprodukt")
+            initial=False, required=False, label=_("Basis-Anteilsgröße")
         )
 
     def is_valid(self, *args, **kwargs):
@@ -74,7 +76,9 @@ class ProductForm(forms.Form):
             if not Product.objects.filter(type_id=self.type_id, base=True).exists():
                 self.add_error(
                     field="base",
-                    error=ValidationError(_("Bitte lege zuerst ein Basisprodukt an.")),
+                    error=ValidationError(
+                        _("Bitte lege zuerst eine Basis-Anteilsgröße an.")
+                    ),
                 )
 
         return not self.errors

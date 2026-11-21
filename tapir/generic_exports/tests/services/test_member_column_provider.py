@@ -3,10 +3,8 @@ from decimal import Decimal
 from unittest.mock import Mock, patch, ANY, MagicMock
 
 from tapir.deliveries.models import Joker
-from tapir.deliveries.services.joker_value_service import (
-    JokerValueService,
-    JokerCreditValuePart,
-)
+from tapir.deliveries.services.joker_value_service import JokerValueService
+from tapir.utils.dataclasses import CalculationPart
 from tapir.deliveries.services.member_specific_delivery_day_calculator import (
     MemberSpecificDeliveryDayCalculator,
 )
@@ -198,12 +196,18 @@ class TestMemberColumnProvider(TapirIntegrationTest):
         )
         return [joker_1, joker_2]
 
+    @patch.object(
+        JokerValueService,
+        "get_actual_delivery_date",
+        autospec=True,
+        side_effect=lambda joker_date, **_: joker_date,
+    )
     @patch.object(JokerValueService, "_get_subscription_part", autospec=True)
     def test_getValueMemberJokerCreditValue_default_returnsSummedPriceOfAllJokersThatAreBeforeDate(
-        self, mock_get_subscription_part: Mock
+        self, mock_get_subscription_part: Mock, _: Mock
     ):
         member = MemberFactory.create()
-        mock_get_subscription_part.return_value = JokerCreditValuePart(
+        mock_get_subscription_part.return_value = CalculationPart(
             explanation="", value=Decimal(6)
         )
         jokers_before_date = self.setupJokerData(member)
@@ -220,7 +224,7 @@ class TestMemberColumnProvider(TapirIntegrationTest):
         self.assertEqual(
             {joker.date for joker in jokers_before_date},
             {
-                call_args.kwargs["joker_date"]
+                call_args.kwargs["delivery_date"]
                 for call_args in mock_get_subscription_part.call_args_list
             },
         )
@@ -230,7 +234,7 @@ class TestMemberColumnProvider(TapirIntegrationTest):
         self, mock_get_subscription_part: Mock
     ):
         member = MemberFactory.create()
-        mock_get_subscription_part.return_value = JokerCreditValuePart(
+        mock_get_subscription_part.return_value = CalculationPart(
             explanation="", value=Decimal(6)
         )
         self.setupJokerData(member)

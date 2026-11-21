@@ -1,6 +1,6 @@
 import datetime
 
-from django.db.models import Exists, OuterRef, Q
+from django.db.models import Exists, OuterRef, Q, QuerySet
 
 from tapir.associations.models import AssociationMembership
 from tapir.associations.services.association_deposit_overview_provider import (
@@ -29,7 +29,7 @@ class AssociationDepositDepartureExport:
     )
 
     @classmethod
-    def get_segment(cls):
+    def get_segment(cls) -> ExportSegment:
         return ExportSegment(
             id=cls.ID,
             display_name=cls.NAME,
@@ -40,10 +40,12 @@ class AssociationDepositDepartureExport:
         )
 
     @staticmethod
-    def get_memberships(reference_datetime: datetime.datetime):
+    def get_memberships(
+        reference_datetime: datetime.datetime,
+    ) -> QuerySet[AssociationMembership]:
         cache = {}
         if not legal_status_is_association(cache=cache):
-            return []
+            return AssociationMembership.objects.none()
         memberships = (
             AssociationMembership.objects.filter(
                 end_date__year=reference_datetime.year - 1,
@@ -68,7 +70,7 @@ class AssociationDepositDepartureExport:
         )
 
     @staticmethod
-    def get_columns():
+    def get_columns() -> list[ExportSegmentColumn]:
         return [
             ExportSegmentColumn(
                 "member",
@@ -97,7 +99,7 @@ class AssociationDepositDepartureExport:
         ]
 
     @classmethod
-    def create_exports(cls):
+    def create_exports(cls) -> None:
         if CsvExport.objects.filter(name=cls.NAME).exists():
             raise TemplateAlreadyExistsException(
                 f'Ein CSV-Export mit dem Namen "{cls.NAME}" existiert bereits.'
