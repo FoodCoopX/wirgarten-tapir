@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("associations", "0011_associationdepositagreedlogentry_associationdeposit"),
-        ("wirgarten", "0150_payment_excluded_from_export"),
+        ("wirgarten", "0151_payment_calculation_explanation_remove_edited"),
     ]
 
     operations = [

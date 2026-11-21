@@ -2,6 +2,7 @@ from django.core.mail import EmailMessage
 from django.urls import reverse
 from rest_framework import status
 
+from tapir.associations.models import AssociationDeposit
 from tapir.configuration.models import TapirParameter
 from tapir.core.config import LEGAL_STATUS_ASSOCIATION, LEGAL_STATUS_COOPERATIVE
 from tapir.core.services.member_data_disclosure_service import DATA_SOURCES
@@ -122,6 +123,21 @@ class TestMemberDataDisclosureApiView(TapirIntegrationTest):
         self.assertIsNone(self.get_section(data, "coop_shares"))
         self.assertIsNotNone(self.get_section(data, "association_memberships"))
 
+    def test_get_memberHasDeposit_returnsOnlyOwnDeposit(self):
+        self._set_parameter(
+            ParameterKeys.ORGANISATION_LEGAL_STATUS, LEGAL_STATUS_ASSOCIATION
+        )
+        member = MemberFactory.create(is_superuser=False)
+        AssociationDeposit.objects.create(member=member)
+        AssociationDeposit.objects.create(member=MemberFactory.create())
+        self.client.force_login(member)
+
+        data = self.get_data(member.id).json()
+
+        section = self.get_section(data, "association_deposits")
+        self.assertEqual(1, len(section["records"]))
+        self.assertNotIn("member", [field["name"] for field in section["records"][0]])
+
     def test_get_organisationIsCooperative_associationMembershipsHidden(self):
         self.set_legal_status(LEGAL_STATUS_COOPERATIVE)
         member = MemberFactory.create(is_superuser=False)
@@ -131,6 +147,7 @@ class TestMemberDataDisclosureApiView(TapirIntegrationTest):
 
         self.assertIsNotNone(self.get_section(data, "coop_shares"))
         self.assertIsNone(self.get_section(data, "association_memberships"))
+        self.assertIsNone(self.get_section(data, "association_deposits"))
 
     def test_get_trafficSourceAnswered_selectedSourcesShown(self):
         member = MemberFactory.create(is_superuser=False)
