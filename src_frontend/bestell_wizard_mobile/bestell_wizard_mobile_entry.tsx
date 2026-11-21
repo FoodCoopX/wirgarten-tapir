@@ -5,7 +5,12 @@ import BestellWizardMobile from "./BestellWizardMobile.tsx";
 const domNode = document.getElementById("bestell_wizard_mobile");
 if (domNode) {
   const root = createRoot(domNode);
-  root.render(<BestellWizardMobile csrfToken={getCsrfToken()} />);
+  root.render(
+    <BestellWizardMobile
+      csrfToken={getCsrfToken()}
+      combineShareSelection={domNode.dataset.combineShareSelection === "true"}
+    />,
+  );
 } else {
   console.error("Failed to render bestell wizard mobile from React");
 }

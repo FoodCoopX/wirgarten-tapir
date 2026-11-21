@@ -164,6 +164,7 @@ class TestValidateOrderAndUserData(TapirUnitTest):
         mock_validate_order.assert_called_once_with(
             pickup_location_ids=pickup_location_ids,
             contract_start_date=contract_start_date,
+            waiting_list_order={},
             order={},
             cache=cache,
         )
@@ -325,6 +326,7 @@ class TestValidateOrderAndUserData(TapirUnitTest):
         mock_validate_order.assert_called_once_with(
             pickup_location_ids=pickup_location_ids,
             contract_start_date=contract_start_date,
+            waiting_list_order={},
             order=order,
             cache=cache,
         )
@@ -407,6 +409,7 @@ class TestValidateOrderAndUserData(TapirUnitTest):
         mock_validate_order.assert_called_once_with(
             pickup_location_ids=pickup_location_ids,
             contract_start_date=contract_start_date,
+            waiting_list_order={},
             order=order,
             cache=cache,
         )
@@ -501,6 +504,7 @@ class TestValidateOrderAndUserData(TapirUnitTest):
         mock_validate_order.assert_called_once_with(
             pickup_location_ids=pickup_location_ids,
             contract_start_date=contract_start_date,
+            waiting_list_order={},
             order=order,
             cache=cache,
         )
@@ -612,6 +616,7 @@ class TestValidateOrderAndUserData(TapirUnitTest):
         mock_validate_order.assert_called_once_with(
             pickup_location_ids=pickup_location_ids,
             contract_start_date=contract_start_date,
+            waiting_list_order={},
             order=order,
             cache=cache,
         )
@@ -723,6 +728,7 @@ class TestValidateOrderAndUserData(TapirUnitTest):
         mock_validate_order.assert_called_once_with(
             pickup_location_ids=pickup_location_ids,
             contract_start_date=contract_start_date,
+            waiting_list_order={},
             order=order,
             cache=cache,
         )

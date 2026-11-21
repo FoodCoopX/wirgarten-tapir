@@ -57,6 +57,18 @@ class ParameterDefinitionsBestellwizard:
         bestellwizard_parameter_order -= 1
 
         importer.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_COMBINE_SHARE_SELECTION,
+            label="Anteile auf einer Seite auswählen",
+            meta=ParameterMeta(show_only_when=legal_status_is_association),
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=False,
+            description="Fasst die Auswahl im öffentlichen Bestellformular zusammen, wenn für alle Produktarten der Vertragsperiode nur ein Einzelabonnement möglich ist. Mit «Ist Pflicht» lässt sich festlegen, welche Produktarten ausgewählt werden müssen.",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+        )
+        bestellwizard_parameter_order -= 1
+
+        importer.parameter_definition(
             key=ParameterKeys.BESTELL_WIZARD_SOLIDARITY_STEP_POSITION,
             label="Position der Schritt 'Solidarbeitrag' in der Reihenfolge der Seiten",
             datatype=TapirParameterDatatype.STRING,

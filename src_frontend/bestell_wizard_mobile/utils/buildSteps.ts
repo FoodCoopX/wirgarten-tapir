@@ -26,6 +26,7 @@ export function buildSteps(
   pickupLocationsWithCapacityFull: Set<PublicPickupLocation>,
   deliveryMode: DeliveryMode,
   waitingListEntryDetails?: PublicWaitingListEntryDetails,
+  combinedShareSelection = false,
 ) {
   const newSteps: Step[] = [];
   newSteps.push(
@@ -42,12 +43,15 @@ export function buildSteps(
     newSteps.push("3b_growing_period_choice");
   }
 
-  if (settings.introEnabled && waitingListEntryDetails === undefined) {
+  if (
+    (settings.introEnabled || combinedShareSelection) &&
+    waitingListEntryDetails === undefined
+  ) {
     newSteps.push("3_product_type_choice");
   }
 
   for (const productType of selectedProductTypes) {
-    if (!productType.noDelivery) {
+    if (!combinedShareSelection && !productType.noDelivery) {
       newSteps.push(`${productType.id!}_intro`, `${productType.id!}_order`);
     }
   }
@@ -95,7 +99,7 @@ export function buildSteps(
   }
 
   for (const productType of selectedProductTypes) {
-    if (productType.noDelivery) {
+    if (!combinedShareSelection && productType.noDelivery) {
       newSteps.push(`${productType.id!}_intro`, `${productType.id!}_order`);
     }
   }
