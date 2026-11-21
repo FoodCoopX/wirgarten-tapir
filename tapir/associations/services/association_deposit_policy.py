@@ -74,7 +74,9 @@ class AssociationDepositPolicy:
             return
         if amount is None:
             raise ValidationError("Bitte die Vereinseinlage auswählen.")
-        AssociationDepositAmountValidator.validate_regular_deposit_amount(amount, cache)
+        AssociationDepositAmountValidator.validate_regular_deposit_amount(
+            amount=amount, cache=cache
+        )
         if amount > settings["minimum"] and not settings["allow_larger_signup"]:
             raise ValidationError(
                 "Bei der Anmeldung ist nur die Mindesteinlage erlaubt."
