@@ -138,7 +138,7 @@ class TestBuildPaymentsForSolidarityContributions(TapirIntegrationTest):
                     generated_payments=generated_payments,
                     in_trial=False,
                     payment_type=MonthPaymentBuilderSolidarityContributions.PAYMENT_TYPE_SOLIDARITY_CONTRIBUTION,
-                    total_to_pay_function=MonthPaymentBuilderSolidarityContributions.get_total_to_pay,
+                    calculation_parts_function=MonthPaymentBuilderSolidarityContributions.get_calculation_parts,
                     allow_negative_amounts=True,
                 )
                 for member in members
@@ -243,7 +243,7 @@ class TestBuildPaymentsForSolidarityContributions(TapirIntegrationTest):
                     generated_payments=generated_payments,
                     in_trial=True,
                     payment_type=MonthPaymentBuilderSolidarityContributions.PAYMENT_TYPE_SOLIDARITY_CONTRIBUTION,
-                    total_to_pay_function=MonthPaymentBuilderSolidarityContributions.get_total_to_pay,
+                    calculation_parts_function=MonthPaymentBuilderSolidarityContributions.get_calculation_parts,
                     allow_negative_amounts=True,
                 )
                 for member in members

@@ -41,9 +41,10 @@ class DeliveryPriceCalculator:
         if subscription.price_override is not None:
             price = subscription.price_override
         else:
-            price = get_product_price(subscription.product, at_date, cache=cache).price
-            if delivery_cycle != CUSTOM_CYCLE[0]:
-                price *= subscription.quantity
+            price = (
+                get_product_price(subscription.product, at_date, cache=cache).price
+                * subscription.quantity
+            )
 
         if delivery_cycle == CUSTOM_CYCLE[0]:
             return price

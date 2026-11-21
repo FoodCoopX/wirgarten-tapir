@@ -26,6 +26,9 @@ from tapir.wirgarten.models import (
     SubscriptionChangeLogEntry,
 )
 from tapir.wirgarten.utils import get_today
+from tapir.subscriptions.services.admin_subscription_change_member_data_builder import (
+    AdminSubscriptionChangeMemberDataBuilder,
+)
 
 
 class ProductForCancellationSerializer(serializers.Serializer):
@@ -247,3 +250,78 @@ class SubscriptionTrialChangeRequestSerializer(serializers.Serializer):
     subscription_id = serializers.CharField()
     trial_disabled = serializers.BooleanField()
     trial_end_date_override = serializers.DateField(allow_null=True, required=False)
+
+
+class AdminSubscriptionChangeMemberSummarySerializer(serializers.Serializer):
+    id = serializers.CharField()
+    display_name = serializers.CharField()
+    member_number = serializers.CharField(allow_null=True)
+
+
+class AdminSubscriptionChangeSubscriptionUnitSerializer(serializers.Serializer):
+    subscription_id = serializers.CharField()
+    unit_number = serializers.IntegerField()
+    product_type_id = serializers.CharField()
+    product_type_name = serializers.CharField()
+    product_id = serializers.CharField()
+    product_name = serializers.CharField()
+    start_date = serializers.DateField()
+    end_date = serializers.DateField()
+    status = serializers.ChoiceField(
+        choices=AdminSubscriptionChangeMemberDataBuilder.STATUSES
+    )
+    price_category = serializers.ChoiceField(
+        choices=AdminSubscriptionChangeMemberDataBuilder.PRICE_CATEGORIES
+    )
+
+
+class AdminSubscriptionChangePrerequisitesStatusSerializer(serializers.Serializer):
+    pickup_location_name = serializers.CharField(allow_null=True)
+    has_banking_data = serializers.BooleanField()
+
+
+class AdminSubscriptionChangeMemberDataSerializer(serializers.Serializer):
+    member = AdminSubscriptionChangeMemberSummarySerializer()
+    subscription_units = AdminSubscriptionChangeSubscriptionUnitSerializer(many=True)
+    prerequisites = AdminSubscriptionChangePrerequisitesStatusSerializer()
+    payment_rhythm_label = serializers.CharField()
+
+
+class AdminStartDateOptionSerializer(serializers.Serializer):
+    date = serializers.DateField(allow_null=True)
+    enabled = serializers.BooleanField()
+
+
+class AdminStartDateWeekOptionSerializer(serializers.Serializer):
+    date = serializers.DateField()
+    is_before_next_possible_start = serializers.BooleanField()
+    has_no_delivery = serializers.BooleanField()
+
+
+class AdminStartDateOptionsSerializer(serializers.Serializer):
+    next_possible_start = AdminStartDateOptionSerializer()
+    weeks = AdminStartDateWeekOptionSerializer(many=True)
+    next_period_start = AdminStartDateOptionSerializer()
+
+
+class SubscriptionPrerequisitesInputSerializer(serializers.Serializer):
+    pickup_location_id = serializers.CharField(required=False, allow_null=True)
+    account_owner = serializers.CharField(allow_blank=True)
+    iban = serializers.CharField(allow_blank=True)
+    sepa_mandate_confirmed = serializers.BooleanField()
+
+
+class AdminSizeChangeSerializer(serializers.Serializer):
+    member_id = serializers.CharField()
+    subscription_id = serializers.CharField()
+    new_product_id = serializers.CharField()
+    change_date = serializers.DateField()
+    prerequisites = SubscriptionPrerequisitesInputSerializer()
+
+
+class AdminSubscriptionAdditionSerializer(serializers.Serializer):
+    member_id = serializers.CharField()
+    product_id = serializers.CharField()
+    quantity = serializers.IntegerField()
+    start_date = serializers.DateField()
+    prerequisites = SubscriptionPrerequisitesInputSerializer()

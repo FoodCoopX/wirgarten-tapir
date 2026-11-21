@@ -112,7 +112,7 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der ProduktTyp-Daten",
+          "Fehler beim Laden der Daten des Produktanteils",
           setToastDatas,
         ),
       )
@@ -222,7 +222,7 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
               id: uuidv4(),
               variant: "danger",
               message: response.error!,
-              title: "Fehler beim Speichern der Produkt-Typ",
+              title: "Fehler beim Speichern des Produktanteils",
             },
             setToastDatas,
           );
@@ -231,7 +231,7 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Speichern der Produkt-Typ",
+          "Fehler beim Speichern des Produktanteils",
           setToastDatas,
         ),
       )
@@ -255,8 +255,8 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
               {productTypesWithoutCapacity.length > 0 && (
                 <>
                   <p>
-                    Folgende Produkttypen existieren schon aber sind noch nicht
-                    mit dieser Vertragsperiode verbunden:
+                    Folgende Produktanteile existieren schon aber sind noch
+                    nicht mit dieser Vertragsperiode verbunden:
                   </p>
                   <ul>
                     {productTypesWithoutCapacity.map((type) => (
@@ -276,10 +276,11 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
                   </ul>
                   <div className={"d-flex flex-row gap-2 align-items-center"}>
                     <div>
-                      Alternativ kannst du ein ganz neues Produkttyp erzeugen:
+                      Alternativ kannst du einen ganz neuen Produktanteil
+                      anlegen:
                     </div>
                     <TapirButton
-                      text={"Neues Produkttyp erzeugen"}
+                      text={"Neuen Produktanteil anlegen"}
                       icon={"add"}
                       variant={"outline-primary"}
                       size={"sm"}
@@ -361,7 +362,7 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
   return (
     <Modal show={show} onHide={onHide} centered={true} size={"xl"}>
       <Modal.Header closeButton>
-        <h5 className={"mb-0"}>Produkt-Typ erzeugen</h5>
+        <h5 className={"mb-0"}>Produktanteil anlegen</h5>
       </Modal.Header>
       {getModalBody()}
       {mode === "create" && (

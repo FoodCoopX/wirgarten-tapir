@@ -1,12 +1,12 @@
 import datetime
 from decimal import Decimal
-from unittest.mock import patch, Mock
+from unittest.mock import patch, Mock, MagicMock
 
 from tapir.subscriptions.services.delivery_price_calculator import (
     DeliveryPriceCalculator,
 )
-from tapir.wirgarten.constants import WEEKLY
-from tapir.wirgarten.tests.factories import SubscriptionFactory
+from tapir.wirgarten.constants import WEEKLY, CUSTOM_CYCLE
+from tapir.wirgarten.tests.factories import SubscriptionFactory, ProductPriceFactory
 from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
@@ -139,6 +139,52 @@ class TestGetPriceOfSingleDelivery(TapirUnitTest):
 
         # 30 * 12 / 52 = 6.92...
         self.assertEqual(Decimal("6.92"), result.quantize(Decimal("0.01")))
+        mock_get_product_price.assert_not_called()
+
+    @patch(
+        "tapir.subscriptions.services.delivery_price_calculator.get_product_price",
+        autospec=True,
+    )
+    def test_getPriceOfSingleDelivery_customCycleWithQuantityHigherThanOne_returnsProductPriceTimesQuantity(
+        self, mock_get_product_price: MagicMock
+    ):
+        mock_get_product_price.return_value = ProductPriceFactory.build(
+            price=Decimal("4.50")
+        )
+        subscription = SubscriptionFactory.build(
+            price_override=None,
+            quantity=3,
+            product__type__delivery_cycle=CUSTOM_CYCLE[0],
+        )
+
+        result = DeliveryPriceCalculator.get_price_of_single_delivery_for_subscription(
+            subscription=subscription,
+            at_date=datetime.date(year=2021, month=5, day=7),
+            cache={},
+        )
+
+        self.assertEqual(Decimal("13.50"), result)
+
+    @patch(
+        "tapir.subscriptions.services.delivery_price_calculator.get_product_price",
+        autospec=True,
+    )
+    def test_getPriceOfSingleDelivery_customCycleWithPriceOverride_returnsOverrideWithoutQuantity(
+        self, mock_get_product_price: MagicMock
+    ):
+        subscription = SubscriptionFactory.build(
+            price_override=Decimal(12),
+            quantity=3,
+            product__type__delivery_cycle=CUSTOM_CYCLE[0],
+        )
+
+        result = DeliveryPriceCalculator.get_price_of_single_delivery_for_subscription(
+            subscription=subscription,
+            at_date=datetime.date(year=2021, month=5, day=7),
+            cache={},
+        )
+
+        self.assertEqual(Decimal(12), result)
         mock_get_product_price.assert_not_called()
 
     @classmethod

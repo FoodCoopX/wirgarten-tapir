@@ -79,8 +79,8 @@ class TestSubscriptionUpdateViewValidatorValidateOptionalProductCanBeOrderedWith
 
         with self.assertRaisesMessage(
             ValidationError,
-            "Um Anteile dieses Zusatzprodukts (optional_PT) zu bestellen, "
-            "musst du in derselben Vertragsperiode auch Anteile des Basisprodukts (required_PT) haben.",
+            "Um Anteile dieses zusätzlichen Produktanteils (optional_PT) zu bestellen, "
+            "musst du in derselben Vertragsperiode auch Anteile des Pflicht-Produktanteils (required_PT) haben.",
         ):
             SubscriptionUpdateViewValidator.validate_optional_product_can_be_ordered_without_required_product_subscription(
                 product_type=optional_product_type,

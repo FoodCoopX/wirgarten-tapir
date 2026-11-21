@@ -465,65 +465,6 @@ class Member(TapirUser):
             )["total_value"]
         )
 
-    @property
-    def base_subscriptions_text(self):
-        """
-        Returns a human-readable string stating which base products the member has subscribed,
-        sorted by their price in ascending order.
-
-        Examples:
-        - “einen M-Ernteanteil”
-        - “2 M-Ernteanteile”
-        - “einen S-Ernteanteil + 2 M-Ernteanteile”
-        - “einen S-Ernteanteil + M-Ernteanteil + L-Ernteanteil”
-        """
-
-        from collections import Counter
-        from tapir.wirgarten.service.products import (
-            get_product_price,
-            get_active_subscriptions,
-        )
-
-        cache = {}
-
-        subscriptions = get_active_subscriptions(cache={}).filter(
-            member_id=self.id, product__type__must_be_subscribed_to=True
-        )
-
-        if not subscriptions:
-            return ""
-
-        # Count the quantity of each base product subscribed
-        product_counts = Counter()
-        for sub in subscriptions:
-            product_counts[sub.product] += sub.quantity
-
-        # Create a list of tuples (product, quantity, price) and sort by price
-        product_info = []
-        today = get_today(cache=cache)
-        for product, quantity in product_counts.items():
-            price = get_product_price(product, today).price
-            product_info.append(
-                (
-                    f"{product.name}-{product.type.name[:-1] if quantity == 1 else product.type.name}",
-                    quantity,
-                    price,
-                )
-            )
-
-        # Sort products by price (ascending)
-        product_info.sort(key=lambda x: x[2])
-
-        # Create the human-readable text
-        base_subscription_texts = []
-        for product_name, quantity, _ in product_info:
-            if quantity == 1:
-                base_subscription_texts.append(f"einen {product_name}")
-            else:
-                base_subscription_texts.append(f"{quantity} {product_name}")
-
-        return " + ".join(base_subscription_texts)
-
     def __str__(self):
         return f"[{self.member_no or '---'}] {self.first_name} {self.last_name} ({self.email})"
 
@@ -791,7 +732,6 @@ class Payment(TapirModel):
         choices=PaymentStatus.choices,
         default=PaymentStatus.DUE,
     )
-    edited = models.BooleanField(default=False)
     transaction = models.ForeignKey(
         PaymentTransaction, on_delete=models.DO_NOTHING, null=True
     )
@@ -820,6 +760,7 @@ class Payment(TapirModel):
     )
     # Only set if the coop shares are paid in instalments
     instalment_number = models.PositiveSmallIntegerField(null=True)
+    calculation_explanation = models.TextField(blank=True, default="")
 
     class Meta:
         indexes = [

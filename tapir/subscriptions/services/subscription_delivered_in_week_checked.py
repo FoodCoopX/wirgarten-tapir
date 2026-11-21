@@ -36,7 +36,7 @@ class SubscriptionDeliveredInWeekChecker:
         ):
             return False
 
-        if skip_donation_check:
+        if skip_donation_check or not subscription.product.type.is_affected_by_jokers:
             return True
 
         from tapir.deliveries.services.delivery_donation_manager import (
