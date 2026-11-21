@@ -12,7 +12,11 @@ class MemberCreditGenerator:
     @classmethod
     def generate_member_credits(cls):
         random.seed("wirgarten")
-        members = list(Member.objects.filter(email__endswith="@example.com"))
+        members = list(
+            Member.objects.filter(
+                email__endswith="@example.com", subscription__isnull=False
+            ).distinct()
+        )
         if not members:
             print("No members found, skipping credit generation")
             return

@@ -20,6 +20,7 @@ import type {
   MailingListRecipient,
   MailingListSubscribeExternalRecipientRequestRequest,
   MailingListSubscribeInternalRecipientRequestRequest,
+  MemberDataDisclosure,
   MemberExtraEmailCreateRequestRequest,
   MemberExtraMailData,
   MemberMailCategoryData,
@@ -35,6 +36,7 @@ import {
   MailingListRecipientFromJSON,
   MailingListSubscribeExternalRecipientRequestRequestToJSON,
   MailingListSubscribeInternalRecipientRequestRequestToJSON,
+  MemberDataDisclosureFromJSON,
   MemberExtraEmailCreateRequestRequestToJSON,
   MemberExtraMailDataFromJSON,
   MemberMailCategoryDataFromJSON,
@@ -78,6 +80,14 @@ export interface CoreApiMailingListSubscribeInternalCreateRequest {
 
 export interface CoreApiMailingListUnsubscribeCreateRequest {
   mailingListSubscribeExternalRecipientRequestRequest: MailingListSubscribeExternalRecipientRequestRequest;
+}
+
+export interface CoreApiMemberDataDisclosurePdfRetrieveRequest {
+  memberId?: string;
+}
+
+export interface CoreApiMemberDataDisclosureRetrieveRequest {
+  memberId?: string;
 }
 
 export interface CoreApiMemberExtraEmailsCreateRequest {
@@ -821,6 +831,116 @@ export class CoreApi extends runtime.BaseAPI {
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<string> {
     const response = await this.coreApiMailingListUnsubscribeCreateRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async coreApiMemberDataDisclosurePdfRetrieveRaw(
+    requestParameters: CoreApiMemberDataDisclosurePdfRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<Blob>> {
+    const queryParameters: any = {};
+
+    if (requestParameters["memberId"] != null) {
+      queryParameters["member_id"] = requestParameters["memberId"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/core/api/member_data_disclosure_pdf`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.BlobApiResponse(response);
+  }
+
+  /**
+   */
+  async coreApiMemberDataDisclosurePdfRetrieve(
+    requestParameters: CoreApiMemberDataDisclosurePdfRetrieveRequest = {},
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<Blob> {
+    const response = await this.coreApiMemberDataDisclosurePdfRetrieveRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async coreApiMemberDataDisclosureRetrieveRaw(
+    requestParameters: CoreApiMemberDataDisclosureRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<MemberDataDisclosure>> {
+    const queryParameters: any = {};
+
+    if (requestParameters["memberId"] != null) {
+      queryParameters["member_id"] = requestParameters["memberId"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/core/api/member_data_disclosure`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      MemberDataDisclosureFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async coreApiMemberDataDisclosureRetrieve(
+    requestParameters: CoreApiMemberDataDisclosureRetrieveRequest = {},
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<MemberDataDisclosure> {
+    const response = await this.coreApiMemberDataDisclosureRetrieveRaw(
       requestParameters,
       initOverrides,
     );

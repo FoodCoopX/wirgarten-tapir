@@ -8,7 +8,6 @@ from tapir.subscriptions.services.automatic_subscription_renewal_service import 
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.service.products import get_next_growing_period
 from tapir.wirgarten.utils import get_today
 
 
@@ -43,7 +42,9 @@ class AutomaticSolidarityContributionRenewalService:
         if contribution.cancellation_ts is not None:
             return False
 
-        next_growing_period = get_next_growing_period(cache=cache)
+        next_growing_period = TapirCache.get_first_growing_period_starting_after(
+            reference_date=get_today(cache=cache), cache=cache
+        )
         if not next_growing_period:
             return False
 
@@ -67,7 +68,7 @@ class AutomaticSolidarityContributionRenewalService:
     def build_renewed_contribution(
         cls, contribution: SolidarityContribution, cache: dict
     ):
-        next_growing_period = get_next_growing_period(
+        next_growing_period = TapirCache.get_first_growing_period_starting_after(
             reference_date=contribution.end_date, cache=cache
         )
 

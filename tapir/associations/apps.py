@@ -27,7 +27,7 @@ class AssociationsConfig(AppConfig):
                 "End-Datum nachher": "end_date_after",
                 "Mitgliedschaft-Typ": "membership_type_name",
             },
-            required=lambda: legal_status_is_association(cache={}),
+            required=lambda cache: legal_status_is_association(cache=cache),
         )
 
         register_transactional_trigger(
@@ -37,7 +37,7 @@ class AssociationsConfig(AppConfig):
                 "Mitgliedschaft-Typ": "membership_type_name",
                 "Beitrittsdatum": "membership_start_date",
             },
-            required=lambda: legal_status_is_association(cache={}),
+            required=lambda cache: legal_status_is_association(cache=cache),
         )
 
         register_transactional_trigger(
@@ -47,7 +47,7 @@ class AssociationsConfig(AppConfig):
                 "Mitgliedschaft-Typ": "membership_type_name",
                 "Kündigungsregistrierungsdatum": "end_date_set_on",
             },
-            required=lambda: legal_status_is_association(cache={}),
+            required=lambda cache: legal_status_is_association(cache=cache),
         )
 
     @staticmethod

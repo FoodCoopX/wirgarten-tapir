@@ -44,10 +44,54 @@ class ApplyTapirOrderManager:
         needs_admin_confirmation: bool,
         cache: dict,
     ):
+        subscriptions_existed_before_changes = (
+            get_active_and_future_subscriptions(
+                reference_date=contract_start_date, cache=cache
+            )
+            .filter(member=member, product__type_id=product_type.id)
+            .exists()
+        )
+        trial_disabled, trial_end_date_override = cls.get_trial_data(
+            member=member,
+            product_type=product_type,
+            contract_start_date=contract_start_date,
+            cache=cache,
+        )
+        cancel_or_delete_subscriptions(
+            member=member,
+            product_type=product_type,
+            start_date=contract_start_date,
+            actor=actor,
+            cache=cache,
+        )
+        TapirCacheManager.clear_category(
+            cache=cache, category=TapirCacheManager.CATEGORY_SUBSCRIPTIONS
+        )
+
+        new_subscriptions = cls.create_subscriptions(
+            member=member,
+            order=order,
+            product_type=product_type,
+            contract_start_date=contract_start_date,
+            actor=actor,
+            needs_admin_confirmation=needs_admin_confirmation,
+            trial_disabled=trial_disabled,
+            trial_end_date_override=trial_end_date_override,
+            cache=cache,
+        )
+        return subscriptions_existed_before_changes, new_subscriptions
+
+    @classmethod
+    def get_trial_data(
+        cls,
+        member: Member,
+        product_type: ProductType,
+        contract_start_date: datetime.date,
+        cache: dict,
+    ) -> tuple[bool, datetime.date | None]:
         active_and_future_subscriptions = get_active_and_future_subscriptions(
             reference_date=contract_start_date, cache=cache
         ).filter(member=member, product__type_id=product_type.id)
-        subscriptions_existed_before_changes = active_and_future_subscriptions.exists()
 
         earliest_trial_period_end_date = None
         active_subscriptions_exists = get_active_subscriptions(
@@ -62,17 +106,27 @@ class ApplyTapirOrderManager:
                     cache=cache,
                 )
             )
-        cancel_or_delete_subscriptions(
-            member=member,
-            product_type=product_type,
-            start_date=contract_start_date,
-            actor=actor,
-            cache=cache,
-        )
-        TapirCacheManager.clear_category(
-            cache=cache, category=TapirCacheManager.CATEGORY_SUBSCRIPTIONS
-        )
 
+        trial_disabled = (
+            active_subscriptions_exists
+            and earliest_trial_period_end_date is None
+            or not get_parameter_value(ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache)
+        )
+        return trial_disabled, earliest_trial_period_end_date
+
+    @classmethod
+    def create_subscriptions(
+        cls,
+        member: Member,
+        order: TapirOrder,
+        product_type: ProductType,
+        contract_start_date: datetime.date,
+        actor: TapirUser,
+        needs_admin_confirmation: bool,
+        trial_disabled: bool,
+        trial_end_date_override: datetime.date | None,
+        cache: dict,
+    ) -> list[Subscription]:
         growing_period = TapirCache.get_growing_period_at_date(
             reference_date=contract_start_date, cache=cache
         )
@@ -93,11 +147,6 @@ class ApplyTapirOrderManager:
             contract_end_date = growing_period.end_date
 
         now = get_now(cache=cache)
-        trial_disabled = (
-            active_subscriptions_exists
-            and earliest_trial_period_end_date is None
-            or not get_parameter_value(ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache)
-        )
         subscriptions = []
         for product, quantity in order.items():
             if quantity == 0:
@@ -117,7 +166,7 @@ class ApplyTapirOrderManager:
                     consent_ts=now,
                     withdrawal_consent_ts=now,
                     trial_disabled=trial_disabled,
-                    trial_end_date_override=earliest_trial_period_end_date,
+                    trial_end_date_override=trial_end_date_override,
                     notice_period_duration=notice_period_duration,
                     notice_period_unit=notice_period_unit,
                     auto_confirmed=None if needs_admin_confirmation else now,
@@ -142,7 +191,7 @@ class ApplyTapirOrderManager:
             admin_confirmed=now,
         ).save()
 
-        return subscriptions_existed_before_changes, new_subscriptions
+        return new_subscriptions
 
     @classmethod
     def apply_order_with_several_product_types(

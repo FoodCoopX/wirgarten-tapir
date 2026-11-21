@@ -3,6 +3,7 @@ from django.db import transaction
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
 
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.forms.member import (
     CancellationReasonForm,
     SubscriptionRenewalForm,
@@ -16,12 +17,10 @@ from tapir.wirgarten.models import (
 from tapir.wirgarten.service.member import (
     create_wait_list_entry,
 )
-from tapir.wirgarten.service.products import (
-    get_next_growing_period,
-)
 from tapir.wirgarten.utils import (
     check_permission_or_self,
     get_now,
+    get_today,
     member_detail_url,
 )
 from tapir.wirgarten.views.modal import get_form_modal
@@ -68,7 +67,10 @@ def get_renew_contracts_form(request, **kwargs):
     member_id = kwargs.pop("pk")
     check_permission_or_self(member_id, request)
     kwargs["member_id"] = member_id
-    kwargs["start_date"] = get_next_growing_period().start_date
+    cache = {}
+    kwargs["start_date"] = TapirCache.get_first_growing_period_starting_after(
+        reference_date=get_today(cache=cache), cache=cache
+    ).start_date
     kwargs["actor"] = request.user
 
     @transaction.atomic
