@@ -1,3 +1,5 @@
+import logging
+
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import HStoreField
 from django.core.mail import EmailMessage
@@ -6,6 +8,27 @@ from django.template.loader import render_to_string
 from django.utils.translation import gettext_lazy as _
 
 from tapir.log.util import freeze_for_log
+
+logger = logging.getLogger(__name__)
+
+
+def sanitize_hstore_value(value, attribute_name: str) -> dict:
+    """
+    Return the value of an ``HStoreField`` as a mapping.
+
+    The field is meant to hold a mapping, but a row written outside ``populate`` (an import or
+    legacy data) can hold a bare scalar. Rendering a log page must not fail with an
+    ``AttributeError`` in that case - it simply shows no values.
+    """
+    if isinstance(value, dict):
+        return value
+
+    logger.warning(
+        "Log entry attribute '%s' is not a mapping (%s), treating it as empty.",
+        attribute_name,
+        type(value).__name__,
+    )
+    return {}
 
 
 class LogEntry(models.Model):
@@ -148,11 +171,14 @@ class UpdateModelLogEntry(LogEntry):
     def get_context_data(self):
         context = super().get_context_data()
 
+        old_values = sanitize_hstore_value(self.old_values, "old_values")
+        new_values = sanitize_hstore_value(self.new_values, "new_values")
+
         changes = []
-        for k in self.old_values.keys():
-            if hasattr(self, "excluded_fields") and k in self.excluded_fields:
+        for key in old_values.keys():
+            if hasattr(self, "excluded_fields") and key in self.excluded_fields:
                 continue
-            changes.append((k, self.old_values[k], self.new_values[k]))
+            changes.append((key, old_values[key], new_values.get(key)))
         context["changes"] = changes
 
         return context
@@ -176,5 +202,5 @@ class ModelLogEntry(LogEntry):
 
     def get_context_data(self):
         context = super().get_context_data()
-        context["values"] = self.values.items()
+        context["values"] = sanitize_hstore_value(self.values, "values").items()
         return context
