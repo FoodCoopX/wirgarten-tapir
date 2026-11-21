@@ -29,7 +29,6 @@ from tapir.wirgarten.service.products import (
     get_active_subscriptions,
     get_available_product_types,
     get_active_and_future_subscriptions,
-    get_next_growing_period,
 )
 from tapir.wirgarten.utils import format_date, get_now, member_detail_url, get_today
 
@@ -42,7 +41,9 @@ def renew_contract_same_conditions(request, **kwargs):
     member_id = kwargs["pk"]
     new_subs = []
     cache = {}
-    next_period = get_next_growing_period(cache=cache)
+    next_period = TapirCache.get_first_growing_period_starting_after(
+        reference_date=get_today(cache=cache), cache=cache
+    )
 
     available_product_types = [
         p.id

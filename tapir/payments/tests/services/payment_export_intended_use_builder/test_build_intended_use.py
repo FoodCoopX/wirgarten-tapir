@@ -1,14 +1,34 @@
 from unittest.mock import Mock, patch
 
+from tapir.core.exceptions import TapirImproperlyConfigured
+from tapir.payments.config import PAYMENT_TYPE_ASSOCIATION_DEPOSIT
 from tapir.payments.services.payment_export_intended_use_builder import (
     PaymentExportIntendedUseBuilder,
 )
 from tapir.utils.tests_utils import mock_parameter_value
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.tests.factories import PaymentFactory
 from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestBuildIntendedUse(TapirUnitTest):
+    def test_buildIntendedUse_customEnabledForDeposit_raisesConfigurationError(self):
+        cache = {}
+        mock_parameter_value(
+            cache=cache,
+            key=ParameterKeys.PAYMENT_INTENDED_USE_ENABLE_CUSTOM,
+            value=True,
+        )
+        payment = PaymentFactory.build(type=PAYMENT_TYPE_ASSOCIATION_DEPOSIT)
+
+        with self.assertRaisesMessage(
+            TapirImproperlyConfigured,
+            "Konfigurierbare Verwendungszwecke für Vereinseinlagen",
+        ):
+            PaymentExportIntendedUseBuilder.build_intended_use(
+                payment=payment, is_contracts=False, cache=cache
+            )
+
     @patch.object(
         PaymentExportIntendedUseBuilder, "_build_intended_use_legacy", autospec=True
     )

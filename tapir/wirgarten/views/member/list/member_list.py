@@ -50,7 +50,6 @@ from tapir.wirgarten.service.member import (
     annotate_member_queryset_with_coop_shares_total_value,
     annotate_member_queryset_with_monthly_payment,
 )
-from tapir.wirgarten.service.products import get_next_growing_period
 from tapir.wirgarten.utils import (
     get_today,
     legal_status_is_cooperative,
@@ -95,7 +94,9 @@ class ContractStatusFilter(ChoiceFilter):
 
     def filter_contract_renewed(self, qs):
         # Get the upcoming growing period
-        growing_period = get_next_growing_period(cache=self.cache)
+        growing_period = TapirCache.get_first_growing_period_starting_after(
+            reference_date=get_today(cache=self.cache), cache=self.cache
+        )
 
         # Filter members with at least one subscription starting in the upcoming growing period
         return qs.filter(
@@ -119,7 +120,9 @@ class ContractStatusFilter(ChoiceFilter):
         )
 
     def filter_undecided(self, qs):
-        growing_period = get_next_growing_period(cache=self.cache)
+        growing_period = TapirCache.get_first_growing_period_starting_after(
+            reference_date=get_today(cache=self.cache), cache=self.cache
+        )
 
         # Calculate the trial period start date
         trial_period_start = get_today(cache=self.cache) + relativedelta(
@@ -232,7 +235,12 @@ class MemberFilter(FilterSet):
             ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=self.cache
         ):
             del self.form.fields["contract_status"]
-        elif get_next_growing_period(cache=self.cache) is None:
+        elif (
+            TapirCache.get_first_growing_period_starting_after(
+                reference_date=get_today(cache=self.cache), cache=self.cache
+            )
+            is None
+        ):
             w = self.form.fields["contract_status"].widget
             w.attrs["disabled"] = True
             w.attrs["title"] = "Es gibt noch keine neue Vertragsperiode!"
@@ -254,9 +262,7 @@ class MemberFilter(FilterSet):
             queryset, ["first_name", "last_name"], cache=self.cache
         )
         if self.show_deposits:
-            queryset = AssociationDepositOverviewProvider.annotate_members(
-                queryset, self.cache
-            )
+            queryset = AssociationDepositOverviewProvider.annotate_members(queryset)
         return super().filter_queryset(queryset)
 
     def filter_deposit_status(self, queryset, name, value):

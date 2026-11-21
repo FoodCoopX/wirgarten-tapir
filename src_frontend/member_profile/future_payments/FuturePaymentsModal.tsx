@@ -15,6 +15,7 @@ import { fromApiDate } from "../../utils/apiDate.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { formatDateText } from "../../utils/formatDateText.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
+import CalculationExplanation from "./CalculationExplanation.tsx";
 import { groupTransactionsByDueDate } from "./groupTransactionsByDueDate.ts";
 import PaymentComponent from "./PaymentComponent.tsx";
 
@@ -53,14 +54,10 @@ function getExplanationText(deliveryChargeEnabled: boolean) {
         Monat.
       </p>
       <p>
-        In Monaten, in denen du aufgrund deines Vertragsstartes nicht alle
-        Abholungen / Lieferungen mitmachen kannst, wird dein monatlicher Betrag
-        auf Basis des Kistenpreises berechnet ((Monatspreis * 12 Monate) / 52
-        Wochen) und mit der Anzahl der wahrgenommenen Lieferungen multipliziert.
-        Der Kistenpreis ergibt sich nicht aus dem Monatspreis geteilt durch
-        vier, da abhängig vom Monat 4 oder 5 Lieferungen stattfinden und dies
-        auf das Jahr gleichverteilt wird, damit die Finanzierung der Solawi
-        gesichert ist.
+        In Monaten, in denen dein Vertrag nicht den ganzen Monat läuft, z. B.
+        bei Vertragsbeginn, Vertragsende oder einer Vertragsänderung, zahlst du
+        nur einen Teil des Monatspreises. Wie dieser Teil berechnet wurde,
+        siehst du bei jeder Zahlung und Gutschrift unter "Berechnung anzeigen".
       </p>
       <p>
         Ein ggf. ausgewählter Solidarpreis wird taggenau auf den Monat
@@ -132,6 +129,7 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
         <div className={"d-flex flex-column align-items-center"}>
           <strong>{formatCurrency(credit.amount)}</strong>
           <Badge bg={"success"}>Gutschrift</Badge>
+          <CalculationExplanation text={credit.comment} />
         </div>
       </div>
     );

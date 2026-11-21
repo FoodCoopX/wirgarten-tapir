@@ -72,7 +72,7 @@ class TestJokerCreditCreator(TapirIntegrationTest):
         self.assertEqual(
             "Joker eingesetzt für die Abholung/Lieferung am 18.01.2020\n"
             "Berechnung der Gutschrift:\n"
-            f"- {self.product.type.name} {self.product.name}: 10,00 € monatlich × 12 ÷ 53 Wochen × 2 Anteile = 4,53 €\n"
+            f"{self.product.type.name} {self.product.name}: 10,00 € monatlich × 12 ÷ 53 Wochen × 2 Anteile = 4,53 €\n"
             "Summe: 4,53 €",
             credit.comment,
         )

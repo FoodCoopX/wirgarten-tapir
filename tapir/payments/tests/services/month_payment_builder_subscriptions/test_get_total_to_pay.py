@@ -1,67 +1,43 @@
 import datetime
-from unittest.mock import patch, Mock, call
+from decimal import Decimal
+from unittest.mock import patch, MagicMock
 
+from tapir.utils.dataclasses import CalculationPart
 from tapir.payments.services.month_payment_builder_subscriptions import (
     MonthPaymentBuilderSubscriptions,
 )
-from tapir.wirgarten.tests.factories import SubscriptionFactory
 from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestGetTotalToPay(TapirUnitTest):
     @patch.object(
         MonthPaymentBuilderSubscriptions,
-        "get_amount_to_pay_for_subscription_within_range",
+        "get_calculation_parts",
         autospec=True,
+        return_value=[
+            CalculationPart(explanation="", value=Decimal(3)),
+            CalculationPart(explanation="", value=Decimal("7.5")),
+        ],
     )
-    def test_getTotalToPay_default_considersOnlySubscriptionsThatOverlapWithTheGivenRange(
-        self, mock_get_amount_to_pay_for_subscription_within_range: Mock
+    def test_getTotalToPay_default_returnsSumOfCalculationParts(
+        self, mock_get_calculation_parts: MagicMock
     ):
         range_start = datetime.date(year=2028, month=1, day=1)
         range_end = datetime.date(year=2028, month=1, day=31)
-        subscription_1 = SubscriptionFactory.build(
-            start_date=range_start, end_date=range_end
-        )
-        subscription_2 = SubscriptionFactory.build(
-            start_date=datetime.date(year=2027, month=12, day=15),
-            end_date=datetime.date(year=2027, month=12, day=31),
-        )
-        subscription_3 = SubscriptionFactory.build(
-            start_date=datetime.date(year=2027, month=12, day=15),
-            end_date=datetime.date(year=2028, month=1, day=19),
-        )
-
-        total_to_pay_by_subscription = {
-            subscription_1: 3,
-            subscription_2: 5,
-            subscription_3: 7,
-        }
-
-        mock_get_amount_to_pay_for_subscription_within_range.side_effect = lambda subscription, range_start, range_end, cache: total_to_pay_by_subscription[
-            subscription
-        ]
-        cache = Mock()
+        contracts = []
+        cache = {}
 
         result = MonthPaymentBuilderSubscriptions.get_total_to_pay(
             range_start=range_start,
             range_end=range_end,
-            contracts=[subscription_1, subscription_2, subscription_3],
+            contracts=contracts,
             cache=cache,
         )
 
-        self.assertEqual(3 + 7, result)
-        self.assertEqual(
-            2, mock_get_amount_to_pay_for_subscription_within_range.call_count
-        )
-        mock_get_amount_to_pay_for_subscription_within_range.assert_has_calls(
-            [
-                call(
-                    subscription=subscription,
-                    range_start=range_start,
-                    range_end=range_end,
-                    cache=cache,
-                )
-                for subscription in [subscription_1, subscription_3]
-            ],
-            any_order=True,
+        self.assertEqual(Decimal("10.5"), result)
+        mock_get_calculation_parts.assert_called_once_with(
+            range_start=range_start,
+            range_end=range_end,
+            contracts=contracts,
+            cache=cache,
         )
