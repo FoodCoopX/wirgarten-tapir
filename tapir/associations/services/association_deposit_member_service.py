@@ -23,7 +23,7 @@ from tapir.wirgarten.utils import get_today, legal_status_is_association
 
 class AssociationDepositMemberService:
     @staticmethod
-    def _get_amount(deposit: AssociationDeposit | None) -> Decimal:
+    def get_amount(deposit: AssociationDeposit | None) -> Decimal:
         if deposit is None:
             return Decimal("0")
         payments = deposit.payments.aggregate(
@@ -49,7 +49,7 @@ class AssociationDepositMemberService:
                 "increment": settings["increment"],
             }
         deposit = getattr(member, "association_deposit", None)
-        amount = cls._get_amount(deposit)
+        amount = cls.get_amount(deposit)
         return {
             "visible": settings["enabled"] or deposit is not None,
             "name": settings["name"],
@@ -95,7 +95,7 @@ class AssociationDepositMemberService:
             .exists()
         ):
             raise ValidationError("Eine aktive Vereinsmitgliedschaft ist erforderlich.")
-        current = cls._get_amount(deposit)
+        current = cls.get_amount(deposit)
         if current <= 0 or total_amount < current:
             raise ValidationError(
                 "Eine bestehende Einlage kann hier nur erhöht werden."

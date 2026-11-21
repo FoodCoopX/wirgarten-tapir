@@ -11,6 +11,9 @@ from tapir_mail.triggers.transactional_trigger import (
 
 from tapir.associations.apps import AssociationsConfig
 from tapir.associations.models import AssociationMembership
+from tapir.associations.services.association_deposit_mail_token_provider import (
+    AssociationDepositMailTokenProvider,
+)
 from tapir.wirgarten.utils import get_today, format_date, get_now
 
 logger = logging.getLogger(__name__)
@@ -24,7 +27,7 @@ def trigger_association_membership_ends_today_mails():
         end_date__lte=today,
         end_date__gt=today - datetime.timedelta(days=14),
         membership_ended_mail_sent_on=None,
-    ).select_related("type"):
+    ).select_related("type", "member"):
         if (
             AssociationMembership.objects.filter(member_id=membership.member_id)
             .filter(Q(end_date__gt=today) | Q(end_date=None))
@@ -41,7 +44,10 @@ def trigger_association_membership_ends_today_mails():
                         "end_date_set_on": format_date(
                             membership.cancellation_ts.date()
                         ),
-                    },
+                    }
+                    | AssociationDepositMailTokenProvider.build_tokens(
+                        member=membership.member, cache=cache
+                    ),
                 )
             )
             membership.membership_ended_mail_sent_on = get_now(cache=cache)

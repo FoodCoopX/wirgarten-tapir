@@ -1,4 +1,5 @@
 import datetime
+from decimal import Decimal
 from unittest.mock import patch, Mock
 
 from tapir_mail.triggers.transactional_trigger import (
@@ -6,6 +7,8 @@ from tapir_mail.triggers.transactional_trigger import (
     TransactionalTriggerData,
 )
 
+from tapir.associations.mail_tokens import ASSOCIATION_DEPOSIT_AMOUNT_TOKEN
+from tapir.associations.models import AssociationDeposit
 from tapir.associations.tests.factories import AssociationMembershipFactory
 from tapir.coop.tasks import send_membership_entry_mails
 from tapir.core.config import (
@@ -67,6 +70,7 @@ class TestSendMembershipEntryMail(TapirIntegrationTest):
         )
         trigger_data = mock_fire_action.call_args.kwargs["trigger_data"]
         self.assertEqual("01.01.2010", trigger_data.token_data["membership_start_date"])
+        self.assertNotIn(ASSOCIATION_DEPOSIT_AMOUNT_TOKEN, trigger_data.token_data)
         member.refresh_from_db()
         self.assertTrue(member.has_received_membership_started_mail)
 
@@ -157,7 +161,16 @@ class TestSendMembershipEntryMail(TapirIntegrationTest):
         mock_timezone(test=self, now=datetime.datetime(year=2010, month=8, day=1))
         member = MemberFactory.create(has_received_membership_started_mail=False)
         AssociationMembershipFactory.create(
+            member=member,
+            start_date=datetime.date(2009, 1, 1),
+            end_date=datetime.date(2009, 6, 30),
+        )
+        AssociationMembershipFactory.create(
             member=member, start_date=datetime.date(year=2010, month=1, day=1)
+        )
+
+        AssociationDeposit.objects.create(
+            member=member, opening_balance=Decimal("200.00")
         )
 
         send_membership_entry_mails()
@@ -169,8 +182,11 @@ class TestSendMembershipEntryMail(TapirIntegrationTest):
         )
         trigger_data = mock_fire_action.call_args.kwargs["trigger_data"]
         self.assertEqual(
-            datetime.date(year=2010, month=1, day=1),
+            datetime.date(year=2009, month=1, day=1),
             trigger_data.token_data["membership_start_date"],
+        )
+        self.assertEqual(
+            "200,00", trigger_data.token_data[ASSOCIATION_DEPOSIT_AMOUNT_TOKEN]
         )
         member.refresh_from_db()
         self.assertTrue(member.has_received_membership_started_mail)

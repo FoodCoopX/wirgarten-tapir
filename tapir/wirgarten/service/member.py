@@ -21,6 +21,9 @@ from tapir_mail.triggers.transactional_trigger import (
 
 from tapir.accounts.models import TapirUser
 from tapir.associations.models import AssociationMembership
+from tapir.associations.services.association_deposit_mail_token_provider import (
+    AssociationDepositMailTokenProvider,
+)
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.models import CoopSharesCancelledLogEntry
 from tapir.coop.services.token_builder_coop_entry import TokenBuilderCoopEntry
@@ -265,6 +268,9 @@ def send_investing_membership_confirmation(
                 member=member,
                 solidarity_contribution=solidarity_contribution,
                 cache=cache,
+            )
+            | AssociationDepositMailTokenProvider.build_tokens(
+                member=member, cache=cache
             ),
         ),
     )
@@ -308,6 +314,14 @@ def send_product_order_confirmation(
             coop_share_transaction=coop_share_transaction,
             association_membership=association_membership,
             cache=cache,
+        )
+
+    if event in (
+        Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION,
+        Events.WAITING_LIST_ORDER_CONFIRMATION,
+    ):
+        token_data |= AssociationDepositMailTokenProvider.build_tokens(
+            member=member, cache=cache
         )
 
     TransactionalTrigger.fire_action(
