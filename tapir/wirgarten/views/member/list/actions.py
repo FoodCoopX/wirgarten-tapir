@@ -303,7 +303,7 @@ class ExportMembersView(PermissionRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         # Get queryset based on filters and ordering
         show_deposits = AssociationDepositOverviewProvider.can_view(
-            request.user, self.cache
+            user=request.user, cache=self.cache
         )
         queryset = MemberFilter(
             request.GET,

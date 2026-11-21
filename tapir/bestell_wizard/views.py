@@ -339,14 +339,14 @@ class BestellWizardConfirmOrderApiView(APIView):
         )
 
         AssociationDepositPolicy.validate_signup_selection(
-            validated_serializer_data.get("association_deposit_amount"),
-            any(
+            amount=validated_serializer_data.get("association_deposit_amount"),
+            has_products=any(
                 quantity > 0
                 for quantity in validated_serializer_data[
                     "shopping_cart_order"
                 ].values()
             ),
-            cache,
+            cache=cache,
             payment_option=validated_serializer_data.get(
                 "association_deposit_payment_option", "once"
             ),

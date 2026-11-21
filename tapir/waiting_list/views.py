@@ -898,9 +898,11 @@ class PublicConfirmWaitingListEntryView(APIView):
             )
             if waiting_list_entry.member_id is None:
                 AssociationDepositPolicy.validate_signup_selection(
-                    serializer.validated_data.get("association_deposit_amount"),
-                    waiting_list_entry.product_wishes.filter(quantity__gt=0).exists(),
-                    self.cache,
+                    amount=serializer.validated_data.get("association_deposit_amount"),
+                    has_products=waiting_list_entry.product_wishes.filter(
+                        quantity__gt=0
+                    ).exists(),
+                    cache=self.cache,
                     payment_option=serializer.validated_data[
                         "association_deposit_payment_option"
                     ],
