@@ -9,6 +9,9 @@ from tapir.associations.services.association_deposit_payment_creator import (
 from tapir.associations.tests.factories import AssociationMembershipFactory
 from tapir.core.config import LEGAL_STATUS_ASSOCIATION
 from tapir.payments.config import PAYMENT_TYPE_ASSOCIATION_DEPOSIT
+from tapir.payments.services.pain_008_xml_string_generator import (
+    Pain008XmlGenericException,
+)
 from tapir.payments.services.payment_export_builder import PaymentExportBuilder
 from tapir.payments.services.payment_export_exclusion_period_service import (
     PaymentExportExclusionPeriodService,
@@ -91,7 +94,7 @@ class TestPaymentExportBuilderAssociationDeposits(TapirIntegrationTest):
             ).count(),
         )
 
-    def test_exportAllUnexportedPayments_invalidMember_exportsOnlyValidPayment(self):
+    def test_exportAllUnexportedPayments_invalidMember_reportsErrorInSharedExport(self):
         valid = self.create_payment(self.create_membership(last_name="Gueltig"))
         invalid = self.create_payment(
             self.create_membership(iban="INVALID", last_name="Ungueltig")
@@ -100,14 +103,24 @@ class TestPaymentExportBuilderAssociationDeposits(TapirIntegrationTest):
         self.assertEqual(1, len(self.export()))
         invalid.refresh_from_db()
         valid.refresh_from_db()
-        self.assertEqual(Payment.PaymentStatus.DUE, invalid.status)
-        self.assertIsNone(invalid.transaction_id)
         csv = bytes(valid.transaction.csv_file.file).decode()
         self.assertIn("Gueltig", csv)
-        self.assertNotIn("Ungueltig", csv)
+        self.assertIn("Ungueltig", csv)
         xml = ElementTree.fromstring(bytes(valid.transaction.xml_file.file))
         self.assertEqual(valid.mandate_ref_id, xml.findtext(".//{*}MndtId"))
         self.assertEqual(1, len(xml.findall(".//{*}DrctDbtTxInf")))
+
+    def test_exportAllUnexportedPayments_invalidCreditor_raisesErrorAndLeavesPaymentOpen(
+        self,
+    ):
+        payment = self.create_payment(self.create_membership())
+        self._set_parameter(ParameterKeys.PAYMENT_ORGANISATION_IBAN, "INVALID")
+
+        with self.assertRaises(Pain008XmlGenericException):
+            self.export()
+
+        payment.refresh_from_db()
+        self.assertIsNone(payment.transaction_id)
 
     def test_exportAllUnexportedPayments_membershipEnded_exportsDeposit(self):
         membership = self.create_membership()
@@ -121,33 +134,16 @@ class TestPaymentExportBuilderAssociationDeposits(TapirIntegrationTest):
             1, Payment.objects.filter(type=PAYMENT_TYPE_ASSOCIATION_DEPOSIT).count()
         )
 
-    def test_exportAllUnexportedPayments_depositExclusionEnds_collectsOnNextRun(self):
+    def test_exportAllUnexportedPayments_memberExcluded_exportsDepositLikeCoopShares(
+        self,
+    ):
         self._set_parameter(ParameterKeys.PAYMENT_EXPORT_EXCLUSION_ENABLED, True)
         membership = self.create_membership()
         payment = self.create_payment(membership)
         PaymentExportExclusionPeriodFactory(
-            member=membership.member, start_date=self.today, end_date=self.today
-        )
-        self.assertTrue(
-            PaymentExportExclusionPeriodService.is_payment_excluded(
-                payment=payment, cache={}
-            )
-        )
-        self.assertTrue(
-            Payment.objects.filter(
-                PaymentExportExclusionPeriodService.build_payment_is_excluded_condition(
-                    cache={}
-                ),
-                pk=payment.pk,
-            ).exists()
+            member=membership.member, start_date=self.today, end_date=None
         )
 
-        self.assertEqual([], self.export())
-        payment.refresh_from_db()
-        self.assertIsNone(payment.transaction_id)
-
-        self.today = datetime.date(2026, 12, 5)
-        mock_timezone(self, datetime.datetime(2026, 12, 5, 12))
         self.assertFalse(
             PaymentExportExclusionPeriodService.is_payment_excluded(
                 payment=payment, cache={}
@@ -164,20 +160,24 @@ class TestPaymentExportBuilderAssociationDeposits(TapirIntegrationTest):
         self.assertEqual([], self.export())
         payment.refresh_from_db()
         self.assertIsNotNone(payment.transaction_id)
+        self.assertFalse(payment.excluded_from_export)
 
-    def test_exportAllUnexportedPayments_differentConsentAndMandateDates_usesSameMandateDateInBothFiles(
+    def test_exportAllUnexportedPayments_alreadyExportedThisMonth_defersNewPaymentToNextMonth(
         self,
     ):
+        self.create_payment(self.create_membership())
+        self.export()
         payment = self.create_payment(self.create_membership())
-        payment.mandate_ref.start_ts = datetime.datetime(
-            2026, 10, 28, 23, 30, tzinfo=datetime.UTC
-        )
-        payment.mandate_ref.save(update_fields=["start_ts"])
-        self.assertEqual([], self.export())
+
+        self.export()
         payment.refresh_from_db()
-        xml = ElementTree.fromstring(bytes(payment.transaction.xml_file.file))
-        self.assertEqual("2026-10-28", xml.findtext(".//{*}DtOfSgntr"))
-        self.assertIn("28.10.2026", bytes(payment.transaction.csv_file.file).decode())
+        self.assertIsNone(payment.transaction_id)
+
+        self.today = datetime.date(2026, 12, 5)
+        mock_timezone(self, datetime.datetime(2026, 12, 5, 12))
+        self.export()
+        payment.refresh_from_db()
+        self.assertIsNotNone(payment.transaction_id)
 
     def test_exportAllUnexportedPayments_contractNamedLikeDeposit_exportsAsContract(
         self,
@@ -196,34 +196,3 @@ class TestPaymentExportBuilderAssociationDeposits(TapirIntegrationTest):
         deposit.refresh_from_db()
         self.assertEqual("Verträge", contract.transaction.type)
         self.assertEqual(PAYMENT_TYPE_ASSOCIATION_DEPOSIT, deposit.transaction.type)
-
-    def test_exportAllUnexportedPayments_overdueDepositScheduledDuringFutureExclusion_defersDebit(
-        self,
-    ):
-        self._set_parameter(ParameterKeys.PAYMENT_EXPORT_EXCLUSION_ENABLED, True)
-        membership = self.create_membership()
-        payment = self.create_payment(membership)
-        PaymentExportExclusionPeriodFactory(
-            member=membership.member,
-            start_date=datetime.date(2026, 12, 3),
-            end_date=datetime.date(2026, 12, 6),
-        )
-        self.today = datetime.date(2026, 12, 1)
-        mock_timezone(self, datetime.datetime(2026, 12, 1, 12))
-
-        self.assertTrue(
-            PaymentExportExclusionPeriodService.is_payment_excluded(
-                payment=payment, cache={}
-            )
-        )
-        self.assertTrue(
-            Payment.objects.filter(
-                PaymentExportExclusionPeriodService.build_payment_is_excluded_condition(
-                    cache={}
-                ),
-                pk=payment.pk,
-            ).exists()
-        )
-        self.assertEqual([], self.export())
-        payment.refresh_from_db()
-        self.assertIsNone(payment.transaction_id)

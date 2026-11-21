@@ -224,10 +224,10 @@ const CustomCycleDeliveryWeeksInput: React.FC<
         </Form.Select>
       </Form.Group>
       <div className={"d-flex flex-row gap-2 align-items-center"}>
-        <span>Lieferwochen für dieses Produkt</span>
+        <span>Lieferwochen für diesen Produktanteil</span>
         <TapirHelpButton
           text={
-            "Bitte gib an, in welchen Wochen das Produkt abgeholt bzw. geliefert wird. Du kannst beliebig viele Wochen angeben und auch wieder löschen. Änderungen können für zukünftige Abholungen / Lieferungen vorgenommen werden."
+            "Bitte gib an, in welchen Wochen der Produktanteil abgeholt bzw. geliefert wird. Du kannst beliebig viele Wochen angeben und auch wieder löschen. Änderungen können für zukünftige Abholungen / Lieferungen vorgenommen werden."
           }
           buttonSize={"sm"}
         />

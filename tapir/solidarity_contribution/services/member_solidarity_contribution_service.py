@@ -12,7 +12,6 @@ from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import Member
-from tapir.wirgarten.service.products import get_next_growing_period
 from tapir.wirgarten.utils import get_now
 
 
@@ -76,7 +75,7 @@ class MemberSolidarityContributionService:
             reference_date=change_date, cache=cache
         )
         if growing_period is None:
-            future_growing_period = get_next_growing_period(
+            future_growing_period = TapirCache.get_first_growing_period_starting_after(
                 reference_date=change_date, cache=cache
             )
             end_date = future_growing_period.start_date - datetime.timedelta(days=1)

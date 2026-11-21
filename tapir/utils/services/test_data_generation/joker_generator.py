@@ -4,7 +4,6 @@ import random
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.models import Joker
 from tapir.deliveries.services.joker_management_service import JokerManagementService
-from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import GrowingPeriod, Member
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import get_today
@@ -32,9 +31,6 @@ class JokerGenerator:
                 start_date = subscriptions[0].start_date
                 subscriptions.sort(key=lambda subscription: subscription.end_date)
                 end_date = subscriptions[-1].end_date
-                growing_period = TapirCache.get_growing_period_at_date(
-                    reference_date=get_today(cache=cache), cache=cache
-                )
                 nb_jokers = random.randint(0, growing_period.max_jokers_per_member)
                 for _ in range(nb_jokers):
                     random_date = start_date + datetime.timedelta(

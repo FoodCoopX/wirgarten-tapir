@@ -49,7 +49,6 @@ from tapir.wirgarten.service.products import (
     get_active_product_capacities,
     get_active_product_types,
     get_active_and_future_subscriptions,
-    get_next_growing_period,
     get_product_price,
 )
 from tapir.wirgarten.utils import (
@@ -176,8 +175,8 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
                 cache=self.cache,
             )
         )
-        next_growing_period = get_next_growing_period(
-            next_contract_start_date, cache=self.cache
+        next_growing_period = TapirCache.get_first_growing_period_starting_after(
+            reference_date=next_contract_start_date, cache=self.cache
         )
 
         context["next_contract_start_date"] = next_contract_start_date
@@ -273,13 +272,14 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         context["cancelled_coop_shares_data"] = list(cancellations.values())
 
     def add_cancelled_association_memberships_context(self, context):
-        cancellations_per_year = {}
-        for cancelled_membership in AssociationMembership.objects.filter(
-            end_date__isnull=False
-        ).order_by("end_date"):
-            if cancelled_membership.end_date.year not in cancellations_per_year:
-                cancellations_per_year[cancelled_membership.end_date.year] = 0
-            cancellations_per_year[cancelled_membership.end_date.year] += 1
+        cancellations_per_year = {
+            row["year"]: row["count"]
+            for row in AssociationMembership.objects.filter(end_date__isnull=False)
+            .annotate(year=ExtractYear("end_date"))
+            .values("year")
+            .annotate(count=Count("id"))
+            .order_by("year")
+        }
 
         context["cancelled_association_memberships_labels"] = list(
             cancellations_per_year.keys()

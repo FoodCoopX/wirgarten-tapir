@@ -22,9 +22,10 @@ class TokenTest(TapirIntegrationTest):
             member = MemberWithSubscriptionFactory.create()
             for k, v in token_registry["Empfänger"].items():
                 try:
-                    result = getattr(member, v)
-                    if callable(result):
-                        result()
+                    if callable(v):
+                        v(member, {})
+                    else:
+                        getattr(member, v)
                 except Exception as e:
                     self.fail(
                         f"Failed to resolve token '{k}' for member '{member.id}': {e}"
@@ -33,6 +34,6 @@ class TokenTest(TapirIntegrationTest):
     def test_tokens_generalTokens_canBeResolved(self):
         for k, v in token_registry["Allgemein"].items():
             try:
-                v() if callable(v) else v
+                v({}) if callable(v) else v
             except Exception as e:
                 self.fail(f"Failed to resolve general token '{k}': {e}")

@@ -68,7 +68,7 @@ class TestDepositDepartureExport(TapirIntegrationTest):
         self.assertNotIn("2025-12-31", csv)
         self.assertNotIn("200,00", csv)
         overview = AssociationDepositOverviewProvider.annotate_members(
-            Member.objects.filter(pk=member.pk), {}
+            Member.objects.filter(pk=member.pk)
         ).get()
         self.assertEqual(Decimal("200"), overview.deposit_agreed)
         self.assertEqual(Decimal("200"), overview.deposit_exported)

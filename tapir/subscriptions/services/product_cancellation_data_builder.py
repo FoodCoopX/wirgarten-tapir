@@ -19,7 +19,7 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.get_next_delivery_date import get_next_delivery_date
-from tapir.wirgarten.service.products import get_next_growing_period
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.utils import get_today
 
 
@@ -100,7 +100,7 @@ class ProductCancellationDataBuilder:
 
         # This is for the case where the trial ends for example during December,
         # but the contracts get renewed on the first of December
-        next_period = get_next_growing_period(
+        next_period = TapirCache.get_first_growing_period_starting_after(
             reference_date=last_subscription_end_date, cache=cache
         )
         return (

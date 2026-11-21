@@ -51,8 +51,6 @@ class AssociationDepositPolicy:
         cache: dict,
         payment_option: str = "once",
     ) -> None:
-        if payment_option not in ("once", "individual_agreement"):
-            raise ValidationError("Bitte eine gültige Einlagenauswahl angeben.")
         settings = cls.get_settings(cache)
         if not settings["enabled"]:
             if amount not in (None, Decimal("0")) or payment_option != "once":
