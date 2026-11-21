@@ -7,6 +7,7 @@ export function buildSettings(
   baseData: BestellWizardBaseDataResponse,
 ): BestellWizardSettings {
   return {
+    associationDeposit: baseData.associationDeposit,
     theme: baseData.theme as TapirTheme,
     pickupLocations: baseData.pickupLocations,
     productTypes: sortProductTypes(baseData.productTypes),

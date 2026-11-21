@@ -139,6 +139,17 @@ class PublicWaitingListEntryExistingMemberCreateSerializer(serializers.Serialize
 
 
 class PublicConfirmWaitingListEntryRequestSerializer(serializers.Serializer):
+    association_deposit_amount = serializers.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        required=False,
+        allow_null=True,
+        default=None,
+        coerce_to_string=False,
+    )
+    association_deposit_payment_option = serializers.ChoiceField(
+        choices=["once", "individual_agreement"], default="once"
+    )
     entry_id = serializers.CharField()
     link_key = serializers.CharField()
     account_owner = serializers.CharField(allow_blank=True)

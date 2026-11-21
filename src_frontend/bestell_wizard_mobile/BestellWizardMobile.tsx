@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import "../../tapir/core/static/core/bootstrap/5.3.8/css/bootstrap.min.css";
 import "../../tapir/core/static/core/css/base.css";
 import {
+  AssociationDepositPaymentOptionEnum,
   AssociationMembershipType,
   BestellWizardApi,
   CoopApi,
@@ -59,6 +60,7 @@ import Step5EPickupLocationConfirmWaitingList from "./steps/Step5EPickupLocation
 import Step6BAssociationMembership from "./steps/Step6BAssociationMembership.tsx";
 import Step6BCoopShares from "./steps/Step6BCoopShares.tsx";
 import Step6CCoopMemberNow from "./steps/Step6CCoopMemberNow.tsx";
+import Step6DAssociationDeposit from "./steps/Step6DAssociationDeposit.tsx";
 import Step7SolidarityContribution from "./steps/Step7SolidarityContribution.tsx";
 import Step8BDeliveryAddress from "./steps/Step8BDeliveryAddress.tsx";
 import Step8PersonalData from "./steps/Step8PersonalData.tsx";
@@ -118,6 +120,13 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
   ] = useState(false);
   const [pickupLocationsWithCapacityFull, setPickupLocationsWithCapacityFull] =
     useState<Set<PublicPickupLocation>>(new Set<PublicPickupLocation>());
+  const [associationDepositAmount, setAssociationDepositAmount] = useState<
+    number | null
+  >(null);
+  const [associationDepositPaymentOption, setAssociationDepositPaymentOption] =
+    useState<AssociationDepositPaymentOptionEnum>(
+      AssociationDepositPaymentOptionEnum.Once,
+    );
   const [selectedNumberOfCoopShares, setSelectedNumberOfCoopShares] =
     useState(0);
   const [statuteAccepted, setStatuteAccepted] = useState(false);
@@ -575,6 +584,8 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
         .waitingListApiPublicConfirmWaitingListEntryCreate({
           publicConfirmWaitingListEntryRequestRequest: {
             entryId: waitingListEntryDetails.entryId,
+            associationDepositAmount: selectedDepositAmount,
+            associationDepositPaymentOption: selectedDepositPaymentOption,
             accountOwner: personalData.accountOwner,
             contractAccepted:
               contractAccepted || waitingListEntryDetails.memberAlreadyExists,
@@ -652,6 +663,8 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
           )
             ? deliveryAddress
             : undefined,
+          associationDepositAmount: selectedDepositAmount,
+          associationDepositPaymentOption: selectedDepositPaymentOption,
         },
       })
       .then(handleOrderResponse)
@@ -699,6 +712,14 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     }
     setCurrentStep(`${productType.id!}_order`);
   }
+
+  const hasDepositStep = steps.includes("6d_association_deposit");
+  const selectedDepositAmount = hasDepositStep
+    ? associationDepositAmount
+    : null;
+  const selectedDepositPaymentOption = hasDepositStep
+    ? associationDepositPaymentOption
+    : AssociationDepositPaymentOptionEnum.Once;
 
   function getStepComponent(step: Step) {
     switch (step) {
@@ -866,6 +887,18 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             setPayInInstalments={setPayCoopSharesInInstalments}
           />
         );
+      case "6d_association_deposit":
+        return (
+          <Step6DAssociationDeposit
+            settings={settings}
+            amount={associationDepositAmount}
+            paymentOption={associationDepositPaymentOption}
+            setPaymentOption={setAssociationDepositPaymentOption}
+            setAmount={setAssociationDepositAmount}
+            stepActive={currentStep === step}
+            goToNextStep={goToNextStep}
+          />
+        );
       case "6b_association_membership":
         return (
           <Step6BAssociationMembership
@@ -956,6 +989,8 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
       case "10_summary":
         return (
           <Step10OrderSummary
+            associationDepositAmount={selectedDepositAmount}
+            associationDepositPaymentOption={selectedDepositPaymentOption}
             goToNextStep={goToNextStep}
             settings={settings}
             studentStatusEnabled={studentStatusEnabled}

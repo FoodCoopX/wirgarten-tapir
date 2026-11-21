@@ -11,6 +11,12 @@ from tapir.accounts.services.keycloak_user_delete_service import (
     KeycloakUserDeleteService,
 )
 from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
+from tapir.associations.services.association_deposit_payment_creator import (
+    AssociationDepositPaymentCreator,
+)
+from tapir.associations.services.association_deposit_signup_handler import (
+    AssociationDepositSignupHandler,
+)
 from tapir.associations.models import AssociationMembershipType
 from tapir.associations.services.association_membership_change_handler import (
     AssociationMembershipChangeHandler,
@@ -142,6 +148,22 @@ class BestellWizardOrderFulfiller:
                 subscriptions=subscriptions,
                 cache=cache,
                 actor=actor,
+            )
+
+        if association_membership is not None:
+            deposit_amount = validated_serializer_data.get("association_deposit_amount")
+            if deposit_amount:
+                AssociationDepositPaymentCreator.validate_new_deposit(
+                    member=member, amount=deposit_amount, cache=cache
+                )
+            AssociationDepositSignupHandler.create_signup_deposit(
+                membership=association_membership,
+                amount=deposit_amount,
+                payment_option=validated_serializer_data.get(
+                    "association_deposit_payment_option", "once"
+                ),
+                actor=actor,
+                cache=cache,
             )
 
         solidarity_contribution_start_date = contract_start_date
