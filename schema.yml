@@ -8789,6 +8789,170 @@ paths:
                 items:
                   $ref: '#/components/schemas/TriggerDefinition'
           description: ''
+  /utils/data_import/activation:
+    get:
+      operationId: utils_data_import_activation_retrieve
+      tags:
+      - data import
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivationResponse'
+          description: ''
+    post:
+      operationId: utils_data_import_activation_create
+      tags:
+      - data import
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivationResponse'
+          description: ''
+  /utils/data_import/apply:
+    post:
+      operationId: utils_data_import_apply_create
+      tags:
+      - data import
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplyRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ApplyRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ApplyRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplyResponse'
+          description: ''
+  /utils/data_import/cell:
+    post:
+      operationId: utils_data_import_cell_create
+      tags:
+      - data import
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataImportCellEditRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DataImportCellEditRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DataImportCellEditRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewResponse'
+          description: ''
+  /utils/data_import/mapping:
+    post:
+      operationId: utils_data_import_mapping_create
+      tags:
+      - data import
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MappingRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MappingRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MappingRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MappingErrorResponse'
+          description: ''
+  /utils/data_import/types:
+    get:
+      operationId: utils_data_import_types_list
+      tags:
+      - data import
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ImportType'
+          description: ''
+  /utils/data_import/upload:
+    post:
+      operationId: utils_data_import_upload_create
+      tags:
+      - data import
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UploadRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UploadRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadResponse'
+          description: ''
   /waiting_list/api/categories:
     get:
       operationId: waiting_list_api_categories_retrieve
@@ -9267,6 +9431,17 @@ paths:
           description: No response body
 components:
   schemas:
+    ActivationResponse:
+      type: object
+      properties:
+        members_without_login:
+          type: integer
+        sent:
+          type: integer
+        errors:
+          type: array
+          items:
+            type: string
     AdminSetAssociationMembershipRequestRequest:
       type: object
       properties:
@@ -9460,6 +9635,29 @@ components:
         * `planned` - planned
         * `cancelled` - cancelled
         * `ended` - ended
+    ApplyRequestRequest:
+      type: object
+      properties:
+        token:
+          type: string
+          minLength: 1
+        row_indices:
+          type: array
+          items:
+            type: integer
+      required:
+      - row_indices
+      - token
+    ApplyResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+        message:
+          type: string
+      required:
+      - count
+      - message
     AssignmentLogEntry:
       type: object
       properties:
@@ -11158,6 +11356,24 @@ components:
       - subscribed_products
       - trial_period_duration
       - trial_period_is_flexible
+    Cell:
+      type: object
+      properties:
+        old_value:
+          type: string
+        value:
+          type: string
+        state:
+          type: string
+        editable:
+          type: boolean
+        edited:
+          type: boolean
+        original_value:
+          type: string
+      required:
+      - state
+      - value
     ChangeMemberPickupLocationRequestRequest:
       type: object
       properties:
@@ -11184,6 +11400,19 @@ components:
         * `CANCELLED` - Kündigung
         * `RENEWED` - Verlängerung
         * `NOT_RENEWED` - Keine Verlängerung
+    Column:
+      type: object
+      properties:
+        index:
+          type: integer
+        header:
+          type: string
+        selected_key:
+          type: string
+      required:
+      - header
+      - index
+      - selected_key
     ConfirmSubscriptionChangesRequestRequest:
       type: object
       properties:
@@ -11899,6 +12128,34 @@ components:
               type: integer
       required:
       - custom_cycle_delivery_weeks
+    DataImportCellEditRequestRequest:
+      type: object
+      properties:
+        token:
+          type: string
+          minLength: 1
+        row_index:
+          type: integer
+        header:
+          type: string
+          minLength: 1
+        value:
+          type: string
+      required:
+      - header
+      - row_index
+      - token
+      - value
+    DataImportPickupLocation:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+      required:
+      - id
+      - name
     DayOfWeekEnum:
       enum:
       - 0
@@ -11917,6 +12174,27 @@ components:
         * `4` - Freitag
         * `5` - Samstag
         * `6` - Sonntag
+    DefaultValue:
+      type: object
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+      required:
+      - key
+      - value
+    DefaultValueRequest:
+      type: object
+      properties:
+        key:
+          type: string
+          minLength: 1
+        value:
+          type: string
+      required:
+      - key
+      - value
     Delivery:
       type: object
       properties:
@@ -12560,6 +12838,31 @@ components:
         * `delivered` - Zugestellt
         * `unknown` - Nicht geöffnet
         * `sending` - Wird versendet
+    DistinctColumnValues:
+      type: object
+      properties:
+        header:
+          type: string
+        values:
+          type: array
+          items:
+            $ref: '#/components/schemas/DistinctValue'
+        capped:
+          type: boolean
+      required:
+      - capped
+      - header
+      - values
+    DistinctValue:
+      type: object
+      properties:
+        value:
+          type: string
+        count:
+          type: integer
+      required:
+      - count
+      - value
     EmailConfiguration:
       type: object
       properties:
@@ -13613,6 +13916,30 @@ components:
       - joker_restrictions
       - jokers_enabled
       - max_jokers_per_member
+    ImportType:
+      type: object
+      properties:
+        key:
+          type: string
+        name:
+          type: string
+        template_url:
+          type: string
+          format: uri
+      required:
+      - key
+      - name
+      - template_url
+    ImportTypesEnum:
+      enum:
+      - members
+      - shares
+      - subscriptions
+      type: string
+      description: |-
+        * `members` - members
+        * `shares` - shares
+        * `subscriptions` - subscriptions
     Ingredient:
       type: object
       properties:
@@ -14074,6 +14401,60 @@ components:
       required:
       - error
       - previews
+    MappingErrorResponse:
+      type: object
+      properties:
+        mapping_errors:
+          type: array
+          items:
+            type: string
+      required:
+      - mapping_errors
+    MappingItemRequest:
+      type: object
+      properties:
+        column_index:
+          type: integer
+          minimum: 0
+        key:
+          type: string
+      required:
+      - column_index
+      - key
+    MappingOptionsRequest:
+      type: object
+      properties:
+        account_owner_from_name:
+          type: boolean
+          default: true
+        sepa_consent_from_contract_start:
+          type: boolean
+          default: true
+    MappingRequestRequest:
+      type: object
+      properties:
+        token:
+          type: string
+          minLength: 1
+        mapping:
+          type: array
+          items:
+            $ref: '#/components/schemas/MappingItemRequest'
+        defaults:
+          type: array
+          items:
+            $ref: '#/components/schemas/DefaultValueRequest'
+        pickup_location_mapping:
+          type: array
+          items:
+            $ref: '#/components/schemas/PickupLocationMappingRequest'
+        options:
+          $ref: '#/components/schemas/MappingOptionsRequest'
+        update_existing:
+          type: boolean
+      required:
+      - mapping
+      - token
     Member:
       type: object
       properties:
@@ -16749,6 +17130,18 @@ components:
       required:
       - id
       - name
+    PickupLocationMappingRequest:
+      type: object
+      properties:
+        value:
+          type: string
+          minLength: 1
+        target:
+          type: string
+          minLength: 1
+      required:
+      - target
+      - value
     PickupLocationOpeningTime:
       type: object
       properties:
@@ -17639,6 +18032,77 @@ components:
             minLength: 1
       required:
       - recipients
+    ReviewResponse:
+      type: object
+      properties:
+        headers:
+          type: array
+          items:
+            type: string
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReviewRow'
+        valid_count:
+          type: integer
+        invalid_count:
+          type: integer
+        status_counts:
+          type: object
+          additionalProperties:
+            type: integer
+        mapping_errors:
+          type: array
+          items:
+            type: string
+      required:
+      - headers
+      - invalid_count
+      - rows
+      - valid_count
+    ReviewRow:
+      type: object
+      properties:
+        index:
+          type: integer
+        line:
+          type: integer
+        valid:
+          type: boolean
+        status:
+          $ref: '#/components/schemas/ReviewRowStatusEnum'
+        editable:
+          type: boolean
+        cells:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cell'
+        messages:
+          type: array
+          items:
+            type: string
+      required:
+      - cells
+      - editable
+      - index
+      - line
+      - messages
+      - status
+      - valid
+    ReviewRowStatusEnum:
+      enum:
+      - new
+      - changed
+      - unchanged
+      - existing
+      - invalid
+      type: string
+      description: |-
+        * `new` - new
+        * `changed` - changed
+        * `unchanged` - unchanged
+        * `existing` - existing
+        * `invalid` - invalid
     RhythmEnum:
       enum:
       - monthly
@@ -17747,6 +18211,28 @@ components:
       - id
       - label
       - type
+    SemanticField:
+      type: object
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        kind:
+          type: string
+        required:
+          type: boolean
+        allows_default:
+          type: boolean
+        required_unless_product_columns:
+          type: boolean
+          default: false
+      required:
+      - allows_default
+      - key
+      - kind
+      - label
+      - required
     SendVerificationEmailsResponse:
       type: object
       properties:
@@ -18879,6 +19365,72 @@ components:
       - product_type_id
       - sepa_allowed
       - shopping_cart
+    UploadRequestRequest:
+      type: object
+      properties:
+        file:
+          type: string
+          format: binary
+        import_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImportTypesEnum'
+        update_existing:
+          type: boolean
+          default: false
+      required:
+      - file
+      - import_types
+    UploadResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        filename:
+          type: string
+        selected_type_names:
+          type: array
+          items:
+            type: string
+        columns:
+          type: array
+          items:
+            $ref: '#/components/schemas/Column'
+        semantic_fields:
+          type: array
+          items:
+            $ref: '#/components/schemas/SemanticField'
+        preview_rows:
+          type: array
+          items:
+            type: array
+            items:
+              type: string
+        total_rows:
+          type: integer
+        suggested_defaults:
+          type: array
+          items:
+            $ref: '#/components/schemas/DefaultValue'
+        pickup_locations:
+          type: array
+          items:
+            $ref: '#/components/schemas/DataImportPickupLocation'
+        distinct_values:
+          type: array
+          items:
+            $ref: '#/components/schemas/DistinctColumnValues'
+      required:
+      - columns
+      - distinct_values
+      - filename
+      - pickup_locations
+      - preview_rows
+      - selected_type_names
+      - semantic_fields
+      - suggested_defaults
+      - token
+      - total_rows
     UploadTypeEnum:
       enum:
       - F

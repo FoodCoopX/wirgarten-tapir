@@ -33,9 +33,13 @@ def import_shares(row, update_existing, dry_run, stdout):
     )
 
 
-def import_subscription(row, update_existing, dry_run, stdout):
+def import_subscription(
+    row, update_existing, dry_run, stdout, match_by_growing_period=False
+):
     return SubscriptionImporter.import_subscription(
-        row=row, update_existing=update_existing
+        row=row,
+        update_existing=update_existing,
+        match_by_growing_period=match_by_growing_period,
     )
 
 

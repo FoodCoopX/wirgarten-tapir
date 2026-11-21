@@ -200,6 +200,10 @@ class MemberImporter:
             row_header,
             member_attribute,
         ) in map_from_row_header_to_member_attribute.items():
+            # A column missing from the row (e.g. an invalid IBAN dropped by the import
+            # wizard) keeps the member's current value instead of clearing it.
+            if row_header not in row:
+                continue
             converter = map_from_row_header_to_converter.get(
                 row_header, DataImportUtils.normalize_cell
             )

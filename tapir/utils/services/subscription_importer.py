@@ -29,7 +29,12 @@ from tapir.wirgarten.utils import get_today
 
 class SubscriptionImporter:
     @classmethod
-    def import_subscription(cls, row: dict[str, str], update_existing: bool):
+    def import_subscription(
+        cls,
+        row: dict[str, str],
+        update_existing: bool,
+        match_by_growing_period: bool = False,
+    ):
         # VertragNr,Zeitstempel,E-Mail-Adresse,Tapir-ID,Mitgliedernummer,Probevertrag,Vertragsbeginn,[S-Ernteanteil],[M-Ernteanteil],[L-Ernteanteil],[XL-Ernteanteil],product,Quantity,"Gesamtzahlung",Vertragsgrundsätze,Abholort,Email-Adressen,Ernteanteilsreduzierung/erhöhung,consent_widerruf,consent_vertragsgrundsätze,cancellation.ts
 
         member_no = DataImportUtils.safe_int(row.get("Mitgliedernummer"), default=-1)
@@ -92,9 +97,14 @@ class SubscriptionImporter:
             row.get("Personalisierter Betrag", None), default=None
         )
 
-        subscription = Subscription.objects.filter(
-            member=member, product=product, start_date=start_date
-        ).first()
+        subscription_query = Subscription.objects.filter(member=member, product=product)
+        if match_by_growing_period:
+            subscription_query = subscription_query.filter(
+                start_date__lte=start_date, end_date__gte=start_date
+            )
+        else:
+            subscription_query = subscription_query.filter(start_date=start_date)
+        subscription = subscription_query.first()
 
         if subscription:
             if not update_existing:

@@ -7,6 +7,7 @@ export * from "./BestellWizardApi";
 export * from "./ConfigApi";
 export * from "./CoopApi";
 export * from "./CoreApi";
+export * from "./DataImportApi";
 export * from "./DeliveriesApi";
 export * from "./GenericExportsApi";
 export * from "./PaymentsApi";

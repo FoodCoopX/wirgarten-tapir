@@ -6,6 +6,7 @@ apis/BestellWizardApi.ts
 apis/ConfigApi.ts
 apis/CoopApi.ts
 apis/CoreApi.ts
+apis/DataImportApi.ts
 apis/DeliveriesApi.ts
 apis/GenericExportsApi.ts
 apis/PaymentsApi.ts
@@ -17,6 +18,7 @@ apis/TapirmailApi.ts
 apis/WaitingListApi.ts
 apis/index.ts
 index.ts
+models/ActivationResponse.ts
 models/AdminSetAssociationMembershipRequestRequest.ts
 models/AdminSizeChangeRequest.ts
 models/AdminStartDateOption.ts
@@ -28,6 +30,8 @@ models/AdminSubscriptionChangeMemberSummary.ts
 models/AdminSubscriptionChangePrerequisitesStatus.ts
 models/AdminSubscriptionChangeSubscriptionUnit.ts
 models/AdminSubscriptionChangeSubscriptionUnitStatusEnum.ts
+models/ApplyRequestRequest.ts
+models/ApplyResponse.ts
 models/AssignmentLogEntry.ts
 models/AssignmentLogEntryStatusEnum.ts
 models/AssociationMembership.ts
@@ -75,8 +79,10 @@ models/CabLoggedInUserChangeTargetsPaymentRhythmResponse.ts
 models/CancelSubscriptionsRequestRequest.ts
 models/CancelSubscriptionsViewResponse.ts
 models/CancellationData.ts
+models/Cell.ts
 models/ChangeMemberPickupLocationRequestRequest.ts
 models/ChangeTypeEnum.ts
+models/Column.ts
 models/ConfirmSubscriptionChangesRequestRequest.ts
 models/ConvertWeekToDateForSubscriptionChangesResponse.ts
 models/CoopShareTransaction.ts
@@ -86,7 +92,11 @@ models/CreateMissingTriggerMailRequest.ts
 models/CsvExportModel.ts
 models/CsvExportModelRequest.ts
 models/CustomCycleDeliveryWeeksRequest.ts
+models/DataImportCellEditRequestRequest.ts
+models/DataImportPickupLocation.ts
 models/DayOfWeekEnum.ts
+models/DefaultValue.ts
+models/DefaultValueRequest.ts
 models/Delivery.ts
 models/DeliveryAddressRequest.ts
 models/DeliveryCountryEnum.ts
@@ -98,6 +108,8 @@ models/DeliveryDonation.ts
 models/DeliveryDonationWithCancellationLimit.ts
 models/DisableLinkSerializerRequest.ts
 models/DispatchStatusEnum.ts
+models/DistinctColumnValues.ts
+models/DistinctValue.ts
 models/EmailConfiguration.ts
 models/EmailConfigurationDispatch.ts
 models/EmailConfigurationDispatchRequest.ts
@@ -128,6 +140,8 @@ models/GroupedEmailDispatch.ts
 models/GrowingPeriod.ts
 models/GrowingPeriodRequest.ts
 models/GrowingPeriodWithDeliveryDayAdjustments.ts
+models/ImportType.ts
+models/ImportTypesEnum.ts
 models/Ingredient.ts
 models/IngredientRequest.ts
 models/Joker.ts
@@ -152,6 +166,10 @@ models/MailingListRecipient.ts
 models/MailingListSubscribeExternalRecipientRequestRequest.ts
 models/MailingListSubscribeInternalRecipientRequestRequest.ts
 models/MandateReferencePreviewResponse.ts
+models/MappingErrorResponse.ts
+models/MappingItemRequest.ts
+models/MappingOptionsRequest.ts
+models/MappingRequestRequest.ts
 models/Member.ts
 models/MemberAssociationMembershipDetails.ts
 models/MemberBankDataResponse.ts
@@ -265,6 +283,7 @@ models/PickupLocationDeliveryChargeCreateRequestRequest.ts
 models/PickupLocationDeliveryChargeEntry.ts
 models/PickupLocationDeliveryChargesResponse.ts
 models/PickupLocationDeliveryDay.ts
+models/PickupLocationMappingRequest.ts
 models/PickupLocationOpeningTime.ts
 models/PickupLocationOpeningTimeInputRequest.ts
 models/PickupLocationSaveRequestRequest.ts
@@ -298,11 +317,15 @@ models/PublicWaitingListEntryDetails.ts
 models/PublicWaitingListEntryExistingMemberCreateRequest.ts
 models/PublicWaitingListProductWish.ts
 models/RecipientRequest.ts
+models/ReviewResponse.ts
+models/ReviewRow.ts
+models/ReviewRowStatusEnum.ts
 models/RhythmEnum.ts
 models/SaveExtendedProductTypeRequest.ts
 models/SegmentData.ts
 models/SegmentDataRequest.ts
 models/SegmentOption.ts
+models/SemanticField.ts
 models/SendLinkSerializerRequest.ts
 models/SendVerificationEmailsResponse.ts
 models/SetAssociationMembershipEndDateRequestRequest.ts
@@ -355,6 +378,7 @@ models/UnverifiedMembersResponse.ts
 models/UpdateMemberSolidarityContributionRequestRequest.ts
 models/UpdateMemberSolidarityContributionResponse.ts
 models/UpdateSubscriptionsRequestRequest.ts
+models/UploadResponse.ts
 models/UploadTypeEnum.ts
 models/UsedJokerInGrowingPeriod.ts
 models/WaitingListEntry.ts

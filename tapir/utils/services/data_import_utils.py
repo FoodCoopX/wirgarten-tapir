@@ -1,7 +1,33 @@
 import datetime
+from contextlib import contextmanager
+from contextvars import ContextVar
+from dataclasses import dataclass
 
 from django.utils import timezone
 from django.utils.dateparse import parse_date, parse_datetime
+
+
+@dataclass(frozen=True)
+class DataImportChange:
+    instance: object
+    field: str
+    old_value: object
+    new_value: object
+
+
+_change_collector: ContextVar[list[DataImportChange] | None] = ContextVar(
+    "data_import_change_collector", default=None
+)
+
+
+@contextmanager
+def collect_data_import_changes():
+    changes: list[DataImportChange] = []
+    token = _change_collector.set(changes)
+    try:
+        yield changes
+    finally:
+        _change_collector.reset(token)
 
 
 class DataImportUtils:
@@ -77,8 +103,12 @@ class DataImportUtils:
 
     @staticmethod
     def update_if_diff(obj, field, new_val):
-        if new_val == getattr(obj, field):
+        old_val = getattr(obj, field)
+        if new_val == old_val:
             return False
+        collector = _change_collector.get()
+        if collector is not None:
+            collector.append(DataImportChange(obj, field, old_val, new_val))
         setattr(obj, field, new_val)
         return True
 

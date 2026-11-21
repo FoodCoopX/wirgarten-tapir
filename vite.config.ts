@@ -17,6 +17,7 @@ export default defineConfig(() => {
       outDir: resolve(OUTPUT_DIR),
       rollupOptions: {
         input: {
+          data_import: resolve(INPUT_DIR, "data_import/data_import_entry.tsx"),
           member_profile: resolve(
             INPUT_DIR,
             "member_profile/member_profile_entry.tsx",
