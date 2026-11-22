@@ -144,7 +144,7 @@ class DataGenerator:
         )
 
         print(f"Generating test data for {generate_test_data_for}...")
-        cls.generate_growing_periods()
+        cls.generate_growing_periods(generate_test_data_for)
         print("Creating products...")
         ProductGenerator.generate_product_data(generate_test_data_for)
         print("Creating pickup locations...")
@@ -183,14 +183,37 @@ class DataGenerator:
         print("Test data generation done")
 
     @classmethod
-    def generate_growing_periods(cls):
-        current_year = datetime.date.today().year
+    def generate_growing_periods(cls, generate_test_data_for: Organization):
+        today = datetime.date.today()
+        start_date_current_period = today.replace(
+            day=1,
+            month=cls.get_starting_month_for_growing_period(generate_test_data_for),
+        )
+        if start_date_current_period > today:
+            start_date_current_period = start_date_current_period.replace(
+                year=start_date_current_period.year - 1
+            )
+
+        end_date_current_period = start_date_current_period.replace(
+            year=start_date_current_period.year + 1
+        ) - datetime.timedelta(days=1)
+
         GrowingPeriod.objects.bulk_create(
             [
                 GrowingPeriod(
-                    start_date=datetime.date(year=year, month=1, day=1),
-                    end_date=datetime.date(year=year, month=12, day=31),
+                    start_date=start_date_current_period.replace(
+                        year=start_date_current_period.year + year_offset
+                    ),
+                    end_date=end_date_current_period.replace(
+                        year=end_date_current_period.year + year_offset
+                    ),
                 )
-                for year in [current_year - 1, current_year, current_year + 1]
+                for year_offset in (-1, 0, 1)
             ]
         )
+
+    @classmethod
+    def get_starting_month_for_growing_period(cls, organization: Organization) -> int:
+        if organization is Organization.VIERLANDE:
+            return VierlandeGenerator.STARTING_MONTH
+        return 1
