@@ -174,28 +174,35 @@ class TestBiddingRoundGenerator(TapirIntegrationTest):
             .order_by("start_date")
             .first()
         )
-        subscription_member_ids = set(
+        all_member_ids = set(
             Subscription.objects.filter(
                 period=current_period,
                 product__type__name=HARVEST_SHARE_PRODUCT_TYPE_NAME,
             ).values_list("member_id", flat=True)
         )
-        member_count = len(subscription_member_ids)
+        pre_cancelled_member_ids = set(
+            Subscription.objects.filter(
+                period=current_period,
+                product__type__name=HARVEST_SHARE_PRODUCT_TYPE_NAME,
+                cancellation_ts__lt=active_round.start_at,
+            ).values_list("member_id", flat=True)
+        )
+        free_member_ids = set(
+            Subscription.objects.filter(
+                period=current_period,
+                product__type__name=HARVEST_SHARE_PRODUCT_TYPE_NAME,
+                cancellation_ts__gte=active_round.start_at,
+            ).values_list("member_id", flat=True)
+        )
+        member_count = len(all_member_ids - pre_cancelled_member_ids)
         bid_member_ids = set(active_round.bids.values_list("member_id", flat=True))
-        cancelled_member_ids = set(
-            Subscription.objects.filter(
-                period=current_period,
-                product__type__name=HARVEST_SHARE_PRODUCT_TYPE_NAME,
-                cancellation_ts__isnull=False,
-            ).values_list("member_id", flat=True)
-        )
         bidder_count = int(member_count * 0.6)
         free_count = member_count - bidder_count - int(member_count * 0.3)
 
         self.assertEqual(bidder_count, len(bid_member_ids))
-        self.assertEqual(free_count, len(cancelled_member_ids))
-        self.assertTrue(bid_member_ids.isdisjoint(cancelled_member_ids))
-        self.assertTrue(bid_member_ids.issubset(subscription_member_ids))
+        self.assertEqual(free_count, len(free_member_ids))
+        self.assertTrue(bid_member_ids.isdisjoint(free_member_ids))
+        self.assertTrue(bid_member_ids.issubset(all_member_ids))
 
     def test_generateAll_activeRoundUsesTheMiddleLevelAmount(self, _count):
         DataGenerator.generate_all(Organization.BIOTOP)
@@ -258,17 +265,25 @@ class TestBiddingRoundGenerator(TapirIntegrationTest):
             .order_by("start_date")
             .first()
         )
-        member_ids = set(
+        all_member_ids = set(
             Subscription.objects.filter(
                 period=current_period,
                 product__type__name=HARVEST_SHARE_PRODUCT_TYPE_NAME,
             ).values_list("member_id", flat=True)
         )
+        pre_cancelled_member_ids = set(
+            Subscription.objects.filter(
+                period=current_period,
+                product__type__name=HARVEST_SHARE_PRODUCT_TYPE_NAME,
+                cancellation_ts__lt=active_round.start_at,
+            ).values_list("member_id", flat=True)
+        )
+        member_count = len(all_member_ids - pre_cancelled_member_ids)
         evaluation = BiddingRoundStatsService.build_admin_evaluation(
             active_round, cache={}
         )
 
-        self.assertEqual(int(len(member_ids) * 0.9), active_round.bids.count())
+        self.assertEqual(int(member_count * 0.9), active_round.bids.count())
         self.assertEqual(0, len(evaluation["auto_renewed"]))
 
         bid_range_round = BiddingRound.objects.get(
@@ -302,10 +317,15 @@ class TestBiddingRoundGenerator(TapirIntegrationTest):
             .first()
         )
         product_type = ProductType.objects.get(name=HARVEST_SHARE_PRODUCT_TYPE_NAME)
+        active_round = BiddingRound.objects.get(status=BIDDING_ROUND_STATUS_ACTIVE)
         total_shares = Decimal("0")
-        for subscription in Subscription.objects.filter(
-            period=current_period, product__type=product_type
-        ).select_related("product"):
+        for subscription in (
+            Subscription.objects.filter(
+                period=current_period, product__type=product_type
+            )
+            .exclude(cancellation_ts__lt=active_round.start_at)
+            .select_related("product")
+        ):
             product_price = get_product_price(
                 product=subscription.product,
                 reference_date=current_period.start_date,
@@ -319,7 +339,6 @@ class TestBiddingRoundGenerator(TapirIntegrationTest):
             total_shares += size * subscription.quantity
         expected_capacity = total_shares.to_integral_value(rounding=ROUND_CEILING)
 
-        active_round = BiddingRound.objects.get(status=BIDDING_ROUND_STATUS_ACTIVE)
         capacity = BiddingRoundStatsService.get_capacity_shares(active_round, cache={})
 
         self.assertEqual(expected_capacity, capacity)
