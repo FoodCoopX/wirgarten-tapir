@@ -67,6 +67,14 @@ class TestBiddingRoundService(TapirIntegrationTest):
         self.assertEqual(product_type, bidding_round.product_type)
         self.assertEqual(Decimal("1000.00"), bidding_round.target_amount_per_year)
 
+    def test_validateRoundCreation_startAfterEnd_raisesValidationError(self):
+        end_at = get_now(cache={})
+
+        with pytest.raises(ValidationError):
+            BiddingRoundService.validate_round_creation(
+                end_at=end_at, start_at=end_at + datetime.timedelta(hours=1)
+            )
+
     def test_startRound_withoutTargetAmount_raisesValidationError(self):
         bidding_round = BiddingRoundFactory.create(target_amount_per_year=None)
         self._add_round_price(bidding_round)

@@ -1,5 +1,6 @@
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.db.models import Exists, OuterRef
 from django.http import Http404
 from django.shortcuts import get_object_or_404
@@ -8,7 +9,8 @@ from django.utils.translation import gettext_lazy as _
 from django.views.generic import TemplateView
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import status
-from rest_framework.permissions import AllowAny
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -97,7 +99,7 @@ class PublicDataView(BiddingRoundFeatureFlagMixin, APIView):
 
     @extend_schema(responses={200: PublicDataResponseSerializer})
     def get(self, request):
-        cache = {}
+        cache = self.cache
         bidding_round = BiddingRoundService.get_current_open_round(cache=cache)
         member = None
         if request.user.is_authenticated:
@@ -143,7 +145,7 @@ class RoundListCreateView(BiddingRoundFeatureFlagMixin, APIView):
 
     @extend_schema(responses={200: RoundSerializer(many=True)})
     def get(self, request):
-        cache = {}
+        cache = self.cache
         rounds = BiddingRound.objects.annotate(
             has_bids=Exists(Bid.objects.filter(round=OuterRef("pk")))
         ).order_by("-created_at")
@@ -157,7 +159,7 @@ class RoundListCreateView(BiddingRoundFeatureFlagMixin, APIView):
 
     @extend_schema(responses={201: RoundSerializer}, request=RoundCreateSerializer())
     def post(self, request):
-        cache = {}
+        cache = self.cache
         serializer = RoundCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         validated = serializer.validated_data
@@ -177,18 +179,36 @@ class RoundListCreateView(BiddingRoundFeatureFlagMixin, APIView):
                     },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-        try:
-            bidding_round = BiddingRoundService.create_round(
-                growing_period=growing_period,
-                name=validated["name"],
-                end_at=validated["end_at"],
-                start_at=validated.get("start_at"),
-                comment=validated.get("comment", ""),
-                product_type_id=validated.get("product_type_id"),
-                target_amount_per_year=validated.get("target_amount_per_year"),
-                prices=validated.get("prices"),
-                cache=cache,
+        product_type_id = validated.get("product_type_id")
+        if not product_type_id:
+            product_types = (
+                BiddingRoundService.get_product_types_with_capacity_for_period(
+                    growing_period, cache=cache
+                )
             )
+            if len(product_types) != 1:
+                return Response(
+                    {"error": _("Bitte genau einen Produkttyp auswählen.")},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            product_type_id = product_types[0].id
+        try:
+            with transaction.atomic():
+                BiddingRoundService.validate_round_creation(
+                    end_at=validated["end_at"],
+                    start_at=validated.get("start_at"),
+                )
+                bidding_round = BiddingRoundService.create_round(
+                    growing_period=growing_period,
+                    name=validated["name"],
+                    end_at=validated["end_at"],
+                    start_at=validated.get("start_at"),
+                    comment=validated.get("comment", ""),
+                    product_type_id=product_type_id,
+                    target_amount_per_year=validated.get("target_amount_per_year"),
+                    prices=validated.get("prices"),
+                    cache=cache,
+                )
         except ValidationError as error:
             return Response(
                 {"error": BiddingRoundViewService.serialize_validation_error(error)},
@@ -205,7 +225,7 @@ class GrowingPeriodsView(BiddingRoundFeatureFlagMixin, APIView):
 
     @extend_schema(responses={200: GrowingPeriodOptionSerializer(many=True)})
     def get(self, request):
-        cache = {}
+        cache = self.cache
         periods = GrowingPeriod.objects.filter(
             end_date__gte=get_today(cache=cache)
         ).order_by("start_date")
@@ -237,7 +257,7 @@ class AvailableProductTypesView(BiddingRoundFeatureFlagMixin, APIView):
         ],
     )
     def get(self, request):
-        cache = {}
+        cache = self.cache
         growing_period_id = request.query_params.get("growing_period_id")
         if growing_period_id:
             growing_period = get_object_or_404(GrowingPeriod, id=growing_period_id)
@@ -279,7 +299,7 @@ class RoundDetailView(BiddingRoundFeatureFlagMixin, APIView):
 
     @extend_schema(responses={200: RoundSerializer})
     def get(self, request, round_id):
-        cache = {}
+        cache = self.cache
         bidding_round = get_object_or_404(BiddingRound, id=round_id)
         return Response(
             BiddingRoundViewService.serialize_round(bidding_round, cache),
@@ -288,7 +308,7 @@ class RoundDetailView(BiddingRoundFeatureFlagMixin, APIView):
 
     @extend_schema(responses={200: RoundSerializer}, request=RoundConfigSerializer())
     def patch(self, request, round_id):
-        cache = {}
+        cache = self.cache
         bidding_round = get_object_or_404(BiddingRound, id=round_id)
         serializer = RoundConfigSerializer(data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
@@ -309,7 +329,7 @@ class RoundDetailView(BiddingRoundFeatureFlagMixin, APIView):
 
     @extend_schema(request=None, responses={204: None})
     def delete(self, request, round_id):
-        cache = {}
+        cache = self.cache
         bidding_round = get_object_or_404(BiddingRound, id=round_id)
         try:
             BiddingRoundService.delete_round(bidding_round, cache=cache)
@@ -326,7 +346,7 @@ class RoundStartView(BiddingRoundFeatureFlagMixin, APIView):
 
     @extend_schema(request=None, responses={200: RoundSerializer})
     def post(self, request, round_id):
-        cache = {}
+        cache = self.cache
         bidding_round = get_object_or_404(BiddingRound, id=round_id)
         try:
             BiddingRoundService.start_round(bidding_round, cache=cache)
@@ -346,7 +366,7 @@ class RoundCloseView(BiddingRoundFeatureFlagMixin, APIView):
 
     @extend_schema(request=None, responses={200: RoundSerializer})
     def post(self, request, round_id):
-        cache = {}
+        cache = self.cache
         bidding_round = get_object_or_404(BiddingRound, id=round_id)
         try:
             BiddingRoundService.close_round(bidding_round, cache=cache)
@@ -366,7 +386,7 @@ class RoundReopenView(BiddingRoundFeatureFlagMixin, APIView):
 
     @extend_schema(request=None, responses={200: RoundSerializer})
     def post(self, request, round_id):
-        cache = {}
+        cache = self.cache
         bidding_round = get_object_or_404(BiddingRound, id=round_id)
         try:
             BiddingRoundService.reopen_round(bidding_round, cache=cache)
@@ -386,7 +406,7 @@ class RoundResultsView(BiddingRoundFeatureFlagMixin, APIView):
 
     @extend_schema(responses={200: RoundResultsResponseSerializer})
     def get(self, request, round_id):
-        cache = {}
+        cache = self.cache
         bidding_round = get_object_or_404(BiddingRound, id=round_id)
         return Response(
             BiddingRoundStatsService.build_admin_evaluation(bidding_round, cache),
@@ -396,20 +416,23 @@ class RoundResultsView(BiddingRoundFeatureFlagMixin, APIView):
 
 class MemberBidView(BiddingRoundFeatureFlagMixin, APIView):
     require_public_url = True
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     @staticmethod
-    def _get_member(request):
-        if not request.user.is_authenticated:
-            return None
+    def _get_member(request) -> Member | None:
         return Member.objects.filter(id=request.user.id).first()
+
+    @staticmethod
+    def _require_member(request) -> Member:
+        member = MemberBidView._get_member(request)
+        if member is None:
+            raise PermissionDenied(_("Für dieses Konto gibt es kein Mitglied."))
+        return member
 
     @extend_schema(responses={200: MemberBidResponseSerializer})
     def get(self, request, round_id):
-        cache = {}
-        member = self._get_member(request)
-        if not member:
-            return Response(status=status.HTTP_403_FORBIDDEN)
+        cache = self.cache
+        member = self._require_member(request)
         bidding_round = get_object_or_404(BiddingRound, id=round_id)
         bid = Bid.objects.filter(round=bidding_round, member=member).first()
         return Response(
@@ -429,10 +452,8 @@ class MemberBidView(BiddingRoundFeatureFlagMixin, APIView):
 
     @extend_schema(request=BidSubmitSerializer(), responses={200: None})
     def post(self, request, round_id):
-        cache = {}
-        member = self._get_member(request)
-        if not member:
-            return Response(status=status.HTTP_403_FORBIDDEN)
+        cache = self.cache
+        member = self._require_member(request)
         bidding_round = get_object_or_404(BiddingRound, id=round_id)
         serializer = BidSubmitSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -459,7 +480,7 @@ class CreateContractsView(BiddingRoundFeatureFlagMixin, APIView):
         request=CreateContractsSerializer(),
     )
     def post(self, request, round_id):
-        cache = {}
+        cache = self.cache
         bidding_round = get_object_or_404(BiddingRound, id=round_id)
         serializer = CreateContractsSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

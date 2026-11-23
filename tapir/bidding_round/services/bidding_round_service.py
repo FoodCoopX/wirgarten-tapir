@@ -26,6 +26,17 @@ class BiddingRoundService:
     SENSITIVE_FIELDS = ("product_type_id", "target_amount_per_year", "prices")
 
     @classmethod
+    def validate_round_creation(
+        cls,
+        end_at: datetime.datetime,
+        start_at: datetime.datetime | None = None,
+    ) -> None:
+        if start_at is not None and start_at > end_at:
+            raise ValidationError(
+                _("Das Startdatum darf nicht nach dem Enddatum liegen.")
+            )
+
+    @classmethod
     @transaction.atomic
     def create_round(
         cls,
@@ -33,25 +44,12 @@ class BiddingRoundService:
         name: str,
         end_at: datetime.datetime,
         cache: dict,
+        product_type_id: str,
         start_at: datetime.datetime | None = None,
         comment: str = "",
-        product_type_id: str | None = None,
         target_amount_per_year=None,
         prices: list[dict] | None = None,
     ) -> BiddingRound:
-        if start_at is not None and start_at > end_at:
-            raise ValidationError(
-                _("Das Startdatum darf nicht nach dem Enddatum liegen.")
-            )
-
-        if product_type_id is None:
-            product_types = cls.get_product_types_with_capacity_for_period(
-                growing_period, cache=cache
-            )
-            if len(product_types) != 1:
-                raise ValidationError(_("Bitte genau einen Produkttyp auswählen."))
-            product_type_id = product_types[0].id
-
         bidding_round = BiddingRound.objects.create(
             growing_period=growing_period,
             name=name,
@@ -225,7 +223,6 @@ class BiddingRoundService:
         bidding_round.delete()
 
     @classmethod
-    @transaction.atomic
     def update_round_config(
         cls, bidding_round: BiddingRound, changes: dict, cache: dict
     ) -> BiddingRound:
@@ -235,8 +232,14 @@ class BiddingRoundService:
                     "Die Beitragsrunde kann nach der Vertragserstellung nicht mehr geändert werden."
                 )
             )
-        cls._validate_round_config_change(bidding_round, changes)
+        cls.validate_round_config_change(bidding_round, changes)
+        return cls._apply_round_config_change(bidding_round, changes, cache)
 
+    @classmethod
+    @transaction.atomic
+    def _apply_round_config_change(
+        cls, bidding_round: BiddingRound, changes: dict, cache: dict
+    ) -> BiddingRound:
         for field in cls.EDITABLE_FIELDS:
             if field not in changes:
                 continue
@@ -295,7 +298,7 @@ class BiddingRoundService:
         }
 
     @classmethod
-    def _validate_round_config_change(
+    def validate_round_config_change(
         cls, bidding_round: BiddingRound, changes: dict
     ) -> None:
         start_at = changes.get("start_at") or bidding_round.start_at

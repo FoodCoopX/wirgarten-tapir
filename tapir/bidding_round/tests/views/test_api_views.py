@@ -12,9 +12,11 @@ from tapir.bidding_round.tests.helpers import (
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
+from tapir.accounts.models import TapirUser
 from tapir.wirgarten.tests.factories import (
     GrowingPeriodFactory,
     MemberFactory,
+    ProductCapacityFactory,
     ProductFactory,
     ProductTypeFactory,
     SubscriptionFactory,
@@ -68,7 +70,25 @@ class TestPublicDataView(BiddingRoundApiTestBase):
 
 
 class TestMemberBidView(BiddingRoundApiTestBase):
-    def test_get_anonymous_returns403(self):
+    def test_get_loggedInWithoutMember_returns403(self):
+        self._enable()
+        bidding_round = create_open_round()
+        self.client.force_login(
+            TapirUser.objects.create(
+                username="staff",
+                first_name="Staff",
+                last_name="Account",
+                email="staff@example.com",
+            )
+        )
+
+        response = self.client.get(
+            reverse("bidding_rounds:member_bid", args=[bidding_round.id])
+        )
+
+        self.assertStatusCode(response, status.HTTP_403_FORBIDDEN)
+
+    def test_get_anonymous_returns401(self):
         self._enable()
         bidding_round = create_open_round()
 
@@ -76,7 +96,7 @@ class TestMemberBidView(BiddingRoundApiTestBase):
             reverse("bidding_rounds:member_bid", args=[bidding_round.id])
         )
 
-        self.assertStatusCode(response, status.HTTP_403_FORBIDDEN)
+        self.assertStatusCode(response, status.HTTP_401_UNAUTHORIZED)
 
     def test_post_validBid_storesBid(self):
         self._enable()
@@ -178,6 +198,45 @@ class TestRoundAdminViews(BiddingRoundApiTestBase):
         list_response = self.client.get(reverse("bidding_rounds:round_list_create"))
         self.assertStatusCode(list_response, status.HTTP_200_OK)
         self.assertEqual(1, len(list_response.data))
+
+    def test_listAndCreate_withoutProductType_usesTheOnlyProductTypeWithCapacity(
+        self,
+    ):
+        growing_period = GrowingPeriodFactory.create()
+        product_type = ProductTypeFactory.create()
+        ProductCapacityFactory.create(
+            period=growing_period, product_type=product_type, capacity=1000
+        )
+
+        response = self.client.post(
+            reverse("bidding_rounds:round_list_create"),
+            data={
+                "growing_period_id": growing_period.id,
+                "name": "Beitragsrunde Test",
+                "end_at": (get_now(cache={}) + datetime.timedelta(days=1)).isoformat(),
+            },
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, status.HTTP_201_CREATED)
+        self.assertEqual(product_type.id, response.data["product"]["product_type_id"])
+
+    def test_listAndCreate_withoutProductTypeAndAmbiguousCapacity_returns400(self):
+        growing_period = GrowingPeriodFactory.create()
+        for _ in range(2):
+            ProductCapacityFactory.create(period=growing_period, capacity=1000)
+
+        response = self.client.post(
+            reverse("bidding_rounds:round_list_create"),
+            data={
+                "growing_period_id": growing_period.id,
+                "name": "Beitragsrunde Test",
+                "end_at": (get_now(cache={}) + datetime.timedelta(days=1)).isoformat(),
+            },
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, status.HTTP_400_BAD_REQUEST)
 
     def test_startCloseAndResults(self):
         growing_period = GrowingPeriodFactory.create()

@@ -21,17 +21,18 @@ class BiddingRoundFeatureFlagMixin:
 
     This keeps the view's own ``permission_classes`` (and therefore the global
     ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
-    the public (member-facing) endpoints.
+    the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
+    so the handlers reuse it instead of building their own.
     """
 
     require_public_url = False
 
     def initial(self, request, *args, **kwargs):
-        cache = {}
-        if not BiddingRoundViewService.is_feature_flag_enabled(cache):
+        self.cache = {}
+        if not BiddingRoundViewService.is_feature_flag_enabled(self.cache):
             raise Http404
         if self.require_public_url and not (
-            BiddingRoundViewService.is_public_url_enabled(cache)
+            BiddingRoundViewService.is_public_url_enabled(self.cache)
         ):
             raise Http404
         return super().initial(request, *args, **kwargs)
