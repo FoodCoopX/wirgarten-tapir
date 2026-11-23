@@ -19,6 +19,8 @@ import type {
   BestellWizardConfirmOrderRequestRequest,
   BestellWizardDeliveryDatesForOrderRequestRequest,
   BestellWizardDeliveryDatesForOrderResponse,
+  BestellWizardOrderEvaluationRequestRequest,
+  BestellWizardOrderEvaluationResponse,
   OrderConfirmationResponse,
 } from "../models/index";
 import {
@@ -28,6 +30,8 @@ import {
   BestellWizardConfirmOrderRequestRequestToJSON,
   BestellWizardDeliveryDatesForOrderRequestRequestToJSON,
   BestellWizardDeliveryDatesForOrderResponseFromJSON,
+  BestellWizardOrderEvaluationRequestRequestToJSON,
+  BestellWizardOrderEvaluationResponseFromJSON,
   OrderConfirmationResponseFromJSON,
 } from "../models/index";
 import * as runtime from "../runtime";
@@ -46,6 +50,10 @@ export interface BestellWizardApiContractStartDateWaitingListEntryRetrieveReques
 
 export interface BestellWizardApiIsEmailAddressValidRetrieveRequest {
   email?: string;
+}
+
+export interface BestellWizardApiOrderEvaluationCreateRequest {
+  bestellWizardOrderEvaluationRequestRequest: BestellWizardOrderEvaluationRequestRequest;
 }
 
 export interface BestellWizardBestellWizardConfirmOrderCreateRequest {
@@ -403,6 +411,72 @@ export class BestellWizardApi extends runtime.BaseAPI {
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<boolean> {
     const response = await this.bestellWizardApiIsEmailAddressValidRetrieveRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async bestellWizardApiOrderEvaluationCreateRaw(
+    requestParameters: BestellWizardApiOrderEvaluationCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<BestellWizardOrderEvaluationResponse>> {
+    if (
+      requestParameters["bestellWizardOrderEvaluationRequestRequest"] == null
+    ) {
+      throw new runtime.RequiredError(
+        "bestellWizardOrderEvaluationRequestRequest",
+        'Required parameter "bestellWizardOrderEvaluationRequestRequest" was null or undefined when calling bestellWizardApiOrderEvaluationCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/bestell_wizard/api/order_evaluation`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: BestellWizardOrderEvaluationRequestRequestToJSON(
+          requestParameters["bestellWizardOrderEvaluationRequestRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      BestellWizardOrderEvaluationResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async bestellWizardApiOrderEvaluationCreate(
+    requestParameters: BestellWizardApiOrderEvaluationCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<BestellWizardOrderEvaluationResponse> {
+    const response = await this.bestellWizardApiOrderEvaluationCreateRaw(
       requestParameters,
       initOverrides,
     );

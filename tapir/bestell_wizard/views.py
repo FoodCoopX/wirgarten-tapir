@@ -22,6 +22,11 @@ from tapir.bestell_wizard.serializers import (
     BestellWizardBaseDataResponseSerializer,
     BestellWizardDeliveryDatesForOrderResponseSerializer,
     BestellWizardDeliveryDatesForOrderRequestSerializer,
+    BestellWizardOrderEvaluationRequestSerializer,
+    BestellWizardOrderEvaluationResponseSerializer,
+)
+from tapir.bestell_wizard.services.first_delivery_dates_provider import (
+    FirstDeliveryDatesProvider,
 )
 from tapir.bestell_wizard.services.growing_period_choice_builder import (
     GrowingPeriodChoiceBuilder,
@@ -32,10 +37,16 @@ from tapir.bestell_wizard.services.bestell_wizard_order_fulfiller import (
 from tapir.bestell_wizard.services.bestell_wizard_order_validator import (
     BestellWizardOrderValidator,
 )
+from tapir.bestell_wizard.services.products_over_capacity_for_order_provider import (
+    ProductsOverCapacityForOrderProvider,
+)
 from tapir.bestell_wizard.services.questionnaire_source_service import (
     QuestionnaireSourceService,
 )
 from tapir.configuration.parameter import get_parameter_value
+from tapir.pickup_locations.services.pickup_locations_with_enough_capacity_provider import (
+    PickupLocationsWithEnoughCapacityProvider,
+)
 from tapir.coop.services.member_needs_banking_data_checker import (
     MemberNeedsBankingDataChecker,
 )
@@ -501,6 +512,54 @@ class BestellWizardCapacityCheckApiView(APIView):
         }
         return Response(
             BestellWizardCapacityCheckResponseSerializer(response_data).data
+        )
+
+
+class BestellWizardOrderEvaluationApiView(APIView):
+    permission_classes = []
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.cache = {}
+
+    @extend_schema(
+        responses={200: BestellWizardOrderEvaluationResponseSerializer},
+        request=BestellWizardOrderEvaluationRequestSerializer,
+    )
+    def post(self, request):
+        serializer = BestellWizardOrderEvaluationRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
+            shopping_cart=serializer.validated_data["shopping_cart"], cache=self.cache
+        )
+        growing_period = get_object_or_404(
+            GrowingPeriod, id=serializer.validated_data["growing_period_id"]
+        )
+        contract_start_date = (
+            ContractStartDateCalculator.get_next_contract_start_date_in_growing_period(
+                growing_period=growing_period,
+                apply_buffer_time=True,
+                cache=self.cache,
+            )
+        )
+
+        response_data = {
+            "ids_of_product_types_over_capacity": ProductsOverCapacityForOrderProvider.get_product_type_ids(
+                order=order, contract_start_date=contract_start_date, cache=self.cache
+            ),
+            "ids_of_products_over_capacity": ProductsOverCapacityForOrderProvider.get_product_ids(
+                order=order, contract_start_date=contract_start_date, cache=self.cache
+            ),
+            "pickup_location_ids_with_enough_capacity_for_order": PickupLocationsWithEnoughCapacityProvider.get_pickup_location_ids(
+                order=order, subscription_start=contract_start_date, cache=self.cache
+            ),
+            "delivery_date_by_pickup_location_id_and_product_type_id": FirstDeliveryDatesProvider.get_delivery_date_by_pickup_location_id_and_product_type_id(
+                order=order, contract_start_date=contract_start_date, cache=self.cache
+            ),
+        }
+        return Response(
+            BestellWizardOrderEvaluationResponseSerializer(response_data).data
         )
 
 

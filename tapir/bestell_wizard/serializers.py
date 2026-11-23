@@ -234,3 +234,21 @@ class BestellWizardDeliveryDatesForOrderResponseSerializer(serializers.Serialize
     delivery_date_by_pickup_location_id_and_product_type_id = serializers.DictField(
         child=serializers.DictField(child=serializers.DateField())
     )
+
+
+class BestellWizardOrderEvaluationRequestSerializer(serializers.Serializer):
+    shopping_cart = serializers.DictField(child=serializers.IntegerField())
+    growing_period_id = serializers.CharField()
+
+
+class BestellWizardOrderEvaluationResponseSerializer(serializers.Serializer):
+    ids_of_product_types_over_capacity = serializers.ListField(
+        child=serializers.CharField()
+    )
+    ids_of_products_over_capacity = serializers.ListField(child=serializers.CharField())
+    pickup_location_ids_with_enough_capacity_for_order = serializers.ListField(
+        child=serializers.CharField()
+    )
+    delivery_date_by_pickup_location_id_and_product_type_id = serializers.DictField(
+        child=serializers.DictField(child=serializers.DateField())
+    )

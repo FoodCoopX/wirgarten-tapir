@@ -29,6 +29,8 @@ export * from "./BestellWizardDeliveryDatesForOrderRequestRequest";
 export * from "./BestellWizardDeliveryDatesForOrderResponse";
 export * from "./BestellWizardGrowingPeriodChoice";
 export * from "./BestellWizardImages";
+export * from "./BestellWizardOrderEvaluationRequestRequest";
+export * from "./BestellWizardOrderEvaluationResponse";
 export * from "./BestellWizardStrings";
 export * from "./BlankEnum";
 export * from "./BounceTypeEnum";

@@ -46,6 +46,8 @@ models/BestellWizardDeliveryDatesForOrderRequestRequest.ts
 models/BestellWizardDeliveryDatesForOrderResponse.ts
 models/BestellWizardGrowingPeriodChoice.ts
 models/BestellWizardImages.ts
+models/BestellWizardOrderEvaluationRequestRequest.ts
+models/BestellWizardOrderEvaluationResponse.ts
 models/BestellWizardStrings.ts
 models/BlankEnum.ts
 models/BounceTypeEnum.ts

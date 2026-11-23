@@ -2586,6 +2586,34 @@ paths:
               schema:
                 type: boolean
           description: ''
+  /bestell_wizard/api/order_evaluation:
+    post:
+      operationId: bestell_wizard_api_order_evaluation_create
+      tags:
+      - bestell_wizard
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BestellWizardOrderEvaluationRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BestellWizardOrderEvaluationRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BestellWizardOrderEvaluationRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BestellWizardOrderEvaluationResponse'
+          description: ''
   /bestell_wizard/bestell_wizard_confirm_order:
     post:
       operationId: bestell_wizard_bestell_wizard_confirm_order_create
@@ -10031,6 +10059,46 @@ components:
       - step6_background_image
       - step8_background_image
       - step9_background_image
+    BestellWizardOrderEvaluationRequestRequest:
+      type: object
+      properties:
+        shopping_cart:
+          type: object
+          additionalProperties:
+            type: integer
+        growing_period_id:
+          type: string
+          minLength: 1
+      required:
+      - growing_period_id
+      - shopping_cart
+    BestellWizardOrderEvaluationResponse:
+      type: object
+      properties:
+        ids_of_product_types_over_capacity:
+          type: array
+          items:
+            type: string
+        ids_of_products_over_capacity:
+          type: array
+          items:
+            type: string
+        pickup_location_ids_with_enough_capacity_for_order:
+          type: array
+          items:
+            type: string
+        delivery_date_by_pickup_location_id_and_product_type_id:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties:
+              type: string
+              format: date
+      required:
+      - delivery_date_by_pickup_location_id_and_product_type_id
+      - ids_of_product_types_over_capacity
+      - ids_of_products_over_capacity
+      - pickup_location_ids_with_enough_capacity_for_order
     BestellWizardStrings:
       type: object
       properties:
