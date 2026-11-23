@@ -1,6 +1,6 @@
 import React from "react";
 import { Form } from "react-bootstrap";
-import { PublicGrowingPeriod } from "../../api-client";
+import { BestellWizardGrowingPeriodChoice } from "../../api-client";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
@@ -9,12 +9,12 @@ import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 interface Step3BGrowingPeriodChoiceProps {
   settings: BestellWizardSettings;
   goToNextStep: () => void;
-  selectedGrowingPeriod: PublicGrowingPeriod | undefined;
-  setSelectedGrowingPeriod: (p: PublicGrowingPeriod) => void;
+  selectedGrowingPeriod: BestellWizardGrowingPeriodChoice | undefined;
+  setSelectedGrowingPeriod: (p: BestellWizardGrowingPeriodChoice) => void;
   stepActive: boolean;
 }
 
-function getPeriodName(period: PublicGrowingPeriod) {
+function getPeriodName(period: BestellWizardGrowingPeriodChoice) {
   return (
     formatDateNumeric(period.startDate) +
     " - " +

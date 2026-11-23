@@ -49,17 +49,11 @@ Delivered in two PRs. PR 1 fixes LEM#267 and can be deployed on its own. Each st
 
 ### Step 1.3: per-period data on the growing period choices (backend, additive)
 
-- `PublicGrowingPeriodSerializer` (`tapir/deliveries/serializers.py:62`), only used by the base data response:
-  - `get_contract_start_date`: use `self.context["cache"]` instead of `cache={}`.
-  - `get_product_types`: pass `{**self.context, "reference_date": <contract start date>}`.
-  - New fields, at the period's contract start date:
-    - `product_type_ids_that_are_already_at_capacity: list[str]`
-    - `product_ids_that_are_already_at_capacity: list[str]`
-    - `pickup_locations`: `PublicPickupLocationSerializer(many=True)` with `reference_date_for_delivery_charge` = contract start date in its context
-    - `solidarity_contribution_minimum: float | None`
-- The top-level fields stay for now, so the current frontend keeps working.
+- `GrowingPeriodChoiceBuilder.build` (`tapir/bestell_wizard/services/growing_period_choice_builder.py`) returns a `GrowingPeriodChoice` dataclass: growing period, contract start date, product types with capacity in the period, both at-capacity lists, pickup locations, solidarity minimum, all at the period's contract start date.
+- `PublicGrowingPeriodSerializer` (`tapir/deliveries/serializers.py`) is replaced by `BestellWizardGrowingPeriodChoiceSerializer` in `tapir/bestell_wizard/serializers.py`, a plain serializer over `GrowingPeriodChoice`. `product_types` and `pickup_locations` are method fields that only pass the contract start date as `reference_date` / `reference_date_for_delivery_charge` to the nested serializers.
+- The base data view builds one choice per available period; the top-level fields stay for now, taken from the first choice, so the current frontend keeps working.
 - Regenerate `schema.yml` and the API client.
-- Tests: two periods, first full and second with free capacity, price changing between the two contract start dates → each period gets its own at-capacity lists and prices; pickup locations and delivery charge at the period's contract start date.
+- Tests: builder (at-capacity lists, pickup locations, product types, contract start date per period); serializer (prices and delivery charge at the contract start date).
 
 ### Step 1.4: frontend settings derived from the selected period (the LEM#267 fix)
 

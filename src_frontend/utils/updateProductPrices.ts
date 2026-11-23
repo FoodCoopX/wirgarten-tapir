@@ -1,12 +1,15 @@
 import React from "react";
-import { BestellWizardApi, PublicGrowingPeriod } from "../api-client";
+import {
+  BestellWizardApi,
+  BestellWizardGrowingPeriodChoice,
+} from "../api-client";
 import { BestellWizardSettings } from "../bestell_wizard/types/BestellWizardSettings.ts";
 import { ToastData } from "../types/ToastData.ts";
 import { handleRequestError } from "./handleRequestError.ts";
 
 export function updateProductPrices(
   bestellWizardApi: BestellWizardApi,
-  selectedGrowingPeriod: PublicGrowingPeriod,
+  selectedGrowingPeriod: BestellWizardGrowingPeriodChoice,
   productPricesController: AbortController | undefined,
   setProductPricesController: (controller: AbortController) => void,
   settings: BestellWizardSettings,

@@ -1,9 +1,10 @@
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from tapir.associations.serializers import AssociationMembershipTypeSerializer
 from tapir.core.config import LEGAL_STATUS_OPTIONS
-from tapir.deliveries.serializers import (
-    PublicGrowingPeriodSerializer,
+from tapir.bestell_wizard.services.growing_period_choice_builder import (
+    GrowingPeriodChoice,
 )
 from tapir.pickup_locations.serializers import (
     DeliveryAddressSerializer,
@@ -145,6 +146,44 @@ class BestellWizardImagesSerializer(serializers.Serializer):
     step14_background_image = serializers.URLField()
 
 
+class BestellWizardGrowingPeriodChoiceSerializer(serializers.Serializer):
+    id = serializers.CharField(source="growing_period.id")
+    start_date = serializers.DateField(source="growing_period.start_date")
+    end_date = serializers.DateField(source="growing_period.end_date")
+    contract_start_date = serializers.DateField()
+    product_types = serializers.SerializerMethodField()
+    product_type_ids_that_are_already_at_capacity = serializers.ListField(
+        child=serializers.CharField()
+    )
+    product_ids_that_are_already_at_capacity = serializers.ListField(
+        child=serializers.CharField()
+    )
+    pickup_locations = serializers.SerializerMethodField()
+    solidarity_contribution_minimum = serializers.FloatField()
+
+    @extend_schema_field(PublicProductTypeSerializer(many=True))
+    def get_product_types(self, growing_period_choice: GrowingPeriodChoice):
+        return PublicProductTypeSerializer(
+            growing_period_choice.product_types,
+            many=True,
+            context={
+                **self.context,
+                "reference_date": growing_period_choice.contract_start_date,
+            },
+        ).data
+
+    @extend_schema_field(PublicPickupLocationSerializer(many=True))
+    def get_pickup_locations(self, growing_period_choice: GrowingPeriodChoice):
+        return PublicPickupLocationSerializer(
+            growing_period_choice.pickup_locations,
+            many=True,
+            context={
+                **self.context,
+                "reference_date_for_delivery_charge": growing_period_choice.contract_start_date,
+            },
+        ).data
+
+
 class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
     price_of_a_share = serializers.FloatField()
     coop_share_instalments_enabled = serializers.BooleanField()
@@ -183,7 +222,7 @@ class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
     solidarity_contribution_minimum = serializers.FloatField(allow_null=True)
     solidarity_contribution_default = serializers.FloatField()
     feedback_step_enabled = serializers.BooleanField()
-    growing_period_choices = PublicGrowingPeriodSerializer(many=True)
+    growing_period_choices = BestellWizardGrowingPeriodChoiceSerializer(many=True)
     solidarity_step_position = serializers.ChoiceField(
         choices=OPTIONS_BESTELL_WIZARD_SOLIDARITY_STEP_POSITION
     )

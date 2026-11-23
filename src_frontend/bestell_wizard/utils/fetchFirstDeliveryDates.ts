@@ -1,5 +1,8 @@
 import React from "react";
-import { BestellWizardApi, PublicGrowingPeriod } from "../../api-client";
+import {
+  BestellWizardApi,
+  BestellWizardGrowingPeriodChoice,
+} from "../../api-client";
 import { ToastData } from "../../types/ToastData.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 import { ShoppingCart } from "../types/ShoppingCart.ts";
@@ -7,7 +10,7 @@ import { ShoppingCart } from "../types/ShoppingCart.ts";
 export function fetchFirstDeliveryDates(
   bestellWizardApi: BestellWizardApi,
   shoppingCart: ShoppingCart,
-  selectedGrowingPeriod: PublicGrowingPeriod | undefined,
+  selectedGrowingPeriod: BestellWizardGrowingPeriodChoice | undefined,
   setFirstDeliveryDatesByPickupLocationIdAndProductTypeId: (map: {
     [key: string]: { [key: string]: string };
   }) => void,

@@ -3,7 +3,7 @@ import "../../../tapir/core/static/core/bootstrap/5.3.8/css/bootstrap.min.css";
 import "../../../tapir/core/static/core/css/base.css";
 import {
   AssociationMembershipType,
-  PublicGrowingPeriod,
+  BestellWizardGrowingPeriodChoice,
   PublicPickupLocation,
   type PublicProductType,
 } from "../../api-client";
@@ -35,7 +35,7 @@ interface BestellWizardShoppingCartOverlayProps {
   goToProductTypeStep: (productType: PublicProductType) => void;
   associationMembershipType?: AssociationMembershipType;
   contractStartDate: Date | undefined;
-  selectedGrowingPeriod: PublicGrowingPeriod | undefined;
+  selectedGrowingPeriod: BestellWizardGrowingPeriodChoice | undefined;
   setCurrentStep: (step: Step) => void;
 }
 

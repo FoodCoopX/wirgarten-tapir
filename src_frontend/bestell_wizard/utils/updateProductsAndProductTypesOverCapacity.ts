@@ -1,5 +1,8 @@
 import React from "react";
-import { BestellWizardApi, PublicGrowingPeriod } from "../../api-client";
+import {
+  BestellWizardApi,
+  BestellWizardGrowingPeriodChoice,
+} from "../../api-client";
 import { ToastData } from "../../types/ToastData.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 import { ShoppingCart } from "../types/ShoppingCart.ts";
@@ -15,7 +18,7 @@ export function updateProductsAndProductTypesOverCapacity(
   setCheckingCapacitiesController: React.Dispatch<
     React.SetStateAction<AbortController | undefined>
   >,
-  growingPeriod: PublicGrowingPeriod | undefined,
+  growingPeriod: BestellWizardGrowingPeriodChoice | undefined,
 ) {
   if (!growingPeriod) {
     return;

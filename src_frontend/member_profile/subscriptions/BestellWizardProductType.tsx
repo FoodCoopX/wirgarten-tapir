@@ -5,11 +5,11 @@ import "../../../tapir/core/static/core/bootstrap/5.3.8/css/bootstrap.min.css";
 import "../../../tapir/core/static/core/css/base.css";
 import {
   BestellWizardApi,
+  BestellWizardGrowingPeriodChoice,
   CoopApi,
   DeliveryAddressRequest,
   PaymentsApi,
   PickupLocationsApi,
-  PublicGrowingPeriod,
   PublicPickupLocation,
   PublicProductType,
   SubscriptionsApi,
@@ -126,7 +126,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
     PublicPickupLocation[]
   >([]);
   const [selectedGrowingPeriod, setSelectedGrowingPeriod] =
-    useState<PublicGrowingPeriod>();
+    useState<BestellWizardGrowingPeriodChoice>();
   const [shoppingCart, setShoppingCart] = useState<ShoppingCart>({});
   const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>("pickup");
   const [deliveryAddress, setDeliveryAddress] =

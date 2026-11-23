@@ -24,8 +24,8 @@ from tapir.bestell_wizard.serializers import (
     BestellWizardDeliveryDatesForOrderRequestSerializer,
     PublicProductPricesResponseSerializer,
 )
-from tapir.bestell_wizard.services.products_without_free_capacity_provider import (
-    ProductsWithoutFreeCapacityProvider,
+from tapir.bestell_wizard.services.growing_period_choice_builder import (
+    GrowingPeriodChoiceBuilder,
 )
 from tapir.bestell_wizard.services.bestell_wizard_order_fulfiller import (
     BestellWizardOrderFulfiller,
@@ -50,9 +50,6 @@ from tapir.pickup_locations.services.member_delivery_address_getter import (
 )
 from tapir.pickup_locations.services.pickup_location_active_filter import (
     PickupLocationActiveFilter,
-)
-from tapir.pickup_locations.services.public_pickup_locations_provider import (
-    PublicPickupLocationProvider,
 )
 from tapir.solidarity_contribution.services.solidarity_validator import (
     SolidarityValidator,
@@ -536,19 +533,13 @@ class BestellWizardBaseDataApiView(APIView):
                 reference_date=get_today(cache=self.cache), cache=self.cache
             )
         )
-        earliest_contract_start_date = (
-            ContractStartDateCalculator.get_next_contract_start_date_in_growing_period(
-                growing_period=available_growing_periods[0],
-                reference_date=get_today(cache=self.cache),
-                apply_buffer_time=True,
-                cache=self.cache,
+        growing_period_choices = [
+            GrowingPeriodChoiceBuilder.build(
+                growing_period=growing_period, cache=self.cache
             )
-        )
-        product_ids_that_are_already_at_capacity = (
-            ProductsWithoutFreeCapacityProvider.get_product_ids(
-                contract_start_date=earliest_contract_start_date, cache=self.cache
-            )
-        )
+            for growing_period in available_growing_periods
+        ]
+        earliest_growing_period_choice = growing_period_choices[0]
 
         response_data = self.build_simple_response_fields(self.cache)
 
@@ -568,10 +559,7 @@ class BestellWizardBaseDataApiView(APIView):
                 ).filter(
                     deleted=False, hidden_in_bestell_wizard=False
                 ),
-                "pickup_locations": PublicPickupLocationProvider.get_pickup_locations_available_for_members(
-                    cache=self.cache,
-                    reference_date=earliest_contract_start_date,
-                ),
+                "pickup_locations": earliest_growing_period_choice.pickup_locations,
                 "show_coop_content": legal_status_is_cooperative(cache=self.cache),
                 "trial_period_length_in_weeks": trial_period_length_in_weeks,
                 "payment_rhythm_choices": {
@@ -582,12 +570,8 @@ class BestellWizardBaseDataApiView(APIView):
                         cache=self.cache
                     )
                 },
-                "product_type_ids_that_are_already_at_capacity": ProductsWithoutFreeCapacityProvider.get_product_type_ids(
-                    cache=self.cache,
-                    product_ids_without_free_capacity=product_ids_that_are_already_at_capacity,
-                    contract_start_date=earliest_contract_start_date,
-                ),
-                "product_ids_that_are_already_at_capacity": product_ids_that_are_already_at_capacity,
+                "product_type_ids_that_are_already_at_capacity": earliest_growing_period_choice.product_type_ids_that_are_already_at_capacity,
+                "product_ids_that_are_already_at_capacity": earliest_growing_period_choice.product_ids_that_are_already_at_capacity,
                 "logo_url": self.build_logo_url(cache=self.cache),
                 "distribution_channels": QuestionnaireSourceService.get_questionnaire_source_choices(
                     cache=self.cache
@@ -595,11 +579,8 @@ class BestellWizardBaseDataApiView(APIView):
                 "solidarity_contribution_choices": SolidarityValidator.get_solidarity_dropdown_values(
                     cache=self.cache
                 ),
-                "solidarity_contribution_minimum": SolidarityValidator.get_solidarity_contribution_minimum(
-                    reference_date=earliest_contract_start_date,
-                    cache=self.cache,
-                ),
-                "growing_period_choices": available_growing_periods,
+                "solidarity_contribution_minimum": earliest_growing_period_choice.solidarity_contribution_minimum,
+                "growing_period_choices": growing_period_choices,
                 "legal_status": get_parameter_value(
                     key=ParameterKeys.ORGANISATION_LEGAL_STATUS, cache=self.cache
                 ),
@@ -614,7 +595,7 @@ class BestellWizardBaseDataApiView(APIView):
                 response_data,
                 context={
                     "cache": self.cache,
-                    "reference_date_for_delivery_charge": earliest_contract_start_date,
+                    "reference_date_for_delivery_charge": earliest_growing_period_choice.contract_start_date,
                 },
             ).data
         )

@@ -44,6 +44,7 @@ models/BestellWizardCapacityCheckResponse.ts
 models/BestellWizardConfirmOrderRequestRequest.ts
 models/BestellWizardDeliveryDatesForOrderRequestRequest.ts
 models/BestellWizardDeliveryDatesForOrderResponse.ts
+models/BestellWizardGrowingPeriodChoice.ts
 models/BestellWizardImages.ts
 models/BestellWizardStrings.ts
 models/BlankEnum.ts
@@ -288,7 +289,6 @@ models/ProductTypeAccordionInBestellWizard.ts
 models/ProductTypeAccordionInBestellWizardRequest.ts
 models/ProductTypesAndConfig.ts
 models/PublicConfirmWaitingListEntryRequestRequest.ts
-models/PublicGrowingPeriod.ts
 models/PublicPickupLocation.ts
 models/PublicProduct.ts
 models/PublicProductPricesResponse.ts

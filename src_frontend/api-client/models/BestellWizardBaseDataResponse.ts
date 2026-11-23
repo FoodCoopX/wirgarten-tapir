@@ -17,6 +17,11 @@ import {
   AssociationMembershipTypeFromJSON,
   AssociationMembershipTypeToJSON,
 } from "./AssociationMembershipType";
+import type { BestellWizardGrowingPeriodChoice } from "./BestellWizardGrowingPeriodChoice";
+import {
+  BestellWizardGrowingPeriodChoiceFromJSON,
+  BestellWizardGrowingPeriodChoiceToJSON,
+} from "./BestellWizardGrowingPeriodChoice";
 import type { BestellWizardImages } from "./BestellWizardImages";
 import {
   BestellWizardImagesFromJSON,
@@ -32,11 +37,6 @@ import {
   LegalStatusEnumFromJSON,
   LegalStatusEnumToJSON,
 } from "./LegalStatusEnum";
-import type { PublicGrowingPeriod } from "./PublicGrowingPeriod";
-import {
-  PublicGrowingPeriodFromJSON,
-  PublicGrowingPeriodToJSON,
-} from "./PublicGrowingPeriod";
 import type { PublicPickupLocation } from "./PublicPickupLocation";
 import {
   PublicPickupLocationFromJSON,
@@ -247,10 +247,10 @@ export interface BestellWizardBaseDataResponse {
   feedbackStepEnabled: boolean;
   /**
    *
-   * @type {Array<PublicGrowingPeriod>}
+   * @type {Array<BestellWizardGrowingPeriodChoice>}
    * @memberof BestellWizardBaseDataResponse
    */
-  growingPeriodChoices: Array<PublicGrowingPeriod>;
+  growingPeriodChoices: Array<BestellWizardGrowingPeriodChoice>;
   /**
    *
    * @type {SolidarityStepPositionEnum}
@@ -489,7 +489,7 @@ export function BestellWizardBaseDataResponseFromJSONTyped(
     solidarityContributionDefault: json["solidarity_contribution_default"],
     feedbackStepEnabled: json["feedback_step_enabled"],
     growingPeriodChoices: (json["growing_period_choices"] as Array<any>).map(
-      PublicGrowingPeriodFromJSON,
+      BestellWizardGrowingPeriodChoiceFromJSON,
     ),
     solidarityStepPosition: SolidarityStepPositionEnumFromJSON(
       json["solidarity_step_position"],
@@ -558,7 +558,7 @@ export function BestellWizardBaseDataResponseToJSONTyped(
     solidarity_contribution_default: value["solidarityContributionDefault"],
     feedback_step_enabled: value["feedbackStepEnabled"],
     growing_period_choices: (value["growingPeriodChoices"] as Array<any>).map(
-      PublicGrowingPeriodToJSON,
+      BestellWizardGrowingPeriodChoiceToJSON,
     ),
     solidarity_step_position: SolidarityStepPositionEnumToJSON(
       value["solidarityStepPosition"],

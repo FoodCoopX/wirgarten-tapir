@@ -1,6 +1,3 @@
-import datetime
-
-from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from tapir.deliveries.models import Joker, DeliveryDonation
@@ -9,11 +6,7 @@ from tapir.pickup_locations.serializers import (
     PickupLocationSerializer,
     PickupLocationOpeningTimeSerializer,
 )
-from tapir.products.serializers import PublicProductTypeSerializer, ProductSerializer
-from tapir.subscriptions.services.contract_start_date_calculator import (
-    ContractStartDateCalculator,
-)
-from tapir.utils.services.tapir_cache import TapirCache
+from tapir.products.serializers import ProductSerializer
 from tapir.wirgarten.models import (
     Subscription,
     GrowingPeriod,
@@ -57,53 +50,6 @@ class GrowingPeriodSerializer(serializers.ModelSerializer):
     class Meta:
         model = GrowingPeriod
         fields = "__all__"
-
-
-class PublicGrowingPeriodSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = GrowingPeriod
-        fields = [
-            "id",
-            "start_date",
-            "end_date",
-            "contract_start_date",
-            "product_types",
-        ]
-
-    contract_start_date = serializers.SerializerMethodField()
-    product_types = serializers.SerializerMethodField()
-
-    @staticmethod
-    def get_contract_start_date(growing_period: GrowingPeriod) -> datetime.date:
-        return (
-            ContractStartDateCalculator.get_next_contract_start_date_in_growing_period(
-                growing_period=growing_period, apply_buffer_time=True, cache={}
-            )
-        )
-
-    @extend_schema_field(PublicProductTypeSerializer(many=True))
-    def get_product_types(self, growing_period: GrowingPeriod):
-        cache = self.context["cache"]
-        product_types_for_this_growing_period = []
-
-        for product_type in TapirCache.get_all_product_types(cache):
-            if (
-                TapirCache.get_product_type_capacity_at_date(
-                    cache=cache,
-                    reference_date=growing_period.start_date,
-                    product_type=product_type,
-                )
-                is not None
-            ):
-                product_types_for_this_growing_period.append(product_type)
-
-        product_types_for_this_growing_period.sort(
-            key=lambda product_type: product_type.order_in_bestellwizard
-        )
-
-        return PublicProductTypeSerializer(
-            product_types_for_this_growing_period, many=True, context=self.context
-        ).data
 
 
 class JokerWithCancellationLimitSerializer(serializers.Serializer):

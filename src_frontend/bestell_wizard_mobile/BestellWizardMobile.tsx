@@ -6,11 +6,11 @@ import "../../tapir/core/static/core/css/base.css";
 import {
   AssociationMembershipType,
   BestellWizardApi,
+  BestellWizardGrowingPeriodChoice,
   CoopApi,
   DeliveryAddressRequest,
   OrderConfirmationResponse,
   PickupLocationsApi,
-  PublicGrowingPeriod,
   PublicPickupLocation,
   type PublicProductType,
   PublicWaitingListEntryDetails,
@@ -158,7 +158,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
   const [currentPickupLocationTab, setCurrentPickupLocationTab] =
     useState<PickupLocationTab>("map");
   const [selectedGrowingPeriod, setSelectedGrowingPeriod] =
-    useState<PublicGrowingPeriod>();
+    useState<BestellWizardGrowingPeriodChoice>();
   const [productPricesController, setProductPricesController] =
     useState<AbortController>();
   const [confirmOrderLoading, setConfirmOrderLoading] = useState(false);

@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Form, Modal } from "react-bootstrap";
-import { PublicGrowingPeriod, PublicProductType } from "../../api-client";
+import {
+  BestellWizardGrowingPeriodChoice,
+  PublicProductType,
+} from "../../api-client";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { buildEmptyShoppingCart } from "../../bestell_wizard/utils/buildEmptyShoppingCart.ts";
@@ -22,7 +25,7 @@ interface Step3ProductTypeChoiceProps {
   investingMembership: boolean;
   setInvestingMembership: (investing: boolean) => void;
   setShoppingCart: (cart: ShoppingCart) => void;
-  selectedGrowingPeriod: PublicGrowingPeriod | undefined;
+  selectedGrowingPeriod: BestellWizardGrowingPeriodChoice | undefined;
   stepActive: boolean;
 }
 

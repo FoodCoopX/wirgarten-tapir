@@ -9795,7 +9795,7 @@ components:
         growing_period_choices:
           type: array
           items:
-            $ref: '#/components/schemas/PublicGrowingPeriod'
+            $ref: '#/components/schemas/BestellWizardGrowingPeriodChoice'
         solidarity_step_position:
           $ref: '#/components/schemas/SolidarityStepPositionEnum'
         legal_status:
@@ -9976,6 +9976,51 @@ components:
               format: date
       required:
       - delivery_date_by_pickup_location_id_and_product_type_id
+    BestellWizardGrowingPeriodChoice:
+      type: object
+      properties:
+        id:
+          type: string
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        contract_start_date:
+          type: string
+          format: date
+        product_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicProductType'
+          readOnly: true
+        product_type_ids_that_are_already_at_capacity:
+          type: array
+          items:
+            type: string
+        product_ids_that_are_already_at_capacity:
+          type: array
+          items:
+            type: string
+        pickup_locations:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicPickupLocation'
+          readOnly: true
+        solidarity_contribution_minimum:
+          type: number
+          format: double
+      required:
+      - contract_start_date
+      - end_date
+      - id
+      - pickup_locations
+      - product_ids_that_are_already_at_capacity
+      - product_type_ids_that_are_already_at_capacity
+      - product_types
+      - solidarity_contribution_minimum
+      - start_date
     BestellWizardImages:
       type: object
       properties:
@@ -17037,6 +17082,7 @@ components:
           maxLength: 128
         deleted:
           type: boolean
+          default: false
         base:
           type: boolean
           nullable: true
@@ -17283,32 +17329,6 @@ components:
       - payment_rhythm
       - sepa_allowed
       - solidarity_contribution
-    PublicGrowingPeriod:
-      type: object
-      properties:
-        id:
-          type: string
-          maxLength: 10
-        start_date:
-          type: string
-          format: date
-        end_date:
-          type: string
-          format: date
-        contract_start_date:
-          type: string
-          format: date
-          readOnly: true
-        product_types:
-          type: array
-          items:
-            $ref: '#/components/schemas/PublicProductType'
-          readOnly: true
-      required:
-      - contract_start_date
-      - end_date
-      - product_types
-      - start_date
     PublicPickupLocation:
       type: object
       properties:

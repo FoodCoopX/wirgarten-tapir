@@ -1,7 +1,7 @@
 import React from "react";
 import {
+  BestellWizardGrowingPeriodChoice,
   PickupLocationsApi,
-  PublicGrowingPeriod,
   PublicPickupLocation,
 } from "../../api-client";
 import { ToastData } from "../../types/ToastData.ts";
@@ -19,7 +19,7 @@ export function checkPickupLocationCapacities(
     React.SetStateAction<Set<PublicPickupLocation>>
   >,
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>,
-  growingPeriod: PublicGrowingPeriod | undefined,
+  growingPeriod: BestellWizardGrowingPeriodChoice | undefined,
 ) {
   setPickupLocationsCapacityCheckLoading(true);
 
