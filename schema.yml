@@ -17984,8 +17984,6 @@ components:
         url:
           type: string
           nullable: true
-        display_name:
-          type: string
         round:
           allOf:
           - $ref: '#/components/schemas/Round'
@@ -18375,8 +18373,6 @@ components:
           type: string
         name:
           type: string
-        display_name:
-          type: string
         status:
           type: string
         start_at:
@@ -18404,7 +18400,6 @@ components:
       required:
       - comment
       - contracts_created_at
-      - display_name
       - end_at
       - growing_period_id
       - has_bids

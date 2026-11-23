@@ -8,15 +8,13 @@ class BestellWizardStyleService:
         background_color = get_parameter_value(
             key=ParameterKeys.BESTELLWIZARD_BACKGROUND_COLOR, cache=cache
         )
-        body_style = f"background-color: {background_color}"
-
         background_image_url = get_parameter_value(
             key=ParameterKeys.BESTELLWIZARD_BACKGROUND_IMAGE, cache=cache
         )
-        if background_image_url:
-            body_style = (
-                f"background-image: url({background_image_url}); "
-                "background-repeat: repeat; background-position: center;"
-            )
+        if not background_image_url:
+            return f"background-color: {background_color}"
 
-        return body_style
+        return (
+            f"background-image: url({background_image_url}); "
+            "background-repeat: repeat; background-position: center;"
+        )

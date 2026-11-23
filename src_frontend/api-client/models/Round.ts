@@ -38,12 +38,6 @@ export interface Round {
    * @type {string}
    * @memberof Round
    */
-  displayName: string;
-  /**
-   *
-   * @type {string}
-   * @memberof Round
-   */
   status: string;
   /**
    *
@@ -95,8 +89,6 @@ export interface Round {
 export function instanceOfRound(value: object): value is Round {
   if (!("id" in value) || value["id"] === undefined) return false;
   if (!("name" in value) || value["name"] === undefined) return false;
-  if (!("displayName" in value) || value["displayName"] === undefined)
-    return false;
   if (!("status" in value) || value["status"] === undefined) return false;
   if (!("startAt" in value) || value["startAt"] === undefined) return false;
   if (!("endAt" in value) || value["endAt"] === undefined) return false;
@@ -127,7 +119,6 @@ export function RoundFromJSONTyped(
   return {
     id: json["id"],
     name: json["name"],
-    displayName: json["display_name"],
     status: json["status"],
     startAt: json["start_at"] == null ? null : new Date(json["start_at"]),
     endAt: new Date(json["end_at"]),
@@ -157,7 +148,6 @@ export function RoundToJSONTyped(
   return {
     id: value["id"],
     name: value["name"],
-    display_name: value["displayName"],
     status: value["status"],
     start_at:
       value["startAt"] == null ? null : (value["startAt"] as any).toISOString(),

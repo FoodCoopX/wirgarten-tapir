@@ -32,10 +32,6 @@ class BiddingRoundStatsService:
         return float(cls.get_reached_per_year(bidding_round) / target * 100)
 
     @classmethod
-    def get_bidder_count(cls, bidding_round) -> int:
-        return bidding_round.bids.count()
-
-    @classmethod
     def get_product_size(cls, product, bidding_round, cache: dict) -> Decimal:
         price = BiddingRoundProductPrice.objects.filter(
             round_product_type__round=bidding_round,
@@ -104,7 +100,7 @@ class BiddingRoundStatsService:
             "target_per_year": str(cls.get_target_per_year(bidding_round)),
             "reached_per_year": str(cls.get_reached_per_year(bidding_round)),
             "coverage_percent": cls.get_coverage_percent(bidding_round),
-            "bidder_count": cls.get_bidder_count(bidding_round),
+            "bidder_count": bidding_round.bids.count(),
             "bidder_average_per_month": str(
                 cls.get_bidder_average_per_month(bidding_round)
             ),

@@ -74,7 +74,6 @@ class RoundProductSerializer(serializers.Serializer):
 class RoundSerializer(serializers.Serializer):
     id = serializers.CharField()
     name = serializers.CharField()
-    display_name = serializers.CharField()
     status = serializers.CharField()
     start_at = serializers.DateTimeField(allow_null=True)
     end_at = serializers.DateTimeField()
@@ -148,7 +147,6 @@ class PublicDataResponseSerializer(serializers.Serializer):
     enabled = serializers.BooleanField()
     url_enabled = serializers.BooleanField(required=False)
     url = serializers.CharField(allow_null=True, required=False)
-    display_name = serializers.CharField(required=False)
     round = RoundSerializer(allow_null=True, required=False)
     round_status = serializers.CharField(required=False)
     texts = RoundTextsSerializer(required=False)

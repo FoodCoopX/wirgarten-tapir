@@ -98,7 +98,6 @@ class PublicDataView(BiddingRoundFeatureFlagMixin, APIView):
     def get(self, request):
         cache = {}
         bidding_round = BiddingRoundService.get_current_open_round(cache=cache)
-        display_name = BiddingRoundViewService.get_display_name(cache)
         member = None
         if request.user.is_authenticated:
             member = Member.objects.filter(id=request.user.id).first()
@@ -111,11 +110,8 @@ class PublicDataView(BiddingRoundFeatureFlagMixin, APIView):
                 if BiddingRoundViewService.is_public_url_enabled(cache)
                 else None
             ),
-            "display_name": display_name,
             "round": (
-                BiddingRoundViewService.serialize_round(
-                    bidding_round, cache, display_name
-                )
+                BiddingRoundViewService.serialize_round(bidding_round, cache)
                 if bidding_round
                 else None
             ),
@@ -150,12 +146,9 @@ class RoundListCreateView(BiddingRoundFeatureFlagMixin, APIView):
         rounds = BiddingRound.objects.annotate(
             has_bids=Exists(Bid.objects.filter(round=OuterRef("pk")))
         ).order_by("-created_at")
-        display_name = BiddingRoundViewService.get_display_name(cache)
         return Response(
             [
-                BiddingRoundViewService.serialize_round(
-                    bidding_round, cache, display_name
-                )
+                BiddingRoundViewService.serialize_round(bidding_round, cache)
                 for bidding_round in rounds
             ],
             status=status.HTTP_200_OK,

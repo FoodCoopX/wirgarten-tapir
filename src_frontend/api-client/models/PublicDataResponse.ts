@@ -50,12 +50,6 @@ export interface PublicDataResponse {
   url?: string | null;
   /**
    *
-   * @type {string}
-   * @memberof PublicDataResponse
-   */
-  displayName?: string;
-  /**
-   *
    * @type {Round}
    * @memberof PublicDataResponse
    */
@@ -117,8 +111,6 @@ export function PublicDataResponseFromJSONTyped(
     enabled: json["enabled"],
     urlEnabled: json["url_enabled"] == null ? undefined : json["url_enabled"],
     url: json["url"] == null ? undefined : json["url"],
-    displayName:
-      json["display_name"] == null ? undefined : json["display_name"],
     round: json["round"] == null ? undefined : RoundFromJSON(json["round"]),
     roundStatus:
       json["round_status"] == null ? undefined : json["round_status"],
@@ -150,7 +142,6 @@ export function PublicDataResponseToJSONTyped(
     enabled: value["enabled"],
     url_enabled: value["urlEnabled"],
     url: value["url"],
-    display_name: value["displayName"],
     round: RoundToJSON(value["round"]),
     round_status: value["roundStatus"],
     texts: RoundTextsToJSON(value["texts"]),

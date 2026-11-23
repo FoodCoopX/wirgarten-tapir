@@ -1,7 +1,6 @@
 from decimal import Decimal
 
 from django.core.exceptions import ValidationError
-from django.utils.translation import gettext
 
 from tapir.bidding_round.models import BiddingRoundProductPrice
 from tapir.pickup_locations.services.member_pickup_location_getter import (
@@ -14,35 +13,18 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 
 class BiddingRoundViewService:
     @classmethod
-    def is_feature_flag_enabled(cls, cache) -> bool:
-        try:
-            return get_parameter_value(ParameterKeys.BIDDING_ROUND_ENABLED, cache=cache)
-        except KeyError:
-            return False
+    def is_feature_flag_enabled(cls, cache: dict) -> bool:
+        return get_parameter_value(ParameterKeys.BIDDING_ROUND_ENABLED, cache=cache)
 
     @classmethod
-    def is_public_url_enabled(cls, cache) -> bool:
-        try:
-            return get_parameter_value(
-                ParameterKeys.BIDDING_ROUND_URL_ENABLED, cache=cache
-            )
-        except KeyError:
-            return True
+    def is_public_url_enabled(cls, cache: dict) -> bool:
+        return get_parameter_value(ParameterKeys.BIDDING_ROUND_URL_ENABLED, cache=cache)
 
     @classmethod
-    def get_display_name(cls, cache) -> str:
-        return gettext("Beitragsrunde")
-
-    @classmethod
-    def serialize_round(
-        cls, bidding_round, cache, display_name: str | None = None
-    ) -> dict:
-        if display_name is None:
-            display_name = cls.get_display_name(cache)
+    def serialize_round(cls, bidding_round, cache: dict) -> dict:
         return {
             "id": bidding_round.id,
             "name": bidding_round.name,
-            "display_name": display_name,
             "status": bidding_round.status,
             "start_at": (
                 bidding_round.start_at.isoformat() if bidding_round.start_at else None

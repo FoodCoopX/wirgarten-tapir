@@ -40,8 +40,6 @@ class BiddingRoundService:
         target_amount_per_year=None,
         prices: list[dict] | None = None,
     ) -> BiddingRound:
-        if end_at is None:
-            raise ValidationError(_("Die Beitragsrunde braucht ein Enddatum."))
         if start_at is not None and start_at > end_at:
             raise ValidationError(
                 _("Das Startdatum darf nicht nach dem Enddatum liegen.")
@@ -73,7 +71,9 @@ class BiddingRoundService:
         return bidding_round
 
     @classmethod
-    def _apply_target_amount_per_year(cls, round_product_type, value) -> None:
+    def _apply_target_amount_per_year(
+        cls, round_product_type: BiddingRoundProductType, value
+    ) -> None:
         if value in (None, ""):
             return
         target_amount_per_year = AmountParser.parse_optional(value)
@@ -85,7 +85,9 @@ class BiddingRoundService:
         round_product_type.save(update_fields=["target_amount_per_year"])
 
     @classmethod
-    def _save_round_prices(cls, round_product_type, prices: list[dict]) -> None:
+    def _save_round_prices(
+        cls, round_product_type: BiddingRoundProductType, prices: list[dict]
+    ) -> None:
         if not prices:
             if round_product_type.prices.exists():
                 return
@@ -146,7 +148,7 @@ class BiddingRoundService:
         ).exclude(product_id__in=payload_product_ids).delete()
 
     @classmethod
-    def _validate_non_negative(cls, value, message) -> None:
+    def _validate_non_negative(cls, value, message: str) -> None:
         if value is not None and value < 0:
             raise ValidationError(message)
 
@@ -280,7 +282,9 @@ class BiddingRoundService:
         return bidding_round
 
     @classmethod
-    def _prices_signature(cls, round_product_type) -> dict:
+    def _prices_signature(
+        cls, round_product_type: BiddingRoundProductType | None
+    ) -> dict:
         if round_product_type is None:
             return {}
         return {
@@ -349,15 +353,11 @@ class BiddingRoundService:
     @classmethod
     def get_current_open_round(cls, cache: dict) -> BiddingRound | None:
         now = get_now(cache=cache)
-        return (
-            BiddingRound.objects.filter(
-                Q(start_at__isnull=True) | Q(start_at__lte=now),
-                status=BIDDING_ROUND_STATUS_ACTIVE,
-                end_at__gte=now,
-            )
-            .order_by("end_at")
-            .first()
-        )
+        return BiddingRound.objects.filter(
+            Q(start_at__isnull=True) | Q(start_at__lte=now),
+            status=BIDDING_ROUND_STATUS_ACTIVE,
+            end_at__gte=now,
+        ).first()
 
     @classmethod
     def get_product_types_with_capacity_for_period(
@@ -378,9 +378,6 @@ class BiddingRoundService:
         items: list[dict],
         cache: dict,
     ) -> Bid:
-        if not isinstance(member, Member):
-            raise ValidationError(_("Nur Mitglieder können ein Gebot abgeben."))
-
         with transaction.atomic():
             bidding_round = BiddingRound.objects.select_for_update().get(
                 pk=bidding_round.pk
