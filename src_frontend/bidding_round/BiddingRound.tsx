@@ -115,15 +115,15 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({ csrfToken }) => {
 
   function applyDefaultBid(publicData: PublicDataResponse | null) {
     const variants = publicData?.biddableProduct?.products ?? [];
-    const existingItem = publicData?.bid?.items?.[0];
-    const variant = existingItem
-      ? variants.find((candidate) => candidate.id === existingItem.productId)
+    const existingBid = publicData?.bid;
+    const variant = existingBid
+      ? variants.find((candidate) => candidate.id === existingBid.productId)
       : (variants.find((candidate) => candidate.currentQuantity !== null) ??
         variants[0]);
 
     setSelectedVariantId(variant?.id ?? null);
-    setQuantity(existingItem?.quantity ?? variant?.currentQuantity ?? 1);
-    setAmount(existingItem?.amount1 ?? "");
+    setQuantity(existingBid?.quantity ?? variant?.currentQuantity ?? 1);
+    setAmount(existingBid?.amount1 ?? "");
   }
 
   useEffect(() => {
@@ -210,14 +210,9 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({ csrfToken }) => {
       await api.biddingRoundsApiBidCreate({
         roundId: data.round.id,
         bidSubmitRequest: {
-          items: [
-            {
-              roundProductTypeId: data.biddableProduct.id,
-              productId: variant.id,
-              quantity: quantity,
-              amount1: toDotDecimal(amount),
-            },
-          ],
+          productId: variant.id,
+          quantity: quantity,
+          amount1: toDotDecimal(amount),
         },
       });
       setConfirmationHtml(texts.bid.successText);

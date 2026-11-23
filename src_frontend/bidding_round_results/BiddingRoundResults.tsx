@@ -197,6 +197,7 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
                 <tr>
                   <th>Mitglied</th>
                   <th>E-Mail</th>
+                  <th>Produkt</th>
                   <th>Anteile</th>
                   <th>Beitrag / Monat</th>
                   <th>Beitrag / Jahr</th>
@@ -207,12 +208,8 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
                   <tr key={bid.bidId}>
                     <td>{bid.memberName}</td>
                     <td>{bid.email}</td>
-                    <td>
-                      {bid.items.reduce(
-                        (total, item) => total + item.quantity,
-                        0,
-                      )}
-                    </td>
+                    <td>{bid.productName}</td>
+                    <td>{bid.quantity}</td>
                     <td>{EURO_FORMAT.format(Number(bid.amountPerMonth))}</td>
                     <td>{EURO_FORMAT.format(Number(bid.amountPerYear))}</td>
                   </tr>

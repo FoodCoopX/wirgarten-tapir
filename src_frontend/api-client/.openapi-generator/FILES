@@ -48,9 +48,7 @@ models/BestellWizardOrderEvaluationRequestRequest.ts
 models/BestellWizardOrderEvaluationResponse.ts
 models/BestellWizardStrings.ts
 models/Bid.ts
-models/BidItem.ts
 models/BidProductVariant.ts
-models/BidSubmitItemRequest.ts
 models/BidSubmitRequest.ts
 models/BidTexts.ts
 models/BiddableProduct.ts

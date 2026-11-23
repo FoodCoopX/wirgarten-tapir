@@ -12,9 +12,6 @@
  * Do not edit the class manually.
  */
 
-import type { BidItem } from "./BidItem";
-import { BidItemFromJSON, BidItemToJSON } from "./BidItem";
-
 /**
  *
  * @export
@@ -50,13 +47,37 @@ export interface Bid {
    * @type {string}
    * @memberof Bid
    */
-  totalPerYear: string;
+  productId: string;
   /**
    *
-   * @type {Array<BidItem>}
+   * @type {string}
    * @memberof Bid
    */
-  items: Array<BidItem>;
+  productName: string;
+  /**
+   *
+   * @type {number}
+   * @memberof Bid
+   */
+  quantity: number;
+  /**
+   *
+   * @type {string}
+   * @memberof Bid
+   */
+  amount1: string | null;
+  /**
+   *
+   * @type {string}
+   * @memberof Bid
+   */
+  amountPerYear: string;
+  /**
+   *
+   * @type {string}
+   * @memberof Bid
+   */
+  totalPerYear: string;
 }
 
 /**
@@ -68,9 +89,15 @@ export function instanceOfBid(value: object): value is Bid {
   if (!("pickupLocationId" in value) || value["pickupLocationId"] === undefined)
     return false;
   if (!("updatedAt" in value) || value["updatedAt"] === undefined) return false;
+  if (!("productId" in value) || value["productId"] === undefined) return false;
+  if (!("productName" in value) || value["productName"] === undefined)
+    return false;
+  if (!("quantity" in value) || value["quantity"] === undefined) return false;
+  if (!("amount1" in value) || value["amount1"] === undefined) return false;
+  if (!("amountPerYear" in value) || value["amountPerYear"] === undefined)
+    return false;
   if (!("totalPerYear" in value) || value["totalPerYear"] === undefined)
     return false;
-  if (!("items" in value) || value["items"] === undefined) return false;
   return true;
 }
 
@@ -87,8 +114,12 @@ export function BidFromJSONTyped(json: any, ignoreDiscriminator: boolean): Bid {
     memberId: json["member_id"],
     pickupLocationId: json["pickup_location_id"],
     updatedAt: json["updated_at"] == null ? null : new Date(json["updated_at"]),
+    productId: json["product_id"],
+    productName: json["product_name"],
+    quantity: json["quantity"],
+    amount1: json["amount_1"],
+    amountPerYear: json["amount_per_year"],
     totalPerYear: json["total_per_year"],
-    items: (json["items"] as Array<any>).map(BidItemFromJSON),
   };
 }
 
@@ -112,7 +143,11 @@ export function BidToJSONTyped(
       value["updatedAt"] == null
         ? null
         : (value["updatedAt"] as any).toISOString(),
+    product_id: value["productId"],
+    product_name: value["productName"],
+    quantity: value["quantity"],
+    amount_1: value["amount1"],
+    amount_per_year: value["amountPerYear"],
     total_per_year: value["totalPerYear"],
-    items: (value["items"] as Array<any>).map(BidItemToJSON),
   };
 }

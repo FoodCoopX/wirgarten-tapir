@@ -2,6 +2,7 @@ import datetime
 import random
 from decimal import Decimal
 
+from tapir.bidding_round.services.bid_input import BidInput
 from tapir.bidding_round.services.bidding_round_service import BiddingRoundService
 from tapir.bidding_round.services.product_size_service import ProductSizeService
 from tapir.configuration.models import TapirParameter
@@ -127,19 +128,15 @@ class BiddingRoundGenerator:
         )
         BiddingRoundService.start_round(bidding_round, cache=cache)
 
-        round_product_type = bidding_round.product_types.first()
         for member, product, quantity, amount in assignments:
             BiddingRoundService.save_bid(
                 member,
                 bidding_round,
-                [
-                    {
-                        "round_product_type_id": round_product_type.id,
-                        "product_id": product.id,
-                        "quantity": quantity,
-                        "amount_1": str(amount),
-                    }
-                ],
+                BidInput(
+                    product_id=product.id,
+                    quantity=quantity,
+                    amount_1=amount,
+                ),
                 cache=cache,
             )
 

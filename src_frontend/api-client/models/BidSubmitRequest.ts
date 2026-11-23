@@ -12,12 +12,6 @@
  * Do not edit the class manually.
  */
 
-import type { BidSubmitItemRequest } from "./BidSubmitItemRequest";
-import {
-  BidSubmitItemRequestFromJSON,
-  BidSubmitItemRequestToJSON,
-} from "./BidSubmitItemRequest";
-
 /**
  *
  * @export
@@ -26,10 +20,22 @@ import {
 export interface BidSubmitRequest {
   /**
    *
-   * @type {Array<BidSubmitItemRequest>}
+   * @type {string}
    * @memberof BidSubmitRequest
    */
-  items: Array<BidSubmitItemRequest>;
+  productId: string;
+  /**
+   *
+   * @type {number}
+   * @memberof BidSubmitRequest
+   */
+  quantity?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof BidSubmitRequest
+   */
+  amount1?: string | null;
 }
 
 /**
@@ -38,7 +44,7 @@ export interface BidSubmitRequest {
 export function instanceOfBidSubmitRequest(
   value: object,
 ): value is BidSubmitRequest {
-  if (!("items" in value) || value["items"] === undefined) return false;
+  if (!("productId" in value) || value["productId"] === undefined) return false;
   return true;
 }
 
@@ -54,7 +60,9 @@ export function BidSubmitRequestFromJSONTyped(
     return json;
   }
   return {
-    items: (json["items"] as Array<any>).map(BidSubmitItemRequestFromJSON),
+    productId: json["product_id"],
+    quantity: json["quantity"] == null ? undefined : json["quantity"],
+    amount1: json["amount_1"] == null ? undefined : json["amount_1"],
   };
 }
 
@@ -71,6 +79,8 @@ export function BidSubmitRequestToJSONTyped(
   }
 
   return {
-    items: (value["items"] as Array<any>).map(BidSubmitItemRequestToJSON),
+    product_id: value["productId"],
+    quantity: value["quantity"],
+    amount_1: value["amount1"],
   };
 }

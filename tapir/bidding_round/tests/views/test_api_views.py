@@ -84,11 +84,12 @@ class TestMemberBidView(BiddingRoundApiTestBase):
             reverse("bidding_rounds:member_bid", args=[bidding_round.id])
         )
         self.assertStatusCode(get_response, status.HTTP_200_OK)
-        item = get_response.data["bid"]["items"][0]
-        self.assertEqual("80.00", item["amount_1"])
-        self.assertEqual(2, item["quantity"])
-        self.assertEqual("1920.00", item["amount_per_year"])
-        self.assertEqual("1920.00", get_response.data["bid"]["total_per_year"])
+        bid = get_response.data["bid"]
+        self.assertEqual("80.00", bid["amount_1"])
+        self.assertEqual(2, bid["quantity"])
+        self.assertEqual("1920.00", bid["amount_per_year"])
+        self.assertEqual("1920.00", bid["total_per_year"])
+        self.assertEqual(get_product_for_round(bidding_round).id, bid["product_id"])
 
     def test_post_quantityOutOfRange_returns400(self):
         self._enable()
@@ -179,9 +180,8 @@ class TestRoundAdminViews(BiddingRoundApiTestBase):
             target_amount_per_year="1000.00",
             cache={},
         )
-        round_product_type = bidding_round.product_types.get()
         BiddingRoundProductPriceFactory.create(
-            round_product_type=round_product_type,
+            round=bidding_round,
             product=ProductFactory.create(type=product_type),
         )
 

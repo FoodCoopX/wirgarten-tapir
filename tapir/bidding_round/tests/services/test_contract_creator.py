@@ -12,16 +12,14 @@ from tapir.bidding_round.models import BiddingRoundCreatedSubscription
 from tapir.bidding_round.services.contract_creator import ContractCreator
 from tapir.bidding_round.tests.factories import (
     BidFactory,
-    BidItemFactory,
     BiddingRoundFactory,
     BiddingRoundProductPriceFactory,
-    BiddingRoundProductTypeFactory,
 )
 from tapir.solidarity_contribution.models import SolidarityContribution
-from tapir.wirgarten.models import Subscription
 from tapir.subscriptions.services.subscription_price_calculator import (
     SubscriptionPriceCalculator,
 )
+from tapir.wirgarten.models import Subscription
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     GrowingPeriodFactory,
@@ -44,7 +42,7 @@ class TestContractCreator(TapirIntegrationTest):
         with pytest.raises(ValidationError):
             ContractCreator.create_contracts_from_bids(bidding_round, cache={})
 
-    def test_createContracts_createsSubscriptionAndContribution(self):
+    def test_createContracts_default_createsSubscriptionAndContribution(self):
         bidding_round, bid, product, period = self._create_closed_round_with_bid(
             bid_amount=Decimal("80.00"), standard_price=Decimal("50.00")
         )
@@ -178,12 +176,8 @@ class TestContractCreator(TapirIntegrationTest):
         bidding_round, bid, product, _period = self._create_closed_round_with_bid(
             bid_amount=Decimal("80.00"), standard_price=Decimal("50.00")
         )
-        other_bid = BidFactory.create(round=bidding_round)
-        BidItemFactory.create(
-            bid=other_bid,
-            round_product_type=bidding_round.product_types.first(),
-            product=product,
-            amount_1=Decimal("90.00"),
+        other_bid = BidFactory.create(
+            round=bidding_round, product=product, amount_1=Decimal("90.00")
         )
 
         result = ContractCreator.create_contracts_from_bids(
@@ -204,8 +198,7 @@ class TestContractCreator(TapirIntegrationTest):
         bidding_round = BiddingRoundFactory.create(
             growing_period=period, status=BIDDING_ROUND_STATUS_CLOSED
         )
-        round_product_type = BiddingRoundProductTypeFactory.create(round=bidding_round)
-        product = ProductFactory.create(type=round_product_type.product_type)
+        product = ProductFactory.create(type=bidding_round.product_type)
         ProductPriceFactory.create(
             product=product,
             price=standard_price,
@@ -213,13 +206,11 @@ class TestContractCreator(TapirIntegrationTest):
             valid_from=period.start_date - datetime.timedelta(days=1),
         )
         BiddingRoundProductPriceFactory.create(
-            round_product_type=round_product_type,
+            round=bidding_round,
             product=product,
         )
-        bid = BidFactory.create(round=bidding_round)
-        BidItemFactory.create(
-            bid=bid,
-            round_product_type=round_product_type,
+        bid = BidFactory.create(
+            round=bidding_round,
             product=product,
             quantity=quantity,
             amount_1=bid_amount,

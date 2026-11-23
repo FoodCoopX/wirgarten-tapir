@@ -33,6 +33,7 @@ from tapir.bidding_round.serializers import (
     RoundResultsResponseSerializer,
     RoundSerializer,
 )
+from tapir.bidding_round.services.bid_input import BidInput
 from tapir.bidding_round.services.bidding_round_service import BiddingRoundService
 from tapir.bidding_round.services.bidding_round_stats_service import (
     BiddingRoundStatsService,
@@ -439,7 +440,7 @@ class MemberBidView(BiddingRoundFeatureFlagMixin, APIView):
             BiddingRoundService.save_bid(
                 member,
                 bidding_round,
-                serializer.validated_data["items"],
+                BidInput.from_mapping(serializer.validated_data),
                 cache=cache,
             )
         except ValidationError as error:

@@ -2,12 +2,12 @@ from decimal import Decimal
 
 from django.core.exceptions import ValidationError
 
-from tapir.bidding_round.models import BiddingRoundProductPrice
+from tapir.bidding_round.models import BiddingRound, BiddingRoundProductPrice
+from tapir.configuration.parameter import get_parameter_value
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
-from tapir.configuration.parameter import get_parameter_value
-from tapir.wirgarten.models import Product, Subscription
+from tapir.wirgarten.models import Member, Product, Subscription
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
@@ -21,14 +21,12 @@ class BiddingRoundViewService:
         return get_parameter_value(ParameterKeys.BIDDING_ROUND_URL_ENABLED, cache=cache)
 
     @classmethod
-    def serialize_round(cls, bidding_round, cache: dict) -> dict:
+    def serialize_round(cls, bidding_round: BiddingRound, cache: dict) -> dict:
         return {
             "id": bidding_round.id,
             "name": bidding_round.name,
             "status": bidding_round.status,
-            "start_at": (
-                bidding_round.start_at.isoformat() if bidding_round.start_at else None
-            ),
+            "start_at": bidding_round.start_at.isoformat(),
             "end_at": bidding_round.end_at.isoformat(),
             "contracts_created_at": (
                 bidding_round.contracts_created_at.isoformat()
@@ -46,16 +44,13 @@ class BiddingRoundViewService:
         }
 
     @classmethod
-    def _serialize_round_product(cls, bidding_round) -> dict | None:
-        round_product_type = cls._get_round_product_type(bidding_round)
-        if round_product_type is None:
-            return None
+    def _serialize_round_product(cls, bidding_round: BiddingRound) -> dict:
         return {
-            "product_type_id": round_product_type.product_type_id,
-            "product_type_name": round_product_type.product_type.name,
+            "product_type_id": bidding_round.product_type_id,
+            "product_type_name": bidding_round.product_type.name,
             "target_amount_per_year": (
-                str(round_product_type.target_amount_per_year)
-                if round_product_type.target_amount_per_year is not None
+                str(bidding_round.target_amount_per_year)
+                if bidding_round.target_amount_per_year is not None
                 else None
             ),
             "prices": [
@@ -64,31 +59,27 @@ class BiddingRoundViewService:
                     "product_name": product.name,
                     **cls._serialize_price_values(price),
                 }
-                for product, price in cls._get_products_with_prices(round_product_type)
+                for product, price in cls._get_products_with_prices(bidding_round)
             ],
         }
 
     @classmethod
-    def _get_round_product_type(cls, bidding_round):
-        return bidding_round.product_types.select_related("product_type").first()
-
-    @classmethod
-    def _get_products_with_prices(cls, round_product_type) -> list[tuple]:
+    def _get_products_with_prices(
+        cls, bidding_round: BiddingRound
+    ) -> list[tuple[Product, BiddingRoundProductPrice | None]]:
         prices_by_product_id = {
             price.product_id: price
-            for price in BiddingRoundProductPrice.objects.filter(
-                round_product_type=round_product_type
-            )
+            for price in BiddingRoundProductPrice.objects.filter(round=bidding_round)
         }
         return [
             (product, prices_by_product_id.get(product.id))
             for product in Product.objects.filter(
-                type_id=round_product_type.product_type_id, deleted=False
+                type_id=bidding_round.product_type_id, deleted=False
             )
         ]
 
     @classmethod
-    def _serialize_price_values(cls, price) -> dict:
+    def _serialize_price_values(cls, price: BiddingRoundProductPrice | None) -> dict:
         return {
             "reference_value": (
                 str(price.reference_value)
@@ -108,23 +99,7 @@ class BiddingRoundViewService:
         }
 
     @classmethod
-    def serialize_bid_item(cls, bid_item) -> dict:
-        return {
-            "round_product_type_id": bid_item.round_product_type_id,
-            "product_type_name": bid_item.round_product_type.product_type.name,
-            "product_id": bid_item.product_id,
-            "product_name": bid_item.product.name,
-            "quantity": bid_item.quantity,
-            "amount_1": (
-                str(bid_item.amount_1) if bid_item.amount_1 is not None else None
-            ),
-            "amount_per_year": str(
-                (bid_item.amount_1 or Decimal("0")) * bid_item.quantity * 12
-            ),
-        }
-
-    @classmethod
-    def serialize_bid(cls, bid, cache: dict) -> dict:
+    def serialize_bid(cls, bid, cache: dict) -> dict | None:
         if bid is None:
             return None
         pickup_location_id = (
@@ -134,30 +109,22 @@ class BiddingRoundViewService:
                 cache=cache,
             )
         )
-        items = list(
-            bid.items.select_related(
-                "round_product_type__product_type", "product"
-            ).all()
-        )
+        amount_per_year = (bid.amount_1 or Decimal("0")) * bid.quantity * 12
         return {
             "id": bid.id,
             "member_id": bid.member_id,
             "pickup_location_id": pickup_location_id,
             "updated_at": bid.updated_at.isoformat() if bid.updated_at else None,
-            "total_per_year": str(
-                sum(
-                    (
-                        (item.amount_1 or Decimal("0")) * item.quantity * 12
-                        for item in items
-                    ),
-                    Decimal("0"),
-                )
-            ),
-            "items": [cls.serialize_bid_item(item) for item in items],
+            "product_id": bid.product_id,
+            "product_name": bid.product.name,
+            "quantity": bid.quantity,
+            "amount_1": str(bid.amount_1) if bid.amount_1 is not None else None,
+            "amount_per_year": str(amount_per_year),
+            "total_per_year": str(amount_per_year),
         }
 
     @classmethod
-    def build_texts(cls, cache) -> dict:
+    def build_texts(cls, cache: dict) -> dict:
         public_string_id_to_parameter_key_map = {
             "intro_title": ParameterKeys.BIDDING_ROUND_PUBLIC_INTRO_TITLE,
             "intro_text": ParameterKeys.BIDDING_ROUND_PUBLIC_INTRO_TEXT,
@@ -196,19 +163,17 @@ class BiddingRoundViewService:
         }
 
     @classmethod
-    def build_biddable_product(cls, bidding_round, cache, member=None) -> dict | None:
-        round_product_type = cls._get_round_product_type(bidding_round)
-        if round_product_type is None:
-            return None
-
-        products_with_prices = cls._get_products_with_prices(round_product_type)
+    def build_biddable_product(
+        cls, bidding_round: BiddingRound, cache: dict, member: Member | None = None
+    ) -> dict:
+        products_with_prices = cls._get_products_with_prices(bidding_round)
         current_quantities = cls._get_current_quantities(
             member, [product for product, _price in products_with_prices]
         )
         return {
-            "id": round_product_type.id,
-            "product_type_id": round_product_type.product_type_id,
-            "product_type_name": round_product_type.product_type.name,
+            "id": bidding_round.product_type_id,
+            "product_type_id": bidding_round.product_type_id,
+            "product_type_name": bidding_round.product_type.name,
             "products": [
                 {
                     "id": product.id,
@@ -221,7 +186,9 @@ class BiddingRoundViewService:
         }
 
     @classmethod
-    def _get_current_quantities(cls, member, products) -> dict:
+    def _get_current_quantities(
+        cls, member: Member | None, products: list[Product]
+    ) -> dict:
         if member is None:
             return {}
         subscriptions = Subscription.objects.filter(

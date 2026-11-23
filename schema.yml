@@ -10604,26 +10604,6 @@ components:
           type: string
           format: date-time
           nullable: true
-        total_per_year:
-          type: string
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/BidItem'
-      required:
-      - id
-      - items
-      - member_id
-      - pickup_location_id
-      - total_per_year
-      - updated_at
-    BidItem:
-      type: object
-      properties:
-        round_product_type_id:
-          type: string
-        product_type_name:
-          type: string
         product_id:
           type: string
         product_name:
@@ -10635,14 +10615,19 @@ components:
           nullable: true
         amount_per_year:
           type: string
+        total_per_year:
+          type: string
       required:
       - amount_1
       - amount_per_year
+      - id
+      - member_id
+      - pickup_location_id
       - product_id
       - product_name
-      - product_type_name
       - quantity
-      - round_product_type_id
+      - total_per_year
+      - updated_at
     BidProductVariant:
       type: object
       properties:
@@ -10669,12 +10654,9 @@ components:
       - name
       - reference_value
       - size
-    BidSubmitItemRequest:
+    BidSubmitRequest:
       type: object
       properties:
-        round_product_type_id:
-          type: string
-          minLength: 1
         product_id:
           type: string
           minLength: 1
@@ -10686,24 +10668,8 @@ components:
         amount_1:
           type: string
           nullable: true
-        amount_2:
-          type: string
-          nullable: true
-        amount_3:
-          type: string
-          nullable: true
       required:
       - product_id
-      - round_product_type_id
-    BidSubmitRequest:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/BidSubmitItemRequest'
-      required:
-      - items
     BidTexts:
       type: object
       properties:
@@ -18536,22 +18502,30 @@ components:
           type: string
         email:
           type: string
+        product_id:
+          type: string
+        product_name:
+          type: string
+        quantity:
+          type: integer
+        amount_1:
+          type: string
+          nullable: true
         amount_per_month:
           type: string
         amount_per_year:
           type: string
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/BidItem'
       required:
+      - amount_1
       - amount_per_month
       - amount_per_year
       - bid_id
       - email
-      - items
       - member_id
       - member_name
+      - product_id
+      - product_name
+      - quantity
     RoundTexts:
       type: object
       properties:

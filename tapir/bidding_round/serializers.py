@@ -37,19 +37,12 @@ class RoundConfigSerializer(serializers.Serializer):
     prices = RoundProductPriceInputSerializer(many=True, required=False)
 
 
-class BidSubmitItemSerializer(serializers.Serializer):
-    round_product_type_id = serializers.CharField()
+class BidSubmitSerializer(serializers.Serializer):
     product_id = serializers.CharField()
     quantity = serializers.IntegerField(
         required=False, min_value=1, max_value=5, default=1
     )
     amount_1 = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-    amount_2 = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-    amount_3 = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-
-
-class BidSubmitSerializer(serializers.Serializer):
-    items = BidSubmitItemSerializer(many=True)
 
 
 class CreateContractsSerializer(serializers.Serializer):
@@ -84,23 +77,17 @@ class RoundSerializer(serializers.Serializer):
     product = RoundProductSerializer(allow_null=True)
 
 
-class BidItemSerializer(serializers.Serializer):
-    round_product_type_id = serializers.CharField()
-    product_type_name = serializers.CharField()
-    product_id = serializers.CharField()
-    product_name = serializers.CharField()
-    quantity = serializers.IntegerField()
-    amount_1 = serializers.CharField(allow_null=True)
-    amount_per_year = serializers.CharField()
-
-
 class BidSerializer(serializers.Serializer):
     id = serializers.CharField()
     member_id = serializers.CharField()
     pickup_location_id = serializers.CharField(allow_null=True)
     updated_at = serializers.DateTimeField(allow_null=True)
+    product_id = serializers.CharField()
+    product_name = serializers.CharField()
+    quantity = serializers.IntegerField()
+    amount_1 = serializers.CharField(allow_null=True)
+    amount_per_year = serializers.CharField()
     total_per_year = serializers.CharField()
-    items = BidItemSerializer(many=True)
 
 
 class BidProductVariantSerializer(serializers.Serializer):
@@ -178,9 +165,12 @@ class RoundStatsBidSerializer(serializers.Serializer):
     member_id = serializers.CharField()
     member_name = serializers.CharField()
     email = serializers.CharField()
+    product_id = serializers.CharField()
+    product_name = serializers.CharField()
+    quantity = serializers.IntegerField()
+    amount_1 = serializers.CharField(allow_null=True)
     amount_per_month = serializers.CharField()
     amount_per_year = serializers.CharField()
-    items = BidItemSerializer(many=True)
 
 
 class RoundResultsResponseSerializer(serializers.Serializer):

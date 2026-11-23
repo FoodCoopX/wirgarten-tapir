@@ -10,12 +10,12 @@ from tapir.bidding_round.config import (
     BIDDING_ROUND_STATUS_CONFIGURATION,
 )
 from tapir.bidding_round.models import Bid, BiddingRound
+from tapir.bidding_round.services.bid_input import BidInput
 from tapir.bidding_round.services.bidding_round_service import BiddingRoundService
 from tapir.bidding_round.tests.factories import (
     BidFactory,
     BiddingRoundFactory,
     BiddingRoundProductPriceFactory,
-    BiddingRoundProductTypeFactory,
 )
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
@@ -43,10 +43,9 @@ class TestBiddingRoundService(TapirIntegrationTest):
 
     @staticmethod
     def _add_round_price(bidding_round):
-        round_product_type = bidding_round.product_types.first()
-        product = ProductFactory.create(type=round_product_type.product_type)
+        product = ProductFactory.create(type=bidding_round.product_type)
         return BiddingRoundProductPriceFactory.create(
-            round_product_type=round_product_type,
+            round=bidding_round,
             product=product,
         )
 
@@ -65,24 +64,11 @@ class TestBiddingRoundService(TapirIntegrationTest):
 
         self.assertEqual(BIDDING_ROUND_STATUS_CONFIGURATION, bidding_round.status)
         self.assertEqual(growing_period, bidding_round.growing_period)
-        round_product_type = bidding_round.product_types.get()
-        self.assertEqual(product_type, round_product_type.product_type)
-        self.assertEqual(Decimal("1000.00"), round_product_type.target_amount_per_year)
-
-    def test_createRound_withoutEndDate_raisesValidationError(self):
-        with pytest.raises(ValidationError):
-            BiddingRoundService.create_round(
-                growing_period=GrowingPeriodFactory.create(),
-                name="Beitragsrunde Test",
-                end_at=None,
-                cache={},
-            )
+        self.assertEqual(product_type, bidding_round.product_type)
+        self.assertEqual(Decimal("1000.00"), bidding_round.target_amount_per_year)
 
     def test_startRound_withoutTargetAmount_raisesValidationError(self):
-        bidding_round = BiddingRoundFactory.create()
-        BiddingRoundProductTypeFactory.create(
-            round=bidding_round, target_amount_per_year=None
-        )
+        bidding_round = BiddingRoundFactory.create(target_amount_per_year=None)
         self._add_round_price(bidding_round)
 
         with pytest.raises(ValidationError):
@@ -90,14 +76,12 @@ class TestBiddingRoundService(TapirIntegrationTest):
 
     def test_startRound_withoutPrices_raisesValidationError(self):
         bidding_round = BiddingRoundFactory.create()
-        BiddingRoundProductTypeFactory.create(round=bidding_round)
 
         with pytest.raises(ValidationError):
             BiddingRoundService.start_round(bidding_round, cache={})
 
     def test_startRound_setsStatusActive(self):
         bidding_round = BiddingRoundFactory.create()
-        BiddingRoundProductTypeFactory.create(round=bidding_round)
         self._add_round_price(bidding_round)
 
         BiddingRoundService.start_round(bidding_round, cache={})
@@ -108,7 +92,6 @@ class TestBiddingRoundService(TapirIntegrationTest):
     def test_startRound_whenAnotherRoundIsActive_raisesValidationError(self):
         BiddingRoundFactory.create(status=BIDDING_ROUND_STATUS_ACTIVE)
         bidding_round = BiddingRoundFactory.create()
-        BiddingRoundProductTypeFactory.create(round=bidding_round)
         self._add_round_price(bidding_round)
 
         with pytest.raises(ValidationError):
@@ -151,6 +134,40 @@ class TestBiddingRoundService(TapirIntegrationTest):
 
         self.assertFalse(BiddingRound.objects.exists())
 
+    def test_updateRoundConfig_pricesReduced_keepsOnlyTheGivenProducts(self):
+        growing_period = GrowingPeriodFactory.create()
+        product_type = ProductTypeFactory.create()
+        first_product = ProductFactory.create(type=product_type)
+        second_product = ProductFactory.create(type=product_type)
+        prices = [
+            {
+                "product_id": product.id,
+                "reference_value": "90.00",
+                "min_amount": "70.00",
+                "size": "1",
+            }
+            for product in (first_product, second_product)
+        ]
+
+        bidding_round = BiddingRoundService.create_round(
+            growing_period=growing_period,
+            name="Beitragsrunde Test",
+            end_at=get_now(cache={}) + datetime.timedelta(days=30),
+            product_type_id=product_type.id,
+            prices=prices,
+            cache={},
+        )
+        BiddingRoundService.update_round_config(
+            bidding_round,
+            {"prices": [prices[0]]},
+            cache={},
+        )
+
+        self.assertEqual(
+            [first_product.id],
+            list(bidding_round.prices.values_list("product_id", flat=True)),
+        )
+
     def test_getCurrentOpenRound_startInTheFuture_returnsNone(self):
         now = get_now(cache={})
         BiddingRoundFactory.create(
@@ -165,7 +182,6 @@ class TestBiddingRoundService(TapirIntegrationTest):
         self,
     ):
         bidding_round = BiddingRoundFactory.create()
-        BiddingRoundProductTypeFactory.create(round=bidding_round)
         BidFactory.create(round=bidding_round)
 
         with pytest.raises(ValidationError):
@@ -177,7 +193,6 @@ class TestBiddingRoundService(TapirIntegrationTest):
         self,
     ):
         bidding_round = BiddingRoundFactory.create()
-        round_product_type = BiddingRoundProductTypeFactory.create(round=bidding_round)
         price = self._add_round_price(bidding_round)
         BidFactory.create(round=bidding_round)
 
@@ -185,10 +200,8 @@ class TestBiddingRoundService(TapirIntegrationTest):
             bidding_round,
             {
                 "name": "Neuer Name",
-                "product_type_id": round_product_type.product_type_id,
-                "target_amount_per_year": str(
-                    round_product_type.target_amount_per_year
-                ),
+                "product_type_id": bidding_round.product_type_id,
+                "target_amount_per_year": str(bidding_round.target_amount_per_year),
                 "prices": [
                     {
                         "product_id": price.product_id,
@@ -204,9 +217,19 @@ class TestBiddingRoundService(TapirIntegrationTest):
         bidding_round.refresh_from_db()
         self.assertEqual("Neuer Name", bidding_round.name)
 
+    def test_updateRoundConfig_givenNullStartAt_keepsTheCurrentStartAt(self):
+        bidding_round = BiddingRoundFactory.create()
+        start_at = bidding_round.start_at
+
+        BiddingRoundService.update_round_config(
+            bidding_round, {"start_at": None}, cache={}
+        )
+
+        bidding_round.refresh_from_db()
+        self.assertEqual(start_at, bidding_round.start_at)
+
     def test_updateRoundConfig_startAfterEnd_raisesValidationError(self):
         bidding_round = BiddingRoundFactory.create()
-        BiddingRoundProductTypeFactory.create(round=bidding_round)
 
         with pytest.raises(ValidationError):
             BiddingRoundService.update_round_config(
@@ -215,57 +238,65 @@ class TestBiddingRoundService(TapirIntegrationTest):
                 cache={},
             )
 
+    def test_updateRoundConfig_newProductType_removesTheOldPrices(self):
+        bidding_round = BiddingRoundFactory.create()
+        old_price = self._add_round_price(bidding_round)
+
+        BiddingRoundService.update_round_config(
+            bidding_round,
+            {"product_type_id": ProductTypeFactory.create().id},
+            cache={},
+        )
+
+        self.assertFalse(bidding_round.prices.filter(pk=old_price.pk).exists())
+
     def test_updateRoundConfig_afterContractsWereCreated_raisesValidationError(self):
         bidding_round = BiddingRoundFactory.create(
             contracts_created_at=get_now(cache={})
         )
-        BiddingRoundProductTypeFactory.create(round=bidding_round)
 
         with pytest.raises(ValidationError):
             BiddingRoundService.update_round_config(
                 bidding_round, {"name": "Neuer Name"}, cache={}
             )
 
-    def test_saveBid_createsBidWithOneItem(self):
-        bidding_round, round_product_type, product = self._create_active_round()
+    def test_saveBid_default_createsBidWithProductQuantityAndAmount(self):
+        bidding_round, product = self._create_active_round()
         member = MemberFactory.create()
 
         BiddingRoundService.save_bid(
             member,
             bidding_round,
-            [
-                {
-                    "round_product_type_id": round_product_type.id,
-                    "product_id": product.id,
-                    "amount_1": "85.00",
-                }
-            ],
+            BidInput(product_id=product.id, quantity=1, amount_1=Decimal("85.00")),
             cache={},
         )
 
         bid = Bid.objects.get(round=bidding_round, member=member)
-        self.assertEqual(1, bid.items.count())
-        self.assertEqual(Decimal("85.00"), bid.items.get().amount_1)
+        self.assertEqual(product, bid.product)
+        self.assertEqual(1, bid.quantity)
+        self.assertEqual(Decimal("85.00"), bid.amount_1)
 
     def test_saveBid_calledTwice_updatesTheSameBid(self):
-        bidding_round, round_product_type, product = self._create_active_round()
+        bidding_round, product = self._create_active_round()
         member = MemberFactory.create()
-        items = [
-            {
-                "round_product_type_id": round_product_type.id,
-                "product_id": product.id,
-                "amount_1": "85.00",
-            }
-        ]
 
-        BiddingRoundService.save_bid(member, bidding_round, items, cache={})
-        items[0]["amount_1"] = "95.00"
-        BiddingRoundService.save_bid(member, bidding_round, items, cache={})
+        BiddingRoundService.save_bid(
+            member,
+            bidding_round,
+            BidInput(product_id=product.id, quantity=1, amount_1=Decimal("85.00")),
+            cache={},
+        )
+        BiddingRoundService.save_bid(
+            member,
+            bidding_round,
+            BidInput(product_id=product.id, quantity=3, amount_1=Decimal("95.00")),
+            cache={},
+        )
 
         self.assertEqual(1, Bid.objects.filter(round=bidding_round).count())
-        self.assertEqual(
-            Decimal("95.00"), Bid.objects.get(round=bidding_round).items.get().amount_1
-        )
+        bid = Bid.objects.get(round=bidding_round)
+        self.assertEqual(3, bid.quantity)
+        self.assertEqual(Decimal("95.00"), bid.amount_1)
 
     def _create_active_round(self):
         bidding_round = BiddingRoundFactory.create(
@@ -274,12 +305,11 @@ class TestBiddingRoundService(TapirIntegrationTest):
             end_at=get_now(cache={}) + datetime.timedelta(days=1),
             growing_period=GrowingPeriodFactory.create(),
         )
-        round_product_type = BiddingRoundProductTypeFactory.create(round=bidding_round)
-        product = ProductFactory.create(type=round_product_type.product_type)
+        product = ProductFactory.create(type=bidding_round.product_type)
         BiddingRoundProductPriceFactory.create(
-            round_product_type=round_product_type,
+            round=bidding_round,
             product=product,
             reference_value=Decimal("90.00"),
             min_amount=Decimal("70.00"),
         )
-        return bidding_round, round_product_type, product
+        return bidding_round, product

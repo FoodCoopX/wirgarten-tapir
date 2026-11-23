@@ -12,9 +12,6 @@
  * Do not edit the class manually.
  */
 
-import type { BidItem } from "./BidItem";
-import { BidItemFromJSON, BidItemToJSON } from "./BidItem";
-
 /**
  *
  * @export
@@ -50,6 +47,30 @@ export interface RoundStatsBid {
    * @type {string}
    * @memberof RoundStatsBid
    */
+  productId: string;
+  /**
+   *
+   * @type {string}
+   * @memberof RoundStatsBid
+   */
+  productName: string;
+  /**
+   *
+   * @type {number}
+   * @memberof RoundStatsBid
+   */
+  quantity: number;
+  /**
+   *
+   * @type {string}
+   * @memberof RoundStatsBid
+   */
+  amount1: string | null;
+  /**
+   *
+   * @type {string}
+   * @memberof RoundStatsBid
+   */
   amountPerMonth: string;
   /**
    *
@@ -57,12 +78,6 @@ export interface RoundStatsBid {
    * @memberof RoundStatsBid
    */
   amountPerYear: string;
-  /**
-   *
-   * @type {Array<BidItem>}
-   * @memberof RoundStatsBid
-   */
-  items: Array<BidItem>;
 }
 
 /**
@@ -74,11 +89,15 @@ export function instanceOfRoundStatsBid(value: object): value is RoundStatsBid {
   if (!("memberName" in value) || value["memberName"] === undefined)
     return false;
   if (!("email" in value) || value["email"] === undefined) return false;
+  if (!("productId" in value) || value["productId"] === undefined) return false;
+  if (!("productName" in value) || value["productName"] === undefined)
+    return false;
+  if (!("quantity" in value) || value["quantity"] === undefined) return false;
+  if (!("amount1" in value) || value["amount1"] === undefined) return false;
   if (!("amountPerMonth" in value) || value["amountPerMonth"] === undefined)
     return false;
   if (!("amountPerYear" in value) || value["amountPerYear"] === undefined)
     return false;
-  if (!("items" in value) || value["items"] === undefined) return false;
   return true;
 }
 
@@ -98,9 +117,12 @@ export function RoundStatsBidFromJSONTyped(
     memberId: json["member_id"],
     memberName: json["member_name"],
     email: json["email"],
+    productId: json["product_id"],
+    productName: json["product_name"],
+    quantity: json["quantity"],
+    amount1: json["amount_1"],
     amountPerMonth: json["amount_per_month"],
     amountPerYear: json["amount_per_year"],
-    items: (json["items"] as Array<any>).map(BidItemFromJSON),
   };
 }
 
@@ -121,8 +143,11 @@ export function RoundStatsBidToJSONTyped(
     member_id: value["memberId"],
     member_name: value["memberName"],
     email: value["email"],
+    product_id: value["productId"],
+    product_name: value["productName"],
+    quantity: value["quantity"],
+    amount_1: value["amount1"],
     amount_per_month: value["amountPerMonth"],
     amount_per_year: value["amountPerYear"],
-    items: (value["items"] as Array<any>).map(BidItemToJSON),
   };
 }
