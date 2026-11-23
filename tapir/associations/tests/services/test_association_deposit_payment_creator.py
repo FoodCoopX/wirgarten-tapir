@@ -43,17 +43,31 @@ class TestAssociationDepositPaymentCreator(TapirIntegrationTest):
         self.assertEqual(payment.type, PAYMENT_TYPE_ASSOCIATION_DEPOSIT)
         self.assertEqual(payment.due_date, datetime.date(2027, 2, 5))
 
-    def test_validateNewDeposit_memberAlreadyHasDeposit_rejectsSameOrDifferentAmount(
-        self,
-    ):
-        AssociationDeposit.objects.create(member=self.member)
-        for amount in (Decimal("200"), Decimal("250")):
-            with self.subTest(amount=amount), self.assertRaisesMessage(
-                ValidationError, "bereits eine Einlage"
-            ):
-                AssociationDepositPaymentCreator.validate_new_deposit(
-                    member=self.member, amount=amount, cache={}
-                )
+    def test_validateNewDeposit_sameAmountAlreadyExists_raisesError(self):
+        AssociationDepositPaymentCreator.create_deposit_and_payment(
+            member=self.member,
+            amount=Decimal("200"),
+            start_date=datetime.date(2027, 1, 6),
+            actor=self.member,
+            cache={},
+        )
+        with self.assertRaisesMessage(ValidationError, "bereits eine Einlage"):
+            AssociationDepositPaymentCreator.validate_new_deposit(
+                member=self.member, amount=Decimal("200"), cache={}
+            )
+
+    def test_validateNewDeposit_differentAmountAlreadyExists_raisesError(self):
+        AssociationDepositPaymentCreator.create_deposit_and_payment(
+            member=self.member,
+            amount=Decimal("200"),
+            start_date=datetime.date(2027, 1, 6),
+            actor=self.member,
+            cache={},
+        )
+        with self.assertRaisesMessage(ValidationError, "bereits eine Einlage"):
+            AssociationDepositPaymentCreator.validate_new_deposit(
+                member=self.member, amount=Decimal("250"), cache={}
+            )
 
     def test_validateNewDeposit_depositsDisabled_rejectsBeforeOtherValidation(self):
         self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_ENABLED, False)
