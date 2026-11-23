@@ -15977,6 +15977,9 @@ components:
         id:
           type: string
           maxLength: 10
+        type_label:
+          type: string
+          readOnly: true
         amount:
           type: number
           format: double
@@ -16030,6 +16033,7 @@ components:
       - due_date
       - mandate_ref
       - type
+      - type_label
       - updated_at
     PaymentExportExclusionPeriod:
       type: object
@@ -16178,6 +16182,9 @@ components:
         id:
           type: string
           maxLength: 10
+        type_label:
+          type: string
+          readOnly: true
         payments_count:
           type: integer
           readOnly: true
@@ -16227,6 +16234,7 @@ components:
       - payments_count
       - payments_sum
       - type
+      - type_label
       - updated_at
       - xml_download_url
     PaymentTransactionDetails:
