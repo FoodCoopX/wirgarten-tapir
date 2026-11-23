@@ -1,10 +1,15 @@
 import datetime
 
+from tapir.associations.services.association_deposit_settings import (
+    association_deposits_enabled,
+)
+from tapir.utils.services.tapir_cache import TapirCache
+
 from django.db.models import Exists, OuterRef, Q, QuerySet
 
 from tapir.associations.models import AssociationMembership
-from tapir.associations.services.association_deposit_overview_provider import (
-    AssociationDepositOverviewProvider,
+from tapir.associations.services.association_deposit_annotator import (
+    AssociationDepositAnnotator,
 )
 from tapir.generic_exports.exceptions import TemplateAlreadyExistsException
 from tapir.generic_exports.models import AutomatedExportCycle, CsvExport, LocaleChoices
@@ -12,11 +17,9 @@ from tapir.generic_exports.services.export_segment_manager import (
     ExportSegment,
     ExportSegmentColumn,
 )
-from tapir.wirgarten.service.file_export import spreadsheet_text
 from tapir.wirgarten.utils import (
     format_currency,
     get_today,
-    legal_status_is_association,
 )
 
 
@@ -24,7 +27,7 @@ class AssociationDepositDepartureExport:
     ID = "association_deposit_departures"
     NAME = "Vereinseinlagen ausgeschiedener Mitglieder"
     DESCRIPTION = (
-        "Einlagen für Austritte im Vorjahr. Ein SEPA-Export bestätigt keinen Bankeingang. "
+        "Einlagen für Austritte in der letzten abgeschlossenen Vertragsperiode. Ein SEPA-Export bestätigt keinen Bankeingang. "
         "Bitte Zahlungseingänge vor einer Rückzahlung prüfen."
     )
 
@@ -36,7 +39,7 @@ class AssociationDepositDepartureExport:
             description=cls.DESCRIPTION,
             get_queryset=cls.get_memberships,
             get_available_columns=cls.get_columns,
-            requires_coop_manage=True,
+            is_available=association_deposits_enabled,
         )
 
     @staticmethod
@@ -44,11 +47,24 @@ class AssociationDepositDepartureExport:
         reference_datetime: datetime.datetime,
     ) -> QuerySet[AssociationMembership]:
         cache = {}
-        if not legal_status_is_association(cache=cache):
+        if not association_deposits_enabled(cache=cache):
+            return AssociationMembership.objects.none()
+        growing_period = next(
+            (
+                period
+                for period in reversed(
+                    TapirCache.get_all_growing_periods_ascending(cache=cache)
+                )
+                if period.end_date < reference_datetime.date()
+            ),
+            None,
+        )
+        if growing_period is None:
             return AssociationMembership.objects.none()
         memberships = (
             AssociationMembership.objects.filter(
-                end_date__year=reference_datetime.year - 1,
+                end_date__gte=growing_period.start_date,
+                end_date__lte=growing_period.end_date,
                 end_date__lt=get_today(cache=cache),
             )
             .filter(
@@ -64,37 +80,47 @@ class AssociationDepositDepartureExport:
             .select_related("member")
         )
         return (
-            AssociationDepositOverviewProvider.annotate_memberships(memberships)
+            AssociationDepositAnnotator.annotate_memberships(memberships)
             .filter(deposit_exported__gt=0)
             .order_by("member__member_no", "end_date", "pk")
         )
 
-    @staticmethod
-    def get_columns() -> list[ExportSegmentColumn]:
+    @classmethod
+    def get_columns(cls) -> list[ExportSegmentColumn]:
         return [
             ExportSegmentColumn(
                 "member",
                 "Mitglied",
                 "",
-                lambda row, _, __: spreadsheet_text(row.member.get_display_name()),
+                lambda membership, _, __: cls._spreadsheet_text(
+                    membership.member.get_display_name()
+                ),
             ),
             ExportSegmentColumn(
-                "departure", "Austritt", "", lambda row, _, __: row.end_date.isoformat()
+                "departure",
+                "Austritt",
+                "",
+                lambda membership, _, __: membership.end_date.isoformat(),
             ),
             ExportSegmentColumn(
                 "account_owner",
                 "Kontoinhaber",
                 "",
-                lambda row, _, __: spreadsheet_text(row.member.account_owner),
+                lambda membership, _, __: cls._spreadsheet_text(
+                    membership.member.account_owner
+                ),
             ),
             ExportSegmentColumn(
-                "iban", "IBAN", "", lambda row, _, __: spreadsheet_text(row.member.iban)
+                "iban",
+                "IBAN",
+                "",
+                lambda membership, _, __: cls._spreadsheet_text(membership.member.iban),
             ),
             ExportSegmentColumn(
                 "amount",
                 "Einlage (€)",
                 "",
-                lambda row, _, __: format_currency(row.deposit_exported),
+                lambda membership, _, __: format_currency(membership.deposit_exported),
             ),
         ]
 
@@ -118,3 +144,13 @@ class AssociationDepositDepartureExport:
             column_ids=[column.id for column in columns],
             custom_column_names=[column.display_name for column in columns],
         )
+
+    @staticmethod
+    def _spreadsheet_text(value: str | None) -> str:
+        if value is None:
+            return ""
+        if value.startswith(("\t", "\r", "\n")) or value.lstrip().startswith(
+            ("=", "+", "-", "@", "＝", "＋", "－", "＠")
+        ):
+            return "'" + value
+        return value

@@ -16,16 +16,11 @@ from tapir.wirgarten.tests.factories import PickupLocationFactory
 from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
+@patch(
+    "tapir.generic_exports.services.csv_export_template_manager.association_deposits_enabled",
+    return_value=False,
+)
 class TestCsvExportTemplateManager(TapirUnitTest):
-    def setUp(self):
-        super().setUp()
-        self.enterContext(
-            patch(
-                "tapir.generic_exports.services.csv_export_template_manager.legal_status_is_association",
-                return_value=False,
-            )
-        )
-
     @staticmethod
     def _build_cache(pickup_locations: list[PickupLocation]) -> dict:
         return {
@@ -35,7 +30,9 @@ class TestCsvExportTemplateManager(TapirUnitTest):
             }
         }
 
-    def test_getTemplates_default_buildsTemplateDataCorrectly(self):
+    def test_getTemplates_default_buildsTemplateDataCorrectly(
+        self, mock_association_deposits_enabled
+    ):
         result = CsvExportTemplateManager.get_templates(cache=self._build_cache([]))
 
         data = result[TemplateJokerOverview.ID]
@@ -46,6 +43,7 @@ class TestCsvExportTemplateManager(TapirUnitTest):
 
     def test_getTemplates_noHomeDeliveryLocation_homeDeliveryTemplateNotIncluded(
         self,
+        mock_association_deposits_enabled,
     ):
         cache = self._build_cache(
             [PickupLocationFactory.build(id="normal", is_home_delivery=False)]
@@ -57,6 +55,7 @@ class TestCsvExportTemplateManager(TapirUnitTest):
 
     def test_getTemplates_homeDeliveryLocationExists_homeDeliveryTemplateIncluded(
         self,
+        mock_association_deposits_enabled,
     ):
         cache = self._build_cache(
             [
@@ -69,7 +68,9 @@ class TestCsvExportTemplateManager(TapirUnitTest):
 
         self.assertIn(TemplateHomeDeliveryList.ID, result)
 
-    def test_createExportsFromTemplate_templateIdNotFound_raises404(self):
+    def test_createExportsFromTemplate_templateIdNotFound_raises404(
+        self, mock_association_deposits_enabled
+    ):
         with self.assertRaisesMessage(
             Http404,
             "Unknown template id \"unknown\", available IDs: ['member_list_geng', 'joker_overview', 'payments_by_income_source']",
@@ -77,3 +78,19 @@ class TestCsvExportTemplateManager(TapirUnitTest):
             CsvExportTemplateManager.create_exports_from_template(
                 template_id="unknown", cache=self._build_cache([])
             )
+
+    def test_getTemplates_depositsDisabled_hidesDepositTemplate(
+        self, mock_association_deposits_enabled
+    ):
+        result = CsvExportTemplateManager.get_templates(cache=self._build_cache([]))
+
+        self.assertNotIn("association_deposit_departures", result)
+
+    def test_getTemplates_depositsEnabled_includesDepositTemplate(
+        self, mock_association_deposits_enabled
+    ):
+        mock_association_deposits_enabled.return_value = True
+
+        result = CsvExportTemplateManager.get_templates(cache=self._build_cache([]))
+
+        self.assertIn("association_deposit_departures", result)

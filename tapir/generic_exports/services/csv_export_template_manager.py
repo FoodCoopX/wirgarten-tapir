@@ -3,7 +3,9 @@ from django.http import Http404
 from tapir.associations.services.association_deposit_departure_export import (
     AssociationDepositDepartureExport,
 )
-from tapir.wirgarten.utils import legal_status_is_association
+from tapir.associations.services.association_deposit_settings import (
+    association_deposits_enabled,
+)
 
 from tapir.generic_exports.services.csv_templates.template_home_delivery_list import (
     TemplateHomeDeliveryList,
@@ -29,7 +31,7 @@ class CsvExportTemplateManager:
             TemplateJokerOverview,
             TemplatePaymentsByIncomeSource,
         ]
-        if legal_status_is_association(cache=cache):
+        if association_deposits_enabled(cache=cache):
             template_list.append(AssociationDepositDepartureExport)
         if any(
             pickup_location.is_home_delivery

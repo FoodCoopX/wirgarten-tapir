@@ -20,7 +20,7 @@ class ExportSegment:
     # Set exactly one of description and get_description
     description: str = ""
     get_description: Callable[[dict], str] | None = None
-    requires_coop_manage: bool = False
+    is_available: Callable[[dict], bool] | None = None
 
 
 class ExportSegmentManager:
