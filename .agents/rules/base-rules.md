@@ -110,6 +110,17 @@ Services: `web` (8000), `vite` (5173), `keycloak` (8080), `db` (5432), `redis` (
   `Member`/`TapirUser`, or personal data), check `tapir/core/services/member_data_disclosure_service.py`: add a
   `DataSource`, update its fields, or exclude fields that must not be shown (secrets, tokens, other members' data).
 - **Business logic in service classes** under `tapir/<app>/services/`, not in views or models.
+- **View structure**: non-trivial views keep validation and applying changes separate. Reference flow:
+    1. check permissions
+    2. deserialize the input (serializers only parse, never validate business rules). Never pass
+       `serializer.validated_data` dicts to services: pass explicit parameters, or a dataclass if that would mean too
+       many parameters. Instantiate Django models only if they are meant to be saved.
+    3. call a validator service, which raises on invalid input and changes nothing
+    4. call an apply service, which persists the changes and triggers side effects (mails, logs), assuming valid input
+    5. build and return the response
+
+  This is a guideline, not a template: a step that takes only a few lines (e.g. a single `save()` under
+  `transaction.atomic()`) stays in the view instead of getting its own service.
 - **`cache` parameter**: a plain `dict` passed through service functions as a per-request query cache. Create it at the
   origin (view `__init__`, first lines of a command) and pass it down. Request-scoped, so usually no invalidation; if
   needed see `tapir.utils.services.tapir_cache_manager.TapirCacheManager`. Optional only for legacy callers — **make it
