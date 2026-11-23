@@ -1,13 +1,11 @@
 import datetime
 from decimal import Decimal
-from unittest.mock import patch
 
 from django.urls import reverse
 
-from tapir.accounts.models import KeycloakUser
 from tapir.associations.models import AssociationDeposit
-from tapir.associations.services.association_deposit_overview_provider import (
-    AssociationDepositOverviewProvider,
+from tapir.associations.services.association_deposit_annotator import (
+    AssociationDepositAnnotator,
 )
 from tapir.associations.tests.factories import AssociationMembershipFactory
 from tapir.core.config import LEGAL_STATUS_ASSOCIATION
@@ -18,11 +16,14 @@ from tapir.generic_exports.services.automated_exports_manager import (
 from tapir.generic_exports.services.csv_export_template_manager import (
     CsvExportTemplateManager,
 )
-from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
-from tapir.wirgarten.tests.factories import MemberFactory, PaymentFactory
+from tapir.wirgarten.tests.factories import (
+    MemberFactory,
+    PaymentFactory,
+    GrowingPeriodFactory,
+)
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
 
@@ -31,25 +32,35 @@ class TestDepositDepartureExport(TapirIntegrationTest):
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
+    def setUp(self):
+        super().setUp()
+        self._set_parameter(
+            ParameterKeys.ORGANISATION_LEGAL_STATUS, LEGAL_STATUS_ASSOCIATION
+        )
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_ENABLED, True)
+        GrowingPeriodFactory.create(
+            start_date=datetime.date(2025, 3, 1), end_date=datetime.date(2026, 2, 28)
+        )
+
     def test_get_csvExport_excludesDepositOfRejoinedMember(self):
         mock_timezone(self, datetime.datetime(2026, 11, 5, 12))
         self._set_parameter(
             ParameterKeys.ORGANISATION_LEGAL_STATUS, LEGAL_STATUS_ASSOCIATION
         )
-        member = MemberFactory(is_superuser=True)
-        AssociationMembershipFactory(
+        member = MemberFactory.create(is_superuser=True)
+        AssociationMembershipFactory.create(
             member=member,
             start_date=datetime.date(2025, 1, 1),
             end_date=datetime.date(2025, 12, 31),
         )
-        AssociationMembershipFactory(
+        AssociationMembershipFactory.create(
             member=member,
             start_date=datetime.date(2026, 3, 1),
             end_date=datetime.date(2026, 12, 31),
         )
         deposit = AssociationDeposit.objects.create(member=member)
-        PaymentFactory(amount=200, association_deposit=deposit)
-        AssociationMembershipFactory(
+        PaymentFactory.create(amount=200, association_deposit=deposit)
+        AssociationMembershipFactory.create(
             member=member, start_date=datetime.date(2027, 3, 1)
         )
         CsvExportTemplateManager.create_exports_from_template(
@@ -67,24 +78,26 @@ class TestDepositDepartureExport(TapirIntegrationTest):
         csv = response.json()["file_as_string"]
         self.assertNotIn("2025-12-31", csv)
         self.assertNotIn("200,00", csv)
-        overview = AssociationDepositOverviewProvider.annotate_members(
+        overview = AssociationDepositAnnotator.annotate_members(
             Member.objects.filter(pk=member.pk)
         ).get()
         self.assertEqual(Decimal("200"), overview.deposit_agreed)
         self.assertEqual(Decimal("200"), overview.deposit_exported)
 
-    def test_doAutomatedCsvExports_yearlyTemplate_exportsPreviousYearOnce(self):
-        mock_timezone(self, datetime.datetime(2026, 1, 2, 12))
+    def test_doAutomatedCsvExports_yearlyTemplate_exportsPreviousGrowingPeriodOnce(
+        self,
+    ):
+        mock_timezone(self, datetime.datetime(2027, 1, 2, 12))
         self._set_parameter(
             ParameterKeys.ORGANISATION_LEGAL_STATUS, LEGAL_STATUS_ASSOCIATION
         )
-        for year, amount in ((2024, 300), (2025, 200)):
-            membership = AssociationMembershipFactory(
+        for year, amount in ((2025, 300), (2026, 200)):
+            membership = AssociationMembershipFactory.create(
                 start_date=datetime.date(year, 1, 1),
                 end_date=datetime.date(year, 12, 31),
             )
             deposit = AssociationDeposit.objects.create(member=membership.member)
-            PaymentFactory(amount=amount, association_deposit=deposit)
+            PaymentFactory.create(amount=amount, association_deposit=deposit)
         CsvExportTemplateManager.create_exports_from_template(
             "association_deposit_departures", {}
         )
@@ -93,23 +106,18 @@ class TestDepositDepartureExport(TapirIntegrationTest):
         AutomatedExportsManager.do_automated_csv_exports({})
         AutomatedExportsManager.do_automated_csv_exports({})
         file = AutomatedCsvExportResult.objects.get().file
-        self.assertTrue(file.requires_coop_manage)
-        self.client.force_login(MemberFactory())
-        with patch.object(
-            KeycloakUser,
-            "has_perm",
-            autospec=True,
-            side_effect=lambda _, perm, obj=None: perm == Permission.Coop.VIEW,
-        ):
-            self.assertEqual(
-                403,
-                self.client.get(
-                    reverse("wirgarten:exported_files_download", args=[file.pk])
-                ).status_code,
-            )
-            response = self.client.get(reverse("wirgarten:exported_files_list"))
-            self.assertNotIn(file, response.context["object_list"])
+        self.client.force_login(MemberFactory.create())
+        self.assertEqual(
+            302,
+            self.client.get(
+                reverse("wirgarten:exported_files_download", args=[file.pk])
+            ).status_code,
+        )
+        self.assertEqual(
+            403,
+            self.client.get(reverse("wirgarten:exported_files_list")).status_code,
+        )
         csv = bytes(file.file).decode()
         self.assertIn("2025-12-31", csv)
-        self.assertIn("200,00", csv)
-        self.assertNotIn("2024-12-31", csv)
+        self.assertIn("300,00", csv)
+        self.assertNotIn("2026-12-31", csv)

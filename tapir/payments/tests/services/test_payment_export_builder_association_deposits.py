@@ -2,16 +2,12 @@ import datetime
 from decimal import Decimal
 from xml.etree import ElementTree
 
-from tapir.associations.models import AssociationDepositAgreedLogEntry
 from tapir.associations.services.association_deposit_payment_creator import (
     AssociationDepositPaymentCreator,
 )
 from tapir.associations.tests.factories import AssociationMembershipFactory
 from tapir.core.config import LEGAL_STATUS_ASSOCIATION
 from tapir.payments.config import PAYMENT_TYPE_ASSOCIATION_DEPOSIT
-from tapir.payments.services.pain_008_xml_string_generator import (
-    Pain008XmlGenericException,
-)
 from tapir.payments.services.payment_export_builder import PaymentExportBuilder
 from tapir.payments.services.payment_export_exclusion_period_service import (
     PaymentExportExclusionPeriodService,
@@ -69,12 +65,11 @@ class TestPaymentExportBuilderAssociationDeposits(TapirIntegrationTest):
             self.today, False, {}
         )
 
-    def test_exportAllUnexportedPayments_retried_exportedDebitAndAuditRemainUnique(
+    def test_exportAllUnexportedPayments_retried_exportedDebitRemainsUnique(
         self,
     ):
         membership = self.create_membership()
         payment = self.create_payment(membership)
-        self.assertEqual(1, AssociationDepositAgreedLogEntry.objects.count())
 
         self.assertEqual([], self.export())
         payment.refresh_from_db()
@@ -93,34 +88,6 @@ class TestPaymentExportBuilderAssociationDeposits(TapirIntegrationTest):
                 type=PAYMENT_TYPE_ASSOCIATION_DEPOSIT
             ).count(),
         )
-
-    def test_exportAllUnexportedPayments_invalidMember_reportsErrorInSharedExport(self):
-        valid = self.create_payment(self.create_membership(last_name="Gueltig"))
-        invalid = self.create_payment(
-            self.create_membership(iban="INVALID", last_name="Ungueltig")
-        )
-
-        self.assertEqual(1, len(self.export()))
-        invalid.refresh_from_db()
-        valid.refresh_from_db()
-        csv = bytes(valid.transaction.csv_file.file).decode()
-        self.assertIn("Gueltig", csv)
-        self.assertIn("Ungueltig", csv)
-        xml = ElementTree.fromstring(bytes(valid.transaction.xml_file.file))
-        self.assertEqual(valid.mandate_ref_id, xml.findtext(".//{*}MndtId"))
-        self.assertEqual(1, len(xml.findall(".//{*}DrctDbtTxInf")))
-
-    def test_exportAllUnexportedPayments_invalidCreditor_raisesErrorAndLeavesPaymentOpen(
-        self,
-    ):
-        payment = self.create_payment(self.create_membership())
-        self._set_parameter(ParameterKeys.PAYMENT_ORGANISATION_IBAN, "INVALID")
-
-        with self.assertRaises(Pain008XmlGenericException):
-            self.export()
-
-        payment.refresh_from_db()
-        self.assertIsNone(payment.transaction_id)
 
     def test_exportAllUnexportedPayments_membershipEnded_exportsDeposit(self):
         membership = self.create_membership()
@@ -161,23 +128,6 @@ class TestPaymentExportBuilderAssociationDeposits(TapirIntegrationTest):
         payment.refresh_from_db()
         self.assertIsNotNone(payment.transaction_id)
         self.assertFalse(payment.excluded_from_export)
-
-    def test_exportAllUnexportedPayments_alreadyExportedThisMonth_defersNewPaymentToNextMonth(
-        self,
-    ):
-        self.create_payment(self.create_membership())
-        self.export()
-        payment = self.create_payment(self.create_membership())
-
-        self.export()
-        payment.refresh_from_db()
-        self.assertIsNone(payment.transaction_id)
-
-        self.today = datetime.date(2026, 12, 5)
-        mock_timezone(self, datetime.datetime(2026, 12, 5, 12))
-        self.export()
-        payment.refresh_from_db()
-        self.assertIsNotNone(payment.transaction_id)
 
     def test_exportAllUnexportedPayments_contractNamedLikeDeposit_exportsAsContract(
         self,

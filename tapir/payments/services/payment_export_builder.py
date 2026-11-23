@@ -12,8 +12,8 @@ from tapir.payments.config import (
     ONE_OFF_TRANSACTION_TYPES,
     PAYMENT_TYPE_ASSOCIATION_DEPOSIT,
     PAYMENT_TYPE_COOP_SHARES,
-    get_payment_type_label,
 )
+from tapir.payments.services.payment_type_label_getter import PaymentTypeLabelGetter
 from tapir.payments.services.pain_008_xml_file_creator import Pain008XmlFileCreator
 from tapir.payments.services.payment_export_exclusion_period_service import (
     PaymentExportExclusionPeriodService,
@@ -228,7 +228,7 @@ class PaymentExportBuilder:
         reference_date: datetime.date,
         cache: dict,
     ):
-        file_name = f"{get_payment_type_label(payment_type)}-Einzahlungen {format_month_and_year(reference_date)}"
+        file_name = f"{PaymentTypeLabelGetter.get_label(payment_type)}-Einzahlungen {format_month_and_year(reference_date)}"
         payments = list(payments)
         csv_string = cls.build_csv_string(
             payments=payments,

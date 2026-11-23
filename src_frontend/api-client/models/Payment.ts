@@ -32,6 +32,12 @@ export interface Payment {
   id?: string;
   /**
    *
+   * @type {string}
+   * @memberof Payment
+   */
+  readonly typeLabel: string;
+  /**
+   *
    * @type {number}
    * @memberof Payment
    */
@@ -126,6 +132,7 @@ export interface Payment {
  * Check if a given object implements the Payment interface.
  */
 export function instanceOfPayment(value: object): value is Payment {
+  if (!("typeLabel" in value) || value["typeLabel"] === undefined) return false;
   if (!("amount" in value) || value["amount"] === undefined) return false;
   if (!("createdAt" in value) || value["createdAt"] === undefined) return false;
   if (!("updatedAt" in value) || value["updatedAt"] === undefined) return false;
@@ -149,6 +156,7 @@ export function PaymentFromJSONTyped(
   }
   return {
     id: json["id"] == null ? undefined : json["id"],
+    typeLabel: json["type_label"],
     amount: json["amount"],
     createdAt: new Date(json["created_at"]),
     updatedAt: new Date(json["updated_at"]),
@@ -192,7 +200,7 @@ export function PaymentToJSON(json: any): Payment {
 }
 
 export function PaymentToJSONTyped(
-  value?: Omit<Payment, "created_at" | "updated_at"> | null,
+  value?: Omit<Payment, "type_label" | "created_at" | "updated_at"> | null,
   ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {

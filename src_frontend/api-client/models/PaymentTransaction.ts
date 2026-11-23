@@ -26,6 +26,12 @@ export interface PaymentTransaction {
   id?: string;
   /**
    *
+   * @type {string}
+   * @memberof PaymentTransaction
+   */
+  readonly typeLabel: string;
+  /**
+   *
    * @type {number}
    * @memberof PaymentTransaction
    */
@@ -104,6 +110,7 @@ export interface PaymentTransaction {
 export function instanceOfPaymentTransaction(
   value: object,
 ): value is PaymentTransaction {
+  if (!("typeLabel" in value) || value["typeLabel"] === undefined) return false;
   if (!("paymentsCount" in value) || value["paymentsCount"] === undefined)
     return false;
   if (!("paymentsSum" in value) || value["paymentsSum"] === undefined)
@@ -143,6 +150,7 @@ export function PaymentTransactionFromJSONTyped(
   }
   return {
     id: json["id"] == null ? undefined : json["id"],
+    typeLabel: json["type_label"],
     paymentsCount: json["payments_count"],
     paymentsSum: json["payments_sum"],
     excludedPaymentsCount: json["excluded_payments_count"],
@@ -165,6 +173,7 @@ export function PaymentTransactionToJSON(json: any): PaymentTransaction {
 export function PaymentTransactionToJSONTyped(
   value?: Omit<
     PaymentTransaction,
+    | "type_label"
     | "payments_count"
     | "payments_sum"
     | "excluded_payments_count"

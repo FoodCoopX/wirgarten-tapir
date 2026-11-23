@@ -38,7 +38,7 @@ const PaymentTransactionsTable: React.FC<PaymentTransactionsTableProps> = ({
           <tr key={transaction.id}>
             <td>{formatDateMonthAndYear(transaction.month)}</td>
             <td>{formatDateNumeric(transaction.createdAt)}</td>
-            <td>{transaction.type}</td>
+            <td>{transaction.typeLabel}</td>
             <td>
               {transaction.paymentsCount}
               {transaction.excludedPaymentsCount > 0 && (
