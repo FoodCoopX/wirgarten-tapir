@@ -51,6 +51,8 @@ class GetExportSegmentsView(APIView):
         cache = {}
         segment_datas = []
         for segment in ExportSegmentManager.registered_export_segments.values():
+            if segment.is_available is not None and not segment.is_available(cache):
+                continue
             segment_datas.append(
                 {
                     "id": segment.id,

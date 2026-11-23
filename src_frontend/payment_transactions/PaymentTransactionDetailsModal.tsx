@@ -127,7 +127,7 @@ const PaymentTransactionsDetailsModal: React.FC<
           <ul>
             {payments.map((payment) => (
               <li key={payment.id}>
-                {formatPaymentType(payment.type)}{" "}
+                {formatPaymentType(payment.typeLabel)}{" "}
                 {formatCurrency(payment.amount)}
                 {getPaymentRangeDetails(payment)}
                 {payment.excludedFromExport && (
@@ -148,7 +148,7 @@ const PaymentTransactionsDetailsModal: React.FC<
     <Modal show={true} onHide={onHide} centered={true} size={"xl"} scrollable>
       <Modal.Header closeButton>
         <Modal.Title>
-          Lastschrift Details: {transaction.type}{" "}
+          Lastschrift Details: {transaction.typeLabel}{" "}
           {formatDateMonthAndYear(transaction.month)}{" "}
           {formatCurrency(transaction.paymentsSum)}
           {transaction.excludedPaymentsCount > 0 &&

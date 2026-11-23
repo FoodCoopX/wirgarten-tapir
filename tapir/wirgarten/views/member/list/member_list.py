@@ -21,9 +21,12 @@ from django_filters.views import FilterView
 from tapir.accounts.services.email_verification_service import (
     EmailVerificationService,
 )
+from tapir.associations.services.association_deposit_settings import (
+    association_deposits_enabled,
+)
 from tapir.associations.models import AssociationMembershipType
-from tapir.associations.services.association_deposit_overview_provider import (
-    AssociationDepositOverviewProvider,
+from tapir.associations.services.association_deposit_annotator import (
+    AssociationDepositAnnotator,
 )
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.german_name_sort_service import GermanNameSortService
@@ -266,7 +269,7 @@ class MemberFilter(FilterSet):
             queryset, ["first_name", "last_name"], cache=self.cache
         )
         if self.show_deposits:
-            queryset = AssociationDepositOverviewProvider.annotate_members(queryset)
+            queryset = AssociationDepositAnnotator.annotate_members(queryset)
         return super().filter_queryset(queryset)
 
     def filter_deposit_status(self, queryset, name, value):
@@ -371,9 +374,7 @@ class MemberListView(PermissionRequiredMixin, FilterView):
             )
             == LEGAL_STATUS_ASSOCIATION
         )
-        context["show_deposits"] = AssociationDepositOverviewProvider.can_view(
-            user=self.request.user, cache=self.cache
-        )
+        context["show_deposits"] = association_deposits_enabled(cache=self.cache)
         context["cache"] = self.cache
         context["delivery_charge_enabled"] = get_parameter_value(
             key=ParameterKeys.DELIVERY_CHARGE_PER_PICKUP_LOCATION_ENABLED,
@@ -384,9 +385,7 @@ class MemberListView(PermissionRequiredMixin, FilterView):
     def get_filterset_kwargs(self, filterset_class):
         kwargs = super().get_filterset_kwargs(filterset_class)
         kwargs["cache"] = self.cache
-        kwargs["show_deposits"] = AssociationDepositOverviewProvider.can_view(
-            user=self.request.user, cache=self.cache
-        )
+        kwargs["show_deposits"] = association_deposits_enabled(cache=self.cache)
         return kwargs
 
     def get_queryset(self):
