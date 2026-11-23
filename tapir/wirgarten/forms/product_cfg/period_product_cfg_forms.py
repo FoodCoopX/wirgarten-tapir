@@ -5,6 +5,7 @@ from django.utils.translation import gettext_lazy as _
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.models import CustomCycleScheduledDeliveryWeek
+from tapir.products.services.product_name_validator import ProductNameValidator
 from tapir.utils.forms import DateInput
 from tapir.utils.shortcuts import get_first_of_next_month
 from tapir.wirgarten.models import (
@@ -80,6 +81,17 @@ class ProductForm(forms.Form):
                         _("Bitte lege zuerst eine Basis-Anteilsgröße an.")
                     ),
                 )
+
+        if "name" in self.cleaned_data:
+            product_id = self.cleaned_data["id"]
+            try:
+                ProductNameValidator.validate_name_is_unique(
+                    product_name=self.cleaned_data["name"],
+                    product_id=None if product_id == "-" else product_id,
+                    cache={},
+                )
+            except ValidationError as error:
+                self.add_error(field="name", error=error)
 
         return not self.errors
 
