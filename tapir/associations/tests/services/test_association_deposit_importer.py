@@ -17,8 +17,8 @@ from tapir.associations.services.association_deposit_departure_export import (
 from tapir.associations.services.association_deposit_member_service import (
     AssociationDepositMemberService,
 )
-from tapir.associations.services.association_deposit_overview_provider import (
-    AssociationDepositOverviewProvider,
+from tapir.associations.services.association_deposit_annotator import (
+    AssociationDepositAnnotator,
 )
 from tapir.associations.services.association_membership_change_handler import (
     AssociationMembershipChangeHandler,
@@ -99,9 +99,7 @@ class TestAssociationDepositImporter(TapirIntegrationTest):
             AssociationDepositImporter.import_deposit(
                 row={**rows[0], "Einlage Offen": "60"}, cache={}
             )
-        overview = AssociationDepositOverviewProvider.annotate_members(
-            Member.objects.all()
-        )
+        overview = AssociationDepositAnnotator.annotate_members(Member.objects.all())
         balance = overview.get(pk=membership.member_id)
         self.assertEqual(Decimal("200"), balance.deposit_agreed)
         self.assertEqual(Decimal("150"), balance.deposit_exported)
