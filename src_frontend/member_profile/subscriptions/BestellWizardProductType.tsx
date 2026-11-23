@@ -22,13 +22,10 @@ import { applyGrowingPeriod } from "../../bestell_wizard/utils/applyGrowingPerio
 import { buildEmptySettings } from "../../bestell_wizard/utils/buildEmptySettings.ts";
 import { buildEmptyShoppingCart } from "../../bestell_wizard/utils/buildEmptyShoppingCart.ts";
 import { buildSettings } from "../../bestell_wizard/utils/buildSettings.ts";
-import { checkPickupLocationCapacities } from "../../bestell_wizard/utils/checkPickupLocationCapacities.ts";
-import { fetchFirstDeliveryDates } from "../../bestell_wizard/utils/fetchFirstDeliveryDates.ts";
+import { evaluateOrder } from "../../bestell_wizard/utils/evaluateOrder.ts";
 import { formatShoppingCart } from "../../bestell_wizard/utils/formatShoppingCart.ts";
 import { getEmptyPersonalData } from "../../bestell_wizard/utils/getEmptyPersonalData.ts";
-import { isShoppingCartEmpty } from "../../bestell_wizard/utils/isShoppingCartEmpty.ts";
 import { onGrowingPeriodSelected } from "../../bestell_wizard/utils/onGrowingPeriodSelected.ts";
-import { updateProductsAndProductTypesOverCapacity } from "../../bestell_wizard/utils/updateProductsAndProductTypesOverCapacity.ts";
 import BestellWizardMobileBase from "../../bestell_wizard_mobile/components/BestellWizardMobileBase.tsx";
 import Step10OrderSummary from "../../bestell_wizard_mobile/steps/Step10OrderSummary.tsx";
 import Step11Legal from "../../bestell_wizard_mobile/steps/Step11Legal.tsx";
@@ -85,24 +82,18 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
   const [steps, setSteps] = useState<Step[]>(["loading"]);
   const [currentStep, setCurrentStep] = useState<Step>("loading");
   const [orderLoading, setOrderLoading] = useState(false);
-  const [checkingCapacities, setCheckingCapacities] = useState(false);
+  const [orderEvaluationLoading, setOrderEvaluationLoading] = useState(false);
   const [productIdsOverCapacity, setProductIdsOverCapacity] = useState<
     string[]
   >([]);
   const [productTypeIdsOverCapacity, setProductTypeIdsOverCapacity] = useState<
     string[]
   >([]);
-  const [checkingCapacitiesController, setCheckingCapacitiesController] =
-    useState<AbortController>();
   const [productTypesInWaitingList, setProductTypesInWaitingList] = useState<
     Set<PublicProductType>
   >(new Set<PublicProductType>());
   const [pickupLocationsWithCapacityFull, setPickupLocationsWithCapacityFull] =
     useState<Set<PublicPickupLocation>>(new Set<PublicPickupLocation>());
-  const [
-    pickupLocationsCapacityCheckLoading,
-    setPickupLocationsCapacityCheckLoading,
-  ] = useState(false);
   const [
     firstDeliveryDatesByPickupLocationAndProductType,
     setFirstDeliveryDatesByPickupLocationAndProductType,
@@ -328,17 +319,29 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
   }
 
   useEffect(() => {
-    updateProductsAndProductTypesOverCapacity(
+    if (!selectedGrowingPeriod) {
+      return;
+    }
+
+    let ignore = false;
+    evaluateOrder(
       bestellWizardApi,
       shoppingCart,
+      selectedGrowingPeriod,
+      settings.pickupLocations,
+      false,
+      setOrderEvaluationLoading,
       setProductIdsOverCapacity,
       setProductTypeIdsOverCapacity,
-      setCheckingCapacities,
+      setPickupLocationsWithCapacityFull,
+      setFirstDeliveryDatesByPickupLocationAndProductType,
       setToastDatas,
-      checkingCapacitiesController,
-      setCheckingCapacitiesController,
-      selectedGrowingPeriod,
+      () => ignore,
     );
+
+    return () => {
+      ignore = true;
+    };
   }, [shoppingCart, selectedGrowingPeriod]);
 
   useEffect(() => {
@@ -359,46 +362,6 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
     selectedPickupLocations,
     shoppingCart,
   ]);
-
-  useEffect(() => {
-    if (
-      settings.pickupLocations.length === 0 ||
-      isShoppingCartEmpty(shoppingCart)
-    ) {
-      return;
-    }
-
-    let ignore = false;
-    checkPickupLocationCapacities(
-      pickupLocationApi,
-      settings.pickupLocations,
-      shoppingCart,
-      setPickupLocationsCapacityCheckLoading,
-      setPickupLocationsWithCapacityFull,
-      setToastDatas,
-      selectedGrowingPeriod,
-      () => ignore,
-    );
-
-    return () => {
-      ignore = true;
-    };
-  }, [settings, shoppingCart, selectedGrowingPeriod]);
-
-  useEffect(() => {
-    if (!selectedGrowingPeriod) {
-      return;
-    }
-
-    fetchFirstDeliveryDates(
-      bestellWizardApi,
-      shoppingCart,
-      selectedGrowingPeriod,
-      setFirstDeliveryDatesByPickupLocationAndProductType,
-      setToastDatas,
-      undefined,
-    );
-  }, [shoppingCart, selectedGrowingPeriod]);
 
   useEffect(() => {
     setSepaAllowed(!needsBankingData);
@@ -545,9 +508,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
             settings={settings}
             selectedPickupLocations={selectedPickupLocations}
             setSelectedPickupLocations={setSelectedPickupLocations}
-            pickupLocationsCapacityCheckLoading={
-              pickupLocationsCapacityCheckLoading
-            }
+            pickupLocationsCapacityCheckLoading={orderEvaluationLoading}
             pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
             goToNextStep={goToNextStep}
             firstDeliveryDatesByPickupLocationAndProductType={
@@ -577,9 +538,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
             settings={settings}
             selectedPickupLocations={selectedPickupLocations}
             setSelectedPickupLocations={setSelectedPickupLocations}
-            pickupLocationsCapacityCheckLoading={
-              pickupLocationsCapacityCheckLoading
-            }
+            pickupLocationsCapacityCheckLoading={orderEvaluationLoading}
             pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
             goToNextStep={goToNextStep}
             stepIsActive={step === "5c_pickup_location_choice"}
@@ -716,7 +675,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
                 shoppingCart={shoppingCart}
                 setShoppingCart={setShoppingCart}
                 stepActive={step === currentStep}
-                checkingCapacities={checkingCapacities}
+                checkingCapacities={orderEvaluationLoading}
                 productTypeIdsOverCapacity={productTypeIdsOverCapacity}
                 productIdsOverCapacity={productIdsOverCapacity}
                 waitingListLinkConfirmationModeEnabled={false}

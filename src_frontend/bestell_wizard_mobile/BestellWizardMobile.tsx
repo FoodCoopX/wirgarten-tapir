@@ -10,7 +10,6 @@ import {
   CoopApi,
   DeliveryAddressRequest,
   OrderConfirmationResponse,
-  PickupLocationsApi,
   PublicPickupLocation,
   type PublicProductType,
   PublicWaitingListEntryDetails,
@@ -24,17 +23,14 @@ import { buildEmptySettings } from "../bestell_wizard/utils/buildEmptySettings.t
 import { buildEmptyShoppingCart } from "../bestell_wizard/utils/buildEmptyShoppingCart.ts";
 import { buildFilteredShoppingCart } from "../bestell_wizard/utils/buildFilteredShoppingCart.ts";
 import { buildSettings } from "../bestell_wizard/utils/buildSettings.ts";
-import { checkPickupLocationCapacities } from "../bestell_wizard/utils/checkPickupLocationCapacities.ts";
-import { fetchFirstDeliveryDates } from "../bestell_wizard/utils/fetchFirstDeliveryDates.ts";
+import { evaluateOrder } from "../bestell_wizard/utils/evaluateOrder.ts";
 import { getEmptyPersonalData } from "../bestell_wizard/utils/getEmptyPersonalData.ts";
 import { getTestPersonalData } from "../bestell_wizard/utils/getTestPersonalData.ts";
 import { isAtLeastOneProductOrdered } from "../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
-import { isShoppingCartEmpty } from "../bestell_wizard/utils/isShoppingCartEmpty.ts";
 import { onGrowingPeriodSelected } from "../bestell_wizard/utils/onGrowingPeriodSelected.ts";
 import { selectAllRequiredProductTypes } from "../bestell_wizard/utils/selectAllRequiredProductTypes.ts";
 import { sortProductTypes } from "../bestell_wizard/utils/sortProductTypes.ts";
 import { updateMinimumNumberOfShares } from "../bestell_wizard/utils/updateMinimumNumberOfShares.ts";
-import { updateProductsAndProductTypesOverCapacity } from "../bestell_wizard/utils/updateProductsAndProductTypesOverCapacity.ts";
 import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
 import { addToast } from "../utils/addToast.ts";
@@ -93,7 +89,6 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
   const bestellWizardApi = useApi(BestellWizardApi, csrfToken);
   const coopApi = useApi(CoopApi, csrfToken);
   const waitingListApi = useApi(WaitingListApi, csrfToken);
-  const pickupLocationsApi = useApi(PickupLocationsApi, csrfToken);
 
   const [baseSettings, setBaseSettings] =
     useState<BestellWizardSettings>(buildEmptySettings());
@@ -114,10 +109,6 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
   const [selectedPickupLocations, setSelectedPickupLocations] = useState<
     PublicPickupLocation[]
   >([]);
-  const [
-    pickupLocationsCapacityCheckLoading,
-    setPickupLocationsCapacityCheckLoading,
-  ] = useState(false);
   const [pickupLocationsWithCapacityFull, setPickupLocationsWithCapacityFull] =
     useState<Set<PublicPickupLocation>>(new Set<PublicPickupLocation>());
   const [selectedNumberOfCoopShares, setSelectedNumberOfCoopShares] =
@@ -142,9 +133,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     useState(false);
   const [emailAddressAlreadyInUseLoading, setEmailAddressAlreadyInUseLoading] =
     useState(false);
-  const [checkingCapacities, setCheckingCapacities] = useState(false);
-  const [checkingCapacitiesController, setCheckingCapacitiesController] =
-    useState<AbortController>();
+  const [orderEvaluationLoading, setOrderEvaluationLoading] = useState(false);
   const [productIdsOverCapacity, setProductIdsOverCapacity] = useState<
     string[]
   >([]);
@@ -371,45 +360,32 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
   }, [steps, currentStep, shoppingCart, settings]);
 
   useEffect(() => {
-    if (
-      settings.pickupLocations.length === 0 ||
-      isShoppingCartEmpty(shoppingCart)
-    ) {
+    if (!selectedGrowingPeriod) {
       return;
     }
 
     let ignore = false;
-    checkPickupLocationCapacities(
-      pickupLocationsApi,
-      settings.pickupLocations,
+    evaluateOrder(
+      bestellWizardApi,
       shoppingCart,
-      setPickupLocationsCapacityCheckLoading,
-      setPickupLocationsWithCapacityFull,
-      setToastDatas,
       selectedGrowingPeriod,
+      settings.pickupLocations,
+      waitingListEntryDetails !== undefined,
+      setOrderEvaluationLoading,
+      setProductIdsOverCapacity,
+      setProductTypeIdsOverCapacity,
+      setPickupLocationsWithCapacityFull,
+      setFirstDeliveryDatesByPickupLocationAndProductType,
+      setToastDatas,
       () => ignore,
     );
 
     return () => {
       ignore = true;
     };
-  }, [settings, shoppingCart, selectedGrowingPeriod]);
+  }, [shoppingCart, selectedGrowingPeriod]);
 
   useEffect(() => {
-    if (waitingListEntryDetails === undefined) {
-      updateProductsAndProductTypesOverCapacity(
-        bestellWizardApi,
-        shoppingCart,
-        setProductIdsOverCapacity,
-        setProductTypeIdsOverCapacity,
-        setCheckingCapacities,
-        setToastDatas,
-        checkingCapacitiesController,
-        setCheckingCapacitiesController,
-        selectedGrowingPeriod,
-      );
-    }
-
     updateMinimumNumberOfShares(
       coopApi,
       shoppingCart,
@@ -417,21 +393,6 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
       setMinimumNumberOfShares,
       setSelectedNumberOfCoopShares,
       setToastDatas,
-    );
-  }, [shoppingCart, selectedGrowingPeriod]);
-
-  useEffect(() => {
-    if (!selectedGrowingPeriod) {
-      return;
-    }
-
-    fetchFirstDeliveryDates(
-      bestellWizardApi,
-      shoppingCart,
-      selectedGrowingPeriod,
-      setFirstDeliveryDatesByPickupLocationAndProductType,
-      setToastDatas,
-      undefined,
     );
   }, [shoppingCart, selectedGrowingPeriod]);
 
@@ -801,9 +762,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             settings={settings}
             selectedPickupLocations={selectedPickupLocations}
             setSelectedPickupLocations={setSelectedPickupLocations}
-            pickupLocationsCapacityCheckLoading={
-              pickupLocationsCapacityCheckLoading
-            }
+            pickupLocationsCapacityCheckLoading={orderEvaluationLoading}
             pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
             goToNextStep={goToNextStep}
             firstDeliveryDatesByPickupLocationAndProductType={
@@ -825,9 +784,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             settings={settings}
             selectedPickupLocations={selectedPickupLocations}
             setSelectedPickupLocations={setSelectedPickupLocations}
-            pickupLocationsCapacityCheckLoading={
-              pickupLocationsCapacityCheckLoading
-            }
+            pickupLocationsCapacityCheckLoading={orderEvaluationLoading}
             pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
             goToNextStep={goToNextStep}
             stepIsActive={step === "5c_pickup_location_choice"}
@@ -1108,7 +1065,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
                 shoppingCart={shoppingCart}
                 setShoppingCart={setShoppingCart}
                 stepActive={step === currentStep}
-                checkingCapacities={checkingCapacities}
+                checkingCapacities={orderEvaluationLoading}
                 productTypeIdsOverCapacity={productTypeIdsOverCapacity}
                 productIdsOverCapacity={productIdsOverCapacity}
                 waitingListLinkConfirmationModeEnabled={
