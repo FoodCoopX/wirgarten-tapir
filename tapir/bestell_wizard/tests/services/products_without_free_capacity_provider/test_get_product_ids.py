@@ -1,6 +1,8 @@
 import datetime
 
-from tapir.bestell_wizard.views import BestellWizardBaseDataApiView
+from tapir.bestell_wizard.services.products_without_free_capacity_provider import (
+    ProductsWithoutFreeCapacityProvider,
+)
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     ProductFactory,
@@ -11,12 +13,12 @@ from tapir.wirgarten.tests.factories import (
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
-class TestBuildProductIdsThatAreAlreadyAtCapacity(TapirIntegrationTest):
+class TestGetProductIds(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
-    def test_buildProductIdsThatAreAlreadyAtCapacity_default_returnProductsThatAreAtOrOverCapacity(
+    def test_getProductIds_default_returnProductsThatAreAtOrOverCapacity(
         self,
     ):
         all_products = ProductFactory.create_batch(size=3, capacity=10)
@@ -41,10 +43,8 @@ class TestBuildProductIdsThatAreAlreadyAtCapacity(TapirIntegrationTest):
             period=growing_period, product=product_with_free_capacity, quantity=9
         )
 
-        result = (
-            BestellWizardBaseDataApiView.build_product_ids_that_are_already_at_capacity(
-                cache={}, contract_start_date=datetime.date(year=2021, month=3, day=19)
-            )
+        result = ProductsWithoutFreeCapacityProvider.get_product_ids(
+            cache={}, contract_start_date=datetime.date(year=2021, month=3, day=19)
         )
 
         self.assertEqual(

@@ -1,6 +1,8 @@
 import datetime
 
-from tapir.bestell_wizard.views import BestellWizardBaseDataApiView
+from tapir.bestell_wizard.services.products_without_free_capacity_provider import (
+    ProductsWithoutFreeCapacityProvider,
+)
 from tapir.waiting_list.tests.factories import WaitingListEntryFactory
 from tapir.wirgarten.models import WaitingListProductWish
 from tapir.wirgarten.parameters import ParameterDefinitions
@@ -15,7 +17,7 @@ from tapir.wirgarten.tests.factories import (
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
-class TestBuildProductTypeIdsThatAreAlreadyAtCapacity(TapirIntegrationTest):
+class TestGetProductTypeIds(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
@@ -45,48 +47,48 @@ class TestBuildProductTypeIdsThatAreAlreadyAtCapacity(TapirIntegrationTest):
             product=cls.product_2, size=1, valid_from=cls.growing_period.start_date
         )
 
-    def test_buildProductTypeIdsThatAreAlreadyAtCapacity_noContracts_productNotIncluded(
+    def test_getProductTypeIds_noContracts_productNotIncluded(
         self,
     ):
-        result = BestellWizardBaseDataApiView.build_product_type_ids_that_are_already_at_capacity(
+        result = ProductsWithoutFreeCapacityProvider.get_product_type_ids(
             cache={},
-            product_ids_that_are_already_at_capacity=[],
+            product_ids_without_free_capacity=[],
             contract_start_date=datetime.date(year=2023, month=3, day=17),
         )
 
         self.assertEqual([], result)
 
-    def test_buildProductTypeIdsThatAreAlreadyAtCapacity_oneProductTypeIsAtCapacity_productTypeIncluded(
+    def test_getProductTypeIds_oneProductTypeIsAtCapacity_productTypeIncluded(
         self,
     ):
         SubscriptionFactory.create(
             period=self.growing_period, product=self.product_1_m, quantity=10
         )
 
-        result = BestellWizardBaseDataApiView.build_product_type_ids_that_are_already_at_capacity(
+        result = ProductsWithoutFreeCapacityProvider.get_product_type_ids(
             cache={},
-            product_ids_that_are_already_at_capacity=[],
+            product_ids_without_free_capacity=[],
             contract_start_date=datetime.date(year=2023, month=3, day=17),
         )
 
         self.assertEqual([self.product_type_1.id], result)
 
-    def test_buildProductTypeIdsThatAreAlreadyOverCapacity_oneProductTypeIsAtCapacity_productTypeIncluded(
+    def test_getProductTypeIdsThatAreAlreadyOverCapacity_oneProductTypeIsAtCapacity_productTypeIncluded(
         self,
     ):
         SubscriptionFactory.create(
             period=self.growing_period, product=self.product_2, quantity=30
         )
 
-        result = BestellWizardBaseDataApiView.build_product_type_ids_that_are_already_at_capacity(
+        result = ProductsWithoutFreeCapacityProvider.get_product_type_ids(
             cache={},
-            product_ids_that_are_already_at_capacity=[],
+            product_ids_without_free_capacity=[],
             contract_start_date=datetime.date(year=2023, month=3, day=17),
         )
 
         self.assertEqual([self.product_type_2.id], result)
 
-    def test_buildProductTypeIdsThatAreAlreadyAtCapacity_enoughCapacityForExactlyOneProduct_productTypeNotIncluded(
+    def test_getProductTypeIds_enoughCapacityForExactlyOneProduct_productTypeNotIncluded(
         self,
     ):
         SubscriptionFactory.create(
@@ -96,24 +98,24 @@ class TestBuildProductTypeIdsThatAreAlreadyAtCapacity(TapirIntegrationTest):
             period=self.growing_period, product=self.product_1_m, quantity=1
         )
 
-        result = BestellWizardBaseDataApiView.build_product_type_ids_that_are_already_at_capacity(
+        result = ProductsWithoutFreeCapacityProvider.get_product_type_ids(
             cache={},
-            product_ids_that_are_already_at_capacity=[],
+            product_ids_without_free_capacity=[],
             contract_start_date=datetime.date(year=2023, month=3, day=17),
         )
 
         self.assertEqual([], result)
 
-    def test_buildProductTypeIdsThatAreAlreadyOverCapacity_enoughProductTypeCapacityButNotEnoughProductCapacity_productTypeIncluded(
+    def test_getProductTypeIdsThatAreAlreadyOverCapacity_enoughProductTypeCapacityButNotEnoughProductCapacity_productTypeIncluded(
         self,
     ):
         SubscriptionFactory.create(
             period=self.growing_period, product=self.product_1_m, quantity=2
         )
 
-        result = BestellWizardBaseDataApiView.build_product_type_ids_that_are_already_at_capacity(
+        result = ProductsWithoutFreeCapacityProvider.get_product_type_ids(
             cache={},
-            product_ids_that_are_already_at_capacity=[
+            product_ids_without_free_capacity=[
                 self.product_1_m.id,
                 self.product_1_l.id,
             ],
@@ -122,16 +124,16 @@ class TestBuildProductTypeIdsThatAreAlreadyAtCapacity(TapirIntegrationTest):
 
         self.assertEqual([self.product_type_1.id], result)
 
-    def test_buildProductTypeIdsThatAreAlreadyOverCapacity_waitingListEntryTakesCapacity_productTypeIncluded(
+    def test_getProductTypeIdsThatAreAlreadyOverCapacity_waitingListEntryTakesCapacity_productTypeIncluded(
         self,
     ):
         SubscriptionFactory.create(
             period=self.growing_period, product=self.product_1_m, quantity=8
         )
 
-        result = BestellWizardBaseDataApiView.build_product_type_ids_that_are_already_at_capacity(
+        result = ProductsWithoutFreeCapacityProvider.get_product_type_ids(
             cache={},
-            product_ids_that_are_already_at_capacity=[],
+            product_ids_without_free_capacity=[],
             contract_start_date=datetime.date(year=2023, month=3, day=17),
         )
         self.assertEqual([], result)
@@ -141,9 +143,9 @@ class TestBuildProductTypeIdsThatAreAlreadyAtCapacity(TapirIntegrationTest):
             waiting_list_entry=waiting_list_entry, product=self.product_1_m, quantity=2
         )
 
-        result = BestellWizardBaseDataApiView.build_product_type_ids_that_are_already_at_capacity(
+        result = ProductsWithoutFreeCapacityProvider.get_product_type_ids(
             cache={},
-            product_ids_that_are_already_at_capacity=[],
+            product_ids_without_free_capacity=[],
             contract_start_date=datetime.date(year=2023, month=3, day=17),
         )
         self.assertEqual([self.product_type_1.id], result)

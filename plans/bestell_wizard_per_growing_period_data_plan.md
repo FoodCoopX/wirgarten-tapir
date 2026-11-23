@@ -43,7 +43,7 @@ Delivered in two PRs. PR 1 fixes LEM#267 and can be deployed on its own. Each st
 
 ### Step 1.2: at-capacity lists as a service (backend)
 
-- Move `build_product_ids_that_are_already_at_capacity` and `build_product_type_ids_that_are_already_at_capacity` out of `BestellWizardBaseDataApiView` into `tapir/bestell_wizard/services/already_at_capacity_provider.py`; the view calls the service.
+- Move `build_product_ids_that_are_already_at_capacity` and `build_product_type_ids_that_are_already_at_capacity` out of `BestellWizardBaseDataApiView` into `ProductsWithoutFreeCapacityProvider` (`get_product_ids`, `get_product_type_ids`); the view calls the service.
 - Move their tests along.
 - Pure refactoring, no API change.
 
