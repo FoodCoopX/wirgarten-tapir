@@ -350,7 +350,7 @@ class TestContractCreator(TapirIntegrationTest):
         )
         return period, bidding_round, old_product, new_product
 
-    def test_createContracts_withAutoRenewed_createsContractAndFloor(self):
+    def test_createContracts_withAutoRenewed_usesTheFrozenRoundPrice(self):
         bidding_round, bid, product, period = self._create_closed_round_with_bid(
             bid_amount=Decimal("80.00"), standard_price=Decimal("50.00")
         )
@@ -396,15 +396,21 @@ class TestContractCreator(TapirIntegrationTest):
                 create_auto_renewed_contracts=True,
             )
 
-        self.assertTrue(
-            BiddingRoundCreatedSubscription.objects.filter(
-                round=bidding_round, subscription=renewed_subscription
+        link = BiddingRoundCreatedSubscription.objects.get(
+            round=bidding_round, subscription=renewed_subscription
+        )
+        self.assertEqual(Decimal("90.0000"), link.monthly_price_per_share)
+        self.assertEqual(
+            Decimal("90.00"),
+            SubscriptionPriceCalculator.get_monthly_price(
+                renewed_subscription, reference_date=period.start_date, cache={}
+            ),
+        )
+        self.assertFalse(
+            SolidarityContribution.objects.filter(
+                member=non_bidder, start_date=period.start_date
             ).exists()
         )
-        contribution = SolidarityContribution.objects.get(
-            member=non_bidder, start_date=period.start_date
-        )
-        self.assertEqual(Decimal("30.00"), contribution.amount)
 
     def _create_closed_round_with_bid(self, bid_amount, standard_price, quantity=1):
         period = GrowingPeriodFactory.create(

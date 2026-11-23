@@ -11,6 +11,7 @@ from tapir.bidding_round.models import (
     Bid,
     BiddingRound,
     BiddingRoundCreatedSubscription,
+    BiddingRoundProductPrice,
 )
 from tapir.bidding_round.services.bidding_round_stats_service import (
     BiddingRoundStatsService,
@@ -181,13 +182,47 @@ class ContractCreator:
             )
             if renewed_subscription.period_id != bidding_round.growing_period_id:
                 continue
+            if subscription.price_override == 0:
+                renewed_subscription.price_override = Decimal("0")
+            else:
+                renewed_subscription.price_override = None
+            renewed_subscription.price_mode = (
+                Subscription.PriceMode.BIDDING_ROUND_AUTO_RENEWED
+            )
             renewed_subscription.save()
             BiddingRoundCreatedSubscription.objects.create(
                 round=bidding_round,
                 subscription=renewed_subscription,
+                monthly_price_per_share=cls._get_auto_renewed_price_per_share(
+                    bidding_round, renewed_subscription.product, cache
+                ),
             )
             created.append(renewed_subscription)
         return created
+
+    @classmethod
+    def _get_auto_renewed_price_per_share(
+        cls, bidding_round: BiddingRound, product: Product, cache: dict
+    ) -> Decimal:
+        """The round price for a member who did not bid.
+
+        Non-bidders pay at least the round's reference value; if the bidders' rate is
+        higher, it wins. The per-share amount is scaled to the product's share size and
+        frozen on the link, so later round changes cannot move the contract's price.
+        """
+        price = BiddingRoundProductPrice.objects.filter(
+            round=bidding_round,
+            product=product,
+        ).first()
+        rate = BiddingRoundStatsService.build_non_bidder_rate_per_share(
+            bidding_round, cache
+        )
+        if price is not None and price.reference_value is not None:
+            rate = max(price.reference_value, rate)
+        size = BiddingRoundStatsService.get_product_size(
+            product, bidding_round, cache
+        )
+        return (rate * size).quantize(Decimal("0.0001"))
 
     @classmethod
     def _create_contracts_for_bid(
