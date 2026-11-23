@@ -23,6 +23,7 @@ from tapir.wirgarten.models import Subscription
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     GrowingPeriodFactory,
+    MemberFactory,
     ProductFactory,
     ProductPriceFactory,
     SubscriptionFactory,
@@ -160,6 +161,76 @@ class TestContractCreator(TapirIntegrationTest):
             ).exists()
         )
 
+    def test_createContracts_otherShareSizeNotStarted_replacesIt(self):
+        period, bidding_round, old_product, new_product = (
+            self._create_round_with_two_share_sizes()
+        )
+        member = MemberFactory.create()
+        existing = SubscriptionFactory.create(
+            member=member,
+            product=old_product,
+            period=period,
+            quantity=1,
+            start_date=period.start_date,
+            end_date=period.end_date,
+        )
+        BidFactory.create(
+            round=bidding_round,
+            member=member,
+            product=new_product,
+            amount_1=Decimal("80.00"),
+        )
+
+        result = ContractCreator.create_contracts_from_bids(
+            bidding_round, cache={}, actor=member
+        )
+
+        self.assertEqual([], result["errors"])
+        self.assertFalse(Subscription.objects.filter(pk=existing.pk).exists())
+        new_subscription = Subscription.objects.get(member=member, product=new_product)
+        self.assertEqual(
+            Subscription.PriceMode.BIDDING_ROUND_BID, new_subscription.price_mode
+        )
+        self.assertEqual(
+            1,
+            Subscription.objects.filter(
+                member=member, cancellation_ts__isnull=True
+            ).count(),
+        )
+
+    def test_createContracts_otherShareSizeStarted_reportsErrorAndWritesNothing(self):
+        period, bidding_round, old_product, new_product = (
+            self._create_round_with_two_share_sizes()
+        )
+        member = MemberFactory.create()
+        existing = SubscriptionFactory.create(
+            member=member,
+            product=old_product,
+            period=period,
+            quantity=1,
+            start_date=get_now(cache={}).date() - datetime.timedelta(days=10),
+            end_date=period.end_date,
+        )
+        BidFactory.create(
+            round=bidding_round,
+            member=member,
+            product=new_product,
+            amount_1=Decimal("80.00"),
+        )
+
+        result = ContractCreator.create_contracts_from_bids(
+            bidding_round, cache={}, actor=member
+        )
+
+        self.assertEqual(1, len(result["errors"]))
+        self.assertIn("anderen Anteilsgröße", result["errors"][0]["error"])
+        self.assertTrue(Subscription.objects.filter(pk=existing.pk).exists())
+        self.assertFalse(
+            Subscription.objects.filter(member=member, product=new_product).exists()
+        )
+        bidding_round.refresh_from_db()
+        self.assertIsNone(bidding_round.contracts_created_at)
+
     def test_createContracts_calledTwice_raisesValidationError(self):
         bidding_round, bid, _product, _period = self._create_closed_round_with_bid(
             bid_amount=Decimal("80.00"), standard_price=Decimal("50.00")
@@ -208,6 +279,31 @@ class TestContractCreator(TapirIntegrationTest):
                 round=bidding_round, subscription__member=other_bid.member
             ).exists()
         )
+
+    def _create_round_with_two_share_sizes(self):
+        period = GrowingPeriodFactory.create(
+            start_date=get_now(cache={}).date() + datetime.timedelta(days=30)
+        )
+        bidding_round = BiddingRoundFactory.create(
+            growing_period=period, status=BIDDING_ROUND_STATUS_CLOSED
+        )
+        old_product = ProductFactory.create(
+            type=bidding_round.product_type, name="Mittlere Kiste"
+        )
+        new_product = ProductFactory.create(
+            type=bidding_round.product_type, name="Große Kiste"
+        )
+        ProductPriceFactory.create(
+            product=new_product,
+            price=Decimal("50.00"),
+            size=1,
+            valid_from=period.start_date - datetime.timedelta(days=1),
+        )
+        BiddingRoundProductPriceFactory.create(
+            round=bidding_round,
+            product=new_product,
+        )
+        return period, bidding_round, old_product, new_product
 
     def _create_closed_round_with_bid(self, bid_amount, standard_price, quantity=1):
         period = GrowingPeriodFactory.create(

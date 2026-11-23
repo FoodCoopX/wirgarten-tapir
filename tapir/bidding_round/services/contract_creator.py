@@ -24,8 +24,9 @@ from tapir.subscriptions.services.notice_period_manager import NoticePeriodManag
 from tapir.subscriptions.services.subscription_price_calculator import (
     SubscriptionPriceCalculator,
 )
+from tapir.wirgarten.forms.subscription import cancel_or_delete_subscriptions
 from tapir.wirgarten.models import GrowingPeriod, Member, Product, Subscription
-from tapir.wirgarten.utils import get_now
+from tapir.wirgarten.utils import get_now, get_today
 
 logger = logging.getLogger(__name__)
 
@@ -104,6 +105,7 @@ class ContractCreator:
         cache: dict,
     ) -> list[Subscription]:
         period = bidding_round.growing_period
+        cls._replace_other_share_sizes(bid, bidding_round, actor, cache)
         subscription = cls._get_existing_subscription(bid.member, bid.product, period)
         if subscription is None:
             subscription = cls._build_subscription(bid, period, cache)
@@ -130,6 +132,39 @@ class ContractCreator:
 
         cls._assign_solidarity_contribution(bid, subscriptions, period, actor, cache)
         return subscriptions
+
+    @classmethod
+    def _replace_other_share_sizes(
+        cls, bid: Bid, bidding_round: BiddingRound, actor: Member | None, cache: dict
+    ) -> None:
+        """Replaces the member's contracts of other share sizes in the round's period.
+
+        The auto-renewal can create a contract for the coming season before the round
+        creates anything, so a bid on another size would otherwise result in two
+        contracts: the old one keeps its own price and only the new one is priced from
+        the round. A contract that already started is not replaced; the bid is
+        reported as an error instead.
+        """
+        conflicting = Subscription.objects.filter(
+            member=bid.member,
+            period=bidding_round.growing_period,
+            product__type_id=bidding_round.product_type_id,
+            cancellation_ts__isnull=True,
+        ).exclude(product_id=bid.product_id)
+        if conflicting.filter(start_date__lte=get_today(cache=cache)).exists():
+            raise ValidationError(
+                _(
+                    "Für dieses Mitglied läuft in dieser Periode bereits ein Vertrag einer anderen Anteilsgröße. Der Wechsel muss manuell geklärt werden."
+                )
+            )
+        cancel_or_delete_subscriptions(
+            member=bid.member,
+            start_date=bidding_round.growing_period.start_date,
+            product_type=bidding_round.product_type,
+            actor=actor,
+            exclude_product_id=bid.product_id,
+            cache=cache,
+        )
 
     @classmethod
     def _get_price_per_share(
