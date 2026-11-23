@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Spinner } from "react-bootstrap";
 import { v4 as uuidv4 } from "uuid";
 import "../../tapir/core/static/core/bootstrap/5.3.8/css/bootstrap.min.css";
@@ -19,6 +19,7 @@ import {
 import { BestellWizardSettings } from "../bestell_wizard/types/BestellWizardSettings.ts";
 import { PersonalData } from "../bestell_wizard/types/PersonalData.ts";
 import { ShoppingCart } from "../bestell_wizard/types/ShoppingCart.ts";
+import { applyGrowingPeriod } from "../bestell_wizard/utils/applyGrowingPeriod.ts";
 import { buildEmptySettings } from "../bestell_wizard/utils/buildEmptySettings.ts";
 import { buildEmptyShoppingCart } from "../bestell_wizard/utils/buildEmptyShoppingCart.ts";
 import { buildFilteredShoppingCart } from "../bestell_wizard/utils/buildFilteredShoppingCart.ts";
@@ -38,7 +39,6 @@ import { ToastData } from "../types/ToastData.ts";
 import { addToast } from "../utils/addToast.ts";
 import { fromApiDate } from "../utils/apiDate.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
-import { updateProductPrices } from "../utils/updateProductPrices.ts";
 import BestellWizardMobileBase from "./components/BestellWizardMobileBase.tsx";
 import Step10OrderSummary from "./steps/Step10OrderSummary.tsx";
 import Step11Legal from "./steps/Step11Legal.tsx";
@@ -94,7 +94,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
   const waitingListApi = useApi(WaitingListApi, csrfToken);
   const pickupLocationsApi = useApi(PickupLocationsApi, csrfToken);
 
-  const [settings, setSettings] =
+  const [baseSettings, setBaseSettings] =
     useState<BestellWizardSettings>(buildEmptySettings());
   const [settingsLoaded, setSettingsLoaded] = useState(false);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
@@ -159,8 +159,10 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     useState<PickupLocationTab>("map");
   const [selectedGrowingPeriod, setSelectedGrowingPeriod] =
     useState<BestellWizardGrowingPeriodChoice>();
-  const [productPricesController, setProductPricesController] =
-    useState<AbortController>();
+  const settings = useMemo(
+    () => applyGrowingPeriod(baseSettings, selectedGrowingPeriod),
+    [baseSettings, selectedGrowingPeriod],
+  );
   const [confirmOrderLoading, setConfirmOrderLoading] = useState(false);
   const [feedback, setFeedback] = useState("");
   const [
@@ -191,7 +193,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
         if (waitingListEntryDetails) {
           newSettings.forceWaitingList = false;
         }
-        setSettings(newSettings);
+        setBaseSettings(newSettings);
         setSettingsLoaded(true);
         setSelectedProductTypes(
           newSettings.introEnabled ? [] : newSettings.productTypes,
@@ -207,9 +209,11 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
 
           const productTypesFromWishes = (
             waitingListEntryDetails.productWishes ?? []
-          ).map((productWish) =>
-            getProductTypeByProductId(productWish.product.id!, newSettings)!,
-          );
+          )
+            .map((productWish) =>
+              getProductTypeByProductId(productWish.product.id!, newSettings),
+            )
+            .filter((productType) => productType !== undefined);
           setSelectedProductTypes(
             sortProductTypes([...new Set(productTypesFromWishes)]),
           );
@@ -273,16 +277,6 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     if (!selectedGrowingPeriod) {
       return;
     }
-
-    updateProductPrices(
-      bestellWizardApi,
-      selectedGrowingPeriod,
-      productPricesController,
-      setProductPricesController,
-      settings,
-      setSettings,
-      setToastDatas,
-    );
 
     setContractStartDate(fromApiDate(selectedGrowingPeriod.contractStartDate));
 
@@ -445,6 +439,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
       setProductTypesInWaitingList,
     );
   }, [
+    settings,
     productTypeIdsOverCapacity,
     productIdsOverCapacity,
     pickupLocationsWithCapacityFull,
@@ -751,7 +746,6 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             investingMembership={investingMembership}
             setInvestingMembership={setInvestingMembership}
             setShoppingCart={setShoppingCart}
-            selectedGrowingPeriod={selectedGrowingPeriod}
             stepActive={step === currentStep}
           />
         );

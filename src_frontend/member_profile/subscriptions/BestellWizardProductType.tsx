@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Spinner } from "react-bootstrap";
 
 import "../../../tapir/core/static/core/bootstrap/5.3.8/css/bootstrap.min.css";
@@ -18,6 +18,7 @@ import {
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { PersonalData } from "../../bestell_wizard/types/PersonalData.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
+import { applyGrowingPeriod } from "../../bestell_wizard/utils/applyGrowingPeriod.ts";
 import { buildEmptySettings } from "../../bestell_wizard/utils/buildEmptySettings.ts";
 import { buildEmptyShoppingCart } from "../../bestell_wizard/utils/buildEmptyShoppingCart.ts";
 import { buildSettings } from "../../bestell_wizard/utils/buildSettings.ts";
@@ -76,14 +77,13 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
   const paymentsApi = useApi(PaymentsApi, csrfToken);
   const coopApi = useApi(CoopApi, csrfToken);
 
-  const [settings, setSettings] =
+  const [baseSettings, setBaseSettings] =
     useState<BestellWizardSettings>(buildEmptySettings());
   const [settingsLoaded, setSettingsLoaded] = useState(false);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
   const [steps, setSteps] = useState<Step[]>(["loading"]);
   const [currentStep, setCurrentStep] = useState<Step>("loading");
   const [orderLoading, setOrderLoading] = useState(false);
-  const [productType, setProductType] = useState<PublicProductType>();
   const [checkingCapacities, setCheckingCapacities] = useState(false);
   const [productIdsOverCapacity, setProductIdsOverCapacity] = useState<
     string[]
@@ -127,6 +127,13 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
   >([]);
   const [selectedGrowingPeriod, setSelectedGrowingPeriod] =
     useState<BestellWizardGrowingPeriodChoice>();
+  const settings = useMemo(
+    () => applyGrowingPeriod(baseSettings, selectedGrowingPeriod),
+    [baseSettings, selectedGrowingPeriod],
+  );
+  const productType = settings.productTypes.find(
+    (productType) => productType.id === productTypeId,
+  );
   const [shoppingCart, setShoppingCart] = useState<ShoppingCart>({});
   const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>("pickup");
   const [deliveryAddress, setDeliveryAddress] =
@@ -164,10 +171,12 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
           memberDeliveryAddress,
         ]) => {
           const newSettings = buildSettings(baseData);
-          for (const productType of newSettings.productTypes) {
-            productType.mustBeSubscribedTo = true;
+          for (const growingPeriod of newSettings.growingPeriodChoices) {
+            for (const productType of growingPeriod.productTypes) {
+              productType.mustBeSubscribedTo = true;
+            }
           }
-          setSettings(newSettings);
+          setBaseSettings(newSettings);
           setSettingsLoaded(true);
 
           if (newSettings.growingPeriodChoices.length > 0) {
@@ -175,12 +184,6 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
           }
 
           setShoppingCart(buildEmptyShoppingCart(newSettings.productTypes));
-
-          setProductType(
-            newSettings.productTypes.find(
-              (productType) => productType.id === productTypeId,
-            ),
-          );
 
           setDeliveryAddress({
             sameAsBillingAddress: memberDeliveryAddress.sameAsBillingAddress,
@@ -348,6 +351,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
       setProductTypesInWaitingList,
     );
   }, [
+    settings,
     productTypeIdsOverCapacity,
     productIdsOverCapacity,
     pickupLocationsWithCapacityFull,
