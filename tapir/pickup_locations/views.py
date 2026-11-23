@@ -64,6 +64,9 @@ from tapir.pickup_locations.services.pickup_location_deletion_validator import (
 from tapir.pickup_locations.services.pickup_location_validator import (
     PickupLocationValidator,
 )
+from tapir.pickup_locations.services.pickup_locations_with_enough_capacity_provider import (
+    PickupLocationsWithEnoughCapacityProvider,
+)
 from tapir.pickup_locations.services.public_pickup_locations_provider import (
     PublicPickupLocationProvider,
 )
@@ -369,24 +372,11 @@ class PickupLocationCapacityCheckApiView(APIView):
                 cache=self.cache,
             )
 
-        candidates = (
-            PublicPickupLocationProvider.get_pickup_locations_available_for_members(
-                cache=self.cache,
-                reference_date=subscription_start,
+        pickup_location_ids_with_enough_capacity_for_order = (
+            PickupLocationsWithEnoughCapacityProvider.get_pickup_location_ids(
+                order=order, subscription_start=subscription_start, cache=self.cache
             )
         )
-
-        pickup_location_ids_with_enough_capacity_for_order = [
-            pickup_location.id
-            for pickup_location in candidates
-            if PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
-                pickup_location=pickup_location,
-                order=order,
-                already_registered_member=None,
-                subscription_start=subscription_start,
-                cache=self.cache,
-            )
-        ]
 
         return Response(
             PickupLocationCapacityCheckResponseSerializer(
