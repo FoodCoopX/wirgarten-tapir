@@ -85,7 +85,7 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
               >
                 Zeichnung: {creation.quantity}
                 {" × "}
-                {creation.product.name} {creation.product.type.name} am{" "}
+                {creation.product.name} am{" "}
                 {formatDateNumeric(creation.startDate)}
                 {creation.autoConfirmed
                   ? " (automatische Bestätigung schon versendet)"
@@ -98,7 +98,7 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
               <li key={cancellation.id}>
                 Kündigung: {cancellation.quantity}
                 {" × "}
-                {cancellation.product.name} {cancellation.product.type.name} zum{" "}
+                {cancellation.product.name} zum{" "}
                 {formatDateNumeric(cancellation.endDate)}
               </li>
             );

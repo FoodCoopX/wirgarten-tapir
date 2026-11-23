@@ -119,7 +119,7 @@ class JokerValueService:
     def _get_subscription_part(
         cls, subscription: Subscription, delivery_date: datetime.date, cache: dict
     ) -> CalculationPart:
-        name = f"{subscription.product.type.name} {subscription.product.name}"
+        name = subscription.product.name
         delivery_cycle = subscription.product.type.delivery_cycle
 
         if delivery_cycle != CUSTOM_CYCLE[0] and (

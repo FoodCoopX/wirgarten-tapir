@@ -33,10 +33,8 @@ interface CancellationStepSubscriptionsProps {
 
 function getCheckboxLabelProduct(subscribedProduct: ProductForCancellation) {
   let result =
-    subscribedProduct.product.type.name +
-    " (" +
     subscribedProduct.product.name +
-    ") zum " +
+    " zum " +
     formatDateText(subscribedProduct.cancellationDate) +
     " kündigen";
   if (subscribedProduct.isInTrial) {

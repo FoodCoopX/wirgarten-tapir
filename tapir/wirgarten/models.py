@@ -539,7 +539,7 @@ class Product(TapirModel):
         ]
 
     def __str__(self):
-        return f"{self.name} ({self.type.name})"
+        return self.name
 
 
 class ProductPrice(TapirModel):
@@ -671,17 +671,17 @@ class Subscription(TapirModel, AdminConfirmableMixin):
 
     def __str__(self):
         return (
-            f"{self.quantity} × {self.product.name} {self.product.type.name}; "
+            f"{self.quantity} × {self.product.name}; "
             f"from {self.start_date} to {self.end_date}"
         )
 
     def short_str(self):
-        return f"{self.quantity}×{self.product.name},{self.product.type.name}"
+        return f"{self.quantity}×{self.product.name}"
 
     def long_str(self):
         return (
-            f"{self.quantity} × {self.product.name} {self.product.type.name} "
-            + f" ({format_date(self.start_date)} - {format_date(self.end_date)})"
+            f"{self.quantity} × {self.product.name} "
+            f"({format_date(self.start_date)} - {format_date(self.end_date)})"
         )
 
 
