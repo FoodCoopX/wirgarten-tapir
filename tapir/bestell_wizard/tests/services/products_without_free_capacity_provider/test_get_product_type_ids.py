@@ -51,6 +51,7 @@ class TestGetProductTypeIds(TapirIntegrationTest):
         self,
     ):
         result = ProductsWithoutFreeCapacityProvider.get_product_type_ids(
+            product_types=[self.product_type_1, self.product_type_2],
             cache={},
             product_ids_without_free_capacity=[],
             contract_start_date=datetime.date(year=2023, month=3, day=17),
@@ -66,6 +67,7 @@ class TestGetProductTypeIds(TapirIntegrationTest):
         )
 
         result = ProductsWithoutFreeCapacityProvider.get_product_type_ids(
+            product_types=[self.product_type_1, self.product_type_2],
             cache={},
             product_ids_without_free_capacity=[],
             contract_start_date=datetime.date(year=2023, month=3, day=17),
@@ -81,6 +83,7 @@ class TestGetProductTypeIds(TapirIntegrationTest):
         )
 
         result = ProductsWithoutFreeCapacityProvider.get_product_type_ids(
+            product_types=[self.product_type_1, self.product_type_2],
             cache={},
             product_ids_without_free_capacity=[],
             contract_start_date=datetime.date(year=2023, month=3, day=17),
@@ -99,6 +102,7 @@ class TestGetProductTypeIds(TapirIntegrationTest):
         )
 
         result = ProductsWithoutFreeCapacityProvider.get_product_type_ids(
+            product_types=[self.product_type_1, self.product_type_2],
             cache={},
             product_ids_without_free_capacity=[],
             contract_start_date=datetime.date(year=2023, month=3, day=17),
@@ -114,6 +118,7 @@ class TestGetProductTypeIds(TapirIntegrationTest):
         )
 
         result = ProductsWithoutFreeCapacityProvider.get_product_type_ids(
+            product_types=[self.product_type_1, self.product_type_2],
             cache={},
             product_ids_without_free_capacity=[
                 self.product_1_m.id,
@@ -132,6 +137,7 @@ class TestGetProductTypeIds(TapirIntegrationTest):
         )
 
         result = ProductsWithoutFreeCapacityProvider.get_product_type_ids(
+            product_types=[self.product_type_1, self.product_type_2],
             cache={},
             product_ids_without_free_capacity=[],
             contract_start_date=datetime.date(year=2023, month=3, day=17),
@@ -144,6 +150,7 @@ class TestGetProductTypeIds(TapirIntegrationTest):
         )
 
         result = ProductsWithoutFreeCapacityProvider.get_product_type_ids(
+            product_types=[self.product_type_1, self.product_type_2],
             cache={},
             product_ids_without_free_capacity=[],
             contract_start_date=datetime.date(year=2023, month=3, day=17),

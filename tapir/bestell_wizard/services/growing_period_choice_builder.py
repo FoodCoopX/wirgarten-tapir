@@ -36,22 +36,26 @@ class GrowingPeriodChoiceBuilder:
                 growing_period=growing_period, apply_buffer_time=True, cache=cache
             )
         )
+        product_types = cls._get_product_types(
+            growing_period=growing_period, cache=cache
+        )
         product_ids_without_free_capacity = (
             ProductsWithoutFreeCapacityProvider.get_product_ids(
-                cache=cache, contract_start_date=contract_start_date
+                product_types=product_types,
+                contract_start_date=contract_start_date,
+                cache=cache,
             )
         )
 
         return GrowingPeriodChoice(
             growing_period=growing_period,
             contract_start_date=contract_start_date,
-            product_types=cls._get_product_types(
-                growing_period=growing_period, cache=cache
-            ),
+            product_types=product_types,
             product_type_ids_that_are_already_at_capacity=ProductsWithoutFreeCapacityProvider.get_product_type_ids(
-                cache=cache,
+                product_types=product_types,
                 product_ids_without_free_capacity=product_ids_without_free_capacity,
                 contract_start_date=contract_start_date,
+                cache=cache,
             ),
             product_ids_that_are_already_at_capacity=product_ids_without_free_capacity,
             pickup_locations=list(

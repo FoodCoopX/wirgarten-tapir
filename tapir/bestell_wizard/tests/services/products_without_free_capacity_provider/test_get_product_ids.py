@@ -44,9 +44,34 @@ class TestGetProductIds(TapirIntegrationTest):
         )
 
         result = ProductsWithoutFreeCapacityProvider.get_product_ids(
-            cache={}, contract_start_date=datetime.date(year=2021, month=3, day=19)
+            product_types=[product.type for product in all_products],
+            contract_start_date=datetime.date(year=2021, month=3, day=19),
+            cache={},
         )
 
         self.assertEqual(
             {product_over_capacity.id, product_at_capacity.id}, set(result)
         )
+
+    def test_getProductIds_productOfAnotherProductType_notChecked(self):
+        growing_period = GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2021, month=1, day=1)
+        )
+        product_of_given_type, product_of_other_type = ProductFactory.create_batch(
+            size=2, capacity=10
+        )
+        for product in [product_of_given_type, product_of_other_type]:
+            ProductPriceFactory.create(
+                product=product, size=1, valid_from=growing_period.start_date
+            )
+            SubscriptionFactory.create(
+                period=growing_period, product=product, quantity=10
+            )
+
+        result = ProductsWithoutFreeCapacityProvider.get_product_ids(
+            product_types=[product_of_given_type.type],
+            contract_start_date=datetime.date(year=2021, month=3, day=19),
+            cache={},
+        )
+
+        self.assertEqual([product_of_given_type.id], result)

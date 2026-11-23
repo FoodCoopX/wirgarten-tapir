@@ -1,9 +1,5 @@
 import React from "react";
-import {
-  BestellWizardGrowingPeriodChoice,
-  PickupLocationsApi,
-  PublicPickupLocation,
-} from "../../api-client";
+import { PickupLocationsApi, PublicPickupLocation } from "../../api-client";
 import { ToastData } from "../../types/ToastData.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 import { ShoppingCart } from "../types/ShoppingCart.ts";
@@ -19,7 +15,6 @@ export function checkPickupLocationCapacities(
     React.SetStateAction<Set<PublicPickupLocation>>
   >,
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>,
-  growingPeriod: BestellWizardGrowingPeriodChoice | undefined,
   isIgnored: () => boolean,
 ) {
   setPickupLocationsCapacityCheckLoading(true);
@@ -28,7 +23,6 @@ export function checkPickupLocationCapacities(
     .pickupLocationsApiPickupLocationCapacityCheckCreate({
       pickupLocationCapacityCheckRequestRequest: {
         shoppingCart: shoppingCart,
-        growingPeriodId: growingPeriod ? growingPeriod.id! : null,
       },
     })
     .then((response) => {

@@ -16599,12 +16599,7 @@ components:
           type: object
           additionalProperties:
             type: integer
-        growing_period_id:
-          type: string
-          nullable: true
-          minLength: 1
       required:
-      - growing_period_id
       - shopping_cart
     PickupLocationCapacityCheckResponse:
       type: object

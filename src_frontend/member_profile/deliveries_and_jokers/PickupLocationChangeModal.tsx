@@ -215,7 +215,6 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
       setPickupLocationsCapacityCheckLoading,
       setPickupLocationsWithCapacityFull,
       setToastDatas,
-      undefined,
       () => ignore,
     );
 

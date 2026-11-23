@@ -352,25 +352,11 @@ class PickupLocationCapacityCheckApiView(APIView):
             shopping_cart=serializer.validated_data["shopping_cart"], cache=self.cache
         )
 
-        growing_period_id = serializer.validated_data.get("growing_period_id", None)
-        if growing_period_id is None:
-            subscription_start = (
-                ContractStartDateCalculator.get_next_contract_start_date(
-                    reference_date=get_today(cache=self.cache),
-                    apply_buffer_time=True,
-                    cache=self.cache,
-                )
-            )
-        else:
-            growing_period = get_object_or_404(
-                GrowingPeriod, id=serializer.validated_data["growing_period_id"]
-            )
-
-            subscription_start = ContractStartDateCalculator.get_next_contract_start_date_in_growing_period(
-                growing_period=growing_period,
-                apply_buffer_time=True,
-                cache=self.cache,
-            )
+        subscription_start = ContractStartDateCalculator.get_next_contract_start_date(
+            reference_date=get_today(cache=self.cache),
+            apply_buffer_time=True,
+            cache=self.cache,
+        )
 
         pickup_location_ids_with_enough_capacity_for_order = (
             PickupLocationsWithEnoughCapacityProvider.get_pickup_location_ids(

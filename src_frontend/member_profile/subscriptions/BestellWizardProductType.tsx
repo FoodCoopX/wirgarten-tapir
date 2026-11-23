@@ -162,7 +162,15 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
           bankingData,
           memberDeliveryAddress,
         ]) => {
-          const newSettings = buildSettings(baseData);
+          const newSettings = buildSettings({
+            ...baseData,
+            growingPeriodChoices: baseData.growingPeriodChoices.filter(
+              (growingPeriod) =>
+                growingPeriod.productTypes.some(
+                  (productType) => productType.id === productTypeId,
+                ),
+            ),
+          });
           for (const growingPeriod of newSettings.growingPeriodChoices) {
             for (const productType of growingPeriod.productTypes) {
               productType.mustBeSubscribedTo = true;

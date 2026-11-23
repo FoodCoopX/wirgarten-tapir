@@ -65,6 +65,7 @@ import { Phase } from "./types/Phase.ts";
 import { PickupLocationTab } from "./types/PickupLocationTab.ts";
 import { Step } from "./types/Step.ts";
 import { buildSteps } from "./utils/buildSteps.ts";
+import { getGrowingPeriodForWaitingListEntry } from "./utils/getGrowingPeriodForWaitingListEntry.ts";
 import { getPhase } from "./utils/getPhase.ts";
 import { getPickupLocationsForDeliveryMode } from "./utils/getPickupLocationsForDeliveryMode.ts";
 import { getProductTypeByProductId } from "./utils/getProductTypeByProductId.ts";
@@ -186,7 +187,16 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     bestellWizardApi
       .bestellWizardApiBestellWizardBaseDataRetrieve()
       .then((baseData) => {
-        const newSettings = buildSettings(baseData);
+        const initialGrowingPeriod = waitingListEntryDetails
+          ? getGrowingPeriodForWaitingListEntry(
+              baseData.growingPeriodChoices,
+              waitingListEntryDetails,
+            )
+          : baseData.growingPeriodChoices[0];
+        const newSettings = applyGrowingPeriod(
+          buildSettings(baseData),
+          initialGrowingPeriod,
+        );
         if (waitingListEntryDetails) {
           newSettings.forceWaitingList = false;
         }
@@ -254,8 +264,8 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
 
         setPersonalData({ ...personalData });
 
-        if (newSettings.growingPeriodChoices.length > 0) {
-          setSelectedGrowingPeriod(newSettings.growingPeriodChoices[0]);
+        if (initialGrowingPeriod) {
+          setSelectedGrowingPeriod(initialGrowingPeriod);
         }
 
         setSolidarityContribution(settings.solidarityContributionDefault);

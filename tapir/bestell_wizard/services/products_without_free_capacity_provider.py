@@ -5,19 +5,21 @@ from tapir.subscriptions.services.global_capacity_checker import (
 )
 from tapir.subscriptions.services.product_capacity_checker import ProductCapacityChecker
 from tapir.utils.services.tapir_cache import TapirCache
+from tapir.wirgarten.models import ProductType
 
 
 class ProductsWithoutFreeCapacityProvider:
     @classmethod
     def get_product_type_ids(
         cls,
-        cache: dict,
+        product_types: list[ProductType],
         product_ids_without_free_capacity: list[str],
         contract_start_date: datetime.date,
+        cache: dict,
     ) -> list[str]:
         ids = []
 
-        for product_type in TapirCache.get_product_types_in_standard_order(cache=cache):
+        for product_type in product_types:
             products = TapirCache.get_products_with_product_type(
                 cache=cache, product_type_id=product_type.id
             )
@@ -52,18 +54,22 @@ class ProductsWithoutFreeCapacityProvider:
 
     @classmethod
     def get_product_ids(
-        cls, cache: dict, contract_start_date: datetime.date
+        cls,
+        product_types: list[ProductType],
+        contract_start_date: datetime.date,
+        cache: dict,
     ) -> list[str]:
-        ids = []
-
-        for product in TapirCache.get_all_products(cache=cache):
+        return [
+            product.id
+            for product_type in product_types
+            for product in TapirCache.get_products_with_product_type(
+                cache=cache, product_type_id=product_type.id
+            )
             if not ProductCapacityChecker.does_product_have_enough_free_capacity_to_add_order(
                 product=product,
                 ordered_quantity=1,
                 member_id=None,
                 subscription_start_date=contract_start_date,
                 cache=cache,
-            ):
-                ids.append(product.id)
-
-        return ids
+            )
+        ]
