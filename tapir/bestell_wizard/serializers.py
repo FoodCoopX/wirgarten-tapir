@@ -186,6 +186,7 @@ class BestellWizardGrowingPeriodChoiceSerializer(serializers.Serializer):
 
 class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
     price_of_a_share = serializers.FloatField()
+    coop_min_shares = serializers.IntegerField()
     coop_share_instalments_enabled = serializers.BooleanField()
     coop_share_instalment_amount = serializers.FloatField()
     theme = serializers.CharField()

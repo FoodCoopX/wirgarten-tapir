@@ -7,7 +7,6 @@ import {
   AssociationMembershipType,
   BestellWizardApi,
   BestellWizardGrowingPeriodChoice,
-  CoopApi,
   DeliveryAddressRequest,
   OrderConfirmationResponse,
   PublicPickupLocation,
@@ -25,12 +24,12 @@ import { buildFilteredShoppingCart } from "../bestell_wizard/utils/buildFiltered
 import { buildSettings } from "../bestell_wizard/utils/buildSettings.ts";
 import { evaluateOrder } from "../bestell_wizard/utils/evaluateOrder.ts";
 import { getEmptyPersonalData } from "../bestell_wizard/utils/getEmptyPersonalData.ts";
+import { getMinimumNumberOfShares } from "../bestell_wizard/utils/getMinimumNumberOfShares.ts";
 import { getTestPersonalData } from "../bestell_wizard/utils/getTestPersonalData.ts";
 import { isAtLeastOneProductOrdered } from "../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
 import { onGrowingPeriodSelected } from "../bestell_wizard/utils/onGrowingPeriodSelected.ts";
 import { selectAllRequiredProductTypes } from "../bestell_wizard/utils/selectAllRequiredProductTypes.ts";
 import { sortProductTypes } from "../bestell_wizard/utils/sortProductTypes.ts";
-import { updateMinimumNumberOfShares } from "../bestell_wizard/utils/updateMinimumNumberOfShares.ts";
 import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
 import { addToast } from "../utils/addToast.ts";
@@ -87,7 +86,6 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
   waitingListEntryDetails,
 }) => {
   const bestellWizardApi = useApi(BestellWizardApi, csrfToken);
-  const coopApi = useApi(CoopApi, csrfToken);
   const waitingListApi = useApi(WaitingListApi, csrfToken);
 
   const [baseSettings, setBaseSettings] =
@@ -114,7 +112,6 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
   const [selectedNumberOfCoopShares, setSelectedNumberOfCoopShares] =
     useState(0);
   const [statuteAccepted, setStatuteAccepted] = useState(false);
-  const [minimumNumberOfShares, setMinimumNumberOfShares] = useState(0);
   const [studentStatusEnabled, setStudentStatusEnabled] = useState(false);
   const [payCoopSharesInInstalments, setPayCoopSharesInInstalments] =
     useState(false);
@@ -152,6 +149,15 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     () => applyGrowingPeriod(baseSettings, selectedGrowingPeriod),
     [baseSettings, selectedGrowingPeriod],
   );
+  const minimumNumberOfShares = useMemo(
+    () =>
+      getMinimumNumberOfShares(
+        settings,
+        shoppingCart,
+        productTypesInWaitingList,
+      ),
+    [settings, shoppingCart, productTypesInWaitingList],
+  );
   const contractStartDate = useMemo(
     () =>
       selectedGrowingPeriod
@@ -177,14 +183,9 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     });
 
   useEffect(() => {
-    Promise.all([
-      bestellWizardApi.bestellWizardApiBestellWizardBaseDataRetrieve(),
-      coopApi.coopApiMinimumNumberOfSharesRetrieve({
-        productIds: [],
-        quantities: [],
-      }),
-    ])
-      .then(([baseData, minNumberOfShares]) => {
+    bestellWizardApi
+      .bestellWizardApiBestellWizardBaseDataRetrieve()
+      .then((baseData) => {
         const newSettings = buildSettings(baseData);
         if (waitingListEntryDetails) {
           newSettings.forceWaitingList = false;
@@ -216,7 +217,6 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
         } else {
           setShoppingCart(buildEmptyShoppingCart(newSettings.productTypes));
         }
-        setMinimumNumberOfShares(minNumberOfShares.minimumNumberOfShares);
 
         personalData.paymentRhythm = baseData.defaultPaymentRhythm;
 
@@ -386,15 +386,8 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
   }, [shoppingCart, selectedGrowingPeriod]);
 
   useEffect(() => {
-    updateMinimumNumberOfShares(
-      coopApi,
-      shoppingCart,
-      productTypesInWaitingList,
-      setMinimumNumberOfShares,
-      setSelectedNumberOfCoopShares,
-      setToastDatas,
-    );
-  }, [shoppingCart, selectedGrowingPeriod]);
+    setSelectedNumberOfCoopShares(minimumNumberOfShares);
+  }, [minimumNumberOfShares]);
 
   useEffect(() => {
     if (waitingListEntryDetails !== undefined) {

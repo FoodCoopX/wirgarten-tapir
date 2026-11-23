@@ -16,6 +16,7 @@ export type BestellWizardSettings = {
   productTypes: PublicProductType[];
   associationMembershipTypes: AssociationMembershipType[];
   priceOfAShare: number;
+  coopMinShares: number;
   coopShareInstalmentsEnabled: boolean;
   coopShareInstalmentAmount: number;
   allowInvestingMembership: boolean;

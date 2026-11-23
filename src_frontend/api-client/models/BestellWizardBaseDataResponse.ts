@@ -57,6 +57,12 @@ export interface BestellWizardBaseDataResponse {
   priceOfAShare: number;
   /**
    *
+   * @type {number}
+   * @memberof BestellWizardBaseDataResponse
+   */
+  coopMinShares: number;
+  /**
+   *
    * @type {boolean}
    * @memberof BestellWizardBaseDataResponse
    */
@@ -257,6 +263,8 @@ export function instanceOfBestellWizardBaseDataResponse(
 ): value is BestellWizardBaseDataResponse {
   if (!("priceOfAShare" in value) || value["priceOfAShare"] === undefined)
     return false;
+  if (!("coopMinShares" in value) || value["coopMinShares"] === undefined)
+    return false;
   if (
     !("coopShareInstalmentsEnabled" in value) ||
     value["coopShareInstalmentsEnabled"] === undefined
@@ -391,6 +399,7 @@ export function BestellWizardBaseDataResponseFromJSONTyped(
   }
   return {
     priceOfAShare: json["price_of_a_share"],
+    coopMinShares: json["coop_min_shares"],
     coopShareInstalmentsEnabled: json["coop_share_instalments_enabled"],
     coopShareInstalmentAmount: json["coop_share_instalment_amount"],
     theme: json["theme"],
@@ -449,6 +458,7 @@ export function BestellWizardBaseDataResponseToJSONTyped(
 
   return {
     price_of_a_share: value["priceOfAShare"],
+    coop_min_shares: value["coopMinShares"],
     coop_share_instalments_enabled: value["coopShareInstalmentsEnabled"],
     coop_share_instalment_amount: value["coopShareInstalmentAmount"],
     theme: value["theme"],

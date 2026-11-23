@@ -128,6 +128,7 @@ class PublicProductSerializer(serializers.ModelSerializer):
             "url_of_image_in_bestellwizard",
             "hidden_in_bestell_wizard",
             "solidarity_choices",
+            "min_coop_shares",
         ]
 
     price = SerializerMethodField()

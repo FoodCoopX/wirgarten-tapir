@@ -9717,6 +9717,8 @@ components:
         price_of_a_share:
           type: number
           format: double
+        coop_min_shares:
+          type: integer
         coop_share_instalments_enabled:
           type: boolean
         coop_share_instalment_amount:
@@ -9800,6 +9802,7 @@ components:
       - association_membership_types
       - associations_allow_investing_membership
       - contact_mail_address
+      - coop_min_shares
       - coop_share_instalment_amount
       - coop_share_instalments_enabled
       - coop_statute_link
@@ -17446,6 +17449,10 @@ components:
             type: number
             format: double
           readOnly: true
+        min_coop_shares:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
       required:
       - name
       - price
