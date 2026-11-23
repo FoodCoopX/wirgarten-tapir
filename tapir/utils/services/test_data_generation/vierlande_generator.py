@@ -549,7 +549,7 @@ class VierlandeGenerator:
                 name=membership_type_name
             ),
             start_date=start_date,
-            actor=None,
+            actor=member,
             cache=cache,
         )
 
