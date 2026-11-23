@@ -131,8 +131,11 @@ Services: `web` (8000), `vite` (5173), `keycloak` (8080), `db` (5432), `redis` (
 - **Mock parameter naming**: the test parameter receiving a patched function or method is named
   `mock_<name_of_the_function>`, e.g. `mock_get_payment_export_exclusion_periods_for_member` for
   `@patch.object(TapirCache, "get_payment_export_exclusion_periods_for_member", ...)`.
+- **Patching**: prefer `@patch` / `@patch.object` decorators on the test method or class over patches defined inside
+  a function (`with patch(...)`, patchers started in `setUp`, `enterContext`).
 - **Mock return values**: set `return_value` / `side_effect` in the test body (`mock_x.return_value = ...`), never in
   the `@patch` / `@patch.object` decorator. Exception: class-level decorators, which may set a default for all tests.
+- **Factories**: always call `XFactory.build()` or `XFactory.create()` explicitly, never `XFactory()`.
 - **Annotate API views** with `@extend_schema(...)` and run `make schema`.
 - **Admin docs**: when adding, changing or removing an admin-visible feature, ask whether the admin documentation in
   `docs/admins/` should be updated.
