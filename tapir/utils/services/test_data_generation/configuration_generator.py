@@ -53,6 +53,10 @@ class ConfigurationGenerator:
             key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         ).update(value=organization in [Organization.BIOTOP, Organization.MM])
 
+        TapirParameter.objects.filter(
+            key=ParameterKeys.SUPPLIER_LIST_PRODUCT_TYPES
+        ).update(value="Hühneranteil")
+
         delivery_day = {
             Organization.BIOTOP: 4,
             Organization.WIRGARTEN: 2,
