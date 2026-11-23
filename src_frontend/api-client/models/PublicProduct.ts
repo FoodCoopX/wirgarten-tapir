@@ -60,6 +60,12 @@ export interface PublicProduct {
    * @memberof PublicProduct
    */
   readonly solidarityChoices: Array<number>;
+  /**
+   *
+   * @type {number}
+   * @memberof PublicProduct
+   */
+  minCoopShares?: number;
 }
 
 /**
@@ -106,6 +112,8 @@ export function PublicProductFromJSONTyped(
         ? undefined
         : json["hidden_in_bestell_wizard"],
     solidarityChoices: json["solidarity_choices"],
+    minCoopShares:
+      json["min_coop_shares"] == null ? undefined : json["min_coop_shares"],
   };
 }
 
@@ -127,5 +135,6 @@ export function PublicProductToJSONTyped(
     description_in_bestellwizard: value["descriptionInBestellwizard"],
     url_of_image_in_bestellwizard: value["urlOfImageInBestellwizard"],
     hidden_in_bestell_wizard: value["hiddenInBestellWizard"],
+    min_coop_shares: value["minCoopShares"],
   };
 }

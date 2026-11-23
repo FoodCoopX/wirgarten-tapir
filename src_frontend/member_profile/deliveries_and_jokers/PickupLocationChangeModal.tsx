@@ -207,6 +207,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
       ]),
     );
 
+    let ignore = false;
     checkPickupLocationCapacities(
       pickupLocationsApi,
       filteredPickupLocations,
@@ -214,8 +215,12 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
       setPickupLocationsCapacityCheckLoading,
       setPickupLocationsWithCapacityFull,
       setToastDatas,
-      undefined,
+      () => ignore,
     );
+
+    return () => {
+      ignore = true;
+    };
   }, [filteredPickupLocations, subscriptions, show]);
 
   useEffect(() => {

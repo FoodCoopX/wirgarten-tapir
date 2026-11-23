@@ -3,8 +3,8 @@ import React from "react";
 import { Accordion, AccordionBody } from "react-bootstrap";
 import {
   AssociationMembershipType,
+  BestellWizardGrowingPeriodChoice,
   DeliveryAddressRequest,
-  PublicGrowingPeriod,
   PublicPickupLocation,
   PublicProductType,
   PublicWaitingListEntryDetails,
@@ -65,7 +65,7 @@ interface Step10OrderSummaryProps {
   waitingListEntryDetails: PublicWaitingListEntryDetails | undefined;
   singleProductType?: PublicProductType;
   associationMembershipType?: AssociationMembershipType;
-  selectedGrowingPeriod: PublicGrowingPeriod | undefined;
+  selectedGrowingPeriod: BestellWizardGrowingPeriodChoice | undefined;
   hideTrialPeriod: boolean;
   stepActive: boolean;
   setCurrentStep: (step: Step) => void;

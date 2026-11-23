@@ -1,5 +1,3 @@
-import datetime
-
 from django.conf import settings
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import transaction
@@ -17,12 +15,15 @@ from tapir.accounts.services.email_normaliser import EmailNormaliser
 from tapir.associations.models import AssociationMembershipType
 from tapir.bestell_wizard.serializers import (
     BestellWizardConfirmOrderRequestSerializer,
-    BestellWizardCapacityCheckResponseSerializer,
-    BestellWizardCapacityCheckRequestSerializer,
     BestellWizardBaseDataResponseSerializer,
-    BestellWizardDeliveryDatesForOrderResponseSerializer,
-    BestellWizardDeliveryDatesForOrderRequestSerializer,
-    PublicProductPricesResponseSerializer,
+    BestellWizardOrderEvaluationRequestSerializer,
+    BestellWizardOrderEvaluationResponseSerializer,
+)
+from tapir.bestell_wizard.services.first_delivery_dates_provider import (
+    FirstDeliveryDatesProvider,
+)
+from tapir.bestell_wizard.services.growing_period_choice_builder import (
+    GrowingPeriodChoiceBuilder,
 )
 from tapir.bestell_wizard.services.bestell_wizard_order_fulfiller import (
     BestellWizardOrderFulfiller,
@@ -30,26 +31,25 @@ from tapir.bestell_wizard.services.bestell_wizard_order_fulfiller import (
 from tapir.bestell_wizard.services.bestell_wizard_order_validator import (
     BestellWizardOrderValidator,
 )
+from tapir.bestell_wizard.services.products_over_capacity_for_order_provider import (
+    ProductsOverCapacityForOrderProvider,
+)
 from tapir.bestell_wizard.services.questionnaire_source_service import (
     QuestionnaireSourceService,
 )
 from tapir.configuration.parameter import get_parameter_value
+from tapir.pickup_locations.services.pickup_locations_with_enough_capacity_provider import (
+    PickupLocationsWithEnoughCapacityProvider,
+)
 from tapir.coop.services.member_needs_banking_data_checker import (
     MemberNeedsBankingDataChecker,
 )
 from tapir.coop.services.personal_data_validator import PersonalDataValidator
-from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
 from tapir.pickup_locations.services.member_delivery_address_getter import (
     DeliveryAddressInput,
-)
-from tapir.pickup_locations.services.pickup_location_active_filter import (
-    PickupLocationActiveFilter,
-)
-from tapir.pickup_locations.services.public_pickup_locations_provider import (
-    PublicPickupLocationProvider,
 )
 from tapir.solidarity_contribution.services.solidarity_validator import (
     SolidarityValidator,
@@ -60,16 +60,10 @@ from tapir.subscriptions.serializers import (
 from tapir.subscriptions.services.contract_start_date_calculator import (
     ContractStartDateCalculator,
 )
-from tapir.subscriptions.services.global_capacity_checker import (
-    GlobalCapacityChecker,
-)
 from tapir.subscriptions.services.growing_period_choice_provider import (
     GrowingPeriodChoiceProvider,
 )
-from tapir.subscriptions.services.product_capacity_checker import ProductCapacityChecker
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
-from tapir.subscriptions.types import TapirOrder
-from tapir.utils.services.tapir_cache import TapirCache
 from tapir.waiting_list.services.waiting_list_entry_confirmation_email_sender import (
     WaitingListEntryConfirmationEmailSender,
 )
@@ -82,19 +76,11 @@ from tapir.waiting_list.services.waiting_list_entry_validator import (
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import OrderFeedback
 from tapir.wirgarten.models import (
-    ProductType,
     WaitingListEntry,
     Member,
-    PickupLocation,
     GrowingPeriod,
-    Product,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.service.delivery import calculate_pickup_location_change_date
-from tapir.wirgarten.service.products import (
-    get_active_and_future_subscriptions,
-    get_product_price,
-)
 from tapir.wirgarten.utils import (
     get_today,
     legal_status_is_cooperative,
@@ -451,7 +437,7 @@ class BestellWizardConfirmOrderApiView(APIView):
         )
 
 
-class BestellWizardCapacityCheckApiView(APIView):
+class BestellWizardOrderEvaluationApiView(APIView):
     permission_classes = []
 
     def __init__(self, **kwargs):
@@ -459,11 +445,11 @@ class BestellWizardCapacityCheckApiView(APIView):
         self.cache = {}
 
     @extend_schema(
-        responses={200: BestellWizardCapacityCheckResponseSerializer},
-        request=BestellWizardCapacityCheckRequestSerializer,
+        responses={200: BestellWizardOrderEvaluationResponseSerializer},
+        request=BestellWizardOrderEvaluationRequestSerializer,
     )
     def post(self, request):
-        serializer = BestellWizardCapacityCheckRequestSerializer(data=request.data)
+        serializer = BestellWizardOrderEvaluationRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
@@ -472,8 +458,7 @@ class BestellWizardCapacityCheckApiView(APIView):
         growing_period = get_object_or_404(
             GrowingPeriod, id=serializer.validated_data["growing_period_id"]
         )
-
-        subscription_start_date = (
+        contract_start_date = (
             ContractStartDateCalculator.get_next_contract_start_date_in_growing_period(
                 growing_period=growing_period,
                 apply_buffer_time=True,
@@ -481,30 +466,22 @@ class BestellWizardCapacityCheckApiView(APIView):
             )
         )
 
-        ids_of_product_types_over_capacity = GlobalCapacityChecker.get_product_type_ids_without_enough_capacity_for_order(
-            order_with_all_product_types=order,
-            member_id=None,
-            subscription_start_date=subscription_start_date,
-            cache=self.cache,
-        )
-
-        ids_of_products_over_capacity = []
-        for product, quantity in order.items():
-            if not ProductCapacityChecker.does_product_have_enough_free_capacity_to_add_order(
-                product=product,
-                ordered_quantity=quantity,
-                member_id=None,
-                subscription_start_date=subscription_start_date,
-                cache=self.cache,
-            ):
-                ids_of_products_over_capacity.append(product.id)
-
         response_data = {
-            "ids_of_product_types_over_capacity": ids_of_product_types_over_capacity,
-            "ids_of_products_over_capacity": ids_of_products_over_capacity,
+            "ids_of_product_types_over_capacity": ProductsOverCapacityForOrderProvider.get_product_type_ids(
+                order=order, contract_start_date=contract_start_date, cache=self.cache
+            ),
+            "ids_of_products_over_capacity": ProductsOverCapacityForOrderProvider.get_product_ids(
+                order=order, contract_start_date=contract_start_date, cache=self.cache
+            ),
+            "pickup_location_ids_with_enough_capacity_for_order": PickupLocationsWithEnoughCapacityProvider.get_pickup_location_ids(
+                order=order, subscription_start=contract_start_date, cache=self.cache
+            ),
+            "delivery_date_by_pickup_location_id_and_product_type_id": FirstDeliveryDatesProvider.get_delivery_date_by_pickup_location_id_and_product_type_id(
+                order=order, contract_start_date=contract_start_date, cache=self.cache
+            ),
         }
         return Response(
-            BestellWizardCapacityCheckResponseSerializer(response_data).data
+            BestellWizardOrderEvaluationResponseSerializer(response_data).data
         )
 
 
@@ -533,19 +510,12 @@ class BestellWizardBaseDataApiView(APIView):
                 reference_date=get_today(cache=self.cache), cache=self.cache
             )
         )
-        earliest_contract_start_date = (
-            ContractStartDateCalculator.get_next_contract_start_date_in_growing_period(
-                growing_period=available_growing_periods[0],
-                reference_date=get_today(cache=self.cache),
-                apply_buffer_time=True,
-                cache=self.cache,
+        growing_period_choices = [
+            GrowingPeriodChoiceBuilder.build(
+                growing_period=growing_period, cache=self.cache
             )
-        )
-        product_ids_that_are_already_at_capacity = (
-            self.build_product_ids_that_are_already_at_capacity(
-                self.cache, contract_start_date=earliest_contract_start_date
-            )
-        )
+            for growing_period in available_growing_periods
+        ]
 
         response_data = self.build_simple_response_fields(self.cache)
 
@@ -559,15 +529,10 @@ class BestellWizardBaseDataApiView(APIView):
 
         response_data.update(
             {
-                "product_types": ProductType.objects.all(),
                 "association_membership_types": AssociationMembershipType.objects.order_by(
                     "order_in_bestell_wizard"
                 ).filter(
                     deleted=False, hidden_in_bestell_wizard=False
-                ),
-                "pickup_locations": PublicPickupLocationProvider.get_pickup_locations_available_for_members(
-                    cache=self.cache,
-                    reference_date=earliest_contract_start_date,
                 ),
                 "show_coop_content": legal_status_is_cooperative(cache=self.cache),
                 "trial_period_length_in_weeks": trial_period_length_in_weeks,
@@ -579,12 +544,6 @@ class BestellWizardBaseDataApiView(APIView):
                         cache=self.cache
                     )
                 },
-                "product_type_ids_that_are_already_at_capacity": self.build_product_type_ids_that_are_already_at_capacity(
-                    cache=self.cache,
-                    product_ids_that_are_already_at_capacity=product_ids_that_are_already_at_capacity,
-                    contract_start_date=earliest_contract_start_date,
-                ),
-                "product_ids_that_are_already_at_capacity": product_ids_that_are_already_at_capacity,
                 "logo_url": self.build_logo_url(cache=self.cache),
                 "distribution_channels": QuestionnaireSourceService.get_questionnaire_source_choices(
                     cache=self.cache
@@ -592,11 +551,7 @@ class BestellWizardBaseDataApiView(APIView):
                 "solidarity_contribution_choices": SolidarityValidator.get_solidarity_dropdown_values(
                     cache=self.cache
                 ),
-                "solidarity_contribution_minimum": SolidarityValidator.get_solidarity_contribution_minimum(
-                    reference_date=earliest_contract_start_date,
-                    cache=self.cache,
-                ),
-                "growing_period_choices": available_growing_periods,
+                "growing_period_choices": growing_period_choices,
                 "legal_status": get_parameter_value(
                     key=ParameterKeys.ORGANISATION_LEGAL_STATUS, cache=self.cache
                 ),
@@ -609,10 +564,7 @@ class BestellWizardBaseDataApiView(APIView):
         return Response(
             BestellWizardBaseDataResponseSerializer(
                 response_data,
-                context={
-                    "cache": self.cache,
-                    "reference_date_for_delivery_charge": earliest_contract_start_date,
-                },
+                context={"cache": self.cache},
             ).data
         )
 
@@ -620,6 +572,7 @@ class BestellWizardBaseDataApiView(APIView):
     def build_simple_response_fields(cls, cache: dict):
         serializer_key_to_parameter_key_map = {
             "price_of_a_share": ParameterKeys.COOP_SHARE_PRICE,
+            "coop_min_shares": ParameterKeys.COOP_MIN_SHARES,
             "coop_share_instalments_enabled": ParameterKeys.COOP_SHARES_INSTALMENTS_ENABLED,
             "coop_share_instalment_amount": ParameterKeys.COOP_SHARES_INSTALMENT_AMOUNT,
             "theme": ParameterKeys.ORGANISATION_THEME,
@@ -743,196 +696,6 @@ class BestellWizardBaseDataApiView(APIView):
             for serializer_key, parameter_key in serializer_key_to_parameter_key_map.items()
         }
 
-    @classmethod
-    def build_product_type_ids_that_are_already_at_capacity(
-        cls,
-        cache: dict,
-        product_ids_that_are_already_at_capacity: list[str],
-        contract_start_date: datetime.date,
-    ):
-        ids = []
-
-        for product_type in TapirCache.get_product_types_in_standard_order(cache=cache):
-            products = TapirCache.get_products_with_product_type(
-                cache=cache, product_type_id=product_type.id
-            )
-            if len(products) == 0:
-                continue
-
-            smallest_product = GlobalCapacityChecker.get_smallest_product(
-                product_type=product_type,
-                cache=cache,
-                reference_date=contract_start_date,
-            )
-
-            if not GlobalCapacityChecker.is_there_enough_free_global_capacity_for_single_product_type(
-                order_for_a_single_product_type={smallest_product: 1},
-                product_type_id=product_type.id,
-                cache=cache,
-                member_id=None,
-                check_waiting_list_entries=True,
-                subscription_start_date=contract_start_date,
-            ):
-                ids.append(product_type.id)
-                continue
-
-            no_product_with_free_capacity = all(
-                product.id in product_ids_that_are_already_at_capacity
-                for product in products
-            )
-
-            if no_product_with_free_capacity:
-                ids.append(product_type.id)
-
-        return ids
-
-    @classmethod
-    def build_product_ids_that_are_already_at_capacity(
-        cls, cache: dict, contract_start_date: datetime.date
-    ) -> list[str]:
-        ids = []
-
-        for product in TapirCache.get_all_products(cache=cache):
-            if not ProductCapacityChecker.does_product_have_enough_free_capacity_to_add_order(
-                product=product,
-                ordered_quantity=1,
-                member_id=None,
-                subscription_start_date=contract_start_date,
-                cache=cache,
-            ):
-                ids.append(product.id)
-
-        return ids
-
-
-class BestellWizardDeliveryDatesForOrderApiView(APIView):
-    permission_classes = []
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.cache = {}
-
-    @extend_schema(
-        responses={200: BestellWizardDeliveryDatesForOrderResponseSerializer},
-        request=BestellWizardDeliveryDatesForOrderRequestSerializer,
-    )
-    def post(self, request):
-        serializer = BestellWizardDeliveryDatesForOrderRequestSerializer(
-            data=request.data
-        )
-        serializer.is_valid(raise_exception=True)
-
-        waiting_list_entry_id = serializer.validated_data.get(
-            "waiting_list_entry_id", None
-        )
-        waiting_list_entry = None
-        if waiting_list_entry_id is not None:
-            waiting_list_entry = get_object_or_404(
-                WaitingListEntry, id=waiting_list_entry_id
-            )
-
-        order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
-            shopping_cart=serializer.validated_data["shopping_cart"], cache=self.cache
-        )
-        product_type_ids = self.get_relevant_product_type_ids(
-            order=order, waiting_list_entry=waiting_list_entry, cache=self.cache
-        )
-
-        growing_period_id = serializer.validated_data.get("growing_period_id", None)
-        growing_period = None
-        if growing_period_id is not None:
-            growing_period = get_object_or_404(GrowingPeriod, id=growing_period_id)
-
-        reference_date = self.get_reference_date(
-            waiting_list_entry=waiting_list_entry,
-            growing_period=growing_period,
-            cache=self.cache,
-        )
-
-        pickup_location_ids = PickupLocationActiveFilter.get_active_at_date(
-            PickupLocation.objects.all(), reference_date
-        ).values_list("id", flat=True)
-
-        response_data = {}
-        for pickup_location_id in pickup_location_ids:
-            response_data[pickup_location_id] = {
-                product_type_id: DeliveryDateCalculator.get_next_delivery_date_for_product_type(
-                    reference_date=reference_date,
-                    pickup_location_id=pickup_location_id,
-                    product_type=TapirCache.get_product_type_by_id(
-                        cache=self.cache, product_type_id=product_type_id
-                    ),
-                    check_for_weeks_without_delivery=True,
-                    cache=self.cache,
-                )
-                for product_type_id in product_type_ids
-            }
-
-        return Response(
-            BestellWizardDeliveryDatesForOrderResponseSerializer(
-                {
-                    "delivery_date_by_pickup_location_id_and_product_type_id": response_data
-                }
-            ).data
-        )
-
-    @classmethod
-    def get_reference_date(
-        cls,
-        waiting_list_entry: WaitingListEntry | None,
-        growing_period: GrowingPeriod | None,
-        cache: dict,
-    ):
-        if waiting_list_entry is not None:
-            if waiting_list_entry.desired_start_date:
-                return waiting_list_entry.desired_start_date
-
-            if waiting_list_entry.product_wishes.count() == 0:
-                return calculate_pickup_location_change_date(cache=cache)
-
-            else:
-                return ContractStartDateCalculator.get_next_contract_start_date(
-                    reference_date=get_today(cache=cache),
-                    apply_buffer_time=False,
-                    cache=cache,
-                )
-
-        if growing_period is None:
-            return ContractStartDateCalculator.get_next_contract_start_date(
-                reference_date=get_today(cache=cache),
-                apply_buffer_time=True,
-                cache=cache,
-            )
-        else:
-            return ContractStartDateCalculator.get_next_contract_start_date_in_growing_period(
-                growing_period=growing_period,
-                apply_buffer_time=True,
-                cache=cache,
-            )
-
-    @classmethod
-    def get_relevant_product_type_ids(
-        cls, order: TapirOrder, waiting_list_entry: WaitingListEntry | None, cache: dict
-    ):
-        product_type_ids = {product.type_id for product in order.keys()}
-        if (
-            waiting_list_entry is None
-            or len(product_type_ids) > 0
-            or waiting_list_entry.member is None
-        ):
-            return product_type_ids
-
-        return (
-            get_active_and_future_subscriptions(
-                reference_date=waiting_list_entry.desired_start_date
-                or get_today(cache=cache),
-                cache=cache,
-            )
-            .filter(member=waiting_list_entry.member)
-            .values_list("product__type_id", flat=True)
-            .distinct()
-        )
-
 
 class GetContractStartDateForWaitingListEntryApiView(APIView):
     permission_classes = []
@@ -1000,36 +763,3 @@ class PublicBestellWizardIsEmailAddressValidApiView(APIView):
             return Response(False)
 
         return Response(True)
-
-
-class PublicProductPricesApiView(APIView):
-    permission_classes = []
-
-    @extend_schema(
-        responses={200: PublicProductPricesResponseSerializer},
-        parameters=[OpenApiParameter("growing_period_id", type=str)],
-    )
-    def get(self, request):
-        cache = {}
-
-        growing_period = get_object_or_404(
-            GrowingPeriod, id=request.query_params.get("growing_period_id")
-        )
-        contract_start_date = (
-            ContractStartDateCalculator.get_next_contract_start_date_in_growing_period(
-                growing_period=growing_period, apply_buffer_time=True, cache=cache
-            )
-        )
-
-        prices_by_product_id = {
-            product.id: get_product_price(
-                product=product, reference_date=contract_start_date, cache=cache
-            ).price
-            for product in Product.objects.all()
-        }
-
-        return Response(
-            PublicProductPricesResponseSerializer(
-                {"prices_by_product_id": prices_by_product_id}
-            ).data
-        )

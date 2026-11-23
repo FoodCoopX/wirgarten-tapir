@@ -1,17 +1,18 @@
 import { BestellWizardBaseDataResponse } from "../../api-client";
 import { TapirTheme } from "../../types/TapirTheme.ts";
 import { BestellWizardSettings } from "../types/BestellWizardSettings.ts";
-import { sortProductTypes } from "./sortProductTypes.ts";
+import { applyGrowingPeriod } from "./applyGrowingPeriod.ts";
 
 export function buildSettings(
   baseData: BestellWizardBaseDataResponse,
 ): BestellWizardSettings {
-  return {
+  const settings: BestellWizardSettings = {
     theme: baseData.theme as TapirTheme,
-    pickupLocations: baseData.pickupLocations,
-    productTypes: sortProductTypes(baseData.productTypes),
+    pickupLocations: [],
+    productTypes: [],
     associationMembershipTypes: baseData.associationMembershipTypes,
     priceOfAShare: baseData.priceOfAShare,
+    coopMinShares: baseData.coopMinShares,
     coopShareInstalmentsEnabled: baseData.coopShareInstalmentsEnabled,
     coopShareInstalmentAmount: baseData.coopShareInstalmentAmount,
     allowInvestingMembership: baseData.allowInvestingMembership,
@@ -27,10 +28,8 @@ export function buildSettings(
     phoneNumberRequired: baseData.phoneNumberRequired,
     pseudonymEnabled: baseData.pseudonymEnabled,
     introEnabled: baseData.introEnabled,
-    productTypeIdsThatAreAlreadyAtCapacity:
-      baseData.productTypeIdsThatAreAlreadyAtCapacity,
-    productIdsThatAreAlreadyAtCapacity:
-      baseData.productIdsThatAreAlreadyAtCapacity,
+    productTypeIdsThatAreAlreadyAtCapacity: [],
+    productIdsThatAreAlreadyAtCapacity: [],
     organizationName: baseData.organizationName,
     coopStatuteLink: baseData.coopStatuteLink,
     logoUrl: baseData.logoUrl,
@@ -38,7 +37,7 @@ export function buildSettings(
     websiteUrl: baseData.websiteUrl,
     distributionChannels: baseData.distributionChannels,
     solidarityContributionChoices: baseData.solidarityContributionChoices,
-    solidarityContributionMinimum: baseData.solidarityContributionMinimum,
+    solidarityContributionMinimum: null,
     solidarityContributionDefault: baseData.solidarityContributionDefault,
     feedbackStepEnabled: baseData.feedbackStepEnabled,
     growingPeriodChoices: baseData.growingPeriodChoices,
@@ -48,4 +47,6 @@ export function buildSettings(
     images: baseData.images,
     debug: baseData.debug,
   };
+
+  return applyGrowingPeriod(settings, baseData.growingPeriodChoices[0]);
 }

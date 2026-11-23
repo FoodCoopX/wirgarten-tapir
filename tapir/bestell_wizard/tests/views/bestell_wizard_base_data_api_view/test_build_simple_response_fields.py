@@ -19,6 +19,11 @@ class TestBuildSimpleResponseFields(TapirUnitTest):
             cache=cache,
         )
         mock_parameter_value(
+            key=ParameterKeys.COOP_MIN_SHARES,
+            value="test_coop_min_shares",
+            cache=cache,
+        )
+        mock_parameter_value(
             key=ParameterKeys.COOP_SHARES_INSTALMENTS_ENABLED,
             value="test_coop_share_instalments_enabled",
             cache=cache,
@@ -118,6 +123,7 @@ class TestBuildSimpleResponseFields(TapirUnitTest):
         self.assertEqual(
             {
                 "price_of_a_share": "test_coop_share_price",
+                "coop_min_shares": "test_coop_min_shares",
                 "coop_share_instalments_enabled": "test_coop_share_instalments_enabled",
                 "coop_share_instalment_amount": "test_coop_share_instalment_amount",
                 "theme": "test_organisation_theme",

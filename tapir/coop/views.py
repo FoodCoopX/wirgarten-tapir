@@ -1,5 +1,4 @@
 from django.conf import settings
-from django.core.exceptions import BadRequest
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
 from django.db.models import Sum, F
@@ -8,7 +7,7 @@ from django.urls import reverse
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from keycloak import KeycloakPutError
 from localflavor.generic.validators import IBANValidator
-from rest_framework import status, viewsets, permissions
+from rest_framework import viewsets, permissions
 from rest_framework.exceptions import (
     ValidationError as DrfValidationError,
     PermissionDenied,
@@ -31,7 +30,6 @@ from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
 from tapir.accounts.services.mail_change_service import MailChangeService
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.serializers import (
-    MinimumNumberOfSharesResponseSerializer,
     GetCoopShareTransactionsResponseSerializer,
     ExistingMemberPurchasesSharesRequestSerializer,
     UpdateMemberBankDataRequestSerializer,
@@ -89,46 +87,6 @@ from tapir.wirgarten.utils import (
     format_currency,
     format_date,
 )
-
-
-class MinimumNumberOfSharesApiView(APIView):
-    permission_classes = []
-
-    @extend_schema(
-        responses={200: MinimumNumberOfSharesResponseSerializer},
-        parameters=[
-            OpenApiParameter(name="product_ids", type=str, many=True),
-            OpenApiParameter(name="quantities", type=int, many=True),
-        ],
-    )
-    def get(self, request):
-        product_ids = request.query_params.getlist("product_ids")
-        quantities = request.query_params.getlist("quantities")
-        cache = {}
-
-        if len(product_ids) != len(quantities):
-            raise BadRequest("Different number of product ids and quantities")
-
-        ordered_products_id_to_quantity_map = {
-            product_id: int(quantities[index] or 0)
-            for index, product_id in enumerate(product_ids)
-            if product_id != ""
-        }
-
-        minimum_number_of_shares = (
-            MinimumNumberOfSharesValidator.get_minimum_number_of_shares_for_order(
-                ordered_products_id_to_quantity_map, cache=cache
-            )
-        )
-
-        return Response(
-            MinimumNumberOfSharesResponseSerializer(
-                {
-                    "minimum_number_of_shares": minimum_number_of_shares,
-                }
-            ).data,
-            status=status.HTTP_200_OK,
-        )
 
 
 class ExistingMemberPurchasesSharesApiView(APIView):

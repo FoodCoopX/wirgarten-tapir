@@ -39,12 +39,12 @@ models/AutomatedExportCycleEnum.ts
 models/AvailableBreadsForDeliveryListResponse.ts
 models/AvailableSegmentsResponse.ts
 models/BestellWizardBaseDataResponse.ts
-models/BestellWizardCapacityCheckRequestRequest.ts
 models/BestellWizardCapacityCheckResponse.ts
 models/BestellWizardConfirmOrderRequestRequest.ts
-models/BestellWizardDeliveryDatesForOrderRequestRequest.ts
-models/BestellWizardDeliveryDatesForOrderResponse.ts
+models/BestellWizardGrowingPeriodChoice.ts
 models/BestellWizardImages.ts
+models/BestellWizardOrderEvaluationRequestRequest.ts
+models/BestellWizardOrderEvaluationResponse.ts
 models/BestellWizardStrings.ts
 models/BlankEnum.ts
 models/BounceTypeEnum.ts
@@ -183,7 +183,6 @@ models/MemberProfileCapacityCheckRequestRequest.ts
 models/MemberProfilePersonalDataResponse.ts
 models/MemberSolidarityContributionsResponse.ts
 models/MemberSubscriptionData.ts
-models/MinimumNumberOfSharesResponse.ts
 models/MissingTrigger.ts
 models/ModeEnum.ts
 models/ModerationActionEnum.ts
@@ -288,10 +287,8 @@ models/ProductTypeAccordionInBestellWizard.ts
 models/ProductTypeAccordionInBestellWizardRequest.ts
 models/ProductTypesAndConfig.ts
 models/PublicConfirmWaitingListEntryRequestRequest.ts
-models/PublicGrowingPeriod.ts
 models/PublicPickupLocation.ts
 models/PublicProduct.ts
-models/PublicProductPricesResponse.ts
 models/PublicProductType.ts
 models/PublicSubscription.ts
 models/PublicWaitingListEntryDetails.ts

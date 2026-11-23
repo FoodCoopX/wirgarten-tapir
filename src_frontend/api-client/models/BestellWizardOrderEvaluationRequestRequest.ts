@@ -15,29 +15,29 @@
 /**
  *
  * @export
- * @interface BestellWizardCapacityCheckRequestRequest
+ * @interface BestellWizardOrderEvaluationRequestRequest
  */
-export interface BestellWizardCapacityCheckRequestRequest {
+export interface BestellWizardOrderEvaluationRequestRequest {
   /**
    *
    * @type {{ [key: string]: number; }}
-   * @memberof BestellWizardCapacityCheckRequestRequest
+   * @memberof BestellWizardOrderEvaluationRequestRequest
    */
   shoppingCart: { [key: string]: number };
   /**
    *
    * @type {string}
-   * @memberof BestellWizardCapacityCheckRequestRequest
+   * @memberof BestellWizardOrderEvaluationRequestRequest
    */
   growingPeriodId: string;
 }
 
 /**
- * Check if a given object implements the BestellWizardCapacityCheckRequestRequest interface.
+ * Check if a given object implements the BestellWizardOrderEvaluationRequestRequest interface.
  */
-export function instanceOfBestellWizardCapacityCheckRequestRequest(
+export function instanceOfBestellWizardOrderEvaluationRequestRequest(
   value: object,
-): value is BestellWizardCapacityCheckRequestRequest {
+): value is BestellWizardOrderEvaluationRequestRequest {
   if (!("shoppingCart" in value) || value["shoppingCart"] === undefined)
     return false;
   if (!("growingPeriodId" in value) || value["growingPeriodId"] === undefined)
@@ -45,16 +45,16 @@ export function instanceOfBestellWizardCapacityCheckRequestRequest(
   return true;
 }
 
-export function BestellWizardCapacityCheckRequestRequestFromJSON(
+export function BestellWizardOrderEvaluationRequestRequestFromJSON(
   json: any,
-): BestellWizardCapacityCheckRequestRequest {
-  return BestellWizardCapacityCheckRequestRequestFromJSONTyped(json, false);
+): BestellWizardOrderEvaluationRequestRequest {
+  return BestellWizardOrderEvaluationRequestRequestFromJSONTyped(json, false);
 }
 
-export function BestellWizardCapacityCheckRequestRequestFromJSONTyped(
+export function BestellWizardOrderEvaluationRequestRequestFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
-): BestellWizardCapacityCheckRequestRequest {
+): BestellWizardOrderEvaluationRequestRequest {
   if (json == null) {
     return json;
   }
@@ -64,14 +64,14 @@ export function BestellWizardCapacityCheckRequestRequestFromJSONTyped(
   };
 }
 
-export function BestellWizardCapacityCheckRequestRequestToJSON(
+export function BestellWizardOrderEvaluationRequestRequestToJSON(
   json: any,
-): BestellWizardCapacityCheckRequestRequest {
-  return BestellWizardCapacityCheckRequestRequestToJSONTyped(json, false);
+): BestellWizardOrderEvaluationRequestRequest {
+  return BestellWizardOrderEvaluationRequestRequestToJSONTyped(json, false);
 }
 
-export function BestellWizardCapacityCheckRequestRequestToJSONTyped(
-  value?: BestellWizardCapacityCheckRequestRequest | null,
+export function BestellWizardOrderEvaluationRequestRequestToJSONTyped(
+  value?: BestellWizardOrderEvaluationRequestRequest | null,
   ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {
