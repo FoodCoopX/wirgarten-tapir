@@ -20,7 +20,7 @@ the non-bidder rule meet.
 flowchart LR
     subgraph member["Member"]
         wizard["/bidding_rounds/<br/>intro, product, bid,<br/>optional SEPA, privacy,<br/>optional feedback, summary"]
-        bid["Bid + BidItem<br/>1–5 shares, 1–3 amounts"]
+        bid["Bid<br/>product, 1–5 shares,<br/>1–3 amounts"]
         wizard --> bid
     end
 
@@ -62,7 +62,7 @@ flowchart LR
 |---|---|
 | Models, status/procedure constants, share limits | `tapir/bidding_round/models.py`, `tapir/bidding_round/config.py` |
 | Round lifecycle and bid persistence | `tapir/bidding_round/services/bidding_round_service.py` |
-| Bid validation | `tapir/bidding_round/services/bid_validator.py` |
+| Bid input and validation | `tapir/bidding_round/services/bid_input.py`, `tapir/bidding_round/services/bid_validator.py` |
 | Evaluation, financing projection, results table | `tapir/bidding_round/services/bidding_round_stats_service.py` |
 | Public data, pickup location and admin serialization | `tapir/bidding_round/services/bidding_round_view_service.py` |
 | Contract rows for the evaluation | `tapir/bidding_round/services/bidding_round_contract_row_service.py` |
@@ -114,33 +114,33 @@ period already has `contracts_created_at` set; a partial unique constraint backs
 
 ```mermaid
 erDiagram
-    BiddingRound ||--o{ BiddingRoundProductType : "has"
-    BiddingRoundProductType ||--o{ BiddingRoundProductPrice : "prices per product"
+    BiddingRound ||--o{ BiddingRoundProductPrice : "prices per product"
+    BiddingRound }o--|| ProductType : "one biddable type"
     BiddingRound ||--o{ Bid : "receives"
-    Bid ||--o{ BidItem : "contains"
-    BidItem }o--|| Product : "bids on"
+    Bid }o--|| Product : "bids on"
     BiddingRound ||--o{ BiddingRoundCreatedSubscription : "creates"
     BiddingRoundCreatedSubscription }o--|| Subscription : "links"
     BiddingRound ||--o{ BiddingRoundMemberEffect : "tracks per member"
     BiddingRoundMemberEffect }o--|| Member : "belongs to"
 ```
 
-- `BiddingRound`: growing period, name, status (`configuration` / `active` / `closed`),
-  `bidding_procedure`, bid levels, start/end, comment, `include_auto_renewed`, `contracts_created_at`
-  and the locked average bid values.
-- `BiddingRoundProductType`: exactly one biddable product type per round plus
-  `target_amount_per_year`.
+- `BiddingRound`: growing period, name, status (`configuration` / `active` / `closed`), the single
+  biddable `product_type` and `target_amount_per_year`, `bidding_procedure`, bid levels, start/end
+  (`start_at` is non-nullable and defaults to the round's creation time), comment,
+  `include_auto_renewed`, `contracts_created_at` and the locked average bid values.
 - `BiddingRoundProductPrice`: `reference_value` and `min_amount` per share plus the round's
-  product `size`. The values apply 1:1 per share; `size` scales the contract price and is not
-  `ProductPrice.size`.
-- `Bid` / `BidItem`: one bid per member and round, one item per product with a share count and the
-  procedure's amounts (`amount_1..3`; the bid range uses `amount_1` = green and `amount_2` = red),
-  plus the confirmation/admin flags. The bid does not store a pickup location; evaluation, CSV
-  export, mails and contract creation read the member's location at the contract start date through
-  `MemberPickupLocationGetter`.
+  product `size`, unique per round and product. The values apply 1:1 per share; `size` is the
+  round's size for the product and turns the round's average bid into an amount per share and back.
+  It is not `ProductPrice.size`.
+- `Bid`: one bid per member and round with one product, a share count (1–5, enforced by a check
+  constraint) and the procedure's amounts (`amount_1..3`; the bid range uses `amount_1` = green and
+  `amount_2` = red), plus the confirmation/admin flags. The bid does not store a pickup location;
+  evaluation, CSV export, mails and contract creation read the member's location at the contract
+  start date through `MemberPickupLocationGetter`.
 - `BiddingRoundCreatedSubscription`: link from the round to the subscriptions created from it;
-  `is_bidder_contract` separates bidder contracts from auto-renewed contracts; `was_reused` and
-  `original_quantity` preserve a reused existing subscription.
+  `monthly_price_per_share` freezes the price the round gave the contract; `is_bidder_contract`
+  separates bidder contracts from auto-renewed contracts; `was_reused` and `original_quantity`
+  preserve a reused existing subscription.
 - `BiddingRoundMemberEffect`: per round and member, the serialized pre-state and post-state of
   subscriptions and solidarity contributions, the contribution log links and the mandate references.
 - `BiddingRoundMemberRollbackLogEntry`: audit entry for a member rollback.
@@ -153,7 +153,7 @@ definitions.
 
 | Migration | Layer | Content |
 |---|---|---|
-| `0001_initial` | S02 | Round, product type, price, bid, bid item, created subscription |
+| `0001_initial` | S02 | Round with its product type and target, price, bid, created subscription |
 | `0002_bidding_round_procedure_and_bid_levels` | S03 | Procedure, bid levels, amount levels |
 | `0003_biddinground_include_auto_renewed` | S06 | `include_auto_renewed` |
 | `0004_bid_admin_confirmed_bid_entered_by_admin_and_more` | S07 | Admin confirmation, manual bids, average-bid lock |
@@ -228,8 +228,12 @@ flowchart TD
 - `SIMPLE` requires exactly `bid_levels` (1–3) ascending amounts. `BID_RANGE` (Gebotsspanne) uses
   exactly two amounts (`amount_1` = green/wish, `amount_2` = red/pain threshold); both are required,
   `amount_3` must be empty, and the amounts must be ascending.
-- One bid per member and round; saving again is an upsert inside a transaction that locks the round
-  row.
+- One bid per member and round; saving again updates the same row, so the last write wins. Two
+  simultaneous first submits are covered by the unique constraint on `(round, member)`; the lookup is
+  retried on that error. The validator and `BiddingRoundService.save_bid` share a typed `BidInput`
+  instead of passing a dict around, so a management command validates exactly like the API.
+- A bid needs a price row of the round for its product; the wizard only offers products that have
+  one.
 - The bid does not store a pickup location. Statistics, CSV export, mails and contract creation use
   the member's location at the round's contract start date (`MemberPickupLocationGetter`). There is
   no pickup location selection or change in the bidding round or the admin bid dialog; the UI links
@@ -372,13 +376,19 @@ and no other round of the same growing period with contracts. Locking itself is 
 - Selection: `bid_ids` limits the bids, `auto_renewed_member_ids` limits which auto-renewed members
   are materialised and `create_auto_renewed_contracts` enables the auto-renewed part; `bid_level`
   selects the position for an unlocked round.
-- Per bid item a `Subscription` for the growing period is created with
+- Per bid a `Subscription` for the growing period is created with
   `price_mode = bidding_round_bid`; its price is the share-weighted bidder average (scaled by the
   round product size and quantity), so the difference to the individual bid becomes a
   `SolidarityContribution` (positive or negative). Contract lists and payments resolve the price
   through `BiddingRoundSubscriptionPriceService`.
 - Existing, non-cancelled subscriptions for the same member, product and period are reused and
   their quantity is adjusted to the bid.
+- The member's contracts of the round's other share sizes in that period are replaced, using the
+  same `cancel_or_delete_subscriptions` helper as the order wizard. This matters because the
+  automatic renewal runs independently of the round: an M contract for the coming season can exist
+  before the round creates anything, and a bid on L would otherwise leave the member with two
+  contracts, only one of them priced from the round. A contract of another size that has already
+  started is not replaced; the bid is reported as an error and nothing is written for that member.
 - Every write for a member runs inside a `BiddingRoundMemberEffect`. The effect freezes the
   member's subscriptions and solidarity contributions before the mutation, stores the resulting
   state, the contribution log links and the mandate references, and is unique per round and
@@ -402,6 +412,8 @@ and no other round of the same growing period with contracts. Locking itself is 
 - `contracts_created_at` is set on the first successful creation and cleared when no applied effect
   remains. Applied members are skipped on re-runs; after a rollback and an unlock, the member's bid
   is editable again.
+- A rollback brings a replaced contract back with its original id and removes the contract the bid
+  created.
   The admin UI offers "Verträge prüfen/erzeugen", "Zurücknehmen" per contract and "Alle
   zurücknehmen".
 
@@ -421,6 +433,28 @@ flowchart TD
     FLOOR --> DONE
     DONE --> ROLLBACK["rollback_members:<br/>restore recorded member pre-state,<br/>refuse divergence or cross-round conflicts"]
 ```
+
+## Price provenance
+
+For a contract that a round created, the round result is the price by design. `ProductPrice` has no
+notion of "this contract's price came from round X", so reading the price from it would silently
+move contracts that are already fixed when the catalog is edited later.
+
+- `Subscription.price_mode` names the source: `standard`, `custom`, `free`, `bidding_round_bid` and
+  `bidding_round_auto_renewed`. Only the bidding round writes the two bidding-round modes; the price
+  form disables them.
+- `BiddingRoundCreatedSubscription.monthly_price_per_share` freezes the per-share amount the round
+  gave the contract. Bidder contracts freeze the locked bidder average per share scaled to the share
+  size; auto-renewed contracts freeze `max(reference_value, bidder rate)` scaled to the share size.
+  `BiddingRoundSubscriptionPriceService` multiplies the frozen value by the quantity, and
+  `price_override` keeps priority, including `0`.
+- Lists and exports that annotate instead of calling the calculator get the same price:
+  `SubscriptionPriceProvider.register_annotation` lets the feature add its queryset annotation and
+  the `When` for the monthly price, so the member list and the contract list show the round price
+  even before the standard prices are aligned.
+- `ProductPrice` stays a projection. "Standardpreis angleichen" writes the locked average per share
+  times the round product size into the catalog so every path that reads `ProductPrice` agrees
+  again, including later joiners in the same season. It is a convenience, not the source of truth.
 
 ## Admin tools
 
@@ -565,3 +599,4 @@ without the share/carousel switches, then inspect the admin evaluation and creat
 | Frontend localization | German literals only |
 | Invoice / credit note integration | separate repository / PR |
 | Contract deletion after a successful creation | replaced by `rollback_members` |
+| Auto-renewed contracts materialised outside the round | not counted in `auto_shares` / pickup location demand of the evaluation (`get_auto_renewed_subscriptions`); known limitation, the round sees only the contracts it created |

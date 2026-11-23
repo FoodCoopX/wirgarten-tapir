@@ -58,20 +58,39 @@ Wechsel hätte einen eigenen Kapazitäts-Check beim Gebot, zusätzliche Pickup-R
 Testdaten-Runde gebraucht — Aufwand und Fehlerfläche stehen in keinem Verhältnis zum Nutzen in der
 ersten Version.
 
-### E4 — Preis-Modus statt manuellem Override
+### E4 — Preis-Modus und eingefrorener Rundenpreis statt manuellem Override
 
 `Subscription.price_mode` unterscheidet `standard`, `custom`, `free`, `bidding_round_bid` und
-`bidding_round_auto_renewed`. Bietrunden-Verträge bekommen ihren Monatspreis aus
-`max(reference_value, fixiertes Durchschnittsgebot der Runde)`, skaliert mit Anteilsgröße und
-Menge; `price_override` bleibt der allgemeine Admin-Override für die Modi `standard`, `custom` und
-`free`. Die Bietrunden-Modi sind in der Preis-Maske deaktiviert und werden nur von der Bietrunde
-gesetzt. Die Finanzierungsprojektion der Auswertungsseite ist ein Was-wäre-wenn mit zielgedecktem
+`bidding_round_auto_renewed`. `price_override` bleibt der allgemeine Admin-Override und hat Vorrang
+vor jedem Modus, auch als `0`; die Bietrunden-Modi sind in der Preis-Maske deaktiviert und werden
+nur von der Bietrunde gesetzt.
+
+Der Preis eines Bietrunden-Vertrags hängt vom Rundenergebnis ab, nicht von `ProductPrice`:
+`ProductPrice` kennt keine Herkunft „Preis aus Runde X", ein späterer Katalogpreis würde sonst
+bereits fixierte Verträge still verschieben. Deshalb friert
+`BiddingRoundCreatedSubscription.monthly_price_per_share` den Anteilspreis beim Anlegen des
+Vertrags ein:
+
+- Bieter-Verträge: das fixierte Durchschnittsgebot der Bietenden je Anteil, skaliert mit der
+  Anteilsgröße der Runde.
+- Automatisch verlängerte Verträge: `max(reference_value, Bietenden-Durchschnitt)` je Anteil,
+  skaliert mit der Anteilsgröße der Runde.
+
+Der Monatspreis ist dieser eingefrorene Anteilspreis mal Menge. Er ändert sich auch dann nicht,
+wenn die Runde oder `ProductPrice` später angepasst werden. `ProductPrice` bleibt eine Projektion;
+„Standardpreis angleichen" schreibt den fixierten Durchschnitt × Rundengröße in den Katalog, damit
+alle Pfade, die `ProductPrice` lesen, wieder übereinstimmen. Queryset-Annotationen für
+Mitglieder- und Vertragslisten lesen denselben eingefrorenen Wert (siehe
+`BiddingRoundSubscriptionPriceService`), damit Listen den Rundenpreis auch vor dem Angleichen
+zeigen.
+
+Die Finanzierungsprojektion der Auswertungsseite ist ein Was-wäre-wenn mit zielgedecktem
 Durchschnitt und ändert keine Vertragspreise.
 
 ### E5 — Bietrunden-Werte je Runde und Anteilsgröße
 
-`BiddingRoundProductPrice` hält `reference_value` und `min_amount` je Produkt (Anteilsgröße),
-`BiddingRoundProductType` den Zielbetrag pro Jahr. `reference_value` und `min_amount` gelten 1:1 je
+`BiddingRoundProductPrice` hält `reference_value` und `min_amount` je Produkt (Anteilsgröße), der
+Zielbetrag pro Jahr liegt direkt an `BiddingRound`. `reference_value` und `min_amount` gelten 1:1 je
 Anteil; der Vertragspreis multipliziert den Anteilspreis mit `BiddingRoundProductPrice.size`.
 `ProductCapacity` bleibt unverändert.
 
@@ -133,8 +152,8 @@ bekommen denselben Floor. Der Floor ist immer aktiv; es gibt keinen Parameter me
 
 ### E12 — Anteile pro Gebot
 
-Gebote können 1–5 Anteile pro Posten enthalten. Die Beträge gelten pro Anteil; Monats- und
-Jahressummen multiplizieren mit der Anzahl.
+Ein Gebot kann 1–5 Anteile enthalten. Die Beträge gelten pro Anteil; Monats- und Jahressummen
+multiplizieren mit der Anzahl.
 
 ### E13 — Auswertungs-UI wie der alte Stand, mitgliedsscharfer Rollback und `is_bidder_contract`
 
