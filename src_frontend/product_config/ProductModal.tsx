@@ -167,6 +167,11 @@ const ProductModal: React.FC<ProductModalProps> = ({
                     onChange={(e) => setProductName(e.target.value)}
                     placeholder={"Name der Anteilsgröße"}
                   />
+                  <Form.Text>
+                    Wird ohne den Produktanteil angezeigt (z.B. in Mails), daher
+                    eindeutig und selbsterklärend benennen, z.B.
+                    "S-Gemüseanteil" statt "S".
+                  </Form.Text>
                 </Form.Group>
               </Col>
               <Col>

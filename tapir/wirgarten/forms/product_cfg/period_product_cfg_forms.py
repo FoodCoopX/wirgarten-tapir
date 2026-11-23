@@ -56,7 +56,13 @@ class ProductForm(forms.Form):
             initial=initial_id, widget=forms.HiddenInput()
         )
         self.fields["name"] = forms.CharField(
-            initial=initial_name, required=True, label=_("Name der Anteilsgröße")
+            initial=initial_name,
+            required=True,
+            label=_("Name der Anteilsgröße"),
+            help_text=_(
+                "Wird ohne den Produktanteil angezeigt (z.B. in Mails), daher eindeutig und "
+                'selbsterklärend benennen, z.B. "S-Gemüseanteil" statt "S".'
+            ),
         )
         self.fields["price"] = forms.FloatField(
             initial=initial_price, required=True, label=_("Preis")
