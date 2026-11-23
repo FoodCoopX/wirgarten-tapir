@@ -80,7 +80,7 @@ class TestGetSubscriptionPart(TapirUnitTest):
 
         self.assertEqual(Decimal("2.3"), part.value)
         self.assertEqual(
-            "Ernteanteil Gemüse M: 10,00 € monatlich × 12 ÷ 52 Wochen = 2,30 €",
+            "Gemüse M: 10,00 € monatlich × 12 ÷ 52 Wochen = 2,30 €",
             part.explanation,
         )
         mock_get_product_price.assert_called_once_with(
@@ -109,7 +109,7 @@ class TestGetSubscriptionPart(TapirUnitTest):
 
         self.assertEqual(Decimal("13.8"), part.value)
         self.assertEqual(
-            "Ernteanteil Gemüse M: 10,00 € monatlich × 12 ÷ 52 Wochen × 2 (Lieferung alle 2 Wochen) × 3 Anteile = 13,80 €",
+            "Gemüse M: 10,00 € monatlich × 12 ÷ 52 Wochen × 2 (Lieferung alle 2 Wochen) × 3 Anteile = 13,80 €",
             part.explanation,
         )
 
@@ -133,9 +133,7 @@ class TestGetSubscriptionPart(TapirUnitTest):
         )
 
         self.assertEqual(Decimal(10), part.value)
-        self.assertEqual(
-            "Ernteanteil Gemüse M: Preis pro Lieferung 10,00 €", part.explanation
-        )
+        self.assertEqual("Gemüse M: Preis pro Lieferung 10,00 €", part.explanation)
 
     def test_getSubscriptionPart_customCycleWithQuantity_explainsQuantity(
         self,
@@ -158,7 +156,7 @@ class TestGetSubscriptionPart(TapirUnitTest):
 
         self.assertEqual(Decimal(30), part.value)
         self.assertEqual(
-            "Ernteanteil Gemüse M: Preis pro Lieferung 10,00 € × 3 Anteile = 30,00 €",
+            "Gemüse M: Preis pro Lieferung 10,00 € × 3 Anteile = 30,00 €",
             part.explanation,
         )
 
@@ -180,7 +178,7 @@ class TestGetSubscriptionPart(TapirUnitTest):
 
         self.assertEqual(Decimal(15), part.value)
         self.assertEqual(
-            "Ernteanteil Gemüse M (Sonderpreis): Preis pro Lieferung 15,00 €",
+            "Gemüse M (Sonderpreis): Preis pro Lieferung 15,00 €",
             part.explanation,
         )
         mock_get_product_price.assert_not_called()
@@ -201,7 +199,7 @@ class TestGetSubscriptionPart(TapirUnitTest):
 
         self.assertEqual(Decimal("6.92"), part.value)
         self.assertEqual(
-            "Ernteanteil Gemüse M (Sonderpreis): 30,00 € monatlich × 12 ÷ 52 Wochen = 6,92 €",
+            "Gemüse M (Sonderpreis): 30,00 € monatlich × 12 ÷ 52 Wochen = 6,92 €",
             part.explanation,
         )
         mock_get_product_price.assert_not_called()
@@ -238,7 +236,7 @@ class TestGetSubscriptionPart(TapirUnitTest):
 
         self.assertEqual(Decimal(19), part.value)
         self.assertEqual(
-            "Ernteanteil Gemüse M: 95,00 € monatlich ÷ 5 Liefertermine im Oktober = 19,00 €",
+            "Gemüse M: 95,00 € monatlich ÷ 5 Liefertermine im Oktober = 19,00 €",
             part.explanation,
         )
         mock_is_proportional_mode_active.assert_called_once_with(
@@ -327,7 +325,7 @@ class TestGetSubscriptionPart(TapirUnitTest):
 
         self.assertEqual(Decimal(38), part.value)
         self.assertEqual(
-            "Ernteanteil Gemüse M (2 Anteile): 190,00 € monatlich ÷ 5 Liefertermine im Oktober = 38,00 €",
+            "Gemüse M (2 Anteile): 190,00 € monatlich ÷ 5 Liefertermine im Oktober = 38,00 €",
             part.explanation,
         )
 
@@ -363,7 +361,7 @@ class TestGetSubscriptionPart(TapirUnitTest):
 
         self.assertEqual(Decimal(16), part.value)
         self.assertEqual(
-            "Ernteanteil Gemüse M (Sonderpreis): 80,00 € monatlich ÷ 5 Liefertermine im Oktober = 16,00 €",
+            "Gemüse M (Sonderpreis): 80,00 € monatlich ÷ 5 Liefertermine im Oktober = 16,00 €",
             part.explanation,
         )
 

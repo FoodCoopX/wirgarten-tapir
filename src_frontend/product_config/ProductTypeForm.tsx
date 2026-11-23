@@ -188,6 +188,10 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
                     required={true}
                     value={name}
                   />
+                  <Form.Text>
+                    Im Singular, z.B. "Gemüseanteil". Wird als Überschrift
+                    angezeigt, z.B. im Bestellwizard und im Mitgliederprofil.
+                  </Form.Text>
                 </Form.Group>
               </Row>
               <Row className={"mt-4"}>

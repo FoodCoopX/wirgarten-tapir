@@ -15,6 +15,7 @@ from tapir.log.util import freeze_for_log
 from tapir.pickup_locations.services.basket_size_capacities_service import (
     BasketSizeCapacitiesService,
 )
+from tapir.products.services.product_name_validator import ProductNameValidator
 from tapir.products.serializers import (
     ExtendedProductSerializer,
     PublicProductTypeSerializer,
@@ -129,6 +130,11 @@ class ExtendedProductView(APIView):
         try:
             SolidarityValidator.validate_solidarity_dropdown_values(
                 request_serializer.validated_data["solidarity_choices"]
+            )
+            ProductNameValidator.validate_name_is_unique(
+                product_name=request_serializer.validated_data["name"],
+                product_id=request_serializer.validated_data["id"],
+                cache={},
             )
         except ValidationError as error:
             return Response(data=error.message, status=status.HTTP_400_BAD_REQUEST)

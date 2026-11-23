@@ -84,7 +84,7 @@ class ProductGenerator:
             description_bestellwizard_short = file.read()
 
         ernteanteile = ProductType.objects.create(
-            name="Ernteanteile",
+            name="Ernteanteil",
             delivery_cycle=WEEKLY[0],
             is_affected_by_jokers=True,
             description_bestellwizard_short=description_bestellwizard_short,
@@ -174,7 +174,7 @@ class ProductGenerator:
     def generate_products_verein(cls, product_type_ernteanteile: ProductType):
         cls.generate_product(
             product_type=product_type_ernteanteile,
-            name="M",
+            name="M-Ernteanteil",
             base_price=70.3,
             size=1,
             base=True,
@@ -182,7 +182,7 @@ class ProductGenerator:
         )
         cls.generate_product(
             product_type=product_type_ernteanteile,
-            name="S",
+            name="S-Ernteanteil",
             base_price=48.3,
             size=0.66,
             base=False,
@@ -190,7 +190,7 @@ class ProductGenerator:
         )
         cls.generate_product(
             product_type=product_type_ernteanteile,
-            name="L",
+            name="L-Ernteanteil",
             base_price=109.8,
             size=1.33,
             base=False,
@@ -198,7 +198,7 @@ class ProductGenerator:
         )
 
         eggs = ProductType.objects.create(
-            name="Hühneranteile",
+            name="Hühneranteil",
             delivery_cycle=EVEN_WEEKS[0],
             is_affected_by_jokers=True,
             order_in_bestellwizard=2,
@@ -210,7 +210,7 @@ class ProductGenerator:
         )
         cls.generate_product(
             product_type=eggs,
-            name="Ganze",
+            name="Ganzer Hühneranteil",
             base_price=18,
             size=1,
             base=True,
@@ -218,7 +218,7 @@ class ProductGenerator:
         )
         cls.generate_product(
             product_type=eggs,
-            name="Halbe",
+            name="Halber Hühneranteil",
             base_price=9.5,
             size=0.5,
             base=False,
@@ -229,7 +229,7 @@ class ProductGenerator:
     def generate_products_wirgarten(cls, product_type_ernteanteile: ProductType):
         cls.generate_product(
             product_type=product_type_ernteanteile,
-            name="M",
+            name="M-Ernteanteil",
             base_price=70.3,
             size=1,
             base=True,
@@ -237,7 +237,7 @@ class ProductGenerator:
         )
         cls.generate_product(
             product_type=product_type_ernteanteile,
-            name="S",
+            name="S-Ernteanteil",
             base_price=48.3,
             size=0.66,
             base=False,
@@ -245,7 +245,7 @@ class ProductGenerator:
         )
         cls.generate_product(
             product_type=product_type_ernteanteile,
-            name="L",
+            name="L-Ernteanteil",
             base_price=109.8,
             size=1.3,
             base=False,
@@ -253,7 +253,7 @@ class ProductGenerator:
         )
         cls.generate_product(
             product_type=product_type_ernteanteile,
-            name="XL",
+            name="XL-Ernteanteil",
             base_price=129.2,
             size=1.66,
             base=False,
@@ -261,7 +261,7 @@ class ProductGenerator:
         )
 
         eggs = ProductType.objects.create(
-            name="Hühneranteile",
+            name="Hühneranteil",
             delivery_cycle=EVEN_WEEKS[0],
             is_affected_by_jokers=True,
             order_in_bestellwizard=2,
@@ -273,7 +273,7 @@ class ProductGenerator:
         )
         cls.generate_product(
             product_type=eggs,
-            name="Ganze",
+            name="Ganzer Hühneranteil",
             base_price=18,
             size=1,
             base=True,
@@ -281,7 +281,7 @@ class ProductGenerator:
         )
         cls.generate_product(
             product_type=eggs,
-            name="Halbe",
+            name="Halber Hühneranteil",
             base_price=9.5,
             size=0.5,
             base=False,
@@ -302,7 +302,7 @@ class ProductGenerator:
         )
         cls.generate_product(
             product_type=hofpunkt,
-            name="Mitgliedschaft",
+            name="Hofpunkt-Mitgliedschaft",
             base_price=3,
             size=1,
             base=True,
@@ -313,7 +313,7 @@ class ProductGenerator:
     def generate_products_biotop(cls, product_type_ernteanteile: ProductType):
         cls.generate_product(
             product_type=product_type_ernteanteile,
-            name="M",
+            name="M-Ernteanteil",
             base_price=70.3,
             size=1,
             base=True,
@@ -323,7 +323,7 @@ class ProductGenerator:
         )
         cls.generate_product(
             product_type=product_type_ernteanteile,
-            name="S",
+            name="S-Ernteanteil",
             base_price=48.3,
             size=0.7,
             base=False,
@@ -333,7 +333,7 @@ class ProductGenerator:
         )
         cls.generate_product(
             product_type=product_type_ernteanteile,
-            name="L",
+            name="L-Ernteanteil",
             base_price=109.8,
             size=1.7,
             base=False,
@@ -343,7 +343,7 @@ class ProductGenerator:
         )
 
         eggs = ProductType.objects.create(
-            name="Hühneranteile",
+            name="Hühneranteil",
             delivery_cycle=EVEN_WEEKS[0],
             is_affected_by_jokers=True,
             order_in_bestellwizard=2,
@@ -355,7 +355,7 @@ class ProductGenerator:
         )
         cls.generate_product(
             product_type=eggs,
-            name="Ganze",
+            name="Ganzer Hühneranteil",
             base_price=18,
             size=1,
             base=True,
@@ -363,7 +363,7 @@ class ProductGenerator:
         )
         cls.generate_product(
             product_type=eggs,
-            name="Halbe",
+            name="Halber Hühneranteil",
             base_price=9.5,
             size=0.5,
             base=False,
@@ -384,7 +384,7 @@ class ProductGenerator:
         )
         cls.generate_product(
             product_type=hofpunkt,
-            name="Mitgliedschaft",
+            name="Hofpunkt-Mitgliedschaft",
             base_price=3,
             size=1,
             base=True,
@@ -392,22 +392,22 @@ class ProductGenerator:
         )
 
         ProductBasketSizeEquivalence.objects.create(
-            product=Product.objects.get(name="S"),
+            product=Product.objects.get(name="S-Ernteanteil"),
             basket_size_name="kleine Kiste",
             quantity=1,
         )
         ProductBasketSizeEquivalence.objects.create(
-            product=Product.objects.get(name="M"),
+            product=Product.objects.get(name="M-Ernteanteil"),
             basket_size_name="normale Kiste",
             quantity=1,
         )
         ProductBasketSizeEquivalence.objects.create(
-            product=Product.objects.get(name="L"),
+            product=Product.objects.get(name="L-Ernteanteil"),
             basket_size_name="kleine Kiste",
             quantity=1,
         )
         ProductBasketSizeEquivalence.objects.create(
-            product=Product.objects.get(name="L"),
+            product=Product.objects.get(name="L-Ernteanteil"),
             basket_size_name="normale Kiste",
             quantity=1,
         )
@@ -416,7 +416,7 @@ class ProductGenerator:
     def generate_products_l2g(cls, product_type_ernteanteile: ProductType):
         cls.generate_product(
             product_type=product_type_ernteanteile,
-            name="Klein",
+            name="Kleiner Ernteanteil",
             base_price=72,
             size=1,
             base=True,
@@ -424,7 +424,7 @@ class ProductGenerator:
         )
         cls.generate_product(
             product_type=product_type_ernteanteile,
-            name="Groß",
+            name="Großer Ernteanteil",
             base_price=112,
             size=1.6,
             base=False,

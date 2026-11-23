@@ -442,7 +442,7 @@ class BaseProductForm(forms.Form):
             raise ValidationError(
                 {
                     "consent_harvest_shares": _(
-                        f"Du musst den Vertragsgrundsätzen zustimmen, um {self.product_type.name} zu zeichnen."
+                        f"Du musst den Vertragsgrundsätzen zustimmen, um Verträge für {self.product_type.name} abzuschließen."
                     )
                 }
             )
@@ -876,7 +876,7 @@ class AdditionalProductForm(forms.Form):
         ):
             raise ValidationError(
                 {
-                    self.consent_field_key: f"Du musst den Vertragsgrundsätzen zustimmen, um {self.product_type.name} zu zeichnen."
+                    self.consent_field_key: f"Du musst den Vertragsgrundsätzen zustimmen, um Verträge für {self.product_type.name} abzuschließen."
                 }
             )
 

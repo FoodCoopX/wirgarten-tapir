@@ -115,7 +115,7 @@ class TestMemberMailTokenService(TapirUnitTest):
             recipient=member, cache=cache
         )
 
-        self.assertEqual("einen S-Ernteanteil + 2 M-Ernteanteile", result)
+        self.assertEqual("1 × S + 2 × M", result)
         mock_get_all_subscriptions_for_member.assert_called_once_with(
             member_id=member.id, cache=cache
         )

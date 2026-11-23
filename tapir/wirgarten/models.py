@@ -11,6 +11,7 @@ from django.db.models import (
     Index,
     JSONField,
     OuterRef,
+    Q,
     Subquery,
     Sum,
     UniqueConstraint,
@@ -529,9 +530,16 @@ class Product(TapirModel):
 
     class Meta:
         indexes = [Index(fields=["type"], name="idx_product_type")]
+        constraints = [
+            UniqueConstraint(
+                fields=["name"],
+                condition=Q(deleted=False),
+                name="unique_non_deleted_product_name",
+            )
+        ]
 
     def __str__(self):
-        return f"{self.name} ({self.type.name})"
+        return self.name
 
 
 class ProductPrice(TapirModel):
@@ -663,17 +671,17 @@ class Subscription(TapirModel, AdminConfirmableMixin):
 
     def __str__(self):
         return (
-            f"{self.quantity} × {self.product.name} {self.product.type.name}; "
+            f"{self.quantity} × {self.product.name}; "
             f"from {self.start_date} to {self.end_date}"
         )
 
     def short_str(self):
-        return f"{self.quantity}×{self.product.name},{self.product.type.name}"
+        return f"{self.quantity}×{self.product.name}"
 
     def long_str(self):
         return (
-            f"{self.quantity} × {self.product.name} {self.product.type.name} "
-            + f" ({format_date(self.start_date)} - {format_date(self.end_date)})"
+            f"{self.quantity} × {self.product.name} "
+            f"({format_date(self.start_date)} - {format_date(self.end_date)})"
         )
 
 

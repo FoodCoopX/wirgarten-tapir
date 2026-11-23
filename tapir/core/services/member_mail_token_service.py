@@ -55,6 +55,4 @@ class MemberMailTokenService:
 
     @staticmethod
     def _format_product_quantity(product: Product, quantity: int) -> str:
-        if quantity == 1:
-            return f"einen {product.name}-{product.type.name[:-1]}"
-        return f"{quantity} {product.name}-{product.type.name}"
+        return f"{quantity} × {product.name}"
