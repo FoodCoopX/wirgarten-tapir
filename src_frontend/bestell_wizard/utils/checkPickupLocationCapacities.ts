@@ -20,6 +20,7 @@ export function checkPickupLocationCapacities(
   >,
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>,
   growingPeriod: BestellWizardGrowingPeriodChoice | undefined,
+  isIgnored: () => boolean,
 ) {
   setPickupLocationsCapacityCheckLoading(true);
 
@@ -31,6 +32,7 @@ export function checkPickupLocationCapacities(
       },
     })
     .then((response) => {
+      if (isIgnored()) return;
       setPickupLocationsWithCapacityFull(
         new Set(
           pickupLocations.filter(
@@ -42,15 +44,17 @@ export function checkPickupLocationCapacities(
         ),
       );
     })
-    .catch((error) =>
+    .catch((error) => {
+      if (isIgnored()) return;
       handleRequestError(
         error,
         "Fehler bei der Bestätigung der Verteilstationen-Kapazitäten: " +
           error.message,
         setToastDatas,
-      ),
-    )
+      );
+    })
     .finally(() => {
+      if (isIgnored()) return;
       setPickupLocationsCapacityCheckLoading(false);
     });
 }

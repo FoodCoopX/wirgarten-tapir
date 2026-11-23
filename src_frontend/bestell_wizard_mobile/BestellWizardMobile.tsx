@@ -30,6 +30,7 @@ import { getEmptyPersonalData } from "../bestell_wizard/utils/getEmptyPersonalDa
 import { getTestPersonalData } from "../bestell_wizard/utils/getTestPersonalData.ts";
 import { isAtLeastOneProductOrdered } from "../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
 import { isShoppingCartEmpty } from "../bestell_wizard/utils/isShoppingCartEmpty.ts";
+import { onGrowingPeriodSelected } from "../bestell_wizard/utils/onGrowingPeriodSelected.ts";
 import { selectAllRequiredProductTypes } from "../bestell_wizard/utils/selectAllRequiredProductTypes.ts";
 import { sortProductTypes } from "../bestell_wizard/utils/sortProductTypes.ts";
 import { updateMinimumNumberOfShares } from "../bestell_wizard/utils/updateMinimumNumberOfShares.ts";
@@ -128,7 +129,6 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     useState(false);
   const [sepaAllowed, setSepaAllowed] = useState(false);
   const [contractAccepted, setContractAccepted] = useState(false);
-  const [contractStartDate, setContractStartDate] = useState(new Date());
   const [
     firstDeliveryDatesByPickupLocationAndProductType,
     setFirstDeliveryDatesByPickupLocationAndProductType,
@@ -162,6 +162,13 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
   const settings = useMemo(
     () => applyGrowingPeriod(baseSettings, selectedGrowingPeriod),
     [baseSettings, selectedGrowingPeriod],
+  );
+  const contractStartDate = useMemo(
+    () =>
+      selectedGrowingPeriod
+        ? fromApiDate(selectedGrowingPeriod.contractStartDate)
+        : new Date(),
+    [selectedGrowingPeriod],
   );
   const [confirmOrderLoading, setConfirmOrderLoading] = useState(false);
   const [feedback, setFeedback] = useState("");
@@ -278,8 +285,6 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
       return;
     }
 
-    setContractStartDate(fromApiDate(selectedGrowingPeriod.contractStartDate));
-
     if (waitingListEntryDetails !== undefined) {
       return;
     }
@@ -373,6 +378,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
       return;
     }
 
+    let ignore = false;
     checkPickupLocationCapacities(
       pickupLocationsApi,
       settings.pickupLocations,
@@ -381,7 +387,12 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
       setPickupLocationsWithCapacityFull,
       setToastDatas,
       selectedGrowingPeriod,
+      () => ignore,
     );
+
+    return () => {
+      ignore = true;
+    };
   }, [settings, shoppingCart, selectedGrowingPeriod]);
 
   useEffect(() => {
@@ -755,7 +766,15 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             goToNextStep={goToNextStep}
             settings={settings}
             selectedGrowingPeriod={selectedGrowingPeriod}
-            setSelectedGrowingPeriod={setSelectedGrowingPeriod}
+            onGrowingPeriodSelected={(growingPeriod) =>
+              onGrowingPeriodSelected(
+                growingPeriod,
+                shoppingCart,
+                setSelectedGrowingPeriod,
+                setSelectedPickupLocations,
+                setShoppingCart,
+              )
+            }
             stepActive={step === currentStep}
           />
         );

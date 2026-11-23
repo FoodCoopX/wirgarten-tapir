@@ -27,6 +27,7 @@ import { fetchFirstDeliveryDates } from "../../bestell_wizard/utils/fetchFirstDe
 import { formatShoppingCart } from "../../bestell_wizard/utils/formatShoppingCart.ts";
 import { getEmptyPersonalData } from "../../bestell_wizard/utils/getEmptyPersonalData.ts";
 import { isShoppingCartEmpty } from "../../bestell_wizard/utils/isShoppingCartEmpty.ts";
+import { onGrowingPeriodSelected } from "../../bestell_wizard/utils/onGrowingPeriodSelected.ts";
 import { updateProductsAndProductTypesOverCapacity } from "../../bestell_wizard/utils/updateProductsAndProductTypesOverCapacity.ts";
 import BestellWizardMobileBase from "../../bestell_wizard_mobile/components/BestellWizardMobileBase.tsx";
 import Step10OrderSummary from "../../bestell_wizard_mobile/steps/Step10OrderSummary.tsx";
@@ -367,6 +368,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
       return;
     }
 
+    let ignore = false;
     checkPickupLocationCapacities(
       pickupLocationApi,
       settings.pickupLocations,
@@ -375,7 +377,12 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
       setPickupLocationsWithCapacityFull,
       setToastDatas,
       selectedGrowingPeriod,
+      () => ignore,
     );
+
+    return () => {
+      ignore = true;
+    };
   }, [settings, shoppingCart, selectedGrowingPeriod]);
 
   useEffect(() => {
@@ -503,7 +510,15 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
             goToNextStep={goToNextStep}
             settings={settings}
             selectedGrowingPeriod={selectedGrowingPeriod}
-            setSelectedGrowingPeriod={setSelectedGrowingPeriod}
+            onGrowingPeriodSelected={(growingPeriod) =>
+              onGrowingPeriodSelected(
+                growingPeriod,
+                shoppingCart,
+                setSelectedGrowingPeriod,
+                setSelectedPickupLocations,
+                setShoppingCart,
+              )
+            }
             stepActive={step === currentStep}
           />
         );

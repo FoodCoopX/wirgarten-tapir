@@ -10,7 +10,7 @@ interface Step3BGrowingPeriodChoiceProps {
   settings: BestellWizardSettings;
   goToNextStep: () => void;
   selectedGrowingPeriod: BestellWizardGrowingPeriodChoice | undefined;
-  setSelectedGrowingPeriod: (p: BestellWizardGrowingPeriodChoice) => void;
+  onGrowingPeriodSelected: (p: BestellWizardGrowingPeriodChoice) => void;
   stepActive: boolean;
 }
 
@@ -26,7 +26,7 @@ const Step3BGrowingPeriodChoice: React.FC<Step3BGrowingPeriodChoiceProps> = ({
   settings,
   goToNextStep,
   selectedGrowingPeriod,
-  setSelectedGrowingPeriod,
+  onGrowingPeriodSelected,
   stepActive,
 }) => {
   return (
@@ -45,7 +45,11 @@ const Step3BGrowingPeriodChoice: React.FC<Step3BGrowingPeriodChoiceProps> = ({
               className="btn-check"
               id={growingPeriod.id}
               autoComplete="off"
-              onChange={() => setSelectedGrowingPeriod(growingPeriod)}
+              onChange={() => {
+                if (growingPeriod !== selectedGrowingPeriod) {
+                  onGrowingPeriodSelected(growingPeriod);
+                }
+              }}
               checked={growingPeriod === selectedGrowingPeriod}
               disabled={settings.growingPeriodChoices.length === 1}
             />
