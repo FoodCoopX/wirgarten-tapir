@@ -14,35 +14,19 @@
 
 import type {
   BestellWizardBaseDataResponse,
-  BestellWizardCapacityCheckRequestRequest,
-  BestellWizardCapacityCheckResponse,
   BestellWizardConfirmOrderRequestRequest,
-  BestellWizardDeliveryDatesForOrderRequestRequest,
-  BestellWizardDeliveryDatesForOrderResponse,
   BestellWizardOrderEvaluationRequestRequest,
   BestellWizardOrderEvaluationResponse,
   OrderConfirmationResponse,
 } from "../models/index";
 import {
   BestellWizardBaseDataResponseFromJSON,
-  BestellWizardCapacityCheckRequestRequestToJSON,
-  BestellWizardCapacityCheckResponseFromJSON,
   BestellWizardConfirmOrderRequestRequestToJSON,
-  BestellWizardDeliveryDatesForOrderRequestRequestToJSON,
-  BestellWizardDeliveryDatesForOrderResponseFromJSON,
   BestellWizardOrderEvaluationRequestRequestToJSON,
   BestellWizardOrderEvaluationResponseFromJSON,
   OrderConfirmationResponseFromJSON,
 } from "../models/index";
 import * as runtime from "../runtime";
-
-export interface BestellWizardApiBestellWizardCapacityCheckCreateRequest {
-  bestellWizardCapacityCheckRequestRequest: BestellWizardCapacityCheckRequestRequest;
-}
-
-export interface BestellWizardApiBestellWizardDeliveryDatesCreateRequest {
-  bestellWizardDeliveryDatesForOrderRequestRequest: BestellWizardDeliveryDatesForOrderRequestRequest;
-}
 
 export interface BestellWizardApiContractStartDateWaitingListEntryRetrieveRequest {
   waitingListEntryId?: string;
@@ -109,139 +93,6 @@ export class BestellWizardApi extends runtime.BaseAPI {
   ): Promise<BestellWizardBaseDataResponse> {
     const response =
       await this.bestellWizardApiBestellWizardBaseDataRetrieveRaw(
-        initOverrides,
-      );
-    return await response.value();
-  }
-
-  /**
-   */
-  async bestellWizardApiBestellWizardCapacityCheckCreateRaw(
-    requestParameters: BestellWizardApiBestellWizardCapacityCheckCreateRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<BestellWizardCapacityCheckResponse>> {
-    if (requestParameters["bestellWizardCapacityCheckRequestRequest"] == null) {
-      throw new runtime.RequiredError(
-        "bestellWizardCapacityCheckRequestRequest",
-        'Required parameter "bestellWizardCapacityCheckRequestRequest" was null or undefined when calling bestellWizardApiBestellWizardCapacityCheckCreate().',
-      );
-    }
-
-    const queryParameters: any = {};
-
-    const headerParameters: runtime.HTTPHeaders = {};
-
-    headerParameters["Content-Type"] = "application/json";
-
-    if (this.configuration && this.configuration.apiKey) {
-      headerParameters["Authorization"] =
-        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
-    }
-
-    if (
-      this.configuration &&
-      (this.configuration.username !== undefined ||
-        this.configuration.password !== undefined)
-    ) {
-      headerParameters["Authorization"] =
-        "Basic " +
-        btoa(this.configuration.username + ":" + this.configuration.password);
-    }
-    const response = await this.request(
-      {
-        path: `/bestell_wizard/api/bestell_wizard_capacity_check`,
-        method: "POST",
-        headers: headerParameters,
-        query: queryParameters,
-        body: BestellWizardCapacityCheckRequestRequestToJSON(
-          requestParameters["bestellWizardCapacityCheckRequestRequest"],
-        ),
-      },
-      initOverrides,
-    );
-
-    return new runtime.JSONApiResponse(response, (jsonValue) =>
-      BestellWizardCapacityCheckResponseFromJSON(jsonValue),
-    );
-  }
-
-  /**
-   */
-  async bestellWizardApiBestellWizardCapacityCheckCreate(
-    requestParameters: BestellWizardApiBestellWizardCapacityCheckCreateRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<BestellWizardCapacityCheckResponse> {
-    const response =
-      await this.bestellWizardApiBestellWizardCapacityCheckCreateRaw(
-        requestParameters,
-        initOverrides,
-      );
-    return await response.value();
-  }
-
-  /**
-   */
-  async bestellWizardApiBestellWizardDeliveryDatesCreateRaw(
-    requestParameters: BestellWizardApiBestellWizardDeliveryDatesCreateRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<BestellWizardDeliveryDatesForOrderResponse>> {
-    if (
-      requestParameters["bestellWizardDeliveryDatesForOrderRequestRequest"] ==
-      null
-    ) {
-      throw new runtime.RequiredError(
-        "bestellWizardDeliveryDatesForOrderRequestRequest",
-        'Required parameter "bestellWizardDeliveryDatesForOrderRequestRequest" was null or undefined when calling bestellWizardApiBestellWizardDeliveryDatesCreate().',
-      );
-    }
-
-    const queryParameters: any = {};
-
-    const headerParameters: runtime.HTTPHeaders = {};
-
-    headerParameters["Content-Type"] = "application/json";
-
-    if (this.configuration && this.configuration.apiKey) {
-      headerParameters["Authorization"] =
-        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
-    }
-
-    if (
-      this.configuration &&
-      (this.configuration.username !== undefined ||
-        this.configuration.password !== undefined)
-    ) {
-      headerParameters["Authorization"] =
-        "Basic " +
-        btoa(this.configuration.username + ":" + this.configuration.password);
-    }
-    const response = await this.request(
-      {
-        path: `/bestell_wizard/api/bestell_wizard_delivery_dates`,
-        method: "POST",
-        headers: headerParameters,
-        query: queryParameters,
-        body: BestellWizardDeliveryDatesForOrderRequestRequestToJSON(
-          requestParameters["bestellWizardDeliveryDatesForOrderRequestRequest"],
-        ),
-      },
-      initOverrides,
-    );
-
-    return new runtime.JSONApiResponse(response, (jsonValue) =>
-      BestellWizardDeliveryDatesForOrderResponseFromJSON(jsonValue),
-    );
-  }
-
-  /**
-   */
-  async bestellWizardApiBestellWizardDeliveryDatesCreate(
-    requestParameters: BestellWizardApiBestellWizardDeliveryDatesCreateRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<BestellWizardDeliveryDatesForOrderResponse> {
-    const response =
-      await this.bestellWizardApiBestellWizardDeliveryDatesCreateRaw(
-        requestParameters,
         initOverrides,
       );
     return await response.value();

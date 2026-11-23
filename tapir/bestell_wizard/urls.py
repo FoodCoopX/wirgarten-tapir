@@ -5,11 +5,6 @@ from tapir.bestell_wizard import views
 app_name = "bestell_wizard"
 urlpatterns = [
     path(
-        "api/bestell_wizard_capacity_check",
-        views.BestellWizardCapacityCheckApiView.as_view(),
-        name="bestell_wizard_capacity_check",
-    ),
-    path(
         "api/order_evaluation",
         views.BestellWizardOrderEvaluationApiView.as_view(),
         name="order_evaluation",
@@ -18,11 +13,6 @@ urlpatterns = [
         "api/bestell_wizard_base_data",
         views.BestellWizardBaseDataApiView.as_view(),
         name="bestell_wizard_base_data",
-    ),
-    path(
-        "api/bestell_wizard_delivery_dates",
-        views.BestellWizardDeliveryDatesForOrderApiView.as_view(),
-        name="bestell_wizard_delivery_dates",
     ),
     path(
         "bestell_wizard_mobile",

@@ -39,11 +39,8 @@ models/AutomatedExportCycleEnum.ts
 models/AvailableBreadsForDeliveryListResponse.ts
 models/AvailableSegmentsResponse.ts
 models/BestellWizardBaseDataResponse.ts
-models/BestellWizardCapacityCheckRequestRequest.ts
 models/BestellWizardCapacityCheckResponse.ts
 models/BestellWizardConfirmOrderRequestRequest.ts
-models/BestellWizardDeliveryDatesForOrderRequestRequest.ts
-models/BestellWizardDeliveryDatesForOrderResponse.ts
 models/BestellWizardGrowingPeriodChoice.ts
 models/BestellWizardImages.ts
 models/BestellWizardOrderEvaluationRequestRequest.ts
@@ -186,7 +183,6 @@ models/MemberProfileCapacityCheckRequestRequest.ts
 models/MemberProfilePersonalDataResponse.ts
 models/MemberSolidarityContributionsResponse.ts
 models/MemberSubscriptionData.ts
-models/MinimumNumberOfSharesResponse.ts
 models/MissingTrigger.ts
 models/ModeEnum.ts
 models/ModerationActionEnum.ts

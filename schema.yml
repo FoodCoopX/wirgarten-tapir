@@ -2470,62 +2470,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/BestellWizardBaseDataResponse'
           description: ''
-  /bestell_wizard/api/bestell_wizard_capacity_check:
-    post:
-      operationId: bestell_wizard_api_bestell_wizard_capacity_check_create
-      tags:
-      - bestell_wizard
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/BestellWizardCapacityCheckRequestRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/BestellWizardCapacityCheckRequestRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/BestellWizardCapacityCheckRequestRequest'
-        required: true
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BestellWizardCapacityCheckResponse'
-          description: ''
-  /bestell_wizard/api/bestell_wizard_delivery_dates:
-    post:
-      operationId: bestell_wizard_api_bestell_wizard_delivery_dates_create
-      tags:
-      - bestell_wizard
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/BestellWizardDeliveryDatesForOrderRequestRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/BestellWizardDeliveryDatesForOrderRequestRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/BestellWizardDeliveryDatesForOrderRequestRequest'
-        required: true
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BestellWizardDeliveryDatesForOrderResponse'
-          description: ''
   /bestell_wizard/api/contract_start_date_waiting_list_entry:
     get:
       operationId: bestell_wizard_api_contract_start_date_waiting_list_entry_retrieve
@@ -2883,35 +2827,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OrderConfirmationResponse'
-          description: ''
-  /coop/api/minimum_number_of_shares:
-    get:
-      operationId: coop_api_minimum_number_of_shares_retrieve
-      parameters:
-      - in: query
-        name: product_ids
-        schema:
-          type: array
-          items:
-            type: string
-      - in: query
-        name: quantities
-        schema:
-          type: array
-          items:
-            type: integer
-      tags:
-      - coop
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MinimumNumberOfSharesResponse'
           description: ''
   /coop/members/:
     get:
@@ -9832,19 +9747,6 @@ components:
       - theme
       - trial_period_length_in_weeks
       - website_url
-    BestellWizardCapacityCheckRequestRequest:
-      type: object
-      properties:
-        shopping_cart:
-          type: object
-          additionalProperties:
-            type: integer
-        growing_period_id:
-          type: string
-          minLength: 1
-      required:
-      - growing_period_id
-      - shopping_cart
     BestellWizardCapacityCheckResponse:
       type: object
       properties:
@@ -9934,33 +9836,6 @@ components:
       - solidarity_contribution
       - statute_accepted
       - student_status_enabled
-    BestellWizardDeliveryDatesForOrderRequestRequest:
-      type: object
-      properties:
-        shopping_cart:
-          type: object
-          additionalProperties:
-            type: integer
-        waiting_list_entry_id:
-          type: string
-          minLength: 1
-        growing_period_id:
-          type: string
-          minLength: 1
-      required:
-      - shopping_cart
-    BestellWizardDeliveryDatesForOrderResponse:
-      type: object
-      properties:
-        delivery_date_by_pickup_location_id_and_product_type_id:
-          type: object
-          additionalProperties:
-            type: object
-            additionalProperties:
-              type: string
-              format: date
-      required:
-      - delivery_date_by_pickup_location_id_and_product_type_id
     BestellWizardGrowingPeriodChoice:
       type: object
       properties:
@@ -14920,13 +14795,6 @@ components:
       - bestell_wizard_url_template
       - product_types
       - subscriptions
-    MinimumNumberOfSharesResponse:
-      type: object
-      properties:
-        minimum_number_of_shares:
-          type: integer
-      required:
-      - minimum_number_of_shares
     MissingTrigger:
       type: object
       properties:

@@ -57,12 +57,6 @@ class BestellWizardConfirmOrderRequestSerializer(serializers.Serializer):
     delivery_address = DeliveryAddressSerializer(required=False)
 
 
-class BestellWizardCapacityCheckRequestSerializer(serializers.Serializer):
-    # map of productId -> quantity ordered
-    shopping_cart = serializers.DictField(child=serializers.IntegerField())
-    growing_period_id = serializers.CharField()
-
-
 class BestellWizardCapacityCheckResponseSerializer(serializers.Serializer):
     ids_of_products_over_capacity = serializers.ListField(child=serializers.CharField())
     ids_of_product_types_over_capacity = serializers.ListField(
@@ -223,18 +217,6 @@ class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
     strings = BestellWizardStringsSerializer()
     images = BestellWizardImagesSerializer()
     debug = serializers.BooleanField()
-
-
-class BestellWizardDeliveryDatesForOrderRequestSerializer(serializers.Serializer):
-    shopping_cart = serializers.DictField(child=serializers.IntegerField())
-    waiting_list_entry_id = serializers.CharField(required=False)
-    growing_period_id = serializers.CharField(required=False)
-
-
-class BestellWizardDeliveryDatesForOrderResponseSerializer(serializers.Serializer):
-    delivery_date_by_pickup_location_id_and_product_type_id = serializers.DictField(
-        child=serializers.DictField(child=serializers.DateField())
-    )
 
 
 class BestellWizardOrderEvaluationRequestSerializer(serializers.Serializer):
