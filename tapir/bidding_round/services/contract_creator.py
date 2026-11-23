@@ -11,6 +11,9 @@ from tapir.bidding_round.models import (
     BiddingRound,
     BiddingRoundCreatedSubscription,
 )
+from tapir.bidding_round.services.bidding_round_stats_service import (
+    BiddingRoundStatsService,
+)
 from tapir.payments.services.mandate_reference_provider import (
     MandateReferenceProvider,
 )
@@ -121,11 +124,31 @@ class ContractCreator:
         BiddingRoundCreatedSubscription.objects.create(
             round=bidding_round,
             subscription=subscription,
+            monthly_price_per_share=cls._get_price_per_share(bid, bidding_round, cache),
         )
         subscriptions = [subscription]
 
         cls._assign_solidarity_contribution(bid, subscriptions, period, actor, cache)
         return subscriptions
+
+    @classmethod
+    def _get_price_per_share(
+        cls, bid: Bid, bidding_round: BiddingRound, cache: dict
+    ) -> Decimal:
+        """The round's average bid per share, scaled to the bid's share size.
+
+        Freezing it on the link makes the contract's price independent of later
+        changes to the round or to ``ProductPrice``.
+        """
+        average_per_share = (
+            BiddingRoundStatsService.get_bidder_average_per_share_per_month(
+                bidding_round, cache=cache
+            )
+        )
+        size = BiddingRoundStatsService.get_product_size(
+            bid.product, bidding_round, cache
+        )
+        return (average_per_share * size).quantize(Decimal("0.0001"))
 
     @classmethod
     def _get_existing_subscription(

@@ -6,7 +6,9 @@ from tapir.bidding_round.services.bidding_round_stats_service import (
 from tapir.bidding_round.tests.factories import (
     BidFactory,
     BiddingRoundFactory,
+    BiddingRoundProductPriceFactory,
 )
+from tapir.wirgarten.tests.factories import ProductFactory, ProductPriceFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
@@ -66,4 +68,22 @@ class TestBiddingRoundStatsService(TapirIntegrationTest):
         self.assertEqual(
             Decimal("0"),
             BiddingRoundStatsService.get_bidder_average_per_month(bidding_round),
+        )
+
+    def test_getProductSize_withoutRoundSize_usesTheProductPriceSize(self):
+        bidding_round = BiddingRoundFactory.create()
+        product = ProductFactory.create(type=bidding_round.product_type)
+        BiddingRoundProductPriceFactory.create(
+            round=bidding_round, product=product, size=None
+        )
+        ProductPriceFactory.create(
+            product=product,
+            price=Decimal("10.00"),
+            size=Decimal("2.0000"),
+            valid_from=bidding_round.growing_period.start_date,
+        )
+
+        self.assertEqual(
+            Decimal("2.0000"),
+            BiddingRoundStatsService.get_product_size(product, bidding_round, cache={}),
         )

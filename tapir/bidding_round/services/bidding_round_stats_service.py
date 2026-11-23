@@ -5,6 +5,7 @@ from tapir.bidding_round.models import (
     BiddingRound,
     BiddingRoundProductPrice,
 )
+from tapir.bidding_round.services.product_size_service import ProductSizeService
 from tapir.wirgarten.models import Product
 
 
@@ -35,9 +36,12 @@ class BiddingRoundStatsService:
             round=bidding_round,
             product=product,
         ).first()
-        if price is None or price.size is None:
-            return Decimal("0")
-        return Decimal(price.size)
+        if price is not None and price.size is not None:
+            return Decimal(price.size)
+        size = ProductSizeService.get_size(
+            product, bidding_round.growing_period, cache=cache
+        )
+        return size if size is not None else Decimal("0")
 
     @classmethod
     def get_bidder_average_per_share_per_month(

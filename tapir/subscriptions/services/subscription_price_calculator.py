@@ -42,14 +42,13 @@ class SubscriptionPriceCalculator:
         queryset = cls.annotate_subscriptions_queryset_with_product_price(
             queryset, reference_date
         )
+        queryset = SubscriptionPriceProvider.apply_annotations(queryset)
         return queryset.annotate(
             **{
                 cls.ANNOTATION_MONTHLY_PRICE: Case(
-                    When(
-                        price_override__isnull=True,
-                        then=F(cls.ANNOTATION_CURRENT_PRODUCT_PRICE) * F("quantity"),
-                    ),
-                    default=F("price_override"),
+                    When(price_override__isnull=False, then=F("price_override")),
+                    *SubscriptionPriceProvider.get_price_whens(),
+                    default=F(cls.ANNOTATION_CURRENT_PRODUCT_PRICE) * F("quantity"),
                     output_field=DecimalField(),
                 )
             }

@@ -107,6 +107,21 @@ class TestBidValidator(TapirIntegrationTest):
                 cache={},
             )
 
+    def test_validate_productWithoutPriceRow_raisesValidationError(self):
+        bidding_round = BiddingRoundFactory.create(
+            status=BIDDING_ROUND_STATUS_ACTIVE,
+            start_at=get_now(cache={}) - datetime.timedelta(hours=1),
+            end_at=get_now(cache={}) + datetime.timedelta(days=1),
+        )
+        product = ProductFactory.create(type=bidding_round.product_type)
+
+        with pytest.raises(ValidationError):
+            BidValidator.validate(
+                bidding_round,
+                BidInput(product_id=product.id, quantity=1, amount_1=Decimal("80.00")),
+                cache={},
+            )
+
     def test_validate_inactiveRound_raisesValidationError(self):
         bidding_round, product = self._create_active_round_with_price()
         bidding_round.status = "closed"

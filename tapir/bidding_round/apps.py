@@ -16,3 +16,7 @@ class BiddingRoundConfig(AppConfig):
         SubscriptionPriceProvider.register(
             BiddingRoundSubscriptionPriceService.get_price_for_subscription
         )
+        SubscriptionPriceProvider.register_annotation(
+            BiddingRoundSubscriptionPriceService.annotate_price_per_share,
+            BiddingRoundSubscriptionPriceService.price_per_share_when,
+        )

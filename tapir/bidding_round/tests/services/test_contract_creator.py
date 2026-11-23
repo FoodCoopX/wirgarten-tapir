@@ -56,11 +56,10 @@ class TestContractCreator(TapirIntegrationTest):
         subscription = Subscription.objects.get(member=bid.member, product=product)
         self.assertEqual(1, subscription.quantity)
         self.assertEqual(period.start_date, subscription.start_date)
-        self.assertTrue(
-            BiddingRoundCreatedSubscription.objects.filter(
-                round=bidding_round, subscription=subscription
-            ).exists()
+        link = BiddingRoundCreatedSubscription.objects.get(
+            round=bidding_round, subscription=subscription
         )
+        self.assertEqual(Decimal("80.0000"), link.monthly_price_per_share)
         self.assertFalse(
             SolidarityContribution.objects.filter(
                 member=bid.member, start_date=period.start_date
@@ -78,6 +77,25 @@ class TestContractCreator(TapirIntegrationTest):
         )
         bidding_round.refresh_from_db()
         self.assertIsNotNone(bidding_round.contracts_created_at)
+
+    def test_createContracts_roundChangesLater_keepsTheFrozenPrice(self):
+        bidding_round, bid, product, period = self._create_closed_round_with_bid(
+            bid_amount=Decimal("80.00"), standard_price=Decimal("50.00")
+        )
+        ContractCreator.create_contracts_from_bids(
+            bidding_round, cache={}, actor=bid.member
+        )
+        bid.amount_1 = Decimal("95.00")
+        bid.save(update_fields=["amount_1", "updated_at"])
+
+        subscription = Subscription.objects.get(member=bid.member, product=product)
+
+        self.assertEqual(
+            Decimal("80.00"),
+            SubscriptionPriceCalculator.get_monthly_price(
+                subscription, reference_date=period.start_date, cache={}
+            ),
+        )
 
     def test_createContracts_withSeveralShares_usesTheBidQuantity(self):
         bidding_round, bid, product, period = self._create_closed_round_with_bid(

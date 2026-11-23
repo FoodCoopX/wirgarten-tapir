@@ -43,6 +43,16 @@ class TestPublicDataView(BiddingRoundApiTestBase):
         self.assertEqual("ended", response.data["round_status"])
         self.assertIsNone(response.data["round"])
 
+    def test_publicData_withProductWithoutPrice_hidesTheProduct(self):
+        self._enable()
+        bidding_round = create_open_round()
+        ProductFactory.create(type=bidding_round.product_type)
+
+        response = self.client.get(reverse("bidding_rounds:public_data"))
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assertEqual(1, len(response.data["biddable_product"]["products"]))
+
     def test_publicData_withActiveRound_returnsRoundAndProduct(self):
         self._enable()
         create_open_round()

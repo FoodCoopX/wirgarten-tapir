@@ -8,7 +8,7 @@ from tapir.bidding_round.config import (
     BIDDING_ROUND_MIN_SHARES,
     BIDDING_ROUND_STATUS_ACTIVE,
 )
-from tapir.bidding_round.models import BiddingRound
+from tapir.bidding_round.models import BiddingRound, BiddingRoundProductPrice
 from tapir.bidding_round.services.bid_input import BidInput
 from tapir.wirgarten.models import Product
 from tapir.wirgarten.utils import get_now
@@ -27,9 +27,10 @@ class BidValidator:
     ) -> BidInput:
         cls._validate_round_is_open(bidding_round, cache)
         product = cls._get_product(bidding_round, bid_input.product_id)
+        price = cls._get_price_row(bidding_round, product)
         quantity = cls._validate_quantity(bid_input.quantity)
         amount = cls._validate_amount(bid_input.amount_1)
-        cls._validate_min_amount(bidding_round, product, amount)
+        cls._validate_min_amount(product, price, amount)
         return BidInput(product_id=product.id, quantity=quantity, amount_1=amount)
 
     @classmethod
@@ -75,11 +76,26 @@ class BidValidator:
         return amount
 
     @classmethod
-    def _validate_min_amount(
-        cls, bidding_round: BiddingRound, product: Product, amount: Decimal
-    ) -> None:
+    def _get_price_row(
+        cls, bidding_round: BiddingRound, product: Product
+    ) -> BiddingRoundProductPrice:
         price = bidding_round.prices.filter(product=product).first()
-        if price is None or price.min_amount is None:
+        if price is None:
+            raise ValidationError(
+                _(
+                    "Für dieses Produkt ist in dieser Beitragsrunde kein Preis hinterlegt."
+                )
+            )
+        return price
+
+    @classmethod
+    def _validate_min_amount(
+        cls,
+        product: Product,
+        price: BiddingRoundProductPrice,
+        amount: Decimal,
+    ) -> None:
+        if price.min_amount is None:
             return
         if amount < price.min_amount:
             raise ValidationError(

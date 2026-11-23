@@ -166,7 +166,11 @@ class BiddingRoundViewService:
     def build_biddable_product(
         cls, bidding_round: BiddingRound, cache: dict, member: Member | None = None
     ) -> dict:
-        products_with_prices = cls._get_products_with_prices(bidding_round)
+        products_with_prices = [
+            (product, price)
+            for product, price in cls._get_products_with_prices(bidding_round)
+            if price is not None
+        ]
         current_quantities = cls._get_current_quantities(
             member, [product for product, _price in products_with_prices]
         )
