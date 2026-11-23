@@ -11,6 +11,7 @@ from django.db.models import (
     Index,
     JSONField,
     OuterRef,
+    Q,
     Subquery,
     Sum,
     UniqueConstraint,
@@ -529,6 +530,13 @@ class Product(TapirModel):
 
     class Meta:
         indexes = [Index(fields=["type"], name="idx_product_type")]
+        constraints = [
+            UniqueConstraint(
+                fields=["name"],
+                condition=Q(deleted=False),
+                name="unique_non_deleted_product_name",
+            )
+        ]
 
     def __str__(self):
         return f"{self.name} ({self.type.name})"

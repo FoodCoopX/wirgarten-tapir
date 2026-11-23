@@ -81,7 +81,7 @@ class ProductFactory(factory.django.DjangoModelFactory[Product]):
         model = Product
 
     type = factory.SubFactory(ProductTypeFactory)
-    name = factory.Faker("sentence", nb_words=3)
+    name = factory.Sequence(lambda n: f"Produkt {n}")
     capacity = factory.Faker("pyint", min_value=100, max_value=1000)
 
     _type_counts = defaultdict(int)  # Track counts of Products for each ProductType
