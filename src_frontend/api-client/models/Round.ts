@@ -137,22 +137,22 @@ export interface Round {
   readonly hasBids: boolean;
   /**
    *
+   * @type {string}
+   * @memberof Round
+   */
+  readonly rollbackAvailable: string;
+  /**
+   *
+   * @type {string}
+   * @memberof Round
+   */
+  readonly rollbackUntracked: string;
+  /**
+   *
    * @type {RoundProduct}
    * @memberof Round
    */
   product: RoundProduct | null;
-  /**
-   *
-   * @type {boolean}
-   * @memberof Round
-   */
-  rollbackAvailable: boolean;
-  /**
-   *
-   * @type {boolean}
-   * @memberof Round
-   */
-  rollbackUntracked: boolean;
 }
 
 /**
@@ -213,7 +213,6 @@ export function instanceOfRound(value: object): value is Round {
     return false;
   if (!("comment" in value) || value["comment"] === undefined) return false;
   if (!("hasBids" in value) || value["hasBids"] === undefined) return false;
-  if (!("product" in value) || value["product"] === undefined) return false;
   if (
     !("rollbackAvailable" in value) ||
     value["rollbackAvailable"] === undefined
@@ -224,6 +223,7 @@ export function instanceOfRound(value: object): value is Round {
     value["rollbackUntracked"] === undefined
   )
     return false;
+  if (!("product" in value) || value["product"] === undefined) return false;
   return true;
 }
 
@@ -265,9 +265,9 @@ export function RoundFromJSONTyped(
     growingPeriodId: json["growing_period_id"],
     comment: json["comment"],
     hasBids: json["has_bids"],
-    product: RoundProductFromJSON(json["product"]),
     rollbackAvailable: json["rollback_available"],
     rollbackUntracked: json["rollback_untracked"],
+    product: RoundProductFromJSON(json["product"]),
   };
 }
 
@@ -276,7 +276,10 @@ export function RoundToJSON(json: any): Round {
 }
 
 export function RoundToJSONTyped(
-  value?: Omit<Round, "display_name" | "has_bids"> | null,
+  value?: Omit<
+    Round,
+    "display_name" | "has_bids" | "rollback_available" | "rollback_untracked"
+  > | null,
   ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {
@@ -310,7 +313,5 @@ export function RoundToJSONTyped(
     growing_period_id: value["growingPeriodId"],
     comment: value["comment"],
     product: RoundProductToJSON(value["product"]),
-    rollback_available: value["rollbackAvailable"],
-    rollback_untracked: value["rollbackUntracked"],
   };
 }

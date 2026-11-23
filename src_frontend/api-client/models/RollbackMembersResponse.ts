@@ -40,6 +40,12 @@ export interface RollbackMembersResponse {
    * @type {string}
    * @memberof RollbackMembersResponse
    */
+  readonly displayName: string;
+  /**
+   *
+   * @type {string}
+   * @memberof RollbackMembersResponse
+   */
   status: string;
   /**
    *
@@ -130,25 +136,25 @@ export interface RollbackMembersResponse {
    * @type {boolean}
    * @memberof RollbackMembersResponse
    */
-  hasBids: boolean;
+  readonly hasBids: boolean;
+  /**
+   *
+   * @type {string}
+   * @memberof RollbackMembersResponse
+   */
+  readonly rollbackAvailable: string;
+  /**
+   *
+   * @type {string}
+   * @memberof RollbackMembersResponse
+   */
+  readonly rollbackUntracked: string;
   /**
    *
    * @type {RoundProduct}
    * @memberof RollbackMembersResponse
    */
   product: RoundProduct | null;
-  /**
-   *
-   * @type {boolean}
-   * @memberof RollbackMembersResponse
-   */
-  rollbackAvailable: boolean;
-  /**
-   *
-   * @type {boolean}
-   * @memberof RollbackMembersResponse
-   */
-  rollbackUntracked: boolean;
   /**
    *
    * @type {Array<RollbackResult>}
@@ -165,6 +171,8 @@ export function instanceOfRollbackMembersResponse(
 ): value is RollbackMembersResponse {
   if (!("id" in value) || value["id"] === undefined) return false;
   if (!("name" in value) || value["name"] === undefined) return false;
+  if (!("displayName" in value) || value["displayName"] === undefined)
+    return false;
   if (!("status" in value) || value["status"] === undefined) return false;
   if (!("biddingProcedure" in value) || value["biddingProcedure"] === undefined)
     return false;
@@ -215,7 +223,6 @@ export function instanceOfRollbackMembersResponse(
     return false;
   if (!("comment" in value) || value["comment"] === undefined) return false;
   if (!("hasBids" in value) || value["hasBids"] === undefined) return false;
-  if (!("product" in value) || value["product"] === undefined) return false;
   if (
     !("rollbackAvailable" in value) ||
     value["rollbackAvailable"] === undefined
@@ -226,6 +233,7 @@ export function instanceOfRollbackMembersResponse(
     value["rollbackUntracked"] === undefined
   )
     return false;
+  if (!("product" in value) || value["product"] === undefined) return false;
   if (!("results" in value) || value["results"] === undefined) return false;
   return true;
 }
@@ -246,6 +254,7 @@ export function RollbackMembersResponseFromJSONTyped(
   return {
     id: json["id"],
     name: json["name"],
+    displayName: json["display_name"],
     status: json["status"],
     biddingProcedure: json["bidding_procedure"],
     bidLevels: json["bid_levels"],
@@ -269,9 +278,9 @@ export function RollbackMembersResponseFromJSONTyped(
     growingPeriodId: json["growing_period_id"],
     comment: json["comment"],
     hasBids: json["has_bids"],
-    product: RoundProductFromJSON(json["product"]),
     rollbackAvailable: json["rollback_available"],
     rollbackUntracked: json["rollback_untracked"],
+    product: RoundProductFromJSON(json["product"]),
     results: (json["results"] as Array<any>).map(RollbackResultFromJSON),
   };
 }
@@ -283,7 +292,10 @@ export function RollbackMembersResponseToJSON(
 }
 
 export function RollbackMembersResponseToJSONTyped(
-  value?: RollbackMembersResponse | null,
+  value?: Omit<
+    RollbackMembersResponse,
+    "display_name" | "has_bids" | "rollback_available" | "rollback_untracked"
+  > | null,
   ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {
@@ -316,10 +328,7 @@ export function RollbackMembersResponseToJSONTyped(
         : (value["contractsCreatedAt"] as any).toISOString(),
     growing_period_id: value["growingPeriodId"],
     comment: value["comment"],
-    has_bids: value["hasBids"],
     product: RoundProductToJSON(value["product"]),
-    rollback_available: value["rollbackAvailable"],
-    rollback_untracked: value["rollbackUntracked"],
     results: (value["results"] as Array<any>).map(RollbackResultToJSON),
   };
 }

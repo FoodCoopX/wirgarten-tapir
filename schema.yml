@@ -19620,6 +19620,9 @@ components:
           type: string
         name:
           type: string
+        display_name:
+          type: string
+          readOnly: true
         status:
           type: string
         bidding_procedure:
@@ -19662,14 +19665,17 @@ components:
           type: string
         has_bids:
           type: boolean
+          readOnly: true
+        rollback_available:
+          type: string
+          readOnly: true
+        rollback_untracked:
+          type: string
+          readOnly: true
         product:
           allOf:
           - $ref: '#/components/schemas/RoundProduct'
           nullable: true
-        rollback_available:
-          type: boolean
-        rollback_untracked:
-          type: boolean
         results:
           type: array
           items:
@@ -19680,6 +19686,7 @@ components:
       - bidding_procedure
       - comment
       - contracts_created_at
+      - display_name
       - end_at
       - growing_period_id
       - has_bids
@@ -19775,14 +19782,16 @@ components:
         has_bids:
           type: boolean
           readOnly: true
+        rollback_available:
+          type: string
+          readOnly: true
+        rollback_untracked:
+          type: string
+          readOnly: true
         product:
           allOf:
           - $ref: '#/components/schemas/RoundProduct'
           nullable: true
-        rollback_available:
-          type: boolean
-        rollback_untracked:
-          type: boolean
       required:
       - average_bid_locked_at
       - bid_levels

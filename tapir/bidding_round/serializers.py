@@ -293,6 +293,9 @@ class RoundSerializer(serializers.ModelSerializer):
 class RollbackMembersResponseSerializer(RoundSerializer):
     results = RollbackResultSerializer(many=True)
 
+    class Meta(RoundSerializer.Meta):
+        fields = RoundSerializer.Meta.fields + ["results"]
+
 
 class BidSerializer(serializers.ModelSerializer):
     id = serializers.CharField()

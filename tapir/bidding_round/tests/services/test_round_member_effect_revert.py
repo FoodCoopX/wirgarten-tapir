@@ -174,6 +174,66 @@ class TestRoundMemberEffectRevert(TapirIntegrationTest):
             ),
         )
 
+    def test_revertMember_withReplacedShareSize_restoresTheOldContract(self):
+        period = GrowingPeriodFactory.create(
+            start_date=get_now(cache={}).date() + datetime.timedelta(days=30)
+        )
+        bidding_round = BiddingRoundFactory.create(
+            growing_period=period, status=BIDDING_ROUND_STATUS_CLOSED
+        )
+        old_product = ProductFactory.create(type=bidding_round.product_type)
+        new_product = ProductFactory.create(type=bidding_round.product_type)
+        for product in (old_product, new_product):
+            ProductPriceFactory.create(
+                product=product,
+                price=Decimal("50.00"),
+                size=1,
+                valid_from=period.start_date - datetime.timedelta(days=1),
+            )
+            BiddingRoundProductPriceFactory.create(round=bidding_round, product=product)
+        member = MemberFactory.create()
+        old_subscription = SubscriptionFactory.create(
+            member=member,
+            product=old_product,
+            period=period,
+            quantity=1,
+            start_date=period.start_date,
+            end_date=period.end_date,
+        )
+        old_pk = old_subscription.pk
+        bid = BidFactory.create(
+            round=bidding_round,
+            member=member,
+            product=new_product,
+            quantity=1,
+            amount_1=Decimal("80.00"),
+        )
+        BiddingRoundService.lock_average_bid(
+            bidding_round,
+            position=0,
+            surcharge_percent=0,
+            surcharge_on_bids=False,
+            surcharge_on_average=False,
+            cache={},
+        )
+        bid.admin_confirmed = get_now(cache={})
+        bid.save()
+
+        ContractCreator.create_contracts_from_bids(
+            bidding_round, cache={}, actor=member
+        )
+        self.assertFalse(Subscription.objects.filter(pk=old_pk).exists())
+        new_subscription = Subscription.objects.get(member=member, product=new_product)
+
+        RoundMemberEffectService.revert_member(
+            bidding_round, member, actor=member, cache={}
+        )
+
+        restored = Subscription.objects.get(pk=old_pk)
+        self.assertEqual(old_product, restored.product)
+        self.assertEqual(member, restored.member)
+        self.assertFalse(Subscription.objects.filter(pk=new_subscription.pk).exists())
+
     def test_revertMember_keepsOtherMembersUntouched(self):
         bidding_round, bid, product, period = self._closed_round_with_bid()
         other_bid = BidFactory.create(
