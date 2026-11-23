@@ -3,15 +3,15 @@ from decimal import Decimal
 
 from django.conf import settings
 
-from tapir.associations.parameter_definitions import (
-    ParameterDefinitionsAssociationDeposit,
-)
 from tapir.configuration.models import (
     TapirParameterDatatype,
     TapirParameterDefinitionImporter,
     TapirParameter,
 )
 from tapir.configuration.parameter import ParameterMeta, parameter_definition
+from tapir.wirgarten.parameter_definitions.parameter_definitions_association_deposit import (
+    ParameterDefinitionsAssociationDeposit,
+)
 from tapir.wirgarten.parameter_definitions.parameter_definitions_bakery import (
     ParameterDefinitionsBakery,
 )

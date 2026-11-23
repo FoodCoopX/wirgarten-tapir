@@ -12,9 +12,12 @@ from django.views.generic import View
 
 from tapir.accounts.services.email_verification_service import EmailVerificationService
 from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
+from tapir.associations.services.association_deposit_settings import (
+    association_deposits_enabled,
+)
 from tapir.associations.models import AssociationMembership
-from tapir.associations.services.association_deposit_overview_provider import (
-    AssociationDepositOverviewProvider,
+from tapir.associations.services.association_deposit_annotator import (
+    AssociationDepositAnnotator,
 )
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.member_number_service import MemberNumberService
@@ -302,9 +305,7 @@ class ExportMembersView(PermissionRequiredMixin, View):
 
     def get(self, request, *args, **kwargs):
         # Get queryset based on filters and ordering
-        show_deposits = AssociationDepositOverviewProvider.can_view(
-            user=request.user, cache=self.cache
-        )
+        show_deposits = association_deposits_enabled(cache=self.cache)
         queryset = MemberFilter(
             request.GET,
             queryset=self.get_queryset(),

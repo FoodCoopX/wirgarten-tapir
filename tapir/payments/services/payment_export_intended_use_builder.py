@@ -6,8 +6,8 @@ from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.payments.config import (
     PAYMENT_TYPE_ASSOCIATION_DEPOSIT,
     PAYMENT_TYPE_COOP_SHARES,
-    get_payment_type_label,
 )
+from tapir.payments.services.payment_type_label_getter import PaymentTypeLabelGetter
 from tapir.payments.services.intended_use_pattern_expander import (
     IntendedUsePatternExpander,
 )
@@ -41,7 +41,7 @@ class PaymentExportIntendedUseBuilder:
         cls, payment: Payment, is_contracts: bool, cache: dict
     ):
         payment_type_display = (
-            get_payment_type_label(payment.type)
+            PaymentTypeLabelGetter.get_label(payment.type)
             if payment.type == PAYMENT_TYPE_ASSOCIATION_DEPOSIT
             else cls.get_payment_type_display_legacy(contract_payments=is_contracts)
         )
