@@ -2,6 +2,8 @@ from decimal import Decimal
 
 from django.core.exceptions import ValidationError
 
+from tapir.associations.models import AssociationDepositPaymentOption
+
 from tapir.associations.services.association_deposit_amount_validator import (
     AssociationDepositAmountValidator,
 )
@@ -17,6 +19,9 @@ class AssociationDepositPolicy:
     def get_settings(cls, cache: dict) -> dict:
         return {
             "enabled": association_deposits_enabled(cache),
+            "signup_text": get_parameter_value(
+                ParameterKeys.ASSOCIATION_DEPOSIT_SIGNUP_TEXT, cache=cache
+            ),
             "name": get_parameter_value(
                 ParameterKeys.ASSOCIATION_DEPOSIT_NAME, cache=cache
             ),
@@ -26,7 +31,7 @@ class AssociationDepositPolicy:
             "increment": get_parameter_value(
                 ParameterKeys.ASSOCIATION_DEPOSIT_INCREMENT, cache=cache
             ),
-            "supporting_members_required": get_parameter_value(
+            "deposit_required_for_supporting_members": get_parameter_value(
                 ParameterKeys.ASSOCIATION_DEPOSIT_SUPPORTING_MEMBERS_MUST_DEPOSIT,
                 cache=cache,
             ),
@@ -43,41 +48,52 @@ class AssociationDepositPolicy:
             ),
         }
 
+    @staticmethod
+    def is_deposit_required(has_products: bool, cache: dict) -> bool:
+        return association_deposits_enabled(cache) and (
+            has_products
+            or get_parameter_value(
+                ParameterKeys.ASSOCIATION_DEPOSIT_SUPPORTING_MEMBERS_MUST_DEPOSIT,
+                cache=cache,
+            )
+        )
+
     @classmethod
-    def validate_signup_selection(
+    def validate_registration_selection(
         cls,
-        amount: Decimal | None,
+        amount: Decimal,
         has_products: bool,
         cache: dict,
-        payment_option: str = "once",
+        payment_option: str,
     ) -> None:
-        settings = cls.get_settings(cache)
-        if not settings["enabled"]:
-            if amount not in (None, Decimal("0")) or payment_option != "once":
-                raise ValidationError("Vereinseinlagen sind nicht aktiviert.")
+        if not cls.is_deposit_required(has_products=has_products, cache=cache):
             return
-        if not (has_products or settings["supporting_members_required"]):
-            if amount not in (None, Decimal("0")) or payment_option != "once":
-                raise ValidationError(
-                    "Für diese Anmeldung ist keine Vereinseinlage vorgesehen."
-                )
-            return
-        if payment_option == "individual_agreement":
-            if not settings["allow_signup_without_deposit"]:
+
+        if payment_option == AssociationDepositPaymentOption.INDIVIDUAL_AGREEMENT:
+            if not get_parameter_value(
+                ParameterKeys.ASSOCIATION_DEPOSIT_ALLOW_SIGNUP_WITHOUT_DEPOSIT,
+                cache=cache,
+            ):
                 raise ValidationError(
                     "Anfragen für individuelle Einlagenvereinbarungen sind nicht aktiviert."
                 )
-            if amount is not None:
+
+            if amount != 0:
                 raise ValidationError(
                     "Bei einer offenen Vereinbarung darf kein Einlagenbetrag angenommen werden."
                 )
+
             return
-        if amount is None:
-            raise ValidationError("Bitte die Vereinseinlage auswählen.")
+
         AssociationDepositAmountValidator.validate_regular_deposit_amount(
             amount=amount, cache=cache
         )
-        if amount > settings["minimum"] and not settings["allow_larger_signup"]:
+
+        if amount > get_parameter_value(
+            ParameterKeys.ASSOCIATION_DEPOSIT_MINIMUM, cache=cache
+        ) and not get_parameter_value(
+            ParameterKeys.ASSOCIATION_DEPOSIT_ALLOW_LARGER_SIGNUP, cache=cache
+        ):
             raise ValidationError(
                 "Bei der Anmeldung ist nur die Mindesteinlage erlaubt."
             )

@@ -13,8 +13,8 @@
  */
 
 /**
- * * `once` - once
- * * `individual_agreement` - individual_agreement
+ * * `once` - Einmalzahlung
+ * * `individual_agreement` - Individuelle Vereinbarung
  * @export
  */
 export const AssociationDepositPaymentOptionEnum = {

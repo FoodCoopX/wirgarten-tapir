@@ -1,4 +1,8 @@
+from decimal import Decimal
+
 from rest_framework import serializers
+
+from tapir.associations.models import AssociationDepositPaymentOption
 
 from tapir.associations.serializers import (
     AssociationMembershipTypeSerializer,
@@ -45,12 +49,12 @@ class BestellWizardConfirmOrderRequestSerializer(serializers.Serializer):
         max_digits=8,
         decimal_places=2,
         required=False,
-        allow_null=True,
-        default=None,
+        default=Decimal("0"),
         coerce_to_string=False,
     )
     association_deposit_payment_option = serializers.ChoiceField(
-        choices=["once", "individual_agreement"], default="once"
+        choices=AssociationDepositPaymentOption.choices,
+        default=AssociationDepositPaymentOption.ONCE,
     )
     number_of_coop_shares = serializers.IntegerField()
     pay_coop_shares_in_instalments = serializers.BooleanField(default=False)

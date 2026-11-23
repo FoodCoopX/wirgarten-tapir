@@ -29,7 +29,7 @@ export interface PublicConfirmWaitingListEntryRequestRequest {
    * @type {number}
    * @memberof PublicConfirmWaitingListEntryRequestRequest
    */
-  associationDepositAmount?: number | null;
+  associationDepositAmount?: number;
   /**
    *
    * @type {AssociationDepositPaymentOptionEnum}

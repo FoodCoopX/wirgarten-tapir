@@ -11,8 +11,8 @@ from tapir.accounts.services.keycloak_user_delete_service import (
     KeycloakUserDeleteService,
 )
 from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
-from tapir.associations.services.association_deposit_payment_creator import (
-    AssociationDepositPaymentCreator,
+from tapir.associations.services.association_deposit_policy import (
+    AssociationDepositPolicy,
 )
 from tapir.associations.services.association_deposit_signup_handler import (
     AssociationDepositSignupHandler,
@@ -150,18 +150,23 @@ class BestellWizardOrderFulfiller:
                 actor=actor,
             )
 
-        if association_membership is not None:
-            deposit_amount = validated_serializer_data.get("association_deposit_amount")
-            if deposit_amount:
-                AssociationDepositPaymentCreator.validate_new_deposit(
-                    member=member, amount=deposit_amount, cache=cache
-                )
+        if (
+            association_membership is not None
+            and AssociationDepositPolicy.is_deposit_required(
+                has_products=any(
+                    quantity > 0
+                    for cart in ("shopping_cart_order", "shopping_cart_waiting_list")
+                    for quantity in validated_serializer_data[cart].values()
+                ),
+                cache=cache,
+            )
+        ):
             AssociationDepositSignupHandler.create_signup_deposit(
                 membership=association_membership,
-                amount=deposit_amount,
-                payment_option=validated_serializer_data.get(
-                    "association_deposit_payment_option", "once"
-                ),
+                amount=validated_serializer_data["association_deposit_amount"],
+                payment_option=validated_serializer_data[
+                    "association_deposit_payment_option"
+                ],
                 actor=actor,
                 cache=cache,
             )

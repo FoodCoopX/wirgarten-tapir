@@ -584,7 +584,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
         .waitingListApiPublicConfirmWaitingListEntryCreate({
           publicConfirmWaitingListEntryRequestRequest: {
             entryId: waitingListEntryDetails.entryId,
-            associationDepositAmount: selectedDepositAmount,
+            associationDepositAmount: selectedDepositAmount ?? 0,
             associationDepositPaymentOption: selectedDepositPaymentOption,
             accountOwner: personalData.accountOwner,
             contractAccepted:
@@ -663,7 +663,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
           )
             ? deliveryAddress
             : undefined,
-          associationDepositAmount: selectedDepositAmount,
+          associationDepositAmount: selectedDepositAmount ?? 0,
           associationDepositPaymentOption: selectedDepositPaymentOption,
         },
       })

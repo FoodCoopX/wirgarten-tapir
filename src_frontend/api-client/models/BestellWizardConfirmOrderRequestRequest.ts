@@ -75,7 +75,7 @@ export interface BestellWizardConfirmOrderRequestRequest {
    * @type {number}
    * @memberof BestellWizardConfirmOrderRequestRequest
    */
-  associationDepositAmount?: number | null;
+  associationDepositAmount?: number;
   /**
    *
    * @type {AssociationDepositPaymentOptionEnum}

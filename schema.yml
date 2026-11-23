@@ -5569,6 +5569,7 @@ paths:
         name: id
         schema:
           type: string
+        description: Ein eindeutiger Wert, der pickup location identifiziert.
         required: true
       tags:
       - pickup_locations
@@ -9503,8 +9504,8 @@ components:
       - individual_agreement
       type: string
       description: |-
-        * `once` - once
-        * `individual_agreement` - individual_agreement
+        * `once` - Einmalzahlung
+        * `individual_agreement` - Individuelle Vereinbarung
     AssociationDepositSettings:
       type: object
       properties:
@@ -9526,8 +9527,10 @@ components:
           minimum: -1000000
           exclusiveMaximum: true
           exclusiveMinimum: true
-        supporting_members_required:
+        deposit_required_for_supporting_members:
           type: boolean
+        signup_text:
+          type: string
         allow_larger_signup:
           type: boolean
         allow_signup_without_deposit:
@@ -9537,12 +9540,13 @@ components:
       required:
       - allow_larger_signup
       - allow_signup_without_deposit
+      - deposit_required_for_supporting_members
       - enabled
       - increment
       - minimum
       - name
+      - signup_text
       - signup_without_deposit_label
-      - supporting_members_required
     AssociationMembership:
       type: object
       properties:
@@ -9948,7 +9952,7 @@ components:
           minimum: -1000000
           exclusiveMaximum: true
           exclusiveMinimum: true
-          nullable: true
+          default: 0.00
         association_deposit_payment_option:
           allOf:
           - $ref: '#/components/schemas/AssociationDepositPaymentOptionEnum'
@@ -17318,7 +17322,7 @@ components:
           minimum: -1000000
           exclusiveMaximum: true
           exclusiveMinimum: true
-          nullable: true
+          default: 0.00
         association_deposit_payment_option:
           allOf:
           - $ref: '#/components/schemas/AssociationDepositPaymentOptionEnum'

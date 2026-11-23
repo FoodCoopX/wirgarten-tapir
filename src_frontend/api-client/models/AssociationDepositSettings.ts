@@ -47,7 +47,13 @@ export interface AssociationDepositSettings {
    * @type {boolean}
    * @memberof AssociationDepositSettings
    */
-  supportingMembersRequired: boolean;
+  depositRequiredForSupportingMembers: boolean;
+  /**
+   *
+   * @type {string}
+   * @memberof AssociationDepositSettings
+   */
+  signupText: string;
   /**
    *
    * @type {boolean}
@@ -79,9 +85,11 @@ export function instanceOfAssociationDepositSettings(
   if (!("minimum" in value) || value["minimum"] === undefined) return false;
   if (!("increment" in value) || value["increment"] === undefined) return false;
   if (
-    !("supportingMembersRequired" in value) ||
-    value["supportingMembersRequired"] === undefined
+    !("depositRequiredForSupportingMembers" in value) ||
+    value["depositRequiredForSupportingMembers"] === undefined
   )
+    return false;
+  if (!("signupText" in value) || value["signupText"] === undefined)
     return false;
   if (
     !("allowLargerSignup" in value) ||
@@ -119,7 +127,9 @@ export function AssociationDepositSettingsFromJSONTyped(
     name: json["name"],
     minimum: json["minimum"],
     increment: json["increment"],
-    supportingMembersRequired: json["supporting_members_required"],
+    depositRequiredForSupportingMembers:
+      json["deposit_required_for_supporting_members"],
+    signupText: json["signup_text"],
     allowLargerSignup: json["allow_larger_signup"],
     allowSignupWithoutDeposit: json["allow_signup_without_deposit"],
     signupWithoutDepositLabel: json["signup_without_deposit_label"],
@@ -145,7 +155,9 @@ export function AssociationDepositSettingsToJSONTyped(
     name: value["name"],
     minimum: value["minimum"],
     increment: value["increment"],
-    supporting_members_required: value["supportingMembersRequired"],
+    deposit_required_for_supporting_members:
+      value["depositRequiredForSupportingMembers"],
+    signup_text: value["signupText"],
     allow_larger_signup: value["allowLargerSignup"],
     allow_signup_without_deposit: value["allowSignupWithoutDeposit"],
     signup_without_deposit_label: value["signupWithoutDepositLabel"],

@@ -10,8 +10,8 @@ from tapir.accounts.services.keycloak_user_delete_service import (
     KeycloakUserDeleteService,
 )
 from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
-from tapir.associations.services.association_deposit_payment_creator import (
-    AssociationDepositPaymentCreator,
+from tapir.associations.services.association_deposit_policy import (
+    AssociationDepositPolicy,
 )
 from tapir.associations.services.association_deposit_signup_handler import (
     AssociationDepositSignupHandler,
@@ -144,20 +144,19 @@ class WaitingListEntryConfirmationApplier:
                 subscriptions=new_subscriptions,
             )
 
-            deposit_amount = validated_data.get("association_deposit_amount")
-            if deposit_amount:
-                AssociationDepositPaymentCreator.validate_new_deposit(
-                    member=member, amount=deposit_amount, cache=cache
-                )
-            AssociationDepositSignupHandler.create_signup_deposit(
-                membership=membership,
-                amount=deposit_amount,
-                actor=actor,
+            if AssociationDepositPolicy.is_deposit_required(
+                has_products=waiting_list_entry.product_wishes.filter(
+                    quantity__gt=0
+                ).exists(),
                 cache=cache,
-                payment_option=validated_data.get(
-                    "association_deposit_payment_option", "once"
-                ),
-            )
+            ):
+                AssociationDepositSignupHandler.create_signup_deposit(
+                    membership=membership,
+                    amount=validated_data["association_deposit_amount"],
+                    actor=actor,
+                    cache=cache,
+                    payment_option=validated_data["association_deposit_payment_option"],
+                )
 
         waiting_list_entry.delete()
 

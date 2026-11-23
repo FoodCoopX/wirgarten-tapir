@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Alert, Form } from "react-bootstrap";
 import { AssociationDepositPaymentOptionEnum } from "../../api-client";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
@@ -6,7 +6,7 @@ import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { isValidDepositAmount } from "../../utils/isValidDepositAmount.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
 
-interface Props {
+interface Step6DAssociationDepositProps {
   settings: BestellWizardSettings;
   amount: number | null;
   paymentOption: AssociationDepositPaymentOptionEnum;
@@ -16,7 +16,7 @@ interface Props {
   goToNextStep: () => void;
 }
 
-export default function Step6DAssociationDeposit({
+const Step6DAssociationDeposit: React.FC<Step6DAssociationDepositProps> = ({
   settings,
   amount,
   paymentOption,
@@ -24,22 +24,22 @@ export default function Step6DAssociationDeposit({
   setAmount,
   stepActive,
   goToNextStep,
-}: Readonly<Props>) {
+}) => {
   const deposit = settings.associationDeposit;
-  const [value, setValue] = useState(String(amount ?? deposit.minimum));
+  const [value, setValue] = useState(String(amount || deposit.minimum));
   const [showError, setShowError] = useState(false);
   const [option, setOption] = useState(paymentOption);
   useEffect(() => {
     if (stepActive) {
-      setValue(String(amount ?? deposit.minimum));
+      setValue(String(amount || deposit.minimum));
       setShowError(false);
       setOption(paymentOption);
     }
   }, [stepActive, amount, paymentOption, deposit.minimum]);
 
-  function next() {
+  function onNextClicked() {
     if (option === AssociationDepositPaymentOptionEnum.IndividualAgreement) {
-      setAmount(null);
+      setAmount(0);
       setPaymentOption(option);
       goToNextStep();
       return;
@@ -61,10 +61,7 @@ export default function Step6DAssociationDeposit({
   return (
     <>
       <p>
-        {deposit.name}: Der rückzahlbare Betrag wird pro Mitglied vereinbart und
-        einmalig per SEPA-Lastschrift eingezogen. Vereinsmitgliedschaft,
-        Vereinsbeitrag und laufende Ernte-/Solidarbeiträge bestehen unabhängig
-        davon.
+        {deposit.name}: {deposit.signupText}
       </p>
       {option !== AssociationDepositPaymentOptionEnum.IndividualAgreement && (
         <Form.Group controlId="signup-deposit-amount">
@@ -104,18 +101,14 @@ export default function Step6DAssociationDeposit({
           }}
         />
       )}
-      {option === AssociationDepositPaymentOptionEnum.IndividualAgreement && (
-        <Alert variant="info" className="mt-3">
-          Du kannst die Anmeldung abschließen. Die Verwaltung klärt die Einlage
-          mit dir. Bis dahin wird keine Einlage eingezogen.
-        </Alert>
-      )}
       {showError && (
         <Alert variant="danger">
           Bitte einen gültigen Betrag in den angegebenen Schritten wählen.
         </Alert>
       )}
-      <NextStepButton onClick={next} stepActive={stepActive} />
+      <NextStepButton onClick={onNextClicked} stepActive={stepActive} />
     </>
   );
-}
+};
+
+export default Step6DAssociationDeposit;

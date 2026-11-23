@@ -64,6 +64,11 @@ class AssociationMembership(TapirModel):
         return f"{self.member.get_display_name()} {self.type.name} {self.start_date} -> {self.end_date}"
 
 
+class AssociationDepositPaymentOption(models.TextChoices):
+    ONCE = "once", "Einmalzahlung"
+    INDIVIDUAL_AGREEMENT = "individual_agreement", "Individuelle Vereinbarung"
+
+
 class AssociationDeposit(TapirModel):
     member = models.OneToOneField(
         Member, on_delete=models.CASCADE, related_name="association_deposit"

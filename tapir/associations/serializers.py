@@ -114,7 +114,8 @@ class AssociationDepositSettingsSerializer(Serializer):
     increment = serializers.DecimalField(
         max_digits=8, decimal_places=2, coerce_to_string=False
     )
-    supporting_members_required = serializers.BooleanField()
+    deposit_required_for_supporting_members = serializers.BooleanField()
+    signup_text = CharField()
     allow_larger_signup = serializers.BooleanField()
     allow_signup_without_deposit = serializers.BooleanField()
     signup_without_deposit_label = CharField()

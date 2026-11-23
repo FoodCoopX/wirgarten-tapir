@@ -1,4 +1,8 @@
+from decimal import Decimal
+
 from rest_framework import serializers
+
+from tapir.associations.models import AssociationDepositPaymentOption
 
 from tapir.deliveries.serializers import (
     SubscriptionSerializer,
@@ -143,12 +147,12 @@ class PublicConfirmWaitingListEntryRequestSerializer(serializers.Serializer):
         max_digits=8,
         decimal_places=2,
         required=False,
-        allow_null=True,
-        default=None,
+        default=Decimal("0"),
         coerce_to_string=False,
     )
     association_deposit_payment_option = serializers.ChoiceField(
-        choices=["once", "individual_agreement"], default="once"
+        choices=AssociationDepositPaymentOption.choices,
+        default=AssociationDepositPaymentOption.ONCE,
     )
     entry_id = serializers.CharField()
     link_key = serializers.CharField()

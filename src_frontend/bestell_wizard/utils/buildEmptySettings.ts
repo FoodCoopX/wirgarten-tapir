@@ -5,9 +5,10 @@ export function buildEmptySettings(): BestellWizardSettings {
     associationDeposit: {
       enabled: false,
       name: "Vereinseinlage",
+      signupText: "",
       minimum: 200,
       increment: 50,
-      supportingMembersRequired: true,
+      depositRequiredForSupportingMembers: true,
       allowLargerSignup: false,
       allowSignupWithoutDeposit: false,
       signupWithoutDepositLabel: "",

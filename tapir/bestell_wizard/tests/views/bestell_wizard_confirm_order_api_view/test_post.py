@@ -21,7 +21,6 @@ from tapir.bestell_wizard.services.questionnaire_source_service import (
 )
 from tapir.configuration.models import TapirParameter
 from tapir.core.config import LEGAL_STATUS_COMPANY, LEGAL_STATUS_ASSOCIATION
-from tapir.payments.services.payment_export_builder import PaymentExportBuilder
 from tapir.payments.models import MemberPaymentRhythm
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
@@ -1589,7 +1588,7 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
     @patch.object(OnboardingTrigger, "on_subscription_updated", autospec=True)
     @patch.object(TransactionalTrigger, "fire_all_released_configs", autospec=True)
     def test_post_associationSignup_keepsHarvestMembershipSolidarityAndDepositSeparate(
-        self, mock_dispatch, mock_onboarding
+        self, mock_fire_all_released_configs, mock_on_subscription_updated
     ):
         self._set_parameter(
             ParameterKeys.ORGANISATION_LEGAL_STATUS, LEGAL_STATUS_ASSOCIATION
@@ -1597,7 +1596,7 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_ENABLED, True)
         self._set_parameter(ParameterKeys.TRIAL_PERIOD_ENABLED, True)
         self._set_parameter(ParameterKeys.TRIAL_PERIOD_DURATION, 4)
-        membership_type = AssociationMembershipTypeFactory()
+        membership_type = AssociationMembershipTypeFactory.create()
         data = self.build_valid_post_data_for_an_order_without_waiting_list()
         data.update(
             association_membership_type_id=membership_type.pk,
@@ -1635,49 +1634,55 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         self.assertEqual(member, deposit.member)
         earliest_contract = member.subscription_set.order_by("start_date").first()
         self.assertGreater(membership.start_date, earliest_contract.start_date)
-        PaymentExportBuilder.export_all_unexported_payments(
-            earliest_contract.start_date, False, {}
-        )
-        payment.refresh_from_db()
-        self.assertIsNone(payment.transaction_id)
         self.assertFalse(CoopShareTransaction.objects.exists())
 
         self.assertIn(
             Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION,
-            [call.args[0].key for call in mock_dispatch.call_args_list],
+            [
+                call.args[0].key
+                for call in mock_fire_all_released_configs.call_args_list
+            ],
         )
 
     @patch.object(OnboardingTrigger, "on_subscription_updated", autospec=True)
     @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_associationSignupMissingRequiredDeposit_createsNothing(
-        self, mock_fire_action, mock_onboarding
+        self, mock_fire_action, mock_on_subscription_updated
     ):
         self._set_parameter(
             ParameterKeys.ORGANISATION_LEGAL_STATUS, LEGAL_STATUS_ASSOCIATION
         )
         self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_ENABLED, True)
         data = self.build_valid_post_data_for_an_order_without_waiting_list()
-        data["association_membership_type_id"] = AssociationMembershipTypeFactory().pk
+        data["association_membership_type_id"] = (
+            AssociationMembershipTypeFactory.create().pk
+        )
         response = self.client.post(
             reverse("bestell_wizard:bestell_wizard_confirm_order"),
             data=json.dumps(data),
             content_type="application/json",
         )
         self.assertFalse(response.json()["order_confirmed"])
-        self.assertIn("Vereinseinlage", response.json()["error"])
+        self.assertIn("Mindesteinlage", response.json()["error"])
         self.assertFalse(Member.objects.exists())
         self.assertFalse(Payment.objects.exists())
 
     @patch.object(OnboardingTrigger, "on_subscription_updated", autospec=True)
     @patch.object(TransactionalTrigger, "fire_action", autospec=True)
-    def test_post_associationSignupDisabledDepositStill_createsRegularMembership(
-        self, mock_fire_action, mock_onboarding
+    def test_post_depositsDisabled_createsMembershipWithoutDeposit(
+        self, mock_fire_action, mock_on_subscription_updated
     ):
         self._set_parameter(
             ParameterKeys.ORGANISATION_LEGAL_STATUS, LEGAL_STATUS_ASSOCIATION
         )
         data = self.build_valid_post_data_for_an_order_without_waiting_list()
-        data["association_membership_type_id"] = AssociationMembershipTypeFactory().pk
+        data["association_membership_type_id"] = (
+            AssociationMembershipTypeFactory.create().pk
+        )
+        data.update(
+            association_deposit_amount="250",
+            association_deposit_payment_option="individual_agreement",
+        )
         response = self.client.post(
             reverse("bestell_wizard:bestell_wizard_confirm_order"),
             data=json.dumps(data),
@@ -1693,7 +1698,7 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
     @patch.object(OnboardingTrigger, "on_subscription_updated", autospec=True)
     @patch.object(TransactionalTrigger, "fire_all_released_configs", autospec=True)
     def test_post_associationSignupIndividualAgreement_keepsOtherComponentsWithoutDepositDebt(
-        self, mock_dispatch, mock_onboarding
+        self, mock_fire_all_released_configs, mock_on_subscription_updated
     ):
         self._set_parameter(
             ParameterKeys.ORGANISATION_LEGAL_STATUS, LEGAL_STATUS_ASSOCIATION
@@ -1704,7 +1709,7 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         )
         data = self.build_valid_post_data_for_an_order_without_waiting_list()
         data.update(
-            association_membership_type_id=AssociationMembershipTypeFactory().pk,
+            association_membership_type_id=AssociationMembershipTypeFactory.create().pk,
             association_deposit_payment_option="individual_agreement",
         )
         response = self.client.post(
@@ -1720,7 +1725,10 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
 
         self.assertIn(
             Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION,
-            [call.args[0].key for call in mock_dispatch.call_args_list],
+            [
+                call.args[0].key
+                for call in mock_fire_all_released_configs.call_args_list
+            ],
         )
 
     @patch.object(TransactionalTrigger, "fire_action", autospec=True)
@@ -1739,7 +1747,7 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         )
         data = self.build_valid_post_data_for_an_order_without_waiting_list()
         data.update(
-            association_membership_type_id=AssociationMembershipTypeFactory().pk,
+            association_membership_type_id=AssociationMembershipTypeFactory.create().pk,
             shopping_cart_order={},
             pickup_location_ids=[],
             become_member_now=True,
@@ -1750,12 +1758,6 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
             data=json.dumps(data | {"association_deposit_amount": "200"}),
             content_type="application/json",
         )
-        self.assertFalse(response.json()["order_confirmed"])
-        self.assertFalse(Member.objects.exists())
-
-        response = self.client.post(
-            url, data=json.dumps(data), content_type="application/json"
-        )
         self.assert_order_confirmed(response.json())
         self.assertEqual(1, AssociationMembership.objects.count())
         self.assertFalse(AssociationDeposit.objects.exists())
@@ -1765,10 +1767,10 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
             ParameterKeys.ORGANISATION_LEGAL_STATUS, LEGAL_STATUS_ASSOCIATION
         )
         self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_ENABLED, True)
-        membership_type = AssociationMembershipTypeFactory()
+        membership_type = AssociationMembershipTypeFactory.create()
         cases = [
-            ("individual_agreement", None, False, 200),
-            ("individual_agreement", "0", True, 200),
+            ("individual_agreement", None, False, 400),
+            ("individual_agreement", "0", False, 200),
             ("individual_agreement", "200", True, 200),
             ("once", "100", True, 200),
             ("once", "200.001", True, 400),
@@ -1803,3 +1805,42 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
                 self.assertFalse(Member.objects.exists())
                 self.assertFalse(AssociationDeposit.objects.exists())
                 self.assertFalse(Payment.objects.exists())
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_allProductsWaitlistedAndJoiningNow_createsOneDepositPayment(
+        self, mock_fire_action
+    ):
+        self._set_parameter(
+            ParameterKeys.ORGANISATION_LEGAL_STATUS, LEGAL_STATUS_ASSOCIATION
+        )
+        self._set_parameter(
+            ParameterKeys.ASSOCIATIONS_ALLOW_SUPPORTING_MEMBERSHIP, True
+        )
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_ENABLED, True)
+        self._set_parameter(
+            ParameterKeys.ASSOCIATION_DEPOSIT_SUPPORTING_MEMBERS_MUST_DEPOSIT, False
+        )
+        data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        data.update(
+            shopping_cart_waiting_list=data["shopping_cart_order"],
+            shopping_cart_order={},
+            become_member_now=True,
+            association_membership_type_id=AssociationMembershipTypeFactory.create().pk,
+            association_deposit_amount="200",
+        )
+
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+
+        self.assert_order_confirmed(response.json())
+        member = Member.objects.get()
+        self.assertEqual(member, WaitingListEntry.objects.get().member)
+        self.assertEqual(member, AssociationMembership.objects.get().member)
+        self.assertEqual(
+            Decimal("200"),
+            Payment.objects.get(association_deposit__member=member).amount,
+        )
+        self.assertFalse(Subscription.objects.exists())

@@ -18,6 +18,7 @@ from tapir.accounts.services.keycloak_user_delete_service import (
 from tapir.associations.models import AssociationDeposit
 from tapir.associations.models import AssociationMembership
 from tapir.associations.tests.factories import AssociationMembershipTypeFactory
+from tapir.payments.config import PAYMENT_TYPE_ASSOCIATION_DEPOSIT
 from tapir.core.config import (
     LEGAL_STATUS_COOPERATIVE,
     LEGAL_STATUS_COMPANY,
@@ -45,6 +46,7 @@ from tapir.wirgarten.tests.factories import (
     GrowingPeriodFactory,
     ProductFactory,
     ProductPriceFactory,
+    PaymentFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
@@ -662,24 +664,24 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
             ParameterKeys.ORGANISATION_LEGAL_STATUS, LEGAL_STATUS_ASSOCIATION
         )
         self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_ENABLED, True)
-        entry = WaitingListEntryFactory(
+        entry = WaitingListEntryFactory.create(
             confirmation_link_key=uuid.uuid4(),
             member=None,
             email="deposit-waiting@example.test",
         )
         mock_timezone(self, datetime.datetime(2026, 11, 5, 12))
-        GrowingPeriodFactory(
+        GrowingPeriodFactory.create(
             start_date=datetime.date(2026, 1, 1), end_date=datetime.date(2027, 12, 31)
         )
         if with_product:
-            product = ProductFactory(type__delivery_cycle=NO_DELIVERY[0])
-            ProductPriceFactory(
+            product = ProductFactory.create(type__delivery_cycle=NO_DELIVERY[0])
+            ProductPriceFactory.create(
                 product=product, price=30, valid_from=datetime.date(2026, 1, 1)
             )
             WaitingListProductWish.objects.create(
                 waiting_list_entry=entry, product=product, quantity=1
             )
-        membership_type = AssociationMembershipTypeFactory()
+        membership_type = AssociationMembershipTypeFactory.create()
         return entry, {
             "entry_id": entry.pk,
             "link_key": str(entry.confirmation_link_key),
@@ -694,7 +696,9 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
         }
 
     @patch.object(TransactionalTrigger, "fire_all_released_configs", autospec=True)
-    def test_post_newMemberAgreesDeposit_createsOneDebit(self, mock_dispatch):
+    def test_post_newMemberAgreesDeposit_createsOnePayment(
+        self, mock_fire_all_released_configs
+    ):
         entry, data = self.prepare_deposit_confirmation(with_product=True)
         data["association_deposit_amount"] = "200"
         response = self.client.post(
@@ -708,10 +712,15 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
 
         self.assertIn(
             Events.WAITING_LIST_ORDER_CONFIRMATION,
-            [call.args[0].key for call in mock_dispatch.call_args_list],
+            [
+                call.args[0].key
+                for call in mock_fire_all_released_configs.call_args_list
+            ],
         )
 
-    def test_post_depositWithoutProductAndWithoutSepaConsent_createsNoDebit(self):
+    def test_post_depositWithoutProductAndWithoutSepaConsent_returnsErrorAndDoesNotApplyChanges(
+        self,
+    ):
         entry, data = self.prepare_deposit_confirmation()
         data.update(association_deposit_amount="200", sepa_allowed=False)
         response = self.client.post(
@@ -719,22 +728,24 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
             data=json.dumps(data),
             content_type="application/json",
         )
-        self.assertFalse(response.json()["order_confirmed"])
-        self.assertIn("SEPA-Mandat", response.json()["error"])
-        self.assertTrue(type(entry).objects.filter(pk=entry.pk).exists())
+        self.assert_order_not_confirmed(
+            response.json(), "SEPA-Mandat muss erlaubt sein"
+        )
+        self.assertTrue(WaitingListEntry.objects.filter(pk=entry.pk).exists())
         self.assertFalse(AssociationDeposit.objects.exists())
         self.assertFalse(Member.objects.exists())
 
-    def test_post_missingWaitingListDeposit_keepsEntryWithoutMemberOrDebit(self):
+    def test_post_missingWaitingListDeposit_returnsErrorAndDoesNotApplyChanges(self):
         entry, data = self.prepare_deposit_confirmation()
         response = self.client.post(
             reverse("waiting_list:public_confirm_waiting_list_entry"),
             data=json.dumps(data),
             content_type="application/json",
         )
-        self.assertFalse(response.json()["order_confirmed"])
-        self.assertIn("Vereinseinlage", response.json()["error"])
-        self.assertTrue(type(entry).objects.filter(pk=entry.pk).exists())
+        self.assert_order_not_confirmed(
+            response.json(), "Die Mindesteinlage beträgt 200,00 €."
+        )
+        self.assertTrue(WaitingListEntry.objects.filter(pk=entry.pk).exists())
         self.assertFalse(AssociationDeposit.objects.exists())
         self.assertFalse(Member.objects.exists())
 
@@ -744,7 +755,7 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
             ParameterKeys.ASSOCIATION_DEPOSIT_SUPPORTING_MEMBERS_MUST_DEPOSIT, False
         )
         WaitingListProductWish.objects.create(
-            waiting_list_entry=entry, product=ProductFactory(), quantity=0
+            waiting_list_entry=entry, product=ProductFactory.create(), quantity=0
         )
         response = self.client.post(
             reverse("waiting_list:public_confirm_waiting_list_entry"),
@@ -760,8 +771,8 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
         self._set_parameter(
             ParameterKeys.ASSOCIATION_DEPOSIT_SUPPORTING_MEMBERS_MUST_DEPOSIT, False
         )
-        product = ProductFactory()
-        ProductPriceFactory(
+        product = ProductFactory.create()
+        ProductPriceFactory.create(
             product=product, valid_from=datetime.date(2026, 1, 1), price=30
         )
         WaitingListProductWish.objects.create(
@@ -772,15 +783,16 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
             data=json.dumps(data),
             content_type="application/json",
         )
-        self.assertFalse(response.json()["order_confirmed"])
-        self.assertIn("Vereinseinlage", response.json()["error"])
+        self.assert_order_not_confirmed(
+            response.json(), "Die Mindesteinlage beträgt 200,00 €."
+        )
         self.assertFalse(AssociationDeposit.objects.exists())
         self.assertFalse(Member.objects.exists())
 
     @patch.object(TransactionalTrigger, "fire_all_released_configs", autospec=True)
-    def test_post_newMemberRequestsIndividualAgreement_createsNoDebit(
+    def test_post_newMemberRequestsIndividualAgreement_tracksRequestWithoutPayment(
         self,
-        mock_dispatch,
+        mock_fire_all_released_configs,
     ):
         entry, data = self.prepare_deposit_confirmation(with_product=True)
         self._set_parameter(
@@ -794,19 +806,22 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
         )
         self.assert_order_confirmed(response.json())
         self.assertIsNone(AssociationDeposit.objects.get().payments.first())
-        self.assertFalse(type(entry).objects.filter(pk=entry.pk).exists())
+        self.assertFalse(WaitingListEntry.objects.filter(pk=entry.pk).exists())
         self.assertEqual(1, AssociationMembership.objects.count())
 
         self.assertIn(
             Events.WAITING_LIST_ORDER_CONFIRMATION,
-            [call.args[0].key for call in mock_dispatch.call_args_list],
+            [
+                call.args[0].key
+                for call in mock_fire_all_released_configs.call_args_list
+            ],
         )
 
     def test_post_invalidDepositChoices_rejectsBeforeExternalUserCreation(self):
         entry, data = self.prepare_deposit_confirmation()
         cases = [
-            ("individual_agreement", None, False, 200),
-            ("individual_agreement", "0", True, 200),
+            ("individual_agreement", None, False, 400),
+            ("individual_agreement", "0", False, 200),
             ("individual_agreement", "200", True, 200),
             ("once", "100", True, 200),
             ("once", "200.001", True, 400),
@@ -838,4 +853,39 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
                 self.mock_keycloak_client.create_user.assert_not_called()
                 self.assertFalse(Member.objects.exists())
                 self.assertFalse(AssociationDeposit.objects.exists())
-                self.assertTrue(type(entry).objects.filter(pk=entry.pk).exists())
+                self.assertTrue(WaitingListEntry.objects.filter(pk=entry.pk).exists())
+
+    @patch.object(TransactionalTrigger, "fire_all_released_configs", autospec=True)
+    def test_post_existingMemberWithDeposit_keepsSinglePayment(
+        self, mock_fire_all_released_configs
+    ):
+        entry, data = self.prepare_deposit_confirmation(with_product=True)
+        member = MemberFactory.create(email=entry.email)
+        AssociationMembership.objects.create(
+            member=member,
+            type_id=data["association_membership_type_id"],
+            start_date=datetime.date(2026, 1, 1),
+        )
+        deposit = AssociationDeposit.objects.create(member=member)
+        payment = PaymentFactory.create(
+            association_deposit=deposit,
+            mandate_ref__member=member,
+            amount=200,
+            type=PAYMENT_TYPE_ASSOCIATION_DEPOSIT,
+        )
+        entry.member = member
+        entry.save(update_fields=["member"])
+        data["association_deposit_amount"] = "200"
+
+        response = self.client.post(
+            reverse("waiting_list:public_confirm_waiting_list_entry"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+
+        self.assert_order_confirmed(response.json())
+        self.assertEqual(
+            [payment.pk], list(deposit.payments.values_list("pk", flat=True))
+        )
+        self.assertEqual(1, AssociationMembership.objects.filter(member=member).count())
+        self.assertFalse(WaitingListEntry.objects.filter(pk=entry.pk).exists())

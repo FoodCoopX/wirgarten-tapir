@@ -6,7 +6,6 @@ import {
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { areAllOrderedProductsInWaitingList } from "../../bestell_wizard/utils/areAllOrderedProductsInWaitingList.ts";
-import { buildFilteredShoppingCart } from "../../bestell_wizard/utils/buildFilteredShoppingCart.ts";
 import { isAtLeastOneOrderedProductWithDelivery } from "../../bestell_wizard/utils/isAtLeastOneOrderedProductWithDelivery.ts";
 import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
 import { DeliveryMode } from "../types/DeliveryMode.ts";
@@ -346,20 +345,14 @@ function buildAssociationSteps(
   }
 
   if (willBecomeMemberNow(settings, becomeMemberNow)) {
+    associationSteps.push("6b_association_membership");
     if (
       settings.associationDeposit.enabled &&
-      (settings.associationDeposit.supportingMembersRequired ||
-        isAtLeastOneProductOrdered(
-          buildFilteredShoppingCart(
-            shoppingCart,
-            false,
-            productTypesInWaitingList,
-          ),
-        ))
+      (settings.associationDeposit.depositRequiredForSupportingMembers ||
+        isAtLeastOneProductOrdered(shoppingCart))
     ) {
       associationSteps.push("6d_association_deposit");
     }
-    associationSteps.push("6b_association_membership");
   }
 
   return associationSteps;

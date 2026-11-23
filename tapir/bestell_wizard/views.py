@@ -338,18 +338,17 @@ class BestellWizardConfirmOrderApiView(APIView):
             cache=cache,
         )
 
-        AssociationDepositPolicy.validate_signup_selection(
-            amount=validated_serializer_data.get("association_deposit_amount"),
+        AssociationDepositPolicy.validate_registration_selection(
+            amount=validated_serializer_data["association_deposit_amount"],
             has_products=any(
                 quantity > 0
-                for quantity in validated_serializer_data[
-                    "shopping_cart_order"
-                ].values()
+                for cart in ("shopping_cart_order", "shopping_cart_waiting_list")
+                for quantity in validated_serializer_data[cart].values()
             ),
             cache=cache,
-            payment_option=validated_serializer_data.get(
-                "association_deposit_payment_option", "once"
-            ),
+            payment_option=validated_serializer_data[
+                "association_deposit_payment_option"
+            ],
         )
         return BestellWizardOrderFulfiller.create_member_and_fulfill_order(
             validated_serializer_data=validated_serializer_data,

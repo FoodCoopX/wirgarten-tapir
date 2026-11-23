@@ -149,3 +149,14 @@ class ParameterDefinitionsAssociationDeposit:
             order_priority=-107,
             meta=ParameterMeta(show_only_when=deposit_agreement_enabled),
         )
+
+        importer.parameter_definition(
+            key=ParameterKeys.ASSOCIATION_DEPOSIT_SIGNUP_TEXT,
+            label="Einleitungstext für die Einlage bei der Anmeldung",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Der rückzahlbare Betrag wird pro Mitglied vereinbart und einmalig per SEPA-Lastschrift eingezogen. Vereinsmitgliedschaft, Vereinsbeitrag und laufende Ernte-/Solidarbeiträge bestehen unabhängig davon.",
+            description="Erklärung im Einlagenschritt der Anmeldung.",
+            category=ParameterCategory.BUSINESS,
+            order_priority=-108,
+            meta=ParameterMeta(show_only_when=association_deposits_enabled),
+        )
