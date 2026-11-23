@@ -22,7 +22,6 @@ from tapir.bestell_wizard.serializers import (
     BestellWizardBaseDataResponseSerializer,
     BestellWizardDeliveryDatesForOrderResponseSerializer,
     BestellWizardDeliveryDatesForOrderRequestSerializer,
-    PublicProductPricesResponseSerializer,
 )
 from tapir.bestell_wizard.services.growing_period_choice_builder import (
     GrowingPeriodChoiceBuilder,
@@ -82,18 +81,15 @@ from tapir.waiting_list.services.waiting_list_entry_validator import (
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import OrderFeedback
 from tapir.wirgarten.models import (
-    ProductType,
     WaitingListEntry,
     Member,
     PickupLocation,
     GrowingPeriod,
-    Product,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import calculate_pickup_location_change_date
 from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
-    get_product_price,
 )
 from tapir.wirgarten.utils import (
     get_today,
@@ -539,7 +535,6 @@ class BestellWizardBaseDataApiView(APIView):
             )
             for growing_period in available_growing_periods
         ]
-        earliest_growing_period_choice = growing_period_choices[0]
 
         response_data = self.build_simple_response_fields(self.cache)
 
@@ -553,13 +548,11 @@ class BestellWizardBaseDataApiView(APIView):
 
         response_data.update(
             {
-                "product_types": ProductType.objects.all(),
                 "association_membership_types": AssociationMembershipType.objects.order_by(
                     "order_in_bestell_wizard"
                 ).filter(
                     deleted=False, hidden_in_bestell_wizard=False
                 ),
-                "pickup_locations": earliest_growing_period_choice.pickup_locations,
                 "show_coop_content": legal_status_is_cooperative(cache=self.cache),
                 "trial_period_length_in_weeks": trial_period_length_in_weeks,
                 "payment_rhythm_choices": {
@@ -570,8 +563,6 @@ class BestellWizardBaseDataApiView(APIView):
                         cache=self.cache
                     )
                 },
-                "product_type_ids_that_are_already_at_capacity": earliest_growing_period_choice.product_type_ids_that_are_already_at_capacity,
-                "product_ids_that_are_already_at_capacity": earliest_growing_period_choice.product_ids_that_are_already_at_capacity,
                 "logo_url": self.build_logo_url(cache=self.cache),
                 "distribution_channels": QuestionnaireSourceService.get_questionnaire_source_choices(
                     cache=self.cache
@@ -579,7 +570,6 @@ class BestellWizardBaseDataApiView(APIView):
                 "solidarity_contribution_choices": SolidarityValidator.get_solidarity_dropdown_values(
                     cache=self.cache
                 ),
-                "solidarity_contribution_minimum": earliest_growing_period_choice.solidarity_contribution_minimum,
                 "growing_period_choices": growing_period_choices,
                 "legal_status": get_parameter_value(
                     key=ParameterKeys.ORGANISATION_LEGAL_STATUS, cache=self.cache
@@ -593,10 +583,7 @@ class BestellWizardBaseDataApiView(APIView):
         return Response(
             BestellWizardBaseDataResponseSerializer(
                 response_data,
-                context={
-                    "cache": self.cache,
-                    "reference_date_for_delivery_charge": earliest_growing_period_choice.contract_start_date,
-                },
+                context={"cache": self.cache},
             ).data
         )
 
@@ -923,36 +910,3 @@ class PublicBestellWizardIsEmailAddressValidApiView(APIView):
             return Response(False)
 
         return Response(True)
-
-
-class PublicProductPricesApiView(APIView):
-    permission_classes = []
-
-    @extend_schema(
-        responses={200: PublicProductPricesResponseSerializer},
-        parameters=[OpenApiParameter("growing_period_id", type=str)],
-    )
-    def get(self, request):
-        cache = {}
-
-        growing_period = get_object_or_404(
-            GrowingPeriod, id=request.query_params.get("growing_period_id")
-        )
-        contract_start_date = (
-            ContractStartDateCalculator.get_next_contract_start_date_in_growing_period(
-                growing_period=growing_period, apply_buffer_time=True, cache=cache
-            )
-        )
-
-        prices_by_product_id = {
-            product.id: get_product_price(
-                product=product, reference_date=contract_start_date, cache=cache
-            ).price
-            for product in Product.objects.all()
-        }
-
-        return Response(
-            PublicProductPricesResponseSerializer(
-                {"prices_by_product_id": prices_by_product_id}
-            ).data
-        )

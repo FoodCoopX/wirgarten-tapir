@@ -59,9 +59,4 @@ urlpatterns = [
         views.GetContractStartDateForWaitingListEntryApiView.as_view(),
         name="contract_start_date_waiting_list_entry",
     ),
-    path(
-        "api/product_prices",
-        views.PublicProductPricesApiView.as_view(),
-        name="product_prices",
-    ),
 ]

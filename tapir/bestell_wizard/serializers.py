@@ -190,9 +190,7 @@ class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
     coop_share_instalment_amount = serializers.FloatField()
     theme = serializers.CharField()
     allow_investing_membership = serializers.BooleanField()
-    product_types = PublicProductTypeSerializer(many=True)
     association_membership_types = AssociationMembershipTypeSerializer(many=True)
-    pickup_locations = PublicPickupLocationSerializer(many=True)
     force_waiting_list = serializers.BooleanField()
     intro_enabled = serializers.BooleanField()
     student_status_allowed = serializers.BooleanField()
@@ -204,12 +202,6 @@ class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
     trial_period_length_in_weeks = serializers.IntegerField()
     payment_rhythm_choices = serializers.DictField(child=serializers.CharField())
     default_payment_rhythm = serializers.CharField()
-    product_type_ids_that_are_already_at_capacity = serializers.ListField(
-        child=serializers.CharField()
-    )
-    product_ids_that_are_already_at_capacity = serializers.ListField(
-        child=serializers.CharField()
-    )
     coop_statute_link = serializers.CharField()
     organization_name = serializers.CharField()
     logo_url = serializers.URLField()
@@ -219,7 +211,6 @@ class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
     solidarity_contribution_choices = serializers.ListField(
         child=serializers.CharField()
     )
-    solidarity_contribution_minimum = serializers.FloatField(allow_null=True)
     solidarity_contribution_default = serializers.FloatField()
     feedback_step_enabled = serializers.BooleanField()
     growing_period_choices = BestellWizardGrowingPeriodChoiceSerializer(many=True)
@@ -243,7 +234,3 @@ class BestellWizardDeliveryDatesForOrderResponseSerializer(serializers.Serialize
     delivery_date_by_pickup_location_id_and_product_type_id = serializers.DictField(
         child=serializers.DictField(child=serializers.DateField())
     )
-
-
-class PublicProductPricesResponseSerializer(serializers.Serializer):
-    prices_by_product_id = serializers.DictField(child=serializers.FloatField())

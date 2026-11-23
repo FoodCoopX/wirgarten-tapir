@@ -274,7 +274,6 @@ export * from "./ProductTypesAndConfig";
 export * from "./PublicConfirmWaitingListEntryRequestRequest";
 export * from "./PublicPickupLocation";
 export * from "./PublicProduct";
-export * from "./PublicProductPricesResponse";
 export * from "./PublicProductType";
 export * from "./PublicSubscription";
 export * from "./PublicWaitingListEntryDetails";
