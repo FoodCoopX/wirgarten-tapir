@@ -76,6 +76,7 @@ import { getProductTypeFromStep } from "./utils/getProductTypeFromStep.ts";
 import { getPublicPickupLocationById } from "./utils/getPublicPickupLocationById.ts";
 import { getVisibleAssociationMembershipTypes } from "./utils/getVisibleAssociationMembershipTypes.ts";
 import { isOrderWaitingListOnly } from "./utils/isOrderWaitingListOnly.ts";
+import { isSolidarityContributionSkipped } from "./utils/isSolidarityContributionSkipped.ts";
 import { updateWaitingList } from "./utils/updateWaitingList.ts";
 import { willBecomeMemberNow } from "./utils/willBecomeMemberNow.ts";
 
@@ -567,6 +568,21 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     );
   }
 
+  function getEffectiveSolidarityContribution() {
+    if (
+      isSolidarityContributionSkipped(
+        settings,
+        shoppingCart,
+        productTypesInWaitingList,
+        becomeMemberNow,
+        waitingListEntryDetails,
+      )
+    ) {
+      return 0;
+    }
+    return solidarityContribution;
+  }
+
   function onConfirmOrder() {
     setConfirmOrderLoading(true);
 
@@ -643,7 +659,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
           privacyPolicyRead: privacyPolicyRead,
           cancellationPolicyRead: cancellationPolicyRead,
           growingPeriodId: selectedGrowingPeriod!.id!,
-          solidarityContribution: solidarityContribution,
+          solidarityContribution: getEffectiveSolidarityContribution(),
           distributionChannels: [...selectedDistributionChannels],
           feedback: feedback,
           associationMembershipTypeId: selectedAssociationMembershipType?.id,
@@ -944,7 +960,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             setContractAccepted={setContractAccepted}
             settings={settings}
             shoppingCart={shoppingCart}
-            solidarityContribution={solidarityContribution}
+            solidarityContribution={getEffectiveSolidarityContribution()}
             stepActive={currentStep === step}
             productTypesInWaitingList={productTypesInWaitingList}
             isOrderStep={false}
@@ -968,7 +984,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             }
             goToProductTypeStep={goToProductTypeStep}
             selectedPickupLocations={selectedPickupLocations}
-            solidarityContribution={solidarityContribution}
+            solidarityContribution={getEffectiveSolidarityContribution()}
             personalData={personalData}
             productTypesInWaitingList={productTypesInWaitingList}
             becomeMemberNow={becomeMemberNow}
@@ -997,7 +1013,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             stepActive={step === currentStep}
             productTypesInWaitingList={productTypesInWaitingList}
             shoppingCart={shoppingCart}
-            solidarityContribution={solidarityContribution}
+            solidarityContribution={getEffectiveSolidarityContribution()}
             isOrderStep={false}
           />
         );
@@ -1105,7 +1121,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
       shoppingCart={shoppingCart}
       phases={phases}
       selectedPickupLocations={selectedPickupLocations}
-      solidarityContribution={solidarityContribution}
+      solidarityContribution={getEffectiveSolidarityContribution()}
       productTypesInWaitingList={productTypesInWaitingList}
       personalData={personalData}
       getStepComponent={getStepComponent}
