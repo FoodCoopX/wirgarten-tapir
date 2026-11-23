@@ -45,7 +45,8 @@ const HELP_TEXT = (
     </p>
     <p className={"mb-0"}>
       Der bisherige Vertrag wird als gekündigt markiert, die neuen Verträge
-      werden direkt bestätigt und das Mitglied erhält eine Bestätigungsmail.
+      werden direkt bestätigt und das Mitglied erhält die Mail, die für den
+      Trigger „Vertragsänderungen im Mitgliederbereich“ hinterlegt ist.
     </p>
   </>
 );

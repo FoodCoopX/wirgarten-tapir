@@ -46,7 +46,8 @@ const AdminSubscriptionAdditionSummary: React.FC<
         </dd>
       </dl>
       <Alert variant={"info"} className={"mb-0"}>
-        Das Mitglied erhält eine Bestätigungsmail.
+        Das Mitglied erhält die Mail, die für den Trigger „Vertragsänderungen im
+        Mitgliederbereich“ hinterlegt ist.
       </Alert>
     </div>
   );

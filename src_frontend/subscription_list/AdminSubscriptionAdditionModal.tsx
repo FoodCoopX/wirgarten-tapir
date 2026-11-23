@@ -42,8 +42,9 @@ const HELP_TEXT = (
       Mitglieds hinzu. Bestehende Verträge werden nicht verändert.
     </p>
     <p className={"mb-0"}>
-      Der neue Vertrag wird direkt bestätigt und das Mitglied erhält eine
-      Bestätigungsmail.
+      Der neue Vertrag wird direkt bestätigt und das Mitglied erhält die Mail,
+      die für den Trigger „Vertragsänderungen im Mitgliederbereich“ hinterlegt
+      ist.
     </p>
   </>
 );
