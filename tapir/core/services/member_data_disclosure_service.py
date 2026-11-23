@@ -119,7 +119,6 @@ DATA_SOURCES = [
         retention=RETENTION_UNTIL_LEAVING,
         model=MemberExtraEmail,
         member_lookup="member",
-        exclude=frozenset({"secret"}),
         is_enabled=lambda cache: get_parameter_value(
             ParameterKeys.ENABLE_EXTRA_MAIL_ADDRESSES, cache=cache
         ),

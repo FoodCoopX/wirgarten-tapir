@@ -20,6 +20,10 @@ from tapir_mail.triggers.transactional_trigger import (
 )
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.core.config import EXTRA_EMAIL_CONFIRMATION_LINK_VALIDITY
+from tapir.core.services.member_extra_email_confirmation_link_service import (
+    MemberExtraEmailConfirmationLinkService,
+)
 from tapir.core.serializers import (
     MemberExtraMailDataSerializer,
     MemberExtraEmailCreateRequest,
@@ -73,6 +77,9 @@ class MemberExtraEmailApiView(APIView):
                         ParameterKeys.EXPLANATION_TEXT_EXTRA_MAIL_ADDRESSES,
                         cache=self.cache,
                     ),
+                    "confirmation_link_validity_minutes": int(
+                        EXTRA_EMAIL_CONFIRMATION_LINK_VALIDITY.total_seconds() // 60
+                    ),
                 }
             ).data
         )
@@ -116,7 +123,7 @@ class MemberExtraEmailApiView(APIView):
             extra_email_object=member_extra_email, user=member, actor=request.user
         ).save()
 
-        confirmation_link = f"{settings.SITE_URL}{reverse('core:member_extra_email_confirm', kwargs={"secret": member_extra_email.secret})}"
+        confirmation_link = f"{settings.SITE_URL}{reverse('core:member_extra_email_confirm', kwargs={"token": MemberExtraEmailConfirmationLinkService.build_token(member_extra_email)})}"
         TransactionalTrigger.fire_action(
             TransactionalTriggerData(
                 key=Events.EXTRA_MAIL_CONFIRMATION,
@@ -206,19 +213,24 @@ class ConfirmMemberExtraEmailApiView(RedirectView):
         ):
             raise PermissionDenied(MemberExtraEmailApiView.FEATURE_DISABLED_MESSAGE)
 
-        secret = kwargs["secret"]
-        member_extra_email = get_object_or_404(MemberExtraEmail, secret=secret)
+        token = kwargs["token"]
+        member_extra_email = (
+            MemberExtraEmailConfirmationLinkService.get_extra_email_from_token(token)
+        )
 
-        member_extra_email.confirmed_on = get_now(cache=cache)
-        member_extra_email.save()
+        if member_extra_email.confirmed_on is None:
+            member_extra_email.confirmed_on = get_now(cache=cache)
+            member_extra_email.save()
 
-        MemberExtraEmailConfirmedLogEntry().populate_email(
-            email=member_extra_email.email,
-            user=member_extra_email.member,
-            actor=self.request.user if self.request.user.is_authenticated else None,
-        ).save()
+            MemberExtraEmailConfirmedLogEntry().populate_email(
+                email=member_extra_email.email,
+                user=member_extra_email.member,
+                actor=(
+                    self.request.user if self.request.user.is_authenticated else None
+                ),
+            ).save()
 
-        return reverse("core:member_extra_email_confirmed", kwargs={"secret": secret})
+        return reverse("core:member_extra_email_confirmed", kwargs={"token": token})
 
 
 class MemberExtraEmailConfirmedView(TemplateView):
@@ -227,8 +239,10 @@ class MemberExtraEmailConfirmedView(TemplateView):
     def get_context_data(self, **kwargs):
         context_data = super().get_context_data(**kwargs)
         cache = {}
-        member_extra_email = get_object_or_404(
-            MemberExtraEmail, secret=kwargs["secret"]
+        member_extra_email = (
+            MemberExtraEmailConfirmationLinkService.get_extra_email_from_token(
+                kwargs["token"]
+            )
         )
         context_data["extra_mail_address"] = member_extra_email.email
         context_data["main_mail_address"] = member_extra_email.member.email

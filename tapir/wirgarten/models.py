@@ -1,5 +1,4 @@
 import datetime
-import uuid
 from functools import partial
 
 from django.contrib.postgres.fields import ArrayField
@@ -1151,7 +1150,6 @@ class MemberExtraEmail(TapirModel):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     confirmed_on = models.DateTimeField(null=True)
-    secret = models.UUIDField(default=uuid.uuid4)
 
     def __str__(self):
         return f"{self.member} - Extra-Mail:{self.email}"

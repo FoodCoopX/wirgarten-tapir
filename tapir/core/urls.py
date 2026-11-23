@@ -23,12 +23,12 @@ urlpatterns = [
         name="member_extra_emails",
     ),
     path(
-        "member_extra_email_confirm/<uuid:secret>",
+        "member_extra_email_confirm/<str:token>",
         member_extra_emails.ConfirmMemberExtraEmailApiView.as_view(),
         name="member_extra_email_confirm",
     ),
     path(
-        "member_extra_email_confirmed/<uuid:secret>",
+        "member_extra_email_confirmed/<str:token>",
         member_extra_emails.MemberExtraEmailConfirmedView.as_view(),
         name="member_extra_email_confirmed",
     ),

@@ -36,6 +36,12 @@ export interface MemberExtraMailData {
    * @memberof MemberExtraMailData
    */
   explanationText: string;
+  /**
+   *
+   * @type {number}
+   * @memberof MemberExtraMailData
+   */
+  confirmationLinkValidityMinutes: number;
 }
 
 /**
@@ -47,6 +53,11 @@ export function instanceOfMemberExtraMailData(
   if (!("extraMails" in value) || value["extraMails"] === undefined)
     return false;
   if (!("explanationText" in value) || value["explanationText"] === undefined)
+    return false;
+  if (
+    !("confirmationLinkValidityMinutes" in value) ||
+    value["confirmationLinkValidityMinutes"] === undefined
+  )
     return false;
   return true;
 }
@@ -67,6 +78,7 @@ export function MemberExtraMailDataFromJSONTyped(
       MemberExtraEmailFromJSON,
     ),
     explanationText: json["explanation_text"],
+    confirmationLinkValidityMinutes: json["confirmation_link_validity_minutes"],
   };
 }
 
@@ -87,5 +99,7 @@ export function MemberExtraMailDataToJSONTyped(
       MemberExtraEmailToJSON,
     ),
     explanation_text: value["explanationText"],
+    confirmation_link_validity_minutes:
+      value["confirmationLinkValidityMinutes"],
   };
 }
