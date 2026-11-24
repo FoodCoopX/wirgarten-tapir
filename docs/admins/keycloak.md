@@ -107,8 +107,21 @@ in the repository root.
 | `KEYCLOAK_PROVISIONER_CLIENT_ID`     | `tapir-provisioner`      | Client used by `manage.py keycloak`. Must exist before the first `sync`. |
 | `KEYCLOAK_PROVISIONER_CLIENT_SECRET_KEY` | `**********`         | Secret for the provisioner client. Must match Keycloak before `sync`. |
 | `KEYCLOAK_SKIP_VERIFICATION_EMAIL`   | `false`                  | Skip the verification email Tapir sends through Keycloak. |
+| `KEYCLOAK_REGISTRATION_EMAIL_AS_USERNAME` | `true`              | Managed realm setting. Override when the realm uses a different policy. |
+| `KEYCLOAK_EDIT_USERNAME_ALLOWED`     | `false`                  | Managed realm setting. Override when users may edit their username. |
+| `KEYCLOAK_VERIFY_EMAIL`              | `true`                   | Managed realm setting. Override when the realm uses a different e-mail verification policy. |
+| `KEYCLOAK_SUPERUSER_GROUP_NAME`      | `superuser`              | Group that receives all Tapir realm roles and is assigned to superusers. |
 | `SITE_URL`                           | `http://localhost:8000`  | Public URL of Tapir. Redirect URIs and web origins are derived from it. |
 | `DEBUG`                              | `false`                  | Adds localhost redirect URIs and disables the local-default warnings. |
+
+The four `KEYCLOAK_*` realm/group overrides are optional. For example:
+
+```dotenv
+KEYCLOAK_REGISTRATION_EMAIL_AS_USERNAME=0
+KEYCLOAK_EDIT_USERNAME_ALLOWED=1
+KEYCLOAK_VERIFY_EMAIL=0
+KEYCLOAK_SUPERUSER_GROUP_NAME=tapir-admins
+```
 
 `KEYCLOAK_ADMIN_SERVER_URL` is the base URL only. It may include a path prefix such as
 `https://auth.example.org/auth`, but it must not include `/realms/<realm>`. A trailing slash is

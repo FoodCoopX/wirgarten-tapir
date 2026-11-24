@@ -8,7 +8,6 @@ from django.conf import settings
 from tapir.wirgarten.constants import Permission
 
 REALM_ROLES = tuple(sorted(Permission.all()))
-SUPERUSER_GROUP_NAME = "superuser"
 REALM_MANAGEMENT_CLIENT_ID = "realm-management"
 BACKEND_CLIENT_ROLES = ("manage-users",)
 PROVISIONER_CLIENT_ROLES = ("realm-admin",)
@@ -185,16 +184,16 @@ def build_desired_state() -> DesiredState:
         realm_settings={
             "enabled": True,
             "registrationAllowed": False,
-            "registrationEmailAsUsername": True,
+            "registrationEmailAsUsername": settings.KEYCLOAK_REGISTRATION_EMAIL_AS_USERNAME,
             "loginWithEmailAllowed": True,
             "duplicateEmailsAllowed": False,
-            "editUsernameAllowed": False,
+            "editUsernameAllowed": settings.KEYCLOAK_EDIT_USERNAME_ALLOWED,
             "resetPasswordAllowed": True,
-            "verifyEmail": True,
+            "verifyEmail": settings.KEYCLOAK_VERIFY_EMAIL,
         },
         realm_roles=tuple(RoleSpec(name=name) for name in REALM_ROLES),
         superuser_group=GroupSpec(
-            name=SUPERUSER_GROUP_NAME,
+            name=settings.KEYCLOAK_SUPERUSER_GROUP_NAME,
             realm_roles=REALM_ROLES,
         ),
         clients=(

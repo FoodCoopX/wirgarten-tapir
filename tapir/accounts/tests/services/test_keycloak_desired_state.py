@@ -196,3 +196,25 @@ class TestKeycloakDesiredState(TapirUnitTest):
             "displayName",
         ):
             self.assertNotIn(key, desired.realm_settings)
+
+    def test_buildDesiredState_default_realmFlagsAndSuperuserGroup(self):
+        desired = build_desired_state()
+
+        self.assertTrue(desired.realm_settings["registrationEmailAsUsername"])
+        self.assertFalse(desired.realm_settings["editUsernameAllowed"])
+        self.assertTrue(desired.realm_settings["verifyEmail"])
+        self.assertEqual("superuser", desired.superuser_group.name)
+
+    @override_settings(
+        KEYCLOAK_REGISTRATION_EMAIL_AS_USERNAME=False,
+        KEYCLOAK_EDIT_USERNAME_ALLOWED=True,
+        KEYCLOAK_VERIFY_EMAIL=False,
+        KEYCLOAK_SUPERUSER_GROUP_NAME="tapir-admins",
+    )
+    def test_buildDesiredState_envOverrides_applyRealmFlagsAndGroupName(self):
+        desired = build_desired_state()
+
+        self.assertFalse(desired.realm_settings["registrationEmailAsUsername"])
+        self.assertTrue(desired.realm_settings["editUsernameAllowed"])
+        self.assertFalse(desired.realm_settings["verifyEmail"])
+        self.assertEqual("tapir-admins", desired.superuser_group.name)

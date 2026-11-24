@@ -38,7 +38,7 @@ class KeycloakUserManager:
             data["requiredActions"] = ["VERIFY_EMAIL", "UPDATE_PASSWORD"]
 
         if user.is_superuser:
-            data["groups"] = ["superuser"]
+            data["groups"] = [settings.KEYCLOAK_SUPERUSER_GROUP_NAME]
         else:
             data["groups"] = []
 

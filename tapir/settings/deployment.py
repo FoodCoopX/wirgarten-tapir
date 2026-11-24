@@ -211,6 +211,18 @@ KEYCLOAK_SKIP_VERIFICATION_EMAIL = env.bool(
     "KEYCLOAK_SKIP_VERIFICATION_EMAIL", default=False
 )
 
+# Optional overrides for the managed realm settings and the superuser group.
+KEYCLOAK_REGISTRATION_EMAIL_AS_USERNAME = env.bool(
+    "KEYCLOAK_REGISTRATION_EMAIL_AS_USERNAME", default=True
+)
+KEYCLOAK_EDIT_USERNAME_ALLOWED = env.bool(
+    "KEYCLOAK_EDIT_USERNAME_ALLOWED", default=False
+)
+KEYCLOAK_VERIFY_EMAIL = env.bool("KEYCLOAK_VERIFY_EMAIL", default=True)
+KEYCLOAK_SUPERUSER_GROUP_NAME = env.str(
+    "KEYCLOAK_SUPERUSER_GROUP_NAME", default="superuser"
+)
+
 CSP_FRAME_SRC = ["'self'", KEYCLOAK_ADMIN_CONFIG["PUBLIC_URL"]]
 
 
