@@ -29,6 +29,7 @@ import { buildDeliveryChargeBadge } from "../utils/buildDeliveryChargeBadge.tsx"
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import { doesWaitingListHaveProductType } from "../utils/doesWaitingListHaveProductType.ts";
 import { getAssociationMembershipTypeMonthlyPriceFormatted } from "../utils/getAssociationMembershipTypeMonthlyPriceFormatted.ts";
+import { getDisplayedAssociationMembershipTypes } from "../utils/getDisplayedAssociationMembershipTypes.ts";
 import { getFirstPickupLocationWithCapacity } from "../utils/getFirstPickupLocationWithCapacity.ts";
 import { getNumberOfCoopShareInstalments } from "../utils/getNumberOfCoopShareInstalments.ts";
 import {
@@ -37,7 +38,6 @@ import {
 } from "../utils/getProductByIdGlobal.ts";
 import { getProductTypeByProductId } from "../utils/getProductTypeByProductId.ts";
 import { getTotalPriceForProductType } from "../utils/getTotalPriceForProductType.ts";
-import { getVisibleAssociationMembershipTypes } from "../utils/getVisibleAssociationMembershipTypes.ts";
 import { scrollIntoView } from "../utils/scrollIntoView.ts";
 import { willBecomeMemberNow } from "../utils/willBecomeMemberNow.ts";
 
@@ -70,6 +70,7 @@ interface Step10OrderSummaryProps {
   stepActive: boolean;
   setCurrentStep: (step: Step) => void;
   deliveryAddress?: DeliveryAddressRequest;
+  investingMembership?: boolean;
 }
 
 const PaymentRow: React.FC<{
@@ -113,6 +114,7 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
   stepActive,
   setCurrentStep,
   deliveryAddress,
+  investingMembership = false,
 }) => {
   function getRelevantPickupLocation(): PublicPickupLocation | undefined {
     if (waitingListEntryDetails === undefined) {
@@ -639,8 +641,9 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                       )}
                     </li>
                   )}
-                  {getVisibleAssociationMembershipTypes(
+                  {getDisplayedAssociationMembershipTypes(
                     settings.associationMembershipTypes,
+                    investingMembership,
                   ).length > 1 && (
                     <li>
                       <TapirButton

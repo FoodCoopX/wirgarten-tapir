@@ -65,13 +65,13 @@ import { Phase } from "./types/Phase.ts";
 import { PickupLocationTab } from "./types/PickupLocationTab.ts";
 import { Step } from "./types/Step.ts";
 import { buildSteps } from "./utils/buildSteps.ts";
+import { getDisplayedAssociationMembershipTypes } from "./utils/getDisplayedAssociationMembershipTypes.ts";
 import { getGrowingPeriodForWaitingListEntry } from "./utils/getGrowingPeriodForWaitingListEntry.ts";
 import { getPhase } from "./utils/getPhase.ts";
 import { getPickupLocationsForDeliveryMode } from "./utils/getPickupLocationsForDeliveryMode.ts";
 import { getProductTypeByProductId } from "./utils/getProductTypeByProductId.ts";
 import { getProductTypeFromStep } from "./utils/getProductTypeFromStep.ts";
 import { getPublicPickupLocationById } from "./utils/getPublicPickupLocationById.ts";
-import { getVisibleAssociationMembershipTypes } from "./utils/getVisibleAssociationMembershipTypes.ts";
 import { isOrderWaitingListOnly } from "./utils/isOrderWaitingListOnly.ts";
 import { isSolidarityContributionSkipped } from "./utils/isSolidarityContributionSkipped.ts";
 import { updateWaitingList } from "./utils/updateWaitingList.ts";
@@ -517,8 +517,9 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
         break;
       case "association":
         setSelectedAssociationMembershipType(
-          getVisibleAssociationMembershipTypes(
+          getDisplayedAssociationMembershipTypes(
             settings.associationMembershipTypes,
+            investingMembership,
           )[0],
         );
     }
@@ -869,6 +870,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             contractStartDate={contractStartDate}
             stepActive={currentStep === step}
             isOrderStep={false}
+            investingMembership={investingMembership}
           />
         );
       case "6c_coop_member_now":
@@ -972,6 +974,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             stepActive={step === currentStep}
             setCurrentStep={setCurrentStep}
             deliveryAddress={deliveryAddress}
+            investingMembership={investingMembership}
           />
         );
       case "11_legal":
@@ -1108,6 +1111,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
       associationMembershipType={selectedAssociationMembershipType}
       contractStartDate={contractStartDate}
       selectedGrowingPeriod={selectedGrowingPeriod}
+      investingMembership={investingMembership}
     />
   );
 };

@@ -18,6 +18,7 @@ class AssociationMembershipTypeFactory(
     deleted = False
     description_in_bestell_wizard = factory.Faker("paragraph")
     order_in_bestell_wizard = 1
+    is_supporting_membership = False
 
 
 class AssociationMembershipTypePriceFactory(

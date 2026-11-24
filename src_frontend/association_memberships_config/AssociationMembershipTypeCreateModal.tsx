@@ -23,12 +23,14 @@ const AssociationMembershipTypeCreateModal: React.FC<
   const [description, setDescription] = useState("");
   const [order, setOrder] = useState(1);
   const [hiddenInBestellWizard, setHiddenInBestellWizard] = useState(false);
+  const [isSupportingMembership, setIsSupportingMembership] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     setName("");
     setDescription("");
     setOrder(1);
+    setIsSupportingMembership(false);
   }, [show]);
 
   function onSave() {
@@ -49,6 +51,7 @@ const AssociationMembershipTypeCreateModal: React.FC<
           orderInBestellWizard: order,
           descriptionInBestellWizard: description,
           hiddenInBestellWizard: hiddenInBestellWizard,
+          isSupportingMembership: isSupportingMembership,
         },
       })
       .then(onCreated)
@@ -124,6 +127,22 @@ const AssociationMembershipTypeCreateModal: React.FC<
               das normale Mitglieder die nicht mehr bestellen können. Diese
               Mitgliedschafttypen können nur von Betrieb-Admins durch die
               Mitgliederliste verteilt werden .
+            </Form.Text>
+          </Form.Group>
+          <Form.Group className={"mt-2"}>
+            <Form.Check
+              checked={isSupportingMembership}
+              onChange={(e) => setIsSupportingMembership(e.target.checked)}
+              id={"is_supporting_membership"}
+              label={"Ist Fördermitgliedschaft"}
+            />
+            <Form.Text>
+              Dieser Typ wird im Bestell-Wizard auf Seite 3 als
+              Fördermitgliedschaft angezeigt und beim Vereinsbeitritt
+              vorausgewählt. Der Typ muss im Bestell-Wizard sichtbar sein (nicht
+              versteckt). Ohne markierten Typ oder bei der Rechtsform
+              Genossenschaft greift der Text unter „Seite 3: Produktauswahl -
+              Name für Fördermitgliedschaften“.
             </Form.Text>
           </Form.Group>
           <Form.Text className={"d-block mt-2"}>

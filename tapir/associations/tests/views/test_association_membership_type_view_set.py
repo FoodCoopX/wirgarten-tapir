@@ -50,3 +50,20 @@ class TestAssociationMembershipTypeViewSet(TapirIntegrationTest):
 
         self.assertStatusCode(response, status.HTTP_405_METHOD_NOT_ALLOWED)
         self.assertEqual(1, AssociationMembershipType.objects.count())
+
+    def test_create_default_storesSupportingMembershipFlag(self):
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+
+        response = self.client.post(
+            reverse("associations:association_membership_types-list"),
+            data={
+                "name": "Fördermitglied",
+                "description_in_bestell_wizard": "Beschreibung",
+                "order_in_bestell_wizard": 1,
+                "is_supporting_membership": True,
+            },
+        )
+
+        self.assertStatusCode(response, status.HTTP_201_CREATED)
+        membership_type = AssociationMembershipType.objects.get(name="Fördermitglied")
+        self.assertTrue(membership_type.is_supporting_membership)

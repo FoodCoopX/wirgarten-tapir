@@ -152,7 +152,12 @@ class ParameterDefinitionsBusiness:
             label="Fördermitgliedschaften erlauben",
             datatype=TapirParameterDatatype.BOOLEAN,
             initial_value=True,
-            description="Wenn ausgeschaltet, ist es nicht möglich eine Vereinsmitgliedschaft abzuschließen ohne dabei ein Produktvertrag abzuschließen. Das wirkt nur in der Intro-Seite des BestellWizards.",
+            description="Wenn ausgeschaltet, kann keine Vereinsmitgliedschaft ohne Produktvertrag "
+            "abgeschlossen werden (wirkt nur auf der Intro-Seite). Damit die Fördermitgliedschaft den "
+            "richtigen Mitgliedschaftstyp erhält, muss unter „Vereinsmitgliedschaften“ bei mindestens "
+            "einem Mitgliedschaftstyp „Ist Fördermitgliedschaft“ aktiviert sein. Deren Namen erscheinen "
+            "auf Seite 3; ohne Markierung greift „Seite 3: Produktauswahl - Name für "
+            "Fördermitgliedschaften“.",
             category=ParameterCategory.BUSINESS,
             meta=ParameterMeta(show_only_when=legal_status_is_association),
             order_priority=order_priority,

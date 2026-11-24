@@ -7,8 +7,8 @@ import { formatCurrency } from "../../utils/formatCurrency.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
 import TapirCheckbox from "../components/TapirCheckbox.tsx";
 import "../utils/flexColOnSmallScreen.css";
+import { getDisplayedAssociationMembershipTypes } from "../utils/getDisplayedAssociationMembershipTypes.ts";
 import { scrollIntoView } from "../utils/scrollIntoView.ts";
-import { getVisibleAssociationMembershipTypes } from "../utils/getVisibleAssociationMembershipTypes.ts";
 
 interface Step6BAssociationMembershipsProps {
   goToNextStep: () => void;
@@ -20,6 +20,7 @@ interface Step6BAssociationMembershipsProps {
   contractStartDate: Date;
   stepActive: boolean;
   isOrderStep: boolean;
+  investingMembership?: boolean;
 }
 
 function buildLabel(type: AssociationMembershipType, contractStartDate: Date) {
@@ -45,9 +46,14 @@ const Step6BAssociationMemberships: React.FC<
   contractStartDate,
   stepActive,
   isOrderStep,
+  investingMembership = false,
 }) => {
   const [showError, setShowError] = useState(false);
   const [statuteAccepted, setStatuteAccepted] = useState(false);
+  const displayedMembershipTypes = getDisplayedAssociationMembershipTypes(
+    settings.associationMembershipTypes,
+    investingMembership,
+  );
 
   useEffect(() => {
     setShowError(false);
@@ -55,17 +61,15 @@ const Step6BAssociationMemberships: React.FC<
 
   useEffect(() => {
     if (!stepActive) return;
+    if (displayedMembershipTypes.length === 0) return;
 
-    const visibleMembershipTypes = getVisibleAssociationMembershipTypes(
-      settings.associationMembershipTypes,
-    );
     if (
-      selectedAssociationMembershipType === undefined &&
-      visibleMembershipTypes.length > 0
+      investingMembership ||
+      selectedAssociationMembershipType === undefined
     ) {
-      setSelectedAssociationMembershipType(visibleMembershipTypes[0]);
+      setSelectedAssociationMembershipType(displayedMembershipTypes[0]);
     }
-  }, [stepActive]);
+  }, [stepActive, investingMembership]);
 
   function onNextClicked() {
     if (selectedAssociationMembershipType === undefined || !statuteAccepted) {
@@ -79,9 +83,7 @@ const Step6BAssociationMemberships: React.FC<
   return (
     <>
       <div style={{ width: "100%" }} className={"d-flex flex-column gap-2"}>
-        {getVisibleAssociationMembershipTypes(
-          settings.associationMembershipTypes,
-        ).map((type) => (
+        {displayedMembershipTypes.map((type) => (
           <Accordion style={{ width: "100%" }} key={type.id}>
             <Accordion.Item eventKey={type.id!} onClick={scrollIntoView}>
               <Accordion.Header>

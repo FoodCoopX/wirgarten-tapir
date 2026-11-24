@@ -54,6 +54,12 @@ export interface AssociationMembershipTypeRequest {
    * @memberof AssociationMembershipTypeRequest
    */
   hiddenInBestellWizard?: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof AssociationMembershipTypeRequest
+   */
+  isSupportingMembership?: boolean;
 }
 
 /**
@@ -99,6 +105,10 @@ export function AssociationMembershipTypeRequestFromJSONTyped(
       json["hidden_in_bestell_wizard"] == null
         ? undefined
         : json["hidden_in_bestell_wizard"],
+    isSupportingMembership:
+      json["is_supporting_membership"] == null
+        ? undefined
+        : json["is_supporting_membership"],
   };
 }
 
@@ -123,5 +133,6 @@ export function AssociationMembershipTypeRequestToJSONTyped(
     description_in_bestell_wizard: value["descriptionInBestellWizard"],
     order_in_bestell_wizard: value["orderInBestellWizard"],
     hidden_in_bestell_wizard: value["hiddenInBestellWizard"],
+    is_supporting_membership: value["isSupportingMembership"],
   };
 }

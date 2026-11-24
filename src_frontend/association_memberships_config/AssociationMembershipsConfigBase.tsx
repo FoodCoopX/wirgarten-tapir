@@ -64,13 +64,35 @@ const AssociationMembershipsConfigBase: React.FC<
       );
     }
 
+    const hasSupportingMembership = membershipTypes.some(
+      (membershipType) => membershipType.isSupportingMembership,
+    );
+
     return (
-      <AssociationMembershipTypeTable
-        membershipTypes={membershipTypes}
-        setToastDatas={setToastDatas}
-        csrfToken={csrfToken}
-        loadData={loadMembershipTypes}
-      />
+      <>
+        <Alert variant={"info"}>
+          Mitgliedschaftstypen, die als Fördermitgliedschaft gelten, mit „Ist
+          Fördermitgliedschaft“ markieren. Sind bei der Rechtsform Verein Typen
+          markiert, erscheinen ihre Namen im Bestell-Wizard auf Seite 3 und im
+          Schritt Vereinsbeitritt wird nur dieser Typ angeboten. Ohne markierten
+          Typ bzw. bei Genossenschaft greift der Text unter „Seite 3:
+          Produktauswahl - Name für Fördermitgliedschaften“.
+        </Alert>
+        {!hasSupportingMembership && (
+          <Alert variant={"warning"}>
+            Kein Mitgliedschaftstyp ist als Fördermitgliedschaft markiert.
+            Aktuell wird auf Seite 3 der Text unter „Seite 3: Produktauswahl -
+            Name für Fördermitgliedschaften“ angezeigt und beim Vereinsbeitritt
+            werden alle Typen angeboten.
+          </Alert>
+        )}
+        <AssociationMembershipTypeTable
+          membershipTypes={membershipTypes}
+          setToastDatas={setToastDatas}
+          csrfToken={csrfToken}
+          loadData={loadMembershipTypes}
+        />
+      </>
     );
   }
 

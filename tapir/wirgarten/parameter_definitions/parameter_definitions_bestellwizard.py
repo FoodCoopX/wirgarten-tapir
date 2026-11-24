@@ -232,9 +232,10 @@ class ParameterDefinitionsBestellwizard:
             label="Seite 3: Produktauswahl - Name für Fördermitgliedschaften",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Fördermitgliedschaft",
-            description="In der Produktauswahl-Seite (soll sie aktiviert sein), kann die interessierte Person ggf. kein "
-            "Produkt auswählen und nur eine Fördermitgliedschaft zeichnen. "
-            "Die Name für dieser Auswahl kann ich personalisiert werden.",
+            description="Wird auf Seite 3 als Fördermitgliedschaft angezeigt, wenn keine "
+            "Vereins-Mitgliedschaftstypen mit „Ist Fördermitgliedschaft“ markiert sind oder die "
+            "Rechtsform keine Vereinsmitgliedschaftstypen hat (z. B. Genossenschaft). Sind bei der "
+            "Rechtsform Verein Typen markiert, werden stattdessen deren Namen angezeigt.",
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
         )

@@ -36,6 +36,7 @@ interface BestellWizardMobileHeaderProps {
   contractStartDate: Date | undefined;
   selectedGrowingPeriod: BestellWizardGrowingPeriodChoice | undefined;
   setCurrentStep: (step: Step) => void;
+  investingMembership?: boolean;
 }
 
 const BestellWizardMobileHeader: React.FC<BestellWizardMobileHeaderProps> = ({
@@ -55,6 +56,7 @@ const BestellWizardMobileHeader: React.FC<BestellWizardMobileHeaderProps> = ({
   contractStartDate,
   selectedGrowingPeriod,
   setCurrentStep,
+  investingMembership = false,
 }) => {
   const [showOverlay, setShowOverlay] = useState(false);
 
@@ -126,6 +128,7 @@ const BestellWizardMobileHeader: React.FC<BestellWizardMobileHeaderProps> = ({
         associationMembershipType={associationMembershipType}
         contractStartDate={contractStartDate}
         selectedGrowingPeriod={selectedGrowingPeriod}
+        investingMembership={investingMembership}
         setCurrentStep={setCurrentStep}
       />
     </>

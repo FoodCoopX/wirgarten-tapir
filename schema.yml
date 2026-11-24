@@ -5491,7 +5491,6 @@ paths:
         name: id
         schema:
           type: string
-        description: Ein eindeutiger Wert, der pickup location identifiziert.
         required: true
       tags:
       - pickup_locations
@@ -9494,6 +9493,8 @@ components:
           minimum: -2147483648
         hidden_in_bestell_wizard:
           type: boolean
+        is_supporting_membership:
+          type: boolean
       required:
       - can_be_hard_deleted
       - created_at
@@ -9578,6 +9579,8 @@ components:
           maximum: 2147483647
           minimum: -2147483648
         hidden_in_bestell_wizard:
+          type: boolean
+        is_supporting_membership:
           type: boolean
       required:
       - description_in_bestell_wizard
@@ -15182,6 +15185,8 @@ components:
           maximum: 2147483647
           minimum: -2147483648
         hidden_in_bestell_wizard:
+          type: boolean
+        is_supporting_membership:
           type: boolean
     PatchedBreadContentRequest:
       type: object

@@ -10,6 +10,7 @@ import TapirButton from "../../components/TapirButton.tsx";
 import { getHtmlDescription } from "../../utils/getHtmlDescription.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
+import { getSupportingMembershipLabel } from "../utils/getSupportingMembershipLabel.ts";
 import { replaceTokens } from "../utils/replaceTokens.ts";
 import "./Step3ProductTypesChoice.css";
 
@@ -202,7 +203,7 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
                     style={{ pointerEvents: "none" }}
                     readOnly={true}
                   />
-                  <span>{settings.strings.step3SupportingMembershipName}</span>
+                  <span>{getSupportingMembershipLabel(settings)}</span>
                 </div>
               </label>
             </div>

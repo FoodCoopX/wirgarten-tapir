@@ -119,6 +119,7 @@ class ConfigurationGenerator:
                 name="Test membership type 1",
                 order_in_bestell_wizard=1,
                 description_in_bestell_wizard="Test description 1",
+                is_supporting_membership=True,
             )
             AssociationMembershipType.objects.create(
                 name="Test membership type 2",

@@ -17,8 +17,8 @@ import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { Step } from "../types/Step.ts";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import { getAssociationMembershipTypeMonthlyPriceFormatted } from "../utils/getAssociationMembershipTypeMonthlyPriceFormatted.ts";
+import { getDisplayedAssociationMembershipTypes } from "../utils/getDisplayedAssociationMembershipTypes.ts";
 import { getTotalPriceForProductType } from "../utils/getTotalPriceForProductType.ts";
-import { getVisibleAssociationMembershipTypes } from "../utils/getVisibleAssociationMembershipTypes.ts";
 
 interface BestellWizardShoppingCartOverlayProps {
   settings: BestellWizardSettings;
@@ -37,6 +37,7 @@ interface BestellWizardShoppingCartOverlayProps {
   contractStartDate: Date | undefined;
   selectedGrowingPeriod: BestellWizardGrowingPeriodChoice | undefined;
   setCurrentStep: (step: Step) => void;
+  investingMembership?: boolean;
 }
 
 const BestellWizardShoppingCartOverlay: React.FC<
@@ -58,6 +59,7 @@ const BestellWizardShoppingCartOverlay: React.FC<
   contractStartDate,
   selectedGrowingPeriod,
   setCurrentStep,
+  investingMembership = false,
 }) => {
   useEffect(() => {
     if (!showOverlay) return;
@@ -80,8 +82,10 @@ const BestellWizardShoppingCartOverlay: React.FC<
 
   function canEditAssociationMembership() {
     if (
-      getVisibleAssociationMembershipTypes(settings.associationMembershipTypes)
-        .length <= 1
+      getDisplayedAssociationMembershipTypes(
+        settings.associationMembershipTypes,
+        investingMembership,
+      ).length <= 1
     ) {
       return false;
     }

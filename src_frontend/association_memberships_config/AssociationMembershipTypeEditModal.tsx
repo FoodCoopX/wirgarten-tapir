@@ -24,6 +24,7 @@ const AssociationMembershipTypeEditModal: React.FC<
   const [description, setDescription] = useState("");
   const [order, setOrder] = useState(1);
   const [hiddenInBestellWizard, setHiddenInBestellWizard] = useState(false);
+  const [isSupportingMembership, setIsSupportingMembership] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
@@ -31,6 +32,7 @@ const AssociationMembershipTypeEditModal: React.FC<
     setOrder(membershipType.orderInBestellWizard);
     setDescription(membershipType.descriptionInBestellWizard);
     setHiddenInBestellWizard(membershipType.hiddenInBestellWizard!);
+    setIsSupportingMembership(membershipType.isSupportingMembership ?? false);
   }, [membershipType]);
 
   function onSave() {
@@ -52,6 +54,7 @@ const AssociationMembershipTypeEditModal: React.FC<
           descriptionInBestellWizard: description,
           orderInBestellWizard: order,
           hiddenInBestellWizard: hiddenInBestellWizard,
+          isSupportingMembership: isSupportingMembership,
         },
       })
       .then(onEdited)
@@ -127,6 +130,22 @@ const AssociationMembershipTypeEditModal: React.FC<
               das normale Mitglieder die nicht mehr bestellen können. Diese
               Mitgliedschafttypen können nur von Betrieb-Admins durch die
               Mitgliederliste verteilt werden .
+            </Form.Text>
+          </Form.Group>
+          <Form.Group className={"mt-2"}>
+            <Form.Check
+              checked={isSupportingMembership}
+              onChange={(e) => setIsSupportingMembership(e.target.checked)}
+              id={"is_supporting_membership"}
+              label={"Ist Fördermitgliedschaft"}
+            />
+            <Form.Text>
+              Dieser Typ wird im Bestell-Wizard auf Seite 3 als
+              Fördermitgliedschaft angezeigt und beim Vereinsbeitritt
+              vorausgewählt. Der Typ muss im Bestell-Wizard sichtbar sein (nicht
+              versteckt). Ohne markierten Typ oder bei der Rechtsform
+              Genossenschaft greift der Text unter „Seite 3: Produktauswahl -
+              Name für Fördermitgliedschaften“.
             </Form.Text>
           </Form.Group>
         </Form>

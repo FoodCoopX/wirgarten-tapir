@@ -45,6 +45,7 @@ interface BestellWizardMobileBaseProps {
   associationMembershipType?: AssociationMembershipType;
   contractStartDate: Date | undefined;
   selectedGrowingPeriod: BestellWizardGrowingPeriodChoice | undefined;
+  investingMembership?: boolean;
 }
 
 const BestellWizardMobileBase: React.FC<BestellWizardMobileBaseProps> = ({
@@ -69,6 +70,7 @@ const BestellWizardMobileBase: React.FC<BestellWizardMobileBaseProps> = ({
   associationMembershipType,
   contractStartDate,
   selectedGrowingPeriod,
+  investingMembership = false,
 }) => {
   return (
     <div
@@ -108,6 +110,7 @@ const BestellWizardMobileBase: React.FC<BestellWizardMobileBaseProps> = ({
           associationMembershipType={associationMembershipType}
           contractStartDate={contractStartDate}
           selectedGrowingPeriod={selectedGrowingPeriod}
+          investingMembership={investingMembership}
           setCurrentStep={setCurrentStep}
         />
       </div>
