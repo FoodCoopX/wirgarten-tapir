@@ -73,6 +73,15 @@ Both the service-account role and the client's role scope mapping are required. 
 mappings. The service-account role is what lets the client call the admin API; the scope mapping makes
 the role available to the token.
 
+### Admin API audience
+
+Current Keycloak releases enforce an audience check on the Admin REST API. Clients that call the
+admin API need the built-in `kc-admin-api` client scope as a **Default** client scope:
+`tapir-provisioner` for `keycloak sync` and `tapir-backend` for runtime user management. The default
+realm import already contains the scope on the provisioner; add it to `tapir-backend` manually if
+your Keycloak enforces the audience check. Without it, admin calls fail with
+`401 {"error":"HTTP 401 Unauthorized"}`.
+
 ### What the command does not manage
 
 Users, SMTP settings, themes, client scopes, optional protocol mappers, authentication flows,
@@ -138,6 +147,7 @@ In the Keycloak admin console, create a client in that realm:
 - Implicit flow: off
 - Valid redirect URIs and web origins: empty
 - Full scope allowed: off
+- Client scopes: add the built-in `kc-admin-api` scope as a **Default** client scope
 - Client secret: generate one and copy it
 
 The local bootstrap file `docker/keycloak/import/tapir-realm.json` is a minimal reference for these
