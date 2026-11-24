@@ -19,6 +19,7 @@ from tapir.bestell_wizard.services.bestell_wizard_style_service import (
 )
 from tapir.bidding_round.models import Bid, BiddingRound
 from tapir.bidding_round.permissions import (
+    BiddingRoundCacheMixin,
     BiddingRoundFeatureFlagMixin,
     BiddingRoundManagePermission,
 )
@@ -36,7 +37,11 @@ from tapir.bidding_round.serializers import (
     RoundSerializer,
 )
 from tapir.bidding_round.services.bid_input import BidInput
-from tapir.bidding_round.services.bidding_round_service import BiddingRoundService
+from tapir.bidding_round.services.bidding_round_service import (
+    BiddingRoundConfigChanges,
+    BiddingRoundService,
+    RoundPriceInput,
+)
 from tapir.bidding_round.services.bidding_round_stats_service import (
     BiddingRoundStatsService,
 )
@@ -51,44 +56,44 @@ from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.utils import get_today
 
 
-class BiddingRoundView(TemplateView):
+class BiddingRoundView(BiddingRoundCacheMixin, TemplateView):
     template_name = "bidding_round/bidding_round.html"
 
     def get(self, request, *args, **kwargs):
-        cache = {}
         if not BiddingRoundViewService.is_feature_flag_enabled(
-            cache
-        ) or not BiddingRoundViewService.is_public_url_enabled(cache):
+            self.cache
+        ) or not BiddingRoundViewService.is_public_url_enabled(self.cache):
             raise Http404
         return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context_data = super().get_context_data(**kwargs)
-        cache = {}
         context_data["body_style"] = BestellWizardStyleService.build_body_style(
-            cache=cache
+            cache=self.cache
         )
         return context_data
 
 
-class BiddingRoundConfigView(PermissionRequiredMixin, TemplateView):
+class BiddingRoundConfigView(
+    BiddingRoundCacheMixin, PermissionRequiredMixin, TemplateView
+):
     permission_required = Permission.Coop.MANAGE
     template_name = "bidding_round/bidding_round_config.html"
 
     def dispatch(self, request, *args, **kwargs):
-        cache = {}
-        if not BiddingRoundViewService.is_feature_flag_enabled(cache):
+        if not BiddingRoundViewService.is_feature_flag_enabled(self.cache):
             raise Http404
         return super().dispatch(request, *args, **kwargs)
 
 
-class BiddingRoundResultsView(PermissionRequiredMixin, TemplateView):
+class BiddingRoundResultsView(
+    BiddingRoundCacheMixin, PermissionRequiredMixin, TemplateView
+):
     permission_required = Permission.Coop.MANAGE
     template_name = "bidding_round/bidding_round_results.html"
 
     def dispatch(self, request, *args, **kwargs):
-        cache = {}
-        if not BiddingRoundViewService.is_feature_flag_enabled(cache):
+        if not BiddingRoundViewService.is_feature_flag_enabled(self.cache):
             raise Http404
         return super().dispatch(request, *args, **kwargs)
 
@@ -183,7 +188,7 @@ class RoundListCreateView(BiddingRoundFeatureFlagMixin, APIView):
         if not product_type_id:
             product_types = (
                 BiddingRoundService.get_product_types_with_capacity_for_period(
-                    growing_period, cache=cache
+                    growing_period
                 )
             )
             if len(product_types) != 1:
@@ -206,7 +211,14 @@ class RoundListCreateView(BiddingRoundFeatureFlagMixin, APIView):
                     comment=validated.get("comment", ""),
                     product_type_id=product_type_id,
                     target_amount_per_year=validated.get("target_amount_per_year"),
-                    prices=validated.get("prices"),
+                    prices=(
+                        [
+                            RoundPriceInput.from_mapping(price)
+                            for price in validated["prices"]
+                        ]
+                        if "prices" in validated
+                        else None
+                    ),
                     cache=cache,
                 )
         except ValidationError as error:
@@ -268,7 +280,7 @@ class AvailableProductTypesView(BiddingRoundFeatureFlagMixin, APIView):
         if growing_period is None:
             return Response([], status=status.HTTP_200_OK)
         product_types = BiddingRoundService.get_product_types_with_capacity_for_period(
-            growing_period, cache=cache
+            growing_period
         )
         return Response(
             [
@@ -315,7 +327,9 @@ class RoundDetailView(BiddingRoundFeatureFlagMixin, APIView):
 
         try:
             BiddingRoundService.update_round_config(
-                bidding_round, serializer.validated_data, cache=cache
+                bidding_round,
+                BiddingRoundConfigChanges.from_mapping(serializer.validated_data),
+                cache=cache,
             )
         except ValidationError as error:
             return Response(
@@ -501,11 +515,11 @@ class CreateContractsView(BiddingRoundFeatureFlagMixin, APIView):
                 "errors": [
                     {
                         "bid_id": entry["bid_id"],
-                        "member_id": entry["member"].id,
-                        "member_name": str(entry["member"]),
-                        "error": entry["error"],
+                        "member_id": entry.member.id,
+                        "member_name": str(entry.member),
+                        "error": entry.error,
                     }
-                    for entry in result["errors"]
+                    for entry in result.errors
                 ],
                 "subscriptions": [
                     {
@@ -513,7 +527,7 @@ class CreateContractsView(BiddingRoundFeatureFlagMixin, APIView):
                         "member_id": subscription.member_id,
                         "product_id": subscription.product_id,
                     }
-                    for subscription in result["subscriptions"]
+                    for subscription in result.subscriptions
                 ],
             },
             status=status.HTTP_200_OK,

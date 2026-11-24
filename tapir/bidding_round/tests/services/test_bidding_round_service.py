@@ -11,7 +11,11 @@ from tapir.bidding_round.config import (
 )
 from tapir.bidding_round.models import Bid, BiddingRound
 from tapir.bidding_round.services.bid_input import BidInput
-from tapir.bidding_round.services.bidding_round_service import BiddingRoundService
+from tapir.bidding_round.services.bidding_round_service import (
+    BiddingRoundConfigChanges,
+    BiddingRoundService,
+    RoundPriceInput,
+)
 from tapir.bidding_round.tests.factories import (
     BidFactory,
     BiddingRoundFactory,
@@ -148,12 +152,12 @@ class TestBiddingRoundService(TapirIntegrationTest):
         first_product = ProductFactory.create(type=product_type)
         second_product = ProductFactory.create(type=product_type)
         prices = [
-            {
-                "product_id": product.id,
-                "reference_value": "90.00",
-                "min_amount": "70.00",
-                "size": "1",
-            }
+            RoundPriceInput(
+                product_id=product.id,
+                reference_value=Decimal("90.00"),
+                min_amount=Decimal("70.00"),
+                size=Decimal("1"),
+            )
             for product in (first_product, second_product)
         ]
 
@@ -167,7 +171,9 @@ class TestBiddingRoundService(TapirIntegrationTest):
         )
         BiddingRoundService.update_round_config(
             bidding_round,
-            {"prices": [prices[0]]},
+            BiddingRoundConfigChanges(
+                prices=[prices[0]], provided_fields=frozenset({"prices"})
+            ),
             cache={},
         )
 
@@ -194,7 +200,11 @@ class TestBiddingRoundService(TapirIntegrationTest):
 
         with pytest.raises(ValidationError):
             BiddingRoundService.update_round_config(
-                bidding_round, {"target_amount_per_year": "2000.00"}, cache={}
+                bidding_round,
+                BiddingRoundConfigChanges.from_mapping(
+                    {"target_amount_per_year": "2000.00"}
+                ),
+                cache={},
             )
 
     def test_updateRoundConfig_givenBidsExistAndUnchangedSensitiveValues_updatesName(
@@ -206,19 +216,22 @@ class TestBiddingRoundService(TapirIntegrationTest):
 
         BiddingRoundService.update_round_config(
             bidding_round,
-            {
-                "name": "Neuer Name",
-                "product_type_id": bidding_round.product_type_id,
-                "target_amount_per_year": str(bidding_round.target_amount_per_year),
-                "prices": [
-                    {
-                        "product_id": price.product_id,
-                        "reference_value": str(price.reference_value),
-                        "min_amount": str(price.min_amount),
-                        "size": str(price.size),
-                    }
+            BiddingRoundConfigChanges(
+                name="Neuer Name",
+                product_type_id=bidding_round.product_type_id,
+                target_amount_per_year=str(bidding_round.target_amount_per_year),
+                prices=[
+                    RoundPriceInput(
+                        product_id=price.product_id,
+                        reference_value=price.reference_value,
+                        min_amount=price.min_amount,
+                        size=price.size,
+                    )
                 ],
-            },
+                provided_fields=frozenset(
+                    {"name", "product_type_id", "target_amount_per_year", "prices"}
+                ),
+            ),
             cache={},
         )
 
@@ -230,7 +243,9 @@ class TestBiddingRoundService(TapirIntegrationTest):
         start_at = bidding_round.start_at
 
         BiddingRoundService.update_round_config(
-            bidding_round, {"start_at": None}, cache={}
+            bidding_round,
+            BiddingRoundConfigChanges.from_mapping({"start_at": None}),
+            cache={},
         )
 
         bidding_round.refresh_from_db()
@@ -242,7 +257,9 @@ class TestBiddingRoundService(TapirIntegrationTest):
         with pytest.raises(ValidationError):
             BiddingRoundService.update_round_config(
                 bidding_round,
-                {"start_at": bidding_round.end_at + datetime.timedelta(days=1)},
+                BiddingRoundConfigChanges.from_mapping(
+                    {"start_at": bidding_round.end_at + datetime.timedelta(days=1)}
+                ),
                 cache={},
             )
 
@@ -252,7 +269,9 @@ class TestBiddingRoundService(TapirIntegrationTest):
 
         BiddingRoundService.update_round_config(
             bidding_round,
-            {"product_type_id": ProductTypeFactory.create().id},
+            BiddingRoundConfigChanges.from_mapping(
+                {"product_type_id": ProductTypeFactory.create().id}
+            ),
             cache={},
         )
 
@@ -265,7 +284,9 @@ class TestBiddingRoundService(TapirIntegrationTest):
 
         with pytest.raises(ValidationError):
             BiddingRoundService.update_round_config(
-                bidding_round, {"name": "Neuer Name"}, cache={}
+                bidding_round,
+                BiddingRoundConfigChanges.from_mapping({"name": "Neuer Name"}),
+                cache={},
             )
 
     def test_saveBid_default_createsBidWithProductQuantityAndAmount(self):

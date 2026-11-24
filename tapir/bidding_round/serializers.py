@@ -1,4 +1,10 @@
+from decimal import Decimal
+
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
+
+from tapir.bidding_round.models import Bid, BiddingRound
+from tapir.wirgarten.models import Product
 
 
 class RoundProductPriceInputSerializer(serializers.Serializer):
@@ -57,14 +63,57 @@ class RoundProductPriceSerializer(serializers.Serializer):
     size = serializers.CharField(allow_null=True)
 
 
-class RoundProductSerializer(serializers.Serializer):
+class RoundProductSerializer(serializers.ModelSerializer):
     product_type_id = serializers.CharField()
-    product_type_name = serializers.CharField()
+    product_type_name = serializers.CharField(source="product_type.name")
     target_amount_per_year = serializers.CharField(allow_null=True)
-    prices = RoundProductPriceSerializer(many=True)
+    prices = serializers.SerializerMethodField()
+
+    class Meta:
+        model = BiddingRound
+        fields = [
+            "product_type_id",
+            "product_type_name",
+            "target_amount_per_year",
+            "prices",
+        ]
+
+    @extend_schema_field(RoundProductPriceSerializer(many=True))
+    def get_prices(self, bidding_round):
+        prices_by_product = {
+            price.product_id: price for price in bidding_round.prices.all()
+        }
+        products = Product.objects.filter(
+            type_id=bidding_round.product_type_id, deleted=False
+        )
+        rows = []
+        for product in products:
+            price = prices_by_product.get(product.id)
+            rows.append(
+                {
+                    "product_id": product.id,
+                    "product_name": product.name,
+                    "reference_value": (
+                        str(price.reference_value)
+                        if price is not None and price.reference_value is not None
+                        else None
+                    ),
+                    "min_amount": (
+                        str(price.min_amount)
+                        if price is not None and price.min_amount is not None
+                        else None
+                    ),
+                    "size": (
+                        str(price.size)
+                        if price is not None and price.size is not None
+                        else None
+                    ),
+                }
+            )
+        return RoundProductPriceSerializer(rows, many=True).data
 
 
-class RoundSerializer(serializers.Serializer):
+class RoundSerializer(serializers.ModelSerializer):
     id = serializers.CharField()
     name = serializers.CharField()
     status = serializers.CharField()
@@ -73,21 +122,75 @@ class RoundSerializer(serializers.Serializer):
     contracts_created_at = serializers.DateTimeField(allow_null=True)
     growing_period_id = serializers.CharField(allow_null=True)
     comment = serializers.CharField()
-    has_bids = serializers.BooleanField()
-    product = RoundProductSerializer(allow_null=True)
+    has_bids = serializers.SerializerMethodField()
+    product = RoundProductSerializer(source="*", allow_null=True)
+
+    class Meta:
+        model = BiddingRound
+        fields = [
+            "id",
+            "name",
+            "status",
+            "start_at",
+            "end_at",
+            "contracts_created_at",
+            "growing_period_id",
+            "comment",
+            "has_bids",
+            "product",
+        ]
+
+    @extend_schema_field(serializers.BooleanField())
+    def get_has_bids(self, bidding_round):
+        if hasattr(bidding_round, "has_bids"):
+            return bidding_round.has_bids
+        return bidding_round.bids.exists()
 
 
-class BidSerializer(serializers.Serializer):
+class BidSerializer(serializers.ModelSerializer):
     id = serializers.CharField()
     member_id = serializers.CharField()
-    pickup_location_id = serializers.CharField(allow_null=True)
-    updated_at = serializers.DateTimeField(allow_null=True)
+    pickup_location_id = serializers.SerializerMethodField()
     product_id = serializers.CharField()
-    product_name = serializers.CharField()
+    product_name = serializers.CharField(source="product.name")
+    amount_1 = serializers.DecimalField(max_digits=8, decimal_places=2, allow_null=True)
+    updated_at = serializers.DateTimeField(allow_null=True)
     quantity = serializers.IntegerField()
-    amount_1 = serializers.CharField(allow_null=True)
-    amount_per_year = serializers.CharField()
-    total_per_year = serializers.CharField()
+    amount_per_year = serializers.SerializerMethodField()
+    total_per_year = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Bid
+        fields = [
+            "id",
+            "member_id",
+            "pickup_location_id",
+            "updated_at",
+            "product_id",
+            "product_name",
+            "quantity",
+            "amount_1",
+            "amount_per_year",
+            "total_per_year",
+        ]
+
+    @extend_schema_field(serializers.CharField(allow_null=True))
+    def get_pickup_location_id(self, bid):
+        from tapir.pickup_locations.services.member_pickup_location_getter import (
+            MemberPickupLocationGetter,
+        )
+
+        return MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
+            member_id=bid.member_id,
+            reference_date=bid.round.growing_period.start_date,
+            cache=self.context.get("cache", {}),
+        )
+
+    def get_amount_per_year(self, bid):
+        return str((bid.amount_1 or Decimal("0")) * bid.quantity * 12)
+
+    def get_total_per_year(self, bid):
+        return self.get_amount_per_year(bid)
 
 
 class BidProductVariantSerializer(serializers.Serializer):
@@ -160,17 +263,38 @@ class ProductTypeOptionSerializer(serializers.Serializer):
     products = ProductOptionSerializer(many=True)
 
 
-class RoundStatsBidSerializer(serializers.Serializer):
-    bid_id = serializers.CharField()
+class RoundStatsBidSerializer(serializers.ModelSerializer):
+    bid_id = serializers.CharField(source="id")
     member_id = serializers.CharField()
-    member_name = serializers.CharField()
-    email = serializers.CharField()
+    member_name = serializers.CharField(source="member")
+    email = serializers.CharField(source="member.email")
     product_id = serializers.CharField()
-    product_name = serializers.CharField()
+    product_name = serializers.CharField(source="product.name")
     quantity = serializers.IntegerField()
-    amount_1 = serializers.CharField(allow_null=True)
-    amount_per_month = serializers.CharField()
-    amount_per_year = serializers.CharField()
+    amount_1 = serializers.DecimalField(max_digits=8, decimal_places=2, allow_null=True)
+    amount_per_month = serializers.SerializerMethodField()
+    amount_per_year = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Bid
+        fields = [
+            "bid_id",
+            "member_id",
+            "member_name",
+            "email",
+            "product_id",
+            "product_name",
+            "quantity",
+            "amount_1",
+            "amount_per_month",
+            "amount_per_year",
+        ]
+
+    def get_amount_per_month(self, bid):
+        return str((bid.amount_1 or Decimal("0")) * bid.quantity)
+
+    def get_amount_per_year(self, bid):
+        return str((bid.amount_1 or Decimal("0")) * bid.quantity * 12)
 
 
 class RoundResultsResponseSerializer(serializers.Serializer):

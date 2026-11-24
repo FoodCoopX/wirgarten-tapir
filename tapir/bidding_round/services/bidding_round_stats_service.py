@@ -5,6 +5,7 @@ from tapir.bidding_round.models import (
     BiddingRound,
     BiddingRoundProductPrice,
 )
+from tapir.bidding_round.serializers import RoundResultsResponseSerializer
 from tapir.bidding_round.services.product_size_service import ProductSizeService
 from tapir.wirgarten.models import Product
 
@@ -71,33 +72,15 @@ class BiddingRoundStatsService:
 
     @classmethod
     def build_admin_evaluation(cls, bidding_round: BiddingRound, cache: dict) -> dict:
-        rows = []
-        for bid in bidding_round.bids.select_related("member", "product"):
-            amount_per_month = cls.get_bid_monthly_amount(bid)
-            rows.append(
-                {
-                    "bid_id": bid.id,
-                    "member_id": bid.member_id,
-                    "member_name": str(bid.member),
-                    "email": bid.member.email,
-                    "product_id": bid.product_id,
-                    "product_name": bid.product.name,
-                    "quantity": bid.quantity,
-                    "amount_1": (
-                        str(bid.amount_1) if bid.amount_1 is not None else None
-                    ),
-                    "amount_per_month": str(amount_per_month),
-                    "amount_per_year": str(amount_per_month * 12),
-                }
-            )
-
-        return {
+        bids = bidding_round.bids.select_related("member", "product")
+        data = {
             "target_per_year": str(cls.get_target_per_year(bidding_round)),
             "reached_per_year": str(cls.get_reached_per_year(bidding_round)),
             "coverage_percent": cls.get_coverage_percent(bidding_round),
-            "bidder_count": bidding_round.bids.count(),
+            "bidder_count": bids.count(),
             "bidder_average_per_month": str(
                 cls.get_bidder_average_per_month(bidding_round)
             ),
-            "bids": rows,
+            "bids": bids,
         }
+        return RoundResultsResponseSerializer(data).data

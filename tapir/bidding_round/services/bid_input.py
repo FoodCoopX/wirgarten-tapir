@@ -32,7 +32,7 @@ class BidInput:
         )
 
     @staticmethod
-    def _to_int(value) -> int:
+    def _to_int(value: object) -> int:
         if value in (None, ""):
             return BIDDING_ROUND_MIN_SHARES
         try:

@@ -11,13 +11,13 @@ class AmountParser:
     cannot use a plain ``Decimal`` field."""
 
     @classmethod
-    def parse_optional(cls, value) -> Decimal | None:
+    def parse_optional(cls, value: object) -> Decimal | None:
         if value in (None, ""):
             return None
         return cls.parse_decimal(value)
 
     @classmethod
-    def parse_decimal(cls, value) -> Decimal:
+    def parse_decimal(cls, value: object) -> Decimal:
         if isinstance(value, str):
             value = value.strip().replace("€", "").replace(",", ".")
         try:

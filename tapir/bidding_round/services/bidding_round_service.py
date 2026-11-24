@@ -1,4 +1,7 @@
 import datetime
+from collections.abc import Mapping
+from dataclasses import dataclass
+from decimal import Decimal
 
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
@@ -21,10 +24,54 @@ from tapir.wirgarten.models import GrowingPeriod, Member, Product, ProductType
 from tapir.wirgarten.utils import get_now
 
 
-class BiddingRoundService:
-    EDITABLE_FIELDS = ("name", "comment", "start_at", "end_at")
-    SENSITIVE_FIELDS = ("product_type_id", "target_amount_per_year", "prices")
+@dataclass(frozen=True)
+class RoundPriceInput:
+    product_id: str
+    reference_value: Decimal | None
+    min_amount: Decimal | None
+    size: Decimal | None
 
+    @classmethod
+    def from_mapping(cls, payload: Mapping[str, object]) -> "RoundPriceInput":
+        return cls(
+            product_id=str(payload.get("product_id") or ""),
+            reference_value=AmountParser.parse_optional(payload.get("reference_value")),
+            min_amount=AmountParser.parse_optional(payload.get("min_amount")),
+            size=AmountParser.parse_optional(payload.get("size")),
+        )
+
+
+@dataclass(frozen=True)
+class BiddingRoundConfigChanges:
+    name: str | None = None
+    comment: str | None = None
+    start_at: datetime.datetime | None = None
+    end_at: datetime.datetime | None = None
+    product_type_id: str | None = None
+    target_amount_per_year: Decimal | str | None = None
+    prices: list[RoundPriceInput] | None = None
+    provided_fields: frozenset[str] = frozenset()
+
+    @classmethod
+    def from_mapping(cls, payload: Mapping[str, object]) -> "BiddingRoundConfigChanges":
+        prices = None
+        if "prices" in payload:
+            prices = [
+                RoundPriceInput.from_mapping(entry) for entry in payload["prices"]
+            ]
+        return cls(
+            name=payload.get("name"),
+            comment=payload.get("comment"),
+            start_at=payload.get("start_at"),
+            end_at=payload.get("end_at"),
+            product_type_id=payload.get("product_type_id"),
+            target_amount_per_year=payload.get("target_amount_per_year"),
+            prices=prices,
+            provided_fields=frozenset(payload.keys()),
+        )
+
+
+class BiddingRoundService:
     @classmethod
     def validate_round_creation(
         cls,
@@ -47,9 +94,11 @@ class BiddingRoundService:
         product_type_id: str,
         start_at: datetime.datetime | None = None,
         comment: str = "",
-        target_amount_per_year=None,
-        prices: list[dict] | None = None,
+        target_amount_per_year: Decimal | str | None = None,
+        prices: list[RoundPriceInput] | None = None,
     ) -> BiddingRound:
+        if prices is not None:
+            cls.validate_round_prices(prices, product_type_id)
         bidding_round = BiddingRound.objects.create(
             growing_period=growing_period,
             name=name,
@@ -65,7 +114,9 @@ class BiddingRoundService:
         return bidding_round
 
     @classmethod
-    def _apply_target_amount_per_year(cls, bidding_round: BiddingRound, value) -> None:
+    def _apply_target_amount_per_year(
+        cls, bidding_round: BiddingRound, value: Decimal | str | None
+    ) -> None:
         if value in (None, ""):
             return
         target_amount_per_year = AmountParser.parse_optional(value)
@@ -77,72 +128,77 @@ class BiddingRoundService:
         bidding_round.save(update_fields=["target_amount_per_year", "updated_at"])
 
     @classmethod
-    def _save_round_prices(
-        cls, bidding_round: BiddingRound, prices: list[dict]
+    def validate_round_prices(
+        cls,
+        prices: list[RoundPriceInput],
+        product_type_id: str,
+        allow_empty: bool = False,
     ) -> None:
-        """Replaces the round's price rows with the given payload.
-
-        The rows are addressed by ``product_id``, so the object ids do not matter and
-        the old rows are deleted first.
-        """
         if not prices:
-            if bidding_round.prices.exists():
+            if allow_empty:
                 return
             raise ValidationError(
                 _("Bitte mindestens ein Produkt mit Preis konfigurieren.")
             )
         valid_product_ids = set(
-            Product.objects.filter(
-                type_id=bidding_round.product_type_id, deleted=False
-            ).values_list("id", flat=True)
+            Product.objects.filter(type_id=product_type_id, deleted=False).values_list(
+                "id", flat=True
+            )
         )
-        rows_by_product_id = {}
-        for entry in prices:
-            product_id = entry.get("product_id")
-            if product_id is None:
+        for price in prices:
+            if not price.product_id:
                 raise ValidationError(
                     _("Für jeden Preis muss ein Produkt angegeben werden.")
                 )
-            if product_id not in valid_product_ids:
+            if price.product_id not in valid_product_ids:
                 raise ValidationError(
                     _(
-                        "Es wurde ein Produkt gewählt, das nicht zum Produkttyp der Beitragsrunde gehört."
+                        "Das gewählte Produkt gehört nicht zum Produkttyp der Beitragsrunde."
                     )
                 )
-            reference_value = AmountParser.parse_optional(entry.get("reference_value"))
-            min_amount = AmountParser.parse_optional(entry.get("min_amount"))
-            size = AmountParser.parse_optional(entry.get("size"))
             cls._validate_non_negative(
-                reference_value, _("Der Richtwert darf nicht negativ sein.")
+                price.reference_value, _("Der Richtwert darf nicht negativ sein.")
             )
             cls._validate_non_negative(
-                min_amount, _("Der Mindestbetrag darf nicht negativ sein.")
+                price.min_amount, _("Der Mindestbetrag darf nicht negativ sein.")
             )
-            if size is None or size <= 0:
-                raise ValidationError(
-                    _("Die Produktgröße ist erforderlich und muss größer als 0 sein.")
-                )
+            if price.size is None or price.size <= 0:
+                raise ValidationError(_("Die Größe muss größer als 0 sein."))
             if (
-                reference_value is not None
-                and min_amount is not None
-                and min_amount > reference_value
+                price.reference_value is not None
+                and price.min_amount is not None
+                and price.min_amount > price.reference_value
             ):
                 raise ValidationError(
-                    _("Der Mindestbetrag darf nicht höher als der Richtwert sein.")
+                    _("Der Mindestbetrag darf nicht größer als der Richtwert sein.")
                 )
-            rows_by_product_id[product_id] = BiddingRoundProductPrice(
-                round=bidding_round,
-                product_id=product_id,
-                reference_value=reference_value,
-                min_amount=min_amount,
-                size=size,
-            )
 
+    @classmethod
+    def _save_round_prices(
+        cls, bidding_round: BiddingRound, prices: list[RoundPriceInput]
+    ) -> None:
+        """Replaces the round's price rows with already validated values.
+
+        The caller validates the new values first. The old rows are deleted before
+        the new rows are inserted, so the unique product constraint cannot collide.
+        """
+        if not prices:
+            return
+        rows_by_product_id = {
+            price.product_id: BiddingRoundProductPrice(
+                round=bidding_round,
+                product_id=price.product_id,
+                reference_value=price.reference_value,
+                min_amount=price.min_amount,
+                size=price.size,
+            )
+            for price in prices
+        }
         bidding_round.prices.all().delete()
         BiddingRoundProductPrice.objects.bulk_create(rows_by_product_id.values())
 
     @classmethod
-    def _validate_non_negative(cls, value, message: str) -> None:
+    def _validate_non_negative(cls, value: Decimal | None, message: str) -> None:
         if value is not None and value < 0:
             raise ValidationError(message)
 
@@ -195,7 +251,7 @@ class BiddingRoundService:
         if bidding_round.contracts_created_at is not None:
             raise ValidationError(
                 _(
-                    "Die Beitragsrunde kann nicht wieder geöffnet werden, sobald Verträge erstellt wurden."
+                    "Eine Beitragsrunde kann nicht wieder geöffnet werden, sobald Verträge erstellt wurden."
                 )
             )
         cls._ensure_no_other_active_round(bidding_round)
@@ -224,7 +280,10 @@ class BiddingRoundService:
 
     @classmethod
     def update_round_config(
-        cls, bidding_round: BiddingRound, changes: dict, cache: dict
+        cls,
+        bidding_round: BiddingRound,
+        changes: BiddingRoundConfigChanges,
+        cache: dict,
     ) -> BiddingRound:
         if bidding_round.contracts_created_at is not None:
             raise ValidationError(
@@ -233,50 +292,65 @@ class BiddingRoundService:
                 )
             )
         cls.validate_round_config_change(bidding_round, changes)
+        if changes.prices is not None:
+            cls.validate_round_prices(
+                changes.prices,
+                changes.product_type_id or bidding_round.product_type_id,
+                allow_empty=bidding_round.prices.exists(),
+            )
         return cls._apply_round_config_change(bidding_round, changes, cache)
 
     @classmethod
     @transaction.atomic
     def _apply_round_config_change(
-        cls, bidding_round: BiddingRound, changes: dict, cache: dict
+        cls,
+        bidding_round: BiddingRound,
+        changes: BiddingRoundConfigChanges,
+        cache: dict,
     ) -> BiddingRound:
-        for field in cls.EDITABLE_FIELDS:
-            if field not in changes:
-                continue
-            if field == "start_at" and changes[field] is None:
-                continue
-            setattr(bidding_round, field, changes[field])
-
-        new_product_type_id = changes.get("product_type_id")
-        if new_product_type_id and new_product_type_id != bidding_round.product_type_id:
-            bidding_round.prices.all().delete()
-            bidding_round.product_type_id = new_product_type_id
-
+        if "name" in changes.provided_fields and changes.name is not None:
+            bidding_round.name = changes.name
+        if "comment" in changes.provided_fields and changes.comment is not None:
+            bidding_round.comment = changes.comment
+        if "start_at" in changes.provided_fields and changes.start_at is not None:
+            bidding_round.start_at = changes.start_at
+        if "end_at" in changes.provided_fields and changes.end_at is not None:
+            bidding_round.end_at = changes.end_at
+        if (
+            "product_type_id" in changes.provided_fields
+            and changes.product_type_id is not None
+        ):
+            if changes.product_type_id != bidding_round.product_type_id:
+                bidding_round.prices.all().delete()
+            bidding_round.product_type_id = changes.product_type_id
         bidding_round.save()
 
-        if "target_amount_per_year" in changes:
+        if "target_amount_per_year" in changes.provided_fields:
             target_amount_per_year = AmountParser.parse_optional(
-                changes["target_amount_per_year"]
+                changes.target_amount_per_year
+            )
+            cls._validate_non_negative(
+                target_amount_per_year,
+                _("Der Zielbetrag pro Jahr darf nicht negativ sein."),
             )
             if target_amount_per_year != bidding_round.target_amount_per_year:
-                cls._validate_non_negative(
-                    target_amount_per_year,
-                    _("Der Zielbetrag pro Jahr darf nicht negativ sein."),
-                )
                 bidding_round.target_amount_per_year = target_amount_per_year
                 bidding_round.save(
                     update_fields=["target_amount_per_year", "updated_at"]
                 )
 
-        if "prices" in changes and cls._payload_prices_signature(
-            changes["prices"]
-        ) != cls._prices_signature(bidding_round):
-            cls._save_round_prices(bidding_round, changes["prices"])
+        if "prices" in changes.provided_fields and changes.prices is not None:
+            if cls._payload_prices_signature(changes.prices) != cls._prices_signature(
+                bidding_round
+            ):
+                cls._save_round_prices(bidding_round, changes.prices)
 
         return bidding_round
 
     @classmethod
-    def _prices_signature(cls, bidding_round: BiddingRound) -> dict:
+    def _prices_signature(
+        cls, bidding_round: BiddingRound
+    ) -> dict[str, tuple[Decimal | None, Decimal | None, Decimal | None]]:
         return {
             price.product_id: (
                 price.reference_value,
@@ -287,22 +361,32 @@ class BiddingRoundService:
         }
 
     @classmethod
-    def _payload_prices_signature(cls, prices: list[dict]) -> dict:
+    def _payload_prices_signature(
+        cls, prices: list[RoundPriceInput]
+    ) -> dict[str, tuple[Decimal | None, Decimal | None, Decimal | None]]:
         return {
-            entry.get("product_id"): (
-                AmountParser.parse_optional(entry.get("reference_value")),
-                AmountParser.parse_optional(entry.get("min_amount")),
-                AmountParser.parse_optional(entry.get("size")),
+            price.product_id: (
+                price.reference_value,
+                price.min_amount,
+                price.size,
             )
-            for entry in prices
+            for price in prices
         }
 
     @classmethod
     def validate_round_config_change(
-        cls, bidding_round: BiddingRound, changes: dict
+        cls, bidding_round: BiddingRound, changes: BiddingRoundConfigChanges
     ) -> None:
-        start_at = changes.get("start_at") or bidding_round.start_at
-        end_at = changes.get("end_at", bidding_round.end_at)
+        start_at = (
+            changes.start_at
+            if "start_at" in changes.provided_fields
+            else bidding_round.start_at
+        )
+        end_at = (
+            changes.end_at
+            if "end_at" in changes.provided_fields
+            else bidding_round.end_at
+        )
         if start_at is not None and end_at is not None and start_at > end_at:
             raise ValidationError(
                 _("Das Startdatum darf nicht nach dem Enddatum liegen.")
@@ -311,15 +395,19 @@ class BiddingRoundService:
             return
 
         sensitive = (
-            changes.get("product_type_id") not in (None, bidding_round.product_type_id)
+            (
+                "product_type_id" in changes.provided_fields
+                and changes.product_type_id not in (None, bidding_round.product_type_id)
+            )
             or (
-                "target_amount_per_year" in changes
-                and AmountParser.parse_optional(changes["target_amount_per_year"])
+                "target_amount_per_year" in changes.provided_fields
+                and AmountParser.parse_optional(changes.target_amount_per_year)
                 != bidding_round.target_amount_per_year
             )
             or (
-                "prices" in changes
-                and cls._payload_prices_signature(changes["prices"])
+                "prices" in changes.provided_fields
+                and changes.prices is not None
+                and cls._payload_prices_signature(changes.prices)
                 != cls._prices_signature(bidding_round)
             )
         )
@@ -332,15 +420,16 @@ class BiddingRoundService:
 
     @classmethod
     def get_current_open_round(cls, cache: dict) -> BiddingRound | None:
+        now = get_now(cache=cache)
         return BiddingRound.objects.filter(
-            start_at__lte=get_now(cache=cache),
+            start_at__lte=now,
             status=BIDDING_ROUND_STATUS_ACTIVE,
-            end_at__gte=get_now(cache=cache),
+            end_at__gte=now,
         ).first()
 
     @classmethod
     def get_product_types_with_capacity_for_period(
-        cls, growing_period: GrowingPeriod, cache: dict
+        cls, growing_period: GrowingPeriod
     ) -> list[ProductType]:
         return list(
             ProductType.objects.filter(
@@ -359,7 +448,7 @@ class BiddingRoundService:
     ) -> Bid:
         """Writes one bid per member and round.
 
-        There is no row lock: a single bid row per member and round means the last
+        There is no row lock: a single bid per member and round means the last
         write wins. Two simultaneous first submits are covered by the unique
         constraint on ``(round, member)``; the lookup is retried on that error.
         """

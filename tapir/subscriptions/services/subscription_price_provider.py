@@ -1,3 +1,11 @@
+from collections.abc import Callable
+from decimal import Decimal
+
+from django.db.models import QuerySet, When
+
+from tapir.wirgarten.models import Subscription
+
+
 class SubscriptionPriceProvider:
     """Registry for feature modules that price a subscription themselves.
 
@@ -15,12 +23,12 @@ class SubscriptionPriceProvider:
     _annotations = []
 
     @classmethod
-    def register(cls, provider) -> None:
+    def register(cls, provider: Callable) -> None:
         if provider not in cls._providers:
             cls._providers.append(provider)
 
     @classmethod
-    def get_price(cls, subscription, cache):
+    def get_price(cls, subscription: Subscription, cache: dict) -> Decimal | None:
         for provider in cls._providers:
             price = provider(subscription, cache)
             if price is not None:
@@ -28,16 +36,16 @@ class SubscriptionPriceProvider:
         return None
 
     @classmethod
-    def register_annotation(cls, annotate, price_when) -> None:
+    def register_annotation(cls, annotate: Callable, price_when: Callable) -> None:
         if (annotate, price_when) not in cls._annotations:
             cls._annotations.append((annotate, price_when))
 
     @classmethod
-    def apply_annotations(cls, queryset):
+    def apply_annotations(cls, queryset: QuerySet) -> QuerySet:
         for annotate, _price_when in cls._annotations:
             queryset = annotate(queryset)
         return queryset
 
     @classmethod
-    def get_price_whens(cls) -> list:
+    def get_price_whens(cls) -> list[When]:
         return [price_when() for _annotate, price_when in cls._annotations]

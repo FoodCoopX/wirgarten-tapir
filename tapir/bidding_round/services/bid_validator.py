@@ -63,7 +63,7 @@ class BidValidator:
         return quantity
 
     @classmethod
-    def _quantity_error(cls):
+    def _quantity_error(cls) -> str:
         return _("Bitte gib zwischen %(min)s und %(max)s Anteile an.") % {
             "min": BIDDING_ROUND_MIN_SHARES,
             "max": BIDDING_ROUND_MAX_SHARES,

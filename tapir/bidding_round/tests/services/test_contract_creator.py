@@ -52,8 +52,8 @@ class TestContractCreator(TapirIntegrationTest):
             bidding_round, cache={}, actor=bid.member
         )
 
-        self.assertEqual([], result["errors"])
-        self.assertEqual(1, len(result["subscriptions"]))
+        self.assertEqual([], result.errors)
+        self.assertEqual(1, len(result.subscriptions))
         subscription = Subscription.objects.get(member=bid.member, product=product)
         self.assertEqual(1, subscription.quantity)
         self.assertEqual(period.start_date, subscription.start_date)
@@ -185,7 +185,7 @@ class TestContractCreator(TapirIntegrationTest):
             bidding_round, cache={}, actor=member
         )
 
-        self.assertEqual([], result["errors"])
+        self.assertEqual([], result.errors)
         self.assertFalse(Subscription.objects.filter(pk=existing.pk).exists())
         new_subscription = Subscription.objects.get(member=member, product=new_product)
         self.assertEqual(
@@ -222,8 +222,8 @@ class TestContractCreator(TapirIntegrationTest):
             bidding_round, cache={}, actor=member
         )
 
-        self.assertEqual(1, len(result["errors"]))
-        self.assertIn("anderen Anteilsgröße", result["errors"][0]["error"])
+        self.assertEqual(1, len(result.errors))
+        self.assertIn("anderen Anteilsgröße", result.errors[0].error)
         self.assertTrue(Subscription.objects.filter(pk=existing.pk).exists())
         self.assertFalse(
             Subscription.objects.filter(member=member, product=new_product).exists()
@@ -273,7 +273,7 @@ class TestContractCreator(TapirIntegrationTest):
             bidding_round, cache={}, bid_ids=[bid.id], actor=bid.member
         )
 
-        self.assertEqual(1, len(result["subscriptions"]))
+        self.assertEqual(1, len(result.subscriptions))
         self.assertFalse(
             BiddingRoundCreatedSubscription.objects.filter(
                 round=bidding_round, subscription__member=other_bid.member

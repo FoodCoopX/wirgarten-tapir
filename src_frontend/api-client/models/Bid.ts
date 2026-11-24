@@ -35,7 +35,7 @@ export interface Bid {
    * @type {string}
    * @memberof Bid
    */
-  pickupLocationId: string | null;
+  readonly pickupLocationId: string | null;
   /**
    *
    * @type {Date}
@@ -71,13 +71,13 @@ export interface Bid {
    * @type {string}
    * @memberof Bid
    */
-  amountPerYear: string;
+  readonly amountPerYear: string;
   /**
    *
    * @type {string}
    * @memberof Bid
    */
-  totalPerYear: string;
+  readonly totalPerYear: string;
 }
 
 /**
@@ -128,7 +128,10 @@ export function BidToJSON(json: any): Bid {
 }
 
 export function BidToJSONTyped(
-  value?: Bid | null,
+  value?: Omit<
+    Bid,
+    "pickup_location_id" | "amount_per_year" | "total_per_year"
+  > | null,
   ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {
@@ -138,7 +141,6 @@ export function BidToJSONTyped(
   return {
     id: value["id"],
     member_id: value["memberId"],
-    pickup_location_id: value["pickupLocationId"],
     updated_at:
       value["updatedAt"] == null
         ? null
@@ -147,7 +149,5 @@ export function BidToJSONTyped(
     product_name: value["productName"],
     quantity: value["quantity"],
     amount_1: value["amount1"],
-    amount_per_year: value["amountPerYear"],
-    total_per_year: value["totalPerYear"],
   };
 }

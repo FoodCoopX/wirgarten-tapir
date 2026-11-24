@@ -3,7 +3,10 @@ import random
 from decimal import Decimal
 
 from tapir.bidding_round.services.bid_input import BidInput
-from tapir.bidding_round.services.bidding_round_service import BiddingRoundService
+from tapir.bidding_round.services.bidding_round_service import (
+    BiddingRoundService,
+    RoundPriceInput,
+)
 from tapir.bidding_round.services.product_size_service import ProductSizeService
 from tapir.configuration.models import TapirParameter
 from tapir.wirgarten.models import (
@@ -101,6 +104,17 @@ class BiddingRoundGenerator:
         target_amount_per_year = (reached_per_year / TARGET_COVERAGE_RATIO).quantize(
             Decimal("0.01")
         )
+        prices = []
+        for product in products:
+            size = cls._get_size_or_one(product, growing_period, cache)
+            prices.append(
+                RoundPriceInput(
+                    product_id=product.id,
+                    reference_value=REFERENCE_VALUE_PER_SIZE * size,
+                    min_amount=MIN_AMOUNT_PER_SIZE * size,
+                    size=size,
+                )
+            )
 
         bidding_round = BiddingRoundService.create_round(
             growing_period=growing_period,
@@ -109,21 +123,7 @@ class BiddingRoundGenerator:
             end_at=now + datetime.timedelta(days=30),
             product_type_id=product_type.id,
             target_amount_per_year=target_amount_per_year,
-            prices=[
-                {
-                    "product_id": product.id,
-                    "reference_value": str(
-                        REFERENCE_VALUE_PER_SIZE
-                        * cls._get_size_or_one(product, growing_period, cache)
-                    ),
-                    "min_amount": str(
-                        MIN_AMOUNT_PER_SIZE
-                        * cls._get_size_or_one(product, growing_period, cache)
-                    ),
-                    "size": str(cls._get_size_or_one(product, growing_period, cache)),
-                }
-                for product in products
-            ],
+            prices=prices,
             cache=cache,
         )
         BiddingRoundService.start_round(bidding_round, cache=cache)

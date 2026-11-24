@@ -1,12 +1,13 @@
-from decimal import Decimal
-
 from django.core.exceptions import ValidationError
 
 from tapir.bidding_round.models import BiddingRound, BiddingRoundProductPrice
-from tapir.configuration.parameter import get_parameter_value
-from tapir.pickup_locations.services.member_pickup_location_getter import (
-    MemberPickupLocationGetter,
+from tapir.bidding_round.serializers import (
+    BiddableProductSerializer,
+    BidSerializer,
+    RoundSerializer,
+    RoundTextsSerializer,
 )
+from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.models import Member, Product, Subscription
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
@@ -22,46 +23,7 @@ class BiddingRoundViewService:
 
     @classmethod
     def serialize_round(cls, bidding_round: BiddingRound, cache: dict) -> dict:
-        return {
-            "id": bidding_round.id,
-            "name": bidding_round.name,
-            "status": bidding_round.status,
-            "start_at": bidding_round.start_at.isoformat(),
-            "end_at": bidding_round.end_at.isoformat(),
-            "contracts_created_at": (
-                bidding_round.contracts_created_at.isoformat()
-                if bidding_round.contracts_created_at
-                else None
-            ),
-            "growing_period_id": bidding_round.growing_period_id,
-            "comment": bidding_round.comment,
-            "has_bids": (
-                bidding_round.has_bids
-                if hasattr(bidding_round, "has_bids")
-                else bidding_round.bids.exists()
-            ),
-            "product": cls._serialize_round_product(bidding_round),
-        }
-
-    @classmethod
-    def _serialize_round_product(cls, bidding_round: BiddingRound) -> dict:
-        return {
-            "product_type_id": bidding_round.product_type_id,
-            "product_type_name": bidding_round.product_type.name,
-            "target_amount_per_year": (
-                str(bidding_round.target_amount_per_year)
-                if bidding_round.target_amount_per_year is not None
-                else None
-            ),
-            "prices": [
-                {
-                    "product_id": product.id,
-                    "product_name": product.name,
-                    **cls._serialize_price_values(price),
-                }
-                for product, price in cls._get_products_with_prices(bidding_round)
-            ],
-        }
+        return RoundSerializer(bidding_round, context={"cache": cache}).data
 
     @classmethod
     def _get_products_with_prices(
@@ -102,26 +64,7 @@ class BiddingRoundViewService:
     def serialize_bid(cls, bid, cache: dict) -> dict | None:
         if bid is None:
             return None
-        pickup_location_id = (
-            MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
-                member_id=bid.member_id,
-                reference_date=bid.round.growing_period.start_date,
-                cache=cache,
-            )
-        )
-        amount_per_year = (bid.amount_1 or Decimal("0")) * bid.quantity * 12
-        return {
-            "id": bid.id,
-            "member_id": bid.member_id,
-            "pickup_location_id": pickup_location_id,
-            "updated_at": bid.updated_at.isoformat() if bid.updated_at else None,
-            "product_id": bid.product_id,
-            "product_name": bid.product.name,
-            "quantity": bid.quantity,
-            "amount_1": str(bid.amount_1) if bid.amount_1 is not None else None,
-            "amount_per_year": str(amount_per_year),
-            "total_per_year": str(amount_per_year),
-        }
+        return BidSerializer(bid, context={"cache": cache}).data
 
     @classmethod
     def build_texts(cls, cache: dict) -> dict:
@@ -147,7 +90,7 @@ class BiddingRoundViewService:
             "error_text": ParameterKeys.BIDDING_ROUND_BID_ERROR_TEXT,
         }
 
-        return {
+        texts = {
             **{
                 string_id: get_parameter_value(parameter_key, cache=cache)
                 for string_id, parameter_key in (
@@ -161,6 +104,7 @@ class BiddingRoundViewService:
                 )
             },
         }
+        return RoundTextsSerializer(texts).data
 
     @classmethod
     def build_biddable_product(
@@ -174,7 +118,7 @@ class BiddingRoundViewService:
         current_quantities = cls._get_current_quantities(
             member, [product for product, _price in products_with_prices]
         )
-        return {
+        data = {
             "id": bidding_round.product_type_id,
             "product_type_id": bidding_round.product_type_id,
             "product_type_name": bidding_round.product_type.name,
@@ -188,6 +132,7 @@ class BiddingRoundViewService:
                 for product, price in products_with_prices
             ],
         }
+        return BiddableProductSerializer(data).data
 
     @classmethod
     def _get_current_quantities(

@@ -21,7 +21,9 @@ class BiddingRoundSubscriptionPriceService:
     ANNOTATION_PRICE_PER_SHARE = "bidding_round_price_per_share"
 
     @classmethod
-    def get_price_for_subscription(cls, subscription, cache) -> Decimal | None:
+    def get_price_for_subscription(
+        cls, subscription: Subscription, cache: dict
+    ) -> Decimal | None:
         if subscription.price_override is not None:
             return subscription.price_override
         if subscription.price_mode not in cls.PRICE_MODES:
@@ -32,7 +34,9 @@ class BiddingRoundSubscriptionPriceService:
         return link.monthly_price_per_share * subscription.quantity
 
     @classmethod
-    def _get_link(cls, subscription) -> BiddingRoundCreatedSubscription | None:
+    def _get_link(
+        cls, subscription: Subscription
+    ) -> BiddingRoundCreatedSubscription | None:
         return (
             BiddingRoundCreatedSubscription.objects.filter(
                 subscription=subscription,

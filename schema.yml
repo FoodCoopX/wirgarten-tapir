@@ -2594,7 +2594,8 @@ paths:
 
         This keeps the view's own ``permission_classes`` (and therefore the global
         ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
-        the public (member-facing) endpoints.
+        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
+        so the handlers reuse it instead of building their own.
       tags:
       - bidding_rounds
       security:
@@ -2617,7 +2618,8 @@ paths:
 
         This keeps the view's own ``permission_classes`` (and therefore the global
         ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
-        the public (member-facing) endpoints.
+        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
+        so the handlers reuse it instead of building their own.
       tags:
       - bidding_rounds
       requestBody:
@@ -2651,7 +2653,8 @@ paths:
 
         This keeps the view's own ``permission_classes`` (and therefore the global
         ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
-        the public (member-facing) endpoints.
+        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
+        so the handlers reuse it instead of building their own.
       parameters:
       - in: path
         name: round_id
@@ -2678,7 +2681,8 @@ paths:
 
         This keeps the view's own ``permission_classes`` (and therefore the global
         ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
-        the public (member-facing) endpoints.
+        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
+        so the handlers reuse it instead of building their own.
       parameters:
       - in: path
         name: round_id
@@ -2716,7 +2720,8 @@ paths:
 
         This keeps the view's own ``permission_classes`` (and therefore the global
         ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
-        the public (member-facing) endpoints.
+        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
+        so the handlers reuse it instead of building their own.
       parameters:
       - in: path
         name: round_id
@@ -2740,7 +2745,8 @@ paths:
 
         This keeps the view's own ``permission_classes`` (and therefore the global
         ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
-        the public (member-facing) endpoints.
+        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
+        so the handlers reuse it instead of building their own.
       parameters:
       - in: path
         name: round_id
@@ -2753,7 +2759,6 @@ paths:
       - tokenAuth: []
       - cookieAuth: []
       - DrfForwardAuthentication: []
-      - {}
       responses:
         '200':
           content:
@@ -2768,7 +2773,8 @@ paths:
 
         This keeps the view's own ``permission_classes`` (and therefore the global
         ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
-        the public (member-facing) endpoints.
+        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
+        so the handlers reuse it instead of building their own.
       parameters:
       - in: path
         name: round_id
@@ -2793,7 +2799,6 @@ paths:
       - tokenAuth: []
       - cookieAuth: []
       - DrfForwardAuthentication: []
-      - {}
       responses:
         '200':
           description: No response body
@@ -2805,7 +2810,8 @@ paths:
 
         This keeps the view's own ``permission_classes`` (and therefore the global
         ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
-        the public (member-facing) endpoints.
+        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
+        so the handlers reuse it instead of building their own.
       parameters:
       - in: path
         name: round_id
@@ -2833,7 +2839,8 @@ paths:
 
         This keeps the view's own ``permission_classes`` (and therefore the global
         ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
-        the public (member-facing) endpoints.
+        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
+        so the handlers reuse it instead of building their own.
       parameters:
       - in: path
         name: round_id
@@ -2872,7 +2879,8 @@ paths:
 
         This keeps the view's own ``permission_classes`` (and therefore the global
         ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
-        the public (member-facing) endpoints.
+        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
+        so the handlers reuse it instead of building their own.
       parameters:
       - in: path
         name: round_id
@@ -2900,7 +2908,8 @@ paths:
 
         This keeps the view's own ``permission_classes`` (and therefore the global
         ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
-        the public (member-facing) endpoints.
+        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
+        so the handlers reuse it instead of building their own.
       parameters:
       - in: path
         name: round_id
@@ -2928,7 +2937,8 @@ paths:
 
         This keeps the view's own ``permission_classes`` (and therefore the global
         ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
-        the public (member-facing) endpoints.
+        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
+        so the handlers reuse it instead of building their own.
       parameters:
       - in: path
         name: round_id
@@ -2956,7 +2966,8 @@ paths:
 
         This keeps the view's own ``permission_classes`` (and therefore the global
         ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
-        the public (member-facing) endpoints.
+        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
+        so the handlers reuse it instead of building their own.
       parameters:
       - in: query
         name: growing_period_id
@@ -2985,7 +2996,8 @@ paths:
 
         This keeps the view's own ``permission_classes`` (and therefore the global
         ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
-        the public (member-facing) endpoints.
+        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
+        so the handlers reuse it instead of building their own.
       tags:
       - bidding_rounds
       security:
@@ -3009,7 +3021,8 @@ paths:
 
         This keeps the view's own ``permission_classes`` (and therefore the global
         ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
-        the public (member-facing) endpoints.
+        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
+        so the handlers reuse it instead of building their own.
       tags:
       - bidding_rounds
       security:
@@ -5929,6 +5942,7 @@ paths:
         name: id
         schema:
           type: string
+        description: Ein eindeutiger Wert, der pickup location identifiziert.
         required: true
       tags:
       - pickup_locations
@@ -10600,6 +10614,7 @@ components:
         pickup_location_id:
           type: string
           nullable: true
+          readOnly: true
         updated_at:
           type: string
           format: date-time
@@ -10612,11 +10627,15 @@ components:
           type: integer
         amount_1:
           type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
           nullable: true
         amount_per_year:
           type: string
+          readOnly: true
         total_per_year:
           type: string
+          readOnly: true
       required:
       - amount_1
       - amount_per_year
@@ -18359,6 +18378,7 @@ components:
           type: string
         has_bids:
           type: boolean
+          readOnly: true
         product:
           allOf:
           - $ref: '#/components/schemas/RoundProduct'
@@ -18421,6 +18441,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/RoundProductPrice'
+          readOnly: true
       required:
       - prices
       - product_type_id
@@ -18510,11 +18531,15 @@ components:
           type: integer
         amount_1:
           type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
           nullable: true
         amount_per_month:
           type: string
+          readOnly: true
         amount_per_year:
           type: string
+          readOnly: true
       required:
       - amount_1
       - amount_per_month

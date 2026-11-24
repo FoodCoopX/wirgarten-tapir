@@ -74,7 +74,7 @@ export interface Round {
    * @type {boolean}
    * @memberof Round
    */
-  hasBids: boolean;
+  readonly hasBids: boolean;
   /**
    *
    * @type {RoundProduct}
@@ -138,7 +138,7 @@ export function RoundToJSON(json: any): Round {
 }
 
 export function RoundToJSONTyped(
-  value?: Round | null,
+  value?: Omit<Round, "has_bids"> | null,
   ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {
@@ -158,7 +158,6 @@ export function RoundToJSONTyped(
         : (value["contractsCreatedAt"] as any).toISOString(),
     growing_period_id: value["growingPeriodId"],
     comment: value["comment"],
-    has_bids: value["hasBids"],
     product: RoundProductToJSON(value["product"]),
   };
 }

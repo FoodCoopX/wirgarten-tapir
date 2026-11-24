@@ -1,4 +1,5 @@
 import logging
+from dataclasses import dataclass
 from decimal import Decimal
 
 from django.core.exceptions import ValidationError
@@ -31,15 +32,22 @@ from tapir.wirgarten.utils import get_now, get_today
 logger = logging.getLogger(__name__)
 
 
+@dataclass(frozen=True)
+class ContractCreationError:
+    bid_id: str
+    member: Member
+    error: str
+
+
+@dataclass(frozen=True)
+class ContractCreationResult:
+    errors: list[ContractCreationError]
+    subscriptions: list[Subscription]
+
+
 class ContractCreator:
     @classmethod
-    def create_contracts_from_bids(
-        cls,
-        bidding_round: BiddingRound,
-        cache: dict,
-        bid_ids: list[str] | None = None,
-        actor: Member | None = None,
-    ) -> dict:
+    def validate_round_can_create_contracts(cls, bidding_round: BiddingRound) -> None:
         if bidding_round.status != BIDDING_ROUND_STATUS_CLOSED:
             raise ValidationError(
                 _("Verträge können erst nach Ende der Beitragsrunde erstellt werden.")
@@ -59,13 +67,22 @@ class ContractCreator:
                 )
             )
 
-        bids = list(bidding_round.bids.select_related("member", "product").all())
-        if bid_ids:
-            selected_ids = {str(bid_id) for bid_id in bid_ids}
-            bids = [bid for bid in bids if str(bid.id) in selected_ids]
+    @classmethod
+    def create_contracts_from_bids(
+        cls,
+        bidding_round: BiddingRound,
+        cache: dict,
+        bid_ids: list[str] | None = None,
+        actor: Member | None = None,
+    ) -> ContractCreationResult:
+        cls.validate_round_can_create_contracts(bidding_round)
 
-        errors = []
-        created_subscriptions = []
+        bids = bidding_round.bids.select_related("member", "product")
+        if bid_ids:
+            bids = bids.filter(id__in=bid_ids)
+
+        errors: list[ContractCreationError] = []
+        created_subscriptions: list[Subscription] = []
         for bid in bids:
             try:
                 with transaction.atomic():
@@ -76,11 +93,11 @@ class ContractCreator:
                     )
             except ValidationError as error:
                 errors.append(
-                    {
-                        "bid_id": bid.id,
-                        "member": bid.member,
-                        "error": str(error),
-                    }
+                    ContractCreationError(
+                        bid_id=bid.id,
+                        member=bid.member,
+                        error=str(error),
+                    )
                 )
 
         if created_subscriptions:
@@ -94,7 +111,9 @@ class ContractCreator:
             len(created_subscriptions),
             len(errors),
         )
-        return {"errors": errors, "subscriptions": created_subscriptions}
+        return ContractCreationResult(
+            errors=errors, subscriptions=created_subscriptions
+        )
 
     @classmethod
     def _create_contracts_for_bid(

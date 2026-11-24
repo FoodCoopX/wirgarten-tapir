@@ -16,7 +16,19 @@ class BiddingRoundManagePermission(BasePermission):
         )
 
 
-class BiddingRoundFeatureFlagMixin:
+class BiddingRoundCacheMixin:
+    """Keeps the per-request cache on the view instance.
+
+    Defining it in ``__init__`` lets ``initial`` reuse the same cache as the
+    handlers instead of building a second one.
+    """
+
+    def __init__(self, *args, **kwargs):
+        self.cache = {}
+        super().__init__(*args, **kwargs)
+
+
+class BiddingRoundFeatureFlagMixin(BiddingRoundCacheMixin):
     """Applies the feature-flag gate to a DRF view via ``initial``.
 
     This keeps the view's own ``permission_classes`` (and therefore the global
@@ -28,7 +40,6 @@ class BiddingRoundFeatureFlagMixin:
     require_public_url = False
 
     def initial(self, request, *args, **kwargs):
-        self.cache = {}
         if not BiddingRoundViewService.is_feature_flag_enabled(self.cache):
             raise Http404
         if self.require_public_url and not (

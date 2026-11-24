@@ -13,10 +13,7 @@
  */
 
 import type { RoundProductPrice } from "./RoundProductPrice";
-import {
-  RoundProductPriceFromJSON,
-  RoundProductPriceToJSON,
-} from "./RoundProductPrice";
+import { RoundProductPriceFromJSON } from "./RoundProductPrice";
 
 /**
  *
@@ -47,7 +44,7 @@ export interface RoundProduct {
    * @type {Array<RoundProductPrice>}
    * @memberof RoundProduct
    */
-  prices: Array<RoundProductPrice>;
+  readonly prices: Array<RoundProductPrice>;
 }
 
 /**
@@ -91,7 +88,7 @@ export function RoundProductToJSON(json: any): RoundProduct {
 }
 
 export function RoundProductToJSONTyped(
-  value?: RoundProduct | null,
+  value?: Omit<RoundProduct, "prices"> | null,
   ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {
@@ -102,6 +99,5 @@ export function RoundProductToJSONTyped(
     product_type_id: value["productTypeId"],
     product_type_name: value["productTypeName"],
     target_amount_per_year: value["targetAmountPerYear"],
-    prices: (value["prices"] as Array<any>).map(RoundProductPriceToJSON),
   };
 }
