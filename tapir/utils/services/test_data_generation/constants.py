@@ -1,0 +1,1 @@
+HARVEST_SHARE_PRODUCT_TYPE_NAME = "Ernteanteil"
