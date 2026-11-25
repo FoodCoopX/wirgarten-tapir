@@ -60,6 +60,41 @@ urlpatterns = [
         name="member_bid",
     ),
     path(
+        "api/<str:round_id>/bids",
+        views.BidCreateView.as_view(),
+        name="bid_create",
+    ),
+    path(
+        "api/<str:round_id>/bids/<str:bid_id>",
+        views.BidEditView.as_view(),
+        name="bid_edit",
+    ),
+    path(
+        "api/<str:round_id>/confirm_bids",
+        views.ConfirmBidsView.as_view(),
+        name="confirm_bids",
+    ),
+    path(
+        "api/<str:round_id>/lock_average_bid",
+        views.RoundLockAverageBidView.as_view(),
+        name="lock_average_bid",
+    ),
+    path(
+        "api/<str:round_id>/unlock_average_bid",
+        views.RoundUnlockAverageBidView.as_view(),
+        name="unlock_average_bid",
+    ),
+    path(
+        "api/<str:round_id>/members_without_bid",
+        views.MembersWithoutBidView.as_view(),
+        name="members_without_bid",
+    ),
+    path(
+        "api/<str:round_id>/export.csv",
+        views.ExportCsvView.as_view(),
+        name="export_csv",
+    ),
+    path(
         "api/<str:round_id>/create_contracts",
         views.CreateContractsView.as_view(),
         name="create_contracts",

@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Exists, OuterRef
 from django.http import Http404
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
@@ -28,11 +29,17 @@ from tapir.bidding_round.permissions import (
     BiddingRoundManagePermission,
 )
 from tapir.bidding_round.serializers import (
+    BidAdminCreateSerializer,
+    BidAdminSerializer,
+    BidSerializer,
     BidSubmitSerializer,
+    ConfirmBidsSerializer,
     CreateContractsResponseSerializer,
     CreateContractsSerializer,
     GrowingPeriodOptionSerializer,
+    LockAverageBidSerializer,
     MemberBidResponseSerializer,
+    MemberOptionSerializer,
     ProductTypeOptionSerializer,
     PublicDataResponseSerializer,
     PublicEvaluationResponseSerializer,
@@ -42,6 +49,9 @@ from tapir.bidding_round.serializers import (
     RoundSerializer,
 )
 from tapir.bidding_round.services.bid_input import BidInput
+from tapir.bidding_round.services.bidding_round_csv_export_service import (
+    BiddingRoundCsvExportService,
+)
 from tapir.bidding_round.services.bidding_round_service import (
     BiddingRoundConfigChanges,
     BiddingRoundService,
@@ -56,8 +66,8 @@ from tapir.bidding_round.services.bidding_round_view_service import (
 from tapir.bidding_round.services.contract_creator import ContractCreator
 from tapir.bidding_round.services.product_size_service import ProductSizeService
 from tapir.wirgarten.constants import Permission
-from tapir.wirgarten.models import GrowingPeriod, Member, Product
 from tapir.utils.services.tapir_cache import TapirCache
+from tapir.wirgarten.models import GrowingPeriod, Member, Product, Subscription
 from tapir.wirgarten.utils import get_today
 
 
@@ -527,6 +537,241 @@ class MemberBidView(BiddingRoundFeatureFlagMixin, APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         return Response("OK", status=status.HTTP_200_OK)
+
+
+class BidCreateView(BiddingRoundFeatureFlagMixin, APIView):
+    permission_classes = [BiddingRoundManagePermission]
+
+    @extend_schema(responses={201: BidSerializer}, request=BidAdminCreateSerializer())
+    def post(self, request, round_id):
+        cache = {}
+        bidding_round = get_object_or_404(BiddingRound, id=round_id)
+        serializer = BidAdminCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        validated = serializer.validated_data
+        member_id = validated["member_id"]
+        # save_admin_bid aktualisiert ein bestehendes Gebot, deshalb bleibt das
+        # Anlegen hier ein reines Anlegen und überschreibt nichts.
+        if Bid.objects.filter(round=bidding_round, member_id=member_id).exists():
+            return Response(
+                {"error": _("Für dieses Mitglied existiert bereits ein Gebot.")},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        member = get_object_or_404(Member, id=member_id)
+        try:
+            bid = BiddingRoundService.save_admin_bid(
+                bidding_round=bidding_round,
+                member=member,
+                bid_input=BidInput.from_mapping(validated),
+                entered_by_admin=True,
+                admin_confirmed=validated.get("admin_confirmed", False),
+                cache=cache,
+            )
+        except ValidationError as error:
+            return Response(
+                {"error": BiddingRoundViewService.serialize_validation_error(error)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return Response(
+            BiddingRoundViewService.serialize_bid(bid, cache=cache),
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class BidEditView(BiddingRoundFeatureFlagMixin, APIView):
+    permission_classes = [BiddingRoundManagePermission]
+
+    @extend_schema(responses={200: BidSerializer}, request=BidAdminSerializer())
+    def patch(self, request, round_id, bid_id):
+        cache = {}
+        bid = get_object_or_404(Bid, id=bid_id, round_id=round_id)
+        serializer = BidAdminSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        validated = serializer.validated_data
+        bid_input = None
+        if set(validated) & {
+            "product_id",
+            "quantity",
+            "amount_1",
+            "amount_2",
+            "amount_3",
+        }:
+            bid_input = BidInput.from_mapping(
+                {
+                    "product_id": validated.get("product_id", bid.product_id),
+                    "quantity": validated.get("quantity", bid.quantity),
+                    "amount_1": validated.get("amount_1", bid.amount_1),
+                    "amount_2": validated.get("amount_2", bid.amount_2),
+                    "amount_3": validated.get("amount_3", bid.amount_3),
+                }
+            )
+        try:
+            bid = BiddingRoundService.save_admin_bid(
+                bidding_round=bid.round,
+                member=bid.member,
+                bid_input=bid_input,
+                entered_by_admin=validated.get("entered_by_admin"),
+                admin_confirmed=validated.get("admin_confirmed"),
+                cache=cache,
+            )
+        except ValidationError as error:
+            return Response(
+                {"error": BiddingRoundViewService.serialize_validation_error(error)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return Response(
+            BiddingRoundViewService.serialize_bid(bid, cache=cache),
+            status=status.HTTP_200_OK,
+        )
+
+    @extend_schema(responses={204: None})
+    def delete(self, request, round_id, bid_id):
+        bid = get_object_or_404(Bid, id=bid_id, round_id=round_id)
+        if bid.round.contracts_created_at is not None:
+            return Response(
+                {
+                    "error": _(
+                        "Gebote können nicht mehr gelöscht werden, nachdem die Verträge erstellt wurden."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if bid.round.average_bid_locked_at is not None:
+            return Response(
+                {
+                    "error": _(
+                        "Gebote können nach dem Fixieren des Durchschnittsgebots nicht mehr gelöscht werden."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        bid.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ConfirmBidsView(BiddingRoundFeatureFlagMixin, APIView):
+    permission_classes = [BiddingRoundManagePermission]
+
+    @extend_schema(
+        responses={200: RoundResultsResponseSerializer},
+        request=ConfirmBidsSerializer(),
+    )
+    def post(self, request, round_id):
+        cache = {}
+        bidding_round = get_object_or_404(BiddingRound, id=round_id)
+        serializer = ConfirmBidsSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        BiddingRoundService.confirm_bids(
+            bidding_round,
+            bid_ids=serializer.validated_data.get("bid_ids"),
+            cache=cache,
+        )
+        return Response(
+            BiddingRoundStatsService.build_admin_evaluation(bidding_round, cache),
+            status=status.HTTP_200_OK,
+        )
+
+
+class RoundLockAverageBidView(BiddingRoundFeatureFlagMixin, APIView):
+    permission_classes = [BiddingRoundManagePermission]
+
+    @extend_schema(responses={200: RoundSerializer}, request=LockAverageBidSerializer())
+    def post(self, request, round_id):
+        cache = {}
+        bidding_round = get_object_or_404(BiddingRound, id=round_id)
+        serializer = LockAverageBidSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            BiddingRoundService.lock_average_bid(
+                bidding_round=bidding_round,
+                position=serializer.validated_data["position"],
+                surcharge_percent=serializer.validated_data.get("surcharge_percent", 0),
+                surcharge_on_bids=serializer.validated_data.get(
+                    "surcharge_on_bids", False
+                ),
+                surcharge_on_average=serializer.validated_data.get(
+                    "surcharge_on_average", False
+                ),
+                cache=cache,
+            )
+        except ValidationError as error:
+            return Response(
+                {"error": BiddingRoundViewService.serialize_validation_error(error)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return Response(
+            BiddingRoundViewService.serialize_round(bidding_round, cache),
+            status=status.HTTP_200_OK,
+        )
+
+
+class RoundUnlockAverageBidView(BiddingRoundFeatureFlagMixin, APIView):
+    permission_classes = [BiddingRoundManagePermission]
+
+    @extend_schema(responses={200: RoundSerializer})
+    def post(self, request, round_id):
+        cache = {}
+        bidding_round = get_object_or_404(BiddingRound, id=round_id)
+        try:
+            BiddingRoundService.unlock_average_bid(bidding_round, cache=cache)
+        except ValidationError as error:
+            return Response(
+                {"error": BiddingRoundViewService.serialize_validation_error(error)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return Response(
+            BiddingRoundViewService.serialize_round(bidding_round, cache),
+            status=status.HTTP_200_OK,
+        )
+
+
+class MembersWithoutBidView(BiddingRoundFeatureFlagMixin, APIView):
+    permission_classes = [BiddingRoundManagePermission]
+
+    @extend_schema(responses={200: MemberOptionSerializer(many=True)})
+    def get(self, request, round_id):
+        bidding_round = get_object_or_404(BiddingRound, id=round_id)
+        bid_member_ids = set(bidding_round.bids.values_list("member_id", flat=True))
+        member_ids = (
+            Subscription.objects.filter(
+                period=bidding_round.growing_period,
+                cancellation_ts__isnull=True,
+            )
+            .values_list("member_id", flat=True)
+            .distinct()
+        )
+        members = (
+            Member.objects.filter(id__in=member_ids)
+            .exclude(id__in=bid_member_ids)
+            .order_by("last_name", "first_name")
+        )
+        return Response(
+            [
+                {
+                    "id": member.id,
+                    "name": str(member),
+                    "email": member.email,
+                }
+                for member in members
+            ],
+            status=status.HTTP_200_OK,
+        )
+
+
+class ExportCsvView(BiddingRoundFeatureFlagMixin, APIView):
+    permission_classes = [BiddingRoundManagePermission]
+
+    @extend_schema(responses={200: str})
+    def get(self, request, round_id):
+        bidding_round = get_object_or_404(BiddingRound, id=round_id)
+
+        response = HttpResponse(content_type="text/csv")
+        response["Content-Disposition"] = (
+            f'attachment; filename="bidding_round_{bidding_round.id}.csv"'
+        )
+        response.write("\ufeff")
+        response.write(BiddingRoundCsvExportService.build_csv(bidding_round, cache={}))
+        return response
 
 
 class CreateContractsView(BiddingRoundFeatureFlagMixin, APIView):

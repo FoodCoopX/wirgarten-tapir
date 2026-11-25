@@ -54,7 +54,7 @@ class ContractCreationResult:
 
 class ContractCreator:
     @classmethod
-    def validate_round_can_create_contracts(cls, bidding_round: BiddingRound) -> None:
+    def _validate_can_create_contracts(cls, bidding_round: BiddingRound) -> None:
         if bidding_round.status != BIDDING_ROUND_STATUS_CLOSED:
             raise ValidationError(
                 _("Verträge können erst nach Ende der Beitragsrunde erstellt werden.")
@@ -73,6 +73,12 @@ class ContractCreator:
                     "Für diese Periode wurden bereits Verträge aus einer anderen Beitragsrunde erstellt."
                 )
             )
+        if bidding_round.average_bid_locked_at is None:
+            raise ValidationError(
+                _(
+                    "Das durchschnittliche Gebot muss fixiert sein, bevor Verträge erstellt werden können."
+                )
+            )
 
     @classmethod
     def create_contracts_from_bids(
@@ -84,23 +90,35 @@ class ContractCreator:
         bid_level: int | None = None,
         create_auto_renewed_contracts: bool = False,
     ) -> ContractCreationResult:
-        cls.validate_round_can_create_contracts(bidding_round)
-
-        if bid_level is not None and bid_level not in range(
-            1, (bidding_round.bid_levels or 1) + 1
-        ):
-            raise ValidationError(_("Unbekannte Gebotsstufe."))
-        position = (
-            BiddingRoundStatsService.get_level_position(bid_level, bidding_round)
-            if bid_level is not None
-            else BiddingRoundStatsService.get_default_position(
-                bidding_round, cache=cache
-            )
-        )
+        cls._validate_can_create_contracts(bidding_round)
 
         bids = bidding_round.bids.select_related("member", "product")
         if bid_ids:
             bids = bids.filter(id__in=bid_ids)
+
+        unconfirmed_bids = [bid for bid in bids if bid.admin_confirmed is None]
+        if unconfirmed_bids:
+            raise ValidationError(
+                _(
+                    "Alle ausgewählten Gebote müssen bestätigt sein, bevor Verträge erstellt werden können. Noch unbestätigt: %(names)s"
+                )
+                % {"names": ", ".join(str(bid.member) for bid in unconfirmed_bids)}
+            )
+
+        is_locked = bidding_round.average_bid_locked_at is not None
+        if (
+            bid_level is not None
+            and not is_locked
+            and bid_level not in range(1, (bidding_round.bid_levels or 1) + 1)
+        ):
+            raise ValidationError(_("Unbekannte Gebotsstufe."))
+        position = (
+            BiddingRoundStatsService.get_level_position(bid_level, bidding_round)
+            if bid_level is not None and not is_locked
+            else BiddingRoundStatsService.get_default_position(
+                bidding_round, cache=cache
+            )
+        )
 
         errors: list[ContractCreationError] = []
         created_subscriptions: list[Subscription] = []

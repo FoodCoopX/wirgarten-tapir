@@ -21,7 +21,13 @@ from tapir.bidding_round.models import (
 )
 from tapir.bidding_round.services.amount_parser import AmountParser
 from tapir.bidding_round.services.bid_input import BidInput
+from tapir.bidding_round.services.bidding_round_stats_service import (
+    BiddingRoundStatsService,
+)
 from tapir.bidding_round.services.bid_validator import BidValidator
+from tapir.bidding_round.services.bidding_round_stats_service import (
+    BiddingRoundStatsService,
+)
 from tapir.wirgarten.models import GrowingPeriod, Member, Product, ProductType
 from tapir.wirgarten.utils import get_now
 
@@ -291,6 +297,141 @@ class BiddingRoundService:
         return bidding_round
 
     @classmethod
+    def lock_average_bid(
+        cls,
+        bidding_round: BiddingRound,
+        position,
+        surcharge_percent,
+        surcharge_on_bids,
+        surcharge_on_average,
+        cache: dict,
+    ) -> BiddingRound:
+        if bidding_round.status != BIDDING_ROUND_STATUS_CLOSED:
+            raise ValidationError(
+                _(
+                    "Das durchschnittliche Gebot kann erst nach Ende der Beitragsrunde fixiert werden."
+                )
+            )
+
+        surcharge = Decimal(str(surcharge_percent or 0))
+        if surcharge < 0 or surcharge > 100:
+            raise ValidationError(
+                _("Der Aufschlag muss zwischen 0 und 100 Prozent liegen.")
+            )
+        position = BiddingRoundStatsService.clamp_position(position)
+        with transaction.atomic():
+            locked = BiddingRound.objects.select_for_update().get(pk=bidding_round.pk)
+            if locked.average_bid_locked_at is not None:
+                raise ValidationError(
+                    _("Das durchschnittliche Gebot ist bereits fixiert.")
+                )
+            amounts = BiddingRoundStatsService.build_locked_average_bid(
+                bidding_round=locked,
+                position=position,
+                surcharge_percent=surcharge,
+                surcharge_on_bids=bool(surcharge_on_bids),
+                surcharge_on_average=bool(surcharge_on_average),
+                cache=cache,
+            )
+            locked.average_bid_locked_at = get_now(cache=cache)
+            locked.locked_bid_range_position = position
+            locked.locked_surcharge_percent = surcharge
+            locked.locked_surcharge_on_bids = bool(surcharge_on_bids)
+            locked.locked_surcharge_on_average = bool(surcharge_on_average)
+            locked.locked_bidder_average_per_share_per_month = amounts[
+                "bidder_amount_per_share_per_month"
+            ]
+            locked.save()
+        bidding_round.refresh_from_db()
+        return bidding_round
+
+    @classmethod
+    def unlock_average_bid(
+        cls, bidding_round: BiddingRound, cache: dict
+    ) -> BiddingRound:
+        with transaction.atomic():
+            locked = BiddingRound.objects.select_for_update().get(pk=bidding_round.pk)
+            if locked.average_bid_locked_at is None:
+                raise ValidationError(
+                    _("Das durchschnittliche Gebot ist nicht fixiert.")
+                )
+            if locked.contracts_created_at is not None:
+                raise ValidationError(
+                    _(
+                        "Das durchschnittliche Gebot kann nach der Vertragserzeugung nicht mehr freigegeben werden."
+                    )
+                )
+            locked.average_bid_locked_at = None
+            locked.locked_bid_range_position = None
+            locked.locked_surcharge_percent = Decimal("0")
+            locked.locked_surcharge_on_bids = False
+            locked.locked_surcharge_on_average = False
+            locked.locked_bidder_average_per_share_per_month = None
+            locked.save()
+        bidding_round.refresh_from_db()
+        return bidding_round
+
+    @classmethod
+    def confirm_bids(cls, bidding_round: BiddingRound, bid_ids, cache: dict) -> int:
+        bids = bidding_round.bids.all()
+        if bid_ids:
+            bids = bids.filter(id__in=bid_ids)
+        return bids.update(admin_confirmed=get_now(cache=cache))
+
+    @classmethod
+    def save_admin_bid(
+        cls,
+        bidding_round: BiddingRound,
+        member: Member,
+        cache: dict,
+        bid_input: BidInput | None = None,
+        entered_by_admin: bool | None = None,
+        admin_confirmed: bool | None = None,
+    ) -> Bid:
+        """Creates or updates a bid on behalf of a member."""
+        with transaction.atomic():
+            locked_round = BiddingRound.objects.select_for_update().get(
+                pk=bidding_round.pk
+            )
+            if locked_round.average_bid_locked_at is not None:
+                raise ValidationError(
+                    _(
+                        "Gebote können nach dem Fixieren des Durchschnittsgebots nicht mehr geändert werden."
+                    )
+                )
+            if locked_round.contracts_created_at is not None and bid_input is not None:
+                raise ValidationError(
+                    _(
+                        "Gebote können nach der Vertragserzeugung nicht mehr geändert werden."
+                    )
+                )
+            values = {}
+            if bid_input is not None:
+                bid_input = BidValidator.validate_admin_edit(
+                    locked_round, bid_input, cache=cache
+                )
+                values = {
+                    "product_id": bid_input.product_id,
+                    "quantity": bid_input.quantity,
+                    "amount_1": bid_input.amount_1,
+                    "amount_2": bid_input.amount_2,
+                    "amount_3": bid_input.amount_3,
+                }
+
+            bid, created = Bid.objects.get_or_create(
+                member=member, round=locked_round, defaults=values
+            )
+            if entered_by_admin is not None:
+                bid.entered_by_admin = entered_by_admin
+            if admin_confirmed is not None:
+                bid.admin_confirmed = get_now(cache=cache) if admin_confirmed else None
+            if not created:
+                for field, value in values.items():
+                    setattr(bid, field, value)
+            bid.save()
+        return bid
+
+    @classmethod
     def delete_round(cls, bidding_round: BiddingRound, cache: dict) -> None:
         if bidding_round.status not in (
             BIDDING_ROUND_STATUS_CONFIGURATION,
@@ -517,6 +658,12 @@ class BiddingRoundService:
             "amount_3": bid_input.amount_3,
         }
         with transaction.atomic():
+            if bidding_round.average_bid_locked_at is not None:
+                raise ValidationError(
+                    _(
+                        "Gebote können nach dem Fixieren des Durchschnittsgebots nicht mehr geändert werden."
+                    )
+                )
             try:
                 bid, created = Bid.objects.get_or_create(
                     member=member, round=bidding_round, defaults=values

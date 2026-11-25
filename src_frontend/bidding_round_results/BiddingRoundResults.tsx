@@ -7,6 +7,7 @@ import {
   Col,
   Container,
   Form,
+  Modal,
   ProgressBar,
   Row,
   Spinner,
@@ -14,14 +15,19 @@ import {
 } from "react-bootstrap";
 
 import { BiddingRoundsApi } from "../api-client/apis/BiddingRoundsApi.ts";
+import { MemberOption } from "../api-client/models/MemberOption.ts";
 import { Round } from "../api-client/models/Round.ts";
 import { RoundResultsResponse } from "../api-client/models/RoundResultsResponse.ts";
+import { RoundStatsBid } from "../api-client/models/RoundStatsBid.ts";
 import TapirToastContainer from "../components/TapirToastContainer.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
 import { addToast } from "../utils/addToast.ts";
 import { formatCurrency } from "../utils/formatCurrency.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
+
+import ContractsCard from "./components/ContractsCard.tsx";
+import LockAverageBidCard from "./components/LockAverageBidCard.tsx";
 
 interface BiddingRoundResultsProps {
   csrfToken: string;
@@ -46,6 +52,20 @@ function getRoundIdFromPath(): string {
   return parts[adminIndex + 1] ?? "";
 }
 
+function buildBidPayload(
+  productId: string,
+  quantity: number,
+  amounts: string[],
+) {
+  return {
+    productId,
+    quantity,
+    amount1: amounts[0] || null,
+    amount2: amounts[1] || null,
+    amount3: amounts[2] || null,
+  };
+}
+
 const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
   csrfToken,
 }) => {
@@ -55,6 +75,25 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
   const [results, setResults] = useState<RoundResultsResponse | null>(null);
   const [selectedLevel, setSelectedLevel] = useState<number>(1);
   const [createAutoRenewed, setCreateAutoRenewed] = useState<boolean>(true);
+  const [filter, setFilter] = useState<string>("all");
+  const [sort, setSort] = useState<string>("name");
+  const [lockPosition, setLockPosition] = useState<number>(50);
+  const [surchargePercent, setSurchargePercent] = useState<string>("0");
+  const [surchargeOnBids, setSurchargeOnBids] = useState<boolean>(false);
+  const [surchargeOnAverage, setSurchargeOnAverage] = useState<boolean>(false);
+  const [editingBid, setEditingBid] = useState<RoundStatsBid | null>(null);
+  const [editAmounts, setEditAmounts] = useState<string[]>(["", "", ""]);
+  const [editQuantity, setEditQuantity] = useState<number>(1);
+  const [editConfirmed, setEditConfirmed] = useState<boolean>(true);
+  const [showManualBid, setShowManualBid] = useState<boolean>(false);
+  const [membersWithoutBid, setMembersWithoutBid] = useState<MemberOption[]>(
+    [],
+  );
+  const [manualMemberId, setManualMemberId] = useState<string>("");
+  const [manualProductId, setManualProductId] = useState<string>("");
+  const [manualAmounts, setManualAmounts] = useState<string[]>(["", "", ""]);
+  const [manualQuantity, setManualQuantity] = useState<number>(1);
+  const [manualConfirmed, setManualConfirmed] = useState<boolean>(true);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
@@ -74,8 +113,16 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
       if (position === undefined) {
         setSelectedLevel(loadedResults.recommendedLevel);
       }
+      if (loadedRound.averageBidLockedAt) {
+        setLockPosition(Number(loadedRound.lockedBidRangePosition ?? 50));
+        setSurchargePercent(String(loadedRound.lockedSurchargePercent ?? "0"));
+        setSurchargeOnBids(loadedRound.lockedSurchargeOnBids);
+        setSurchargeOnAverage(loadedRound.lockedSurchargeOnAverage);
+      } else {
+        setLockPosition((loadedResults.recommendedLevel - 1) * 50);
+      }
     } catch (error) {
-      await handleRequestError(
+      handleRequestError(
         error,
         "Die Auswertung konnte nicht geladen werden.",
         setToastDatas,
@@ -104,7 +151,7 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
       );
       await load((selectedLevel - 1) * 50);
     } catch (error) {
-      await handleRequestError(
+      handleRequestError(
         error,
         "Die Aktion ist fehlgeschlagen.",
         setToastDatas,
@@ -112,6 +159,37 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
     } finally {
       setBusy(false);
     }
+  }
+
+  async function openManualBid() {
+    try {
+      const members = await api.biddingRoundsApiMembersWithoutBidList({
+        roundId,
+      });
+      setMembersWithoutBid(members);
+      setManualMemberId(members[0]?.id ?? "");
+      setManualProductId(round?.product?.prices?.[0]?.productId ?? "");
+      setManualAmounts(["", "", ""]);
+      setManualQuantity(1);
+      setShowManualBid(true);
+    } catch (error) {
+      handleRequestError(
+        error,
+        "Die Mitglieder konnten nicht geladen werden.",
+        setToastDatas,
+      );
+    }
+  }
+
+  function openEditBid(bid: RoundStatsBid) {
+    setEditingBid(bid);
+    setEditAmounts([
+      bid.amount1 ?? "",
+      bid.amount2 ?? "",
+      bid.amount3 ?? "",
+    ]);
+    setEditQuantity(bid.quantity);
+    setEditConfirmed(!!bid.adminConfirmed);
   }
 
   if (loading) {
@@ -149,6 +227,24 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
   const coverageStatusLabel =
     COVERAGE_STATUS_LABELS[coverageStatus] ?? coverageStatus;
   const selectedLevelLabel = levelLabels[selectedLevel - 1];
+  const isLocked = !!round.averageBidLockedAt;
+
+  const visibleBids = [...results.bids]
+    .filter((bid) => {
+      if (filter === "confirmed") {
+        return !!bid.adminConfirmed;
+      }
+      if (filter === "unconfirmed") {
+        return !bid.adminConfirmed;
+      }
+      return true;
+    })
+    .sort((first, second) => {
+      if (sort === "date") {
+        return String(second.updatedAt).localeCompare(String(first.updatedAt));
+      }
+      return first.memberName.localeCompare(second.memberName, "de");
+    });
 
   return (
     <Container fluid className={"py-4"}>
@@ -166,6 +262,11 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
           <Badge bg={round.status === "active" ? "success" : "secondary"}>
             {round.status}
           </Badge>
+          {isLocked && (
+            <Badge bg={"dark"} className={"ms-2"}>
+              Gebot fixiert
+            </Badge>
+          )}
         </div>
       </div>
 
@@ -285,6 +386,23 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
         </Card>
       )}
 
+      <LockAverageBidCard
+        round={round}
+        isLocked={isLocked}
+        busy={busy}
+        api={api}
+        roundId={roundId}
+        runAction={runAction}
+        lockPosition={lockPosition}
+        setLockPosition={setLockPosition}
+        surchargePercent={surchargePercent}
+        setSurchargePercent={setSurchargePercent}
+        surchargeOnBids={surchargeOnBids}
+        setSurchargeOnBids={setSurchargeOnBids}
+        surchargeOnAverage={surchargeOnAverage}
+        setSurchargeOnAverage={setSurchargeOnAverage}
+      />
+
       <Card className={"mb-4"}>
         <Card.Header>
           <strong>Zusatzposten</strong>
@@ -343,12 +461,67 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
 
       <Card className={"mb-4"}>
         <Card.Header>
-          <strong>Gebote</strong>
+          <div className={"d-flex flex-wrap gap-2 align-items-center"}>
+            <strong className={"me-auto"}>Gebote</strong>
+            <Form.Select
+              size={"sm"}
+              style={{ width: "auto" }}
+              value={filter}
+              onChange={(event) => setFilter(event.target.value)}
+            >
+              <option value={"all"}>Alle</option>
+              <option value={"confirmed"}>Bestätigt</option>
+              <option value={"unconfirmed"}>
+                Unbestätigt ({results.unconfirmedBidCount})
+              </option>
+            </Form.Select>
+            <Form.Select
+              size={"sm"}
+              style={{ width: "auto" }}
+              value={sort}
+              onChange={(event) => setSort(event.target.value)}
+            >
+              <option value={"name"}>Name</option>
+              <option value={"date"}>Datum</option>
+            </Form.Select>
+            <Button
+              size={"sm"}
+              variant={"outline-dark"}
+              disabled={busy || results.unconfirmedBidCount === 0}
+              onClick={() =>
+                runAction(
+                  () =>
+                    api.biddingRoundsApiConfirmBidsCreate({
+                      roundId,
+                      confirmBidsRequest: {},
+                    }),
+                  "Alle Gebote bestätigt",
+                )
+              }
+            >
+              Alle bestätigen
+            </Button>
+            <Button
+              size={"sm"}
+              variant={"dark"}
+              onClick={openManualBid}
+              disabled={busy}
+            >
+              Manuelles Gebot
+            </Button>
+            <Button
+              size={"sm"}
+              variant={"outline-dark"}
+              href={`/bidding_rounds/api/${roundId}/export.csv`}
+            >
+              CSV
+            </Button>
+          </div>
         </Card.Header>
         <Card.Body className={"p-0"}>
-          {results.bids.length === 0 ? (
+          {visibleBids.length === 0 ? (
             <Alert variant={"info"} className={"m-3"}>
-              Noch keine Gebote abgegeben.
+              Keine Gebote für diesen Filter.
             </Alert>
           ) : (
             <Table responsive hover className={"mb-0"}>
@@ -361,16 +534,24 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
                   {levelLabels.map((label) => (
                     <th key={label}>{label}</th>
                   ))}
-                  <th>Beitrag / Monat</th>
-                  <th>Beitrag / Jahr</th>
+                  <th>Gewählt / Monat</th>
+                  <th>Bestätigt</th>
+                  <th>Aktionen</th>
                 </tr>
               </thead>
               <tbody>
-                {results.bids.map((bid) => {
+                {visibleBids.map((bid) => {
                   const amounts = [bid.amount1, bid.amount2, bid.amount3];
                   return (
                     <tr key={bid.bidId}>
-                      <td>{bid.memberName}</td>
+                      <td>
+                        {bid.memberName}
+                        {bid.enteredByAdmin && (
+                          <Badge bg={"secondary"} className={"ms-2"}>
+                            Admin
+                          </Badge>
+                        )}
+                      </td>
                       <td>{bid.email}</td>
                       <td>{bid.productName}</td>
                       <td>{bid.quantity}</td>
@@ -382,7 +563,41 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
                         </td>
                       ))}
                       <td>{formatCurrency(Number(bid.amountPerMonth))}</td>
-                      <td>{formatCurrency(Number(bid.amountPerYear))}</td>
+                      <td>
+                        {bid.adminConfirmed ? (
+                          <Badge bg={"success"}>ja</Badge>
+                        ) : (
+                          <Badge bg={"warning"}>nein</Badge>
+                        )}
+                      </td>
+                      <td>
+                        <div className={"d-flex gap-1"}>
+                          <Button
+                            size={"sm"}
+                            variant={"outline-dark"}
+                            onClick={() => openEditBid(bid)}
+                          >
+                            Bearbeiten
+                          </Button>
+                          <Button
+                            size={"sm"}
+                            variant={"outline-danger"}
+                            disabled={busy}
+                            onClick={() =>
+                              runAction(
+                                () =>
+                                  api.biddingRoundsApiBidsDestroy({
+                                    roundId,
+                                    bidId: bid.bidId,
+                                  }),
+                                "Gebot gelöscht",
+                              )
+                            }
+                          >
+                            Löschen
+                          </Button>
+                        </div>
+                      </td>
                     </tr>
                   );
                 })}
@@ -392,80 +607,188 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
         </Card.Body>
       </Card>
 
-      <Card>
-        <Card.Header>
-          <strong>Verträge</strong>
-        </Card.Header>
-        <Card.Body>
-          {round.contractsCreatedAt ? (
-            <Alert variant={"success"}>
-              Verträge erstellt am{" "}
-              {new Date(round.contractsCreatedAt).toLocaleString("de-DE")}. Die
-              Erzeugung ist endgültig; Korrekturen laufen über die normalen
-              Verwaltungswerkzeuge.
-            </Alert>
-          ) : round.status !== "closed" ? (
-            <Alert variant={"info"}>
-              Verträge können erst erstellt werden, wenn die Beitragsrunde
-              geschlossen ist.
-            </Alert>
-          ) : (
+      <ContractsCard
+        round={round}
+        results={results}
+        isLocked={isLocked}
+        busy={busy}
+        createAutoRenewed={createAutoRenewed}
+        setCreateAutoRenewed={setCreateAutoRenewed}
+        api={api}
+        roundId={roundId}
+        runAction={runAction}
+      />
+
+      <Modal show={!!editingBid} onHide={() => setEditingBid(null)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Gebot bearbeiten</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {editingBid && (
             <>
-              {levelCount > 1 && (
-                <Form.Group className={"mb-3"}>
-                  <Form.Label>Gebotsstufe für die Verträge</Form.Label>
-                  <Form.Select
-                    value={String(selectedLevel)}
-                    onChange={(event) =>
-                      selectLevel(Number(event.target.value))
-                    }
-                  >
-                    {levelLabels.map((label, index) => (
-                      <option key={label} value={String(index + 1)}>
-                        {label}
-                      </option>
-                    ))}
-                  </Form.Select>
-                  <Form.Text className={"text-muted"}>
-                    Empfohlen: Stufe {results.recommendedLevel} bei{" "}
-                    {coverage.toFixed(1)} % Deckung.
-                  </Form.Text>
+              <p className={"text-muted"}>{editingBid.memberName}</p>
+              <Form.Group className={"mb-3"}>
+                <Form.Label>Anteile</Form.Label>
+                <Form.Control
+                  type={"number"}
+                  min={1}
+                  max={5}
+                  value={editQuantity}
+                  onChange={(event) =>
+                    setEditQuantity(Number(event.target.value))
+                  }
+                />
+              </Form.Group>
+              {levelLabels.map((label, index) => (
+                <Form.Group key={label} className={"mb-3"}>
+                  <Form.Label>{label}</Form.Label>
+                  <Form.Control
+                    value={editAmounts[index]}
+                    onChange={(event) => {
+                      const next = [...editAmounts];
+                      next[index] = event.target.value;
+                      setEditAmounts(next);
+                    }}
+                  />
                 </Form.Group>
-              )}
+              ))}
               <Form.Check
                 type={"checkbox"}
-                className={"mb-3"}
-                label={
-                  "Verträge für automatisch verlängerte Mitglieder mit erzeugen"
-                }
-                checked={createAutoRenewed}
-                onChange={(event) => setCreateAutoRenewed(event.target.checked)}
+                label={"Bestätigt"}
+                checked={editConfirmed}
+                onChange={(event) => setEditConfirmed(event.target.checked)}
               />
-              <Button
-                variant={"dark"}
-                disabled={busy || results.bids.length === 0}
-                onClick={() =>
-                  runAction(
-                    () =>
-                      api.biddingRoundsApiCreateContractsCreate({
-                        roundId,
-                        createContractsRequest: {
-                          ...(levelCount > 1
-                            ? { bidLevel: selectedLevel }
-                            : {}),
-                          createAutoRenewedContracts: createAutoRenewed,
-                        },
-                      }),
-                    "Verträge erstellt",
-                  )
-                }
-              >
-                Verträge aus allen Geboten erstellen
-              </Button>
             </>
           )}
-        </Card.Body>
-      </Card>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant={"outline-dark"} onClick={() => setEditingBid(null)}>
+            Abbrechen
+          </Button>
+          <Button
+            variant={"dark"}
+            disabled={busy}
+            onClick={() =>
+              runAction(
+                () =>
+                  api.biddingRoundsApiBidsPartialUpdate({
+                    roundId,
+                    bidId: editingBid!.bidId,
+                    patchedBidAdminRequest: {
+                      ...buildBidPayload(
+                        editingBid!.productId,
+                        editQuantity,
+                        editAmounts,
+                      ),
+                      adminConfirmed: editConfirmed,
+                    },
+                  }),
+                "Gebot gespeichert",
+              ).then(() => setEditingBid(null))
+            }
+          >
+            Speichern
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal show={showManualBid} onHide={() => setShowManualBid(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Manuelles Gebot</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form.Group className={"mb-3"}>
+            <Form.Label>Mitglied</Form.Label>
+            <Form.Select
+              value={manualMemberId}
+              onChange={(event) => setManualMemberId(event.target.value)}
+            >
+              {membersWithoutBid.map((member) => (
+                <option key={member.id} value={member.id}>
+                  {member.name} ({member.email})
+                </option>
+              ))}
+            </Form.Select>
+          </Form.Group>
+          <Form.Group className={"mb-3"}>
+            <Form.Label>Produkt</Form.Label>
+            <Form.Select
+              value={manualProductId}
+              onChange={(event) => setManualProductId(event.target.value)}
+            >
+              {(round.product?.prices ?? []).map((price) => (
+                <option key={price.productId} value={price.productId}>
+                  {price.productName}
+                </option>
+              ))}
+            </Form.Select>
+          </Form.Group>
+          <Form.Group className={"mb-3"}>
+            <Form.Label>Anteile</Form.Label>
+            <Form.Control
+              type={"number"}
+              min={1}
+              max={5}
+              value={manualQuantity}
+              onChange={(event) =>
+                setManualQuantity(Number(event.target.value))
+              }
+            />
+          </Form.Group>
+          {levelLabels.map((label, index) => (
+            <Form.Group key={label} className={"mb-3"}>
+              <Form.Label>{label}</Form.Label>
+              <Form.Control
+                value={manualAmounts[index]}
+                onChange={(event) => {
+                  const next = [...manualAmounts];
+                  next[index] = event.target.value;
+                  setManualAmounts(next);
+                }}
+              />
+            </Form.Group>
+          ))}
+          <Form.Check
+            type={"checkbox"}
+            label={"Bestätigt"}
+            checked={manualConfirmed}
+            onChange={(event) => setManualConfirmed(event.target.checked)}
+          />
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant={"outline-dark"}
+            onClick={() => setShowManualBid(false)}
+          >
+            Abbrechen
+          </Button>
+          <Button
+            variant={"dark"}
+            disabled={busy || !manualMemberId}
+            onClick={() =>
+              runAction(
+                () =>
+                  api.biddingRoundsApiBidsCreate({
+                    roundId,
+                    bidAdminCreateRequest: {
+                      memberId: manualMemberId,
+                      ...buildBidPayload(
+                        manualProductId,
+                        manualQuantity,
+                        manualAmounts,
+                      ),
+                      enteredByAdmin: true,
+                      adminConfirmed: manualConfirmed,
+                    },
+                  }),
+                "Gebot angelegt",
+              ).then(() => setShowManualBid(false))
+            }
+          >
+            Speichern
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Container>
   );
 };

@@ -37,6 +37,7 @@ from tapir.wirgarten.tests.factories import (
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
+from tapir.wirgarten.utils import get_now
 
 
 class TestBiddingRoundStatsService(TapirIntegrationTest):
@@ -452,3 +453,80 @@ class TestBiddingRoundStatsService(TapirIntegrationTest):
         self.assertEqual(
             Decimal("12.00"), positions["delivery_charge"]["reached_per_year"]
         )
+
+    def test_buildNonBidderRatePerShare_withSurchargeOnAverage_appliesSurcharge(self):
+        bidding_round = BiddingRoundFactory.create(
+            average_bid_locked_at=get_now(cache={}),
+            locked_surcharge_percent=Decimal("10"),
+            locked_surcharge_on_average=True,
+        )
+        product = ProductFactory.create(type=bidding_round.product_type)
+        BiddingRoundProductPriceFactory.create(
+            round=bidding_round, product=product, size=1
+        )
+        BidFactory.create(
+            round=bidding_round, product=product, amount_1=Decimal("80.00")
+        )
+
+        rate = BiddingRoundStatsService.build_non_bidder_rate_per_share(
+            bidding_round, cache={}
+        )
+
+        self.assertEqual(Decimal("88.00"), rate)
+
+    def test_buildNonBidderRatePerShare_afterLock_usesLockedValue(self):
+        bidding_round = BiddingRoundFactory.create()
+        bidding_round.average_bid_locked_at = get_now(cache={})
+        bidding_round.locked_bidder_average_per_share_per_month = Decimal("42.00")
+        bidding_round.save()
+
+        self.assertEqual(
+            Decimal("42.00"),
+            BiddingRoundStatsService.build_non_bidder_rate_per_share(
+                bidding_round, cache={}
+            ),
+        )
+
+    def test_getBidderAveragePerSharePerMonth_afterLock_usesLockedValue(self):
+        bidding_round = BiddingRoundFactory.create()
+        bidding_round.average_bid_locked_at = get_now(cache={})
+        bidding_round.locked_bidder_average_per_share_per_month = Decimal("42.00")
+        bidding_round.save()
+
+        self.assertEqual(
+            Decimal("42.00"),
+            BiddingRoundStatsService.get_bidder_average_per_share_per_month(
+                bidding_round, cache={}
+            ),
+        )
+
+    def test_buildLockedAverageBid_surchargeOnBids_capsAtRed(self):
+        bidding_round = BiddingRoundFactory.create(
+            bidding_procedure=BIDDING_ROUND_PROCEDURE_BID_RANGE, bid_levels=2
+        )
+        product = ProductFactory.create(type=bidding_round.product_type)
+        BiddingRoundProductPriceFactory.create(
+            round=bidding_round, product=product, size=1
+        )
+        ProductPriceFactory.create(
+            product=product,
+            size=1,
+            valid_from=bidding_round.growing_period.start_date,
+        )
+        BidFactory.create(
+            round=bidding_round,
+            product=product,
+            amount_1=Decimal("70.00"),
+            amount_2=Decimal("90.00"),
+        )
+
+        locked = BiddingRoundStatsService.build_locked_average_bid(
+            bidding_round,
+            position=0,
+            surcharge_percent=50,
+            surcharge_on_bids=True,
+            surcharge_on_average=False,
+            cache={},
+        )
+
+        self.assertEqual(Decimal("90.00"), locked["bidder_amount_per_share_per_month"])

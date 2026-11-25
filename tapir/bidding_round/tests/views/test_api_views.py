@@ -341,3 +341,113 @@ class TestPublicResultsView(BiddingRoundApiTestBase):
         self.assertEqual(1.0, float(response.data["current_shares"]))
         self.assertEqual(1.0, response.data["utilization_percent"])
         self.assertEqual(96.0, response.data["levels"]["yellow"]["coverage_percent"])
+
+
+class TestAdminBidTools(BiddingRoundApiTestBase):
+    def setUp(self):
+        super().setUp()
+        self._enable()
+        self.client.force_login(MemberFactory.create(is_superuser=True, is_staff=True))
+
+    def test_adminBidFlow(self):
+        bidding_round = create_open_round()
+        product = get_product_for_round(bidding_round)
+        member = MemberFactory.create()
+        SubscriptionFactory.create(
+            member=member,
+            product=product,
+            period=bidding_round.growing_period,
+            quantity=1,
+            start_date=bidding_round.growing_period.start_date,
+            end_date=bidding_round.growing_period.end_date,
+        )
+
+        without_bid = self.client.get(
+            reverse("bidding_rounds:members_without_bid", args=[bidding_round.id])
+        )
+        self.assertStatusCode(without_bid, status.HTTP_200_OK)
+        self.assertIn(member.id, [entry["id"] for entry in without_bid.data])
+
+        create_response = self.client.post(
+            reverse("bidding_rounds:bid_create", args=[bidding_round.id]),
+            data={
+                "member_id": member.id,
+                "product_id": product.id,
+                "quantity": 2,
+                "amount_1": "80.00",
+                "admin_confirmed": True,
+            },
+            content_type="application/json",
+        )
+        self.assertStatusCode(create_response, status.HTTP_201_CREATED)
+        self.assertEqual(2, create_response.data["quantity"])
+        self.assertTrue(create_response.data["entered_by_admin"])
+        self.assertIsNotNone(create_response.data["admin_confirmed"])
+        bid_id = create_response.data["id"]
+
+        confirm_response = self.client.post(
+            reverse("bidding_rounds:confirm_bids", args=[bidding_round.id]),
+            data={"bid_ids": [bid_id]},
+            content_type="application/json",
+        )
+        self.assertStatusCode(confirm_response, status.HTTP_200_OK)
+        self.assertEqual(0, confirm_response.data["unconfirmed_bid_count"])
+
+        bidding_round.status = BIDDING_ROUND_STATUS_CLOSED
+        bidding_round.save()
+
+        lock_response = self.client.post(
+            reverse("bidding_rounds:lock_average_bid", args=[bidding_round.id]),
+            data={"position": 0, "surcharge_percent": 0},
+            content_type="application/json",
+        )
+        self.assertStatusCode(lock_response, status.HTTP_200_OK)
+        self.assertIsNotNone(lock_response.data["average_bid_locked_at"])
+
+        results_response = self.client.get(
+            reverse("bidding_rounds:round_results", args=[bidding_round.id])
+        )
+        self.assertStatusCode(results_response, status.HTTP_200_OK)
+        self.assertEqual(0, results_response.data["unconfirmed_bid_count"])
+
+        csv_response = self.client.get(
+            reverse("bidding_rounds:export_csv", args=[bidding_round.id])
+        )
+        self.assertStatusCode(csv_response, status.HTTP_200_OK)
+        csv_content = csv_response.content.decode("utf-8")
+        self.assertIn("Mitglied", csv_content)
+        self.assertIn("Anteile", csv_content)
+        self.assertIn("Betrag / Monat", csv_content)
+        self.assertIn("Betrag / Jahr", csv_content)
+        self.assertIn("160.00", csv_content)
+        self.assertIn("1920.00", csv_content)
+
+        edit_response = self.client.patch(
+            reverse("bidding_rounds:bid_edit", args=[bidding_round.id, bid_id]),
+            data={
+                "product_id": product.id,
+                "quantity": 2,
+                "amount_1": "85.00",
+            },
+            content_type="application/json",
+        )
+        self.assertStatusCode(edit_response, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Durchschnittsgebot", edit_response.data["error"])
+
+        delete_response = self.client.delete(
+            reverse("bidding_rounds:bid_edit", args=[bidding_round.id, bid_id])
+        )
+        self.assertStatusCode(delete_response, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Durchschnittsgebot", delete_response.data["error"])
+
+    def test_create_withoutItems_returns400(self):
+        bidding_round = create_open_round()
+        member = MemberFactory.create()
+
+        response = self.client.post(
+            reverse("bidding_rounds:bid_create", args=[bidding_round.id]),
+            data={"member_id": member.id},
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, status.HTTP_400_BAD_REQUEST)

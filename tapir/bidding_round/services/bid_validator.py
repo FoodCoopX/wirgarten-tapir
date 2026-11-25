@@ -29,6 +29,19 @@ class BidValidator:
         cls, bidding_round: BiddingRound, bid_input: BidInput, cache: dict
     ) -> BidInput:
         cls._validate_round_is_open(bidding_round, cache)
+        return cls._validate_proposition(bidding_round, bid_input)
+
+    @classmethod
+    def validate_admin_edit(
+        cls, bidding_round: BiddingRound, bid_input: BidInput, cache: dict
+    ) -> BidInput:
+        """Admins may correct a bid while the round is open or already closed."""
+        return cls._validate_proposition(bidding_round, bid_input)
+
+    @classmethod
+    def _validate_proposition(
+        cls, bidding_round: BiddingRound, bid_input: BidInput
+    ) -> BidInput:
         product = cls._get_product(bidding_round, bid_input.product_id)
         price = cls._get_price_row(bidding_round, product)
         quantity = cls._validate_quantity(bid_input.quantity)
