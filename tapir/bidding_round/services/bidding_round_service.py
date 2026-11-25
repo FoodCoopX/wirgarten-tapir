@@ -37,7 +37,13 @@ from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
 from tapir.wirgarten.mail_events import Events
-from tapir.wirgarten.models import GrowingPeriod, Member, Product, ProductType
+from tapir.wirgarten.models import (
+    GrowingPeriod,
+    Member,
+    OrderFeedback,
+    Product,
+    ProductType,
+)
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import get_now
 
@@ -93,6 +99,18 @@ class BiddingRoundConfigChanges:
             include_auto_renewed=payload.get("include_auto_renewed"),
             provided_fields=frozenset(payload.keys()),
         )
+
+
+@dataclass
+class BidConsents:
+    sepa_allowed: bool = False
+    account_owner: str | None = None
+    iban: str | None = None
+    payment_rhythm: str | None = None
+    privacy_policy_read: bool = False
+    cancellation_policy_read: bool = False
+    contract_accepted: bool = False
+    enforce_consents: bool = False
 
 
 class BiddingRoundService:
@@ -653,14 +671,8 @@ class BiddingRoundService:
         bid_input: BidInput,
         cache: dict,
         send_mail: bool = True,
-        sepa_allowed: bool = False,
-        account_owner: str | None = None,
-        iban: str | None = None,
-        payment_rhythm: str | None = None,
-        privacy_policy_read: bool = False,
-        cancellation_policy_read: bool = False,
-        contract_accepted: bool = False,
-        enforce_consents: bool = False,
+        consents: BidConsents | None = None,
+        feedback: str | None = None,
     ) -> Bid:
         """Writes one bid per member and round.
 
@@ -668,6 +680,9 @@ class BiddingRoundService:
         write wins. Two simultaneous first submits are covered by the unique
         constraint on ``(round, member)``; the lookup is retried on that error.
         """
+        if not isinstance(member, Member):
+            raise ValidationError(_("Nur Mitglieder können ein Gebot abgeben."))
+        consents = consents or BidConsents()
         bid_input = BidValidator.validate(bidding_round, bid_input, cache=cache)
         values = {
             "product_id": bid_input.product_id,
@@ -683,14 +698,14 @@ class BiddingRoundService:
                         "Gebote können nach dem Fixieren des Durchschnittsgebots nicht mehr geändert werden."
                     )
                 )
-            if enforce_consents:
+            if consents.enforce_consents:
                 cls._validate_member_consents(
                     member=member,
-                    privacy_policy_read=privacy_policy_read,
-                    cancellation_policy_read=cancellation_policy_read,
-                    contract_accepted=contract_accepted,
-                    sepa_allowed=sepa_allowed,
-                    iban=iban,
+                    privacy_policy_read=consents.privacy_policy_read,
+                    cancellation_policy_read=consents.cancellation_policy_read,
+                    contract_accepted=consents.contract_accepted,
+                    sepa_allowed=consents.sepa_allowed,
+                    iban=consents.iban,
                     cache=cache,
                 )
             try:
@@ -717,15 +732,21 @@ class BiddingRoundService:
                 )
             cls._apply_member_consents(
                 member=member,
-                sepa_allowed=sepa_allowed,
-                account_owner=account_owner,
-                iban=iban,
-                payment_rhythm=payment_rhythm,
-                privacy_policy_read=privacy_policy_read,
-                cancellation_policy_read=cancellation_policy_read,
+                sepa_allowed=consents.sepa_allowed,
+                account_owner=consents.account_owner,
+                iban=consents.iban,
+                payment_rhythm=consents.payment_rhythm,
+                privacy_policy_read=consents.privacy_policy_read,
+                cancellation_policy_read=consents.cancellation_policy_read,
                 bidding_round=bidding_round,
                 cache=cache,
             )
+            if feedback:
+                OrderFeedback.objects.update_or_create(
+                    member=member,
+                    bidding_round=bidding_round,
+                    defaults={"feedback_text": feedback},
+                )
 
         if send_mail:
             TransactionalTrigger.fire_action(

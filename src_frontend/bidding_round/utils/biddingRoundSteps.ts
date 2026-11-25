@@ -11,6 +11,7 @@ interface BuildBiddingRoundStepsParams {
   productTypeId?: string | null;
   hasProductIntro: boolean;
   sepaEnabled: boolean;
+  feedbackEnabled: boolean;
 }
 
 export function buildBiddingRoundSteps({
@@ -19,6 +20,7 @@ export function buildBiddingRoundSteps({
   productTypeId,
   hasProductIntro,
   sepaEnabled,
+  feedbackEnabled,
 }: BuildBiddingRoundStepsParams): MobileWizardStep[] {
   if (!hasActiveRound || !isAuthenticated || !productTypeId) {
     return ["bidding_round_intro"];
@@ -32,7 +34,11 @@ export function buildBiddingRoundSteps({
   if (sepaEnabled) {
     steps.push("bidding_round_sepa");
   }
-  steps.push("bidding_round_privacy", "bidding_round_summary");
+  steps.push("bidding_round_privacy");
+  if (feedbackEnabled) {
+    steps.push("bidding_round_feedback");
+  }
+  steps.push("bidding_round_summary");
   steps.push("bidding_round_confirmation");
   return steps;
 }
@@ -59,6 +65,7 @@ export function getBiddingRoundPhase(
       return "intro";
     case "bidding_round_sepa":
     case "bidding_round_privacy":
+    case "bidding_round_feedback":
       return "personal_data";
     case "bidding_round_confirmation":
       return "confirmation";
@@ -90,6 +97,8 @@ export function getBiddingRoundStepTitle(
       return "SEPA-Lastschrift";
     case "bidding_round_privacy":
       return texts.privacyTitle;
+    case "bidding_round_feedback":
+      return settings.strings?.step13Title;
     case "bidding_round_summary":
       return texts.summaryTitle;
     case "bidding_round_confirmation":
@@ -117,6 +126,8 @@ export function getBiddingRoundStepBackground(
       return settings.images?.step9BackgroundImage;
     case "bidding_round_privacy":
       return settings.images?.step11BackgroundImage;
+    case "bidding_round_feedback":
+      return settings.images?.step13BackgroundImage;
     case "bidding_round_summary":
       return settings.images?.step10BackgroundImage;
     case "bidding_round_confirmation":
@@ -137,6 +148,8 @@ export function getBiddingRoundStepName(
       return "SEPA";
     case "bidding_round_privacy":
       return "Datenschutz";
+    case "bidding_round_feedback":
+      return "Feedback";
     case "bidding_round_summary":
       return "Zusammenfassung";
     case "bidding_round_confirmation":

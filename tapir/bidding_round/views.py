@@ -54,6 +54,7 @@ from tapir.bidding_round.services.bidding_round_csv_export_service import (
     BiddingRoundCsvExportService,
 )
 from tapir.bidding_round.services.bidding_round_service import (
+    BidConsents,
     BiddingRoundConfigChanges,
     BiddingRoundService,
     RoundPriceInput,
@@ -155,6 +156,9 @@ class PublicDataView(BiddingRoundFeatureFlagMixin, APIView):
             ),
             "bid_options": BiddingRoundViewService.build_bid_options(cache),
             "sepa_enabled": BiddingRoundViewService.is_sepa_enabled(cache),
+            "feedback_enabled": BiddingRoundViewService.is_feedback_enabled(cache),
+            "first_name": member.first_name if member is not None else None,
+            "association_membership": None,
         }
 
         if bidding_round and member:
@@ -553,16 +557,19 @@ class MemberBidView(BiddingRoundFeatureFlagMixin, APIView):
                 bidding_round,
                 BidInput.from_mapping(serializer.validated_data),
                 cache=cache,
-                sepa_allowed=validated.get("sepa_allowed", False),
-                account_owner=validated.get("account_owner"),
-                iban=validated.get("iban"),
-                payment_rhythm=validated.get("payment_rhythm"),
-                privacy_policy_read=validated.get("privacy_policy_read", False),
-                cancellation_policy_read=validated.get(
-                    "cancellation_policy_read", False
+                consents=BidConsents(
+                    sepa_allowed=validated.get("sepa_allowed", False),
+                    account_owner=validated.get("account_owner"),
+                    iban=validated.get("iban"),
+                    payment_rhythm=validated.get("payment_rhythm"),
+                    privacy_policy_read=validated.get("privacy_policy_read", False),
+                    cancellation_policy_read=validated.get(
+                        "cancellation_policy_read", False
+                    ),
+                    contract_accepted=validated.get("contract_accepted", False),
+                    enforce_consents=True,
                 ),
-                contract_accepted=validated.get("contract_accepted", False),
-                enforce_consents=True,
+                feedback=validated.get("feedback"),
             )
         except ValidationError as error:
             return Response(

@@ -13,6 +13,7 @@ from tapir.bidding_round.config import (
 from tapir.bidding_round.models import Bid, BiddingRound
 from tapir.bidding_round.services.bid_input import BidInput
 from tapir.bidding_round.services.bidding_round_service import (
+    BidConsents,
     BiddingRoundConfigChanges,
     BiddingRoundService,
     RoundPriceInput,
@@ -379,8 +380,10 @@ class TestBiddingRoundService(TapirIntegrationTest):
                     amount_1=Decimal("80.00"),
                 ),
                 cache={},
-                enforce_consents=True,
-                privacy_policy_read=False,
+                consents=BidConsents(
+                    enforce_consents=True,
+                    privacy_policy_read=False,
+                ),
             )
 
     def _create_active_round(self):
