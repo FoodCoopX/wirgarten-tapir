@@ -47,6 +47,7 @@ const EMPTY_TEXTS: RoundTexts = {
   loginTitle: "",
   loginText: "",
   summaryTitle: "",
+  pickupLocationTitle: "",
   submitLabel: "",
   bid: {
     amountLabel: "",
@@ -398,6 +399,7 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({ csrfToken }) => {
           requiredAmountLevels={requiredAmountLevels}
           isBidRange={isBidRange}
           texts={texts}
+          currentPickupLocation={data.currentPickupLocation ?? null}
           submitting={submitting}
           onSubmit={submitBid}
         />
@@ -443,6 +445,7 @@ const BiddingRound: React.FC<BiddingRoundProps> = ({ csrfToken }) => {
         onQuantityChange={setQuantity}
         amounts={amounts}
         onAmountChange={updateAmount}
+        currentPickupLocation={data.currentPickupLocation ?? null}
         goToNextStep={goToSummary}
         stepActive={step === currentStep}
       />

@@ -12898,6 +12898,19 @@ components:
       - file_name
       - name
       - separator
+    CurrentPickupLocation:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        yearly_delivery_charge:
+          type: string
+      required:
+      - id
+      - name
+      - yearly_delivery_charge
     CustomCycleDeliveryWeeksRequest:
       type: object
       properties:
@@ -18527,6 +18540,10 @@ components:
           nullable: true
         is_authenticated:
           type: boolean
+        current_pickup_location:
+          allOf:
+          - $ref: '#/components/schemas/CurrentPickupLocation'
+          nullable: true
         bid:
           allOf:
           - $ref: '#/components/schemas/Bid'
@@ -19278,6 +19295,8 @@ components:
           type: string
         summary_title:
           type: string
+        pickup_location_title:
+          type: string
         submit_label:
           type: string
         bid:
@@ -19289,6 +19308,7 @@ components:
       - intro_title
       - login_text
       - login_title
+      - pickup_location_title
       - submit_label
       - summary_title
     SaveExtendedProductTypeRequest:

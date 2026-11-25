@@ -1,9 +1,10 @@
 import React from "react";
 import { Card } from "react-bootstrap";
 
-import { RoundTexts } from "../../api-client";
+import { CurrentPickupLocation, RoundTexts } from "../../api-client";
 import TapirButton from "../../components/TapirButton.tsx";
 import AmountRow from "../../components/mobile_wizard/AmountRow.tsx";
+import PickupLocationRow from "../components/PickupLocationRow.tsx";
 import {
   getMonthlyTotal,
   getYearlyAmount,
@@ -17,6 +18,7 @@ interface BiddingRoundSummaryStepProps {
   requiredAmountLevels: number;
   isBidRange: boolean;
   texts: RoundTexts;
+  currentPickupLocation: CurrentPickupLocation | null;
   submitting: boolean;
   onSubmit: () => void;
 }
@@ -28,6 +30,7 @@ const BiddingRoundSummaryStep: React.FC<BiddingRoundSummaryStepProps> = ({
   requiredAmountLevels,
   isBidRange,
   texts,
+  currentPickupLocation,
   submitting,
   onSubmit,
 }) => {
@@ -65,6 +68,11 @@ const BiddingRoundSummaryStep: React.FC<BiddingRoundSummaryStepProps> = ({
             <span className={"text-muted"}>Anteile</span>
             <strong>{quantity}</strong>
           </div>
+          <PickupLocationRow
+            currentPickupLocation={currentPickupLocation}
+            texts={texts}
+            variant={"inline"}
+          />
           {levelRows.map((row) => (
             <div key={row.label} className={"border-top pt-2"}>
               <AmountRow

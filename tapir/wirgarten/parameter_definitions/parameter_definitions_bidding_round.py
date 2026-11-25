@@ -120,6 +120,17 @@ class ParameterDefinitionsBiddingRound:
         )
 
         importer.parameter_definition(
+            key=ParameterKeys.BIDDING_ROUND_PUBLIC_PICKUP_LOCATION_TITLE,
+            label=gettext_noop("Beitragsrunden-Seite: Titel Abholort"),
+            description=gettext_noop("Beschriftung des Abholorts im Gebotsablauf."),
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Abholort",
+            category=ParameterCategory.BIDDING_ROUND,
+            order_priority=24,
+            meta=ParameterMeta(show_only_when=_show_only_when_enabled),
+        )
+
+        importer.parameter_definition(
             key=ParameterKeys.BIDDING_ROUND_PUBLIC_SUBMIT_LABEL,
             label=gettext_noop("Beitragsrunden-Seite: Beschriftung Gebot abgeben"),
             description=gettext_noop(
