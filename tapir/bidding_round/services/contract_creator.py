@@ -219,9 +219,7 @@ class ContractCreator:
         )
         if price is not None and price.reference_value is not None:
             rate = max(price.reference_value, rate)
-        size = BiddingRoundStatsService.get_product_size(
-            product, bidding_round, cache
-        )
+        size = BiddingRoundStatsService.get_product_size(product, bidding_round, cache)
         return (rate * size).quantize(Decimal("0.0001"))
 
     @classmethod

@@ -286,9 +286,7 @@ class BiddingRoundGenerator:
         size = cls._get_size_or_one(product, growing_period, cache)
         return RoundPriceInput(
             product_id=product.id,
-            reference_value=(REFERENCE_VALUE_PER_SIZE * size).quantize(
-                Decimal("0.01")
-            ),
+            reference_value=(REFERENCE_VALUE_PER_SIZE * size).quantize(Decimal("0.01")),
             min_amount=(MIN_AMOUNT_PER_SIZE * size).quantize(Decimal("0.01")),
             size=size,
         )
