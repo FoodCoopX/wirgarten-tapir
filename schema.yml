@@ -8711,6 +8711,56 @@ paths:
                 items:
                   $ref: '#/components/schemas/TriggerDefinition'
           description: ''
+  /utils/api/member_import/apply:
+    post:
+      operationId: member_import_apply
+      tags:
+      - member import
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberImportApplyRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MemberImportApplyRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MemberImportApplyRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberImportResult'
+          description: ''
+  /utils/api/member_import/preview:
+    post:
+      operationId: member_import_preview
+      tags:
+      - member import
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MemberImportUploadRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberImportPreview'
+          description: ''
   /waiting_list/api/categories:
     get:
       operationId: waiting_list_api_categories_retrieve
@@ -14553,6 +14603,67 @@ components:
       required:
       - explanation_text
       - extra_mails
+    MemberImportApplyRequest:
+      type: object
+      properties:
+        token:
+          type: string
+          minLength: 1
+      required:
+      - token
+    MemberImportPreview:
+      type: object
+      properties:
+        token:
+          type: string
+          nullable: true
+        result:
+          $ref: '#/components/schemas/MemberImportResult'
+      required:
+      - result
+      - token
+    MemberImportResult:
+      type: object
+      properties:
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemberImportRow'
+        errors:
+          type: array
+          items:
+            type: string
+        applied:
+          type: boolean
+        can_apply:
+          type: boolean
+          readOnly: true
+      required:
+      - applied
+      - can_apply
+      - errors
+      - rows
+    MemberImportRow:
+      type: object
+      properties:
+        line:
+          type: integer
+        status:
+          type: string
+        error:
+          type: string
+      required:
+      - error
+      - line
+      - status
+    MemberImportUploadRequest:
+      type: object
+      properties:
+        file:
+          type: string
+          format: binary
+      required:
+      - file
     MemberJokerInformation:
       type: object
       properties:

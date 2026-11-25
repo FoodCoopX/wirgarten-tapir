@@ -8,6 +8,7 @@ apis/CoopApi.ts
 apis/CoreApi.ts
 apis/DeliveriesApi.ts
 apis/GenericExportsApi.ts
+apis/MemberImportApi.ts
 apis/PaymentsApi.ts
 apis/PickupLocationsApi.ts
 apis/ProductsApi.ts
@@ -172,6 +173,10 @@ models/MemberEmailResponse.ts
 models/MemberExtraEmail.ts
 models/MemberExtraEmailCreateRequestRequest.ts
 models/MemberExtraMailData.ts
+models/MemberImportApplyRequest.ts
+models/MemberImportPreview.ts
+models/MemberImportResult.ts
+models/MemberImportRow.ts
 models/MemberJokerInformation.ts
 models/MemberMailCategoryData.ts
 models/MemberMailCategoryRequestRequest.ts

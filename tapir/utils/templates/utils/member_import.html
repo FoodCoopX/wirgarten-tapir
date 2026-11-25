@@ -1,0 +1,10 @@
+{% extends "core/base.html" %}
+{% load django_vite %}
+{% block title %}{{ page_title }}{% endblock title %}
+{% block head %}
+    {% vite_asset 'member_import/member_import_entry.tsx' %}
+{% endblock head %}
+{% block content %}
+    {% csrf_token %}
+    <div id="member_import" data-template-url="{% url 'utils:member_import_template' %}"></div>
+{% endblock content %}

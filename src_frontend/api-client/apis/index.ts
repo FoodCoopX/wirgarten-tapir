@@ -9,6 +9,7 @@ export * from "./CoopApi";
 export * from "./CoreApi";
 export * from "./DeliveriesApi";
 export * from "./GenericExportsApi";
+export * from "./MemberImportApi";
 export * from "./PaymentsApi";
 export * from "./PickupLocationsApi";
 export * from "./ProductsApi";

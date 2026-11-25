@@ -141,6 +141,11 @@ def add_admin_links(groups, request, cache: dict):
 
     if request.user.has_perm(Permission.Coop.MANAGE):
         admin_group.add_link(
+            display_name=_("Mitgliederimport"),
+            material_icon="upload_file",
+            url=reverse_lazy("utils:member_import"),
+        )
+        admin_group.add_link(
             display_name=_("CSV-Exports"),
             material_icon="csv",
             url=reverse_lazy("generic_exports:csv_export_editor"),
