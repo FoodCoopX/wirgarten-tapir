@@ -1,4 +1,5 @@
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import override_settings
 
 from tapir.accounts.models import TapirUser
 from tapir.log.models import LogEntry
@@ -11,6 +12,9 @@ from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
+@override_settings(
+    CACHES={"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
+)
 class TestMemberImportService(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
