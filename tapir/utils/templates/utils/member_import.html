@@ -13,7 +13,7 @@
             <button class="btn btn-outline-primary align-self-start" type="submit">Datei prüfen</button>
         </form>
         {% if result %}
-            {% if result.applied %}<div class="alert alert-success" role="status">Import abgeschlossen.</div>
+            {% if result.applied %}<output class="alert alert-success d-block">Import abgeschlossen.</output>
             {% else %}<p>Prüfergebnis. Es wurden keine Daten gespeichert.</p>{% endif %}
             {% for message in result.errors %}<div class="alert alert-danger" role="alert">{{ message }}</div>{% endfor %}
             {% if result.rows %}

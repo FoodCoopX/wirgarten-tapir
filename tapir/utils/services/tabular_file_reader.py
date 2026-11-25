@@ -81,7 +81,7 @@ class TabularFileReader:
         for line, values in enumerate(rows, start=2):
             values = [cls.cell_to_string(value) for value in values]
             if not any(values):
-                result.append({header: "" for header in named_headers})
+                result.append(dict.fromkeys(named_headers, ""))
                 continue
 
             if len(values) > len(headers) or any(
