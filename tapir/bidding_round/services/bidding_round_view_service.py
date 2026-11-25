@@ -1,4 +1,5 @@
 from django.core.exceptions import ValidationError
+from django.utils.translation import gettext
 
 from tapir.associations.services.association_membership_price_type_getter import (
     AssociationMembershipTypePriceGetter,
@@ -15,25 +16,38 @@ from tapir.bidding_round.services.bidding_round_delivery_charge_service import (
     BiddingRoundDeliveryChargeService,
 )
 from tapir.configuration.parameter import get_parameter_value
-from tapir.pickup_locations.services.member_pickup_location_getter import (
-    MemberPickupLocationGetter,
-)
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
+from tapir.pickup_locations.serializers import PublicPickupLocationSerializer
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
+)
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.wirgarten.models import Member, Product, Subscription
+from tapir.wirgarten.models import Member, PickupLocation, Product, Subscription
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.service.products import get_product_price
 
 
 class BiddingRoundViewService:
     @classmethod
+    def _get_boolean_parameter(cls, key, default: bool, cache) -> bool:
+        try:
+            return get_parameter_value(key, cache=cache)
+        except KeyError:
+            return default
+
+    @classmethod
     def is_feature_flag_enabled(cls, cache: dict) -> bool:
-        return get_parameter_value(ParameterKeys.BIDDING_ROUND_ENABLED, cache=cache)
+        return cls._get_boolean_parameter(
+            ParameterKeys.BIDDING_ROUND_ENABLED, False, cache
+        )
 
     @classmethod
     def is_public_url_enabled(cls, cache: dict) -> bool:
-        return get_parameter_value(ParameterKeys.BIDDING_ROUND_URL_ENABLED, cache=cache)
+        return cls._get_boolean_parameter(
+            ParameterKeys.BIDDING_ROUND_URL_ENABLED, True, cache
+        )
 
     @classmethod
     def public_access_allowed(cls, user, cache: dict) -> bool:
@@ -49,14 +63,14 @@ class BiddingRoundViewService:
 
     @classmethod
     def is_status_enabled(cls, cache: dict) -> bool:
-        return get_parameter_value(
-            ParameterKeys.BIDDING_ROUND_STATUS_ENABLED, cache=cache
+        return cls._get_boolean_parameter(
+            ParameterKeys.BIDDING_ROUND_STATUS_ENABLED, True, cache
         )
 
     @classmethod
     def is_status_public_enabled(cls, cache: dict) -> bool:
-        return get_parameter_value(
-            ParameterKeys.BIDDING_ROUND_STATUS_PUBLIC_ENABLED, cache=cache
+        return cls._get_boolean_parameter(
+            ParameterKeys.BIDDING_ROUND_STATUS_PUBLIC_ENABLED, True, cache
         )
 
     @classmethod
@@ -66,8 +80,8 @@ class BiddingRoundViewService:
         Purely a UI flag; bids are validated independently, so toggling it does not
         invalidate existing bids.
         """
-        return get_parameter_value(
-            ParameterKeys.BIDDING_ROUND_BID_SHARES_ENABLED, cache=cache
+        return cls._get_boolean_parameter(
+            ParameterKeys.BIDDING_ROUND_BID_SHARES_ENABLED, False, cache
         )
 
     @classmethod
@@ -77,27 +91,31 @@ class BiddingRoundViewService:
         Purely a UI flag; bids are validated independently, so toggling it does not
         invalidate existing bids.
         """
-        return get_parameter_value(
-            ParameterKeys.BIDDING_ROUND_BID_CAROUSEL_ENABLED, cache=cache
+        return cls._get_boolean_parameter(
+            ParameterKeys.BIDDING_ROUND_BID_CAROUSEL_ENABLED, False, cache
         )
 
     @classmethod
     def is_sepa_enabled(cls, cache: dict) -> bool:
-        return get_parameter_value(
-            ParameterKeys.BIDDING_ROUND_SEPA_ENABLED, cache=cache
+        return cls._get_boolean_parameter(
+            ParameterKeys.BIDDING_ROUND_SEPA_ENABLED, True, cache
         )
 
     @classmethod
     def is_feedback_enabled(cls, cache: dict) -> bool:
-        return get_parameter_value(
-            ParameterKeys.BIDDING_ROUND_FEEDBACK_ENABLED, cache=cache
+        return cls._get_boolean_parameter(
+            ParameterKeys.BIDDING_ROUND_FEEDBACK_ENABLED, True, cache
         )
 
     @classmethod
     def is_auto_renewal_enabled(cls, cache: dict) -> bool:
-        return get_parameter_value(
-            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
+        return cls._get_boolean_parameter(
+            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, False, cache
         )
+
+    @classmethod
+    def get_display_name(cls, cache: dict) -> str:
+        return gettext("Beitragsrunde")
 
     @classmethod
     def build_member_data(cls, member, bidding_round, cache) -> dict:
@@ -132,8 +150,15 @@ class BiddingRoundViewService:
         }
 
     @classmethod
-    def serialize_round(cls, bidding_round: BiddingRound, cache: dict) -> dict:
-        return RoundSerializer(bidding_round, context={"cache": cache}).data
+    def serialize_round(
+        cls, bidding_round: BiddingRound, cache: dict, display_name=None
+    ) -> dict:
+        if display_name is None:
+            display_name = cls.get_display_name(cache)
+        return RoundSerializer(
+            bidding_round,
+            context={"cache": cache, "display_name": display_name},
+        ).data
 
     @classmethod
     def _get_products_with_prices(
@@ -171,10 +196,30 @@ class BiddingRoundViewService:
         }
 
     @classmethod
-    def serialize_bid(cls, bid, cache: dict) -> dict | None:
+    def get_effective_amount(
+        cls, bid, effective_position=None, bidding_round=None
+    ) -> Decimal:
+        if effective_position is None:
+            return cls._counting_amount(bid, bidding_round)
+        from tapir.bidding_round.services.bidding_round_stats_service import (
+            BiddingRoundStatsService,
+        )
+
+        return BiddingRoundStatsService.get_effective_amount(
+            bid, effective_position, bidding_round
+        )
+
+    @classmethod
+    def serialize_bid(
+        cls, bid, effective_position=None, bid_range_position=None, *, cache: dict
+    ) -> dict | None:
         if bid is None:
             return None
-        return BidSerializer(bid, context={"cache": cache}).data
+        if effective_position is None:
+            effective_position = bid_range_position
+        return BidSerializer(
+            bid, context={"cache": cache, "position": effective_position}
+        ).data
 
     @classmethod
     def build_texts(cls, cache: dict) -> dict:
@@ -244,15 +289,24 @@ class BiddingRoundViewService:
         current_quantities = cls._get_current_quantities(
             member, [product for product, _price in products_with_prices]
         )
+        capacity = TapirCache.get_product_type_capacity_at_date(
+            cache=cache,
+            product_type=bidding_round.product_type,
+            reference_date=bidding_round.growing_period.start_date,
+        )
         data = {
             "id": bidding_round.product_type_id,
             "product_type_id": bidding_round.product_type_id,
             "product_type_name": bidding_round.product_type.name,
+            "capacity_id": capacity.id if capacity is not None else None,
             "products": [
                 {
                     "id": product.id,
                     "name": product.name,
                     **cls._serialize_price_values(price),
+                    "standard_price": cls._get_standard_price(
+                        product, bidding_round, cache
+                    ),
                     "current_quantity": current_quantities.get(product.id),
                     "image_url": product.url_of_image_in_bestellwizard or None,
                 }
@@ -260,6 +314,15 @@ class BiddingRoundViewService:
             ],
         }
         return BiddableProductSerializer(data).data
+
+    @classmethod
+    def _get_standard_price(cls, product, bidding_round, cache) -> str | None:
+        product_price = get_product_price(
+            product,
+            reference_date=bidding_round.growing_period.start_date,
+            cache=cache,
+        )
+        return str(product_price.price) if product_price is not None else None
 
     @classmethod
     def _get_current_quantities(
@@ -286,11 +349,10 @@ class BiddingRoundViewService:
         )
         if pickup_location is None:
             return None
-        product_type = bidding_round.product_type
         yearly_delivery_charge = (
             BiddingRoundDeliveryChargeService.get_yearly_delivery_charge(
                 pickup_location_id=pickup_location.id,
-                product_type=product_type,
+                product_type=bidding_round.product_type,
                 growing_period=bidding_round.growing_period,
                 cache=cache,
             )
@@ -307,6 +369,76 @@ class BiddingRoundViewService:
             "quantity_enabled": cls.is_bid_shares_enabled(cache),
             "carousel_enabled": cls.is_bid_carousel_enabled(cache),
         }
+
+    @classmethod
+    def build_pickup_locations(cls, bidding_round, cache) -> list:
+        from tapir.bidding_round.services.bidding_round_stats_service import (
+            BiddingRoundStatsService,
+        )
+
+        growing_period = bidding_round.growing_period
+        utilization = BiddingRoundStatsService.build_public_pickup_location_utilization(
+            bidding_round, cache=cache
+        )
+
+        locations = list(PickupLocation.objects.prefetch_related("opening_times").all())
+        serializer_context = {
+            "cache": cache,
+            "reference_date_for_delivery_charge": growing_period.start_date,
+        }
+        serialized_locations = list(
+            PublicPickupLocationSerializer(
+                locations, many=True, context=serializer_context
+            ).data
+        )
+
+        result = []
+        for location, serialized_location in zip(locations, serialized_locations):
+            entry = dict(serialized_location)
+            entry["yearly_delivery_charge"] = str(
+                BiddingRoundDeliveryChargeService.get_yearly_delivery_charge(
+                    pickup_location_id=location.id,
+                    product_type=bidding_round.product_type,
+                    growing_period=growing_period,
+                    cache=cache,
+                )
+            )
+            entry["utilization"] = utilization.get(location.id)
+            result.append(entry)
+        return result
+
+    @classmethod
+    def parse_bool(cls, value):
+        if value is None:
+            return None
+        return value.lower() in ("true", "1", "yes")
+
+    @classmethod
+    def filter_and_sort_members(cls, members, filter_, sort):
+        if filter_ == "active_in_contract_period":
+            members = [
+                member
+                for member in members
+                if member.get("is_active_in_contract_period", True)
+            ]
+        elif filter_ == "has_bid":
+            members = [member for member in members if member["has_bid"]]
+        elif filter_ == "no_bid":
+            members = [
+                member
+                for member in members
+                if not member["has_bid"]
+                and member.get("is_active_in_contract_period", True)
+            ]
+        elif filter_ == "auto_renewed":
+            members = [member for member in members if member["is_auto_renewed"]]
+        if sort == "date":
+            return sorted(
+                members,
+                key=lambda member: (member["bid"] or {}).get("updated_at") or "",
+                reverse=True,
+            )
+        return sorted(members, key=lambda member: member["member_name"].lower())
 
     @classmethod
     def serialize_validation_error(cls, error: ValidationError) -> str:

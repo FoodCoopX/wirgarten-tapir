@@ -17,6 +17,17 @@ import {
   AutoRenewedMemberFromJSON,
   AutoRenewedMemberToJSON,
 } from "./AutoRenewedMember";
+import type { AverageBid } from "./AverageBid";
+import { AverageBidFromJSON, AverageBidToJSON } from "./AverageBid";
+import type { BiddableProduct } from "./BiddableProduct";
+import {
+  BiddableProductFromJSON,
+  BiddableProductToJSON,
+} from "./BiddableProduct";
+import type { BidOptions } from "./BidOptions";
+import { BidOptionsFromJSON, BidOptionsToJSON } from "./BidOptions";
+import type { ContractRow } from "./ContractRow";
+import { ContractRowFromJSON, ContractRowToJSON } from "./ContractRow";
 import type { EvaluationLevels } from "./EvaluationLevels";
 import {
   EvaluationLevelsFromJSON,
@@ -24,8 +35,30 @@ import {
 } from "./EvaluationLevels";
 import type { ExtraPositions } from "./ExtraPositions";
 import { ExtraPositionsFromJSON, ExtraPositionsToJSON } from "./ExtraPositions";
+import type { FinancingProjection } from "./FinancingProjection";
+import {
+  FinancingProjectionFromJSON,
+  FinancingProjectionToJSON,
+} from "./FinancingProjection";
+import type { PickupLocationWithCharge } from "./PickupLocationWithCharge";
+import {
+  PickupLocationWithChargeFromJSON,
+  PickupLocationWithChargeToJSON,
+} from "./PickupLocationWithCharge";
+import type { ResultsTable } from "./ResultsTable";
+import { ResultsTableFromJSON, ResultsTableToJSON } from "./ResultsTable";
 import type { RoundStatsBid } from "./RoundStatsBid";
 import { RoundStatsBidFromJSON, RoundStatsBidToJSON } from "./RoundStatsBid";
+import type { RoundStatsEntry } from "./RoundStatsEntry";
+import {
+  RoundStatsEntryFromJSON,
+  RoundStatsEntryToJSON,
+} from "./RoundStatsEntry";
+import type { RoundStatsTotals } from "./RoundStatsTotals";
+import {
+  RoundStatsTotalsFromJSON,
+  RoundStatsTotalsToJSON,
+} from "./RoundStatsTotals";
 
 /**
  *
@@ -87,6 +120,84 @@ export interface RoundResultsResponse {
    * @memberof RoundResultsResponse
    */
   levels: EvaluationLevels;
+  /**
+   *
+   * @type {string}
+   * @memberof RoundResultsResponse
+   */
+  displayName: string;
+  /**
+   *
+   * @type {Array<RoundStatsEntry>}
+   * @memberof RoundResultsResponse
+   */
+  stats: Array<RoundStatsEntry>;
+  /**
+   *
+   * @type {RoundStatsTotals}
+   * @memberof RoundResultsResponse
+   */
+  totals: RoundStatsTotals;
+  /**
+   *
+   * @type {AverageBid}
+   * @memberof RoundResultsResponse
+   */
+  averageBid: AverageBid;
+  /**
+   *
+   * @type {boolean}
+   * @memberof RoundResultsResponse
+   */
+  autoRenewedEnabled: boolean;
+  /**
+   *
+   * @type {FinancingProjection}
+   * @memberof RoundResultsResponse
+   */
+  financingProjection: FinancingProjection;
+  /**
+   *
+   * @type {ResultsTable}
+   * @memberof RoundResultsResponse
+   */
+  resultsTable: ResultsTable;
+  /**
+   *
+   * @type {BiddableProduct}
+   * @memberof RoundResultsResponse
+   */
+  biddableProduct: BiddableProduct | null;
+  /**
+   *
+   * @type {Array<PickupLocationWithCharge>}
+   * @memberof RoundResultsResponse
+   */
+  pickupLocations: Array<PickupLocationWithCharge>;
+  /**
+   *
+   * @type {BidOptions}
+   * @memberof RoundResultsResponse
+   */
+  bidOptions: BidOptions;
+  /**
+   *
+   * @type {Array<ContractRow>}
+   * @memberof RoundResultsResponse
+   */
+  contracts: Array<ContractRow>;
+  /**
+   *
+   * @type {string}
+   * @memberof RoundResultsResponse
+   */
+  growingPeriodId: string | null;
+  /**
+   *
+   * @type {Date}
+   * @memberof RoundResultsResponse
+   */
+  contractsCreatedAt: Date | null;
   /**
    *
    * @type {string}
@@ -204,6 +315,38 @@ export function instanceOfRoundResultsResponse(
   )
     return false;
   if (!("levels" in value) || value["levels"] === undefined) return false;
+  if (!("displayName" in value) || value["displayName"] === undefined)
+    return false;
+  if (!("stats" in value) || value["stats"] === undefined) return false;
+  if (!("totals" in value) || value["totals"] === undefined) return false;
+  if (!("averageBid" in value) || value["averageBid"] === undefined)
+    return false;
+  if (
+    !("autoRenewedEnabled" in value) ||
+    value["autoRenewedEnabled"] === undefined
+  )
+    return false;
+  if (
+    !("financingProjection" in value) ||
+    value["financingProjection"] === undefined
+  )
+    return false;
+  if (!("resultsTable" in value) || value["resultsTable"] === undefined)
+    return false;
+  if (!("biddableProduct" in value) || value["biddableProduct"] === undefined)
+    return false;
+  if (!("pickupLocations" in value) || value["pickupLocations"] === undefined)
+    return false;
+  if (!("bidOptions" in value) || value["bidOptions"] === undefined)
+    return false;
+  if (!("contracts" in value) || value["contracts"] === undefined) return false;
+  if (!("growingPeriodId" in value) || value["growingPeriodId"] === undefined)
+    return false;
+  if (
+    !("contractsCreatedAt" in value) ||
+    value["contractsCreatedAt"] === undefined
+  )
+    return false;
   if (
     !("roundProductTypeId" in value) ||
     value["roundProductTypeId"] === undefined
@@ -287,6 +430,26 @@ export function RoundResultsResponseFromJSONTyped(
     coveragePercent: json["coverage_percent"],
     bidderAveragePerMonth: json["bidder_average_per_month"],
     levels: EvaluationLevelsFromJSON(json["levels"]),
+    displayName: json["display_name"],
+    stats: (json["stats"] as Array<any>).map(RoundStatsEntryFromJSON),
+    totals: RoundStatsTotalsFromJSON(json["totals"]),
+    averageBid: AverageBidFromJSON(json["average_bid"]),
+    autoRenewedEnabled: json["auto_renewed_enabled"],
+    financingProjection: FinancingProjectionFromJSON(
+      json["financing_projection"],
+    ),
+    resultsTable: ResultsTableFromJSON(json["results_table"]),
+    biddableProduct: BiddableProductFromJSON(json["biddable_product"]),
+    pickupLocations: (json["pickup_locations"] as Array<any>).map(
+      PickupLocationWithChargeFromJSON,
+    ),
+    bidOptions: BidOptionsFromJSON(json["bid_options"]),
+    contracts: (json["contracts"] as Array<any>).map(ContractRowFromJSON),
+    growingPeriodId: json["growing_period_id"],
+    contractsCreatedAt:
+      json["contracts_created_at"] == null
+        ? null
+        : new Date(json["contracts_created_at"]),
     roundProductTypeId: json["round_product_type_id"],
     includeAutoRenewed: json["include_auto_renewed"],
     autoRenewedPerYear: json["auto_renewed_per_year"],
@@ -332,6 +495,26 @@ export function RoundResultsResponseToJSONTyped(
     coverage_percent: value["coveragePercent"],
     bidder_average_per_month: value["bidderAveragePerMonth"],
     levels: EvaluationLevelsToJSON(value["levels"]),
+    display_name: value["displayName"],
+    stats: (value["stats"] as Array<any>).map(RoundStatsEntryToJSON),
+    totals: RoundStatsTotalsToJSON(value["totals"]),
+    average_bid: AverageBidToJSON(value["averageBid"]),
+    auto_renewed_enabled: value["autoRenewedEnabled"],
+    financing_projection: FinancingProjectionToJSON(
+      value["financingProjection"],
+    ),
+    results_table: ResultsTableToJSON(value["resultsTable"]),
+    biddable_product: BiddableProductToJSON(value["biddableProduct"]),
+    pickup_locations: (value["pickupLocations"] as Array<any>).map(
+      PickupLocationWithChargeToJSON,
+    ),
+    bid_options: BidOptionsToJSON(value["bidOptions"]),
+    contracts: (value["contracts"] as Array<any>).map(ContractRowToJSON),
+    growing_period_id: value["growingPeriodId"],
+    contracts_created_at:
+      value["contractsCreatedAt"] == null
+        ? null
+        : (value["contractsCreatedAt"] as any).toISOString(),
     round_product_type_id: value["roundProductTypeId"],
     include_auto_renewed: value["includeAutoRenewed"],
     auto_renewed_per_year: value["autoRenewedPerYear"],

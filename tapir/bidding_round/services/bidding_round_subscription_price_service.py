@@ -28,23 +28,26 @@ class BiddingRoundSubscriptionPriceService:
             return subscription.price_override
         if subscription.price_mode not in cls.PRICE_MODES:
             return None
-        link = cls._get_link(subscription)
+        link = cls._get_link(subscription, cache)
         if link is None or link.monthly_price_per_share is None:
             return None
         return link.monthly_price_per_share * subscription.quantity
 
     @classmethod
     def _get_link(
-        cls, subscription: Subscription
+        cls, subscription: Subscription, cache: dict
     ) -> BiddingRoundCreatedSubscription | None:
-        return (
-            BiddingRoundCreatedSubscription.objects.filter(
-                subscription=subscription,
-                round__growing_period=subscription.period,
+        cache_key = ("bidding_round_created_subscription_link", subscription.id)
+        if cache_key not in cache:
+            cache[cache_key] = (
+                BiddingRoundCreatedSubscription.objects.filter(
+                    subscription=subscription,
+                    round__growing_period=subscription.period,
+                )
+                .order_by("-round__end_at", "-round__created_at")
+                .first()
             )
-            .order_by("-round__end_at", "-round__created_at")
-            .first()
-        )
+        return cache[cache_key]
 
     @classmethod
     def annotate_price_per_share(cls, queryset: QuerySet[Subscription]) -> QuerySet:
@@ -73,3 +76,12 @@ class BiddingRoundSubscriptionPriceService:
             & Q(**{f"{cls.ANNOTATION_PRICE_PER_SHARE}__isnull": False}),
             then=F(cls.ANNOTATION_PRICE_PER_SHARE) * F("quantity"),
         )
+
+    @classmethod
+    def attach_monthly_prices(cls, subscriptions, cache: dict) -> None:
+        for subscription in subscriptions:
+            if subscription.price_mode not in cls.PRICE_MODES:
+                continue
+            price = cls.get_price_for_subscription(subscription, cache)
+            if price is not None:
+                subscription.monthly_price = price

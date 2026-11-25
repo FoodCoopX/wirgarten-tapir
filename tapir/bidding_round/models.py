@@ -177,6 +177,10 @@ class BiddingRoundCreatedSubscription(TapirModel):
 
     ``monthly_price_per_share`` freezes the price the round gave the contract, so later
     changes to the round's results or to ``ProductPrice`` cannot move it.
+    ``is_bidder_contract`` marks contracts created from a bid, as opposed to
+    auto-renewed contracts. ``was_reused`` marks links to subscriptions that already
+    existed before contract creation; ``original_quantity`` keeps their quantity from
+    before the round.
     """
 
     round = models.ForeignKey(
@@ -188,6 +192,9 @@ class BiddingRoundCreatedSubscription(TapirModel):
     monthly_price_per_share = models.DecimalField(
         max_digits=8, decimal_places=4, null=True
     )
+    is_bidder_contract = models.BooleanField(default=False)
+    was_reused = models.BooleanField(default=False)
+    original_quantity = models.PositiveSmallIntegerField(null=True)
 
     class Meta:
         constraints = [

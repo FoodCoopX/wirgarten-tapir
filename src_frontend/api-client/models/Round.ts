@@ -38,6 +38,12 @@ export interface Round {
    * @type {string}
    * @memberof Round
    */
+  readonly displayName: string;
+  /**
+   *
+   * @type {string}
+   * @memberof Round
+   */
   status: string;
   /**
    *
@@ -143,6 +149,8 @@ export interface Round {
 export function instanceOfRound(value: object): value is Round {
   if (!("id" in value) || value["id"] === undefined) return false;
   if (!("name" in value) || value["name"] === undefined) return false;
+  if (!("displayName" in value) || value["displayName"] === undefined)
+    return false;
   if (!("status" in value) || value["status"] === undefined) return false;
   if (!("biddingProcedure" in value) || value["biddingProcedure"] === undefined)
     return false;
@@ -211,6 +219,7 @@ export function RoundFromJSONTyped(
   return {
     id: json["id"],
     name: json["name"],
+    displayName: json["display_name"],
     status: json["status"],
     biddingProcedure: json["bidding_procedure"],
     bidLevels: json["bid_levels"],
@@ -243,7 +252,7 @@ export function RoundToJSON(json: any): Round {
 }
 
 export function RoundToJSONTyped(
-  value?: Omit<Round, "has_bids"> | null,
+  value?: Omit<Round, "display_name" | "has_bids"> | null,
   ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {
