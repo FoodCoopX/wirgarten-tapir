@@ -71,6 +71,18 @@ export interface RoundStatsBid {
    * @type {string}
    * @memberof RoundStatsBid
    */
+  amount2: string | null;
+  /**
+   *
+   * @type {string}
+   * @memberof RoundStatsBid
+   */
+  amount3: string | null;
+  /**
+   *
+   * @type {string}
+   * @memberof RoundStatsBid
+   */
   readonly amountPerMonth: string;
   /**
    *
@@ -94,6 +106,8 @@ export function instanceOfRoundStatsBid(value: object): value is RoundStatsBid {
     return false;
   if (!("quantity" in value) || value["quantity"] === undefined) return false;
   if (!("amount1" in value) || value["amount1"] === undefined) return false;
+  if (!("amount2" in value) || value["amount2"] === undefined) return false;
+  if (!("amount3" in value) || value["amount3"] === undefined) return false;
   if (!("amountPerMonth" in value) || value["amountPerMonth"] === undefined)
     return false;
   if (!("amountPerYear" in value) || value["amountPerYear"] === undefined)
@@ -121,6 +135,8 @@ export function RoundStatsBidFromJSONTyped(
     productName: json["product_name"],
     quantity: json["quantity"],
     amount1: json["amount_1"],
+    amount2: json["amount_2"],
+    amount3: json["amount_3"],
     amountPerMonth: json["amount_per_month"],
     amountPerYear: json["amount_per_year"],
   };
@@ -147,5 +163,7 @@ export function RoundStatsBidToJSONTyped(
     product_name: value["productName"],
     quantity: value["quantity"],
     amount_1: value["amount1"],
+    amount_2: value["amount2"],
+    amount_3: value["amount3"],
   };
 }

@@ -52,6 +52,7 @@ models/BidProductVariant.ts
 models/BidSubmitRequest.ts
 models/BidTexts.ts
 models/BiddableProduct.ts
+models/BiddingProcedureEnum.ts
 models/BlankEnum.ts
 models/BounceTypeEnum.ts
 models/BreadBreakdown.ts
@@ -120,6 +121,8 @@ models/EmailDispatchRequest.ts
 models/EmailDispatchWithRetries.ts
 models/EmailTemplate.ts
 models/EmailTemplateRequest.ts
+models/EvaluationLevel.ts
+models/EvaluationLevels.ts
 models/ExistingMemberPurchasesSharesRequestRequest.ts
 models/ExistingMemberUpdatesAssociationMembershipRequestRequest.ts
 models/ExportSegment.ts

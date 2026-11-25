@@ -36,6 +36,18 @@ export interface BidSubmitRequest {
    * @memberof BidSubmitRequest
    */
   amount1?: string | null;
+  /**
+   *
+   * @type {string}
+   * @memberof BidSubmitRequest
+   */
+  amount2?: string | null;
+  /**
+   *
+   * @type {string}
+   * @memberof BidSubmitRequest
+   */
+  amount3?: string | null;
 }
 
 /**
@@ -63,6 +75,8 @@ export function BidSubmitRequestFromJSONTyped(
     productId: json["product_id"],
     quantity: json["quantity"] == null ? undefined : json["quantity"],
     amount1: json["amount_1"] == null ? undefined : json["amount_1"],
+    amount2: json["amount_2"] == null ? undefined : json["amount_2"],
+    amount3: json["amount_3"] == null ? undefined : json["amount_3"],
   };
 }
 
@@ -82,5 +96,7 @@ export function BidSubmitRequestToJSONTyped(
     product_id: value["productId"],
     quantity: value["quantity"],
     amount_1: value["amount1"],
+    amount_2: value["amount2"],
+    amount_3: value["amount3"],
   };
 }

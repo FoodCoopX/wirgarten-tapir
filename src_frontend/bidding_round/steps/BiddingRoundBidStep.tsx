@@ -4,8 +4,8 @@ import { Col, Form, Row } from "react-bootstrap";
 import { BiddableProduct, RoundTexts } from "../../api-client";
 import NextStepButton from "../../components/mobile_wizard/NextStepButton.tsx";
 import ProductCard from "../../components/mobile_wizard/ProductCard.tsx";
-import TapirButton from "../../components/TapirButton.tsx";
 import { BUTTON_VARIANT } from "../../components/mobile_wizard/utils/BUTTON_VARIANT.ts";
+import TapirButton from "../../components/TapirButton.tsx";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import {
   formatAmountNumber,
@@ -17,12 +17,14 @@ import {
 interface BiddingRoundBidStepProps {
   biddableProduct: BiddableProduct;
   texts: RoundTexts;
+  isBidRange: boolean;
+  requiredAmountLevels: number;
   selectedVariantId: string | null;
   onSelectVariant: (variantId: string) => void;
   quantity: number;
   onQuantityChange: (quantity: number) => void;
-  amount: string;
-  onAmountChange: (amount: string) => void;
+  amounts: string[];
+  onAmountChange: (levelIndex: number, value: string) => void;
   goToNextStep: () => void;
   stepActive: boolean;
 }
@@ -33,11 +35,13 @@ const MAX_QUANTITY = 5;
 const BiddingRoundBidStep: React.FC<BiddingRoundBidStepProps> = ({
   biddableProduct,
   texts,
+  isBidRange,
+  requiredAmountLevels,
   selectedVariantId,
   onSelectVariant,
   quantity,
   onQuantityChange,
-  amount,
+  amounts,
   onAmountChange,
   goToNextStep,
   stepActive,
@@ -45,9 +49,17 @@ const BiddingRoundBidStep: React.FC<BiddingRoundBidStepProps> = ({
   const selectedVariant = biddableProduct.products.find(
     (variant) => variant.id === selectedVariantId,
   );
-  const parsedAmount = parseEuroAmount(amount);
-  const yearlyAmount =
-    parsedAmount === null ? null : getYearlyAmount(parsedAmount, quantity);
+
+  const levelLabels = isBidRange
+    ? [texts.bid.greenLabel, texts.bid.redLabel]
+    : [texts.bid.amountLabel];
+
+  function getLevelYearlyAmount(levelIndex: number): number | null {
+    const parsedAmount = parseEuroAmount(amounts[levelIndex]);
+    return parsedAmount === null
+      ? null
+      : getYearlyAmount(parsedAmount, quantity);
+  }
 
   return (
     <>
@@ -96,23 +108,47 @@ const BiddingRoundBidStep: React.FC<BiddingRoundBidStepProps> = ({
           </div>
         </Form.Group>
 
-        <Form.Group>
-          <Form.Label>
-            <strong>{texts.bid.amountLabel}</strong>
-          </Form.Label>
-          <Form.Control
-            type={"text"}
-            inputMode={"decimal"}
-            placeholder={"0,00"}
-            value={amount}
-            onChange={(event) =>
-              onAmountChange(sanitizeEuroAmountInput(event.target.value))
-            }
+        {isBidRange && texts.bid.bidRangeExplanation && (
+          <p
+            className={"text-muted mb-0"}
+            dangerouslySetInnerHTML={{
+              __html: texts.bid.bidRangeExplanation,
+            }}
           />
-          <Form.Text className={"text-muted"}>
-            {texts.bid.monthlyHint}
-          </Form.Text>
-        </Form.Group>
+        )}
+
+        {Array.from({ length: requiredAmountLevels }, (_, levelIndex) => {
+          const yearlyAmount = getLevelYearlyAmount(levelIndex);
+          return (
+            <div key={levelLabels[levelIndex] ?? levelIndex}>
+              <Form.Group>
+                <Form.Label>
+                  <strong>{levelLabels[levelIndex]}</strong>
+                </Form.Label>
+                <Form.Control
+                  type={"text"}
+                  inputMode={"decimal"}
+                  placeholder={"0,00"}
+                  value={amounts[levelIndex]}
+                  onChange={(event) =>
+                    onAmountChange(
+                      levelIndex,
+                      sanitizeEuroAmountInput(event.target.value),
+                    )
+                  }
+                />
+              </Form.Group>
+              <p className={"text-center mb-0 small"}>
+                {texts.bid.liveYearlyLabel}{" "}
+                <strong>
+                  {yearlyAmount === null ? "–" : formatCurrency(yearlyAmount)}
+                </strong>
+              </p>
+            </div>
+          );
+        })}
+
+        <Form.Text className={"text-muted"}>{texts.bid.monthlyHint}</Form.Text>
 
         {selectedVariant?.referenceValue && (
           <p className={"text-muted mb-0"}>
@@ -122,13 +158,6 @@ const BiddingRoundBidStep: React.FC<BiddingRoundBidStepProps> = ({
             )}
           </p>
         )}
-
-        <p className={"text-center mb-0"}>
-          {texts.bid.liveYearlyLabel}{" "}
-          <strong>
-            {yearlyAmount === null ? "–" : formatCurrency(yearlyAmount)}
-          </strong>
-        </p>
       </div>
 
       <NextStepButton onClick={goToNextStep} stepActive={stepActive} />

@@ -12,6 +12,11 @@
  * Do not edit the class manually.
  */
 
+import type { BiddingProcedureEnum } from "./BiddingProcedureEnum";
+import {
+  BiddingProcedureEnumFromJSON,
+  BiddingProcedureEnumToJSON,
+} from "./BiddingProcedureEnum";
 import type { RoundProductPriceInputRequest } from "./RoundProductPriceInputRequest";
 import {
   RoundProductPriceInputRequestFromJSON,
@@ -72,6 +77,18 @@ export interface RoundCreateRequest {
    * @memberof RoundCreateRequest
    */
   prices?: Array<RoundProductPriceInputRequest>;
+  /**
+   *
+   * @type {BiddingProcedureEnum}
+   * @memberof RoundCreateRequest
+   */
+  biddingProcedure?: BiddingProcedureEnum;
+  /**
+   *
+   * @type {number}
+   * @memberof RoundCreateRequest
+   */
+  bidLevels?: number;
 }
 
 /**
@@ -115,6 +132,11 @@ export function RoundCreateRequestFromJSONTyped(
         : (json["prices"] as Array<any>).map(
             RoundProductPriceInputRequestFromJSON,
           ),
+    biddingProcedure:
+      json["bidding_procedure"] == null
+        ? undefined
+        : BiddingProcedureEnumFromJSON(json["bidding_procedure"]),
+    bidLevels: json["bid_levels"] == null ? undefined : json["bid_levels"],
   };
 }
 
@@ -147,5 +169,7 @@ export function RoundCreateRequestToJSONTyped(
         : (value["prices"] as Array<any>).map(
             RoundProductPriceInputRequestToJSON,
           ),
+    bidding_procedure: BiddingProcedureEnumToJSON(value["biddingProcedure"]),
+    bid_levels: value["bidLevels"],
   };
 }

@@ -81,6 +81,12 @@ class BiddingRoundViewService:
             "amount_label": ParameterKeys.BIDDING_ROUND_BID_AMOUNT_LABEL,
             "reference_value_hint": ParameterKeys.BIDDING_ROUND_BID_REFERENCE_VALUE_HINT,
             "simple_explanation": ParameterKeys.BIDDING_ROUND_BID_SIMPLE_EXPLANATION,
+            "bid_range_explanation": (
+                ParameterKeys.BIDDING_ROUND_BID_RANGE_EXPLANATION
+            ),
+            "green_label": ParameterKeys.BIDDING_ROUND_BID_GREEN_LABEL,
+            "yellow_label": ParameterKeys.BIDDING_ROUND_BID_YELLOW_LABEL,
+            "red_label": ParameterKeys.BIDDING_ROUND_BID_RED_LABEL,
             "live_yearly_label": ParameterKeys.BIDDING_ROUND_BID_LIVE_YEARLY_LABEL,
             "monthly_hint": ParameterKeys.BIDDING_ROUND_BID_MONTHLY_HINT,
             "monthly_unit": ParameterKeys.BIDDING_ROUND_BID_MONTHLY_UNIT,

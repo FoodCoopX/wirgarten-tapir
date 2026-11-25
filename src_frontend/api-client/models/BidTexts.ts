@@ -41,6 +41,30 @@ export interface BidTexts {
    * @type {string}
    * @memberof BidTexts
    */
+  bidRangeExplanation: string;
+  /**
+   *
+   * @type {string}
+   * @memberof BidTexts
+   */
+  greenLabel: string;
+  /**
+   *
+   * @type {string}
+   * @memberof BidTexts
+   */
+  yellowLabel: string;
+  /**
+   *
+   * @type {string}
+   * @memberof BidTexts
+   */
+  redLabel: string;
+  /**
+   *
+   * @type {string}
+   * @memberof BidTexts
+   */
   liveYearlyLabel: string;
   /**
    *
@@ -96,6 +120,16 @@ export function instanceOfBidTexts(value: object): value is BidTexts {
     value["simpleExplanation"] === undefined
   )
     return false;
+  if (
+    !("bidRangeExplanation" in value) ||
+    value["bidRangeExplanation"] === undefined
+  )
+    return false;
+  if (!("greenLabel" in value) || value["greenLabel"] === undefined)
+    return false;
+  if (!("yellowLabel" in value) || value["yellowLabel"] === undefined)
+    return false;
+  if (!("redLabel" in value) || value["redLabel"] === undefined) return false;
   if (!("liveYearlyLabel" in value) || value["liveYearlyLabel"] === undefined)
     return false;
   if (!("monthlyHint" in value) || value["monthlyHint"] === undefined)
@@ -127,6 +161,10 @@ export function BidTextsFromJSONTyped(
     amountLabel: json["amount_label"],
     referenceValueHint: json["reference_value_hint"],
     simpleExplanation: json["simple_explanation"],
+    bidRangeExplanation: json["bid_range_explanation"],
+    greenLabel: json["green_label"],
+    yellowLabel: json["yellow_label"],
+    redLabel: json["red_label"],
     liveYearlyLabel: json["live_yearly_label"],
     monthlyHint: json["monthly_hint"],
     monthlyUnit: json["monthly_unit"],
@@ -153,6 +191,10 @@ export function BidTextsToJSONTyped(
     amount_label: value["amountLabel"],
     reference_value_hint: value["referenceValueHint"],
     simple_explanation: value["simpleExplanation"],
+    bid_range_explanation: value["bidRangeExplanation"],
+    green_label: value["greenLabel"],
+    yellow_label: value["yellowLabel"],
+    red_label: value["redLabel"],
     live_yearly_label: value["liveYearlyLabel"],
     monthly_hint: value["monthlyHint"],
     monthly_unit: value["monthlyUnit"],

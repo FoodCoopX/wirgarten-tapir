@@ -74,8 +74,19 @@ class ContractCreator:
         cache: dict,
         bid_ids: list[str] | None = None,
         actor: Member | None = None,
+        bid_level: int | None = None,
     ) -> ContractCreationResult:
         cls.validate_round_can_create_contracts(bidding_round)
+
+        if bid_level is not None and bid_level not in range(
+            1, (bidding_round.bid_levels or 1) + 1
+        ):
+            raise ValidationError(_("Unbekannte Gebotsstufe."))
+        position = (
+            BiddingRoundStatsService.get_level_position(bid_level, bidding_round)
+            if bid_level is not None
+            else BiddingRoundStatsService.get_default_position(bidding_round)
+        )
 
         bids = bidding_round.bids.select_related("member", "product")
         if bid_ids:
@@ -88,7 +99,11 @@ class ContractCreator:
                 with transaction.atomic():
                     created_subscriptions.extend(
                         cls._create_contracts_for_bid(
-                            bid, bidding_round, actor=actor, cache=cache
+                            bid,
+                            bidding_round,
+                            actor=actor,
+                            cache=cache,
+                            position=position,
                         )
                     )
             except ValidationError as error:
@@ -122,6 +137,7 @@ class ContractCreator:
         bidding_round: BiddingRound,
         actor: Member | None,
         cache: dict,
+        position,
     ) -> list[Subscription]:
         period = bidding_round.growing_period
         cls._replace_other_share_sizes(bid, bidding_round, actor, cache)
@@ -145,11 +161,15 @@ class ContractCreator:
         BiddingRoundCreatedSubscription.objects.create(
             round=bidding_round,
             subscription=subscription,
-            monthly_price_per_share=cls._get_price_per_share(bid, bidding_round, cache),
+            monthly_price_per_share=cls._get_price_per_share(
+                bid, bidding_round, cache, position
+            ),
         )
         subscriptions = [subscription]
 
-        cls._assign_solidarity_contribution(bid, subscriptions, period, actor, cache)
+        cls._assign_solidarity_contribution(
+            bid, subscriptions, period, actor, cache, position, bidding_round
+        )
         return subscriptions
 
     @classmethod
@@ -187,7 +207,7 @@ class ContractCreator:
 
     @classmethod
     def _get_price_per_share(
-        cls, bid: Bid, bidding_round: BiddingRound, cache: dict
+        cls, bid: Bid, bidding_round: BiddingRound, cache: dict, position
     ) -> Decimal:
         """The round's average bid per share, scaled to the bid's share size.
 
@@ -196,7 +216,7 @@ class ContractCreator:
         """
         average_per_share = (
             BiddingRoundStatsService.get_bidder_average_per_share_per_month(
-                bidding_round, cache=cache
+                bidding_round, position, cache=cache
             )
         )
         size = BiddingRoundStatsService.get_product_size(
@@ -262,6 +282,8 @@ class ContractCreator:
         period: GrowingPeriod,
         actor: Member | None,
         cache: dict,
+        position,
+        bidding_round: BiddingRound,
     ) -> None:
         contract_monthly_total = sum(
             (
@@ -272,7 +294,10 @@ class ContractCreator:
             ),
             Decimal("0"),
         )
-        bid_monthly_total = (bid.amount_1 or Decimal("0")) * bid.quantity
+        bid_monthly_total = (
+            BiddingRoundStatsService.get_effective_amount(bid, position, bidding_round)
+            * bid.quantity
+        )
         MemberSolidarityContributionService.assign_contribution_to_member(
             member=bid.member,
             change_date=period.start_date,

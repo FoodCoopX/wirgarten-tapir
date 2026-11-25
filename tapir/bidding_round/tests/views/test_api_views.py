@@ -3,12 +3,14 @@ import datetime
 from django.urls import reverse
 from rest_framework import status
 
+from tapir.bidding_round.config import BIDDING_ROUND_PROCEDURE_BID_RANGE
 from tapir.bidding_round.services.bidding_round_service import BiddingRoundService
 from tapir.bidding_round.tests.factories import BiddingRoundProductPriceFactory
 from tapir.bidding_round.tests.helpers import (
     bid_payload,
     create_open_round,
     get_product_for_round,
+    bid_range_payload,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
@@ -120,6 +122,28 @@ class TestMemberBidView(BiddingRoundApiTestBase):
         self.assertEqual("1920.00", bid["amount_per_year"])
         self.assertEqual("1920.00", bid["total_per_year"])
         self.assertEqual(get_product_for_round(bidding_round).id, bid["product_id"])
+
+    def test_post_bidRangeBid_storesTwoAmounts(self):
+        self._enable()
+        bidding_round = create_open_round(
+            bidding_procedure=BIDDING_ROUND_PROCEDURE_BID_RANGE, bid_levels=2
+        )
+        self.client.force_login(MemberFactory.create())
+
+        response = self.client.post(
+            reverse("bidding_rounds:member_bid", args=[bidding_round.id]),
+            data=bid_range_payload(bidding_round, quantity=2),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        bid = self.client.get(
+            reverse("bidding_rounds:member_bid", args=[bidding_round.id])
+        ).data["bid"]
+        self.assertEqual("70.00", bid["amount_1"])
+        self.assertEqual("90.00", bid["amount_2"])
+        self.assertIsNone(bid["amount_3"])
+        self.assertEqual(2, bid["quantity"])
 
     def test_post_quantityOutOfRange_returns400(self):
         self._enable()
