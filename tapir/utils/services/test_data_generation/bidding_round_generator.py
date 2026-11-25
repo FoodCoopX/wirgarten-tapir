@@ -9,6 +9,9 @@ from tapir.bidding_round.services.bidding_round_service import (
 )
 from tapir.bidding_round.services.product_size_service import ProductSizeService
 from tapir.configuration.models import TapirParameter
+from tapir.utils.services.test_data_generation.constants import (
+    HARVEST_SHARE_PRODUCT_TYPE_NAME,
+)
 from tapir.wirgarten.models import (
     GrowingPeriod,
     Member,
@@ -19,7 +22,6 @@ from tapir.wirgarten.models import (
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import get_now, get_today
 
-HARVEST_SHARE_PRODUCT_TYPE_NAME = "Ernteanteile"
 REFERENCE_VALUE_PER_SIZE = Decimal("80.00")
 MIN_AMOUNT_PER_SIZE = Decimal("60.00")
 TARGET_COVERAGE_RATIO = Decimal("0.91")
