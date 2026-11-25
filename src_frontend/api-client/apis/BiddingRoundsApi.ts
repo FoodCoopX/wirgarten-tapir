@@ -21,6 +21,7 @@ import type {
   PatchedRoundConfigRequest,
   ProductTypeOption,
   PublicDataResponse,
+  PublicEvaluationResponse,
   Round,
   RoundCreateRequest,
   RoundResultsResponse,
@@ -34,6 +35,7 @@ import {
   PatchedRoundConfigRequestToJSON,
   ProductTypeOptionFromJSON,
   PublicDataResponseFromJSON,
+  PublicEvaluationResponseFromJSON,
   RoundCreateRequestToJSON,
   RoundFromJSON,
   RoundResultsResponseFromJSON,
@@ -73,6 +75,10 @@ export interface BiddingRoundsApiDestroyRequest {
 export interface BiddingRoundsApiPartialUpdateRequest {
   roundId: string;
   patchedRoundConfigRequest?: PatchedRoundConfigRequest;
+}
+
+export interface BiddingRoundsApiPublicResultsRetrieveRequest {
+  roundId: string;
 }
 
 export interface BiddingRoundsApiReopenCreateRequest {
@@ -757,6 +763,70 @@ export class BiddingRoundsApi extends runtime.BaseAPI {
   ): Promise<PublicDataResponse> {
     const response =
       await this.biddingRoundsApiPublicDataRetrieveRaw(initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints. The per-request cache lives on ``self.cache`` so the handlers reuse it instead of building their own.
+   */
+  async biddingRoundsApiPublicResultsRetrieveRaw(
+    requestParameters: BiddingRoundsApiPublicResultsRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<PublicEvaluationResponse>> {
+    if (requestParameters["roundId"] == null) {
+      throw new runtime.RequiredError(
+        "roundId",
+        'Required parameter "roundId" was null or undefined when calling biddingRoundsApiPublicResultsRetrieve().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/bidding_rounds/api/{round_id}/public_results`.replace(
+          `{${"round_id"}}`,
+          encodeURIComponent(String(requestParameters["roundId"])),
+        ),
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      PublicEvaluationResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   * Applies the feature-flag gate to a DRF view via ``initial``.  This keeps the view\'s own ``permission_classes`` (and therefore the global ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks the public (member-facing) endpoints. The per-request cache lives on ``self.cache`` so the handlers reuse it instead of building their own.
+   */
+  async biddingRoundsApiPublicResultsRetrieve(
+    requestParameters: BiddingRoundsApiPublicResultsRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<PublicEvaluationResponse> {
+    const response = await this.biddingRoundsApiPublicResultsRetrieveRaw(
+      requestParameters,
+      initOverrides,
+    );
     return await response.value();
   }
 

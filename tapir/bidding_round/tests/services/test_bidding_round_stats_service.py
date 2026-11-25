@@ -12,7 +12,11 @@ from tapir.bidding_round.tests.factories import (
     BiddingRoundFactory,
     BiddingRoundProductPriceFactory,
 )
-from tapir.wirgarten.tests.factories import ProductFactory, ProductPriceFactory
+from tapir.wirgarten.tests.factories import (
+    ProductCapacityFactory,
+    ProductFactory,
+    ProductPriceFactory,
+)
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
@@ -248,3 +252,29 @@ class TestBiddingRoundStatsService(TapirIntegrationTest):
         self.assertEqual(72.0, levels["green"]["coverage_percent"])
         self.assertEqual(108.0, levels["yellow"]["coverage_percent"])
         self.assertEqual(144.0, levels["red"]["coverage_percent"])
+
+    def test_buildPublicEvaluation_withSeveralShares_countsQuantity(self):
+        bidding_round = BiddingRoundFactory.create()
+        product = ProductFactory.create(type=bidding_round.product_type)
+        BiddingRoundProductPriceFactory.create(
+            round=bidding_round, product=product, size=1
+        )
+        ProductPriceFactory.create(product=product, size=1)
+        ProductCapacityFactory.create(
+            period=bidding_round.growing_period,
+            product_type=bidding_round.product_type,
+            capacity=4,
+        )
+        BidFactory.create(
+            round=bidding_round,
+            product=product,
+            quantity=2,
+            amount_1=Decimal("80.00"),
+        )
+
+        evaluation = BiddingRoundStatsService.build_public_evaluation(
+            bidding_round, cache={}
+        )
+
+        self.assertEqual(Decimal("2"), Decimal(evaluation["current_shares"]))
+        self.assertEqual(50.0, evaluation["utilization_percent"])

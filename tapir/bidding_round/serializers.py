@@ -361,18 +361,27 @@ class EvaluationLevelsSerializer(serializers.Serializer):
     red = EvaluationLevelSerializer()
 
 
-class RoundResultsResponseSerializer(serializers.Serializer):
+class EvaluationAggregatesSerializer(serializers.Serializer):
     bidding_procedure = serializers.CharField()
     bid_levels = serializers.IntegerField()
-    bid_range_position = serializers.FloatField()
     recommended_level = serializers.IntegerField()
+    bid_range_position = serializers.FloatField()
     coverage_status = serializers.CharField()
-    levels = EvaluationLevelsSerializer()
     target_per_year = serializers.CharField()
-    reached_per_year = serializers.CharField()
     coverage_percent = serializers.FloatField()
-    bidder_count = serializers.IntegerField()
     bidder_average_per_month = serializers.CharField()
+    levels = EvaluationLevelsSerializer()
+
+
+class PublicEvaluationResponseSerializer(EvaluationAggregatesSerializer):
+    capacity_shares = serializers.CharField()
+    current_shares = serializers.CharField()
+    utilization_percent = serializers.FloatField()
+
+
+class RoundResultsResponseSerializer(EvaluationAggregatesSerializer):
+    reached_per_year = serializers.CharField()
+    bidder_count = serializers.IntegerField()
     bids = RoundStatsBidSerializer(many=True)
 
 
