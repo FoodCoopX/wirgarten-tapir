@@ -1,4 +1,5 @@
 from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Exists, OuterRef
@@ -75,10 +76,10 @@ class BiddingRoundView(BiddingRoundCacheMixin, TemplateView):
     template_name = "bidding_round/bidding_round.html"
 
     def get(self, request, *args, **kwargs):
-        if not BiddingRoundViewService.is_feature_flag_enabled(
-            self.cache
-        ) or not BiddingRoundViewService.is_public_url_enabled(self.cache):
+        if not BiddingRoundViewService.is_feature_flag_enabled(self.cache):
             raise Http404
+        if not BiddingRoundViewService.public_access_allowed(request.user, self.cache):
+            return redirect_to_login(request.get_full_path())
         return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -148,6 +149,10 @@ class PublicDataView(BiddingRoundFeatureFlagMixin, APIView):
                 else None
             ),
             "is_authenticated": request.user.is_authenticated,
+            "status_enabled": BiddingRoundViewService.is_status_enabled(cache),
+            "status_public_enabled": BiddingRoundViewService.is_status_public_enabled(
+                cache
+            ),
         }
 
         if bidding_round and member:
@@ -172,6 +177,13 @@ class PublicResultsView(BiddingRoundFeatureFlagMixin, APIView):
     @extend_schema(responses={200: PublicEvaluationResponseSerializer})
     def get(self, request, round_id):
         cache = {}
+        if not BiddingRoundViewService.is_status_enabled(cache):
+            raise Http404
+        if (
+            not BiddingRoundViewService.is_status_public_enabled(cache)
+            and not request.user.is_authenticated
+        ):
+            raise Http404
         bidding_round = get_object_or_404(BiddingRound, id=round_id)
         if bidding_round.status != BIDDING_ROUND_STATUS_ACTIVE:
             raise Http404

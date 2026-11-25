@@ -38,9 +38,19 @@ class TestBiddingRoundFeatureFlagGating(TapirIntegrationTest):
 
         self.assertStatusCode(response, status.HTTP_404_NOT_FOUND)
 
-    def test_urlFlagOff_publicData_returns404(self):
+    def test_urlFlagOff_publicData_authenticated_reachable(self):
         self._set_parameter(ParameterKeys.BIDDING_ROUND_ENABLED, True)
         self._set_parameter(ParameterKeys.BIDDING_ROUND_URL_ENABLED, False)
+
+        response = self.client.get(reverse("bidding_rounds:public_data"))
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assertFalse(response.data["url_enabled"])
+
+    def test_urlFlagOff_publicData_anonymous_returns404(self):
+        self._set_parameter(ParameterKeys.BIDDING_ROUND_ENABLED, True)
+        self._set_parameter(ParameterKeys.BIDDING_ROUND_URL_ENABLED, False)
+        self.client.logout()
 
         response = self.client.get(reverse("bidding_rounds:public_data"))
 
@@ -54,7 +64,7 @@ class TestBiddingRoundFeatureFlagGating(TapirIntegrationTest):
 
         self.assertStatusCode(response, status.HTTP_200_OK)
 
-    def test_urlFlagOff_publicResults_returns404(self):
+    def test_urlFlagOff_publicResults_authenticated_reachable(self):
         self._set_parameter(ParameterKeys.BIDDING_ROUND_ENABLED, True)
         self._set_parameter(ParameterKeys.BIDDING_ROUND_URL_ENABLED, False)
         bidding_round = create_open_round()
@@ -63,9 +73,33 @@ class TestBiddingRoundFeatureFlagGating(TapirIntegrationTest):
             reverse("bidding_rounds:public_results", args=[bidding_round.id])
         )
 
+        self.assertStatusCode(response, status.HTTP_200_OK)
+
+    def test_urlFlagOff_publicResults_anonymous_returns404(self):
+        self._set_parameter(ParameterKeys.BIDDING_ROUND_ENABLED, True)
+        self._set_parameter(ParameterKeys.BIDDING_ROUND_URL_ENABLED, False)
+        bidding_round = create_open_round()
+        self.client.logout()
+
+        response = self.client.get(
+            reverse("bidding_rounds:public_results", args=[bidding_round.id])
+        )
+
         self.assertStatusCode(response, status.HTTP_404_NOT_FOUND)
 
-    def test_urlFlagOff_memberBid_returns404(self):
+    def test_urlFlagOff_memberBid_anonymous_returns404(self):
+        self._set_parameter(ParameterKeys.BIDDING_ROUND_ENABLED, True)
+        self._set_parameter(ParameterKeys.BIDDING_ROUND_URL_ENABLED, False)
+        bidding_round = create_open_round()
+        self.client.logout()
+
+        response = self.client.get(
+            reverse("bidding_rounds:member_bid", args=[bidding_round.id])
+        )
+
+        self.assertStatusCode(response, status.HTTP_404_NOT_FOUND)
+
+    def test_urlFlagOff_memberBid_authenticated_reachable(self):
         self._set_parameter(ParameterKeys.BIDDING_ROUND_ENABLED, True)
         self._set_parameter(ParameterKeys.BIDDING_ROUND_URL_ENABLED, False)
         bidding_round = create_open_round()
@@ -74,4 +108,49 @@ class TestBiddingRoundFeatureFlagGating(TapirIntegrationTest):
             reverse("bidding_rounds:member_bid", args=[bidding_round.id])
         )
 
+        self.assertStatusCode(response, status.HTTP_200_OK)
+
+    def test_statusFlagOff_publicResults_returns404ForMembers(self):
+        self._set_parameter(ParameterKeys.BIDDING_ROUND_ENABLED, True)
+        self._set_parameter(ParameterKeys.BIDDING_ROUND_STATUS_ENABLED, False)
+        bidding_round = create_open_round()
+
+        response = self.client.get(
+            reverse("bidding_rounds:public_results", args=[bidding_round.id])
+        )
+
         self.assertStatusCode(response, status.HTTP_404_NOT_FOUND)
+
+    def test_statusPublicFlagOff_publicResults_anonymous_returns404(self):
+        self._set_parameter(ParameterKeys.BIDDING_ROUND_ENABLED, True)
+        self._set_parameter(ParameterKeys.BIDDING_ROUND_STATUS_PUBLIC_ENABLED, False)
+        bidding_round = create_open_round()
+        self.client.logout()
+
+        response = self.client.get(
+            reverse("bidding_rounds:public_results", args=[bidding_round.id])
+        )
+
+        self.assertStatusCode(response, status.HTTP_404_NOT_FOUND)
+
+    def test_statusPublicFlagOff_publicResults_membersReachable(self):
+        self._set_parameter(ParameterKeys.BIDDING_ROUND_ENABLED, True)
+        self._set_parameter(ParameterKeys.BIDDING_ROUND_STATUS_PUBLIC_ENABLED, False)
+        bidding_round = create_open_round()
+
+        response = self.client.get(
+            reverse("bidding_rounds:public_results", args=[bidding_round.id])
+        )
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+
+    def test_publicData_containsStatusFlags(self):
+        self._set_parameter(ParameterKeys.BIDDING_ROUND_ENABLED, True)
+        self._set_parameter(ParameterKeys.BIDDING_ROUND_STATUS_ENABLED, True)
+        self._set_parameter(ParameterKeys.BIDDING_ROUND_STATUS_PUBLIC_ENABLED, False)
+
+        response = self.client.get(reverse("bidding_rounds:public_data"))
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assertTrue(response.data["status_enabled"])
+        self.assertFalse(response.data["status_public_enabled"])

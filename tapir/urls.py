@@ -17,8 +17,9 @@ Including another URLconf
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import include, path
-from django.views.generic import RedirectView, TemplateView
+from django.views.generic import TemplateView
 
+from tapir.accounts.views import keycloak_login_redirect
 from tapir.wirgarten.views.default_redirect import wirgarten_redirect_view
 from tapir.wirgarten.views.mailing import TapirMailView
 
@@ -33,7 +34,7 @@ urlpatterns = [
     path("accounts/", include("tapir.accounts.urls")),
     path(
         "accounts/login/",
-        RedirectView.as_view(url="/accounts/oidc/keycloak/login"),
+        keycloak_login_redirect,
         name="account_login",
     ),
     path("accounts/", include("allauth.urls")),

@@ -423,4 +423,5 @@ class BiddingRoundGenerator:
                 bidding_round,
                 bid_input,
                 cache=cache,
+                send_mail=False,
             )

@@ -2594,8 +2594,9 @@ paths:
 
         This keeps the view's own ``permission_classes`` (and therefore the global
         ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
-        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
-        so the handlers reuse it instead of building their own.
+        the public (member-facing) endpoints, which require authentication while the public
+        URL flag is off. The per-request cache lives on ``self.cache`` so the handlers reuse
+        it instead of building their own.
       tags:
       - bidding_rounds
       security:
@@ -2618,8 +2619,9 @@ paths:
 
         This keeps the view's own ``permission_classes`` (and therefore the global
         ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
-        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
-        so the handlers reuse it instead of building their own.
+        the public (member-facing) endpoints, which require authentication while the public
+        URL flag is off. The per-request cache lives on ``self.cache`` so the handlers reuse
+        it instead of building their own.
       tags:
       - bidding_rounds
       requestBody:
@@ -2653,8 +2655,9 @@ paths:
 
         This keeps the view's own ``permission_classes`` (and therefore the global
         ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
-        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
-        so the handlers reuse it instead of building their own.
+        the public (member-facing) endpoints, which require authentication while the public
+        URL flag is off. The per-request cache lives on ``self.cache`` so the handlers reuse
+        it instead of building their own.
       parameters:
       - in: path
         name: round_id
@@ -2681,8 +2684,9 @@ paths:
 
         This keeps the view's own ``permission_classes`` (and therefore the global
         ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
-        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
-        so the handlers reuse it instead of building their own.
+        the public (member-facing) endpoints, which require authentication while the public
+        URL flag is off. The per-request cache lives on ``self.cache`` so the handlers reuse
+        it instead of building their own.
       parameters:
       - in: path
         name: round_id
@@ -2720,8 +2724,9 @@ paths:
 
         This keeps the view's own ``permission_classes`` (and therefore the global
         ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
-        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
-        so the handlers reuse it instead of building their own.
+        the public (member-facing) endpoints, which require authentication while the public
+        URL flag is off. The per-request cache lives on ``self.cache`` so the handlers reuse
+        it instead of building their own.
       parameters:
       - in: path
         name: round_id
@@ -2745,8 +2750,9 @@ paths:
 
         This keeps the view's own ``permission_classes`` (and therefore the global
         ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
-        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
-        so the handlers reuse it instead of building their own.
+        the public (member-facing) endpoints, which require authentication while the public
+        URL flag is off. The per-request cache lives on ``self.cache`` so the handlers reuse
+        it instead of building their own.
       parameters:
       - in: path
         name: round_id
@@ -2773,8 +2779,9 @@ paths:
 
         This keeps the view's own ``permission_classes`` (and therefore the global
         ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
-        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
-        so the handlers reuse it instead of building their own.
+        the public (member-facing) endpoints, which require authentication while the public
+        URL flag is off. The per-request cache lives on ``self.cache`` so the handlers reuse
+        it instead of building their own.
       parameters:
       - in: path
         name: round_id
@@ -2810,8 +2817,9 @@ paths:
 
         This keeps the view's own ``permission_classes`` (and therefore the global
         ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
-        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
-        so the handlers reuse it instead of building their own.
+        the public (member-facing) endpoints, which require authentication while the public
+        URL flag is off. The per-request cache lives on ``self.cache`` so the handlers reuse
+        it instead of building their own.
       parameters:
       - in: path
         name: round_id
@@ -2851,8 +2859,9 @@ paths:
 
         This keeps the view's own ``permission_classes`` (and therefore the global
         ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
-        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
-        so the handlers reuse it instead of building their own.
+        the public (member-facing) endpoints, which require authentication while the public
+        URL flag is off. The per-request cache lives on ``self.cache`` so the handlers reuse
+        it instead of building their own.
       parameters:
       - in: path
         name: bid_id
@@ -2895,8 +2904,9 @@ paths:
 
         This keeps the view's own ``permission_classes`` (and therefore the global
         ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
-        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
-        so the handlers reuse it instead of building their own.
+        the public (member-facing) endpoints, which require authentication while the public
+        URL flag is off. The per-request cache lives on ``self.cache`` so the handlers reuse
+        it instead of building their own.
       parameters:
       - in: path
         name: bid_id
@@ -2925,8 +2935,9 @@ paths:
 
         This keeps the view's own ``permission_classes`` (and therefore the global
         ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
-        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
-        so the handlers reuse it instead of building their own.
+        the public (member-facing) endpoints, which require authentication while the public
+        URL flag is off. The per-request cache lives on ``self.cache`` so the handlers reuse
+        it instead of building their own.
       parameters:
       - in: path
         name: round_id
@@ -2954,8 +2965,9 @@ paths:
 
         This keeps the view's own ``permission_classes`` (and therefore the global
         ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
-        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
-        so the handlers reuse it instead of building their own.
+        the public (member-facing) endpoints, which require authentication while the public
+        URL flag is off. The per-request cache lives on ``self.cache`` so the handlers reuse
+        it instead of building their own.
       parameters:
       - in: path
         name: round_id
@@ -2994,8 +3006,9 @@ paths:
 
         This keeps the view's own ``permission_classes`` (and therefore the global
         ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
-        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
-        so the handlers reuse it instead of building their own.
+        the public (member-facing) endpoints, which require authentication while the public
+        URL flag is off. The per-request cache lives on ``self.cache`` so the handlers reuse
+        it instead of building their own.
       parameters:
       - in: path
         name: round_id
@@ -3034,8 +3047,9 @@ paths:
 
         This keeps the view's own ``permission_classes`` (and therefore the global
         ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
-        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
-        so the handlers reuse it instead of building their own.
+        the public (member-facing) endpoints, which require authentication while the public
+        URL flag is off. The per-request cache lives on ``self.cache`` so the handlers reuse
+        it instead of building their own.
       parameters:
       - in: path
         name: round_id
@@ -3063,8 +3077,9 @@ paths:
 
         This keeps the view's own ``permission_classes`` (and therefore the global
         ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
-        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
-        so the handlers reuse it instead of building their own.
+        the public (member-facing) endpoints, which require authentication while the public
+        URL flag is off. The per-request cache lives on ``self.cache`` so the handlers reuse
+        it instead of building their own.
       parameters:
       - in: path
         name: round_id
@@ -3104,8 +3119,9 @@ paths:
 
         This keeps the view's own ``permission_classes`` (and therefore the global
         ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
-        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
-        so the handlers reuse it instead of building their own.
+        the public (member-facing) endpoints, which require authentication while the public
+        URL flag is off. The per-request cache lives on ``self.cache`` so the handlers reuse
+        it instead of building their own.
       parameters:
       - in: path
         name: round_id
@@ -3135,8 +3151,9 @@ paths:
 
         This keeps the view's own ``permission_classes`` (and therefore the global
         ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
-        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
-        so the handlers reuse it instead of building their own.
+        the public (member-facing) endpoints, which require authentication while the public
+        URL flag is off. The per-request cache lives on ``self.cache`` so the handlers reuse
+        it instead of building their own.
       parameters:
       - in: path
         name: round_id
@@ -3165,8 +3182,9 @@ paths:
 
         This keeps the view's own ``permission_classes`` (and therefore the global
         ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
-        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
-        so the handlers reuse it instead of building their own.
+        the public (member-facing) endpoints, which require authentication while the public
+        URL flag is off. The per-request cache lives on ``self.cache`` so the handlers reuse
+        it instead of building their own.
       parameters:
       - in: path
         name: round_id
@@ -3194,8 +3212,9 @@ paths:
 
         This keeps the view's own ``permission_classes`` (and therefore the global
         ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
-        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
-        so the handlers reuse it instead of building their own.
+        the public (member-facing) endpoints, which require authentication while the public
+        URL flag is off. The per-request cache lives on ``self.cache`` so the handlers reuse
+        it instead of building their own.
       parameters:
       - in: query
         name: position
@@ -3228,8 +3247,9 @@ paths:
 
         This keeps the view's own ``permission_classes`` (and therefore the global
         ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
-        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
-        so the handlers reuse it instead of building their own.
+        the public (member-facing) endpoints, which require authentication while the public
+        URL flag is off. The per-request cache lives on ``self.cache`` so the handlers reuse
+        it instead of building their own.
       parameters:
       - in: path
         name: round_id
@@ -3257,8 +3277,9 @@ paths:
 
         This keeps the view's own ``permission_classes`` (and therefore the global
         ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
-        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
-        so the handlers reuse it instead of building their own.
+        the public (member-facing) endpoints, which require authentication while the public
+        URL flag is off. The per-request cache lives on ``self.cache`` so the handlers reuse
+        it instead of building their own.
       parameters:
       - in: path
         name: round_id
@@ -3286,8 +3307,9 @@ paths:
 
         This keeps the view's own ``permission_classes`` (and therefore the global
         ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
-        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
-        so the handlers reuse it instead of building their own.
+        the public (member-facing) endpoints, which require authentication while the public
+        URL flag is off. The per-request cache lives on ``self.cache`` so the handlers reuse
+        it instead of building their own.
       parameters:
       - in: query
         name: growing_period_id
@@ -3316,8 +3338,9 @@ paths:
 
         This keeps the view's own ``permission_classes`` (and therefore the global
         ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
-        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
-        so the handlers reuse it instead of building their own.
+        the public (member-facing) endpoints, which require authentication while the public
+        URL flag is off. The per-request cache lives on ``self.cache`` so the handlers reuse
+        it instead of building their own.
       tags:
       - bidding_rounds
       security:
@@ -3341,8 +3364,9 @@ paths:
 
         This keeps the view's own ``permission_classes`` (and therefore the global
         ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
-        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
-        so the handlers reuse it instead of building their own.
+        the public (member-facing) endpoints, which require authentication while the public
+        URL flag is off. The per-request cache lives on ``self.cache`` so the handlers reuse
+        it instead of building their own.
       tags:
       - bidding_rounds
       security:
@@ -11083,6 +11107,12 @@ components:
     BidTexts:
       type: object
       properties:
+        level_1_label:
+          type: string
+        level_2_label:
+          type: string
+        level_3_label:
+          type: string
         amount_label:
           type: string
         reference_value_hint:
@@ -11117,6 +11147,9 @@ components:
       - confirm_text
       - error_text
       - green_label
+      - level_1_label
+      - level_2_label
+      - level_3_label
       - live_yearly_label
       - monthly_hint
       - monthly_unit
@@ -18539,6 +18572,10 @@ components:
           - $ref: '#/components/schemas/BiddableProduct'
           nullable: true
         is_authenticated:
+          type: boolean
+        status_enabled:
+          type: boolean
+        status_public_enabled:
           type: boolean
         current_pickup_location:
           allOf:
