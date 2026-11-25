@@ -1,8 +1,6 @@
 import datetime
 
-from django.core.exceptions import ValidationError
 from django.core.management.base import OutputWrapper
-from django.core.validators import validate_email
 from django.utils import timezone
 
 from tapir.accounts.models import TapirUser
@@ -167,33 +165,12 @@ class MemberImporter:
         )
         return True
 
-    @staticmethod
-    def get_target_consents(
-        member: Member, row: dict[str, str]
-    ) -> dict[str, datetime.datetime | None]:
-        target_consents = {}
-        for column, attribute in (
-            ("consent_sepa", "sepa_consent"),
-            ("privacy_consent", "privacy_consent"),
-        ):
-            consent = getattr(member, attribute)
-            if DataImportUtils.is_cell_filled(row=row, column=column):
-                consent = DataImportUtils.to_datetime(row[column])
-                if consent is None:
-                    raise TapirDataImportException(f"{column}: Ungültiges Datum.")
-            target_consents[attribute] = consent
-
-        return target_consents
-
     @classmethod
     def update_member_attributes_and_save_member(
         cls, member: Member, row: dict[str, str], dry_run: bool
     ):
-        email_before = member.email
-        target_mail = cls.build_mail(row=row, member_no=member.member_no)
-        target_consents = cls.get_target_consents(member=member, row=row)
-
         member_updated = False
+        email_before = member.email
 
         map_from_row_header_to_member_attribute = {
             "Vorname": "first_name",
@@ -230,6 +207,24 @@ class MemberImporter:
             ):
                 member_updated = True
 
+        target_consents = {
+            "sepa_consent": DataImportUtils.get_value_or_default(
+                row=row,
+                column="consent_sepa",
+                converter=DataImportUtils.to_datetime,
+                current_value=member.sepa_consent,
+                default=get_now(cache={}),
+                use_default=DataImportUtils.is_cell_filled(row=row, column="IBAN"),
+            ),
+            "privacy_consent": DataImportUtils.get_value_or_default(
+                row=row,
+                column="privacy_consent",
+                converter=DataImportUtils.to_datetime,
+                current_value=member.privacy_consent,
+                default=get_now(cache={}),
+                use_default=True,
+            ),
+        }
         for member_attribute, target_consent in target_consents.items():
             if DataImportUtils.update_if_diff(member, member_attribute, target_consent):
                 member_updated = True
@@ -248,6 +243,7 @@ class MemberImporter:
         if cls.update_delivery_address(member=member, row=row):
             member_updated = True
 
+        target_mail = cls.build_mail(row=row, member_no=member.member_no)
         if DataImportUtils.update_if_diff(
             member,
             "email",
@@ -290,19 +286,12 @@ class MemberImporter:
 
     @classmethod
     def build_mail(cls, row: dict[str, str], member_no: int):
-        email = DataImportUtils.normalize_cell(row.get("Mailadresse"))
-        if not email:
-            raise TapirDataImportException("Mailadresse: E-Mail-Adresse fehlt.")
-
-        try:
-            validate_email(email)
-        except ValidationError as error:
-            raise TapirDataImportException(
-                "Mailadresse: Ungültige E-Mail-Adresse."
-            ) from error
+        target_mail = DataImportUtils.normalize_cell(row.get("Mailadresse"))
+        if target_mail == "":
+            return f"team+missing_mail_katringer_{member_no}@foodcoopx.de"
 
         with_suffix = cls.build_mail_with_suffix(
-            original_mail=email, member_no=member_no
+            original_mail=target_mail, member_no=member_no
         )
         return EmailNormaliser.normalise(with_suffix)
 

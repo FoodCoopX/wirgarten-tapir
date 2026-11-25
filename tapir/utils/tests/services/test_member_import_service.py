@@ -39,9 +39,6 @@ class TestMemberImportService(TapirIntegrationTest):
         result = MemberImportService.apply("admin", token)
 
         self.assertTrue(result.applied)
-        member = Member.objects.get(member_no=101)
-        self.assertIsNone(member.sepa_consent)
-        self.assertIsNone(member.privacy_consent)
         with self.assertRaises(TapirDataImportException):
             MemberImportService.apply("admin", token)
         self.assertEqual(1, Member.objects.count())
@@ -59,7 +56,7 @@ class TestMemberImportService(TapirIntegrationTest):
             ["Nr", "Mailadresse"],
             [
                 {"Nr": "101", "Mailadresse": "mika@example.test"},
-                {"Nr": "102", "Mailadresse": "invalid"},
+                {"Nr": "invalid", "Mailadresse": "other@example.test"},
             ],
         )
 

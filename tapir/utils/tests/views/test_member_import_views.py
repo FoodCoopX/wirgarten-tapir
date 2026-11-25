@@ -53,16 +53,19 @@ class TestMemberImportViews(TapirIntegrationTest):
         self.assertTrue(response.context["result"].applied)
         self.assertEqual("mika@example.test", Member.objects.get(member_no=101).email)
 
-    def test_post_invalidEmail_showsRowErrorWithoutApplyButton(self):
+    def test_post_invalidMemberNumber_showsRowErrorWithoutApplyButton(self):
         self._login_as_admin()
-        file = SimpleUploadedFile("members.csv", b"Nr;Mailadresse\n101;invalid\n")
+        member_count = Member.objects.count()
+        file = SimpleUploadedFile(
+            "members.csv", b"Nr;Mailadresse\ninvalid;mika@example.test\n"
+        )
 
         response = self.client.post(reverse("utils:member_import"), {"file": file})
 
         self.assertStatusCode(response, 200)
-        self.assertContains(response, "Ungültige E-Mail-Adresse")
+        self.assertContains(response, "invalid literal for int()")
         self.assertIsNone(response.context["token"])
-        self.assertFalse(Member.objects.filter(member_no=101).exists())
+        self.assertEqual(member_count, Member.objects.count())
 
     def test_get_templateAsAdmin_receivesCsv(self):
         self._login_as_admin()
