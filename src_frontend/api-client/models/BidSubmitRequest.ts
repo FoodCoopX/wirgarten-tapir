@@ -48,6 +48,48 @@ export interface BidSubmitRequest {
    * @memberof BidSubmitRequest
    */
   amount3?: string | null;
+  /**
+   *
+   * @type {boolean}
+   * @memberof BidSubmitRequest
+   */
+  sepaAllowed?: boolean;
+  /**
+   *
+   * @type {string}
+   * @memberof BidSubmitRequest
+   */
+  accountOwner?: string | null;
+  /**
+   *
+   * @type {string}
+   * @memberof BidSubmitRequest
+   */
+  iban?: string | null;
+  /**
+   *
+   * @type {string}
+   * @memberof BidSubmitRequest
+   */
+  paymentRhythm?: string | null;
+  /**
+   *
+   * @type {boolean}
+   * @memberof BidSubmitRequest
+   */
+  privacyPolicyRead?: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof BidSubmitRequest
+   */
+  cancellationPolicyRead?: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof BidSubmitRequest
+   */
+  contractAccepted?: boolean;
 }
 
 /**
@@ -77,6 +119,23 @@ export function BidSubmitRequestFromJSONTyped(
     amount1: json["amount_1"] == null ? undefined : json["amount_1"],
     amount2: json["amount_2"] == null ? undefined : json["amount_2"],
     amount3: json["amount_3"] == null ? undefined : json["amount_3"],
+    sepaAllowed:
+      json["sepa_allowed"] == null ? undefined : json["sepa_allowed"],
+    accountOwner:
+      json["account_owner"] == null ? undefined : json["account_owner"],
+    iban: json["iban"] == null ? undefined : json["iban"],
+    paymentRhythm:
+      json["payment_rhythm"] == null ? undefined : json["payment_rhythm"],
+    privacyPolicyRead:
+      json["privacy_policy_read"] == null
+        ? undefined
+        : json["privacy_policy_read"],
+    cancellationPolicyRead:
+      json["cancellation_policy_read"] == null
+        ? undefined
+        : json["cancellation_policy_read"],
+    contractAccepted:
+      json["contract_accepted"] == null ? undefined : json["contract_accepted"],
   };
 }
 
@@ -98,5 +157,12 @@ export function BidSubmitRequestToJSONTyped(
     amount_1: value["amount1"],
     amount_2: value["amount2"],
     amount_3: value["amount3"],
+    sepa_allowed: value["sepaAllowed"],
+    account_owner: value["accountOwner"],
+    iban: value["iban"],
+    payment_rhythm: value["paymentRhythm"],
+    privacy_policy_read: value["privacyPolicyRead"],
+    cancellation_policy_read: value["cancellationPolicyRead"],
+    contract_accepted: value["contractAccepted"],
   };
 }

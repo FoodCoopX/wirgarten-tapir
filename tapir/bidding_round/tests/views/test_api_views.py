@@ -21,6 +21,10 @@ from tapir.bidding_round.tests.helpers import (
     bid_range_payload,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.payments.models import MemberPaymentRhythm
+from tapir.payments.services.member_payment_rhythm_service import (
+    MemberPaymentRhythmService,
+)
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.accounts.models import TapirUser
 from tapir.wirgarten.tests.factories import (
@@ -156,6 +160,27 @@ class TestPublicDataView(BiddingRoundApiTestBase):
             "https://example.com/share.png",
             response.data["biddable_product"]["products"][0]["image_url"],
         )
+
+    def test_publicData_withMember_returnsSepaAndBankingData(self):
+        self._enable()
+        bidding_round = create_open_round()
+        member = MemberFactory.create(
+            account_owner="Test Owner", iban="DE89370400440532013000"
+        )
+        MemberPaymentRhythm.objects.create(
+            member=member,
+            rhythm=MemberPaymentRhythm.Rhythm.QUARTERLY,
+            valid_from=bidding_round.growing_period.start_date,
+        )
+        self.client.force_login(member)
+
+        response = self.client.get(reverse("bidding_rounds:public_data"))
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assertTrue(response.data["sepa_enabled"])
+        self.assertEqual("Test Owner", response.data["account_owner"])
+        self.assertEqual("DE89370400440532013000", response.data["iban"])
+        self.assertEqual("quarterly", response.data["payment_rhythm"])
 
     def test_publicData_bidOptionsDefaultToOff(self):
         self._set_parameter(ParameterKeys.BIDDING_ROUND_ENABLED, True)
@@ -302,6 +327,125 @@ class TestMemberBidView(BiddingRoundApiTestBase):
         )
 
         self.assertStatusCode(response, status.HTTP_400_BAD_REQUEST)
+
+    def test_post_withSepaAndPrivacyData_updatesMemberAndSetsConsents(self):
+        self._enable()
+        bidding_round = create_open_round()
+        member = MemberFactory.create(
+            account_owner=None,
+            iban=None,
+            sepa_consent=None,
+            withdrawal_consent=None,
+            privacy_consent=None,
+        )
+        self.client.force_login(member)
+        payload = bid_payload(bidding_round, amount="80.00")
+        payload.update(
+            {
+                "sepa_allowed": True,
+                "account_owner": "Neue Inhaberin",
+                "iban": "DE89370400440532013000",
+                "payment_rhythm": "monthly",
+                "privacy_policy_read": True,
+                "cancellation_policy_read": True,
+                "contract_accepted": True,
+            }
+        )
+
+        response = self.client.post(
+            reverse("bidding_rounds:member_bid", args=[bidding_round.id]),
+            data=payload,
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        member.refresh_from_db()
+        self.assertEqual("Neue Inhaberin", member.account_owner)
+        self.assertEqual("DE89370400440532013000", member.iban)
+        self.assertIsNotNone(member.sepa_consent)
+        self.assertIsNotNone(member.withdrawal_consent)
+        self.assertIsNotNone(member.privacy_consent)
+        self.assertEqual(
+            "monthly",
+            MemberPaymentRhythmService.get_member_payment_rhythm(
+                member=member,
+                reference_date=bidding_round.growing_period.start_date,
+                cache={},
+            ),
+        )
+
+    def test_post_withoutPrivacyConsent_returns400(self):
+        self._enable()
+        bidding_round = create_open_round()
+        self.client.force_login(MemberFactory.create())
+        payload = bid_payload(bidding_round, amount="80.00")
+        payload["privacy_policy_read"] = False
+
+        response = self.client.post(
+            reverse("bidding_rounds:member_bid", args=[bidding_round.id]),
+            data=payload,
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            "Die Datenschutzerklärung muss akzeptiert sein.", response.data["error"]
+        )
+
+    def test_post_withoutCancellationPolicyRead_returns400(self):
+        self._enable()
+        bidding_round = create_open_round()
+        self.client.force_login(MemberFactory.create())
+        payload = bid_payload(bidding_round, amount="80.00")
+        payload["cancellation_policy_read"] = False
+
+        response = self.client.post(
+            reverse("bidding_rounds:member_bid", args=[bidding_round.id]),
+            data=payload,
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            "Die Widerrufsbelehrung muss akzeptiert sein.", response.data["error"]
+        )
+
+    def test_post_withoutContractAccepted_returns400(self):
+        self._enable()
+        bidding_round = create_open_round()
+        self.client.force_login(MemberFactory.create())
+        payload = bid_payload(bidding_round, amount="80.00")
+        payload["contract_accepted"] = False
+
+        response = self.client.post(
+            reverse("bidding_rounds:member_bid", args=[bidding_round.id]),
+            data=payload,
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            "Vertragsgrundsätze müssen akzeptiert sein.", response.data["error"]
+        )
+
+    def test_post_withSepaAllowedButWithoutIban_returns400(self):
+        self._enable()
+        bidding_round = create_open_round()
+        self.client.force_login(MemberFactory.create(iban=None))
+        payload = bid_payload(bidding_round, amount="80.00")
+        payload["sepa_allowed"] = True
+        payload["iban"] = ""
+
+        response = self.client.post(
+            reverse("bidding_rounds:member_bid", args=[bidding_round.id]),
+            data=payload,
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            "Für die SEPA-Zustimmung wird eine IBAN benötigt.", response.data["error"]
+        )
 
 
 class TestRoundAdminViews(BiddingRoundApiTestBase):

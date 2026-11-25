@@ -10472,7 +10472,11 @@ components:
           type: boolean
         label_checkbox_sepa_mandat:
           type: string
+        explanation_checkbox_sepa_mandat:
+          type: string
         label_checkbox_contract_policy:
+          type: string
+        explanation_checkbox_contract_policy:
           type: string
         trial_period_length_in_weeks:
           type: integer
@@ -10535,6 +10539,8 @@ components:
       - debug
       - default_payment_rhythm
       - distribution_channels
+      - explanation_checkbox_contract_policy
+      - explanation_checkbox_sepa_mandat
       - feedback_step_enabled
       - force_waiting_list
       - growing_period_choices
@@ -11116,6 +11122,27 @@ components:
         amount_3:
           type: string
           nullable: true
+        sepa_allowed:
+          type: boolean
+          default: false
+        account_owner:
+          type: string
+          nullable: true
+        iban:
+          type: string
+          nullable: true
+        payment_rhythm:
+          type: string
+          nullable: true
+        privacy_policy_read:
+          type: boolean
+          default: false
+        cancellation_policy_read:
+          type: boolean
+          default: false
+        contract_accepted:
+          type: boolean
+          default: false
       required:
       - product_id
     BidTexts:
@@ -18591,6 +18618,17 @@ components:
           type: boolean
         status_public_enabled:
           type: boolean
+        sepa_enabled:
+          type: boolean
+        account_owner:
+          type: string
+          nullable: true
+        iban:
+          type: string
+          nullable: true
+        payment_rhythm:
+          type: string
+          nullable: true
         current_pickup_location:
           allOf:
           - $ref: '#/components/schemas/CurrentPickupLocation'
@@ -19348,6 +19386,8 @@ components:
           type: string
         summary_title:
           type: string
+        privacy_title:
+          type: string
         pickup_location_title:
           type: string
         submit_label:
@@ -19362,6 +19402,7 @@ components:
       - login_text
       - login_title
       - pickup_location_title
+      - privacy_title
       - submit_label
       - summary_title
     SaveExtendedProductTypeRequest:

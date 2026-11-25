@@ -49,6 +49,9 @@ def bid_range_payload(bidding_round, amounts=("70.00", "90.00"), quantity=1):
         "quantity": quantity,
         "amount_1": amounts[0],
         "amount_2": amounts[1],
+        "cancellation_policy_read": True,
+        "contract_accepted": True,
+        "privacy_policy_read": True,
     }
 
 
@@ -58,4 +61,7 @@ def bid_payload(bidding_round, amount="80.00", quantity=1):
         "product_id": product.id,
         "quantity": quantity,
         "amount_1": amount,
+        "cancellation_policy_read": True,
+        "contract_accepted": True,
+        "privacy_policy_read": True,
     }

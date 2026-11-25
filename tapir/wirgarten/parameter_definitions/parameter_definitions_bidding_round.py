@@ -32,7 +32,7 @@ class ParameterDefinitionsBiddingRound:
             datatype=TapirParameterDatatype.BOOLEAN,
             initial_value=False,
             category=ParameterCategory.BIDDING_ROUND,
-            order_priority=29,
+            order_priority=33,
         )
 
         importer.parameter_definition(
@@ -44,7 +44,7 @@ class ParameterDefinitionsBiddingRound:
             datatype=TapirParameterDatatype.BOOLEAN,
             initial_value=True,
             category=ParameterCategory.BIDDING_ROUND,
-            order_priority=28,
+            order_priority=32,
             meta=ParameterMeta(show_only_when=_show_only_when_enabled),
         )
 
@@ -57,7 +57,7 @@ class ParameterDefinitionsBiddingRound:
             datatype=TapirParameterDatatype.BOOLEAN,
             initial_value=True,
             category=ParameterCategory.BIDDING_ROUND,
-            order_priority=27,
+            order_priority=31,
             meta=ParameterMeta(show_only_when=_show_only_when_enabled),
         )
 
@@ -70,7 +70,20 @@ class ParameterDefinitionsBiddingRound:
             datatype=TapirParameterDatatype.BOOLEAN,
             initial_value=True,
             category=ParameterCategory.BIDDING_ROUND,
-            order_priority=26,
+            order_priority=30,
+            meta=ParameterMeta(show_only_when=_show_only_when_enabled),
+        )
+
+        importer.parameter_definition(
+            key=ParameterKeys.BIDDING_ROUND_SEPA_ENABLED,
+            label=gettext_noop("SEPA-Lastschrift in der Beitragsrunde anbieten"),
+            description=gettext_noop(
+                "Wenn aktiviert, können Mitglieder ihre Bankdaten direkt in der Beitragsrunde hinterlegen. Das SEPA-Mandat muss dabei immer neu bestätigt werden."
+            ),
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=True,
+            category=ParameterCategory.BIDDING_ROUND,
+            order_priority=29,
             meta=ParameterMeta(show_only_when=_show_only_when_enabled),
         )
 
@@ -81,7 +94,7 @@ class ParameterDefinitionsBiddingRound:
             datatype=TapirParameterDatatype.STRING,
             initial_value="Beitragsrunde",
             category=ParameterCategory.BIDDING_ROUND,
-            order_priority=25,
+            order_priority=28,
             meta=ParameterMeta(show_only_when=_show_only_when_enabled),
         )
 
@@ -92,7 +105,7 @@ class ParameterDefinitionsBiddingRound:
             datatype=TapirParameterDatatype.STRING,
             initial_value="In der Beitragsrunde bestimmst du selbst, wie viel dein Ernteanteil kostet. Mit deinem Beitrag finanzierst du die Saison und sorgst dafür, dass die Solidarität in unserer Gemeinschaft wächst.",
             category=ParameterCategory.BIDDING_ROUND,
-            order_priority=24,
+            order_priority=27,
             meta=ParameterMeta(textarea=True, show_only_when=_show_only_when_enabled),
         )
 
@@ -107,7 +120,7 @@ class ParameterDefinitionsBiddingRound:
             datatype=TapirParameterDatatype.STRING,
             initial_value='Die aktuelle Beitragsrunde ist beendet. Du kannst jederzeit Mitglied werden – über unseren <a href="/bestell_wizard/bestell_wizard_mobile">Bestell-Wizard</a> gelangst du direkt zur Anmeldung. Wir freuen uns auf dich!',
             category=ParameterCategory.BIDDING_ROUND,
-            order_priority=23,
+            order_priority=26,
             meta=ParameterMeta(textarea=True, show_only_when=_show_only_when_enabled),
         )
 
@@ -120,7 +133,7 @@ class ParameterDefinitionsBiddingRound:
             datatype=TapirParameterDatatype.STRING,
             initial_value="Du bist bereits Mitglied?",
             category=ParameterCategory.BIDDING_ROUND,
-            order_priority=22,
+            order_priority=25,
             meta=ParameterMeta(show_only_when=_show_only_when_enabled),
         )
 
@@ -133,7 +146,7 @@ class ParameterDefinitionsBiddingRound:
             datatype=TapirParameterDatatype.STRING,
             initial_value="Melde dich an, um dein Gebot abzugeben oder zu ändern.",
             category=ParameterCategory.BIDDING_ROUND,
-            order_priority=21,
+            order_priority=24,
             meta=ParameterMeta(textarea=True, show_only_when=_show_only_when_enabled),
         )
 
@@ -146,7 +159,7 @@ class ParameterDefinitionsBiddingRound:
             datatype=TapirParameterDatatype.STRING,
             initial_value="Dein Gebot",
             category=ParameterCategory.BIDDING_ROUND,
-            order_priority=20,
+            order_priority=23,
             meta=ParameterMeta(show_only_when=_show_only_when_enabled),
         )
 
@@ -157,7 +170,7 @@ class ParameterDefinitionsBiddingRound:
             datatype=TapirParameterDatatype.STRING,
             initial_value="Abholort",
             category=ParameterCategory.BIDDING_ROUND,
-            order_priority=19,
+            order_priority=22,
             meta=ParameterMeta(show_only_when=_show_only_when_enabled),
         )
 
@@ -170,8 +183,21 @@ class ParameterDefinitionsBiddingRound:
             datatype=TapirParameterDatatype.STRING,
             initial_value="Gebot abgeben",
             category=ParameterCategory.BIDDING_ROUND,
-            order_priority=18,
+            order_priority=21,
             meta=ParameterMeta(show_only_when=_show_only_when_enabled),
+        )
+
+        importer.parameter_definition(
+            key=ParameterKeys.BIDDING_ROUND_PUBLIC_PRIVACY_TITLE,
+            label=gettext_noop("Beitragsrunden-Seite: Titel Datenschutz"),
+            description=gettext_noop(
+                "Titel des Datenschutz-Schritts in der Beitragsrunde."
+            ),
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Du musst uns noch deine Zustimmung geben, damit wir dein Gebot annehmen können.",
+            category=ParameterCategory.BIDDING_ROUND,
+            order_priority=20,
+            meta=ParameterMeta(textarea=True, show_only_when=_show_only_when_enabled),
         )
 
         importer.parameter_definition(
@@ -183,7 +209,7 @@ class ParameterDefinitionsBiddingRound:
             datatype=TapirParameterDatatype.STRING,
             initial_value="Dein Gebot (€/Monat)",
             category=ParameterCategory.BIDDING_ROUND,
-            order_priority=17,
+            order_priority=19,
             meta=ParameterMeta(show_only_when=_show_only_when_enabled),
         )
 
@@ -196,7 +222,7 @@ class ParameterDefinitionsBiddingRound:
             datatype=TapirParameterDatatype.STRING,
             initial_value="Der Richtwert liegt bei {reference_value} €/Monat.",
             category=ParameterCategory.BIDDING_ROUND,
-            order_priority=16,
+            order_priority=18,
             meta=ParameterMeta(
                 vars_hint=["reference_value"], show_only_when=_show_only_when_enabled
             ),
@@ -211,7 +237,7 @@ class ParameterDefinitionsBiddingRound:
             datatype=TapirParameterDatatype.STRING,
             initial_value="Du gibst einen Betrag an: So viel möchtest du pro Monat für deinen Ernteanteil zahlen. Der Betrag gilt für die ganze Saison.",
             category=ParameterCategory.BIDDING_ROUND,
-            order_priority=15,
+            order_priority=17,
             meta=ParameterMeta(textarea=True, show_only_when=_show_only_when_enabled),
         )
 
@@ -224,7 +250,7 @@ class ParameterDefinitionsBiddingRound:
             datatype=TapirParameterDatatype.STRING,
             initial_value="Du gibst zwei Beträge an: Grün ist dein Wunsch, Rot ist deine Schmerzgrenze. Der tatsächliche Betrag wird gleichmäßig zwischen beiden ermittelt. Je höher die Deckung, desto näher liegt er an Rot.",
             category=ParameterCategory.BIDDING_ROUND,
-            order_priority=14,
+            order_priority=16,
             meta=ParameterMeta(textarea=True, show_only_when=_show_only_when_enabled),
         )
 
@@ -237,7 +263,7 @@ class ParameterDefinitionsBiddingRound:
             datatype=TapirParameterDatatype.STRING,
             initial_value="Gebot Grün (Wunsch)",
             category=ParameterCategory.BIDDING_ROUND,
-            order_priority=13,
+            order_priority=15,
             meta=ParameterMeta(show_only_when=_show_only_when_enabled),
         )
 
@@ -250,7 +276,7 @@ class ParameterDefinitionsBiddingRound:
             datatype=TapirParameterDatatype.STRING,
             initial_value="Gelb (Zufrieden)",
             category=ParameterCategory.BIDDING_ROUND,
-            order_priority=12,
+            order_priority=14,
             meta=ParameterMeta(show_only_when=_show_only_when_enabled),
         )
 
@@ -263,7 +289,7 @@ class ParameterDefinitionsBiddingRound:
             datatype=TapirParameterDatatype.STRING,
             initial_value="Rot (Schmerzgrenze)",
             category=ParameterCategory.BIDDING_ROUND,
-            order_priority=11,
+            order_priority=13,
             meta=ParameterMeta(show_only_when=_show_only_when_enabled),
         )
 
@@ -276,7 +302,7 @@ class ParameterDefinitionsBiddingRound:
             datatype=TapirParameterDatatype.STRING,
             initial_value="Gebot 1",
             category=ParameterCategory.BIDDING_ROUND,
-            order_priority=10,
+            order_priority=12,
             meta=ParameterMeta(show_only_when=_show_only_when_enabled),
         )
 
@@ -289,7 +315,7 @@ class ParameterDefinitionsBiddingRound:
             datatype=TapirParameterDatatype.STRING,
             initial_value="Gebot 2",
             category=ParameterCategory.BIDDING_ROUND,
-            order_priority=9,
+            order_priority=11,
             meta=ParameterMeta(show_only_when=_show_only_when_enabled),
         )
 
@@ -302,7 +328,7 @@ class ParameterDefinitionsBiddingRound:
             datatype=TapirParameterDatatype.STRING,
             initial_value="Gebot 3",
             category=ParameterCategory.BIDDING_ROUND,
-            order_priority=8,
+            order_priority=10,
             meta=ParameterMeta(show_only_when=_show_only_when_enabled),
         )
 
@@ -315,7 +341,7 @@ class ParameterDefinitionsBiddingRound:
             datatype=TapirParameterDatatype.STRING,
             initial_value="Das ergibt pro Jahr:",
             category=ParameterCategory.BIDDING_ROUND,
-            order_priority=7,
+            order_priority=9,
             meta=ParameterMeta(show_only_when=_show_only_when_enabled),
         )
 
@@ -328,7 +354,7 @@ class ParameterDefinitionsBiddingRound:
             datatype=TapirParameterDatatype.STRING,
             initial_value="Alle Beträge sind Monatsbeträge (€/Monat).",
             category=ParameterCategory.BIDDING_ROUND,
-            order_priority=6,
+            order_priority=8,
             meta=ParameterMeta(show_only_when=_show_only_when_enabled),
         )
 
@@ -341,7 +367,7 @@ class ParameterDefinitionsBiddingRound:
             datatype=TapirParameterDatatype.STRING,
             initial_value="€/Monat",
             category=ParameterCategory.BIDDING_ROUND,
-            order_priority=5,
+            order_priority=7,
             meta=ParameterMeta(show_only_when=_show_only_when_enabled),
         )
 
@@ -352,7 +378,7 @@ class ParameterDefinitionsBiddingRound:
             datatype=TapirParameterDatatype.STRING,
             initial_value="€/Jahr",
             category=ParameterCategory.BIDDING_ROUND,
-            order_priority=4,
+            order_priority=6,
             meta=ParameterMeta(show_only_when=_show_only_when_enabled),
         )
 
@@ -365,7 +391,7 @@ class ParameterDefinitionsBiddingRound:
             datatype=TapirParameterDatatype.STRING,
             initial_value="Bitte prüfe deine Angaben und bestätige dein Gebot.",
             category=ParameterCategory.BIDDING_ROUND,
-            order_priority=3,
+            order_priority=5,
             meta=ParameterMeta(textarea=True, show_only_when=_show_only_when_enabled),
         )
 
@@ -378,7 +404,7 @@ class ParameterDefinitionsBiddingRound:
             datatype=TapirParameterDatatype.STRING,
             initial_value="Danke! Dein Gebot ist bei uns angekommen. Du kannst es bis zum Ende der Beitragsrunde jederzeit ändern.",
             category=ParameterCategory.BIDDING_ROUND,
-            order_priority=2,
+            order_priority=4,
             meta=ParameterMeta(textarea=True, show_only_when=_show_only_when_enabled),
         )
 
@@ -391,7 +417,7 @@ class ParameterDefinitionsBiddingRound:
             datatype=TapirParameterDatatype.STRING,
             initial_value="Das Gebot konnte nicht gespeichert werden. Bitte prüfe deine Angaben.",
             category=ParameterCategory.BIDDING_ROUND,
-            order_priority=1,
+            order_priority=3,
             meta=ParameterMeta(textarea=True, show_only_when=_show_only_when_enabled),
         )
 
@@ -404,7 +430,7 @@ class ParameterDefinitionsBiddingRound:
             datatype=TapirParameterDatatype.BOOLEAN,
             initial_value=False,
             category=ParameterCategory.BIDDING_ROUND,
-            order_priority=0,
+            order_priority=2,
             meta=ParameterMeta(
                 warning=BIDDING_ROUND_NO_CAPACITY_CHECK_WARNING,
                 show_only_when=_show_only_when_enabled,
@@ -420,7 +446,7 @@ class ParameterDefinitionsBiddingRound:
             datatype=TapirParameterDatatype.BOOLEAN,
             initial_value=False,
             category=ParameterCategory.BIDDING_ROUND,
-            order_priority=-1,
+            order_priority=1,
             meta=ParameterMeta(
                 warning=BIDDING_ROUND_NO_CAPACITY_CHECK_WARNING,
                 show_only_when=_show_only_when_enabled,
