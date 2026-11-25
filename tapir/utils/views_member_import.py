@@ -1,60 +1,74 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.http import HttpResponse
-from django.shortcuts import render
 from django.views import View
-from django.views.generic import FormView
+from django.views.generic import TemplateView
+from drf_spectacular.utils import extend_schema
+from rest_framework import parsers, permissions
+from rest_framework.exceptions import ValidationError
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
+from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.utils.exceptions import TapirDataImportException
-from tapir.utils.forms import MemberImportForm, MemberImportApplyForm
+from tapir.utils.serializers_member_import import (
+    MemberImportApplySerializer,
+    MemberImportPreviewSerializer,
+    MemberImportResultSerializer,
+    MemberImportUploadSerializer,
+)
 from tapir.utils.services.member_import_service import MemberImportService
 from tapir.wirgarten.constants import Permission
 
 
-class MemberImportView(LoginRequiredMixin, PermissionRequiredMixin, FormView):
+class MemberImportView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
     permission_required = Permission.Coop.MANAGE
-    form_class = MemberImportForm
     template_name = "utils/member_import.html"
     extra_context = {"page_title": "Mitglieder importieren"}
 
-    def form_valid(self, form):
+
+class MemberImportPreviewView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+    parser_classes = [parsers.MultiPartParser]
+
+    @extend_schema(
+        request=MemberImportUploadSerializer,
+        responses={200: MemberImportPreviewSerializer},
+        operation_id="member_import_preview",
+        tags=["member import"],
+    )
+    def post(self, request):
+        serializer = MemberImportUploadSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         try:
             token, result = MemberImportService.preview(
-                file=form.cleaned_data["file"], user_id=self.request.user.pk
+                file=serializer.validated_data["file"], user_id=request.user.pk
             )
         except TapirDataImportException as error:
-            form.add_error("file", str(error))
-            return self.form_invalid(form)
-        return self.render_to_response(
-            self.get_context_data(form=form, result=result, token=token)
+            raise ValidationError({"detail": str(error)}) from error
+        return Response(
+            MemberImportPreviewSerializer({"token": token, "result": result}).data
         )
 
 
-class MemberImportApplyView(LoginRequiredMixin, PermissionRequiredMixin, View):
-    permission_required = Permission.Coop.MANAGE
+class MemberImportApplyView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
 
+    @extend_schema(
+        request=MemberImportApplySerializer,
+        responses={200: MemberImportResultSerializer},
+        operation_id="member_import_apply",
+        tags=["member import"],
+    )
     def post(self, request):
-        form = MemberImportApplyForm(request.POST)
-        result = None
-        error = None
-        if form.is_valid():
-            try:
-                result = MemberImportService.apply(
-                    user_id=request.user.pk, token=form.cleaned_data["token"]
-                )
-            except TapirDataImportException as exception:
-                error = str(exception)
-        else:
-            error = "Bitte zuerst eine Datei hochladen und prüfen."
-        return render(
-            request,
-            "utils/member_import.html",
-            {
-                "page_title": "Mitglieder importieren",
-                "form": MemberImportForm(),
-                "result": result,
-                "error": error,
-            },
-        )
+        serializer = MemberImportApplySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            result = MemberImportService.apply(
+                user_id=request.user.pk, token=serializer.validated_data["token"]
+            )
+        except TapirDataImportException as error:
+            raise ValidationError({"detail": str(error)}) from error
+        return Response(MemberImportResultSerializer(result).data)
 
 
 class MemberImportTemplateView(LoginRequiredMixin, PermissionRequiredMixin, View):

@@ -1,33 +1,10 @@
 {% extends "core/base.html" %}
-{% load django_bootstrap5 %}
+{% load django_vite %}
 {% block title %}{{ page_title }}{% endblock title %}
+{% block head %}
+    {% vite_asset 'member_import/member_import_entry.tsx' %}
+{% endblock head %}
 {% block content %}
-    <div class="container py-3">
-        <h1>{{ page_title }}</h1>
-        <p>Neue Mitglieder aus CSV oder Excel übernehmen. Bereits vorhandene Mitgliedsnummern werden übersprungen. Es werden keine Aktivierungsmails versendet.</p>
-        <p>Abholorte und Vereinsmitgliedschaftstypen müssen vorher angelegt sein. Fehler bitte in der Datei korrigieren und die Datei erneut hochladen.</p>
-        <a class="btn btn-outline-secondary mb-3" href="{% url 'utils:member_import_template' %}">Vorlage herunterladen</a>
-        {% if error %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endif %}
-        <form method="post" enctype="multipart/form-data" action="{% url 'utils:member_import' %}" class="card card-body mb-3">
-            {% csrf_token %}{% bootstrap_form form %}
-            <button class="btn btn-outline-primary align-self-start" type="submit">Datei prüfen</button>
-        </form>
-        {% if result %}
-            {% if result.applied %}<output class="alert alert-success d-block">Import abgeschlossen.</output>
-            {% else %}<p>Prüfergebnis. Es wurden keine Daten gespeichert.</p>{% endif %}
-            {% for message in result.errors %}<div class="alert alert-danger" role="alert">{{ message }}</div>{% endfor %}
-            {% if result.rows %}
-                <div class="table-responsive"><table class="table">
-                    <thead><tr><th>Zeile</th><th>Ergebnis</th><th>Hinweis</th></tr></thead>
-                    <tbody>{% for row in result.rows %}<tr{% if row.error %} class="table-danger"{% endif %}><td>{{ row.line }}</td><td>{{ row.status }}</td><td>{{ row.error }}</td></tr>{% endfor %}</tbody>
-                </table></div>
-            {% endif %}
-            {% if token and result.can_apply %}
-                <form method="post" action="{% url 'utils:member_import_apply' %}">
-                    {% csrf_token %}<input type="hidden" name="token" value="{{ token }}">
-                    <button type="submit" class="btn btn-primary">Mitglieder importieren</button>
-                </form>
-            {% elif not result.applied %}<p>Es wurde nichts übernommen. Bitte die Fehler korrigieren und erneut prüfen.</p>{% endif %}
-        {% endif %}
-    </div>
+    {% csrf_token %}
+    <div id="member_import" data-template-url="{% url 'utils:member_import_template' %}"></div>
 {% endblock content %}

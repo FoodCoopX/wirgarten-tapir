@@ -3,6 +3,7 @@ from django.urls import path
 
 from tapir.utils.views_member_import import (
     MemberImportView,
+    MemberImportPreviewView,
     MemberImportApplyView,
     MemberImportTemplateView,
 )
@@ -24,7 +25,12 @@ else:
 urlpatterns += [
     path("member_import", MemberImportView.as_view(), name="member_import"),
     path(
-        "member_import/apply",
+        "api/member_import/preview",
+        MemberImportPreviewView.as_view(),
+        name="member_import_preview",
+    ),
+    path(
+        "api/member_import/apply",
         MemberImportApplyView.as_view(),
         name="member_import_apply",
     ),
