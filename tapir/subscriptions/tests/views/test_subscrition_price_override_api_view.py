@@ -4,6 +4,7 @@ from django.urls import reverse
 from rest_framework import status
 
 from tapir.subscriptions.models import SubscriptionPriceChangedLogEntry
+from tapir.wirgarten.models import Subscription
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import MemberFactory, SubscriptionFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
@@ -96,3 +97,22 @@ class TestSubscriptionPriceOverrideApiView(TapirIntegrationTest):
         self.assertEqual(member.email, log_entry.actor.email)
         self.assertEqual(Decimal(5), log_entry.price_before)
         self.assertEqual(Decimal(123), log_entry.price_after)
+
+    def test_post_sendingBiddingRoundPriceMode_returns400(self):
+        member = MemberFactory.create(is_superuser=True)
+        subscription = SubscriptionFactory.create(member=member, price_override=5)
+        self.client.force_login(member)
+
+        post_data = {
+            "subscription_id": subscription.id,
+            "price_override": 123,
+            "price_mode": "bidding_round_bid",
+        }
+        response = self.client.post(
+            reverse("subscriptions:subscription_price_override"), data=post_data
+        )
+
+        self.assertStatusCode(response, status.HTTP_400_BAD_REQUEST)
+        subscription.refresh_from_db()
+        self.assertEqual(5, subscription.price_override)
+        self.assertEqual(Subscription.PriceMode.STANDARD, subscription.price_mode)

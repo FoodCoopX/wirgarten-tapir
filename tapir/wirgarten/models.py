@@ -620,6 +620,16 @@ class Subscription(TapirModel, AdminConfirmableMixin):
     A subscription for a member.
     """
 
+    class PriceMode(models.TextChoices):
+        STANDARD = "standard", "Standardbetrag"
+        CUSTOM = "custom", "Personalisierter Betrag"
+        FREE = "free", "Beitragsbefreit"
+        BIDDING_ROUND_BID = "bidding_round_bid", "Bietrunde: Gebot"
+        BIDDING_ROUND_AUTO_RENEWED = (
+            "bidding_round_auto_renewed",
+            "Bietrunde: Auto-Verlängert",
+        )
+
     member = models.ForeignKey(Member, on_delete=models.DO_NOTHING, null=False)
     product = models.ForeignKey(Product, on_delete=models.DO_NOTHING, null=False)
     period = models.ForeignKey(GrowingPeriod, on_delete=models.DO_NOTHING, null=True)
@@ -636,6 +646,11 @@ class Subscription(TapirModel, AdminConfirmableMixin):
     trial_end_date_override = models.DateField(null=True)
     price_override = models.DecimalField(
         decimal_places=2, max_digits=8, null=True, blank=True
+    )
+    price_mode = models.CharField(
+        max_length=32,
+        choices=PriceMode.choices,
+        default=PriceMode.STANDARD,
     )
     notice_period_duration = models.IntegerField()
     notice_period_unit = models.CharField(

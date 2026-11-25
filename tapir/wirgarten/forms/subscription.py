@@ -973,18 +973,23 @@ def cancel_or_delete_subscriptions(
     product_type: ProductType,
     actor: TapirUser | None,
     cache: dict,
+    exclude_product_id: str | None = None,
 ) -> date | None:
     """
     Cancels all subscriptions of the given product type for the given member and start date because they changed their contract.
 
+    ``exclude_product_id`` keeps the subscription of one product, for callers that
+    create or reuse that subscription themselves.
+
     :return: The trial end date of the last subscription that was canceled
     """
 
-    subscriptions = list(
-        get_active_and_future_subscriptions(
-            reference_date=start_date, cache=cache
-        ).filter(member_id=member.id, product__type=product_type)
-    )
+    subscriptions = get_active_and_future_subscriptions(
+        reference_date=start_date, cache=cache
+    ).filter(member_id=member.id, product__type=product_type)
+    if exclude_product_id is not None:
+        subscriptions = subscriptions.exclude(product_id=exclude_product_id)
+    subscriptions = list(subscriptions)
 
     existing_trial_end_date = None
 

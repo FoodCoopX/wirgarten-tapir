@@ -222,6 +222,19 @@ class ConfirmSubscriptionChangesRequestSerializer(serializers.Serializer):
 class SubscriptionPriceOverrideChangeRequestSerializer(serializers.Serializer):
     subscription_id = serializers.CharField()
     price_override = serializers.FloatField(allow_null=True)
+    price_mode = serializers.CharField(required=False)
+
+    def validate_price_mode(self, value):
+        allowed = {
+            Subscription.PriceMode.STANDARD,
+            Subscription.PriceMode.CUSTOM,
+            Subscription.PriceMode.FREE,
+        }
+        if value not in allowed:
+            raise serializers.ValidationError(
+                "Dieser Preis-Modus wird von der Bietrunde gesetzt und ist hier nicht wählbar."
+            )
+        return value
 
 
 class SubscriptionTrialFieldsSerializer(SubscriptionSerializer):

@@ -2586,6 +2586,457 @@ paths:
               schema:
                 $ref: '#/components/schemas/OrderConfirmationResponse'
           description: ''
+  /bidding_rounds/api:
+    get:
+      operationId: bidding_rounds_api_list
+      description: |-
+        Applies the feature-flag gate to a DRF view via ``initial``.
+
+        This keeps the view's own ``permission_classes`` (and therefore the global
+        ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
+        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
+        so the handlers reuse it instead of building their own.
+      tags:
+      - bidding_rounds
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Round'
+          description: ''
+    post:
+      operationId: bidding_rounds_api_create
+      description: |-
+        Applies the feature-flag gate to a DRF view via ``initial``.
+
+        This keeps the view's own ``permission_classes`` (and therefore the global
+        ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
+        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
+        so the handlers reuse it instead of building their own.
+      tags:
+      - bidding_rounds
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoundCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RoundCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RoundCreateRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Round'
+          description: ''
+  /bidding_rounds/api/{round_id}:
+    get:
+      operationId: bidding_rounds_api_retrieve
+      description: |-
+        Applies the feature-flag gate to a DRF view via ``initial``.
+
+        This keeps the view's own ``permission_classes`` (and therefore the global
+        ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
+        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
+        so the handlers reuse it instead of building their own.
+      parameters:
+      - in: path
+        name: round_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - bidding_rounds
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Round'
+          description: ''
+    patch:
+      operationId: bidding_rounds_api_partial_update
+      description: |-
+        Applies the feature-flag gate to a DRF view via ``initial``.
+
+        This keeps the view's own ``permission_classes`` (and therefore the global
+        ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
+        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
+        so the handlers reuse it instead of building their own.
+      parameters:
+      - in: path
+        name: round_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - bidding_rounds
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedRoundConfigRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedRoundConfigRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedRoundConfigRequest'
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Round'
+          description: ''
+    delete:
+      operationId: bidding_rounds_api_destroy
+      description: |-
+        Applies the feature-flag gate to a DRF view via ``initial``.
+
+        This keeps the view's own ``permission_classes`` (and therefore the global
+        ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
+        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
+        so the handlers reuse it instead of building their own.
+      parameters:
+      - in: path
+        name: round_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - bidding_rounds
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '204':
+          description: No response body
+  /bidding_rounds/api/{round_id}/bid:
+    get:
+      operationId: bidding_rounds_api_bid_retrieve
+      description: |-
+        Applies the feature-flag gate to a DRF view via ``initial``.
+
+        This keeps the view's own ``permission_classes`` (and therefore the global
+        ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
+        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
+        so the handlers reuse it instead of building their own.
+      parameters:
+      - in: path
+        name: round_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - bidding_rounds
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberBidResponse'
+          description: ''
+    post:
+      operationId: bidding_rounds_api_bid_create
+      description: |-
+        Applies the feature-flag gate to a DRF view via ``initial``.
+
+        This keeps the view's own ``permission_classes`` (and therefore the global
+        ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
+        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
+        so the handlers reuse it instead of building their own.
+      parameters:
+      - in: path
+        name: round_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - bidding_rounds
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BidSubmitRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BidSubmitRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BidSubmitRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          description: No response body
+  /bidding_rounds/api/{round_id}/close:
+    post:
+      operationId: bidding_rounds_api_close_create
+      description: |-
+        Applies the feature-flag gate to a DRF view via ``initial``.
+
+        This keeps the view's own ``permission_classes`` (and therefore the global
+        ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
+        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
+        so the handlers reuse it instead of building their own.
+      parameters:
+      - in: path
+        name: round_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - bidding_rounds
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Round'
+          description: ''
+  /bidding_rounds/api/{round_id}/create_contracts:
+    post:
+      operationId: bidding_rounds_api_create_contracts_create
+      description: |-
+        Applies the feature-flag gate to a DRF view via ``initial``.
+
+        This keeps the view's own ``permission_classes`` (and therefore the global
+        ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
+        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
+        so the handlers reuse it instead of building their own.
+      parameters:
+      - in: path
+        name: round_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - bidding_rounds
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateContractsRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreateContractsRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateContractsRequest'
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateContractsResponse'
+          description: ''
+  /bidding_rounds/api/{round_id}/reopen:
+    post:
+      operationId: bidding_rounds_api_reopen_create
+      description: |-
+        Applies the feature-flag gate to a DRF view via ``initial``.
+
+        This keeps the view's own ``permission_classes`` (and therefore the global
+        ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
+        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
+        so the handlers reuse it instead of building their own.
+      parameters:
+      - in: path
+        name: round_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - bidding_rounds
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Round'
+          description: ''
+  /bidding_rounds/api/{round_id}/results:
+    get:
+      operationId: bidding_rounds_api_results_retrieve
+      description: |-
+        Applies the feature-flag gate to a DRF view via ``initial``.
+
+        This keeps the view's own ``permission_classes`` (and therefore the global
+        ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
+        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
+        so the handlers reuse it instead of building their own.
+      parameters:
+      - in: path
+        name: round_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - bidding_rounds
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoundResultsResponse'
+          description: ''
+  /bidding_rounds/api/{round_id}/start:
+    post:
+      operationId: bidding_rounds_api_start_create
+      description: |-
+        Applies the feature-flag gate to a DRF view via ``initial``.
+
+        This keeps the view's own ``permission_classes`` (and therefore the global
+        ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
+        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
+        so the handlers reuse it instead of building their own.
+      parameters:
+      - in: path
+        name: round_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - bidding_rounds
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Round'
+          description: ''
+  /bidding_rounds/api/available_product_types:
+    get:
+      operationId: bidding_rounds_api_available_product_types_list
+      description: |-
+        Applies the feature-flag gate to a DRF view via ``initial``.
+
+        This keeps the view's own ``permission_classes`` (and therefore the global
+        ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
+        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
+        so the handlers reuse it instead of building their own.
+      parameters:
+      - in: query
+        name: growing_period_id
+        schema:
+          type: string
+      tags:
+      - bidding_rounds
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductTypeOption'
+          description: ''
+  /bidding_rounds/api/growing_periods:
+    get:
+      operationId: bidding_rounds_api_growing_periods_list
+      description: |-
+        Applies the feature-flag gate to a DRF view via ``initial``.
+
+        This keeps the view's own ``permission_classes`` (and therefore the global
+        ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
+        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
+        so the handlers reuse it instead of building their own.
+      tags:
+      - bidding_rounds
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GrowingPeriodOption'
+          description: ''
+  /bidding_rounds/api/public_data:
+    get:
+      operationId: bidding_rounds_api_public_data_retrieve
+      description: |-
+        Applies the feature-flag gate to a DRF view via ``initial``.
+
+        This keeps the view's own ``permission_classes`` (and therefore the global
+        ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
+        the public (member-facing) endpoints. The per-request cache lives on ``self.cache``
+        so the handlers reuse it instead of building their own.
+      tags:
+      - bidding_rounds
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicDataResponse'
+          description: ''
   /config/member-number-preview:
     get:
       operationId: config_member_number_preview_retrieve
@@ -10153,6 +10604,143 @@ components:
       - step9_title
       - step_10_single_product_type_hint
       - student_checkbox_explanation_text
+    Bid:
+      type: object
+      properties:
+        id:
+          type: string
+        member_id:
+          type: string
+        pickup_location_id:
+          type: string
+          nullable: true
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+        product_id:
+          type: string
+        product_name:
+          type: string
+        quantity:
+          type: integer
+        amount_1:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
+          nullable: true
+        amount_per_year:
+          type: string
+          readOnly: true
+        total_per_year:
+          type: string
+          readOnly: true
+      required:
+      - amount_1
+      - amount_per_year
+      - id
+      - member_id
+      - pickup_location_id
+      - product_id
+      - product_name
+      - quantity
+      - total_per_year
+      - updated_at
+    BidProductVariant:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        reference_value:
+          type: string
+          nullable: true
+        min_amount:
+          type: string
+          nullable: true
+        size:
+          type: string
+          nullable: true
+        current_quantity:
+          type: integer
+          nullable: true
+      required:
+      - current_quantity
+      - id
+      - min_amount
+      - name
+      - reference_value
+      - size
+    BidSubmitRequest:
+      type: object
+      properties:
+        product_id:
+          type: string
+          minLength: 1
+        quantity:
+          type: integer
+          maximum: 5
+          minimum: 1
+          default: 1
+        amount_1:
+          type: string
+          nullable: true
+      required:
+      - product_id
+    BidTexts:
+      type: object
+      properties:
+        amount_label:
+          type: string
+        reference_value_hint:
+          type: string
+        simple_explanation:
+          type: string
+        live_yearly_label:
+          type: string
+        monthly_hint:
+          type: string
+        monthly_unit:
+          type: string
+        yearly_unit:
+          type: string
+        confirm_text:
+          type: string
+        success_text:
+          type: string
+        error_text:
+          type: string
+      required:
+      - amount_label
+      - confirm_text
+      - error_text
+      - live_yearly_label
+      - monthly_hint
+      - monthly_unit
+      - reference_value_hint
+      - simple_explanation
+      - success_text
+      - yearly_unit
+    BiddableProduct:
+      type: object
+      properties:
+        id:
+          type: string
+        product_type_id:
+          type: string
+        product_type_name:
+          type: string
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/BidProductVariant'
+      required:
+      - id
+      - product_type_id
+      - product_type_name
+      - products
     BlankEnum:
       enum:
       - ''
@@ -11704,6 +12292,57 @@ components:
         * `ZR` - Zaire
         * `ZW` - Zimbabwe
         * `ZZ` - Unknown or unspecified country
+    CreateContractsError:
+      type: object
+      properties:
+        bid_id:
+          type: string
+        member_id:
+          type: string
+        member_name:
+          type: string
+        error:
+          type: string
+      required:
+      - bid_id
+      - error
+      - member_id
+      - member_name
+    CreateContractsRequest:
+      type: object
+      properties:
+        bid_ids:
+          type: array
+          items:
+            type: string
+            minLength: 1
+    CreateContractsResponse:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateContractsError'
+        subscriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateContractsSubscription'
+      required:
+      - errors
+      - subscriptions
+    CreateContractsSubscription:
+      type: object
+      properties:
+        id:
+          type: string
+        member_id:
+          type: string
+        product_id:
+          type: string
+      required:
+      - id
+      - member_id
+      - product_id
     CreateMissingTriggerMailRequest:
       type: object
       properties:
@@ -13488,6 +14127,21 @@ components:
       - end_date
       - start_date
       - updated_at
+    GrowingPeriodOption:
+      type: object
+      properties:
+        id:
+          type: string
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+      required:
+      - end_date
+      - id
+      - start_date
     GrowingPeriodRequest:
       type: object
       properties:
@@ -14212,6 +14866,23 @@ components:
       - account_owner
       - iban
       - organisation_name
+    MemberBidResponse:
+      type: object
+      properties:
+        round:
+          $ref: '#/components/schemas/Round'
+        biddable_product:
+          allOf:
+          - $ref: '#/components/schemas/BiddableProduct'
+          nullable: true
+        bid:
+          allOf:
+          - $ref: '#/components/schemas/Bid'
+          nullable: true
+      required:
+      - bid
+      - biddable_product
+      - round
     MemberCredit:
       type: object
       properties:
@@ -15703,6 +16374,32 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PickupLocationCapacityByShareRequest'
+    PatchedRoundConfigRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        comment:
+          type: string
+        start_at:
+          type: string
+          format: date-time
+          nullable: true
+        end_at:
+          type: string
+          format: date-time
+        product_type_id:
+          type: string
+          nullable: true
+          minLength: 1
+        target_amount_per_year:
+          type: string
+          nullable: true
+        prices:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoundProductPriceInputRequest'
     PatchedSaveExtendedProductTypeRequest:
       type: object
       properties:
@@ -16947,6 +17644,20 @@ components:
         * `standard` - standard
         * `personalised` - personalised
         * `exempt` - exempt
+    PriceModeEnum:
+      enum:
+      - standard
+      - custom
+      - free
+      - bidding_round_bid
+      - bidding_round_auto_renewed
+      type: string
+      description: |-
+        * `standard` - Standardbetrag
+        * `custom` - Personalisierter Betrag
+        * `free` - Beitragsbefreit
+        * `bidding_round_bid` - Bietrunde: Gebot
+        * `bidding_round_auto_renewed` - Bietrunde: Auto-Verlängert
     Product:
       type: object
       properties:
@@ -17050,6 +17761,22 @@ components:
       - notice_period_unit
       - post_trial_subscription_end_date
       - product
+    ProductOption:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        size:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
+          nullable: true
+      required:
+      - id
+      - name
+      - size
     ProductType:
       type: object
       properties:
@@ -17152,6 +17879,21 @@ components:
       - description
       - order
       - title
+    ProductTypeOption:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductOption'
+      required:
+      - id
+      - name
+      - products
     ProductTypesAndConfig:
       type: object
       properties:
@@ -17217,6 +17959,62 @@ components:
       - payment_rhythm
       - sepa_allowed
       - solidarity_contribution
+    PublicDataResponse:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        url_enabled:
+          type: boolean
+        url:
+          type: string
+          nullable: true
+        round:
+          allOf:
+          - $ref: '#/components/schemas/Round'
+          nullable: true
+        round_status:
+          type: string
+        texts:
+          $ref: '#/components/schemas/RoundTexts'
+        biddable_product:
+          allOf:
+          - $ref: '#/components/schemas/BiddableProduct'
+          nullable: true
+        is_authenticated:
+          type: boolean
+        bid:
+          allOf:
+          - $ref: '#/components/schemas/Bid'
+          nullable: true
+      required:
+      - enabled
+    PublicGrowingPeriod:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        contract_start_date:
+          type: string
+          format: date
+          readOnly: true
+        product_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicProductType'
+          readOnly: true
+      required:
+      - contract_start_date
+      - end_date
+      - product_types
+      - start_date
     PublicPickupLocation:
       type: object
       properties:
@@ -17553,6 +18351,234 @@ components:
         * `quarterly` - Vierteljährlich
         * `semiannually` - Halbjährlich
         * `yearly` - Jährlich
+    Round:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        status:
+          type: string
+        start_at:
+          type: string
+          format: date-time
+          nullable: true
+        end_at:
+          type: string
+          format: date-time
+        contracts_created_at:
+          type: string
+          format: date-time
+          nullable: true
+        growing_period_id:
+          type: string
+          nullable: true
+        comment:
+          type: string
+        has_bids:
+          type: boolean
+          readOnly: true
+        product:
+          allOf:
+          - $ref: '#/components/schemas/RoundProduct'
+          nullable: true
+      required:
+      - comment
+      - contracts_created_at
+      - end_at
+      - growing_period_id
+      - has_bids
+      - id
+      - name
+      - product
+      - start_at
+      - status
+    RoundCreateRequest:
+      type: object
+      properties:
+        growing_period_id:
+          type: string
+          nullable: true
+          minLength: 1
+        name:
+          type: string
+          minLength: 1
+        end_at:
+          type: string
+          format: date-time
+        start_at:
+          type: string
+          format: date-time
+          nullable: true
+        comment:
+          type: string
+        product_type_id:
+          type: string
+          nullable: true
+          minLength: 1
+        target_amount_per_year:
+          type: string
+          nullable: true
+        prices:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoundProductPriceInputRequest'
+      required:
+      - end_at
+      - name
+    RoundProduct:
+      type: object
+      properties:
+        product_type_id:
+          type: string
+        product_type_name:
+          type: string
+        target_amount_per_year:
+          type: string
+          nullable: true
+        prices:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoundProductPrice'
+          readOnly: true
+      required:
+      - prices
+      - product_type_id
+      - product_type_name
+      - target_amount_per_year
+    RoundProductPrice:
+      type: object
+      properties:
+        product_id:
+          type: string
+        product_name:
+          type: string
+        reference_value:
+          type: string
+          nullable: true
+        min_amount:
+          type: string
+          nullable: true
+        size:
+          type: string
+          nullable: true
+      required:
+      - min_amount
+      - product_id
+      - product_name
+      - reference_value
+      - size
+    RoundProductPriceInputRequest:
+      type: object
+      properties:
+        product_id:
+          type: string
+          minLength: 1
+        reference_value:
+          type: string
+          nullable: true
+        min_amount:
+          type: string
+          nullable: true
+        size:
+          type: string
+          minLength: 1
+      required:
+      - product_id
+      - size
+    RoundResultsResponse:
+      type: object
+      properties:
+        target_per_year:
+          type: string
+        reached_per_year:
+          type: string
+        coverage_percent:
+          type: number
+          format: double
+        bidder_count:
+          type: integer
+        bidder_average_per_month:
+          type: string
+        bids:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoundStatsBid'
+      required:
+      - bidder_average_per_month
+      - bidder_count
+      - bids
+      - coverage_percent
+      - reached_per_year
+      - target_per_year
+    RoundStatsBid:
+      type: object
+      properties:
+        bid_id:
+          type: string
+        member_id:
+          type: string
+        member_name:
+          type: string
+        email:
+          type: string
+        product_id:
+          type: string
+        product_name:
+          type: string
+        quantity:
+          type: integer
+        amount_1:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
+          nullable: true
+        amount_per_month:
+          type: string
+          readOnly: true
+        amount_per_year:
+          type: string
+          readOnly: true
+      required:
+      - amount_1
+      - amount_per_month
+      - amount_per_year
+      - bid_id
+      - email
+      - member_id
+      - member_name
+      - product_id
+      - product_name
+      - quantity
+    RoundTexts:
+      type: object
+      properties:
+        intro_title:
+          type: string
+        intro_text:
+          type: string
+        ended_text:
+          type: string
+        login_title:
+          type: string
+        login_text:
+          type: string
+        summary_title:
+          type: string
+        submit_label:
+          type: string
+        bid:
+          $ref: '#/components/schemas/BidTexts'
+      required:
+      - bid
+      - ended_text
+      - intro_text
+      - intro_title
+      - login_text
+      - login_title
+      - submit_label
+      - summary_title
     SaveExtendedProductTypeRequest:
       type: object
       properties:
@@ -18229,6 +19255,8 @@ components:
           format: decimal
           pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
           nullable: true
+        price_mode:
+          $ref: '#/components/schemas/PriceModeEnum'
         notice_period_duration:
           type: integer
           maximum: 2147483647
@@ -18358,6 +19386,9 @@ components:
           type: number
           format: double
           nullable: true
+        price_mode:
+          type: string
+          minLength: 1
       required:
       - price_override
       - subscription_id
@@ -18442,6 +19473,8 @@ components:
           format: decimal
           pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
           nullable: true
+        price_mode:
+          $ref: '#/components/schemas/PriceModeEnum'
         notice_period_duration:
           type: integer
           maximum: 2147483647

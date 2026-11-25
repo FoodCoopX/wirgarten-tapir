@@ -17,6 +17,8 @@ import {
   NoticePeriodUnitEnumFromJSON,
   NoticePeriodUnitEnumToJSON,
 } from "./NoticePeriodUnitEnum";
+import type { PriceModeEnum } from "./PriceModeEnum";
+import { PriceModeEnumFromJSON, PriceModeEnumToJSON } from "./PriceModeEnum";
 import type { Product } from "./Product";
 import { ProductFromJSON, ProductToJSON } from "./Product";
 
@@ -134,6 +136,12 @@ export interface SubscriptionTrialFields {
    * @memberof SubscriptionTrialFields
    */
   priceOverride?: string | null;
+  /**
+   *
+   * @type {PriceModeEnum}
+   * @memberof SubscriptionTrialFields
+   */
+  priceMode?: PriceModeEnum;
   /**
    *
    * @type {number}
@@ -258,6 +266,10 @@ export function SubscriptionTrialFieldsFromJSONTyped(
         : json["trial_end_date_override"],
     priceOverride:
       json["price_override"] == null ? undefined : json["price_override"],
+    priceMode:
+      json["price_mode"] == null
+        ? undefined
+        : PriceModeEnumFromJSON(json["price_mode"]),
     noticePeriodDuration: json["notice_period_duration"],
     noticePeriodUnit: NoticePeriodUnitEnumFromJSON(json["notice_period_unit"]),
     cancellationAdminConfirmed:
@@ -320,6 +332,7 @@ export function SubscriptionTrialFieldsToJSONTyped(
     trial_disabled: value["trialDisabled"],
     trial_end_date_override: value["trialEndDateOverride"],
     price_override: value["priceOverride"],
+    price_mode: PriceModeEnumToJSON(value["priceMode"]),
     notice_period_duration: value["noticePeriodDuration"],
     notice_period_unit: NoticePeriodUnitEnumToJSON(value["noticePeriodUnit"]),
     cancellation_admin_confirmed:

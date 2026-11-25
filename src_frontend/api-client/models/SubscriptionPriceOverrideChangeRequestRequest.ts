@@ -30,6 +30,12 @@ export interface SubscriptionPriceOverrideChangeRequestRequest {
    * @memberof SubscriptionPriceOverrideChangeRequestRequest
    */
   priceOverride: number | null;
+  /**
+   *
+   * @type {string}
+   * @memberof SubscriptionPriceOverrideChangeRequestRequest
+   */
+  priceMode?: string;
 }
 
 /**
@@ -64,6 +70,7 @@ export function SubscriptionPriceOverrideChangeRequestRequestFromJSONTyped(
   return {
     subscriptionId: json["subscription_id"],
     priceOverride: json["price_override"],
+    priceMode: json["price_mode"] == null ? undefined : json["price_mode"],
   };
 }
 
@@ -84,5 +91,6 @@ export function SubscriptionPriceOverrideChangeRequestRequestToJSONTyped(
   return {
     subscription_id: value["subscriptionId"],
     price_override: value["priceOverride"],
+    price_mode: value["priceMode"],
   };
 }

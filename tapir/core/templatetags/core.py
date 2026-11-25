@@ -5,6 +5,9 @@ from django.core.paginator import Paginator
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 
+from tapir.bidding_round.services.bidding_round_view_service import (
+    BiddingRoundViewService,
+)
 from tapir.configuration.parameter import get_parameter_value
 from tapir.core.models import SidebarLinkGroup
 from tapir.subscriptions.views.confirmations import (
@@ -112,6 +115,15 @@ def add_admin_links(groups, request, cache: dict):
             display_name=_("Abholorte"),
             material_icon="add_location_alt",
             url=reverse_lazy("wirgarten:pickup_locations"),
+        )
+
+    if request.user.has_perm(
+        Permission.Coop.MANAGE
+    ) and BiddingRoundViewService.is_feature_flag_enabled(cache):
+        admin_group.add_link(
+            display_name=_("Beitragsrunden"),
+            material_icon="gavel",
+            url=reverse_lazy("bidding_rounds:bidding_rounds_config"),
         )
 
     if request.user.has_perm(Permission.Email.MANAGE):
