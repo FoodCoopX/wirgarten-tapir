@@ -52,7 +52,12 @@ const BiddingRoundBidStep: React.FC<BiddingRoundBidStepProps> = ({
 
   const levelLabels = isBidRange
     ? [texts.bid.greenLabel, texts.bid.redLabel]
-    : [texts.bid.amountLabel];
+    : requiredAmountLevels === 1
+      ? [texts.bid.amountLabel]
+      : Array.from(
+          { length: requiredAmountLevels },
+          (_, index) => `Stufe ${index + 1}`,
+        );
 
   function getLevelYearlyAmount(levelIndex: number): number | null {
     const parsedAmount = parseEuroAmount(amounts[levelIndex]);

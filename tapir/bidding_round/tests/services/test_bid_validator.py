@@ -157,8 +157,85 @@ class TestBidValidator(TapirIntegrationTest):
                 cache={},
             )
 
-    def test_validate_simple_givenSecondAmount_raisesValidationError(self):
-        bidding_round, product = self._create_active_round_with_price()
+    def test_validate_simpleWithOneLevel_rejectsSecondAmount(self):
+        bidding_round, product = self._create_active_round_with_price(bid_levels=1)
+
+        with pytest.raises(ValidationError):
+            BidValidator.validate(
+                bidding_round,
+                BidInput(
+                    product_id=product.id,
+                    quantity=1,
+                    amount_1=Decimal("80.00"),
+                    amount_2=Decimal("90.00"),
+                ),
+                cache={},
+            )
+
+    def test_validate_simpleWithTwoLevels_requiresBothAmounts(self):
+        bidding_round, product = self._create_active_round_with_price(bid_levels=2)
+
+        with pytest.raises(ValidationError):
+            BidValidator.validate(
+                bidding_round,
+                BidInput(
+                    product_id=product.id,
+                    quantity=1,
+                    amount_1=Decimal("80.00"),
+                ),
+                cache={},
+            )
+
+    def test_validate_simpleWithTwoLevels_acceptsAscendingAmounts(self):
+        bidding_round, product = self._create_active_round_with_price(bid_levels=2)
+
+        validated = BidValidator.validate(
+            bidding_round,
+            BidInput(
+                product_id=product.id,
+                quantity=1,
+                amount_1=Decimal("80.00"),
+                amount_2=Decimal("90.00"),
+            ),
+            cache={},
+        )
+
+        self.assertEqual(Decimal("90.00"), validated.amount_2)
+
+    def test_validate_simpleWithTwoLevels_rejectsThirdAmount(self):
+        bidding_round, product = self._create_active_round_with_price(bid_levels=2)
+
+        with pytest.raises(ValidationError):
+            BidValidator.validate(
+                bidding_round,
+                BidInput(
+                    product_id=product.id,
+                    quantity=1,
+                    amount_1=Decimal("80.00"),
+                    amount_2=Decimal("90.00"),
+                    amount_3=Decimal("100.00"),
+                ),
+                cache={},
+            )
+
+    def test_validate_simpleWithThreeLevels_rejectsDescendingAmounts(self):
+        bidding_round, product = self._create_active_round_with_price(bid_levels=3)
+
+        with pytest.raises(ValidationError):
+            BidValidator.validate(
+                bidding_round,
+                BidInput(
+                    product_id=product.id,
+                    quantity=1,
+                    amount_1=Decimal("90.00"),
+                    amount_2=Decimal("80.00"),
+                    amount_3=Decimal("100.00"),
+                ),
+                cache={},
+            )
+
+    def test_validate_simpleWithThreeLevels_requiresThirdAmount(self):
+        bidding_round, product = self._create_active_round_with_price(bid_levels=3)
 
         with pytest.raises(ValidationError):
             BidValidator.validate(

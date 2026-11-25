@@ -2,6 +2,7 @@ from unittest.mock import patch
 
 from tapir.bidding_round.config import (
     BIDDING_ROUND_PROCEDURE_BID_RANGE,
+    BIDDING_ROUND_PROCEDURE_SIMPLE,
     BIDDING_ROUND_STATUS_ACTIVE,
     BIDDING_ROUND_STATUS_CLOSED,
 )
@@ -74,3 +75,40 @@ class TestBiddingRoundGenerator(TapirIntegrationTest):
             delta=1.0,
             msg="middle position",
         )
+
+    def test_generateAll_createsClosedThreeLevelSimpleRound(self, _count):
+        DataGenerator.generate_all(Organization.BIOTOP)
+
+        rounds = BiddingRound.objects.filter(
+            bidding_procedure=BIDDING_ROUND_PROCEDURE_SIMPLE,
+            bid_levels=3,
+            status=BIDDING_ROUND_STATUS_CLOSED,
+        )
+        self.assertEqual(1, rounds.count())
+
+        bid = Bid.objects.filter(round=rounds.first()).first()
+        self.assertIsNotNone(bid)
+        self.assertIsNotNone(bid.amount_1)
+        self.assertIsNotNone(bid.amount_2)
+        self.assertIsNotNone(bid.amount_3)
+        self.assertLess(bid.amount_1, bid.amount_2)
+        self.assertLess(bid.amount_2, bid.amount_3)
+
+    def test_generateAll_simpleThreeLevelRoundReachesCalibratedCoverage(self, _count):
+        DataGenerator.generate_all(Organization.BIOTOP)
+
+        bidding_round = BiddingRound.objects.get(
+            bidding_procedure=BIDDING_ROUND_PROCEDURE_SIMPLE,
+            bid_levels=3,
+            status=BIDDING_ROUND_STATUS_CLOSED,
+        )
+        for level, expected in ((1, 81.0), (2, 91.0), (3, 109.0)):
+            self.assertAlmostEqual(
+                expected,
+                BiddingRoundStatsService.get_coverage_percent(
+                    bidding_round,
+                    BiddingRoundStatsService.get_level_position(level, bidding_round),
+                ),
+                delta=1.0,
+                msg=f"level {level}",
+            )
