@@ -14,7 +14,7 @@ def set_price_mode(apps, schema_editor):
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("wirgarten", "0151_payment_calculation_explanation_remove_edited"),
+        ("wirgarten", "0152_product_unique_non_deleted_name"),
     ]
 
     operations = [

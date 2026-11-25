@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ("wirgarten", "0152_subscription_price_mode"),
+        ("wirgarten", "0153_subscription_price_mode"),
     ]
 
     operations = [
