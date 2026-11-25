@@ -35,3 +35,15 @@ class ResetTestDataForm(Form):
             "This will delete all existing data, including members, users, subscriptions... and recreate them from scratch."
         ),
     )
+
+
+class MemberImportForm(Form):
+    file = forms.FileField(
+        label="Mitgliederdatei",
+        help_text="CSV oder Excel (.xlsx), mit den Spaltennamen aus der Vorlage. Bei Excel wird das erste Tabellenblatt gelesen.",
+        widget=forms.ClearableFileInput(attrs={"accept": ".csv,.xlsx"}),
+    )
+
+
+class MemberImportApplyForm(Form):
+    token = forms.CharField(widget=forms.HiddenInput)
