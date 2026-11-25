@@ -167,12 +167,10 @@ class MemberImporter:
         )
         return True
 
-    @classmethod
-    def update_member_attributes_and_save_member(
-        cls, member: Member, row: dict[str, str], dry_run: bool
-    ):
-        email_before = member.email
-        target_mail = cls.build_mail(row=row, member_no=member.member_no)
+    @staticmethod
+    def get_target_consents(
+        member: Member, row: dict[str, str]
+    ) -> dict[str, datetime.datetime | None]:
         target_consents = {}
         for column, attribute in (
             ("consent_sepa", "sepa_consent"),
@@ -184,6 +182,16 @@ class MemberImporter:
                 if consent is None:
                     raise TapirDataImportException(f"{column}: Ungültiges Datum.")
             target_consents[attribute] = consent
+
+        return target_consents
+
+    @classmethod
+    def update_member_attributes_and_save_member(
+        cls, member: Member, row: dict[str, str], dry_run: bool
+    ):
+        email_before = member.email
+        target_mail = cls.build_mail(row=row, member_no=member.member_no)
+        target_consents = cls.get_target_consents(member=member, row=row)
 
         member_updated = False
 
