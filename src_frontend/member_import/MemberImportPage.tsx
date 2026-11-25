@@ -10,10 +10,10 @@ import { handleRequestError } from "../utils/handleRequestError";
 export default function MemberImportPage({
   csrfToken,
   templateUrl,
-}: {
+}: Readonly<{
   csrfToken: string;
   templateUrl: string;
-}) {
+}>) {
   const api = useApi(MemberImportApi, csrfToken);
   const [file, setFile] = useState<File>();
   const [token, setToken] = useState<string>();
@@ -149,7 +149,7 @@ export default function MemberImportPage({
               </tbody>
             </Table>
           )}
-          {token && result.canApply ? (
+          {token && result.canApply && (
             <TapirButton
               variant="primary"
               text="Mitglieder importieren"
@@ -157,12 +157,13 @@ export default function MemberImportPage({
               loading={loading === "apply"}
               disabled={!!loading}
             />
-          ) : !result.applied && !result.canApply ? (
+          )}
+          {!result.applied && !result.canApply && (
             <p>
               Es wurde nichts übernommen. Bitte die Fehler korrigieren und
               erneut prüfen.
             </p>
-          ) : null}
+          )}
         </>
       )}
       <TapirToastContainer
