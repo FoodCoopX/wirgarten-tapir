@@ -1,8 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Spinner } from "react-bootstrap";
 import { v4 as uuidv4 } from "uuid";
-import "../../tapir/core/static/core/bootstrap/5.3.8/css/bootstrap.min.css";
-import "../../tapir/core/static/core/css/base.css";
 import {
   AssociationMembershipType,
   BestellWizardApi,

@@ -3,7 +3,7 @@ import React from "react";
 import { Form } from "react-bootstrap";
 import { PublicPickupLocation } from "../../api-client";
 import TapirButton from "../../components/TapirButton.tsx";
-import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
+import { BUTTON_VARIANT } from "../../components/mobile_wizard/utils/BUTTON_VARIANT.ts";
 import "./map.css";
 
 interface Step5CPickupLocationWishesProps {

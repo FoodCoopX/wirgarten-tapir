@@ -6,8 +6,9 @@ import { PublicPickupLocation, type PublicProductType } from "../../api-client";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import DeliveryDayTabs from "../../components/DeliveryDayTabs.tsx";
+import NextStepButton from "../../components/mobile_wizard/NextStepButton.tsx";
+import { BUTTON_VARIANT } from "../../components/mobile_wizard/utils/BUTTON_VARIANT.ts";
 import { getUniqueDeliveryDays } from "../../utils/getUniqueDeliveryDays.ts";
-import NextStepButton from "../components/NextStepButton.tsx";
 import Step5CPickupLocationList from "../components/Step5CPickupLocationList.tsx";
 import Step5CPickupLocationMap from "../components/Step5CPickupLocationMap.tsx";
 import Step5CPickupLocationWishes from "../components/Step5CPickupLocationWishes.tsx";
@@ -15,7 +16,6 @@ import {
   ALL_PICKUP_LOCATION_TABS,
   PickupLocationTab,
 } from "../types/PickupLocationTab.ts";
-import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import { getPickupLocationsForDeliveryMode } from "../utils/getPickupLocationsForDeliveryMode.ts";
 import { shouldShowPickupLocationWishes } from "../utils/shouldShowPickupLocationWishes.ts";
 
