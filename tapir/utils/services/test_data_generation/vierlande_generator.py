@@ -66,6 +66,12 @@ class VierlandeGenerator:
 
     SEASON_CAPACITY_PER_PRODUCT_TYPE = {HARVEST_SHARE_PRODUCT_TYPE_NAME: 230}
 
+    BIDDING_ROUND_TARGET_AMOUNT_PER_YEAR = Decimal("220800.00")
+
+    @classmethod
+    def get_bidding_round_target_amount_per_year(cls) -> Decimal:
+        return cls.BIDDING_ROUND_TARGET_AMOUNT_PER_YEAR
+
     # (name, base_price, size, count, base, description)
     # One subscription per share member: 194 * 1 + 13 * 2 + 1 * 3 = 223 assigned share
     # units of 230 capacity.

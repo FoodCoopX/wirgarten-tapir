@@ -54,6 +54,7 @@ class BiddingRoundConfigChanges:
     prices: list[RoundPriceInput] | None = None
     bidding_procedure: str | None = None
     bid_levels: int | None = None
+    include_auto_renewed: bool | None = None
     provided_fields: frozenset[str] = frozenset()
 
     @classmethod
@@ -73,6 +74,7 @@ class BiddingRoundConfigChanges:
             prices=prices,
             bidding_procedure=payload.get("bidding_procedure"),
             bid_levels=payload.get("bid_levels"),
+            include_auto_renewed=payload.get("include_auto_renewed"),
             provided_fields=frozenset(payload.keys()),
         )
 
@@ -107,6 +109,7 @@ class BiddingRoundService:
         prices: list[RoundPriceInput] | None = None,
         bidding_procedure: str = BIDDING_ROUND_PROCEDURE_SIMPLE,
         bid_levels: int = 1,
+        include_auto_renewed: bool = True,
     ) -> BiddingRound:
         if prices is not None:
             cls.validate_round_prices(prices, product_type_id)
@@ -119,6 +122,7 @@ class BiddingRoundService:
             comment=comment,
             bidding_procedure=bidding_procedure,
             bid_levels=bid_levels,
+            include_auto_renewed=include_auto_renewed,
         )
         cls._apply_target_amount_per_year(bidding_round, target_amount_per_year)
         if prices is not None:
@@ -350,6 +354,11 @@ class BiddingRoundService:
             bidding_round.bidding_procedure = changes.bidding_procedure
         if "bid_levels" in changes.provided_fields and changes.bid_levels is not None:
             bidding_round.bid_levels = changes.bid_levels
+        if (
+            "include_auto_renewed" in changes.provided_fields
+            and changes.include_auto_renewed is not None
+        ):
+            bidding_round.include_auto_renewed = changes.include_auto_renewed
         if (
             "product_type_id" in changes.provided_fields
             and changes.product_type_id is not None

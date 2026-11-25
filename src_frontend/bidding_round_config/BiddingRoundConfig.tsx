@@ -44,6 +44,7 @@ interface FormState {
   targetAmountPerYear: string;
   biddingProcedure: string;
   bidLevels: string;
+  includeAutoRenewed: boolean;
   prices: Record<string, PriceDraft>;
 }
 
@@ -57,6 +58,7 @@ const EMPTY_FORM: FormState = {
   targetAmountPerYear: "",
   biddingProcedure: "simple",
   bidLevels: "1",
+  includeAutoRenewed: true,
   prices: {},
 };
 
@@ -203,6 +205,7 @@ const BiddingRoundConfig: React.FC<BiddingRoundConfigProps> = ({
       targetAmountPerYear: round.product?.targetAmountPerYear ?? "",
       biddingProcedure: round.biddingProcedure,
       bidLevels: String(round.bidLevels),
+      includeAutoRenewed: round.includeAutoRenewed,
       prices,
     });
     void loadProductTypes(round.growingPeriodId ?? "");
@@ -253,6 +256,9 @@ const BiddingRoundConfig: React.FC<BiddingRoundConfigProps> = ({
     if (formBidLevels !== current.bidLevels) {
       patch.bidLevels = formBidLevels;
     }
+    if (form.includeAutoRenewed !== current.includeAutoRenewed) {
+      patch.includeAutoRenewed = form.includeAutoRenewed;
+    }
     return patch;
   }
 
@@ -286,6 +292,7 @@ const BiddingRoundConfig: React.FC<BiddingRoundConfigProps> = ({
               form.biddingProcedure === "bid_range"
                 ? 2
                 : Number(form.bidLevels) || 1,
+            includeAutoRenewed: form.includeAutoRenewed,
             prices,
           },
         });
@@ -354,7 +361,7 @@ const BiddingRoundConfig: React.FC<BiddingRoundConfigProps> = ({
   const hasInvalidSize = selectedPrices.some(
     (price) => !price.size || Number.parseFloat(price.size) <= 0,
   );
-  const canEditProductType = !editingRoundId
+  const canEditSensitive = !editingRoundId
     ? true
     : !(rounds.find((round) => round.id === editingRoundId)?.hasBids ?? false);
 
@@ -443,10 +450,26 @@ const BiddingRoundConfig: React.FC<BiddingRoundConfigProps> = ({
             </Col>
             <Col md={3}>
               <Form.Group>
+                <Form.Check
+                  type={"checkbox"}
+                  label={"Auto-Verlängerte einbeziehen"}
+                  checked={form.includeAutoRenewed}
+                  disabled={!canEditSensitive}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      includeAutoRenewed: event.target.checked,
+                    }))
+                  }
+                />
+              </Form.Group>
+            </Col>
+            <Col md={3}>
+              <Form.Group>
                 <Form.Label>Produkttyp</Form.Label>
                 <Form.Select
                   value={form.productTypeId}
-                  disabled={!canEditProductType}
+                  disabled={!canEditSensitive}
                   onChange={(event) =>
                     updateForm("productTypeId", event.target.value)
                   }
@@ -465,6 +488,7 @@ const BiddingRoundConfig: React.FC<BiddingRoundConfigProps> = ({
                 <Form.Label>Verfahren</Form.Label>
                 <Form.Select
                   value={form.biddingProcedure}
+                  disabled={!canEditSensitive}
                   onChange={(event) =>
                     updateForm("biddingProcedure", event.target.value)
                   }
@@ -479,7 +503,10 @@ const BiddingRoundConfig: React.FC<BiddingRoundConfigProps> = ({
                 <Form.Label>Gebotsstufen</Form.Label>
                 <Form.Select
                   value={form.bidLevels}
-                  disabled={form.biddingProcedure === "bid_range"}
+                  disabled={
+                    !canEditSensitive ||
+                    form.biddingProcedure === "bid_range"
+                  }
                   onChange={(event) =>
                     updateForm("bidLevels", event.target.value)
                   }

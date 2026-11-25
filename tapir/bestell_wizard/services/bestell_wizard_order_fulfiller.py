@@ -18,6 +18,9 @@ from tapir.associations.services.association_membership_change_handler import (
 from tapir.bestell_wizard.services.bestell_wizard_order_validator import (
     BestellWizardOrderValidator,
 )
+from tapir.bidding_round.services.non_bidder_contribution_service import (
+    NonBidderContributionService,
+)
 from tapir.coop.services.coop_share_purchase_handler import CoopSharePurchaseHandler
 from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.payments.services.member_payment_rhythm_service import (
@@ -155,6 +158,17 @@ class BestellWizardOrderFulfiller:
             cache=cache,
             actor=actor,
         )
+
+        # Latecomers (Nachzügler) pay at least the non-bidder floor when the season
+        # round is already closed (never lowers the chosen contribution).
+        floored_contribution = NonBidderContributionService.apply_latecomer_floor(
+            member=member,
+            contract_start_date=contract_start_date,
+            actor=actor,
+            cache=cache,
+        )
+        if floored_contribution is not None:
+            solidarity_contribution = floored_contribution
 
         cls.create_questionnaire_responses(
             questionnaire_source_ids=validated_serializer_data["distribution_channels"],
