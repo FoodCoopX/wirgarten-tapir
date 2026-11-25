@@ -19,165 +19,191 @@ import {
 } from "./NoticePeriodUnitEnum";
 import type { Product } from "./Product";
 import { ProductFromJSON, ProductToJSON } from "./Product";
+import type { RenewalCancellationStatusEnum } from "./RenewalCancellationStatusEnum";
+import { RenewalCancellationStatusEnumFromJSON } from "./RenewalCancellationStatusEnum";
 
 /**
  *
  * @export
- * @interface SubscriptionTrialFields
+ * @interface SubscriptionDetails
  */
-export interface SubscriptionTrialFields {
+export interface SubscriptionDetails {
   /**
    *
    * @type {string}
-   * @memberof SubscriptionTrialFields
+   * @memberof SubscriptionDetails
    */
   id?: string;
   /**
    *
    * @type {Product}
-   * @memberof SubscriptionTrialFields
+   * @memberof SubscriptionDetails
    */
   product: Product;
   /**
    *
    * @type {boolean}
-   * @memberof SubscriptionTrialFields
+   * @memberof SubscriptionDetails
    */
   readonly isInTrial: boolean;
   /**
    *
    * @type {string}
-   * @memberof SubscriptionTrialFields
+   * @memberof SubscriptionDetails
    */
   readonly defaultTrialEndDate: string;
   /**
    *
    * @type {string}
-   * @memberof SubscriptionTrialFields
+   * @memberof SubscriptionDetails
    */
   readonly effectiveTrialEndDate: string;
   /**
    *
+   * @type {RenewalCancellationStatusEnum}
+   * @memberof SubscriptionDetails
+   */
+  readonly renewalCancellationStatus: RenewalCancellationStatusEnum;
+  /**
+   *
+   * @type {string}
+   * @memberof SubscriptionDetails
+   */
+  readonly renewalStartDate: string | null;
+  /**
+   *
+   * @type {string}
+   * @memberof SubscriptionDetails
+   */
+  readonly growingPeriodStartDate: string;
+  /**
+   *
+   * @type {string}
+   * @memberof SubscriptionDetails
+   */
+  readonly growingPeriodEndDate: string;
+  /**
+   *
    * @type {Date}
-   * @memberof SubscriptionTrialFields
+   * @memberof SubscriptionDetails
    */
   readonly createdAt: Date;
   /**
    *
    * @type {Date}
-   * @memberof SubscriptionTrialFields
+   * @memberof SubscriptionDetails
    */
   readonly updatedAt: Date;
   /**
    *
    * @type {Date}
-   * @memberof SubscriptionTrialFields
+   * @memberof SubscriptionDetails
    */
   adminConfirmed?: Date | null;
   /**
    *
    * @type {Date}
-   * @memberof SubscriptionTrialFields
+   * @memberof SubscriptionDetails
    */
   autoConfirmed?: Date | null;
   /**
    *
    * @type {number}
-   * @memberof SubscriptionTrialFields
+   * @memberof SubscriptionDetails
    */
   quantity: number;
   /**
    *
    * @type {string}
-   * @memberof SubscriptionTrialFields
+   * @memberof SubscriptionDetails
    */
   startDate: string;
   /**
    *
    * @type {string}
-   * @memberof SubscriptionTrialFields
+   * @memberof SubscriptionDetails
    */
   endDate: string;
   /**
    *
    * @type {Date}
-   * @memberof SubscriptionTrialFields
+   * @memberof SubscriptionDetails
    */
   cancellationTs?: Date | null;
   /**
    *
    * @type {Date}
-   * @memberof SubscriptionTrialFields
+   * @memberof SubscriptionDetails
    */
   consentTs?: Date | null;
   /**
    *
    * @type {Date}
-   * @memberof SubscriptionTrialFields
+   * @memberof SubscriptionDetails
    */
   withdrawalConsentTs?: Date | null;
   /**
    *
    * @type {boolean}
-   * @memberof SubscriptionTrialFields
+   * @memberof SubscriptionDetails
    */
   trialDisabled?: boolean;
   /**
    *
    * @type {string}
-   * @memberof SubscriptionTrialFields
+   * @memberof SubscriptionDetails
    */
   trialEndDateOverride?: string | null;
   /**
    *
    * @type {string}
-   * @memberof SubscriptionTrialFields
+   * @memberof SubscriptionDetails
    */
   priceOverride?: string | null;
   /**
    *
    * @type {number}
-   * @memberof SubscriptionTrialFields
+   * @memberof SubscriptionDetails
    */
   noticePeriodDuration: number;
   /**
    *
    * @type {NoticePeriodUnitEnum}
-   * @memberof SubscriptionTrialFields
+   * @memberof SubscriptionDetails
    */
   noticePeriodUnit: NoticePeriodUnitEnum;
   /**
    *
    * @type {Date}
-   * @memberof SubscriptionTrialFields
+   * @memberof SubscriptionDetails
    */
   cancellationAdminConfirmed?: Date | null;
   /**
    *
    * @type {string}
-   * @memberof SubscriptionTrialFields
+   * @memberof SubscriptionDetails
    */
   member: string;
   /**
    *
    * @type {string}
-   * @memberof SubscriptionTrialFields
+   * @memberof SubscriptionDetails
    */
   period?: string | null;
   /**
    *
    * @type {string}
-   * @memberof SubscriptionTrialFields
+   * @memberof SubscriptionDetails
    */
   mandateRef: string;
 }
 
 /**
- * Check if a given object implements the SubscriptionTrialFields interface.
+ * Check if a given object implements the SubscriptionDetails interface.
  */
-export function instanceOfSubscriptionTrialFields(
+export function instanceOfSubscriptionDetails(
   value: object,
-): value is SubscriptionTrialFields {
+): value is SubscriptionDetails {
   if (!("product" in value) || value["product"] === undefined) return false;
   if (!("isInTrial" in value) || value["isInTrial"] === undefined) return false;
   if (
@@ -188,6 +214,23 @@ export function instanceOfSubscriptionTrialFields(
   if (
     !("effectiveTrialEndDate" in value) ||
     value["effectiveTrialEndDate"] === undefined
+  )
+    return false;
+  if (
+    !("renewalCancellationStatus" in value) ||
+    value["renewalCancellationStatus"] === undefined
+  )
+    return false;
+  if (!("renewalStartDate" in value) || value["renewalStartDate"] === undefined)
+    return false;
+  if (
+    !("growingPeriodStartDate" in value) ||
+    value["growingPeriodStartDate"] === undefined
+  )
+    return false;
+  if (
+    !("growingPeriodEndDate" in value) ||
+    value["growingPeriodEndDate"] === undefined
   )
     return false;
   if (!("createdAt" in value) || value["createdAt"] === undefined) return false;
@@ -208,16 +251,14 @@ export function instanceOfSubscriptionTrialFields(
   return true;
 }
 
-export function SubscriptionTrialFieldsFromJSON(
-  json: any,
-): SubscriptionTrialFields {
-  return SubscriptionTrialFieldsFromJSONTyped(json, false);
+export function SubscriptionDetailsFromJSON(json: any): SubscriptionDetails {
+  return SubscriptionDetailsFromJSONTyped(json, false);
 }
 
-export function SubscriptionTrialFieldsFromJSONTyped(
+export function SubscriptionDetailsFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
-): SubscriptionTrialFields {
+): SubscriptionDetails {
   if (json == null) {
     return json;
   }
@@ -227,6 +268,12 @@ export function SubscriptionTrialFieldsFromJSONTyped(
     isInTrial: json["is_in_trial"],
     defaultTrialEndDate: json["default_trial_end_date"],
     effectiveTrialEndDate: json["effective_trial_end_date"],
+    renewalCancellationStatus: RenewalCancellationStatusEnumFromJSON(
+      json["renewal_cancellation_status"],
+    ),
+    renewalStartDate: json["renewal_start_date"],
+    growingPeriodStartDate: json["growing_period_start_date"],
+    growingPeriodEndDate: json["growing_period_end_date"],
     createdAt: new Date(json["created_at"]),
     updatedAt: new Date(json["updated_at"]),
     adminConfirmed:
@@ -270,18 +317,20 @@ export function SubscriptionTrialFieldsFromJSONTyped(
   };
 }
 
-export function SubscriptionTrialFieldsToJSON(
-  json: any,
-): SubscriptionTrialFields {
-  return SubscriptionTrialFieldsToJSONTyped(json, false);
+export function SubscriptionDetailsToJSON(json: any): SubscriptionDetails {
+  return SubscriptionDetailsToJSONTyped(json, false);
 }
 
-export function SubscriptionTrialFieldsToJSONTyped(
+export function SubscriptionDetailsToJSONTyped(
   value?: Omit<
-    SubscriptionTrialFields,
+    SubscriptionDetails,
     | "is_in_trial"
     | "default_trial_end_date"
     | "effective_trial_end_date"
+    | "renewal_cancellation_status"
+    | "renewal_start_date"
+    | "growing_period_start_date"
+    | "growing_period_end_date"
     | "created_at"
     | "updated_at"
   > | null,

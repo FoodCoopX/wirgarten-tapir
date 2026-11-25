@@ -5886,22 +5886,33 @@ paths:
               schema:
                 type: string
           description: ''
-  /subscriptions/api/convert_weeks_to_date_for_subscription_change:
+  /subscriptions/api/convert_week_to_date_for_subscription_change:
     get:
-      operationId: subscriptions_api_convert_weeks_to_date_for_subscription_change_retrieve
+      operationId: subscriptions_api_convert_week_to_date_for_subscription_change_retrieve
       parameters:
       - in: query
-        name: end_week
+        name: boundary
         schema:
-          type: integer
-      - in: query
-        name: start_week
-        schema:
-          type: integer
+          enum:
+          - start
+          - end
+          type: string
+          minLength: 1
+        description: |-
+          * `start` - start
+          * `end` - end
+        required: true
       - in: query
         name: subscription_id
         schema:
           type: string
+          minLength: 1
+        required: true
+      - in: query
+        name: week
+        schema:
+          type: integer
+        required: true
       tags:
       - subscriptions
       security:
@@ -5913,7 +5924,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ConvertWeekToDateForSubscriptionChangesResponse'
+                $ref: '#/components/schemas/ConvertWeekToDateForSubscriptionChangeResponse'
           description: ''
   /subscriptions/api/dates_change:
     post:
@@ -6324,7 +6335,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/SubscriptionTrialFields'
+                  $ref: '#/components/schemas/SubscriptionDetails'
           description: ''
   /subscriptions/subscriptions/{id}/:
     get:
@@ -6347,7 +6358,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SubscriptionTrialFields'
+                $ref: '#/components/schemas/SubscriptionDetails'
           description: ''
   /tapirmail/api/create_missing_trigger:
     post:
@@ -9189,6 +9200,16 @@ paths:
           description: No response body
 components:
   schemas:
+    ActionEnum:
+      enum:
+      - change_start
+      - change_end
+      - cancel_renewal
+      type: string
+      description: |-
+        * `change_start` - change_start
+        * `change_end` - change_end
+        * `cancel_renewal` - cancel_renewal
     AdminSetAssociationMembershipRequestRequest:
       type: object
       properties:
@@ -11156,18 +11177,19 @@ components:
       - confirm_creation_ids
       - confirm_deletion_ids
       - confirm_purchase_ids
-    ConvertWeekToDateForSubscriptionChangesResponse:
+    ConvertWeekToDateForSubscriptionChangeResponse:
       type: object
       properties:
-        start_date:
+        date:
           type: string
           format: date
-        end_date:
+          nullable: true
+        error:
           type: string
-          format: date
+          nullable: true
       required:
-      - end_date
-      - start_date
+      - date
+      - error
     CoopShareTransaction:
       type: object
       properties:
@@ -17541,6 +17563,16 @@ components:
             minLength: 1
       required:
       - recipients
+    RenewalCancellationStatusEnum:
+      enum:
+      - available
+      - before_notice_period_end
+      - not_available
+      type: string
+      description: |-
+        * `available` - available
+        * `before_notice_period_end` - before_notice_period_end
+        * `not_available` - not_available
     RhythmEnum:
       enum:
       - monthly
@@ -18311,72 +18343,22 @@ components:
     SubscriptionDateChangeRequestRequest:
       type: object
       properties:
-        start_date_is_on_period_start:
-          type: boolean
-        end_date_is_on_period_end:
-          type: boolean
-        start_week:
-          type: integer
-        end_week:
-          type: integer
         subscription_id:
           type: string
           minLength: 1
-        update_end_date_of_other_contracts:
-          type: boolean
-      required:
-      - end_date_is_on_period_end
-      - end_week
-      - start_date_is_on_period_start
-      - start_week
-      - subscription_id
-      - update_end_date_of_other_contracts
-    SubscriptionPrerequisitesInputRequest:
-      type: object
-      properties:
-        pickup_location_id:
-          type: string
-          nullable: true
-          minLength: 1
-        account_owner:
-          type: string
-        iban:
-          type: string
-        sepa_mandate_confirmed:
-          type: boolean
-      required:
-      - account_owner
-      - iban
-      - sepa_mandate_confirmed
-    SubscriptionPriceOverrideChangeRequestRequest:
-      type: object
-      properties:
-        subscription_id:
-          type: string
-          minLength: 1
-        price_override:
-          type: number
-          format: double
-          nullable: true
-      required:
-      - price_override
-      - subscription_id
-    SubscriptionTrialChangeRequestRequest:
-      type: object
-      properties:
-        subscription_id:
-          type: string
-          minLength: 1
-        trial_disabled:
-          type: boolean
-        trial_end_date_override:
+        action:
+          $ref: '#/components/schemas/ActionEnum'
+        date:
           type: string
           format: date
           nullable: true
+        update_other_contracts:
+          type: boolean
       required:
+      - action
       - subscription_id
-      - trial_disabled
-    SubscriptionTrialFields:
+      - update_other_contracts
+    SubscriptionDetails:
       type: object
       properties:
         id:
@@ -18392,6 +18374,23 @@ components:
           readOnly: true
         effective_trial_end_date:
           type: string
+          readOnly: true
+        renewal_cancellation_status:
+          allOf:
+          - $ref: '#/components/schemas/RenewalCancellationStatusEnum'
+          readOnly: true
+        renewal_start_date:
+          type: string
+          format: date
+          nullable: true
+          readOnly: true
+        growing_period_start_date:
+          type: string
+          format: date
+          readOnly: true
+        growing_period_end_date:
+          type: string
+          format: date
           readOnly: true
         created_at:
           type: string
@@ -18464,6 +18463,8 @@ components:
       - default_trial_end_date
       - effective_trial_end_date
       - end_date
+      - growing_period_end_date
+      - growing_period_start_date
       - is_in_trial
       - mandate_ref
       - member
@@ -18471,8 +18472,55 @@ components:
       - notice_period_unit
       - product
       - quantity
+      - renewal_cancellation_status
+      - renewal_start_date
       - start_date
       - updated_at
+    SubscriptionPrerequisitesInputRequest:
+      type: object
+      properties:
+        pickup_location_id:
+          type: string
+          nullable: true
+          minLength: 1
+        account_owner:
+          type: string
+        iban:
+          type: string
+        sepa_mandate_confirmed:
+          type: boolean
+      required:
+      - account_owner
+      - iban
+      - sepa_mandate_confirmed
+    SubscriptionPriceOverrideChangeRequestRequest:
+      type: object
+      properties:
+        subscription_id:
+          type: string
+          minLength: 1
+        price_override:
+          type: number
+          format: double
+          nullable: true
+      required:
+      - price_override
+      - subscription_id
+    SubscriptionTrialChangeRequestRequest:
+      type: object
+      properties:
+        subscription_id:
+          type: string
+          minLength: 1
+        trial_disabled:
+          type: boolean
+        trial_end_date_override:
+          type: string
+          format: date
+          nullable: true
+      required:
+      - subscription_id
+      - trial_disabled
     TemplateTypeEnum:
       enum:
       - start

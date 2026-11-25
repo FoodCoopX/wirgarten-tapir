@@ -23,7 +23,7 @@ import type {
   CancelSubscriptionsViewResponse,
   CancellationData,
   ConfirmSubscriptionChangesRequestRequest,
-  ConvertWeekToDateForSubscriptionChangesResponse,
+  ConvertWeekToDateForSubscriptionChangeResponse,
   ExtendedProduct,
   MemberDataToConfirm,
   MemberProfileCapacityCheckRequestRequest,
@@ -33,9 +33,9 @@ import type {
   Product,
   PublicProductType,
   SubscriptionDateChangeRequestRequest,
+  SubscriptionDetails,
   SubscriptionPriceOverrideChangeRequestRequest,
   SubscriptionTrialChangeRequestRequest,
-  SubscriptionTrialFields,
   UpdateSubscriptionsRequestRequest,
 } from "../models/index";
 import {
@@ -49,7 +49,7 @@ import {
   CancelSubscriptionsViewResponseFromJSON,
   CancellationDataFromJSON,
   ConfirmSubscriptionChangesRequestRequestToJSON,
-  ConvertWeekToDateForSubscriptionChangesResponseFromJSON,
+  ConvertWeekToDateForSubscriptionChangeResponseFromJSON,
   ExtendedProductFromJSON,
   MemberDataToConfirmFromJSON,
   MemberProfileCapacityCheckRequestRequestToJSON,
@@ -59,9 +59,9 @@ import {
   ProductFromJSON,
   PublicProductTypeFromJSON,
   SubscriptionDateChangeRequestRequestToJSON,
+  SubscriptionDetailsFromJSON,
   SubscriptionPriceOverrideChangeRequestRequestToJSON,
   SubscriptionTrialChangeRequestRequestToJSON,
-  SubscriptionTrialFieldsFromJSON,
   UpdateSubscriptionsRequestRequestToJSON,
 } from "../models/index";
 import * as runtime from "../runtime";
@@ -102,10 +102,10 @@ export interface SubscriptionsApiConfirmSubscriptionChangesCreateRequest {
   confirmSubscriptionChangesRequestRequest: ConfirmSubscriptionChangesRequestRequest;
 }
 
-export interface SubscriptionsApiConvertWeeksToDateForSubscriptionChangeRetrieveRequest {
-  endWeek?: number;
-  startWeek?: number;
-  subscriptionId?: string;
+export interface SubscriptionsApiConvertWeekToDateForSubscriptionChangeRetrieveRequest {
+  boundary: SubscriptionsApiConvertWeekToDateForSubscriptionChangeRetrieveBoundaryEnum;
+  subscriptionId: string;
+  week: number;
 }
 
 export interface SubscriptionsApiDatesChangeCreateRequest {
@@ -725,24 +725,45 @@ export class SubscriptionsApi extends runtime.BaseAPI {
 
   /**
    */
-  async subscriptionsApiConvertWeeksToDateForSubscriptionChangeRetrieveRaw(
-    requestParameters: SubscriptionsApiConvertWeeksToDateForSubscriptionChangeRetrieveRequest,
+  async subscriptionsApiConvertWeekToDateForSubscriptionChangeRetrieveRaw(
+    requestParameters: SubscriptionsApiConvertWeekToDateForSubscriptionChangeRetrieveRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<
-    runtime.ApiResponse<ConvertWeekToDateForSubscriptionChangesResponse>
+    runtime.ApiResponse<ConvertWeekToDateForSubscriptionChangeResponse>
   > {
-    const queryParameters: any = {};
-
-    if (requestParameters["endWeek"] != null) {
-      queryParameters["end_week"] = requestParameters["endWeek"];
+    if (requestParameters["boundary"] == null) {
+      throw new runtime.RequiredError(
+        "boundary",
+        'Required parameter "boundary" was null or undefined when calling subscriptionsApiConvertWeekToDateForSubscriptionChangeRetrieve().',
+      );
     }
 
-    if (requestParameters["startWeek"] != null) {
-      queryParameters["start_week"] = requestParameters["startWeek"];
+    if (requestParameters["subscriptionId"] == null) {
+      throw new runtime.RequiredError(
+        "subscriptionId",
+        'Required parameter "subscriptionId" was null or undefined when calling subscriptionsApiConvertWeekToDateForSubscriptionChangeRetrieve().',
+      );
+    }
+
+    if (requestParameters["week"] == null) {
+      throw new runtime.RequiredError(
+        "week",
+        'Required parameter "week" was null or undefined when calling subscriptionsApiConvertWeekToDateForSubscriptionChangeRetrieve().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    if (requestParameters["boundary"] != null) {
+      queryParameters["boundary"] = requestParameters["boundary"];
     }
 
     if (requestParameters["subscriptionId"] != null) {
       queryParameters["subscription_id"] = requestParameters["subscriptionId"];
+    }
+
+    if (requestParameters["week"] != null) {
+      queryParameters["week"] = requestParameters["week"];
     }
 
     const headerParameters: runtime.HTTPHeaders = {};
@@ -763,7 +784,7 @@ export class SubscriptionsApi extends runtime.BaseAPI {
     }
     const response = await this.request(
       {
-        path: `/subscriptions/api/convert_weeks_to_date_for_subscription_change`,
+        path: `/subscriptions/api/convert_week_to_date_for_subscription_change`,
         method: "GET",
         headers: headerParameters,
         query: queryParameters,
@@ -772,18 +793,18 @@ export class SubscriptionsApi extends runtime.BaseAPI {
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      ConvertWeekToDateForSubscriptionChangesResponseFromJSON(jsonValue),
+      ConvertWeekToDateForSubscriptionChangeResponseFromJSON(jsonValue),
     );
   }
 
   /**
    */
-  async subscriptionsApiConvertWeeksToDateForSubscriptionChangeRetrieve(
-    requestParameters: SubscriptionsApiConvertWeeksToDateForSubscriptionChangeRetrieveRequest = {},
+  async subscriptionsApiConvertWeekToDateForSubscriptionChangeRetrieve(
+    requestParameters: SubscriptionsApiConvertWeekToDateForSubscriptionChangeRetrieveRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<ConvertWeekToDateForSubscriptionChangesResponse> {
+  ): Promise<ConvertWeekToDateForSubscriptionChangeResponse> {
     const response =
-      await this.subscriptionsApiConvertWeeksToDateForSubscriptionChangeRetrieveRaw(
+      await this.subscriptionsApiConvertWeekToDateForSubscriptionChangeRetrieveRaw(
         requestParameters,
         initOverrides,
       );
@@ -1768,7 +1789,7 @@ export class SubscriptionsApi extends runtime.BaseAPI {
    */
   async subscriptionsSubscriptionsListRaw(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<Array<SubscriptionTrialFields>>> {
+  ): Promise<runtime.ApiResponse<Array<SubscriptionDetails>>> {
     const queryParameters: any = {};
 
     const headerParameters: runtime.HTTPHeaders = {};
@@ -1798,7 +1819,7 @@ export class SubscriptionsApi extends runtime.BaseAPI {
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      jsonValue.map(SubscriptionTrialFieldsFromJSON),
+      jsonValue.map(SubscriptionDetailsFromJSON),
     );
   }
 
@@ -1806,7 +1827,7 @@ export class SubscriptionsApi extends runtime.BaseAPI {
    */
   async subscriptionsSubscriptionsList(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<Array<SubscriptionTrialFields>> {
+  ): Promise<Array<SubscriptionDetails>> {
     const response =
       await this.subscriptionsSubscriptionsListRaw(initOverrides);
     return await response.value();
@@ -1817,7 +1838,7 @@ export class SubscriptionsApi extends runtime.BaseAPI {
   async subscriptionsSubscriptionsRetrieveRaw(
     requestParameters: SubscriptionsSubscriptionsRetrieveRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<SubscriptionTrialFields>> {
+  ): Promise<runtime.ApiResponse<SubscriptionDetails>> {
     if (requestParameters["id"] == null) {
       throw new runtime.RequiredError(
         "id",
@@ -1857,7 +1878,7 @@ export class SubscriptionsApi extends runtime.BaseAPI {
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      SubscriptionTrialFieldsFromJSON(jsonValue),
+      SubscriptionDetailsFromJSON(jsonValue),
     );
   }
 
@@ -1866,7 +1887,7 @@ export class SubscriptionsApi extends runtime.BaseAPI {
   async subscriptionsSubscriptionsRetrieve(
     requestParameters: SubscriptionsSubscriptionsRetrieveRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<SubscriptionTrialFields> {
+  ): Promise<SubscriptionDetails> {
     const response = await this.subscriptionsSubscriptionsRetrieveRaw(
       requestParameters,
       initOverrides,
@@ -1874,3 +1895,14 @@ export class SubscriptionsApi extends runtime.BaseAPI {
     return await response.value();
   }
 }
+
+/**
+ * @export
+ */
+export const SubscriptionsApiConvertWeekToDateForSubscriptionChangeRetrieveBoundaryEnum =
+  {
+    Start: "start",
+    End: "end",
+  } as const;
+export type SubscriptionsApiConvertWeekToDateForSubscriptionChangeRetrieveBoundaryEnum =
+  (typeof SubscriptionsApiConvertWeekToDateForSubscriptionChangeRetrieveBoundaryEnum)[keyof typeof SubscriptionsApiConvertWeekToDateForSubscriptionChangeRetrieveBoundaryEnum];

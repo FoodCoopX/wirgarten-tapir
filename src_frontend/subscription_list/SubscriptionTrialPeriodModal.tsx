@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Alert, Col, Form, Modal, Row, Spinner } from "react-bootstrap";
 import {
   Subscription,
+  SubscriptionDetails,
   SubscriptionsApi,
-  SubscriptionTrialFields,
 } from "../api-client";
 import TapirButton from "../components/TapirButton.tsx";
 import TapirHelpButton from "../components/TapirHelpButton.tsx";
@@ -26,7 +26,7 @@ const SubscriptionTrialPeriodModal: React.FC<
 > = ({ onHide, show, subscriptionId, csrfToken, setToastDatas }) => {
   const subscriptionsApi = useApi(SubscriptionsApi, csrfToken);
   const [loading, setLoading] = useState(true);
-  const [subscription, setSubscription] = useState<SubscriptionTrialFields>();
+  const [subscription, setSubscription] = useState<SubscriptionDetails>();
   const [trialDisabled, setTrialDisabled] = useState(false);
   const [useCustomEndDate, setUseCustomEndDate] = useState(false);
   const [customEndDate, setCustomEndDate] = useState("");

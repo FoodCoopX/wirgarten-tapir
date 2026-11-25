@@ -1,5 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
+export * from "./ActionEnum";
 export * from "./AdminSetAssociationMembershipRequestRequest";
 export * from "./AdminSizeChangeRequest";
 export * from "./AdminStartDateOption";
@@ -61,7 +62,7 @@ export * from "./CancelSubscriptionsViewResponse";
 export * from "./ChangeMemberPickupLocationRequestRequest";
 export * from "./ChangeTypeEnum";
 export * from "./ConfirmSubscriptionChangesRequestRequest";
-export * from "./ConvertWeekToDateForSubscriptionChangesResponse";
+export * from "./ConvertWeekToDateForSubscriptionChangeResponse";
 export * from "./CoopShareTransaction";
 export * from "./CountryEnum";
 export * from "./Counts";
@@ -278,6 +279,7 @@ export * from "./PublicWaitingListEntryDetails";
 export * from "./PublicWaitingListEntryExistingMemberCreateRequest";
 export * from "./PublicWaitingListProductWish";
 export * from "./RecipientRequest";
+export * from "./RenewalCancellationStatusEnum";
 export * from "./RhythmEnum";
 export * from "./SaveExtendedProductTypeRequest";
 export * from "./SegmentData";
@@ -313,10 +315,10 @@ export * from "./Subscription";
 export * from "./SubscriptionChange";
 export * from "./SubscriptionChangeLogEntry";
 export * from "./SubscriptionDateChangeRequestRequest";
+export * from "./SubscriptionDetails";
 export * from "./SubscriptionPrerequisitesInputRequest";
 export * from "./SubscriptionPriceOverrideChangeRequestRequest";
 export * from "./SubscriptionTrialChangeRequestRequest";
-export * from "./SubscriptionTrialFields";
 export * from "./TapirmailApiSegmentCombineCreate200Response";
 export * from "./TapirmailApiSegmentCombineCreate200ResponseRecipientsInner";
 export * from "./TemplateTypeEnum";

@@ -110,10 +110,11 @@ Services: `web` (8000), `vite` (5173), `keycloak` (8080), `db` (5432), `redis` (
   `Member`/`TapirUser`, or personal data), check `tapir/core/services/member_data_disclosure_service.py`: add a
   `DataSource`, update its fields, or exclude fields that must not be shown (secrets, tokens, other members' data).
 - **Log entries**: every change that concerns a specific member (their personal data, contracts, memberships,
-  payments, credits, …) writes a log entry from `tapir/log/models.py`, with `user` set to the member and `actor` set to
-  whoever made the change (`None` for automated tasks). This includes deletions, side effects (e.g. a renewal deleted
-  while shortening a contract) and bulk changes (one entry per affected member). Only changes that cannot be linked to
-  a specific member (configuration, products, pickup locations, …) need no log entry.
+  payments, credits, …) writes a log entry (a subclass of `LogEntry` from `tapir/log/models.py`, usually defined in the
+  owning app's `models.py`), with `user` set to the member and `actor` set to whoever made the change (`None` for
+  automated tasks). This includes deletions, side effects (e.g. a renewal deleted while shortening a contract) and bulk
+  changes (one entry per affected member). Only changes that cannot be linked to a specific member (configuration,
+  products, pickup locations, …) need no log entry.
 - **Final-state code**: code must make sense on its own, not relative to the version it replaced or to earlier steps of
   the same change. When a feature evolves during implementation, rework the API, names and tests to fit the result
   instead of layering flags and exceptions on top.

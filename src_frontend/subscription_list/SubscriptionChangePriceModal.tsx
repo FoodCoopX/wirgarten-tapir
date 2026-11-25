@@ -4,7 +4,7 @@ import {
   CoopApi,
   Member,
   Subscription,
-  SubscriptionTrialFields,
+  SubscriptionDetails,
   SubscriptionsApi,
 } from "../api-client";
 import TapirButton from "../components/TapirButton.tsx";
@@ -64,7 +64,7 @@ const SubscriptionChangePriceModal: React.FC<
   const subscriptionsApi = useApi(SubscriptionsApi, csrfToken);
   const coopApi = useApi(CoopApi, csrfToken);
   const [loading, setLoading] = useState(true);
-  const [subscription, setSubscription] = useState<SubscriptionTrialFields>();
+  const [subscription, setSubscription] = useState<SubscriptionDetails>();
   const [memberId, setMemberId] = useState<string>();
   const [memberData, setMemberData] = useState<Member>();
   const [error, setError] = useState<string>();
