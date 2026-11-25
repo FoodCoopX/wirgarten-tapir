@@ -34,6 +34,7 @@ export * from "./Bid";
 export * from "./BidAdminCreateRequest";
 export * from "./BiddableProduct";
 export * from "./BiddingProcedureEnum";
+export * from "./BidOptions";
 export * from "./BidProductVariant";
 export * from "./BidSubmitRequest";
 export * from "./BidTexts";

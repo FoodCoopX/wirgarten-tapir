@@ -31,3 +31,15 @@ class TestParameterForm(TapirIntegrationTest):
 
         self.assertFalse(form.is_valid())
         self.assertIn(ParameterKeys.SITE_NAME, form.errors)
+
+    def test_init_biddingRoundBidSwitches_showCapacityWarning(self):
+        self._set_parameter(ParameterKeys.BIDDING_ROUND_ENABLED, True)
+        form = ParameterForm()
+
+        for key in [
+            ParameterKeys.BIDDING_ROUND_BID_SHARES_ENABLED,
+            ParameterKeys.BIDDING_ROUND_BID_CAROUSEL_ENABLED,
+        ]:
+            with self.subTest(key=key):
+                self.assertIn("alert alert-warning", form.fields[key].help_text)
+                self.assertIn("Kapazitätsprüfung", form.fields[key].help_text)

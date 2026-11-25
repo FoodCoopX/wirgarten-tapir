@@ -1,5 +1,6 @@
-import React from "react";
-import { Col, Form, Row } from "react-bootstrap";
+import React, { useRef } from "react";
+import { Button, Carousel, Form } from "react-bootstrap";
+import { CarouselRef } from "react-bootstrap/Carousel";
 
 import {
   BiddableProduct,
@@ -7,17 +8,21 @@ import {
   RoundTexts,
 } from "../../api-client";
 import NextStepButton from "../../components/mobile_wizard/NextStepButton.tsx";
-import ProductCard from "../../components/mobile_wizard/ProductCard.tsx";
 import { BUTTON_VARIANT } from "../../components/mobile_wizard/utils/BUTTON_VARIANT.ts";
 import TapirButton from "../../components/TapirButton.tsx";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import PickupLocationRow from "../components/PickupLocationRow.tsx";
 import {
   formatAmountNumber,
+  getMonthlyTotal,
   getYearlyAmount,
   parseEuroAmount,
   sanitizeEuroAmountInput,
 } from "../utils/amounts.ts";
+import {
+  getAmountLevelLabels,
+  getBidRangeLabels,
+} from "../utils/getLevelLabels.ts";
 
 interface BiddingRoundBidStepProps {
   biddableProduct: BiddableProduct;
@@ -31,6 +36,8 @@ interface BiddingRoundBidStepProps {
   amounts: string[];
   onAmountChange: (levelIndex: number, value: string) => void;
   currentPickupLocation: CurrentPickupLocation | null;
+  sharesEnabled: boolean;
+  carouselEnabled: boolean;
   goToNextStep: () => void;
   stepActive: boolean;
 }
@@ -50,75 +57,183 @@ const BiddingRoundBidStep: React.FC<BiddingRoundBidStepProps> = ({
   amounts,
   onAmountChange,
   currentPickupLocation,
+  sharesEnabled,
+  carouselEnabled,
   goToNextStep,
   stepActive,
 }) => {
   const selectedVariant = biddableProduct.products.find(
     (variant) => variant.id === selectedVariantId,
   );
+  const selectedIndex = Math.max(
+    0,
+    biddableProduct.products.findIndex(
+      (variant) => variant.id === selectedVariantId,
+    ),
+  );
+  const carouselRef = useRef<CarouselRef>(null);
+
+  const renderVariant = (
+    variant: (typeof biddableProduct.products)[number],
+  ) => (
+    <div className={"d-flex flex-column align-items-center"}>
+      <div
+        className={"d-flex flex-row align-items-center justify-content-center"}
+        style={{ width: "100%" }}
+      >
+        {variant.imageUrl ? (
+          <img
+            src={variant.imageUrl}
+            style={{
+              maxWidth: "40dvw",
+              maxHeight: "30dvh",
+              objectFit: "contain",
+            }}
+            alt={"Photo von " + variant.name}
+          />
+        ) : (
+          <div style={{ height: "10dvh" }} />
+        )}
+      </div>
+      <div className={"d-flex flex-row gap-2 justify-content-center"}>
+        <strong>{variant.name}</strong>
+      </div>
+      {variant.referenceValue && (
+        <div className={"text-center text-muted small"}>
+          Richtwert {formatCurrency(Number(variant.referenceValue))}
+        </div>
+      )}
+    </div>
+  );
+
+  function buildImageAtIndex(index: number, isBeforeButton: boolean) {
+    const variant = biddableProduct.products[index];
+    if (!variant) {
+      return null;
+    }
+
+    return (
+      <div
+        style={{
+          position: "absolute",
+          left: isBeforeButton ? "2dvw" : undefined,
+          right: isBeforeButton ? undefined : "2dvw",
+          top: "47%",
+          transform: "translate(0, -50%)",
+          cursor: "pointer",
+          zIndex: 10,
+        }}
+        className={"d-flex flex-column align-items-center"}
+      >
+        <Button
+          variant={BUTTON_VARIANT}
+          style={{ padding: 0 }}
+          onClick={() =>
+            isBeforeButton
+              ? carouselRef.current?.prev()
+              : carouselRef.current?.next()
+          }
+        >
+          <div className={"d-flex flex-column align-items-center"}>
+            <span className={"material-icons"}>
+              {isBeforeButton ? "chevron_left" : "chevron_right"}
+            </span>
+            {variant.imageUrl && (
+              <img
+                src={variant.imageUrl}
+                style={{
+                  maxWidth: "8dvh",
+                  objectFit: "contain",
+                }}
+                alt={"Photo von " + variant.name}
+              />
+            )}
+          </div>
+        </Button>
+      </div>
+    );
+  }
 
   const levelLabels = isBidRange
-    ? [texts.bid.greenLabel, texts.bid.redLabel]
-    : requiredAmountLevels === 1
-      ? [texts.bid.amountLabel]
-      : [texts.bid.level1Label, texts.bid.level2Label, texts.bid.level3Label].slice(
-          0,
-          requiredAmountLevels,
-        );
-
-  function getLevelYearlyAmount(levelIndex: number): number | null {
-    const parsedAmount = parseEuroAmount(amounts[levelIndex]);
-    return parsedAmount === null
-      ? null
-      : getYearlyAmount(parsedAmount, quantity);
-  }
+    ? getBidRangeLabels(texts)
+    : getAmountLevelLabels(texts, requiredAmountLevels);
 
   return (
     <>
-      <div className={"d-flex flex-column gap-2"}>
-        <Row xs={1} sm={2} className={"g-2"}>
-          {biddableProduct.products.map((variant) => (
-            <Col key={variant.id}>
-              <ProductCard
-                name={variant.name}
-                referenceValue={variant.referenceValue}
-                selected={variant.id === selectedVariantId}
-                onSelect={() => onSelectVariant(variant.id)}
-              />
-            </Col>
-          ))}
-        </Row>
+      <div className={"d-flex flex-column gap-2 w-100"}>
+        {carouselEnabled ? (
+          biddableProduct.products.length > 1 ? (
+            <Carousel
+              activeIndex={selectedIndex}
+              onSelect={(index) =>
+                onSelectVariant(biddableProduct.products[index].id)
+              }
+              controls={false}
+              indicators={false}
+              interval={null}
+              touch={true}
+              variant={"dark"}
+              ref={carouselRef}
+              wrap={false}
+              style={{ width: "100%" }}
+            >
+              {biddableProduct.products.map((variant, index) => (
+                <Carousel.Item key={variant.id}>
+                  <div
+                    className={
+                      "d-flex flex-row align-items-center justify-content-center"
+                    }
+                  >
+                    {buildImageAtIndex(index - 1, true)}
+                    {renderVariant(variant)}
+                    {buildImageAtIndex(index + 1, false)}
+                  </div>
+                </Carousel.Item>
+              ))}
+            </Carousel>
+          ) : (
+            biddableProduct.products.map((variant) => (
+              <React.Fragment key={variant.id}>
+                {renderVariant(variant)}
+              </React.Fragment>
+            ))
+          )
+        ) : (
+          selectedVariant && renderVariant(selectedVariant)
+        )}
 
-        <Form.Group>
-          <Form.Label>
-            <strong>Anteile</strong>
-          </Form.Label>
-          <div
-            className={
-              "d-flex flex-row gap-2 align-items-center justify-content-center"
-            }
-          >
-            <TapirButton
-              variant={BUTTON_VARIANT}
-              icon={"remove"}
-              size={"sm"}
-              onClick={() =>
-                onQuantityChange(Math.max(MIN_QUANTITY, quantity - 1))
+        {sharesEnabled && (
+          <Form.Group>
+            <Form.Label>
+              <strong>Anteile</strong>
+            </Form.Label>
+            <div
+              className={
+                "d-flex flex-row gap-2 align-items-center justify-content-center"
               }
-              disabled={quantity <= MIN_QUANTITY}
-            />
-            <span className={"fw-bold"}>{quantity}</span>
-            <TapirButton
-              variant={BUTTON_VARIANT}
-              icon={"add"}
-              size={"sm"}
-              onClick={() =>
-                onQuantityChange(Math.min(MAX_QUANTITY, quantity + 1))
-              }
-              disabled={quantity >= MAX_QUANTITY}
-            />
-          </div>
-        </Form.Group>
+            >
+              <TapirButton
+                variant={BUTTON_VARIANT}
+                icon={"remove"}
+                size={"sm"}
+                onClick={() =>
+                  onQuantityChange(Math.max(MIN_QUANTITY, quantity - 1))
+                }
+                disabled={quantity <= MIN_QUANTITY}
+              />
+              <span className={"fw-bold"}>{quantity}</span>
+              <TapirButton
+                variant={BUTTON_VARIANT}
+                icon={"add"}
+                size={"sm"}
+                onClick={() =>
+                  onQuantityChange(Math.min(MAX_QUANTITY, quantity + 1))
+                }
+                disabled={quantity >= MAX_QUANTITY}
+              />
+            </div>
+          </Form.Group>
+        )}
 
         <PickupLocationRow
           currentPickupLocation={currentPickupLocation}
@@ -136,7 +251,11 @@ const BiddingRoundBidStep: React.FC<BiddingRoundBidStepProps> = ({
         )}
 
         {Array.from({ length: requiredAmountLevels }, (_, levelIndex) => {
-          const yearlyAmount = getLevelYearlyAmount(levelIndex);
+          const parsedAmount = parseEuroAmount(amounts[levelIndex]);
+          const yearlyAmount =
+            parsedAmount === null
+              ? null
+              : getYearlyAmount(parsedAmount, quantity);
           return (
             <div key={levelLabels[levelIndex] ?? levelIndex}>
               <Form.Group>
@@ -162,6 +281,15 @@ const BiddingRoundBidStep: React.FC<BiddingRoundBidStepProps> = ({
                   {yearlyAmount === null ? "–" : formatCurrency(yearlyAmount)}
                 </strong>
               </p>
+              {quantity > 1 && parsedAmount !== null && (
+                <p className={"text-center mb-0 small text-muted"}>
+                  Beitrag gesamt:{" "}
+                  <strong>
+                    {formatCurrency(getMonthlyTotal(parsedAmount, quantity))}{" "}
+                    {texts.bid.monthlyUnit}
+                  </strong>
+                </p>
+              )}
             </div>
           );
         })}

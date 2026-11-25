@@ -39,6 +39,7 @@ class ParameterMeta:
         textarea=False,
         vars_hint: list[str] = None,
         show_only_when: Callable = None,
+        warning: str = None,
     ):
         if validators is None:
             validators = []
@@ -52,6 +53,7 @@ class ParameterMeta:
         self.validators = validators
         self.textarea = textarea
         self.show_only_when = show_only_when
+        self.warning = warning
 
 
 class ParameterMetaInfo:

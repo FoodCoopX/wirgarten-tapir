@@ -153,6 +153,7 @@ class PublicDataView(BiddingRoundFeatureFlagMixin, APIView):
             "status_public_enabled": BiddingRoundViewService.is_status_public_enabled(
                 cache
             ),
+            "bid_options": BiddingRoundViewService.build_bid_options(cache),
         }
 
         if bidding_round and member:

@@ -52,6 +52,28 @@ class BiddingRoundViewService:
         )
 
     @classmethod
+    def is_bid_shares_enabled(cls, cache: dict) -> bool:
+        """Presentation switch: hides the share quantity controls in the wizard.
+
+        Purely a UI flag; bids are validated independently, so toggling it does not
+        invalidate existing bids.
+        """
+        return get_parameter_value(
+            ParameterKeys.BIDDING_ROUND_BID_SHARES_ENABLED, cache=cache
+        )
+
+    @classmethod
+    def is_bid_carousel_enabled(cls, cache: dict) -> bool:
+        """Presentation switch: hides the product carousel in the wizard.
+
+        Purely a UI flag; bids are validated independently, so toggling it does not
+        invalidate existing bids.
+        """
+        return get_parameter_value(
+            ParameterKeys.BIDDING_ROUND_BID_CAROUSEL_ENABLED, cache=cache
+        )
+
+    @classmethod
     def serialize_round(cls, bidding_round: BiddingRound, cache: dict) -> dict:
         return RoundSerializer(bidding_round, context={"cache": cache}).data
 
@@ -170,6 +192,7 @@ class BiddingRoundViewService:
                     "name": product.name,
                     **cls._serialize_price_values(price),
                     "current_quantity": current_quantities.get(product.id),
+                    "image_url": product.url_of_image_in_bestellwizard or None,
                 }
                 for product, price in products_with_prices
             ],
@@ -214,6 +237,13 @@ class BiddingRoundViewService:
             "id": pickup_location.id,
             "name": pickup_location.name,
             "yearly_delivery_charge": str(yearly_delivery_charge),
+        }
+
+    @classmethod
+    def build_bid_options(cls, cache) -> dict:
+        return {
+            "quantity_enabled": cls.is_bid_shares_enabled(cache),
+            "carousel_enabled": cls.is_bid_carousel_enabled(cache),
         }
 
     @classmethod

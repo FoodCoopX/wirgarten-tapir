@@ -179,6 +179,8 @@ class ParameterKeys:
     BIDDING_ROUND_BID_CONFIRM_TEXT = f"{PREFIX}.bidding_round.bid.confirm_text"
     BIDDING_ROUND_BID_SUCCESS_TEXT = f"{PREFIX}.bidding_round.bid.success_text"
     BIDDING_ROUND_BID_ERROR_TEXT = f"{PREFIX}.bidding_round.bid.error_text"
+    BIDDING_ROUND_BID_SHARES_ENABLED = f"{PREFIX}.bidding_round.bid.shares_enabled"
+    BIDDING_ROUND_BID_CAROUSEL_ENABLED = f"{PREFIX}.bidding_round.bid.carousel_enabled"
 
     TESTS_OVERRIDE_DATE_PRESET = f"{PREFIX}.tests.override_date_preset"
     TESTS_OVERRIDE_DATE = f"{PREFIX}.tests.override_date"
