@@ -114,6 +114,9 @@ Services: `web` (8000), `vite` (5173), `keycloak` (8080), `db` (5432), `redis` (
   whoever made the change (`None` for automated tasks). This includes deletions, side effects (e.g. a renewal deleted
   while shortening a contract) and bulk changes (one entry per affected member). Only changes that cannot be linked to
   a specific member (configuration, products, pickup locations, …) need no log entry.
+- **Final-state code**: code must make sense on its own, not relative to the version it replaced or to earlier steps of
+  the same change. When a feature evolves during implementation, rework the API, names and tests to fit the result
+  instead of layering flags and exceptions on top.
 - **Business logic in service classes** under `tapir/<app>/services/`, not in views or models.
 - **View structure**: non-trivial views keep validation and applying changes separate. Reference flow:
     1. check permissions
