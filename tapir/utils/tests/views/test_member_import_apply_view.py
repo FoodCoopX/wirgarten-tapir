@@ -3,6 +3,7 @@ from django.test import override_settings
 from django.urls import reverse
 
 from tapir.utils.services.member_import_service import MemberImportService
+from tapir.utils.models import MemberImportedLogEntry
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import MemberFactory
@@ -39,7 +40,11 @@ class TestMemberImportApplyView(TapirIntegrationTest):
         )
         self.assertStatusCode(response, 200)
         self.assertTrue(response.json()["applied"])
-        self.assertEqual("mika@example.test", Member.objects.get(member_no=101).email)
+        member = Member.objects.get(member_no=101)
+        self.assertEqual("mika@example.test", member.email)
+        self.assertEqual(
+            admin.pk, MemberImportedLogEntry.objects.get(user=member).actor_id
+        )
         self.assertStatusCode(
             self.client.post(reverse("utils:member_import_apply"), {"token": token}),
             400,
@@ -50,7 +55,8 @@ class TestMemberImportApplyView(TapirIntegrationTest):
         file = SimpleUploadedFile(
             "members.csv", b"Nr;Mailadresse\n101;mika@example.test\n"
         )
-        token, _ = MemberImportService.preview(file=file, user_id="other-admin")
+        other_admin = MemberFactory.create(is_superuser=True)
+        token, _ = MemberImportService.preview(file=file, user_id=other_admin.pk)
         response = self.client.post(
             reverse("utils:member_import_apply"), {"token": token}
         )

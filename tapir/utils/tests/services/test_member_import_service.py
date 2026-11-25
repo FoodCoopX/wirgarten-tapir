@@ -2,8 +2,11 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import override_settings
 
 from tapir.accounts.models import TapirUser
+from tapir.associations.models import AssociationMembershipCreatedLogEntry
+from tapir.associations.tests.factories import AssociationMembershipTypeFactory
 from tapir.log.models import LogEntry
 from tapir.utils.exceptions import TapirDataImportException
+from tapir.utils.models import MemberImportedLogEntry
 from tapir.utils.services.member_import_service import MemberImportService
 from tapir.utils.services.tabular_file_reader import TabularData
 from tapir.wirgarten.models import Member
@@ -20,11 +23,17 @@ class TestMemberImportService(TapirIntegrationTest):
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
+    def setUp(self):
+        super().setUp()
+        self.admin = TapirUser.objects.create(
+            username="import-admin", email="admin@example.test"
+        )
+
     def upload(self, rows="101;mika@example.test\n"):
         return SimpleUploadedFile("members.csv", ("Nr;Mailadresse\n" + rows).encode())
 
     def test_preview_validMember_rollsBackWrites(self):
-        token, result = MemberImportService.preview(self.upload(), "admin")
+        token, result = MemberImportService.preview(self.upload(), self.admin.pk)
 
         self.assertTrue(result.can_apply)
         self.assertIsNotNone(token)
@@ -34,22 +43,50 @@ class TestMemberImportService(TapirIntegrationTest):
         self.mock_keycloak_client.update_user.assert_not_called()
 
     def test_apply_validPreview_createsMemberOnce(self):
-        token, _ = MemberImportService.preview(self.upload(), "admin")
+        token, _ = MemberImportService.preview(self.upload(), self.admin.pk)
 
-        result = MemberImportService.apply("admin", token)
+        result = MemberImportService.apply(self.admin.pk, token)
 
         self.assertTrue(result.applied)
         with self.assertRaises(TapirDataImportException):
-            MemberImportService.apply("admin", token)
+            MemberImportService.apply(self.admin.pk, token)
         self.assertEqual(1, Member.objects.count())
 
+    def test_apply_newAssociationMember_attributesImportLogsToAdmin(self):
+        membership_type = AssociationMembershipTypeFactory.create(name="Standard")
+        file = SimpleUploadedFile(
+            "members.csv",
+            (
+                "Nr;Mailadresse;Vereinsmitgliedschafttyp;Vereinsmitgliedschaft Start_Date\n"
+                f"101;mika@example.test;{membership_type.name};01.03.2024\n"
+            ).encode(),
+        )
+        token, preview = MemberImportService.preview(file, self.admin.pk)
+        self.assertTrue(preview.can_apply)
+        self.assertFalse(LogEntry.objects.exists())
+
+        result = MemberImportService.apply(self.admin.pk, token)
+
+        self.assertTrue(result.applied)
+        member = Member.objects.get(member_no=101)
+        self.assertEqual(
+            self.admin, MemberImportedLogEntry.objects.get(user=member).actor
+        )
+        self.assertEqual(
+            self.admin,
+            AssociationMembershipCreatedLogEntry.objects.get(user=member).actor,
+        )
+        self.assertFalse(
+            LogEntry.objects.filter(user=member).exclude(actor=self.admin).exists()
+        )
+
     def test_apply_otherAdmin_cannotConsumeUpload(self):
-        token, _ = MemberImportService.preview(self.upload(), "admin")
+        token, _ = MemberImportService.preview(self.upload(), self.admin.pk)
 
         with self.assertRaises(TapirDataImportException):
             MemberImportService.apply("other-admin", token)
 
-        self.assertTrue(MemberImportService.apply("admin", token).applied)
+        self.assertTrue(MemberImportService.apply(self.admin.pk, token).applied)
 
     def test_run_invalidRow_rollsBackWholeFile(self):
         data = TabularData(
@@ -60,7 +97,7 @@ class TestMemberImportService(TapirIntegrationTest):
             ],
         )
 
-        result = MemberImportService.run(data, dry_run=False)
+        result = MemberImportService.run(data, dry_run=False, actor_id=self.admin.pk)
 
         self.assertFalse(result.applied)
         self.assertEqual(3, result.rows[1].line)
@@ -70,13 +107,19 @@ class TestMemberImportService(TapirIntegrationTest):
 
     def test_apply_repeatedFile_preservesExistingMember(self):
         member = MemberFactory.create(member_no=101, email="original@example.test")
-        token, result = MemberImportService.preview(self.upload(), "admin")
+        historical_log = MemberImportedLogEntry().populate(
+            model=member, user=member, actor=None
+        )
+        historical_log.save()
+        token, result = MemberImportService.preview(self.upload(), self.admin.pk)
         self.assertIn("übersprungen", result.rows[0].status)
 
-        MemberImportService.apply("admin", token)
+        MemberImportService.apply(self.admin.pk, token)
 
         member.refresh_from_db()
         self.assertEqual("original@example.test", member.email)
+        historical_log.refresh_from_db()
+        self.assertIsNone(historical_log.actor)
         self.assertEqual(1, Member.objects.count())
         self.mock_keycloak_client.update_user.assert_not_called()
 
@@ -93,7 +136,7 @@ class TestMemberImportService(TapirIntegrationTest):
             ],
         )
 
-        result = MemberImportService.run(data, dry_run=False)
+        result = MemberImportService.run(data, dry_run=False, actor_id=self.admin.pk)
 
         self.assertFalse(result.applied)
         self.assertIn("Benutzerkonto ohne Mitgliedschaft", result.rows[1].error)
@@ -118,7 +161,7 @@ class TestMemberImportService(TapirIntegrationTest):
             ],
         )
 
-        result = MemberImportService.run(data, dry_run=False)
+        result = MemberImportService.run(data, dry_run=False, actor_id=self.admin.pk)
 
         self.assertFalse(result.applied)
         self.assertIn("Benutzerkonto ohne Mitgliedschaft", result.rows[0].error)
@@ -127,7 +170,9 @@ class TestMemberImportService(TapirIntegrationTest):
 
     def test_run_unknownColumn_rejectsBeforeWriting(self):
         result = MemberImportService.run(
-            TabularData(["Nr", "Mailadresse", "Typo"], []), dry_run=False
+            TabularData(["Nr", "Mailadresse", "Typo"], []),
+            dry_run=False,
+            actor_id=self.admin.pk,
         )
 
         self.assertFalse(result.can_apply)
@@ -139,7 +184,7 @@ class TestMemberImportService(TapirIntegrationTest):
             "template.csv", MemberImportService.build_template().encode()
         )
 
-        _, result = MemberImportService.preview(file, "admin")
+        _, result = MemberImportService.preview(file, self.admin.pk)
 
         self.assertTrue(result.can_apply, result)
         self.assertFalse(Member.objects.exists())

@@ -9,6 +9,7 @@ from django.core.management.base import OutputWrapper
 from django.db import transaction
 
 from tapir.accounts.models import TapirUser
+from tapir.log.models import LogEntry
 from tapir.utils.config import (
     MEMBER_IMPORT_STATUS_CREATED,
     MEMBER_IMPORT_STATUS_SKIPPED,
@@ -100,7 +101,7 @@ class MemberImportService:
         cls, file: UploadedFile, user_id: str
     ) -> tuple[str | None, MemberImportResult]:
         data = TabularFileReader.read(file)
-        result = cls.run(data=data, dry_run=True)
+        result = cls.run(data=data, dry_run=True, actor_id=user_id)
         token = None
         if result.can_apply:
             token = uuid.uuid4().hex
@@ -115,10 +116,10 @@ class MemberImportService:
             raise TapirDataImportException(
                 "Die geprüfte Datei ist abgelaufen. Bitte erneut hochladen."
             )
-        return cls.run(data=data, dry_run=False)
+        return cls.run(data=data, dry_run=False, actor_id=user_id)
 
     @classmethod
-    def run(cls, data: TabularData, dry_run: bool) -> MemberImportResult:
+    def run(cls, data: TabularData, dry_run: bool, actor_id: str) -> MemberImportResult:
         result = MemberImportResult()
         missing = [
             column for column in cls.REQUIRED_COLUMNS if column not in data.headers
@@ -155,6 +156,9 @@ class MemberImportService:
                             dry_run=dry_run,
                             stdout=OutputWrapper(io.StringIO()),
                         )
+                        cls._attribute_import_logs(
+                            member_no=member_no, status=status, actor_id=actor_id
+                        )
                     label = {
                         MEMBER_IMPORT_STATUS_CREATED: "Neu",
                         MEMBER_IMPORT_STATUS_SKIPPED: "Bereits vorhanden – übersprungen",
@@ -172,6 +176,15 @@ class MemberImportService:
             else:
                 result.applied = True
         return result
+
+    @staticmethod
+    def _attribute_import_logs(member_no: int, status: str, actor_id: str) -> None:
+        if status != MEMBER_IMPORT_STATUS_CREATED:
+            return
+        # Account reuse is rejected above, so these logs belong to this import.
+        LogEntry.objects.filter(
+            user__member__member_no=member_no, actor__isnull=True
+        ).update(actor_id=actor_id)
 
     @classmethod
     def build_template(cls) -> str:
