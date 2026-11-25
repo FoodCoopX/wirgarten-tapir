@@ -42,6 +42,11 @@ class BiddingRoundContractRowService:
             bids_by_member_id=bids_by_member_id,
         )
         cls._add_auto_renewed_contract_rows(rows, bidding_round, cache)
+        effect_states = dict(
+            bidding_round.member_effects.values_list("member_id", "state")
+        )
+        for member_id, row in rows.items():
+            row["rollback_state"] = effect_states.get(member_id, "none")
         ordered = sorted(
             rows.values(), key=lambda row: (row["member_name"] or "").lower()
         )
@@ -210,6 +215,7 @@ class BiddingRoundContractRowService:
             "floor_amount_per_month": Decimal("0"),
             "current_contribution_per_month": Decimal("0"),
             "is_free_auto_renewed": False,
+            "rollback_state": "none",
         }
 
     @classmethod

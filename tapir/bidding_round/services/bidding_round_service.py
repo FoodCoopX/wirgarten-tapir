@@ -32,6 +32,9 @@ from tapir.bidding_round.services.bidding_round_mail_token_builder import (
 from tapir.bidding_round.services.bidding_round_stats_service import (
     BiddingRoundStatsService,
 )
+from tapir.bidding_round.services.round_member_effect_service import (
+    RoundMemberEffectService,
+)
 from tapir.configuration.parameter import get_parameter_value
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
@@ -313,7 +316,7 @@ class BiddingRoundService:
             raise ValidationError(
                 _("Nur geschlossene Beitragsrunden können wieder geöffnet werden.")
             )
-        if bidding_round.contracts_created_at is not None:
+        if RoundMemberEffectService.has_applied_effects(bidding_round):
             raise ValidationError(
                 _(
                     "Eine Beitragsrunde kann nicht wieder geöffnet werden, sobald Verträge erstellt wurden."
@@ -383,7 +386,7 @@ class BiddingRoundService:
                 raise ValidationError(
                     _("Das durchschnittliche Gebot ist nicht fixiert.")
                 )
-            if locked.contracts_created_at is not None:
+            if RoundMemberEffectService.has_applied_effects(locked):
                 raise ValidationError(
                     _(
                         "Das durchschnittliche Gebot kann nach der Vertragserzeugung nicht mehr freigegeben werden."
@@ -433,6 +436,16 @@ class BiddingRoundService:
                         "Gebote können nach der Vertragserzeugung nicht mehr geändert werden."
                     )
                 )
+            if (
+                bid_input is not None
+                and RoundMemberEffectService.applied_effect(locked_round, member)
+                is not None
+            ):
+                raise ValidationError(
+                    _(
+                        "Gebote können nach der Vertragserzeugung nicht mehr geändert werden."
+                    )
+                )
             values = {}
             if bid_input is not None:
                 bid_input = BidValidator.validate_admin_edit(
@@ -449,10 +462,17 @@ class BiddingRoundService:
             bid, created = Bid.objects.get_or_create(
                 member=member, round=locked_round, defaults=values
             )
+            amounts_changed = (
+                not created
+                and bool(values)
+                and any(getattr(bid, field) != value for field, value in values.items())
+            )
             if entered_by_admin is not None:
                 bid.entered_by_admin = entered_by_admin
             if admin_confirmed is not None:
                 bid.admin_confirmed = get_now(cache=cache) if admin_confirmed else None
+            elif amounts_changed:
+                bid.admin_confirmed = None
             if not created:
                 for field, value in values.items():
                     setattr(bid, field, value)
@@ -470,7 +490,7 @@ class BiddingRoundService:
                     "Beitragsrunden können nur im Status Konfiguration oder Abgeschlossen gelöscht werden."
                 )
             )
-        if bidding_round.contracts_created_at is not None:
+        if RoundMemberEffectService.has_applied_effects(bidding_round):
             raise ValidationError(
                 _(
                     "Die Beitragsrunde kann nicht gelöscht werden, sobald Verträge erstellt wurden."
@@ -485,7 +505,7 @@ class BiddingRoundService:
         changes: BiddingRoundConfigChanges,
         cache: dict,
     ) -> BiddingRound:
-        if bidding_round.contracts_created_at is not None:
+        if RoundMemberEffectService.has_applied_effects(bidding_round):
             raise ValidationError(
                 _(
                     "Die Beitragsrunde kann nach der Vertragserstellung nicht mehr geändert werden."
@@ -832,3 +852,19 @@ class BiddingRoundService:
                 cache=cache,
                 actor=None,
             )
+
+    @classmethod
+    def delete_bid(cls, bid: Bid, cache: dict) -> None:
+        if RoundMemberEffectService.applied_effect(bid.round, bid.member) is not None:
+            raise ValidationError(
+                _(
+                    "Gebote können nicht mehr gelöscht werden, nachdem die Verträge erstellt wurden."
+                )
+            )
+        if bid.round.average_bid_locked_at is not None:
+            raise ValidationError(
+                _(
+                    "Gebote können nach dem Fixieren des Durchschnittsgebots nicht mehr gelöscht werden."
+                )
+            )
+        bid.delete()

@@ -1560,6 +1560,7 @@ class BiddingRoundStatsService:
             ),
             "growing_period_id": bidding_round.growing_period_id,
             "contracts": contracts,
+            **BiddingRoundViewService.serialize_rollback_flags(bidding_round),
         }
 
     STATS_AMOUNT_KEYS = (

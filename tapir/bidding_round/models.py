@@ -13,6 +13,7 @@ from tapir.bidding_round.config import (
     OPTIONS_BIDDING_ROUND_STATUS,
 )
 from tapir.core.models import TapirModel
+from tapir.log.models import LogEntry
 from tapir.wirgarten.models import (
     GrowingPeriod,
     Member,
@@ -92,6 +93,11 @@ class BiddingRound(TapirModel):
                     | models.Q(bid_levels=2)
                 ),
                 name="bidding_round_bid_range_requires_two_levels",
+            ),
+            models.UniqueConstraint(
+                fields=["growing_period"],
+                condition=models.Q(contracts_created_at__isnull=False),
+                name="uniq_bidding_round_with_contracts_per_growing_period",
             ),
         ]
 
@@ -206,3 +212,87 @@ class BiddingRoundCreatedSubscription(TapirModel):
 
     def __str__(self):
         return f"{self.round} - {self.subscription}"
+
+
+class BiddingRoundMemberEffect(TapirModel):
+    """Records what a round changed for one member, so the change can be undone.
+
+    ``previous_*`` holds the serialized rows before the mutation, ``applied_*`` the
+    rows after it. A revert restores ``previous_*`` verbatim; a change that did not
+    touch anything does not create an effect.
+    """
+
+    class State(models.TextChoices):
+        APPLIED = "applied", "angewendet"
+        REVERSED = "reversed", "zurückgenommen"
+
+    class Source(models.TextChoices):
+        BID = "bid", "Gebot"
+        AUTO_RENEWED = "auto_renewed", "Auto-Verlängerung"
+        NON_BIDDER_FLOOR = "non_bidder_floor", "Nicht-Bieter-Beitrag"
+
+    round = models.ForeignKey(
+        BiddingRound, on_delete=models.CASCADE, related_name="member_effects"
+    )
+    member = models.ForeignKey(Member, on_delete=models.CASCADE)
+    state = models.CharField(
+        max_length=16, choices=State.choices, default=State.APPLIED
+    )
+    source = models.CharField(max_length=24, choices=Source.choices)
+
+    previous_subscriptions = models.JSONField(default=list)
+    applied_subscriptions = models.JSONField(default=list)
+    previous_contributions = models.JSONField(default=list)
+    applied_contributions = models.JSONField(default=list)
+    contribution_log_links = models.JSONField(default=list)
+    previous_mandate_ref_ids = models.JSONField(default=list)
+    created_mandate_ref_ids = models.JSONField(default=list)
+
+    applied_at = models.DateTimeField(null=True)
+    reversed_at = models.DateTimeField(null=True)
+    reversed_by = models.ForeignKey(
+        "accounts.TapirUser", null=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    reversal_reason = models.TextField(blank=True)
+    divergence_overridden = models.BooleanField(default=False)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["round", "member"],
+                name="uniq_bidding_round_member_effect",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.round} - {self.member} ({self.get_state_display()})"
+
+
+class BiddingRoundMemberRollbackLogEntry(LogEntry):
+    template_name = "bidding_round/log/member_rollback_log_entry.html"
+
+    round_name = models.CharField(max_length=200)
+    subscriptions_deleted = models.PositiveIntegerField(default=0)
+    subscriptions_restored = models.PositiveIntegerField(default=0)
+    contributions_restored = models.PositiveIntegerField(default=0)
+    reason = models.TextField(blank=True)
+    forced = models.BooleanField(default=False)
+
+    def populate(
+        self,
+        round_name=None,
+        subscriptions_deleted=0,
+        subscriptions_restored=0,
+        contributions_restored=0,
+        reason="",
+        forced=False,
+        *args,
+        **kwargs,
+    ):
+        self.round_name = round_name
+        self.subscriptions_deleted = subscriptions_deleted
+        self.subscriptions_restored = subscriptions_restored
+        self.contributions_restored = contributions_restored
+        self.reason = reason
+        self.forced = forced
+        return super().populate(*args, **kwargs)

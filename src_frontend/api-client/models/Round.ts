@@ -137,6 +137,18 @@ export interface Round {
   readonly hasBids: boolean;
   /**
    *
+   * @type {string}
+   * @memberof Round
+   */
+  readonly rollbackAvailable: string;
+  /**
+   *
+   * @type {string}
+   * @memberof Round
+   */
+  readonly rollbackUntracked: string;
+  /**
+   *
    * @type {RoundProduct}
    * @memberof Round
    */
@@ -201,6 +213,16 @@ export function instanceOfRound(value: object): value is Round {
     return false;
   if (!("comment" in value) || value["comment"] === undefined) return false;
   if (!("hasBids" in value) || value["hasBids"] === undefined) return false;
+  if (
+    !("rollbackAvailable" in value) ||
+    value["rollbackAvailable"] === undefined
+  )
+    return false;
+  if (
+    !("rollbackUntracked" in value) ||
+    value["rollbackUntracked"] === undefined
+  )
+    return false;
   if (!("product" in value) || value["product"] === undefined) return false;
   return true;
 }
@@ -243,6 +265,8 @@ export function RoundFromJSONTyped(
     growingPeriodId: json["growing_period_id"],
     comment: json["comment"],
     hasBids: json["has_bids"],
+    rollbackAvailable: json["rollback_available"],
+    rollbackUntracked: json["rollback_untracked"],
     product: RoundProductFromJSON(json["product"]),
   };
 }
@@ -252,7 +276,10 @@ export function RoundToJSON(json: any): Round {
 }
 
 export function RoundToJSONTyped(
-  value?: Omit<Round, "display_name" | "has_bids"> | null,
+  value?: Omit<
+    Round,
+    "display_name" | "has_bids" | "rollback_available" | "rollback_untracked"
+  > | null,
   ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {

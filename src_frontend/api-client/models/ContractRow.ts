@@ -123,6 +123,12 @@ export interface ContractRow {
    * @memberof ContractRow
    */
   isCreated: boolean;
+  /**
+   *
+   * @type {string}
+   * @memberof ContractRow
+   */
+  rollbackState: string;
 }
 
 /**
@@ -181,6 +187,8 @@ export function instanceOfContractRow(value: object): value is ContractRow {
   )
     return false;
   if (!("isCreated" in value) || value["isCreated"] === undefined) return false;
+  if (!("rollbackState" in value) || value["rollbackState"] === undefined)
+    return false;
   return true;
 }
 
@@ -213,6 +221,7 @@ export function ContractRowFromJSONTyped(
     nonBidderFloorPerMonth: json["non_bidder_floor_per_month"],
     previousAmountPerMonth: json["previous_amount_per_month"],
     isCreated: json["is_created"],
+    rollbackState: json["rollback_state"],
   };
 }
 
@@ -246,5 +255,6 @@ export function ContractRowToJSONTyped(
     non_bidder_floor_per_month: value["nonBidderFloorPerMonth"],
     previous_amount_per_month: value["previousAmountPerMonth"],
     is_created: value["isCreated"],
+    rollback_state: value["rollbackState"],
   };
 }

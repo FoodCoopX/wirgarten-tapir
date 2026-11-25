@@ -45,6 +45,8 @@ from tapir.bidding_round.serializers import (
     ProductTypeOptionSerializer,
     PublicDataResponseSerializer,
     PublicEvaluationResponseSerializer,
+    RollbackMembersResponseSerializer,
+    RollbackMembersSerializer,
     RoundConfigSerializer,
     RoundCreateSerializer,
     RoundResultsResponseSerializer,
@@ -71,6 +73,12 @@ from tapir.bidding_round.services.bidding_round_view_service import (
     BiddingRoundViewService,
 )
 from tapir.bidding_round.services.contract_creator import ContractCreator
+from tapir.bidding_round.services.round_member_effect_service import (
+    MemberRollbackConflict,
+    NoEffectsError,
+    RoundMemberEffectService,
+    UntrackedRoundError,
+)
 from tapir.bidding_round.services.product_size_service import ProductSizeService
 from tapir.wirgarten.constants import Permission
 from tapir.utils.services.tapir_cache import TapirCache
@@ -704,26 +712,15 @@ class BidEditView(BiddingRoundFeatureFlagMixin, APIView):
 
     @extend_schema(responses={204: None})
     def delete(self, request, round_id, bid_id):
+        cache = {}
         bid = get_object_or_404(Bid, id=bid_id, round_id=round_id)
-        if bid.round.contracts_created_at is not None:
+        try:
+            BiddingRoundService.delete_bid(bid, cache=cache)
+        except ValidationError as error:
             return Response(
-                {
-                    "error": _(
-                        "Gebote können nicht mehr gelöscht werden, nachdem die Verträge erstellt wurden."
-                    )
-                },
+                {"error": BiddingRoundViewService.serialize_validation_error(error)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if bid.round.average_bid_locked_at is not None:
-            return Response(
-                {
-                    "error": _(
-                        "Gebote können nach dem Fixieren des Durchschnittsgebots nicht mehr gelöscht werden."
-                    )
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        bid.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -868,7 +865,6 @@ class CreateContractsView(BiddingRoundFeatureFlagMixin, APIView):
             result = ContractCreator.create_contracts_from_bids(
                 bidding_round,
                 bid_ids=serializer.validated_data.get("bid_ids"),
-                bid_level=serializer.validated_data.get("bid_level"),
                 create_auto_renewed_contracts=serializer.validated_data.get(
                     "create_auto_renewed_contracts", False
                 ),
@@ -963,3 +959,60 @@ class StandardPriceView(BiddingRoundFeatureFlagMixin, APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         return Response({"results": results}, status=status.HTTP_200_OK)
+
+
+class RoundRollbackMembersView(BiddingRoundFeatureFlagMixin, APIView):
+    permission_classes = [BiddingRoundManagePermission]
+
+    @extend_schema(
+        request=RollbackMembersSerializer,
+        responses={200: RollbackMembersResponseSerializer},
+    )
+    def post(self, request, round_id):
+        cache = {}
+        bidding_round = get_object_or_404(BiddingRound, id=round_id)
+        serializer = RollbackMembersSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        validated = serializer.validated_data
+        member_ids = None if validated["all"] else validated["member_ids"]
+        try:
+            results = RoundMemberEffectService.revert_members(
+                bidding_round,
+                member_ids=member_ids,
+                actor=request.user,
+                reason=validated.get("reason", ""),
+                force=validated.get("force", False),
+                cache=cache,
+            )
+        except MemberRollbackConflict as error:
+            has_cross_round = any(
+                conflict["kind"] == "cross_round" for conflict in error.conflicts
+            )
+            code = "cross_round" if has_cross_round else "diverged"
+            return Response(
+                {
+                    "error": str(error),
+                    "code": code,
+                    "conflicts": error.conflicts,
+                },
+                status=status.HTTP_409_CONFLICT,
+            )
+        except UntrackedRoundError as error:
+            return Response(
+                {"error": str(error), "code": "untracked"},
+                status=status.HTTP_409_CONFLICT,
+            )
+        except NoEffectsError as error:
+            return Response(
+                {"error": str(error), "code": "no_effects"},
+                status=status.HTTP_409_CONFLICT,
+            )
+        except ValidationError as error:
+            return Response(
+                {"error": BiddingRoundViewService.serialize_validation_error(error)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        bidding_round.refresh_from_db()
+        payload = BiddingRoundViewService.serialize_round(bidding_round, cache)
+        payload["results"] = results
+        return Response(payload, status=status.HTTP_200_OK)

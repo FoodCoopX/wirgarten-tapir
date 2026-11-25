@@ -11,7 +11,9 @@ import ContractsCard, {
 } from "./components/ContractsCard.tsx";
 import FinancingProjectionCard from "./components/FinancingProjectionCard.tsx";
 import PickupFillCard from "./components/PickupFillCard.tsx";
+import RollbackModal from "./components/RollbackModal.tsx";
 import { useBiddingRoundResults } from "./hooks/useBiddingRoundResults.ts";
+import { useRollback } from "./hooks/useRollback.ts";
 import type { BiddingRoundSections } from "./types.ts";
 
 interface BiddingRoundResultsProps {
@@ -22,6 +24,13 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
   csrfToken,
 }) => {
   const results = useBiddingRoundResults(csrfToken);
+  const rollback = useRollback({
+    api: results.api,
+    roundId: results.roundId,
+    reload: results.reload,
+    setResultMessage: results.setResultMessage,
+    setToastDatas: results.setToastDatas,
+  });
   const [openSections, setOpenSections] = useState<BiddingRoundSections>({
     pickupLocations: false,
     bids: false,
@@ -34,6 +43,7 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
         <Container className="d-flex justify-content-center mt-5">
           <Spinner animation="border" />
         </Container>
+
         <TapirToastContainer
           toastDatas={results.toastDatas}
           setToastDatas={results.setToastDatas}
@@ -143,6 +153,8 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
           onCreateBid={results.openCreateBidModal}
           onEditBid={results.openEditBidModal}
           onDeleteBid={results.deleteBid}
+          rollbackAvailable={results.data?.rollbackAvailable ?? false}
+          onRollbackAll={() => rollback.openRollbackModal(null, [])}
         />
 
         {results.contracts.length > 0 && (
@@ -156,6 +168,10 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
             }
             contracts={results.contracts}
             growingPeriodId={results.data?.growingPeriodId ?? null}
+            rollbackUntracked={results.data?.rollbackUntracked ?? false}
+            onRollback={(memberIds, memberNames) =>
+              rollback.openRollbackModal(memberIds, memberNames)
+            }
           />
         )}
       </Container>
@@ -179,6 +195,20 @@ const BiddingRoundResults: React.FC<BiddingRoundResultsProps> = ({
         onCreateContracts={results.createContracts}
         standardPriceSaving={results.standardPriceSaving}
         onAlignStandardPrices={results.alignStandardPrices}
+      />
+
+      <RollbackModal
+        show={rollback.target !== null}
+        onHide={rollback.closeRollbackModal}
+        target={rollback.target}
+        reason={rollback.reason}
+        onReasonChange={rollback.setReason}
+        force={rollback.force}
+        onForceChange={rollback.setForce}
+        conflicts={rollback.conflicts}
+        error={rollback.error}
+        loading={rollback.loading}
+        onRun={rollback.runRollback}
       />
 
       <BidEditModal

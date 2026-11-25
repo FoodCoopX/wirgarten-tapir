@@ -3329,6 +3329,47 @@ paths:
               schema:
                 $ref: '#/components/schemas/RoundResultsResponse'
           description: ''
+  /bidding_rounds/api/{round_id}/rollback_members:
+    post:
+      operationId: bidding_rounds_api_rollback_members_create
+      description: |-
+        Applies the feature-flag gate to a DRF view via ``initial``.
+
+        This keeps the view's own ``permission_classes`` (and therefore the global
+        ``IsAuthenticated`` default for admin views) untouched. ``require_public_url`` marks
+        the public (member-facing) endpoints, which require authentication while the public
+        URL flag is off. The per-request cache lives on ``self.cache`` so the handlers reuse
+        it instead of building their own.
+      parameters:
+      - in: path
+        name: round_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - bidding_rounds
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RollbackMembersRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RollbackMembersRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RollbackMembersRequest'
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RollbackMembersResponse'
+          description: ''
   /bidding_rounds/api/{round_id}/start:
     post:
       operationId: bidding_rounds_api_start_create
@@ -12466,6 +12507,8 @@ components:
           nullable: true
         is_created:
           type: boolean
+        rollback_state:
+          type: string
       required:
       - amount_per_month
       - amount_per_year
@@ -12480,6 +12523,7 @@ components:
       - non_bidder_floor_per_month
       - pickup_location_name
       - previous_amount_per_month
+      - rollback_state
       - standard_amount_per_month
       - standard_amount_per_year
       - type
@@ -13058,10 +13102,6 @@ components:
           items:
             type: string
             minLength: 1
-        bid_level:
-          type: integer
-          maximum: 3
-          minimum: 1
         create_auto_renewed_contracts:
           type: boolean
           default: false
@@ -19556,6 +19596,139 @@ components:
         * `quarterly` - Vierteljährlich
         * `semiannually` - Halbjährlich
         * `yearly` - Jährlich
+    RollbackMembersRequest:
+      type: object
+      properties:
+        member_ids:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        all:
+          type: boolean
+          default: false
+        force:
+          type: boolean
+          default: false
+        reason:
+          type: string
+          maxLength: 500
+    RollbackMembersResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        display_name:
+          type: string
+          readOnly: true
+        status:
+          type: string
+        bidding_procedure:
+          type: string
+        bid_levels:
+          type: integer
+        include_auto_renewed:
+          type: boolean
+        average_bid_locked_at:
+          type: string
+          format: date-time
+          nullable: true
+        locked_bid_range_position:
+          type: string
+          nullable: true
+        locked_bidder_average_per_share_per_month:
+          type: string
+          nullable: true
+        locked_surcharge_percent:
+          type: string
+        locked_surcharge_on_bids:
+          type: boolean
+        locked_surcharge_on_average:
+          type: boolean
+        start_at:
+          type: string
+          format: date-time
+          nullable: true
+        end_at:
+          type: string
+          format: date-time
+        contracts_created_at:
+          type: string
+          format: date-time
+          nullable: true
+        growing_period_id:
+          type: string
+          nullable: true
+        comment:
+          type: string
+        has_bids:
+          type: boolean
+          readOnly: true
+        rollback_available:
+          type: string
+          readOnly: true
+        rollback_untracked:
+          type: string
+          readOnly: true
+        product:
+          allOf:
+          - $ref: '#/components/schemas/RoundProduct'
+          nullable: true
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/RollbackResult'
+      required:
+      - average_bid_locked_at
+      - bid_levels
+      - bidding_procedure
+      - comment
+      - contracts_created_at
+      - display_name
+      - end_at
+      - growing_period_id
+      - has_bids
+      - id
+      - include_auto_renewed
+      - locked_bid_range_position
+      - locked_bidder_average_per_share_per_month
+      - locked_surcharge_on_average
+      - locked_surcharge_on_bids
+      - locked_surcharge_percent
+      - name
+      - product
+      - results
+      - rollback_available
+      - rollback_untracked
+      - start_at
+      - status
+    RollbackResult:
+      type: object
+      properties:
+        member_id:
+          type: string
+        member_name:
+          type: string
+        state:
+          type: string
+        subscriptions_deleted:
+          type: integer
+        subscriptions_restored:
+          type: integer
+        contributions_restored:
+          type: integer
+        detail:
+          type: string
+      required:
+      - contributions_restored
+      - detail
+      - member_id
+      - member_name
+      - state
+      - subscriptions_deleted
+      - subscriptions_restored
     Round:
       type: object
       properties:
@@ -19609,6 +19782,12 @@ components:
         has_bids:
           type: boolean
           readOnly: true
+        rollback_available:
+          type: string
+          readOnly: true
+        rollback_untracked:
+          type: string
+          readOnly: true
         product:
           allOf:
           - $ref: '#/components/schemas/RoundProduct'
@@ -19632,6 +19811,8 @@ components:
       - locked_surcharge_percent
       - name
       - product
+      - rollback_available
+      - rollback_untracked
       - start_at
       - status
     RoundCreateRequest:
@@ -19795,6 +19976,10 @@ components:
           type: string
           format: date-time
           nullable: true
+        rollback_available:
+          type: boolean
+        rollback_untracked:
+          type: boolean
         round_product_type_id:
           type: string
           nullable: true
@@ -19866,6 +20051,8 @@ components:
       - reached_per_year
       - recommended_level
       - results_table
+      - rollback_available
+      - rollback_untracked
       - round_product_type_id
       - stats
       - target_per_year
