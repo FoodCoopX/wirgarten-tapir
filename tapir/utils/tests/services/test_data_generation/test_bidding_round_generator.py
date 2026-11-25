@@ -17,6 +17,7 @@ from tapir.bidding_round.models import (
 from tapir.bidding_round.services.bidding_round_stats_service import (
     BiddingRoundStatsService,
 )
+from tapir.configuration.parameter import get_parameter_value
 from tapir.utils.config import Organization
 from tapir.utils.services.test_data_generation import bidding_round_generator
 from tapir.utils.services.test_data_generation.bidding_round_generator import (
@@ -28,6 +29,7 @@ from tapir.utils.services.test_data_generation.vierlande_generator import (
     VierlandeGenerator,
 )
 from tapir.wirgarten.models import GrowingPeriod, ProductType, Subscription
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import get_product_price
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
@@ -345,7 +347,9 @@ class TestBiddingRoundGenerator(TapirIntegrationTest):
         self.assertLess(capacity, Decimal("1000"))
 
     @pytest.mark.slow
-    def test_generateAll_vierlandeIncludesDeliveryChargesAndMembership(self, _count):
+    def test_generateAll_vierlandeIncludesDeliveryChargesAndWaivesMembership(
+        self, _count
+    ):
         with (
             patch.object(
                 VierlandeGenerator, "HARVEST_SHARE_VARIANTS", VIERLANDE_SMALL_VARIANTS
@@ -378,8 +382,15 @@ class TestBiddingRoundGenerator(TapirIntegrationTest):
         self.assertGreater(
             extra_positions["delivery_charge"]["reached_per_year"], Decimal("0")
         )
-        self.assertGreater(
-            extra_positions["membership"]["reached_per_year"], Decimal("0")
+        self.assertFalse(extra_positions["membership"]["applicable"])
+        self.assertEqual(
+            Decimal("0"), extra_positions["membership"]["reached_per_year"]
+        )
+        self.assertTrue(
+            get_parameter_value(
+                ParameterKeys.ASSOCIATIONS_MEMBERSHIP_FEE_WAIVED_WITH_PRODUCTS,
+                cache={},
+            )
         )
 
         active_round = BiddingRound.objects.get(status=BIDDING_ROUND_STATUS_ACTIVE)
