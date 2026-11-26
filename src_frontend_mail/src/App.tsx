@@ -1,4 +1,3 @@
-import { AnimatePresence, motion } from "framer-motion";
 import { Suspense, useEffect } from "react";
 import {
   Route,
@@ -40,27 +39,21 @@ const InnerApp = () => {
 
   const location = useLocation();
   return (
-    <motion.div
+    <Suspense
       key={location.pathname}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
+      fallback={
+        <div style={{ width: "100%", marginTop: "5em" }}>
+          <Loading />
+        </div>
+      }
     >
-      <Suspense
-        fallback={
-          <div style={{ width: "100%", marginTop: "5em" }}>
-            <Loading />
-          </div>
-        }
-      >
-        <Routes>
-          {routes.map((route, index) => (
-            <Route key={index} path={route.path} element={<route.element />} />
-          ))}
-          <Route path="*" element={<RouteNotFound />} />
-        </Routes>
-      </Suspense>
-    </motion.div>
+      <Routes>
+        {routes.map((route, index) => (
+          <Route key={index} path={route.path} element={<route.element />} />
+        ))}
+        <Route path="*" element={<RouteNotFound />} />
+      </Routes>
+    </Suspense>
   );
 };
 
@@ -68,11 +61,9 @@ function App() {
   return (
     <div className="App" data-testid="App">
       <AlertProvider>
-        <AnimatePresence mode="wait">
-          <Router basename={env.REACT_APP_BASENAME}>
-            <InnerApp />
-          </Router>
-        </AnimatePresence>
+        <Router basename={env.REACT_APP_BASENAME}>
+          <InnerApp />
+        </Router>
       </AlertProvider>
     </div>
   );
