@@ -64,7 +64,9 @@ The label stays `tapir_mail`, so the following stay valid without data migration
   - The mail viewsets are already mounted in Tapir's `urls.py`, so `schema.yml` contains them.
   - The mail UI imports Tapir's generated client from `src_frontend/api-client` through a Vite/tsconfig alias. The generated client has no React dependency, so sharing it across the React 18 / 19 boundary is safe.
   - Delete `tapir_mail_ui/src/api_client` and fix renamed operations at compile time.
-- Frontend tests: port the four Jest tests to Vitest in the package, or delete them if they only cover CRA boilerplate (`App.test.tsx`).
+- Frontend tests: deleted. Tapir has no frontend test runner; the old Jest tests stay in the archived mail repo.
+- Dropped with the standalone server: the dummy accounts pages and their routes.
+- The editor's web fonts are referenced as `/static/fonts/...`; they live in `tapir/mail/static/fonts/` so that URL keeps working.
 
 ### Serving
 
@@ -101,16 +103,19 @@ New dev page `docs/dev/mail_module.md`, written for a developer who opens the ma
 - **Global registries**: apps register segment providers, tokens and triggers at startup into module-level registries. Tests that add a segment provider use `add_mail_segment_provider` (`tapir/mail/tests/test_utils.py`), which removes it again on cleanup. Test segment names must not collide with Tapir's (e.g. "Alle Benutzer").
 - **Redis in tests**: the dispatch tasks use `django_redis` locks, so the tests need a real Redis. `tapir/conftest.py` gives each xdist worker its own Redis database, because `cache.clear()` flushes the whole database.
 - **`tapir.mail` vs. `tapir.wirgarten.tapirmail`**: the mail module is generic; `tapir/wirgarten/tapirmail.py` configures it for Tapir (base segment, tokens, triggers).
-- Any further oddity found during phases 3–5 is added here.
+- **React 18 types in a React 19 workspace**: pnpm hoists `@types/react` 19 from the root, so third-party typings in the mail package would pick it up. `src_frontend_mail/tsconfig.json` pins `react` / `react-dom` to the package's own `@types` via `paths`.
+- **CSS minification with esbuild**: the Arco theme bundled with easy-email contains invalid CSS that Vite's default minifier (lightningcss) rejects.
+- **API base path**: the generated client already contains `/tapirmail` in every path, so the mail UI uses an empty base path, while `REACT_APP_API_ROOT` (with `/tapirmail`) is still used for the filepond and media library URLs.
+- Any further oddity found during phases 4–6 is added here.
 
-Only the oddities that phase 6 keeps go into the page. For those left for a follow-up, the page names the follow-up.
+Only the oddities that phase 7 keeps go into the page. For those left for a follow-up, the page names the follow-up.
 
 Other docs:
 - `docs/dev/index.md`: link the new page.
 - `docs/`: replace mentions of the separate mail repo and its releases.
 - `AGENTS.md`: in the app table, add `mail/` with a pointer to `docs/dev/mail_module.md`. Add a short rule: never upgrade React in `src_frontend_mail` together with the root package, and don't change the iframe without reading the doc page.
 
-## Evening out oddities (phase 6)
+## Evening out oddities (phase 7)
 
 For each oddity, check whether it can be removed with reasonable effort now that the code lives in Tapir. Candidates:
 - **Two URL prefixes** (`/mailing/` wrapper, `/tapirmail/` UI and API): mount the mail API under Tapir's usual URL scheme, and serve the iframe content from a path next to the wrapper.
@@ -120,6 +125,8 @@ For each oddity, check whether it can be removed with reasonable effort now that
 - **CSRF / `credentials: "include"` handling in `useApi.ts` / `requests.ts`**: align with how `src_frontend` calls the API, if the shared client makes it redundant.
 - **Mail-specific UI components that duplicate `src_frontend/components`** (`TapirButton`, pagination, modals): reuse is blocked by the React version, so only list them.
 - **Settings only the mail module reads**: drop those Tapir never changes from their defaults.
+- **`TAPIR_MAIL_PATH` is effectively fixed**: the generated client hardcodes `/tapirmail`. Either drop the setting or stop pretending it can change.
+- **Two `useApi` hooks**: the mail UI has its own copy of `src_frontend/hooks/useApi.ts`. Tapir's hook only uses `useMemo`, which works with React 18 too, so the mail UI could reuse it.
 - **Dead CORS settings**: `CORS_*` in `tapir/settings/base.py` have no effect, since `corsheaders` was never installed in Tapir (it was a dependency of the standalone mail server). Remove them, unless the Vite dev servers need them.
 - **Path-based permission middleware**: replace `TapirMailPermissionMiddleware` with permission classes on the mail views.
 
@@ -129,14 +136,15 @@ Out of scope even if possible: the iframe itself and the React 18 package (see a
 
 - [x] Phase 1 — backend move: copy to `tapir/mail/`, label `tapir_mail`, rewrite imports, dependencies, settings, celery task names, drop the wheel
 - [x] Phase 2 — backend tests: move, replace `dummy_accounts` usages
-- [ ] Phase 3 — frontend package: workspace package, CRA → Vite, React 18, shared API client, tests
+- [x] Phase 3 — frontend package: workspace package, CRA → Vite, React 18, shared API client, tests
 - [ ] Phase 4 — serving: django-vite `mail` config, iframe target template, Docker dev servers, build scripts
-- [ ] Phase 5 — smoke test on a local instance: editor popups/tooltips, media library upload, dispatch, bounce check, category registration pages
-- [ ] Phase 6 — evening out oddities: go through the oddities listed under Docs plus those found in phases 1–5. For each one, decide whether to remove it now, leave it for a follow-up, or keep it for good (see below). Present the list for review before changing anything.
-- [ ] Phase 7 — docs: `docs/dev/mail_module.md` (conventions warning, the oddities that remain after phase 6), `docs/dev/index.md` link, `AGENTS.md`
+- [ ] Phase 5 — update dependencies where possible: the npm packages of `src_frontend_mail` and the Python packages the mail app brought in (`beautifulsoup4`, `django-drf-filepond`, `django-redis`, `flufl-bounce`). Within the constraints: React 18 and everything pinned by easy-email (`react-final-form` 6 / `final-form` 4), and pnpm's `minimumReleaseAge`. Major updates (e.g. `react-router-dom` 7, `framer-motion` → `motion`) only if the code changes stay small; otherwise list them as follow-ups. Before the smoke test, so it covers the updates.
+- [ ] Phase 6 — smoke test on a local instance: editor popups/tooltips, media library upload, dispatch, bounce check, category registration pages
+- [ ] Phase 7 — evening out oddities: go through the oddities listed under Docs plus those found in phases 1–6. For each one, decide whether to remove it now, leave it for a follow-up, or keep it for good (see below). Present the list for review before changing anything.
 - [ ] Phase 8 — review the mail code for worst offenders: code that is very far from Tapir's conventions, or badly written or designed in general (e.g. huge view classes, module-level global state, logic in serializers, missing cache parameter on hot paths, untested areas). Present a ranked list with a short reason and a rough effort for each, for review before changing anything. Each item is either fixed in this branch or becomes a follow-up issue.
-- [ ] Phase 9 — archive `tapir-mail-module` and `tapir-mail-releases` (after deploy)
-- [ ] Phase 10 — delete this plan file (`plans/tapir_mail_integration_plan.md`)
+- [ ] Phase 9 — docs: `docs/dev/mail_module.md` (conventions warning, the oddities that remain after phase 7, links to the follow-up issues from phases 5 and 8), `docs/dev/index.md` link, `AGENTS.md`
+- [ ] Phase 10 — archive `tapir-mail-module` and `tapir-mail-releases` (after deploy)
+- [ ] Phase 11 — delete this plan file (`plans/tapir_mail_integration_plan.md`)
 
 ## Decisions
 
