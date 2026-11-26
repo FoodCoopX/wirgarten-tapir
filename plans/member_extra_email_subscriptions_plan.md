@@ -25,7 +25,7 @@ Category mails reach an extra address only through its own registrations, regard
 - `tapir/core/views/member_extra_emails.py`: CRUD API (`check_permission_or_self`), confirmation redirect + confirmed page. Confirmation mail via `Events.EXTRA_MAIL_CONFIRMATION`.
 - Frontend: `src_frontend/member_profile/personal_data/MemberExtraEmailsModal.tsx`.
 - Parameters: `ENABLE_EXTRA_MAIL_ADDRESSES`, `EXPLANATION_TEXT_EXTRA_MAIL_ADDRESSES` (`parameter_definitions_emails.py`). They are saved by the legacy Django form `ParameterView` (`tapir/configuration/views.py:39`), which has no change hooks.
-- Mail categories, member side: `MemberMailCategoryDataApiView` (`tapir/core/views/general.py`). Shows categories whose dynamic segment contains the member; stores `InternalRecipientCategoryRegistration(internal_recipient_id=member.id)`. `InternalRecipientManager` applies the mode defaults. Card: `MemberMailCategoryCard.tsx`.
+- Mail categories, member side: `MemberMailCategoryDataApiView` (`tapir/core/views/general.py`). Shows categories whose dynamic segment contains the member; stores `InternalRecipientCategoryRegistration(member=member)`; `post` deletes all the member's registrations and recreates the submitted ones. `InternalRecipientManager` applies the mode defaults. Card: `MemberMailCategoryCard.tsx`.
 - Mailman (`tapir/core/views/mailing_lists.py`, `tapir/core/services/mailman/`):
   - No DB mirror. Subscriptions are address based and read live through `mailmanclient`. Every subscription goes through Tapir.
   - Gated by `settings.MAILING_LISTS_ENABLED`.
@@ -57,12 +57,12 @@ Category mails reach an extra address only through its own registrations, regard
 
 - `MemberExtraEmail.receives_direct_mails: BooleanField`. UI label "Erhält auch persönliche Mails (Verträge, Abholung, Rundmails an alle Mitglieder)"; badge "Persönliche Mails" / "Nur Abos". The migration sets `True` for existing rows; the field default for new rows is `True` as well.
 - `InternalRecipientCategoryRegistration` references its recipient through two nullable foreign keys, `member` and `member_extra_email` (cascade on delete). A check constraint requires exactly one of them; unique constraints allow one registration per category and recipient. Migration `tapir_mail` 0053 replaces the former `internal_recipient_id` string, linking existing rows to their member and deleting rows without one and older duplicates.
-- Category defaults for extras: same as `InternalRecipientManager`, except that `ALWAYS_ON` counts as `OPTIONAL_DEFAULT_ON`. The extra address is voluntary, and the mandatory mails still reach the main address.
-- Changing `receives_direct_mails` after confirmation only switches the direct mails. Registrations and subscriptions stay as they are.
+- Category defaults for extras: same as `InternalRecipientManager`, except that `ALWAYS_ON` counts as `OPTIONAL_DEFAULT_ON`. The extra address is voluntary, and the mandatory mails still reach the main address. Today the rule exists only as a queryset in `MemberExtraRecipientProvider.get_category_recipients`; phase 6 adds the per-extra counterpart of `InternalRecipientManager.is_member_registered_to_mail_category` next to it, so both read the rule from one place.
+- Changing `receives_direct_mails` after confirmation only switches the direct mails. Registrations and subscriptions stay as they are: an extra created without direct mails and switched on later gets no snapshot, keeps the defaults and has no lists.
 
 ### Snapshot at confirmation (`receives_direct_mails=True`)
 
-New service `MemberExtraEmailRegistrationSnapshotter.snapshot(extra_email, cache)`, called from `ConfirmMemberExtraEmailApiView` when `receives_direct_mails` is set:
+New service `MemberExtraEmailRegistrationSnapshotter.snapshot(extra_email, cache)`, called from `ConfirmMemberExtraEmailApiView` on the first confirmation only, when `receives_direct_mails` is set:
 - For each category whose dynamic segment contains the member: one explicit `InternalRecipientCategoryRegistration(member_extra_email=extra, is_registered=<member's effective state>)`. Explicit rows keep the snapshot stable if the category mode changes later.
 - For each list the main address is subscribed to (confirmed, not pending invitations): subscribe the extra with `pre_verified`, `pre_confirmed`, `pre_approved` and `send_welcome_message=False`.
 
@@ -148,10 +148,13 @@ All endpoints are public (`permission_classes = []`). The token is validated in 
   - `receives_direct_mails`, main address.
   - Categories, using the same selection as for the member, with the extra's registration states and the extra defaults.
   - Mailing lists, if enabled: advertised lists plus lists the address is already on, with their subscribed state.
-- `POST api/extra_email_access/categories`: same semantics as `MemberMailCategoryDataApiView.post`, with `member_extra_email=extra`.
+- `POST api/extra_email_access/categories`: updates or creates a registration (`member_extra_email=extra`) for each submitted category only. Unlike today's `MemberMailCategoryDataApiView.post`, it never deletes the other rows: the backfill's rows for categories outside the member's current segment must survive.
 - `POST api/extra_email_access/mailing_list_subscribe` and `.../mailing_list_unsubscribe`: `{token, list_name}`.
 - `DELETE api/extra_email_access?token=`: self-removal. It logs `MemberExtraEmailDeletedLogEntry` with `actor=None`, runs `unsubscribe_from_all` and deletes the extra. The member is not notified.
-- Extract the shared logic from `MemberMailCategoryDataApiView` and the member self-service views into services that take a recipient id or an address, so the member and extra paths share it.
+- Extract the shared logic from `MemberMailCategoryDataApiView` and the member self-service views into services, so the member and extra paths share it:
+  - Category registrations: take a `Member` or a `MemberExtraEmail`. `MemberMailCategoryDataApiView.post` switches to the same update-or-create semantics.
+  - Category selection (categories whose dynamic segment contains the member): currently duplicated in `MemberMailCategoryDataApiView.get` and `MemberExtraEmailRegistrationSnapshotter._snapshot_mail_categories`; both use the extracted service.
+  - Mailing lists: take an address.
 - Throttling (optional, decided at the beginning of phase 6): DRF `ScopedRateThrottle` on the request-link endpoint and the token endpoints. Nothing in the repo uses throttling yet; it needs `REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]`.
 
 ### Member email change
@@ -178,7 +181,7 @@ New service `ActiveMemberProvider` in `tapir/core/services/active_member_provide
 **Blocking new subscriptions**, otherwise the next run would undo them:
 - Member self-service (subscribe, confirm invitation) and the extras' access link endpoints refuse former members and their extras. The member profile card and the access page hide the subscribe buttons and show a hint instead.
 - The admin views (subscribe internal, subscribe external) refuse addresses that belong to a former member, with an explanation.
-- The snapshot at confirmation skips the lists if the member has already left.
+- The snapshot at confirmation skips the lists if the member has already left. The check runs in `snapshot` before registering the `on_commit` callback, since `_snapshot_mailing_lists` only receives addresses.
 
 Rejoining restores nothing: the member subscribes again through self-service.
 
@@ -211,11 +214,11 @@ Rejoining restores nothing: the member subscribes again through self-service.
 - [x] Phase 3 — extras in `MailCategoryRecipientResolver` + extra defaults, snapshot at confirmation (categories + lists), data migration for existing extras
 - [ ] Phase 4 — extra mailing list manager, unsubscribe on deletion, recipient list display, parameter description update, explanation text default update
 - [ ] Phase 5 — access token service, send-link endpoint + trigger, public request page, "Abos verwalten Link" token
-- [ ] Phase 6 — management API + island (categories, lists, self-removal), log entry, throttling (optional: decide at the beginning of the phase whether it's necessary; if yes, it also covers the phase 5 request-link endpoint)
+- [ ] Phase 6 — per-extra category state, shared category services (update-or-create, also for the member path; category selection, also for the snapshotter), management API + island (categories, lists, self-removal), log entry, throttling (optional: decide at the beginning of the phase whether it's necessary; if yes, it also covers the phase 5 request-link endpoint)
 - [ ] Phase 7 — mailman subscriptions follow the member's email change
 - [ ] Phase 8 — former members: `ActiveMemberProvider` (move `get_queryset_active_members`, add `get_former_members`, update callers), nightly unsubscription task + log entry, blocking new subscriptions (self-service, access link, admin views, snapshot), list unsubscription in `DeleteMemberApiView`
-- [ ] Phase 9 — test data generation (extras with and without direct mails, with registrations)
-- [ ] Phase 10 — docs (`docs/admins`, explanation text)
+- [ ] Phase 9 — test data generation (extras with and without direct mails; registrations of extras with direct mails through `MemberExtraEmailRegistrationSnapshotter`)
+- [ ] Phase 10 — docs (`docs/admins`, explanation text): `ALWAYS_ON` categories are optional for extras, the snapshot runs only on the first confirmation, switching direct mails on later gives no snapshot
 - [ ] Phase 11 — delete this plan file (`plans/member_extra_email_subscriptions_plan.md`)
 
 ## Deployment and migration
