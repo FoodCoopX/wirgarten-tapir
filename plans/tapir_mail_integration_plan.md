@@ -120,7 +120,7 @@ For each oddity, check whether it can be removed with reasonable effort now that
 - **Settings only the mail module reads**: drop those Tapir never changes from their defaults.
 - [x] **`TAPIR_MAIL_PATH` is effectively fixed**: replaced by the constant `MAIL_URL_PREFIX` in `tapir/mail/config.py`; changing it requires regenerating the schema and client.
 - **Two `useApi` hooks**: the mail UI has its own copy of `src_frontend/hooks/useApi.ts`. Tapir's hook only uses `useMemo`, which works with React 18 too, so the mail UI could reuse it.
-- **Dead CORS settings**: `CORS_*` in `tapir/settings/base.py` have no effect, since `corsheaders` was never installed in Tapir (it was a dependency of the standalone mail server). Remove them, unless the Vite dev servers need them.
+- [x] **Dead CORS settings**: removed from `tapir/settings/base.py`; mail UI and Jasmin checked locally.
 - **Path-based permission middleware**: replace `TapirMailPermissionMiddleware` with permission classes on the mail views.
 - **`OnboardingTrigger` ID from the module path**: `tapir/wirgarten/triggers/onboarding_trigger.py` still derives its ID from `__name__`, like the mail triggers did. Moving that file would break stored triggers again.
 
