@@ -664,14 +664,28 @@ class EmailConfigurationDispatchViewSet(viewsets.ModelViewSet):
     pagination_class = LimitOffsetPagination
     DEFAULT_LIMIT = 10
 
+    @staticmethod
+    def with_serializer_relations(queryset: QuerySet, path_to_dispatch: str = ""):
+        # Loads what EmailConfigurationDispatchSerializer reads from relations
+        version = f"{path_to_dispatch}email_configuration_version"
+        return queryset.select_related(
+            f"{version}__email_configuration"
+        ).prefetch_related(
+            f"{version}__static_segments_additive",
+            f"{version}__static_segments_subtractive",
+            f"{version}__mail_categories_additive",
+        )
+
     @extend_schema(
         responses={200: EmailConfigurationDispatchSerializer(many=True)},
     )
     @action(detail=False)
     def last_sent(self, request: Request):
         pagination = self.pagination_class()
-        queryset = EmailConfigurationDispatch.objects.filter(is_sent=True).order_by(
-            "-scheduled_time"
+        queryset = self.with_serializer_relations(
+            EmailConfigurationDispatch.objects.filter(is_sent=True).order_by(
+                "-scheduled_time"
+            )
         )
         objects = pagination.paginate_queryset(queryset, request)
         serializer = EmailConfigurationDispatchSerializer(objects, many=True)
@@ -684,7 +698,7 @@ class EmailConfigurationDispatchViewSet(viewsets.ModelViewSet):
     @action(detail=False)
     def next_sends(self, request):
         pagination = self.pagination_class()
-        queryset = (
+        queryset = self.with_serializer_relations(
             EmailConfigurationDispatch.objects.filter(is_sent=False)
             .exclude(email_configuration_version__status=ReleaseStatus.ARCHIVED)
             .order_by("scheduled_time")
@@ -744,11 +758,16 @@ class EmailDispatchViewSet(viewsets.ReadOnlyModelViewSet):
         ],
     )
     def list(self, request, *args, **kwargs):
-        queryset = EmailDispatch.objects.filter(next_retry__isnull=True).order_by(
-            "-created_at",
-            "-sent_time",
-            "-opened_time",
-            "recipient",
+        queryset = EmailConfigurationDispatchViewSet.with_serializer_relations(
+            EmailDispatch.objects.filter(next_retry__isnull=True)
+            .select_related("previous_retry")
+            .order_by(
+                "-created_at",
+                "-sent_time",
+                "-opened_time",
+                "recipient",
+            ),
+            path_to_dispatch="email_configuration_dispatch__",
         )
         config_dispatch_id = request.query_params.get("config_dispatch_id")
         if config_dispatch_id:

@@ -1,3 +1,4 @@
+import datetime
 from pathlib import Path
 
 import factory
@@ -86,9 +87,10 @@ class EmailConfigurationDispatchFactory(
 
     email_configuration_version = factory.SubFactory(EmailConfigurationVersionFactory)
     scheduled_time = factory.Faker(
-        "date_this_decade",
-        before_today=True,
-        after_today=True,
+        "date_time_this_decade",
+        before_now=True,
+        after_now=True,
+        tzinfo=datetime.UTC,
     )
     is_sent = factory.Faker("pybool")
 
