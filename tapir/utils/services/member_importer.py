@@ -60,7 +60,9 @@ class MemberImporter:
         if DataImportUtils.is_row_empty(row):
             return None
 
-        member_no = int(DataImportUtils.normalize_cell(row.get("Nr")))
+        member_no = DataImportUtils.parse_member_number(value=row.get("Nr"), cache={})
+        if member_no is None:
+            raise TapirDataImportException("Missing member number in column 'Nr'")
         member = Member.objects.filter(member_no=member_no).first()
 
         if member:
