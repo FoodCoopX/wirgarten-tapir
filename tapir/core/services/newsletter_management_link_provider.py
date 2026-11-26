@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.urls import reverse
-from tapir_mail.models import StaticSegmentRecipient, ExternalRecipient
+from tapir.mail.models import StaticSegmentRecipient, ExternalRecipient
 
 from tapir.wirgarten.models import Member
 

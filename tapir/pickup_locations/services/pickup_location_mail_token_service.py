@@ -1,4 +1,4 @@
-from tapir_mail.models import StaticSegmentRecipient
+from tapir.mail.models import StaticSegmentRecipient
 
 from tapir.pickup_locations.services.member_delivery_address_getter import (
     MemberDeliveryAddressGetter,

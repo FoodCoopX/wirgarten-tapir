@@ -1,5 +1,5 @@
 from django.apps import AppConfig
-from tapir_mail.registries import mail_segment_providers, MailSegment
+from tapir.mail.registries import mail_segment_providers, MailSegment
 
 
 class CoopConfig(AppConfig):

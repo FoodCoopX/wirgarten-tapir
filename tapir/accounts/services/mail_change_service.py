@@ -4,8 +4,8 @@ import json
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
 from django.urls import reverse_lazy
-from tapir_mail.models import StaticSegmentRecipient, ExternalRecipient
-from tapir_mail.triggers.transactional_trigger import (
+from tapir.mail.models import StaticSegmentRecipient, ExternalRecipient
+from tapir.mail.triggers.transactional_trigger import (
     TransactionalTrigger,
     TransactionalTriggerData,
 )

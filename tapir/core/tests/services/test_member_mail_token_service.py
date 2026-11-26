@@ -1,7 +1,7 @@
 import datetime
 from unittest.mock import MagicMock, Mock, patch
 
-from tapir_mail.models import StaticSegmentRecipient
+from tapir.mail.models import StaticSegmentRecipient
 
 from tapir.core.services import member_mail_token_service
 from tapir.core.services.member_mail_token_service import MemberMailTokenService

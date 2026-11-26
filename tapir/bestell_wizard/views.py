@@ -9,7 +9,7 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from tapir_mail.triggers.transactional_trigger import TransactionalTriggerData
+from tapir.mail.triggers.transactional_trigger import TransactionalTriggerData
 
 from tapir.accounts.services.email_normaliser import EmailNormaliser
 from tapir.associations.models import AssociationMembershipType

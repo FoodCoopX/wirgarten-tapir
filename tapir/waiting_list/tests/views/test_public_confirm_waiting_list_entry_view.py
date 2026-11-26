@@ -6,7 +6,7 @@ from unittest.mock import patch, Mock
 
 from django.urls import reverse
 from keycloak import KeycloakPutError
-from tapir_mail.triggers.transactional_trigger import (
+from tapir.mail.triggers.transactional_trigger import (
     TransactionalTriggerData,
     TransactionalTrigger,
 )
@@ -114,7 +114,7 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
         self.assertEqual(0, WaitingListEntry.objects.count())
 
     @patch(
-        "tapir_mail.triggers.transactional_trigger.TransactionalTrigger.fire_action",
+        "tapir.mail.triggers.transactional_trigger.TransactionalTrigger.fire_action",
         autospec=True,
     )
     def test_post_waitingListEntryWithoutStartDateAndNoGrowingPeriodOnCurrentStartDate_startsContractOnFollowingGrowingPeriod(

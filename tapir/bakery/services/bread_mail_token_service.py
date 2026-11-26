@@ -1,7 +1,7 @@
 import datetime
 
 from django.utils.html import escape
-from tapir_mail.models import StaticSegmentRecipient
+from tapir.mail.models import StaticSegmentRecipient
 
 from tapir.bakery.models import Bread
 from tapir.bakery.services.bread_delivery_context_service import (

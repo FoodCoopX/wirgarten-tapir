@@ -1,3 +1,5 @@
+packages:
+  - src_frontend_mail
 allowBuilds:
   '@nestjs/core': true
   '@openapitools/openapi-generator-cli': true

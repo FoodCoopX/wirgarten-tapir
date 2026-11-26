@@ -3,7 +3,7 @@ from unittest.mock import patch, MagicMock
 
 from django.urls import reverse
 from rest_framework import status
-from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
+from tapir.mail.triggers.transactional_trigger import TransactionalTrigger
 
 from tapir.wirgarten.constants import WEEKLY
 from tapir.wirgarten.models import Subscription

@@ -1,4 +1,4 @@
-from tapir_mail.models import (
+from tapir.mail.models import (
     MailCategory,
     InternalRecipientCategoryRegistration,
     MailCategoryMode,

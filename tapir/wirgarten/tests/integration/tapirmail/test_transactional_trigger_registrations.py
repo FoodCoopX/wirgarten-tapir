@@ -1,4 +1,4 @@
-from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
+from tapir.mail.triggers.transactional_trigger import TransactionalTrigger
 
 from tapir.core.config import (
     LEGAL_STATUS_ASSOCIATION,

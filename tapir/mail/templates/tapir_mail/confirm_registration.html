@@ -1,0 +1,21 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8">
+    <title>Tapir Newsletter-Anmeldung: {{ mail_category_name }}</title>
+    <link rel="stylesheet" href="{% static 'core/bootstrap/5.3.8/css/bootstrap.min.css' %}">
+  </head>
+  <body>
+    <div class="card">
+      <div class="card-header"><h5>Anmeldung zum Newsletter: {{ mail_category_name }}</h5></div>
+      <div class="card-body">
+        <p>Bitte bestätige deine Anmeldung.</p>
+        <form method="post">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary">Anmeldung bestätigen</button>
+        </form>
+      </div>
+    </div>
+  </body>
+</html>

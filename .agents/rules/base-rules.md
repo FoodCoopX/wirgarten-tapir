@@ -20,6 +20,7 @@ Role profiles: `.agents/agents/`. Task recipes: `.agents/skills/`. See [.agents/
 ```
 tapir/            Django project + apps
 src_frontend/     React/TS, one folder per Django page
+src_frontend_mail/ mail UI, separate pnpm package on React 18
 scripts/          dev helpers
 docker/keycloak/  image, realm import, themes
 schema.yml        generated OpenAPI schema — never hand-edit
@@ -31,6 +32,7 @@ vite.config.ts    lists every JS entry point
 | App                        | Responsibility                                                                                                                   |
 |----------------------------|----------------------------------------------------------------------------------------------------------------------------------|
 | `wirgarten/`               | **Legacy core domain**: `Member`, `Subscription`, `ProductType`, `GrowingPeriod`, `PickupLocation`; main views, middleware, mail |
+| `mail/`                    | Mail module (label `tapir_mail`): templates, dispatch, segments, triggers, newsletters. Read [docs/dev/mail_module.md](docs/dev/mail_module.md) first |
 | `core/`                    | `TapirModel` base model (nanoid id, `created_at`, `updated_at`), health status                                                   |
 | `accounts/`                | `TapirUser`, Keycloak integration, sessions                                                                                      |
 | `subscriptions/`           | Subscriptions, notice periods, cancellations, confirmations                                                                      |
@@ -68,6 +70,9 @@ Routing: [tapir/urls.py](tapir/urls.py) includes per-app `urls.py`; apps mix DRF
   (`toApiDate(date)` if you only have a `Date`). Details in [docs/dev/frontend_dates.md](docs/dev/frontend_dates.md).
 - Fetch through [src_frontend/hooks/useApi.ts](src_frontend/hooks/useApi.ts) (CSRF token + base path from `env.ts`).
   React hooks only, no Redux/Zustand, no path aliases.
+- `src_frontend_mail/` is a separate pnpm package on React 18 (easy-email doesn't support React 19). Never upgrade
+  React there together with the root package, and don't import React code from `src_frontend` into it. Details in
+  [docs/dev/mail_module.md](docs/dev/mail_module.md).
 - Button variants by what the button does:
     - `outline-secondary`: no effect (close a modal, cancel, go back, navigate to another page).
     - `outline-primary`: no effect yet, but leads to a button that has one (open a form, go to a confirmation step).

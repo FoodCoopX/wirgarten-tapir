@@ -4,7 +4,7 @@ from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.db.models import F, Sum
 from django.views import generic
-from tapir_mail.models import MailCategory
+from tapir.mail.models import MailCategory
 
 from tapir.accounts.models import EmailChangeRequest
 from tapir.configuration.parameter import get_parameter_value

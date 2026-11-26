@@ -1,7 +1,7 @@
 import datetime
 from unittest.mock import patch, Mock
 
-from tapir_mail.triggers.transactional_trigger import (
+from tapir.mail.triggers.transactional_trigger import (
     TransactionalTrigger,
     TransactionalTriggerData,
 )
