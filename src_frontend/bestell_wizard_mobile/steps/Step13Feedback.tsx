@@ -1,8 +1,8 @@
 import React from "react";
 import { Form } from "react-bootstrap";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
+import NextStepButton from "../../components/mobile_wizard/NextStepButton.tsx";
 import { getHtmlDescription } from "../../utils/getHtmlDescription.ts";
-import NextStepButton from "../components/NextStepButton.tsx";
 
 interface Step13FeedbackProps {
   settings: BestellWizardSettings;

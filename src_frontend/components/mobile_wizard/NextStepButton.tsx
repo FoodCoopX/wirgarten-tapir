@@ -1,7 +1,7 @@
 import React from "react";
-import TapirButton from "../../components/TapirButton.tsx";
-import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
-import { NEXT_BUTTON_HEIGHT } from "../utils/DIMENSIONS.ts";
+import TapirButton from "../TapirButton.tsx";
+import { BUTTON_VARIANT } from "./utils/BUTTON_VARIANT.ts";
+import { NEXT_BUTTON_HEIGHT } from "./utils/DIMENSIONS.ts";
 
 interface NextButtonProps {
   onClick: () => void;

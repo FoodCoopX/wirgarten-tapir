@@ -363,8 +363,8 @@ html .custom-sidebar .nav-link.active .material-icons {
 }
 
 /* ----- BestellWizard / Beitragsrunde (mobile) --------------------------- */
-/* The mobile header logo is an inline-styled <img height="70%">; enlarge it a bit */
-#bw-header img {
+/* The shared mobile header logo is an inline-styled <img height="70%">; enlarge it a bit */
+#mobile-wizard-header img {
   height: 90% !important;
 }
 

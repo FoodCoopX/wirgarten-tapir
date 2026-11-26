@@ -1,6 +1,6 @@
 import React from "react";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
-import NextStepButton from "../components/NextStepButton.tsx";
+import NextStepButton from "../../components/mobile_wizard/NextStepButton.tsx";
 import TapirCheckbox from "../components/TapirCheckbox.tsx";
 
 interface Step12ChannelProps {

@@ -7,11 +7,11 @@ import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
 import { isIbanValid } from "../../bestell_wizard/utils/isIbanValid.ts";
 import TapirButton from "../../components/TapirButton.tsx";
-import NextStepButton from "../components/NextStepButton.tsx";
+import NextStepButton from "../../components/mobile_wizard/NextStepButton.tsx";
+import { BUTTON_VARIANT } from "../../components/mobile_wizard/utils/BUTTON_VARIANT.ts";
 import PersonalDataFormControl from "../components/PersonalDataFormControl.tsx";
 import TapirCheckbox from "../components/TapirCheckbox.tsx";
 import { atLeastOneMonthlyPayment } from "../utils/atLeastOneMonthlyPayment.ts";
-import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 
 interface Step9BankingDataProps {
   goToNextStep: () => void;

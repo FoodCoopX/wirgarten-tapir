@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { PublicPickupLocation, PublicProductType } from "../../api-client";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
-import NextStepButton from "../components/NextStepButton.tsx";
+import NextStepButton from "../../components/mobile_wizard/NextStepButton.tsx";
 import Step5CPickupLocationList from "../components/Step5CPickupLocationList.tsx";
 import Step5CPickupLocationWishes from "../components/Step5CPickupLocationWishes.tsx";
 import { getPickupLocationsForDeliveryMode } from "../utils/getPickupLocationsForDeliveryMode.ts";
