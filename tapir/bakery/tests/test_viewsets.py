@@ -1,10 +1,11 @@
 import datetime
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from rest_framework import status
 
 from tapir.bakery.models import (
     Bread,
-    BreadCapacityPickupLocation,
     BreadContent,
     BreadGroup,
     BreadLabel,
@@ -14,8 +15,8 @@ from tapir.bakery.models import (
 )
 from tapir.bakery.serializers import MAX_PIECES_PER_ENTRY
 from tapir.bakery.tests.factories import (
+    AvailableBreadsForDeliveryDayFactory,
     BreadSubscriptionFactory,
-    BreadCapacityPickupLocationFactory,
     BreadContentFactory,
     BreadDeliveryFactory,
     BreadFactory,
@@ -26,6 +27,7 @@ from tapir.bakery.tests.factories import (
     BreadsToBakePerWeekFactory,
     IngredientFactory,
     StoveSessionFactory,
+    offer_bread_at_pickup_location,
 )
 from tapir.pickup_locations.tests.factories import (
     create_pickup_location_with_opening_times,
@@ -275,40 +277,121 @@ class TestBreadViewSet(TapirIntegrationTest):
         self.assertIn("Vollkornbrot", names)
         self.assertNotIn("Weissbrot", names)
 
-    def test_list_filterByPickupLocationYearWeek_withCapacityAndAvailability(self):
-        pl = PickupLocationFactory.create()
-        bread = BreadFactory.create(name="Roggenbrot", is_active=True)
-        BreadCapacityPickupLocationFactory.create(
-            bread=bread,
-            pickup_location=pl,
-            year=YEAR,
-            delivery_week=WEEK,
-            capacity=5,
-        )
-
+    def _list_for_station(self, pickup_location, **params):
         response = self.client.get(
             reverse("bakery:breads-list-list"),
             {
-                "pickup_location_id": str(pl.id),
+                "pickup_location_id": str(pickup_location.id),
                 "year": YEAR,
                 "week": WEEK,
+                **params,
             },
         )
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        names = [b["name"] for b in response.data]
-        self.assertIn("Roggenbrot", names)
+        return {b["name"]: b for b in response.data}
 
-    def test_list_filterByPickupLocation_noCapacityLeft_excluded(self):
+    def test_list_filterByPickupLocation_ownSlot_isLeftOutOfTheCounts(self):
+        # A switch from A to B inside a full group is allowed, so it is
+        # offered to the member editing that slot.
+        pl = create_pickup_location_with_opening_times([DAY])
+        group = BreadGroupFactory.create(name="Teig1")
+        bread_a, bread_b = (
+            BreadFactory.create(
+                name=name,
+                is_active=True,
+                group=group,
+                max_pieces=1,
+                min_remaining_pieces=0,
+            )
+            for name in ("Brot A", "Brot B")
+        )
+        for bread in (bread_a, bread_b):
+            offer_bread_at_pickup_location(bread, pl, year=YEAR, delivery_week=WEEK)
+        mine = BreadDeliveryFactory.create(
+            year=YEAR, delivery_week=WEEK, pickup_location=pl, bread=bread_a
+        )
+
+        self.assertNotIn("Brot B", self._list_for_station(pl))
+        self.assertIn("Brot B", self._list_for_station(pl, delivery_id=mine.id))
+
+    def test_list_filterByPickupLocation_weekNotInTheYear_returns400(self):
+        # 2027 has 52 ISO weeks.
+        pl = create_pickup_location_with_opening_times([DAY])
+
+        response = self.client.get(
+            reverse("bakery:breads-list-list"),
+            {"pickup_location_id": str(pl.id), "year": 2027, "week": 53},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_list_filterByPickupLocationYearWeek_withCapacityAndAvailability(self):
+        pl = create_pickup_location_with_opening_times([DAY])
+        bread = BreadFactory.create(
+            name="Roggenbrot",
+            is_active=True,
+            max_pieces=10,
+            min_remaining_pieces=0,
+            max_direct_order_percent=50,
+        )
+        offer_bread_at_pickup_location(bread, pl, year=YEAR, delivery_week=WEEK)
+        BreadDeliveryFactory.create(
+            year=YEAR, delivery_week=WEEK, pickup_location=pl, bread=bread
+        )
+
+        breads = self._list_for_station(pl)
+
+        self.assertEqual(breads["Roggenbrot"]["capacity"], 5)
+        self.assertEqual(breads["Roggenbrot"]["delivery_count"], 1)
+        self.assertEqual(breads["Roggenbrot"]["available_capacity"], 4)
+
+    def test_list_filterByPickupLocation_breadWithoutMax_isUnlimited(self):
+        pl = create_pickup_location_with_opening_times([DAY])
+        bread = BreadFactory.create(name="Roggenbrot", is_active=True, max_pieces=None)
+        offer_bread_at_pickup_location(bread, pl, year=YEAR, delivery_week=WEEK)
+
+        breads = self._list_for_station(pl)
+
+        self.assertIsNone(breads["Roggenbrot"]["capacity"])
+        self.assertIsNone(breads["Roggenbrot"]["available_capacity"])
+
+    def test_list_filterByPickupLocation_breadNotBakedThatDay_excluded(self):
+        pl = create_pickup_location_with_opening_times([DAY])
+        bread = BreadFactory.create(name="Roggenbrot", is_active=True)
+        AvailableBreadsForDeliveryDayFactory.create(
+            year=YEAR, delivery_week=WEEK, delivery_day=DAY + 1, bread=bread
+        )
+
+        self.assertNotIn("Roggenbrot", self._list_for_station(pl))
+
+    def test_list_filterByPickupLocation_ordersAtOtherStationsOfTheDayCount(self):
+        pl = create_pickup_location_with_opening_times([DAY])
+        other = create_pickup_location_with_opening_times([DAY])
+        bread = BreadFactory.create(
+            name="Roggenbrot", is_active=True, max_pieces=1, min_remaining_pieces=0
+        )
+        offer_bread_at_pickup_location(bread, pl, year=YEAR, delivery_week=WEEK)
+        BreadDeliveryFactory.create(
+            year=YEAR, delivery_week=WEEK, pickup_location=other, bread=bread
+        )
+
+        self.assertNotIn("Roggenbrot", self._list_for_station(pl))
+
+    def test_list_filterByPickupLocation_stationWithoutOpeningTimes_isEmpty(self):
         pl = PickupLocationFactory.create()
         bread = BreadFactory.create(name="Roggenbrot", is_active=True)
-        BreadCapacityPickupLocationFactory.create(
-            bread=bread,
-            pickup_location=pl,
-            year=YEAR,
-            delivery_week=WEEK,
-            capacity=1,
+        AvailableBreadsForDeliveryDayFactory.create(
+            year=YEAR, delivery_week=WEEK, delivery_day=DAY, bread=bread
         )
+
+        self.assertEqual(self._list_for_station(pl), {})
+
+    def test_list_filterByPickupLocation_noCapacityLeft_excluded(self):
+        pl = create_pickup_location_with_opening_times([DAY])
+        bread = BreadFactory.create(
+            name="Roggenbrot", is_active=True, max_pieces=1, min_remaining_pieces=0
+        )
+        offer_bread_at_pickup_location(bread, pl, year=YEAR, delivery_week=WEEK)
         member = MemberFactory.create()
         sub = BreadSubscriptionFactory.create(member=member)
         BreadDeliveryFactory.create(
@@ -968,25 +1051,32 @@ class TestBreadSpecificsPerDeliveryDayViewSet(TapirIntegrationTest):
         self.assertEqual(spec.min_pieces, 10)
         self.assertEqual(spec.max_pieces, 30)
 
-    def test_bulkUpdate_allNullFields_deletesEntry(self):
-        bread = BreadFactory.create(name="Roggenbrot")
-        BreadSpecificsPerDeliveryDayFactory.create(
-            year=YEAR, delivery_week=WEEK, delivery_day=DAY, bread=bread
-        )
-
-        response = self.client.post(
+    def _bulk_update(self, update):
+        return self.client.post(
             reverse("bakery:bread-specifics-bulk-update"),
             data={
                 "year": YEAR,
                 "delivery_week": WEEK,
                 "delivery_day": DAY,
-                "updates": [
-                    {
-                        "bread": str(bread.id),
-                    }
-                ],
+                "updates": [update],
             },
             content_type="application/json",
+        )
+
+    def test_bulkUpdate_allNullFields_deletesEntry(self):
+        bread = BreadFactory.create(name="Roggenbrot")
+        BreadSpecificsPerDeliveryDayFactory.create(
+            year=YEAR, delivery_week=WEEK, delivery_day=DAY, bread=bread, min_pieces=1
+        )
+
+        response = self._bulk_update(
+            {
+                "bread": str(bread.id),
+                "min_pieces": None,
+                "max_pieces": None,
+                "min_remaining_pieces": None,
+                "fixed_pieces": None,
+            }
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -995,6 +1085,94 @@ class TestBreadSpecificsPerDeliveryDayViewSet(TapirIntegrationTest):
                 year=YEAR, delivery_week=WEEK, delivery_day=DAY, bread=bread
             ).exists()
         )
+
+    def test_bulkUpdate_onlyThePercentage_keepsTheDaySettings(self):
+        bread = BreadFactory.create(name="Roggenbrot")
+        BreadSpecificsPerDeliveryDayFactory.create(
+            year=YEAR, delivery_week=WEEK, delivery_day=DAY, bread=bread, max_pieces=30
+        )
+
+        response = self._bulk_update(
+            {"bread": str(bread.id), "max_direct_order_percent": 80}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        spec = BreadSpecificsPerDeliveryDay.objects.get(bread=bread)
+        self.assertEqual(spec.max_pieces, 30)
+        self.assertEqual(spec.max_direct_order_percent, 80)
+
+    def test_bulkUpdate_daySettingsCleared_keepTheRowForThePercentage(self):
+        bread = BreadFactory.create(name="Roggenbrot")
+        BreadSpecificsPerDeliveryDayFactory.create(
+            year=YEAR,
+            delivery_week=WEEK,
+            delivery_day=DAY,
+            bread=bread,
+            max_pieces=30,
+            max_direct_order_percent=80,
+        )
+
+        response = self._bulk_update(
+            {
+                "bread": str(bread.id),
+                "min_pieces": None,
+                "max_pieces": None,
+                "min_remaining_pieces": None,
+                "fixed_pieces": None,
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        spec = BreadSpecificsPerDeliveryDay.objects.get(bread=bread)
+        self.assertIsNone(spec.max_pieces)
+        self.assertEqual(spec.max_direct_order_percent, 80)
+
+    def test_bulkUpdate_percentageAbove100_returns400(self):
+        bread = BreadFactory.create(name="Roggenbrot")
+
+        response = self._bulk_update(
+            {"bread": str(bread.id), "max_direct_order_percent": 101}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(BreadSpecificsPerDeliveryDay.objects.exists())
+
+    def test_create_weekNotInTheYear_returns400(self):
+        # 2027 has 52 ISO weeks.
+        bread = BreadFactory.create(name="Roggenbrot")
+
+        response = self.client.post(
+            reverse("bakery:bread-specifics-list"),
+            data={
+                "year": 2027,
+                "delivery_week": 53,
+                "delivery_day": DAY,
+                "bread": str(bread.id),
+                "max_pieces": 5,
+            },
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(BreadSpecificsPerDeliveryDay.objects.exists())
+
+    def test_bulkUpdate_weekNotInTheYear_returns400(self):
+        # 2027 has 52 ISO weeks.
+        bread = BreadFactory.create(name="Roggenbrot")
+
+        response = self.client.post(
+            reverse("bakery:bread-specifics-bulk-update"),
+            data={
+                "year": 2027,
+                "delivery_week": 53,
+                "delivery_day": DAY,
+                "updates": [{"bread": str(bread.id), "max_pieces": 5}],
+            },
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(BreadSpecificsPerDeliveryDay.objects.exists())
 
 
 class TestBreadDeliveryViewSetOwnership(TapirIntegrationTest):
@@ -1254,13 +1432,6 @@ class TestProtectedDelete(TapirIntegrationTest):
     def test_deleteBread_stillChosenForAWeek_returns409(self):
         bread = BreadFactory.create(name="Roggenbrot")
         location = PickupLocationFactory.create()
-        BreadCapacityPickupLocationFactory.create(
-            year=2026,
-            delivery_week=11,
-            pickup_location=location,
-            bread=bread,
-            capacity=10,
-        )
         BreadDeliveryFactory.create(
             year=2026, delivery_week=11, pickup_location=location, bread=bread
         )
@@ -1308,7 +1479,7 @@ class TestBreadChoiceCapacityGuard(TapirIntegrationTest):
         self.admin = MemberFactory.create(is_superuser=True)
         self.client.force_login(self.admin)
         self.bread = BreadFactory.create(name="Roggenbrot")
-        self.location = PickupLocationFactory.create()
+        self.location = create_pickup_location_with_opening_times([DAY])
 
     def _delivery(self, member=None):
         return BreadDeliveryFactory.create(
@@ -1335,14 +1506,23 @@ class TestBreadChoiceCapacityGuard(TapirIntegrationTest):
         delivery.refresh_from_db()
         self.assertIsNone(delivery.bread_id)
 
-    def test_patch_capacityAlreadyTaken_returns400(self):
-        BreadCapacityPickupLocationFactory.create(
-            year=YEAR,
-            delivery_week=WEEK,
-            pickup_location=self.location,
-            bread=self.bread,
-            capacity=1,
+    def _offer(self, max_pieces):
+        self.bread.max_pieces = max_pieces
+        self.bread.min_remaining_pieces = 0
+        self.bread.save()
+        offer_bread_at_pickup_location(
+            self.bread, self.location, year=YEAR, delivery_week=WEEK
         )
+
+    def _patch(self, delivery, bread):
+        return self.client.patch(
+            reverse("bakery:bread-deliveries-detail", args=[delivery.id]),
+            {"bread": str(bread.id)},
+            content_type="application/json",
+        )
+
+    def test_patch_capacityAlreadyTaken_returns400(self):
+        self._offer(max_pieces=1)
         taken = self._delivery()
         taken.bread = self.bread
         taken.save()
@@ -1361,13 +1541,7 @@ class TestBreadChoiceCapacityGuard(TapirIntegrationTest):
         self.assertIsNone(mine.bread_id)
 
     def test_patch_capacityAvailable_isAccepted(self):
-        BreadCapacityPickupLocationFactory.create(
-            year=YEAR,
-            delivery_week=WEEK,
-            pickup_location=self.location,
-            bread=self.bread,
-            capacity=2,
-        )
+        self._offer(max_pieces=2)
         delivery = self._delivery()
 
         response = self.client.patch(
@@ -1379,6 +1553,110 @@ class TestBreadChoiceCapacityGuard(TapirIntegrationTest):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         delivery.refresh_from_db()
         self.assertEqual(delivery.bread_id, self.bread.id)
+
+    def test_patch_stationWithoutOpeningTimes_returns400(self):
+        self.location = PickupLocationFactory.create()
+        AvailableBreadsForDeliveryDayFactory.create(
+            year=YEAR, delivery_week=WEEK, delivery_day=DAY, bread=self.bread
+        )
+
+        response = self._patch(self._delivery(), self.bread)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("nicht verfügbar", response.data["error"])
+
+    def test_patch_locksTheDaysEntriesOfTheGroupOnly(self):
+        other = self._group_of_two_with_max(10)
+        delivery = self._delivery()
+
+        with CaptureQueriesContext(connection) as queries:
+            response = self._patch(delivery, other)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        locks = [
+            query["sql"]
+            for query in queries.captured_queries
+            if "FOR UPDATE" in query["sql"]
+        ]
+        locked_tables = {sql.split(" FROM ")[1].split()[0].strip('"') for sql in locks}
+        self.assertEqual(
+            locked_tables,
+            {"bakery_breaddelivery", "bakery_availablebreadsfordeliveryday"},
+        )
+        [entries_lock] = [sql for sql in locks if "availablebreads" in sql]
+        # The entries of every bread of the group, not the breads themselves.
+        self.assertIn("group_id", entries_lock)
+        self.assertIn(
+            'FOR UPDATE OF "bakery_availablebreadsfordeliveryday"', entries_lock
+        )
+
+    def test_patch_takenAtAnotherStationOfTheSameDay_returns400(self):
+        self._offer(max_pieces=1)
+        BreadDeliveryFactory.create(
+            year=YEAR,
+            delivery_week=WEEK,
+            pickup_location=create_pickup_location_with_opening_times([DAY]),
+            bread=self.bread,
+        )
+
+        response = self._patch(self._delivery(), self.bread)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Keine Kapazität", response.data["error"])
+
+    def test_patch_takenAtAStationOfAnotherDay_isAccepted(self):
+        self._offer(max_pieces=1)
+        BreadDeliveryFactory.create(
+            year=YEAR,
+            delivery_week=WEEK,
+            pickup_location=create_pickup_location_with_opening_times([DAY + 1]),
+            bread=self.bread,
+        )
+
+        response = self._patch(self._delivery(), self.bread)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def _group_of_two_with_max(self, max_pieces):
+        group = BreadGroupFactory.create(name="Teig1")
+        other = BreadFactory.create(
+            name="Dinkelbrot",
+            group=group,
+            max_pieces=max_pieces,
+            min_remaining_pieces=0,
+        )
+        self.bread.group = group
+        self.bread.save()
+        self._offer(max_pieces=max_pieces)
+        offer_bread_at_pickup_location(
+            other, self.location, year=YEAR, delivery_week=WEEK
+        )
+        return other
+
+    def test_patch_groupFull_otherBreadOfTheGroup_returns400(self):
+        other = self._group_of_two_with_max(2)
+        for _ in range(2):
+            taken = self._delivery()
+            taken.bread = self.bread
+            taken.save()
+
+        response = self._patch(self._delivery(), other)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Keine Kapazität", response.data["error"])
+
+    def test_patch_swapWithinAFullGroup_isAccepted(self):
+        other = self._group_of_two_with_max(2)
+        deliveries = [self._delivery() for _ in range(2)]
+        for delivery in deliveries:
+            delivery.bread = self.bread
+            delivery.save()
+
+        response = self._patch(deliveries[0], other)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        deliveries[0].refresh_from_db()
+        self.assertEqual(deliveries[0].bread_id, other.id)
 
 
 class TestWritableIdIsClosed(TapirIntegrationTest):
@@ -1518,12 +1796,8 @@ class TestBreadChoiceDeadline(TapirIntegrationTest):
         )
 
     def _delivery(self, year, week, member=None):
-        BreadCapacityPickupLocationFactory.create(
-            year=year,
-            delivery_week=week,
-            pickup_location=self.location,
-            bread=self.bread,
-            capacity=10,
+        offer_bread_at_pickup_location(
+            self.bread, self.location, year=year, delivery_week=week
         )
         return BreadDeliveryFactory.create(
             year=year,

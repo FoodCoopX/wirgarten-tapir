@@ -7,6 +7,8 @@ interface YearWeekSelectorCardProps {
   selectedWeek: number;
   onYearChange: (year: number) => void;
   onWeekChange: (week: number) => void;
+  // Shown next to the week, for actions on the selected week.
+  children?: React.ReactNode;
 }
 
 const currentYear = currentIsoYear();
@@ -16,6 +18,7 @@ export const YearWeekSelectorCard: React.FC<YearWeekSelectorCardProps> = ({
   selectedWeek,
   onYearChange,
   onWeekChange,
+  children,
 }) => {
   const years = Array.from(
     { length: currentYear + 1 - 2026 + 1 },
@@ -67,6 +70,7 @@ export const YearWeekSelectorCard: React.FC<YearWeekSelectorCardProps> = ({
               )}
             </select>
           </div>
+          {children && <div className="col-md-auto">{children}</div>}
         </div>
       </div>
     </div>

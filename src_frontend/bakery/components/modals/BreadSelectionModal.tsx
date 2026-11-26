@@ -17,6 +17,9 @@ interface BreadSelectionModalProps {
   pickupLocationName: string;
   selectedWeek: number;
   selectedYear: number;
+  // The slot being chosen for: its own choice does not count against the
+  // limits, so a switch inside a full group is offered.
+  deliveryId: string;
   currentBreadId?: string | null;
   onSelect: (breadId: string) => void;
   onClose: () => void;
@@ -29,6 +32,7 @@ export const BreadSelectionModal: React.FC<BreadSelectionModalProps> = ({
   pickupLocationName,
   selectedWeek,
   selectedYear,
+  deliveryId,
   currentBreadId,
   onSelect,
   onClose,
@@ -43,7 +47,7 @@ export const BreadSelectionModal: React.FC<BreadSelectionModalProps> = ({
 
   useEffect(() => {
     loadData();
-  }, [pickupLocationId, selectedWeek, selectedYear]);
+  }, [pickupLocationId, selectedWeek, selectedYear, deliveryId]);
 
   const loadData = () => {
     setLoading(true);
@@ -53,6 +57,7 @@ export const BreadSelectionModal: React.FC<BreadSelectionModalProps> = ({
         pickupLocationId,
         year: selectedYear,
         week: selectedWeek,
+        deliveryId,
       }),
       bakeryApi.bakeryLabelsList(),
     ])

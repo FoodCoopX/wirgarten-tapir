@@ -14,14 +14,14 @@ from rest_framework.views import APIView
 from tapir.bakery.models import (
     AvailableBreadsForDeliveryDay,
     Bread,
-    BreadCapacityPickupLocation,
 )
 from tapir.bakery.serializers import (
     AvailableBreadsForDeliveryListResponseSerializer,
-    BreadCapacityAllocationResponseSerializer,
-    BreadCapacityBulkUpdateSerializer,
     BreadListSerializer,
+    CopyWeekSettingsRequestSerializer,
+    CopyWeekSettingsResponseSerializer,
     DeliveryDaysResponseSerializer,
+    DirectOrderLimitsResponseSerializer,
     PickupListsResponseSerializer,
     PickupLocationsByDeliveryDayResponseSerializer,
     PreferenceSatisfactionResponseSerializer,
@@ -34,6 +34,13 @@ from tapir.bakery.serializers import (
     SolverPreviewResponseSerializer,
     ToggleBreadRequestSerializer,
     ToggleBreadResponseSerializer,
+    WeekSettingsSourcesResponseSerializer,
+)
+from tapir.bakery.services.bread_choice_deadline_service import (
+    BreadChoiceDeadlineService,
+)
+from tapir.bakery.services.direct_order_limit_service import (
+    DirectOrderLimitService,
 )
 from tapir.bakery.services.pickup_list_service import PickupListService
 from tapir.bakery.solver_availability import (
@@ -45,6 +52,10 @@ from tapir.bakery.services.preference_satisfaction_service import (
 )
 from tapir.bakery.services.preferred_bread_statistics_service import (
     PreferredBreadStatisticsService,
+)
+from tapir.bakery.services.weekly_plan_service import (
+    DeliveryDayIsOver,
+    WeeklyPlanService,
 )
 from tapir.bakery.utils import parse_week_params
 from tapir.generic_exports.permissions import HasCoopManagePermission
@@ -98,6 +109,10 @@ class AvailableBreadsForDeliveryListView(APIView):
                 "year": year,
                 "delivery_week": delivery_week,
                 "delivery_day": delivery_day,
+                "delivery_day_is_over": delivery_day is not None
+                and BreadChoiceDeadlineService.is_delivery_day_over(
+                    year, delivery_week, delivery_day, cache={}
+                ),
                 "breads": BreadListSerializer(
                     [entry.bread for entry in available_breads], many=True
                 ).data,
@@ -106,8 +121,19 @@ class AvailableBreadsForDeliveryListView(APIView):
 
     @extend_schema(
         summary="Toggle bread availability for a delivery day",
+        description=(
+            "Switching a bread off clears the members' choices of it for that "
+            "day. With dry_run, only counts them. A day that is over can no "
+            "longer be changed."
+        ),
         request=ToggleBreadRequestSerializer,
-        responses={200: ToggleBreadResponseSerializer},
+        responses={
+            200: ToggleBreadResponseSerializer,
+            400: OpenApiResponse(
+                description="Validation errors, or the delivery day is over"
+            ),
+            404: OpenApiResponse(description="Bread not found"),
+        },
     )
     def post(self, request):
         serializer = ToggleBreadRequestSerializer(data=request.data)
@@ -127,34 +153,27 @@ class AvailableBreadsForDeliveryListView(APIView):
                 {"error": "Bread not found"}, status=status.HTTP_404_NOT_FOUND
             )
 
-        if is_active:
-            entry, created = AvailableBreadsForDeliveryDay.objects.get_or_create(
+        try:
+            result = WeeklyPlanService.set_bread_baked(
+                bread_id=bread.id,
                 year=year,
                 delivery_week=delivery_week,
                 delivery_day=delivery_day,
-                bread=bread,
+                is_baked=is_active,
+                cache={},
+                dry_run=data["dry_run"],
             )
-            return Response(
-                {
-                    "success": True,
-                    "created": created,
-                    "bread_id": str(bread_id),
-                }
-            )
+        except DeliveryDayIsOver as error:
+            return Response({"error": str(error)}, status=status.HTTP_400_BAD_REQUEST)
+        response = {"success": True, "bread_id": str(bread_id)}
+        if data["dry_run"]:
+            response["cleared_choices"] = result.cleared_choices
+        elif is_active:
+            response["created"] = result.created
         else:
-            deleted_count, _ = AvailableBreadsForDeliveryDay.objects.filter(
-                year=year,
-                delivery_week=delivery_week,
-                delivery_day=delivery_day,
-                bread=bread,
-            ).delete()
-            return Response(
-                {
-                    "success": True,
-                    "deleted": deleted_count > 0,
-                    "bread_id": str(bread_id),
-                }
-            )
+            response["deleted"] = result.deleted
+            response["cleared_choices"] = result.cleared_choices
+        return Response(response)
 
 
 class PickupListView(APIView):
@@ -662,19 +681,22 @@ class PickupLocationsByDeliveryDayView(APIView):
 
 
 @extend_schema(tags=["bakery"])
-class BreadCapacityAllocationView(APIView):
-    """The capacities of one delivery day, shaped the way the allocation table needs them."""
+class DirectOrderLimitsView(APIView):
+    """
+    What members may order directly of each bread on one delivery day. The
+    percentages are saved through the bread specifics bulk update.
+    """
 
     permission_classes = [IsAuthenticated, HasCoopManagePermission]
 
     @extend_schema(
-        summary="Get the bread capacities of every station delivered on a weekday",
+        summary="Get the direct-order limits of every bread baked on a delivery day",
         parameters=[
             OpenApiParameter(name="year", type=int, required=True),
             OpenApiParameter(name="delivery_week", type=int, required=True),
             OpenApiParameter(name="delivery_day", type=int, required=True),
         ],
-        responses={200: BreadCapacityAllocationResponseSerializer},
+        responses={200: DirectOrderLimitsResponseSerializer},
     )
     def get(self, request: Request) -> Response:
         result = parse_week_params(request.query_params)
@@ -688,67 +710,78 @@ class BreadCapacityAllocationView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        cache = {}
-        pickup_location_ids = (
-            PickupLocationDeliveryDayService.get_pickup_location_ids_for_delivery_day(
-                day=delivery_day, cache=cache
-            )
-        )
-        pickup_locations = (
-            PublicPickupLocationProvider.get_pickup_locations_available_for_members(
-                cache=cache
-            ).filter(id__in=pickup_location_ids)
-        )
-
-        allocations = {pickup_location.id: {} for pickup_location in pickup_locations}
-        capacities = BreadCapacityPickupLocation.objects.filter(
+        limits = DirectOrderLimitService.get_limits_for_day(
             year=year,
             delivery_week=delivery_week,
-            pickup_location_id__in=allocations.keys(),
+            delivery_day=delivery_day,
+            cache={},
         )
-        for capacity in capacities:
-            allocations[capacity.pickup_location_id][
-                capacity.bread_id
-            ] = capacity.capacity
-
         return Response(
-            BreadCapacityAllocationResponseSerializer(
+            DirectOrderLimitsResponseSerializer(
                 {
-                    "pickup_locations": [
-                        {"id": pickup_location.id, "name": pickup_location.name}
-                        for pickup_location in pickup_locations
-                    ],
-                    "allocations": allocations,
+                    "breads": list(limits.breads.values()),
+                    "groups": list(limits.groups.values()),
                 }
             ).data
         )
 
+
+@extend_schema(tags=["bakery"])
+class CopyWeekSettingsView(APIView):
+    """Copy an earlier week's bread plan into a week, see WeeklyPlanService."""
+
+    permission_classes = [IsAuthenticated, HasCoopManagePermission]
+
     @extend_schema(
-        summary="Create, update and delete bread capacities in one request",
-        request=BreadCapacityBulkUpdateSerializer,
+        summary="List the earlier weeks whose bread plan can be copied into a week",
+        description="Weeks before the given one that bake an active bread, latest first.",
+        parameters=[
+            OpenApiParameter(name="year", type=int, required=True),
+            OpenApiParameter(name="delivery_week", type=int, required=True),
+        ],
+        responses={200: WeekSettingsSourcesResponseSerializer},
+    )
+    def get(self, request: Request) -> Response:
+        result = parse_week_params(request.query_params)
+        if isinstance(result, Response):
+            return result
+
+        year, delivery_week, _ = result
+        sources = WeeklyPlanService.get_source_weeks(year, delivery_week, cache={})
+        return Response(
+            WeekSettingsSourcesResponseSerializer({"sources": sources}).data
+        )
+
+    @extend_schema(
+        summary="Copy the bread plan and day settings of an earlier week into a week",
+        description=(
+            "Replaces, on each delivery day of the target week that is not "
+            "over, the breads baked and their day settings with the source "
+            "week's, and clears members' choices of breads no longer baked. "
+            "With dry_run, only says what it would do."
+        ),
+        request=CopyWeekSettingsRequestSerializer,
         responses={
-            200: OpenApiResponse(description='{"status": "success"}'),
-            400: OpenApiResponse(description="Validation errors"),
+            200: CopyWeekSettingsResponseSerializer,
+            400: OpenApiResponse(
+                description=(
+                    "Validation errors: a week that does not exist, or a "
+                    "source week that is not before the target week"
+                )
+            ),
         },
     )
     def post(self, request: Request) -> Response:
-        serializer = BreadCapacityBulkUpdateSerializer(data=request.data)
+        serializer = CopyWeekSettingsRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
-        for update in data["updates"]:
-            keys = {
-                "year": data["year"],
-                "delivery_week": data["delivery_week"],
-                "pickup_location_id": update["pickup_location"].pk,
-                "bread_id": update["bread"].pk,
-            }
-            capacity = update.get("capacity")
-            if capacity is None:
-                BreadCapacityPickupLocation.objects.filter(**keys).delete()
-            else:
-                BreadCapacityPickupLocation.objects.update_or_create(
-                    **keys, defaults={"capacity": capacity}
-                )
-
-        return Response({"status": "success"})
+        result = WeeklyPlanService.copy_week(
+            source_year=data["source_year"],
+            source_week=data["source_week"],
+            target_year=data["target_year"],
+            target_week=data["target_week"],
+            cache={},
+            dry_run=data["dry_run"],
+        )
+        return Response(CopyWeekSettingsResponseSerializer(result).data)

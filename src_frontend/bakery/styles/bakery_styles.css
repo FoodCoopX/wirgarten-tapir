@@ -112,10 +112,6 @@
   background-color: var(--bakery-bg-lighter) !important;
 }
 
-.bg-bakery-primary {
-  background-color: var(--bakery-primary) !important;
-}
-
 .bg-bakery-primary-darker {
   background-color: var(--bakery-primary-darker) !important;
 }

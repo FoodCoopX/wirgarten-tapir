@@ -1,13 +1,21 @@
+from collections import defaultdict
 from datetime import datetime, timedelta
 
 from django.conf import settings
 from django.db import models
 
-from tapir.bakery.models import BreadCapacityPickupLocation, BreadDelivery
+from tapir.bakery.models import AvailableBreadsForDeliveryDay, BreadDelivery
+from tapir.bakery.services.bread_choice_deadline_service import (
+    BreadChoiceDeadlineService,
+)
 from tapir.bakery.services.bread_delivery_context_service import (
     BreadDeliveryContextService,
 )
+from tapir.bakery.services.direct_order_limit_service import (
+    DirectOrderLimitService,
+)
 from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import GrowingPeriod, Member, Subscription
 
 
@@ -72,7 +80,9 @@ class BreadDeliveryService:
         cls, member: Member, cache: dict | None = None
     ):
         """
-        Drop bread choices the member's station cannot supply any more.
+        Drop bread choices the member's station cannot supply any more: a
+        station offers the breads baked on its delivery day, and the choices
+        kept must fit that day's direct-order limits like a new choice.
 
         Only current and future weeks: past deliveries are a record of what was
         handed over.
@@ -100,29 +110,139 @@ class BreadDeliveryService:
 
         weeks = {(delivery.year, delivery.delivery_week) for delivery in deliveries}
         available = set(
-            BreadCapacityPickupLocation.objects.filter(
+            AvailableBreadsForDeliveryDay.objects.filter(
                 year__in={year for year, _ in weeks},
                 delivery_week__in={week for _, week in weeks},
-            ).values_list("year", "delivery_week", "pickup_location_id", "bread_id")
+                bread__is_active=True,
+            ).values_list("year", "delivery_week", "delivery_day", "bread_id")
         )
+        delivery_days = TapirCache.get_delivery_day_by_pickup_location_id(cache=cache)
 
         to_clear = []
+        kept_by_day = defaultdict(list)
         for delivery in deliveries:
             pickup_location_id = BreadDeliveryContextService.get_pickup_location_id(
                 delivery, cache=cache
             )
+            delivery_day = delivery_days.get(pickup_location_id)
             key = (
                 delivery.year,
                 delivery.delivery_week,
-                pickup_location_id,
+                delivery_day,
                 delivery.bread_id,
             )
             if key not in available:
-                delivery.bread = None
                 to_clear.append(delivery)
+            elif not BreadDeliveryContextService.is_joker_taken(
+                delivery, cache=cache
+            ) and not BreadChoiceDeadlineService.is_delivery_day_over(
+                delivery.year, delivery.delivery_week, delivery_day, cache=cache
+            ):
+                kept_by_day[
+                    (delivery.year, delivery.delivery_week, delivery_day)
+                ].append(delivery)
 
+        for (year, delivery_week, delivery_day), kept in kept_by_day.items():
+            to_clear.extend(
+                cls._choices_over_the_limit(
+                    kept, year, delivery_week, delivery_day, cache=cache
+                )
+            )
+
+        for delivery in to_clear:
+            delivery.bread = None
         if to_clear:
             BreadDelivery.objects.bulk_update(to_clear, ["bread"])
+
+    @classmethod
+    def _choices_over_the_limit(
+        cls,
+        choices: list[BreadDelivery],
+        year: int,
+        delivery_week: int,
+        delivery_day: int,
+        cache: dict,
+    ) -> list[BreadDelivery]:
+        """
+        The member's choices of one delivery day that do not fit its limits
+        when made one after the other, as if new. Mostly one or two per day.
+        """
+        accepted = []
+        over = []
+        for choice in sorted(choices, key=lambda delivery: delivery.slot_number):
+            limits = DirectOrderLimitService.get_limits_for_day(
+                year=year,
+                delivery_week=delivery_week,
+                delivery_day=delivery_day,
+                cache=cache,
+                exclude_delivery_ids=[
+                    delivery.id for delivery in choices if delivery not in accepted
+                ],
+            )
+            remaining = limits.remaining(choice.bread_id)
+            if remaining is not None and remaining <= 0:
+                over.append(choice)
+            else:
+                accepted.append(choice)
+        return over
+
+    @classmethod
+    def get_choices_of_breads_for_delivery_day(
+        cls,
+        bread_ids: list,
+        year: int,
+        delivery_week: int,
+        delivery_day: int,
+        cache: dict,
+    ) -> list[BreadDelivery]:
+        """
+        The slots where members chose one of the breads for that delivery day,
+        at every station delivered that day, jokered ones included. Nothing
+        once the day is over (see BreadChoiceDeadlineService.is_delivery_day_over).
+        """
+        if not bread_ids or BreadChoiceDeadlineService.is_delivery_day_over(
+            year, delivery_week, delivery_day, cache=cache
+        ):
+            return []
+
+        deliveries_by_location = (
+            BreadDeliveryContextService.get_deliveries_by_location_for_week(
+                year=year,
+                delivery_week=delivery_week,
+                cache=cache,
+                queryset=BreadDelivery.objects.filter(bread_id__in=bread_ids),
+                include_jokered=True,
+                delivery_day=delivery_day,
+            )
+        )
+        return [
+            delivery
+            for deliveries in deliveries_by_location.values()
+            for delivery in deliveries
+        ]
+
+    @classmethod
+    def clear_choices_of_breads_for_delivery_day(
+        cls,
+        bread_ids: list,
+        year: int,
+        delivery_week: int,
+        delivery_day: int,
+        cache: dict,
+    ) -> int:
+        """
+        For breads no longer baked on that delivery day: drops the choices
+        get_choices_of_breads_for_delivery_day finds and returns how many.
+        The update checks the bread again: a member who switched to another
+        bread since the read keeps that choice.
+        """
+        deliveries = cls.get_choices_of_breads_for_delivery_day(
+            bread_ids, year, delivery_week, delivery_day, cache=cache
+        )
+        return BreadDelivery.objects.filter(
+            id__in=[delivery.id for delivery in deliveries],
+            bread_id__in=bread_ids,
+        ).update(bread=None)
 
     @classmethod
     def _sync_deliveries(cls, member: Member, cache: dict):

@@ -1,3 +1,5 @@
+import datetime
+
 from rest_framework.exceptions import ValidationError
 
 from typing import Any, Optional, Tuple
@@ -15,6 +17,21 @@ def str_to_bool(value: Optional[str]) -> Optional[bool]:
     return value.lower() in ["true", "1", "yes"]
 
 
+ISO_WEEK_MISSING_MESSAGE = "Diese Woche gibt es in dem Jahr nicht."
+
+
+def is_valid_iso_week(year: int, week: int) -> bool:
+    """
+    A year has 52 or 53 ISO weeks. Every day of the week must be a date
+    Python can hold, the Sunday included.
+    """
+    try:
+        datetime.date.fromisocalendar(year, week, 7)
+    except (ValueError, OverflowError, TypeError):
+        return False
+    return True
+
+
 def parse_week_params(query_params: Any) -> Tuple[int, int, Optional[int]] | Response:
     year = query_params.get("year")
     delivery_week = query_params.get("delivery_week")
@@ -27,7 +44,7 @@ def parse_week_params(query_params: Any) -> Tuple[int, int, Optional[int]] | Res
         )
 
     try:
-        return (
+        parsed = (
             int(year),
             int(delivery_week),
             int(delivery_day_param) if delivery_day_param else None,
@@ -39,6 +56,17 @@ def parse_week_params(query_params: Any) -> Tuple[int, int, Optional[int]] | Res
             },
             status=status.HTTP_400_BAD_REQUEST,
         )
+
+    if not is_valid_iso_week(parsed[0], parsed[1]):
+        return Response(
+            {"error": ISO_WEEK_MISSING_MESSAGE}, status=status.HTTP_400_BAD_REQUEST
+        )
+    if parsed[2] is not None and not 0 <= parsed[2] <= 6:
+        return Response(
+            {"error": "delivery_day must be between 0 (Monday) and 6 (Sunday)."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    return parsed
 
 
 def int_query_param(request, name: str):

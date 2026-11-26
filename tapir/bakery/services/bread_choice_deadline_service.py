@@ -22,9 +22,34 @@ class BreadChoiceDeadlineService:
         )
         if delivery_day is None:
             return None
+        return cls.get_date_of_delivery_day(year, delivery_week, delivery_day)
+
+    @classmethod
+    def get_date_of_delivery_day(
+        cls, year: int, delivery_week: int, delivery_day: int
+    ) -> datetime.date:
         return week_to_monday(year, delivery_week) + datetime.timedelta(
             days=delivery_day
         )
+
+    @classmethod
+    def is_delivery_day_over(
+        cls, year: int, delivery_week: int, delivery_day: int, cache: dict
+    ) -> bool:
+        """
+        Today counts as over: its loaves are being handed out. Which breads
+        are baked on a day that is over, and the members' choices of them,
+        are the record of what was baked and delivered, so the weekly plan
+        no longer changes them (see WeeklyPlanService); the day settings stay
+        editable.
+
+        Before that they still change, also after the members' deadline: a
+        choice cleared then cannot be made again, and the solver fills the
+        slot from the member's preferences instead.
+        """
+        return cls.get_date_of_delivery_day(
+            year, delivery_week, delivery_day
+        ) <= get_today(cache=cache)
 
     @classmethod
     def get_deadline(

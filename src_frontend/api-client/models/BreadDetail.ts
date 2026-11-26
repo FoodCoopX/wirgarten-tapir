@@ -78,23 +78,23 @@ export interface BreadDetail {
    */
   isActive?: boolean;
   /**
-   *
+   * Set for a station's week only: the bread's direct-order limit on the station's delivery day, null when unlimited.
    * @type {number}
    * @memberof BreadDetail
    */
-  readonly capacity: number;
+  readonly capacity: number | null;
   /**
-   *
+   * Set for a station's week only: direct orders of the bread on the station's delivery day, over all stations delivered that day.
    * @type {number}
    * @memberof BreadDetail
    */
   readonly deliveryCount: number;
   /**
-   *
+   * Set for a station's week only: what is left of the bread's limit and its group's, null when neither has one.
    * @type {number}
    * @memberof BreadDetail
    */
-  readonly availableCapacity: number;
+  readonly availableCapacity: number | null;
 }
 
 /**

@@ -39,6 +39,7 @@ export const BreadModal: React.FC<BreadModalProps> = ({
     minPieces: undefined,
     maxPieces: undefined,
     minRemainingPieces: undefined,
+    maxDirectOrderPercent: 100,
     group: null,
   });
   const [availableLabels, setAvailableLabels] = useState<BreadLabel[]>([]);
@@ -67,6 +68,7 @@ export const BreadModal: React.FC<BreadModalProps> = ({
         minPieces: bread.minPieces,
         maxPieces: bread.maxPieces,
         minRemainingPieces: bread.minRemainingPieces,
+        maxDirectOrderPercent: bread.maxDirectOrderPercent ?? 100,
         group: bread.group ?? null,
       });
     }
@@ -513,6 +515,43 @@ export const BreadModal: React.FC<BreadModalProps> = ({
                       placeholder="z.B. 5"
                     />
                     <small className="text-muted">Für Laufkundschaft</small>
+                  </div>
+                </div>
+              </div>
+
+              <div className="row">
+                <div className="col-md-4">
+                  <div className="mb-3">
+                    <label
+                      htmlFor="maxDirectOrderPercent"
+                      className="form-label fw-bold small"
+                    >
+                      Max. direkt bestellbar (%)
+                    </label>
+                    <input
+                      type="number"
+                      className="form-control form-control-sm"
+                      id="maxDirectOrderPercent"
+                      value={formData.maxDirectOrderPercent ?? ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          maxDirectOrderPercent: e.target.value
+                            ? parseInt(e.target.value)
+                            : undefined,
+                        })
+                      }
+                      min="0"
+                      max="100"
+                      required
+                    />
+                    <small className="text-muted">
+                      Anteil der Gesamtkapazität des Tages abzüglich Min. Übrig,
+                      den Mitglieder direkt bestellen können. Die
+                      Gesamtkapazität ist meist Max. Stücke; Tageseinstellungen
+                      und Gruppen können sie ändern. Gilt für alle Wochen, wenn
+                      die Wochenplanung nichts anderes sagt.
+                    </small>
                   </div>
                 </div>
               </div>

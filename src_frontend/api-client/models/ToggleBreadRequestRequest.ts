@@ -48,6 +48,12 @@ export interface ToggleBreadRequestRequest {
    * @memberof ToggleBreadRequestRequest
    */
   isActive: boolean;
+  /**
+   * Changes nothing; cleared_choices says how many choices switching the bread off would clear.
+   * @type {boolean}
+   * @memberof ToggleBreadRequestRequest
+   */
+  dryRun?: boolean;
 }
 
 /**
@@ -85,6 +91,7 @@ export function ToggleBreadRequestRequestFromJSONTyped(
     deliveryDay: json["delivery_day"],
     breadId: json["bread_id"],
     isActive: json["is_active"],
+    dryRun: json["dry_run"] == null ? undefined : json["dry_run"],
   };
 }
 
@@ -108,5 +115,6 @@ export function ToggleBreadRequestRequestToJSONTyped(
     delivery_day: value["deliveryDay"],
     bread_id: value["breadId"],
     is_active: value["isActive"],
+    dry_run: value["dryRun"],
   };
 }

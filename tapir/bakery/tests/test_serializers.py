@@ -4,10 +4,10 @@ from django.test.utils import CaptureQueriesContext
 from tapir.bakery.models import BreadDelivery
 from tapir.bakery.serializers import BreadDeliverySerializer
 from tapir.bakery.tests.factories import (
-    BreadCapacityPickupLocationFactory,
     BreadDeliveryFactory,
     BreadFactory,
     BreadSubscriptionFactory,
+    offer_bread_at_pickup_location,
 )
 from tapir.bakery.tests.test_viewsets import (
     DAY,
@@ -102,12 +102,8 @@ class TestBreadDeliverySerializerBreadValidation(TapirIntegrationTest):
         pickup_location = create_pickup_location_with_opening_times([DAY])
         delivery = self._delivery(pickup_location)
         bread = BreadFactory.create(name="Roggenbrot")
-        BreadCapacityPickupLocationFactory.create(
-            year=YEAR,
-            delivery_week=WEEK,
-            pickup_location=pickup_location,
-            bread=bread,
-            capacity=5,
+        offer_bread_at_pickup_location(
+            bread, pickup_location, year=YEAR, delivery_week=WEEK
         )
 
         serializer = BreadDeliverySerializer(

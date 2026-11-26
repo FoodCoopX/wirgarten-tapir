@@ -85,6 +85,12 @@ export interface BreadSpecificsPerDeliveryDay {
    */
   fixedPieces?: number | null;
   /**
+   * Overrides the bread's max_direct_order_percent on this delivery day
+   * @type {number}
+   * @memberof BreadSpecificsPerDeliveryDay
+   */
+  maxDirectOrderPercent?: number | null;
+  /**
    *
    * @type {string}
    * @memberof BreadSpecificsPerDeliveryDay
@@ -140,6 +146,10 @@ export function BreadSpecificsPerDeliveryDayFromJSONTyped(
         : json["min_remaining_pieces"],
     fixedPieces:
       json["fixed_pieces"] == null ? undefined : json["fixed_pieces"],
+    maxDirectOrderPercent:
+      json["max_direct_order_percent"] == null
+        ? undefined
+        : json["max_direct_order_percent"],
     bread: json["bread"],
   };
 }
@@ -169,6 +179,7 @@ export function BreadSpecificsPerDeliveryDayToJSONTyped(
     max_pieces: value["maxPieces"],
     min_remaining_pieces: value["minRemainingPieces"],
     fixed_pieces: value["fixedPieces"],
+    max_direct_order_percent: value["maxDirectOrderPercent"],
     bread: value["bread"],
   };
 }

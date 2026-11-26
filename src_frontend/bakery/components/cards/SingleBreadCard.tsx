@@ -33,10 +33,9 @@ export const SingleBreadCard: React.FC<SingleBreadCardProps> = ({
   showAvailability = false,
 }) => {
   const availableCapacity = bread.availableCapacity;
+  // null: the bread has no limit on direct orders that day.
   const hasLimitedCapacity =
-    showAvailability &&
-    availableCapacity !== undefined &&
-    availableCapacity <= 5;
+    showAvailability && availableCapacity != null && availableCapacity <= 5;
   return (
     <div style={{ width, flex: `0 0 ${width}` }}>
       <div
@@ -97,7 +96,7 @@ export const SingleBreadCard: React.FC<SingleBreadCardProps> = ({
             </small>
           )}
 
-          {showAvailability && availableCapacity !== undefined && (
+          {showAvailability && availableCapacity != null && (
             <div className="mb-2">
               <span
                 className={`badge ${hasLimitedCapacity ? "bg-warning text-dark" : "badge-bakery-success"}`}

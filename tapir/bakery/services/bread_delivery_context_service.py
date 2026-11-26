@@ -1,5 +1,7 @@
 import datetime
 import logging
+from collections import Counter
+from collections.abc import Collection
 
 from tapir.bakery.models import BreadDelivery
 from tapir.deliveries.services.joker_management_service import JokerManagementService
@@ -44,11 +46,20 @@ class BreadDeliveryContextService:
     @classmethod
     def get_pickup_location_id(cls, delivery: BreadDelivery, cache: dict) -> str | None:
         """Requires the delivery to carry its subscription (select_related)."""
+        return cls._get_member_pickup_location_id(
+            delivery.subscription.member_id,
+            delivery.year,
+            delivery.delivery_week,
+            cache=cache,
+        )
+
+    @classmethod
+    def _get_member_pickup_location_id(
+        cls, member_id, year: int, delivery_week: int, cache: dict
+    ) -> str | None:
         return MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
-            member_id=delivery.subscription.member_id,
-            reference_date=cls.get_reference_date(
-                delivery.year, delivery.delivery_week, cache=cache
-            ),
+            member_id=member_id,
+            reference_date=cls.get_reference_date(year, delivery_week, cache=cache),
             cache=cache,
         )
 
@@ -64,13 +75,65 @@ class BreadDeliveryContextService:
     @classmethod
     def is_joker_taken(cls, delivery: BreadDelivery, cache: dict) -> bool:
         """Requires the delivery to carry its subscription (select_related)."""
-        return JokerManagementService.does_member_have_a_joker_in_week(
-            member_id=delivery.subscription.member_id,
-            reference_date=cls.get_reference_date(
-                delivery.year, delivery.delivery_week, cache=cache
-            ),
+        return cls._has_member_taken_joker(
+            delivery.subscription.member_id,
+            delivery.year,
+            delivery.delivery_week,
             cache=cache,
         )
+
+    @classmethod
+    def _has_member_taken_joker(
+        cls, member_id, year: int, delivery_week: int, cache: dict
+    ) -> bool:
+        return JokerManagementService.does_member_have_a_joker_in_week(
+            member_id=member_id,
+            reference_date=cls.get_reference_date(year, delivery_week, cache=cache),
+            cache=cache,
+        )
+
+    @classmethod
+    def count_chosen_breads_for_delivery_day(
+        cls,
+        year: int,
+        delivery_week: int,
+        delivery_day: int,
+        cache: dict,
+        bread_ids: Collection[str],
+        exclude_delivery_ids: Collection[str] = (),
+    ) -> Counter:
+        """
+        How many slots members chose each of the breads for, over all
+        stations delivered that day; jokered slots left out. The same
+        deliveries get_deliveries_by_location_for_week finds, read as
+        (bread, member) pairs only: a member's choice is checked against these
+        counts while it holds row locks (see warm_caches_for_week).
+        """
+        choices = list(
+            BreadDelivery.objects.filter(
+                year=year, delivery_week=delivery_week, bread_id__in=bread_ids
+            )
+            .exclude(id__in=exclude_delivery_ids)
+            .values_list("bread_id", "subscription__member_id")
+        )
+        if not choices:
+            return Counter()
+
+        cls.warm_caches_for_week(year, delivery_week, choices[0][1], cache=cache)
+        delivery_days = TapirCache.get_delivery_day_by_pickup_location_id(cache=cache)
+        counts = Counter()
+        for bread_id, member_id in choices:
+            if cls._has_member_taken_joker(member_id, year, delivery_week, cache=cache):
+                continue
+            pickup_location_id = cls._get_member_pickup_location_id(
+                member_id, year, delivery_week, cache=cache
+            )
+            if (
+                pickup_location_id is not None
+                and delivery_days.get(pickup_location_id) == delivery_day
+            ):
+                counts[bread_id] += 1
+        return counts
 
     @classmethod
     def get_deliveries_by_location_for_week(
@@ -143,12 +206,8 @@ class BreadDeliveryContextService:
         if not deliveries:
             return {}
 
-        # Warms both caches for the whole batch; the return values are unused.
-        TapirCache.get_all_jokers_for_member(
-            member_id=deliveries[0].subscription.member_id, cache=cache
-        )
-        MemberPickupLocationGetter.get_member_pickup_locations_objects_by_member_id(
-            cache=cache
+        cls._warm_member_caches(
+            deliveries[0].subscription.member_id, cache, include_jokered
         )
 
         deliveries_by_location = {}
@@ -161,6 +220,31 @@ class BreadDeliveryContextService:
             deliveries_by_location.setdefault(pickup_location_id, []).append(delivery)
 
         return deliveries_by_location
+
+    @classmethod
+    def warm_caches_for_week(
+        cls, year: int, delivery_week: int, any_member_id, cache: dict
+    ):
+        """
+        Loads what count_chosen_breads_for_delivery_day looks up for every
+        member, so a caller can do it before taking row locks.
+        """
+        cls.get_reference_date(year, delivery_week, cache=cache)
+        cls._warm_member_caches(any_member_id, cache, include_jokered=False)
+        TapirCache.get_delivery_day_by_pickup_location_id(cache=cache)
+
+    @classmethod
+    def _warm_member_caches(cls, any_member_id, cache: dict, include_jokered: bool):
+        """
+        Loads the jokers and the members' pickup locations for the whole
+        batch at once; the return values are unused. The jokers only when
+        jokered slots are to be left out.
+        """
+        if not include_jokered:
+            TapirCache.get_all_jokers_for_member(member_id=any_member_id, cache=cache)
+        MemberPickupLocationGetter.get_member_pickup_locations_objects_by_member_id(
+            cache=cache
+        )
 
     @classmethod
     def get_deliveries_for_location_for_week(

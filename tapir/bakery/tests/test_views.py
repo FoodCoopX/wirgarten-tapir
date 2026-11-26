@@ -1,3 +1,4 @@
+import datetime
 from unittest.mock import patch
 
 from django.core.cache import cache
@@ -14,7 +15,6 @@ from tapir.bakery.models import (
 from tapir.bakery.tests.factories import (
     BreadSubscriptionFactory,
     AvailableBreadsForDeliveryDayFactory,
-    BreadCapacityPickupLocationFactory,
     BreadDeliveryFactory,
     BreadFactory,
     BreadGroupFactory,
@@ -64,6 +64,18 @@ class TestAvailableBreadsForDeliveryListViewGet(TapirIntegrationTest):
         self.assertEqual(response.data["year"], YEAR)
         self.assertEqual(response.data["delivery_week"], WEEK)
         self.assertEqual(response.data["delivery_day"], DAY)
+
+    def test_get_saysWhetherTheDayIsOver(self):
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+
+        for year, is_over in ((2020, True), (2099, False)):
+            with self.subTest(year=year):
+                response = self.client.get(
+                    self.url,
+                    {"year": year, "delivery_week": WEEK, "delivery_day": DAY},
+                )
+
+                self.assertEqual(response.data["delivery_day_is_over"], is_over)
 
     def test_get_groupedBreads_doNotCostAQueryEach(self):
         self.client.force_login(MemberFactory.create(is_superuser=True))
@@ -178,6 +190,10 @@ class TestAvailableBreadsForDeliveryListViewPost(TapirIntegrationTest):
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
+    # Far enough ahead that the day is not over: the plan of a day that is
+    # over cannot be changed.
+    FUTURE_YEAR = 2099
+
     def setUp(self):
         super().setUp()
         self.url = reverse("bakery:breads-for-delivery-list")
@@ -190,7 +206,7 @@ class TestAvailableBreadsForDeliveryListViewPost(TapirIntegrationTest):
         response = self.client.post(
             self.url,
             {
-                "year": YEAR,
+                "year": self.FUTURE_YEAR,
                 "delivery_week": WEEK,
                 "delivery_day": DAY,
                 "bread_id": str(bread.id),
@@ -204,7 +220,7 @@ class TestAvailableBreadsForDeliveryListViewPost(TapirIntegrationTest):
         self.assertTrue(response.data["created"])
         self.assertTrue(
             AvailableBreadsForDeliveryDay.objects.filter(
-                year=YEAR,
+                year=self.FUTURE_YEAR,
                 delivery_week=WEEK,
                 delivery_day=DAY,
                 bread=bread,
@@ -216,13 +232,13 @@ class TestAvailableBreadsForDeliveryListViewPost(TapirIntegrationTest):
 
         bread = BreadFactory.create(name="Roggenbrot")
         AvailableBreadsForDeliveryDayFactory.create(
-            year=YEAR, delivery_week=WEEK, delivery_day=DAY, bread=bread
+            year=self.FUTURE_YEAR, delivery_week=WEEK, delivery_day=DAY, bread=bread
         )
 
         response = self.client.post(
             self.url,
             {
-                "year": YEAR,
+                "year": self.FUTURE_YEAR,
                 "delivery_week": WEEK,
                 "delivery_day": DAY,
                 "bread_id": str(bread.id),
@@ -240,13 +256,13 @@ class TestAvailableBreadsForDeliveryListViewPost(TapirIntegrationTest):
 
         bread = BreadFactory.create(name="Roggenbrot")
         AvailableBreadsForDeliveryDayFactory.create(
-            year=YEAR, delivery_week=WEEK, delivery_day=DAY, bread=bread
+            year=self.FUTURE_YEAR, delivery_week=WEEK, delivery_day=DAY, bread=bread
         )
 
         response = self.client.post(
             self.url,
             {
-                "year": YEAR,
+                "year": self.FUTURE_YEAR,
                 "delivery_week": WEEK,
                 "delivery_day": DAY,
                 "bread_id": str(bread.id),
@@ -260,7 +276,7 @@ class TestAvailableBreadsForDeliveryListViewPost(TapirIntegrationTest):
         self.assertTrue(response.data["deleted"])
         self.assertFalse(
             AvailableBreadsForDeliveryDay.objects.filter(
-                year=YEAR,
+                year=self.FUTURE_YEAR,
                 delivery_week=WEEK,
                 delivery_day=DAY,
                 bread=bread,
@@ -275,7 +291,7 @@ class TestAvailableBreadsForDeliveryListViewPost(TapirIntegrationTest):
         response = self.client.post(
             self.url,
             {
-                "year": YEAR,
+                "year": self.FUTURE_YEAR,
                 "delivery_week": WEEK,
                 "delivery_day": DAY,
                 "bread_id": str(bread.id),
@@ -286,6 +302,109 @@ class TestAvailableBreadsForDeliveryListViewPost(TapirIntegrationTest):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(response.data["deleted"])
+
+    def _deactivate(self, bread, year, week):
+        return self.client.post(
+            self.url,
+            {
+                "year": year,
+                "delivery_week": week,
+                "delivery_day": DAY,
+                "bread_id": str(bread.id),
+                "is_active": False,
+            },
+        )
+
+    def test_post_deactivateBread_clearsTheChoicesOfThatDayOnly(self):
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+        year, week = (
+            datetime.date.today() + datetime.timedelta(weeks=4)
+        ).isocalendar()[:2]
+        bread = BreadFactory.create(name="Roggenbrot")
+        AvailableBreadsForDeliveryDayFactory.create(
+            year=year, delivery_week=week, delivery_day=DAY, bread=bread
+        )
+        that_day = BreadDeliveryFactory.create(
+            year=year,
+            delivery_week=week,
+            pickup_location=create_pickup_location_with_opening_times([DAY]),
+            bread=bread,
+        )
+        other_day = BreadDeliveryFactory.create(
+            year=year,
+            delivery_week=week,
+            pickup_location=create_pickup_location_with_opening_times([DAY + 1]),
+            bread=bread,
+        )
+
+        response = self._deactivate(bread, year, week)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["cleared_choices"], 1)
+        that_day.refresh_from_db()
+        other_day.refresh_from_db()
+        self.assertIsNone(that_day.bread_id)
+        self.assertEqual(other_day.bread_id, bread.id)
+
+    def test_post_dryRun_countsTheChoicesAndChangesNothing(self):
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+        year, week = (
+            datetime.date.today() + datetime.timedelta(weeks=4)
+        ).isocalendar()[:2]
+        bread = BreadFactory.create(name="Roggenbrot")
+        AvailableBreadsForDeliveryDayFactory.create(
+            year=year, delivery_week=week, delivery_day=DAY, bread=bread
+        )
+        delivery = BreadDeliveryFactory.create(
+            year=year,
+            delivery_week=week,
+            pickup_location=create_pickup_location_with_opening_times([DAY]),
+            bread=bread,
+        )
+
+        response = self.client.post(
+            self.url,
+            {
+                "year": year,
+                "delivery_week": week,
+                "delivery_day": DAY,
+                "bread_id": str(bread.id),
+                "is_active": False,
+                "dry_run": True,
+            },
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["cleared_choices"], 1)
+        self.assertTrue(
+            AvailableBreadsForDeliveryDay.objects.filter(
+                year=year, delivery_week=week, delivery_day=DAY, bread=bread
+            ).exists()
+        )
+        delivery.refresh_from_db()
+        self.assertEqual(delivery.bread_id, bread.id)
+
+    def test_post_dayThatIsOver_isRejectedAndChangesNothing(self):
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+        bread = BreadFactory.create(name="Roggenbrot")
+        AvailableBreadsForDeliveryDayFactory.create(
+            year=2020, delivery_week=7, delivery_day=DAY, bread=bread
+        )
+        delivery = BreadDeliveryFactory.create(
+            year=2020,
+            delivery_week=7,
+            pickup_location=create_pickup_location_with_opening_times([DAY]),
+            bread=bread,
+        )
+
+        response = self._deactivate(bread, 2020, 7)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue(
+            AvailableBreadsForDeliveryDay.objects.filter(bread=bread).exists()
+        )
+        delivery.refresh_from_db()
+        self.assertEqual(delivery.bread_id, bread.id)
 
     def test_post_nonexistentBread_returns404(self):
         self.client.force_login(MemberFactory.create(is_superuser=True))
@@ -303,6 +422,31 @@ class TestAvailableBreadsForDeliveryListViewPost(TapirIntegrationTest):
         )
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_post_weekNotInTheYear_returns400AndKeepsTheEntry(self):
+        # 2027 has 52 ISO weeks.
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+        bread = BreadFactory.create(name="Roggenbrot")
+        AvailableBreadsForDeliveryDayFactory.create(
+            year=2027, delivery_week=52, delivery_day=DAY, bread=bread
+        )
+
+        response = self.client.post(
+            self.url,
+            {
+                "year": 2027,
+                "delivery_week": 53,
+                "delivery_day": DAY,
+                "bread_id": str(bread.id),
+                "is_active": False,
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue(
+            AvailableBreadsForDeliveryDay.objects.filter(bread=bread).exists()
+        )
 
 
 class TestPickupListView(TapirIntegrationTest):
@@ -339,14 +483,6 @@ class TestPickupListView(TapirIntegrationTest):
         bread = BreadFactory.create(name="Roggenbrot")
         member = MemberFactory.create()
         sub = BreadSubscriptionFactory.create(member=member)
-
-        BreadCapacityPickupLocationFactory.create(
-            year=YEAR,
-            delivery_week=WEEK,
-            pickup_location=pl,
-            bread=bread,
-            capacity=10,
-        )
 
         BreadDeliveryFactory.create(
             year=YEAR,
@@ -749,14 +885,6 @@ class TestPreferenceSatisfactionMetricsView(TapirIntegrationTest):
         member = MemberFactory.create()
         sub = BreadSubscriptionFactory.create(member=member)
 
-        BreadCapacityPickupLocationFactory.create(
-            year=YEAR,
-            delivery_week=WEEK,
-            pickup_location=pl,
-            bread=bread,
-            capacity=10,
-        )
-
         BreadDeliveryFactory.create(
             year=YEAR,
             delivery_week=WEEK,
@@ -902,13 +1030,6 @@ class TestPreferenceSatisfactionMetricsView(TapirIntegrationTest):
         bread = BreadFactory.create(name="Roggenbrot")
 
         for pickup_location in [pl_z, pl_a]:
-            BreadCapacityPickupLocationFactory.create(
-                year=YEAR,
-                delivery_week=WEEK,
-                pickup_location=pickup_location,
-                bread=bread,
-                capacity=10,
-            )
             # A member belongs to one station per week, so the second station
             # needs its own member.
             BreadDeliveryFactory.create(

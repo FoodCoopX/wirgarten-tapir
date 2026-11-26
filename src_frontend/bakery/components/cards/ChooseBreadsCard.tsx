@@ -375,6 +375,7 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
                       pickupLocationName={delivery.pickupLocationName || ""}
                       selectedWeek={selectedWeek}
                       selectedYear={selectedYear}
+                      deliveryId={delivery.id!}
                       currentBreadId={delivery.bread || null}
                       onSelect={(breadId) =>
                         handleBreadSelected(delivery.id!, breadId)

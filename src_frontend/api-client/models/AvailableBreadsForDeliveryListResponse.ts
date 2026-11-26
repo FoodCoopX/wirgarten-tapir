@@ -40,6 +40,12 @@ export interface AvailableBreadsForDeliveryListResponse {
    */
   deliveryDay: number;
   /**
+   * Its breads can no longer be switched on or off.
+   * @type {boolean}
+   * @memberof AvailableBreadsForDeliveryListResponse
+   */
+  deliveryDayIsOver: boolean;
+  /**
    *
    * @type {Array<BreadList>}
    * @memberof AvailableBreadsForDeliveryListResponse
@@ -57,6 +63,11 @@ export function instanceOfAvailableBreadsForDeliveryListResponse(
   if (!("deliveryWeek" in value) || value["deliveryWeek"] === undefined)
     return false;
   if (!("deliveryDay" in value) || value["deliveryDay"] === undefined)
+    return false;
+  if (
+    !("deliveryDayIsOver" in value) ||
+    value["deliveryDayIsOver"] === undefined
+  )
     return false;
   if (!("breads" in value) || value["breads"] === undefined) return false;
   return true;
@@ -79,6 +90,7 @@ export function AvailableBreadsForDeliveryListResponseFromJSONTyped(
     year: json["year"],
     deliveryWeek: json["delivery_week"],
     deliveryDay: json["delivery_day"],
+    deliveryDayIsOver: json["delivery_day_is_over"],
     breads: (json["breads"] as Array<any>).map(BreadListFromJSON),
   };
 }
@@ -101,6 +113,7 @@ export function AvailableBreadsForDeliveryListResponseToJSONTyped(
     year: value["year"],
     delivery_week: value["deliveryWeek"],
     delivery_day: value["deliveryDay"],
+    delivery_day_is_over: value["deliveryDayIsOver"],
     breads: (value["breads"] as Array<any>).map(BreadListToJSON),
   };
 }

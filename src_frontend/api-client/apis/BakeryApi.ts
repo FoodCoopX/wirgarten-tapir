@@ -14,8 +14,6 @@
 
 import type {
   AvailableBreadsForDeliveryListResponse,
-  BreadCapacityAllocationResponse,
-  BreadCapacityBulkUpdateRequest,
   BreadContent,
   BreadContentRequest,
   BreadDelivery,
@@ -31,7 +29,10 @@ import type {
   BreadSpecificsPerDeliveryDayRequest,
   BreadsPerPickupLocationPerWeek,
   BreadsToBakePerWeek,
+  CopyWeekSettingsRequestRequest,
+  CopyWeekSettingsResponse,
   DeliveryDaysResponse,
+  DirectOrderLimitsResponse,
   Ingredient,
   IngredientRequest,
   PatchedBreadContentRequest,
@@ -56,11 +57,10 @@ import type {
   StoveSession,
   ToggleBreadRequestRequest,
   ToggleBreadResponse,
+  WeekSettingsSourcesResponse,
 } from "../models/index";
 import {
   AvailableBreadsForDeliveryListResponseFromJSON,
-  BreadCapacityAllocationResponseFromJSON,
-  BreadCapacityBulkUpdateRequestToJSON,
   BreadContentFromJSON,
   BreadContentRequestToJSON,
   BreadDeliveryFromJSON,
@@ -76,7 +76,10 @@ import {
   BreadSpecificsPerDeliveryDayRequestToJSON,
   BreadsPerPickupLocationPerWeekFromJSON,
   BreadsToBakePerWeekFromJSON,
+  CopyWeekSettingsRequestRequestToJSON,
+  CopyWeekSettingsResponseFromJSON,
   DeliveryDaysResponseFromJSON,
+  DirectOrderLimitsResponseFromJSON,
   IngredientFromJSON,
   IngredientRequestToJSON,
   PatchedBreadContentRequestToJSON,
@@ -101,6 +104,7 @@ import {
   StoveSessionFromJSON,
   ToggleBreadRequestRequestToJSON,
   ToggleBreadResponseFromJSON,
+  WeekSettingsSourcesResponseFromJSON,
 } from "../models/index";
 import * as runtime from "../runtime";
 
@@ -119,11 +123,16 @@ export interface BakeryApiBakerySolverPreviewDetailRetrieveRequest {
   year: number;
 }
 
-export interface BakeryApiBreadCapacityAllocationsCreateRequest {
-  breadCapacityBulkUpdateRequest: BreadCapacityBulkUpdateRequest;
+export interface BakeryApiCopyWeekSettingsCreateRequest {
+  copyWeekSettingsRequestRequest: CopyWeekSettingsRequestRequest;
 }
 
-export interface BakeryApiBreadCapacityAllocationsRetrieveRequest {
+export interface BakeryApiCopyWeekSettingsRetrieveRequest {
+  deliveryWeek: number;
+  year: number;
+}
+
+export interface BakeryApiDirectOrderLimitsRetrieveRequest {
   deliveryDay: number;
   deliveryWeek: number;
   year: number;
@@ -268,6 +277,7 @@ export interface BakeryBreadsListDestroyRequest {
 }
 
 export interface BakeryBreadsListListRequest {
+  deliveryId?: string;
   isActive?: boolean;
   labelId?: string;
   pickupLocationId?: string;
@@ -621,17 +631,17 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * The capacities of one delivery day, shaped the way the allocation table needs them.
-   * Create, update and delete bread capacities in one request
+   * Replaces, on each delivery day of the target week that is not over, the breads baked and their day settings with the source week\'s, and clears members\' choices of breads no longer baked. With dry_run, only says what it would do.
+   * Copy the bread plan and day settings of an earlier week into a week
    */
-  async bakeryApiBreadCapacityAllocationsCreateRaw(
-    requestParameters: BakeryApiBreadCapacityAllocationsCreateRequest,
+  async bakeryApiCopyWeekSettingsCreateRaw(
+    requestParameters: BakeryApiCopyWeekSettingsCreateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<void>> {
-    if (requestParameters["breadCapacityBulkUpdateRequest"] == null) {
+  ): Promise<runtime.ApiResponse<CopyWeekSettingsResponse>> {
+    if (requestParameters["copyWeekSettingsRequestRequest"] == null) {
       throw new runtime.RequiredError(
-        "breadCapacityBulkUpdateRequest",
-        'Required parameter "breadCapacityBulkUpdateRequest" was null or undefined when calling bakeryApiBreadCapacityAllocationsCreate().',
+        "copyWeekSettingsRequestRequest",
+        'Required parameter "copyWeekSettingsRequestRequest" was null or undefined when calling bakeryApiCopyWeekSettingsCreate().',
       );
     }
 
@@ -657,68 +667,60 @@ export class BakeryApi extends runtime.BaseAPI {
     }
     const response = await this.request(
       {
-        path: `/bakery/api/bread-capacity-allocations/`,
+        path: `/bakery/api/copy-week-settings/`,
         method: "POST",
         headers: headerParameters,
         query: queryParameters,
-        body: BreadCapacityBulkUpdateRequestToJSON(
-          requestParameters["breadCapacityBulkUpdateRequest"],
+        body: CopyWeekSettingsRequestRequestToJSON(
+          requestParameters["copyWeekSettingsRequestRequest"],
         ),
       },
       initOverrides,
     );
 
-    return new runtime.VoidApiResponse(response);
-  }
-
-  /**
-   * The capacities of one delivery day, shaped the way the allocation table needs them.
-   * Create, update and delete bread capacities in one request
-   */
-  async bakeryApiBreadCapacityAllocationsCreate(
-    requestParameters: BakeryApiBreadCapacityAllocationsCreateRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<void> {
-    await this.bakeryApiBreadCapacityAllocationsCreateRaw(
-      requestParameters,
-      initOverrides,
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      CopyWeekSettingsResponseFromJSON(jsonValue),
     );
   }
 
   /**
-   * The capacities of one delivery day, shaped the way the allocation table needs them.
-   * Get the bread capacities of every station delivered on a weekday
+   * Replaces, on each delivery day of the target week that is not over, the breads baked and their day settings with the source week\'s, and clears members\' choices of breads no longer baked. With dry_run, only says what it would do.
+   * Copy the bread plan and day settings of an earlier week into a week
    */
-  async bakeryApiBreadCapacityAllocationsRetrieveRaw(
-    requestParameters: BakeryApiBreadCapacityAllocationsRetrieveRequest,
+  async bakeryApiCopyWeekSettingsCreate(
+    requestParameters: BakeryApiCopyWeekSettingsCreateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<BreadCapacityAllocationResponse>> {
-    if (requestParameters["deliveryDay"] == null) {
-      throw new runtime.RequiredError(
-        "deliveryDay",
-        'Required parameter "deliveryDay" was null or undefined when calling bakeryApiBreadCapacityAllocationsRetrieve().',
-      );
-    }
+  ): Promise<CopyWeekSettingsResponse> {
+    const response = await this.bakeryApiCopyWeekSettingsCreateRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
 
+  /**
+   * Weeks before the given one that bake an active bread, latest first.
+   * List the earlier weeks whose bread plan can be copied into a week
+   */
+  async bakeryApiCopyWeekSettingsRetrieveRaw(
+    requestParameters: BakeryApiCopyWeekSettingsRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<WeekSettingsSourcesResponse>> {
     if (requestParameters["deliveryWeek"] == null) {
       throw new runtime.RequiredError(
         "deliveryWeek",
-        'Required parameter "deliveryWeek" was null or undefined when calling bakeryApiBreadCapacityAllocationsRetrieve().',
+        'Required parameter "deliveryWeek" was null or undefined when calling bakeryApiCopyWeekSettingsRetrieve().',
       );
     }
 
     if (requestParameters["year"] == null) {
       throw new runtime.RequiredError(
         "year",
-        'Required parameter "year" was null or undefined when calling bakeryApiBreadCapacityAllocationsRetrieve().',
+        'Required parameter "year" was null or undefined when calling bakeryApiCopyWeekSettingsRetrieve().',
       );
     }
 
     const queryParameters: any = {};
-
-    if (requestParameters["deliveryDay"] != null) {
-      queryParameters["delivery_day"] = requestParameters["deliveryDay"];
-    }
 
     if (requestParameters["deliveryWeek"] != null) {
       queryParameters["delivery_week"] = requestParameters["deliveryWeek"];
@@ -746,7 +748,7 @@ export class BakeryApi extends runtime.BaseAPI {
     }
     const response = await this.request(
       {
-        path: `/bakery/api/bread-capacity-allocations/`,
+        path: `/bakery/api/copy-week-settings/`,
         method: "GET",
         headers: headerParameters,
         query: queryParameters,
@@ -755,19 +757,19 @@ export class BakeryApi extends runtime.BaseAPI {
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      BreadCapacityAllocationResponseFromJSON(jsonValue),
+      WeekSettingsSourcesResponseFromJSON(jsonValue),
     );
   }
 
   /**
-   * The capacities of one delivery day, shaped the way the allocation table needs them.
-   * Get the bread capacities of every station delivered on a weekday
+   * Weeks before the given one that bake an active bread, latest first.
+   * List the earlier weeks whose bread plan can be copied into a week
    */
-  async bakeryApiBreadCapacityAllocationsRetrieve(
-    requestParameters: BakeryApiBreadCapacityAllocationsRetrieveRequest,
+  async bakeryApiCopyWeekSettingsRetrieve(
+    requestParameters: BakeryApiCopyWeekSettingsRetrieveRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<BreadCapacityAllocationResponse> {
-    const response = await this.bakeryApiBreadCapacityAllocationsRetrieveRaw(
+  ): Promise<WeekSettingsSourcesResponse> {
+    const response = await this.bakeryApiCopyWeekSettingsRetrieveRaw(
       requestParameters,
       initOverrides,
     );
@@ -822,6 +824,95 @@ export class BakeryApi extends runtime.BaseAPI {
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<DeliveryDaysResponse> {
     const response = await this.bakeryApiDeliveryDaysRetrieveRaw(initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * What members may order directly of each bread on one delivery day. The percentages are saved through the bread specifics bulk update.
+   * Get the direct-order limits of every bread baked on a delivery day
+   */
+  async bakeryApiDirectOrderLimitsRetrieveRaw(
+    requestParameters: BakeryApiDirectOrderLimitsRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<DirectOrderLimitsResponse>> {
+    if (requestParameters["deliveryDay"] == null) {
+      throw new runtime.RequiredError(
+        "deliveryDay",
+        'Required parameter "deliveryDay" was null or undefined when calling bakeryApiDirectOrderLimitsRetrieve().',
+      );
+    }
+
+    if (requestParameters["deliveryWeek"] == null) {
+      throw new runtime.RequiredError(
+        "deliveryWeek",
+        'Required parameter "deliveryWeek" was null or undefined when calling bakeryApiDirectOrderLimitsRetrieve().',
+      );
+    }
+
+    if (requestParameters["year"] == null) {
+      throw new runtime.RequiredError(
+        "year",
+        'Required parameter "year" was null or undefined when calling bakeryApiDirectOrderLimitsRetrieve().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    if (requestParameters["deliveryDay"] != null) {
+      queryParameters["delivery_day"] = requestParameters["deliveryDay"];
+    }
+
+    if (requestParameters["deliveryWeek"] != null) {
+      queryParameters["delivery_week"] = requestParameters["deliveryWeek"];
+    }
+
+    if (requestParameters["year"] != null) {
+      queryParameters["year"] = requestParameters["year"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/bakery/api/direct-order-limits/`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      DirectOrderLimitsResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   * What members may order directly of each bread on one delivery day. The percentages are saved through the bread specifics bulk update.
+   * Get the direct-order limits of every bread baked on a delivery day
+   */
+  async bakeryApiDirectOrderLimitsRetrieve(
+    requestParameters: BakeryApiDirectOrderLimitsRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<DirectOrderLimitsResponse> {
+    const response = await this.bakeryApiDirectOrderLimitsRetrieveRaw(
+      requestParameters,
+      initOverrides,
+    );
     return await response.value();
   }
 
@@ -972,7 +1063,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * Get or toggle breads for a specific year, week and day
+   * Switching a bread off clears the members\' choices of it for that day. With dry_run, only counts them. A day that is over can no longer be changed.
    * Toggle bread availability for a delivery day
    */
   async bakeryAvailableBreadsForDeliveryCreateRaw(
@@ -1025,7 +1116,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * Get or toggle breads for a specific year, week and day
+   * Switching a bread off clears the members\' choices of it for that day. With dry_run, only counts them. A day that is over can no longer be changed.
    * Toggle bread availability for a delivery day
    */
   async bakeryAvailableBreadsForDeliveryCreate(
@@ -2885,6 +2976,10 @@ export class BakeryApi extends runtime.BaseAPI {
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<Array<BreadList>>> {
     const queryParameters: any = {};
+
+    if (requestParameters["deliveryId"] != null) {
+      queryParameters["delivery_id"] = requestParameters["deliveryId"];
+    }
 
     if (requestParameters["isActive"] != null) {
       queryParameters["is_active"] = requestParameters["isActive"];

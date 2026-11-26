@@ -9,12 +9,15 @@ from tapir.bakery.services.bread_delivery_context_service import (
 )
 from tapir.bakery.services.breaddelivery_service import BreadDeliveryService
 from tapir.bakery.tests.factories import (
-    BreadCapacityPickupLocationFactory,
     BreadDeliveryFactory,
     BreadFactory,
+    offer_bread_at_pickup_location,
 )
 from tapir.pickup_locations.services.member_pickup_location_setter import (
     MemberPickupLocationSetter,
+)
+from tapir.pickup_locations.tests.factories import (
+    create_pickup_location_with_opening_times,
 )
 from tapir.utils.shortcuts import week_to_monday
 from tapir.wirgarten.constants import NO_DELIVERY
@@ -29,7 +32,7 @@ from tapir.wirgarten.tests.factories import (
     ProductTypeFactory,
     SubscriptionFactory,
 )
-from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
+from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
 FROZEN_DATE = datetime.date(2026, 3, 14)  # Saturday, week 11
 
@@ -492,11 +495,8 @@ class TestEnsureBreadDeliveries(TapirIntegrationTest):
 
         bread = BreadFactory.create(name="Roggenbrot")
         delivery = BreadDelivery.objects.filter(subscription=sub).first()
-        BreadCapacityPickupLocationFactory.create(
-            year=delivery.year,
-            delivery_week=delivery.delivery_week,
-            pickup_location=pl,
-            bread=bread,
+        offer_bread_at_pickup_location(
+            bread, pl, year=delivery.year, delivery_week=delivery.delivery_week
         )
         delivery.bread = bread
         delivery.save()
@@ -666,9 +666,7 @@ class TestEnsureBreadDeliveries(TapirIntegrationTest):
 
         year, week, _ = FROZEN_DATE.isocalendar()
         bread = BreadFactory.create(name="Roggenbrot")
-        BreadCapacityPickupLocationFactory.create(
-            year=year, delivery_week=week, pickup_location=pl, bread=bread
-        )
+        offer_bread_at_pickup_location(bread, pl, year=year, delivery_week=week)
         slot_two = BreadDelivery.objects.get(
             subscription=sub, year=year, delivery_week=week, slot_number=2
         )
@@ -689,12 +687,11 @@ class TestEnsureBreadDeliveries(TapirIntegrationTest):
 
     def _choose_bread(self, delivery, pickup_location):
         bread = BreadFactory.create()
-        BreadCapacityPickupLocationFactory.create(
+        offer_bread_at_pickup_location(
+            bread,
+            pickup_location,
             year=delivery.year,
             delivery_week=delivery.delivery_week,
-            pickup_location=pickup_location,
-            bread=bread,
-            capacity=10,
         )
         delivery.bread = bread
         delivery.save()
@@ -720,7 +717,9 @@ class TestEnsureBreadDeliveries(TapirIntegrationTest):
         delivery = BreadDelivery.objects.filter(subscription=sub).last()
         self._choose_bread(delivery, old_location)
 
-        self._move_member(member, PickupLocationFactory.create(), FROZEN_DATE)
+        # Delivered on Friday, while the bread is baked for Wednesday only.
+        new_location = create_pickup_location_with_opening_times(open_days=[4])
+        self._move_member(member, new_location, FROZEN_DATE)
 
         delivery.refresh_from_db()
         self.assertIsNone(delivery.bread)
@@ -736,14 +735,8 @@ class TestEnsureBreadDeliveries(TapirIntegrationTest):
         delivery = BreadDelivery.objects.filter(subscription=sub).last()
         bread = self._choose_bread(delivery, old_location)
 
-        new_location = PickupLocationFactory.create()
-        BreadCapacityPickupLocationFactory.create(
-            year=delivery.year,
-            delivery_week=delivery.delivery_week,
-            pickup_location=new_location,
-            bread=bread,
-            capacity=10,
-        )
+        # Delivered on the same day as the old station.
+        new_location = create_pickup_location_with_opening_times(open_days=[2])
         self._move_member(member, new_location, FROZEN_DATE)
 
         delivery.refresh_from_db()
@@ -822,3 +815,138 @@ class TestEnsureBreadDeliveries(TapirIntegrationTest):
         self.assertEqual(
             self._weeks_with_slots(member), {week_11, week_11 + 1, week_11 + 2}
         )
+
+
+@override_settings(BAKERY_ENABLED=True)
+class TestClearChoicesOfBreadsForDeliveryDay(TapirIntegrationTest):
+    """FROZEN_DATE is the Saturday of week 11."""
+
+    @classmethod
+    def setUpTestData(cls):
+        ParameterDefinitions().import_definitions(bulk_create=True)
+
+    def setUp(self):
+        super().setUp()
+        mock_timezone(self, datetime.datetime.combine(FROZEN_DATE, datetime.time(12)))
+        self.bread = BreadFactory.create(name="Roggenbrot")
+
+    def _choice(self, week, day, **kwargs):
+        return BreadDeliveryFactory.create(
+            year=2026,
+            delivery_week=week,
+            pickup_location=create_pickup_location_with_opening_times(open_days=[day]),
+            bread=self.bread,
+            **kwargs,
+        )
+
+    def _clear(self, week, day):
+        return BreadDeliveryService.clear_choices_of_breads_for_delivery_day(
+            [self.bread.id], 2026, week, day, cache={}
+        )
+
+    def test_laterDayOfTheWeek_isCleared(self):
+        delivery = self._choice(week=11, day=6)
+
+        self.assertEqual(self._clear(week=11, day=6), 1)
+        delivery.refresh_from_db()
+        self.assertIsNone(delivery.bread_id)
+
+    def test_todayAndEarlierDaysOfTheWeek_areKept(self):
+        for day in (2, 5):
+            with self.subTest(day=day):
+                delivery = self._choice(week=11, day=day)
+
+                self.assertEqual(self._clear(week=11, day=day), 0)
+                delivery.refresh_from_db()
+                self.assertEqual(delivery.bread_id, self.bread.id)
+
+    def test_jokeredSlot_isCleared(self):
+        delivery = self._choice(week=12, day=2, joker_taken=True)
+
+        self.assertEqual(self._clear(week=12, day=2), 1)
+        delivery.refresh_from_db()
+        self.assertIsNone(delivery.bread_id)
+
+    def test_memberWhoSwitchedSinceTheRead_keepsTheNewChoice(self):
+        delivery = self._choice(week=12, day=2)
+        other_bread = BreadFactory.create(name="Dinkelbrot")
+        found = BreadDeliveryService.get_choices_of_breads_for_delivery_day
+
+        def switch_after_reading(*args, **kwargs):
+            choices = found(*args, **kwargs)
+            BreadDelivery.objects.filter(pk=delivery.pk).update(bread=other_bread)
+            return choices
+
+        with patch.object(
+            BreadDeliveryService,
+            "get_choices_of_breads_for_delivery_day",
+            side_effect=switch_after_reading,
+        ):
+            cleared = self._clear(week=12, day=2)
+
+        self.assertEqual(cleared, 0)
+        delivery.refresh_from_db()
+        self.assertEqual(delivery.bread_id, other_bread.id)
+
+
+@override_settings(BAKERY_ENABLED=True)
+class TestClearBreadsUnavailableAtPickupLocationLimits(TapirIntegrationTest):
+    """A choice kept on a station change must fit the new day's limit."""
+
+    # Far enough ahead that no day of it is over.
+    FUTURE_YEAR = 2099
+    WEEK = 10
+    DAY = 1
+
+    @classmethod
+    def setUpTestData(cls):
+        ParameterDefinitions().import_definitions(bulk_create=True)
+
+    def setUp(self):
+        super().setUp()
+        self.station = create_pickup_location_with_opening_times(open_days=[self.DAY])
+
+    def _bread(self, max_pieces):
+        bread = BreadFactory.create(
+            name="Saaten", max_pieces=max_pieces, min_remaining_pieces=0
+        )
+        offer_bread_at_pickup_location(
+            bread, self.station, year=self.FUTURE_YEAR, delivery_week=self.WEEK
+        )
+        return bread
+
+    def _choice(self, bread):
+        return BreadDeliveryFactory.create(
+            year=self.FUTURE_YEAR,
+            delivery_week=self.WEEK,
+            pickup_location=self.station,
+            bread=bread,
+        )
+
+    def _recheck(self, delivery):
+        BreadDeliveryService.clear_breads_unavailable_at_pickup_location(
+            delivery.subscription.member, cache={}
+        )
+        delivery.refresh_from_db()
+
+    def test_keptChoiceOverTheNewDaysLimit_isCleared(self):
+        bread = self._bread(max_pieces=2)
+        others = [self._choice(bread) for _ in range(2)]
+        mover = self._choice(bread)
+
+        self._recheck(mover)
+
+        self.assertIsNone(mover.bread_id)
+        for other in others:
+            other.refresh_from_db()
+            self.assertEqual(other.bread_id, bread.id)
+
+    def test_keptChoiceWithinTheNewDaysLimit_isKept(self):
+        bread = self._bread(max_pieces=3)
+        self._choice(bread)
+        self._choice(bread)
+        mover = self._choice(bread)
+
+        self._recheck(mover)
+
+        self.assertEqual(mover.bread_id, bread.id)
