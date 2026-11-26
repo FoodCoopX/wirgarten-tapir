@@ -5,6 +5,10 @@
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>Tapir Mail</title>
+        {{ env_vars|json_script:"tapir-mail-env" }}
+        <script>
+            window._env_ = JSON.parse(document.getElementById("tapir-mail-env").textContent);
+        </script>
         {% vite_hmr_client app="mail" %}
         {% vite_react_refresh app="mail" %}
         {% vite_asset "main.tsx" app="mail" %}

@@ -92,7 +92,6 @@ New dev page `docs/dev/mail_module.md`, written for a developer who opens the ma
   - `/tapirmail/` serves the mail UI and its API.
   - The iframe's path is synced into the outer URL hash so links and reloads keep the subpage.
   - The `beforeunload` guard lives in the wrapper.
-- **Configuration through the parent window**: `env.ts` reads `TAPIRMAIL_`-prefixed variables from `window.parent._env_`, set via `javascript_environment_variables`.
 - **Shared API client**: the mail UI imports `src_frontend/api-client` across the React 18/19 boundary. This is safe because the generated client doesn't depend on React.
 - **Two Vite configs**: the dev servers run on 5173 and 5174, the manifests are `dist/` and `dist/mail/`, and django-vite uses the `"mail"` config for the mail entry.
 - **Module path vs. app label**: the code lives in `tapir.mail` but the label is `tapir_mail`, to keep tables, migration history, content types and permissions.
@@ -107,7 +106,6 @@ New dev page `docs/dev/mail_module.md`, written for a developer who opens the ma
 - **CSS minification with esbuild**: the Arco theme bundled with easy-email contains invalid CSS that Vite's default minifier (lightningcss) rejects.
 - **API base path**: the generated client already contains `/tapirmail` in every path, so the mail UI uses an empty base path, while `REACT_APP_API_ROOT` (with `/tapirmail`) is still used for the filepond and media library URLs.
 - **Build order**: the root `vite build` empties `dist/`, including `dist/mail/`. The root `pnpm build` therefore builds the mail package last; running only the root Vite build removes the mail build.
-- **Opening `/tapirmail/` directly shows "Route not found"**: the UI reads its basename from the parent window, so it only works inside the `/mailing/` iframe.
 - Any further oddity found during phase 6 is added here.
 
 Only the oddities that phase 7 keeps go into the page. For those left for a follow-up, the page names the follow-up.
@@ -121,7 +119,7 @@ Other docs:
 
 For each oddity, check whether it can be removed with reasonable effort now that the code lives in Tapir. Candidates:
 - **Two URL prefixes** (`/mailing/` wrapper, `/tapirmail/` UI and API): mount the mail API under Tapir's usual URL scheme, and serve the iframe content from a path next to the wrapper.
-- **`env.ts` parent-window config**: the iframe template is now rendered by Tapir, so it can set `window._env_` itself (API root, basename) without the `TAPIRMAIL_` prefix and the `window.parent` lookup.
+- [x] **`env.ts` parent-window config**: `MailUiView` renders `window._env_` (API root, basename) into `tapir_mail/ui.html`; `env.ts` only reads it. The `TAPIRMAIL_REACT_APP_*` settings and env vars are gone, and `/tapirmail/…` works without the iframe.
 - **Hash syncing by polling**: replace the 500 ms interval with a `postMessage` from the mail UI's router on navigation.
 - **`beforeunload` guard in the wrapper**: move it into the mail UI, so the wrapper doesn't need to know the editor's routes.
 - **CSRF / `credentials: "include"` handling in `useApi.ts` / `requests.ts`**: align with how `src_frontend` calls the API, if the shared client makes it redundant.

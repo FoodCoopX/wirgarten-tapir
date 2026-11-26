@@ -1275,6 +1275,18 @@ class ConfirmRegistrationToMailCategoryView(TemplateView):
         return context_data
 
 
+class MailUiView(TemplateView):
+    template_name = "tapir_mail/ui.html"
+
+    def get_context_data(self, **kwargs):
+        context_data = super().get_context_data(**kwargs)
+        context_data["env_vars"] = {
+            "REACT_APP_API_ROOT": settings.SITE_URL + settings.TAPIR_MAIL_PATH,
+            "REACT_APP_BASENAME": settings.TAPIR_MAIL_PATH,
+        }
+        return context_data
+
+
 class ExternalRecipientManagementView(FormView):
     form_class = ExternalRecipientManagementForm
     template_name = "tapir_mail/management.html"

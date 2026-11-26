@@ -219,8 +219,6 @@ def javascript_environment_variables(context):
     return {
         "env_vars": {
             "REACT_APP_API_ROOT": api_root,
-            "TAPIRMAIL_REACT_APP_BASENAME": settings.TAPIRMAIL_REACT_APP_BASENAME,
-            "TAPIRMAIL_REACT_APP_API_ROOT": settings.TAPIRMAIL_REACT_APP_API_ROOT,
         },
     }
 

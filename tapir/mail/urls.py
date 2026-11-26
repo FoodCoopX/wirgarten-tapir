@@ -8,6 +8,7 @@ from tapir.mail.views import (
     ConfirmationMailSentView,
     ConfirmRegistrationToMailCategoryView,
     ExternalRecipientManagementView,
+    MailUiView,
 )
 
 router = routers.DefaultRouter()
@@ -65,7 +66,7 @@ urlpatterns = [
     ),
     re_path(
         r"^(?!api/).*$",
-        TemplateView.as_view(template_name="tapir_mail/ui.html"),
+        MailUiView.as_view(),
     ),
     path(
         "api/missing_triggers",

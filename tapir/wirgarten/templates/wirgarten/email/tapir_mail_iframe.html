@@ -1,8 +1,4 @@
 {% extends "core/base.html" %}
-{% load core %}
-{% block head %}
-    {% javascript_environment_variables %}
-{% endblock %}
 {% block content %}
     {% csrf_token %}
     <div

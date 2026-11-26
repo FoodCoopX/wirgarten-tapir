@@ -1,0 +1,28 @@
+import json
+
+from django.conf import settings
+from django.test import override_settings
+
+from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
+
+
+class MailUiViewTest(TapirIntegrationTest):
+    @override_settings(SITE_URL="https://tapir.example.com")
+    def test_get_default_rendersEnvironmentVariablesForTheMailUi(self):
+        self._login_as_admin()
+
+        response = self.client.get(f"{settings.TAPIR_MAIL_PATH}/editor/123")
+
+        self.assertStatusCode(response, 200)
+        self.assertEqual(
+            {
+                "REACT_APP_API_ROOT": "https://tapir.example.com/tapirmail",
+                "REACT_APP_BASENAME": "/tapirmail",
+            },
+            response.context["env_vars"],
+        )
+        self.assertContains(
+            response,
+            f'<script id="tapir-mail-env" type="application/json">{json.dumps(response.context["env_vars"])}</script>',
+            html=False,
+        )
