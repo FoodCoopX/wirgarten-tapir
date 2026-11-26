@@ -26,6 +26,7 @@ from tapir.mail.config import MAIL_URL_PREFIX, TransactionalTriggerKeys
 from tapir.mail.forms import RegisterToMailCategoryForm, ExternalRecipientManagementForm
 from tapir.mail.permissions import HasEmailManagePermission
 from tapir.wirgarten.constants import Permission
+from tapir.wirgarten.utils import get_now
 from tapir.mail.models import (
     EmailConfiguration,
     EmailConfigurationDispatch,
@@ -329,10 +330,8 @@ class EmailConfigurationVersionViewSet(
         email_configuration = EmailConfiguration.objects.get_or_create(
             name=serializer.validated_data["name"],
         )[0]
-        email_configuration.description = (
-            (serializer.validated_data["description"],)
-            if "description" in serializer.validated_data
-            else None
+        email_configuration.description = serializer.validated_data.get(
+            "description", None
         )
         email_configuration.save()
 
@@ -1260,7 +1259,7 @@ class ConfirmRegistrationToMailCategoryView(TemplateView):
         if external_recipient_confirmation.confirmed_at is not None:
             return super().get(request, *args, **kwargs)
 
-        external_recipient_confirmation.confirmed_at = datetime.datetime.now()
+        external_recipient_confirmation.confirmed_at = get_now(cache={})
         external_recipient_confirmation.save()
 
         ExternalRecipientManager.register_external_recipient_to_category(

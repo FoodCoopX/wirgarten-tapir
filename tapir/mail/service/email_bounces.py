@@ -226,7 +226,9 @@ class EmailBounces:
 
     @staticmethod
     def determine_bounce_type(message: Message, recipient_address: str):
+        # flufl.bounce returns the addresses as bytes.
         soft, hard = all_failures(message)
+        recipient_address = recipient_address.encode()
         if recipient_address in hard:
             return EmailDispatch.BounceTypes.HARD
         if recipient_address in soft:

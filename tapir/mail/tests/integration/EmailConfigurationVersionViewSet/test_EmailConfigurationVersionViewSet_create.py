@@ -69,7 +69,7 @@ class TestEmailConfigurationVersionViewSetCreate(TapirIntegrationTest):
         self.assertEqual(1, EmailConfiguration.objects.count())
         config = EmailConfiguration.objects.get()
         self.assertEqual(self.CONFIG_NAME, config.name)
-        self.assertIn("Description after", config.description)
+        self.assertEqual("Description after", config.description)
 
     def test_default_emailConfigurationVersionGetsCreated(self):
         config = EmailConfigurationFactory.create()

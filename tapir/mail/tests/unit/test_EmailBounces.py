@@ -1,3 +1,4 @@
+import email
 from email.message import Message
 from unittest.mock import patch, Mock, call
 
@@ -110,7 +111,10 @@ class TestEmailBounces(TapirUnitTest):
     ):
         message = Message()
         recipient_address = "test@test.de"
-        mock_all_failures.return_value = ([recipient_address], [recipient_address])
+        mock_all_failures.return_value = (
+            frozenset({recipient_address.encode()}),
+            frozenset({recipient_address.encode()}),
+        )
 
         result = EmailBounces.determine_bounce_type(message, recipient_address)
 
@@ -123,7 +127,10 @@ class TestEmailBounces(TapirUnitTest):
     ):
         message = Message()
         recipient_address = "test@test.de"
-        mock_all_failures.return_value = (["other@test.de"], [recipient_address])
+        mock_all_failures.return_value = (
+            frozenset({b"other@test.de"}),
+            frozenset({recipient_address.encode()}),
+        )
 
         result = EmailBounces.determine_bounce_type(message, recipient_address)
 
@@ -131,12 +138,15 @@ class TestEmailBounces(TapirUnitTest):
         self.assertEqual(EmailDispatch.BounceTypes.HARD, result)
 
     @patch("tapir.mail.service.email_bounces.all_failures")
-    def test_determineBounceType_recipientAddressIsOnlyInSoft_returnsHard(
+    def test_determineBounceType_recipientAddressIsOnlyInSoft_returnsSoft(
         self, mock_all_failures: Mock
     ):
         message = Message()
         recipient_address = "test@test.de"
-        mock_all_failures.return_value = ([recipient_address], ["other@test.de"])
+        mock_all_failures.return_value = (
+            frozenset({recipient_address.encode()}),
+            frozenset({b"other@test.de"}),
+        )
 
         result = EmailBounces.determine_bounce_type(message, recipient_address)
 
@@ -149,12 +159,43 @@ class TestEmailBounces(TapirUnitTest):
     ):
         message = Message()
         recipient_address = "test@test.de"
-        mock_all_failures.return_value = (["other@test.de"], ["other@test.de"])
+        mock_all_failures.return_value = (
+            frozenset({b"other@test.de"}),
+            frozenset({b"other@test.de"}),
+        )
 
         result = EmailBounces.determine_bounce_type(message, recipient_address)
 
         mock_all_failures.assert_called_once_with(message)
         self.assertEqual(EmailDispatch.BounceTypes.UNKNOWN, result)
+
+    def test_determineBounceType_realDeliveryStatusNotification_returnsHard(self):
+        message = email.message_from_string(
+            "From: MAILER-DAEMON@example.com\n"
+            "To: bounce@example.com\n"
+            "Subject: Undelivered Mail Returned to Sender\n"
+            "MIME-Version: 1.0\n"
+            'Content-Type: multipart/report; report-type=delivery-status; boundary="B"\n'
+            "\n"
+            "--B\n"
+            "Content-Type: text/plain\n"
+            "\n"
+            "failed\n"
+            "--B\n"
+            "Content-Type: message/delivery-status\n"
+            "\n"
+            "Reporting-MTA: dns; mail.example.com\n"
+            "\n"
+            "Final-Recipient: rfc822; user@example.org\n"
+            "Action: failed\n"
+            "Status: 5.1.1\n"
+            "\n"
+            "--B--\n"
+        )
+
+        result = EmailBounces.determine_bounce_type(message, "user@example.org")
+
+        self.assertEqual(EmailDispatch.BounceTypes.HARD, result)
 
     def test_processMessage_fetchFails_raisesException(self):
         mail_client = Mock()
