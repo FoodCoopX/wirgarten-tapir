@@ -75,7 +75,9 @@ class MemberMailCategoryDataApiView(APIView):
 
         return Response(
             {
-                "categories": MailCategorySerializer(mail_categories, many=True).data,
+                "categories": MailCategorySerializer(
+                    mail_categories, many=True, context={"cache": {}}
+                ).data,
                 "categories_registered_to": categories_registered_to,
             }
         )
@@ -94,7 +96,7 @@ class MemberMailCategoryDataApiView(APIView):
         member = get_object_or_404(Member, id=member_id)
 
         InternalRecipientCategoryRegistration.objects.filter(
-            internal_recipient_id=member.id,
+            member=member,
         ).delete()
 
         for category_id, enabled in serializer.validated_data[
@@ -104,13 +106,13 @@ class MemberMailCategoryDataApiView(APIView):
             if enabled:
                 InternalRecipientCategoryRegistration.objects.create(
                     mail_category=mail_category,
-                    internal_recipient_id=member.id,
+                    member=member,
                     is_registered=True,
                 )
             else:
                 InternalRecipientCategoryRegistration.objects.create(
                     mail_category=mail_category,
-                    internal_recipient_id=member.id,
+                    member=member,
                     is_registered=False,
                 )
 

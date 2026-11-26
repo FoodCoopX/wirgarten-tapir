@@ -11,9 +11,14 @@ class MailCategoryViewSet(viewsets.ModelViewSet):
     queryset = MailCategory.objects.order_by("name")
     serializer_class = MailCategorySerializer
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["cache"] = {}
+        return context
+
     @transaction.atomic
     def create(self, request, *args, **kwargs):
-        serializer = MailCategorySerializer(data=request.data)
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         data = serializer.validated_data
@@ -29,7 +34,7 @@ class MailCategoryViewSet(viewsets.ModelViewSet):
         )
 
         return Response(
-            MailCategorySerializer(category).data,
+            self.get_serializer(category).data,
             status=status.HTTP_201_CREATED,
         )
 

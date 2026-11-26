@@ -16,7 +16,7 @@ class InternalRecipientManager:
             return True
 
         registration = InternalRecipientCategoryRegistration.objects.filter(
-            mail_category=mail_category, internal_recipient_id=member.id
+            mail_category=mail_category, member=member
         ).first()
         if registration is not None:
             return registration.is_registered

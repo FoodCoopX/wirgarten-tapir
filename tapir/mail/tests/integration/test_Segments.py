@@ -258,6 +258,43 @@ class TestSegments(TapirIntegrationTest):
             sorted(result, key=lambda addressed: addressed.recipient.id),
         )
 
+    def test_resolveSegments_extraRegisteredToMailCategory_resultContainsExtra(
+        self,
+    ):
+        member = self._create_confirmed_extra(member_id="1")
+        mail_category = self._create_category_with_only_member_registered(member=member)
+        self._register_extra(member=member, mail_category=mail_category)
+
+        result = resolve_segments(
+            cache={}, mail_category_ids_additive=[mail_category.id]
+        )
+
+        self.assertEqual(
+            [
+                AddressedRecipient.at_own_address(member),
+                self._build_copy(member=member),
+            ],
+            result,
+        )
+
+    def test_resolveSegments_extraInDynamicSegmentAndRegisteredToMailCategory_resultContainsExtraOnce(
+        self,
+    ):
+        member = self._create_confirmed_extra(member_id="1")
+        mail_category = self._create_category_with_only_member_registered(member=member)
+        self._register_extra(member=member, mail_category=mail_category)
+
+        result = resolve_segments(
+            cache={},
+            dynamic_segment_names_additive=[self.SEGMENT_COOP_MEMBERS],
+            mail_category_ids_additive=[mail_category.id],
+        )
+
+        self.assertEqual(
+            ["mail1@test.net", "extra@test.net", "mail3@test.net"],
+            [r.email for r in sorted(result, key=lambda r: r.recipient.id)],
+        )
+
     def test_resolveSegments_extraAddressInSubtractiveStaticSegment_copyNotInList(
         self,
     ):
@@ -316,11 +353,19 @@ class TestSegments(TapirIntegrationTest):
             dynamic_segment_name=self.SEGMENT_COOP_MEMBERS,
         )
         InternalRecipientCategoryRegistration.objects.create(
-            internal_recipient_id=member.id,
+            member=member,
             mail_category=mail_category,
             is_registered=True,
         )
         return mail_category
+
+    @staticmethod
+    def _register_extra(member: Member, mail_category: MailCategory):
+        InternalRecipientCategoryRegistration.objects.create(
+            member_extra_email=member.memberextraemail_set.get(),
+            mail_category=mail_category,
+            is_registered=True,
+        )
 
     @staticmethod
     def _build_copy(member: Member) -> AddressedRecipient:

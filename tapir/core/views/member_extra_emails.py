@@ -20,6 +20,9 @@ from tapir.mail.triggers.transactional_trigger import (
 )
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.core.services.member_extra_email_registration_snapshotter import (
+    MemberExtraEmailRegistrationSnapshotter,
+)
 from tapir.core.serializers import (
     MemberExtraMailDataSerializer,
     MemberExtraEmailCreateRequest,
@@ -212,9 +215,15 @@ class ConfirmMemberExtraEmailApiView(RedirectView):
 
         secret = kwargs["secret"]
         member_extra_email = get_object_or_404(MemberExtraEmail, secret=secret)
+        is_first_confirmation = member_extra_email.confirmed_on is None
 
         member_extra_email.confirmed_on = get_now(cache=cache)
         member_extra_email.save()
+
+        if is_first_confirmation and member_extra_email.receives_direct_mails:
+            MemberExtraEmailRegistrationSnapshotter.snapshot(
+                extra_email=member_extra_email, cache=cache
+            )
 
         MemberExtraEmailConfirmedLogEntry().populate_email(
             email=member_extra_email.email,

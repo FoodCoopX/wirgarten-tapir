@@ -360,6 +360,26 @@ class ExternalRecipientConfirmation(BaseModel):
 
 
 class InternalRecipientCategoryRegistration(BaseModel):
-    internal_recipient_id = models.CharField(max_length=ID_LENGTH)
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(member__isnull=False, member_extra_email__isnull=True)
+                | Q(member__isnull=True, member_extra_email__isnull=False),
+                name="registration_has_exactly_one_recipient",
+            ),
+            models.UniqueConstraint(
+                fields=["mail_category", "member"],
+                name="unique_member_registration_per_category",
+            ),
+            models.UniqueConstraint(
+                fields=["mail_category", "member_extra_email"],
+                name="unique_member_extra_email_registration_per_category",
+            ),
+        ]
+
+    member = models.ForeignKey("wirgarten.Member", on_delete=models.CASCADE, null=True)
+    member_extra_email = models.ForeignKey(
+        "wirgarten.MemberExtraEmail", on_delete=models.CASCADE, null=True
+    )
     mail_category = models.ForeignKey(MailCategory, on_delete=models.CASCADE)
     is_registered = models.BooleanField()

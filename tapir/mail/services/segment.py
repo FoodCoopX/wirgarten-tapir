@@ -136,7 +136,9 @@ def __resolve_segments_internal(
         )
 
     add_mail_categories(
-        recipient_list=result, mail_category_ids=mail_category_ids_additive
+        recipient_list=result,
+        mail_category_ids=mail_category_ids_additive,
+        cache=cache,
     )
     add_static_segments(recipient_list=result, segment_ids=static_segment_ids_additive)
 
@@ -187,12 +189,16 @@ def add_static_segments(
 
 
 def add_mail_categories(
-    recipient_list: list[AddressedRecipient], mail_category_ids: list[str]
+    recipient_list: list[AddressedRecipient],
+    mail_category_ids: list[str],
+    cache: dict,
 ):
     for mail_category_id in mail_category_ids:
         mail_category = MailCategory.objects.get(id=mail_category_id)
         recipient_list.extend(
-            MailCategoryRecipientResolver.resolve_recipients(mail_category)
+            MailCategoryRecipientResolver.resolve_recipients(
+                mail_category=mail_category, cache=cache
+            )
         )
 
 

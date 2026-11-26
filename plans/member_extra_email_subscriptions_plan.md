@@ -56,14 +56,14 @@ Category mails reach an extra address only through its own registrations, regard
 ### Model
 
 - `MemberExtraEmail.receives_direct_mails: BooleanField`. UI label "Erhält auch persönliche Mails (Verträge, Abholung, Rundmails an alle Mitglieder)"; badge "Persönliche Mails" / "Nur Abos". The migration sets `True` for existing rows; the field default for new rows is `True` as well.
-- Category registrations of all extras reuse `InternalRecipientCategoryRegistration` with `internal_recipient_id=extra_email.id`. Both ids are nanoids of length 10, so a collision is negligible.
+- `InternalRecipientCategoryRegistration` references its recipient through two nullable foreign keys, `member` and `member_extra_email` (cascade on delete). A check constraint requires exactly one of them; unique constraints allow one registration per category and recipient. Migration `tapir_mail` 0053 replaces the former `internal_recipient_id` string, linking existing rows to their member and deleting rows without one and older duplicates.
 - Category defaults for extras: same as `InternalRecipientManager`, except that `ALWAYS_ON` counts as `OPTIONAL_DEFAULT_ON`. The extra address is voluntary, and the mandatory mails still reach the main address.
 - Changing `receives_direct_mails` after confirmation only switches the direct mails. Registrations and subscriptions stay as they are.
 
 ### Snapshot at confirmation (`receives_direct_mails=True`)
 
 New service `MemberExtraEmailRegistrationSnapshotter.snapshot(extra_email, cache)`, called from `ConfirmMemberExtraEmailApiView` when `receives_direct_mails` is set:
-- For each category whose dynamic segment contains the member: one explicit `InternalRecipientCategoryRegistration(internal_recipient_id=extra.id, is_registered=<member's effective state>)`. Explicit rows keep the snapshot stable if the category mode changes later.
+- For each category whose dynamic segment contains the member: one explicit `InternalRecipientCategoryRegistration(member_extra_email=extra, is_registered=<member's effective state>)`. Explicit rows keep the snapshot stable if the category mode changes later.
 - For each list the main address is subscribed to (confirmed, not pending invitations): subscribe the extra with `pre_verified`, `pre_confirmed`, `pre_approved` and `send_welcome_message=False`.
 
 Mailman calls run in `transaction.on_commit`, so a rollback doesn't leave mailman subscribed and a mailman error doesn't roll back the confirmation.
@@ -148,7 +148,7 @@ All endpoints are public (`permission_classes = []`). The token is validated in 
   - `receives_direct_mails`, main address.
   - Categories, using the same selection as for the member, with the extra's registration states and the extra defaults.
   - Mailing lists, if enabled: advertised lists plus lists the address is already on, with their subscribed state.
-- `POST api/extra_email_access/categories`: same semantics as `MemberMailCategoryDataApiView.post`, with `internal_recipient_id=extra.id`.
+- `POST api/extra_email_access/categories`: same semantics as `MemberMailCategoryDataApiView.post`, with `member_extra_email=extra`.
 - `POST api/extra_email_access/mailing_list_subscribe` and `.../mailing_list_unsubscribe`: `{token, list_name}`.
 - `DELETE api/extra_email_access?token=`: self-removal. It logs `MemberExtraEmailDeletedLogEntry` with `actor=None`, runs `unsubscribe_from_all` and deletes the extra. The member is not notified.
 - Extract the shared logic from `MemberMailCategoryDataApiView` and the member self-service views into services that take a recipient id or an address, so the member and extra paths share it.
@@ -185,7 +185,6 @@ Rejoining restores nothing: the member subscribes again through self-service.
 **Deleting a member** ("Mitglied löschen", `DeleteMemberApiView`, `tapir/coop/views.py:351`): the nightly task can't catch this, because the `Member` row and the link to the extras are gone. The view therefore:
 - Collects the main address and all extra addresses before deleting.
 - Runs `unsubscribe_from_all` for each in `transaction.on_commit`. It also discards pending invitations and skips addresses still used by another member.
-- Deletes the `InternalRecipientCategoryRegistration` rows of the member's id and the extras' ids (plain string ids, no cascade).
 
 ### UI changes
 
@@ -209,12 +208,12 @@ Rejoining restores nothing: the member subscribes again through self-service.
 - [x] Phase 0 — merge the mail module into this repo (#1447)
 - [x] Phase 1 — mail module (`tapir/mail`): `AddressedRecipient`, resolution returns only `AddressedRecipient`s (segment members expanded through `MemberExtraRecipientProvider`, replacing `Member.get_extra_recipients` and the `getattr` lookup; step order, override matching, onboarding trigger, preview, dead branch), category and static recipients without copies, dedup by email; tests
 - [x] Phase 2 — `receives_direct_mails` field + migration, `MemberExtraRecipientProvider` filters on it, API/serializer/modal checkbox
-- [ ] Phase 3 — extras in `MailCategoryRecipientResolver` + extra defaults, snapshot at confirmation (categories + lists), data migration for existing extras
-- [ ] Phase 4 — extra mailing list manager, unsubscribe on deletion, recipient list display, parameter description update
+- [x] Phase 3 — extras in `MailCategoryRecipientResolver` + extra defaults, snapshot at confirmation (categories + lists), data migration for existing extras
+- [ ] Phase 4 — extra mailing list manager, unsubscribe on deletion, recipient list display, parameter description update, explanation text default update
 - [ ] Phase 5 — access token service, send-link endpoint + trigger, public request page, "Abos verwalten Link" token
 - [ ] Phase 6 — management API + island (categories, lists, self-removal), log entry, throttling (optional: decide at the beginning of the phase whether it's necessary; if yes, it also covers the phase 5 request-link endpoint)
 - [ ] Phase 7 — mailman subscriptions follow the member's email change
-- [ ] Phase 8 — former members: `ActiveMemberProvider` (move `get_queryset_active_members`, add `get_former_members`, update callers), nightly unsubscription task + log entry, blocking new subscriptions (self-service, access link, admin views, snapshot), list unsubscription + registration cleanup in `DeleteMemberApiView`
+- [ ] Phase 8 — former members: `ActiveMemberProvider` (move `get_queryset_active_members`, add `get_former_members`, update callers), nightly unsubscription task + log entry, blocking new subscriptions (self-service, access link, admin views, snapshot), list unsubscription in `DeleteMemberApiView`
 - [ ] Phase 9 — test data generation (extras with and without direct mails, with registrations)
 - [ ] Phase 10 — docs (`docs/admins`, explanation text)
 - [ ] Phase 11 — delete this plan file (`plans/member_extra_email_subscriptions_plan.md`)
@@ -224,10 +223,10 @@ Rejoining restores nothing: the member subscribes again through self-service.
 The whole plan is implemented before deploying. Phase 1 alone would stop category copies to extras before phase 3 gives them their own registrations.
 
 Existing confirmed extras get `receives_direct_mails=True` but no registrations. Without a backfill, they would lose category mails they get today as copies, or fall back to the category defaults. A data migration (phase 3) backfills the categories, using historical models only:
-- For each confirmed `MemberExtraEmail` and each `MailCategory` with a non-empty `dynamic_segment_name`: one `InternalRecipientCategoryRegistration(internal_recipient_id=extra.id, is_registered=<member's state>)`, via `bulk_create`.
+- For each confirmed `MemberExtraEmail` and each `MailCategory` with a non-empty `dynamic_segment_name`: one `InternalRecipientCategoryRegistration(member_extra_email=extra, is_registered=<member's state>)`, via `bulk_create`.
 - Member's state, as in `InternalRecipientManager.is_member_registered_to_mail_category`: `True` for `ALWAYS_ON`, else the member's own registration row if any, else `mode == OPTIONAL_DEFAULT_ON`.
 - No segment membership check: it would need live segment code. A row for a category whose segment doesn't contain the member has no effect until the member joins it.
-- Depends on the latest `wirgarten` and `mail` migrations.
+- Runs after `tapir_mail` 0053 (foreign keys).
 
 No list backfill: no production instance uses mailman. Existing extras join lists through the access link.
 
