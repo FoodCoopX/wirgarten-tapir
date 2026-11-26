@@ -20,7 +20,7 @@ class TimeTrigger(Trigger[TimeTriggerData]):
 
     @classmethod
     def get_id(cls) -> str:
-        return f"{__name__}.time_trigger"
+        return "time_trigger"
 
     @classmethod
     def get_display_name(cls) -> str:

@@ -18,6 +18,8 @@ export default defineConfig({
     host: "0.0.0.0",
     port: 5174,
     cors: true,
+    // The page is served by Django, so asset URLs in CSS (e.g. fonts) must point to the dev server.
+    origin: "http://localhost:5174",
   },
   build: {
     sourcemap: true,

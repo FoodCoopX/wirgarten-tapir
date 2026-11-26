@@ -107,7 +107,8 @@ New dev page `docs/dev/mail_module.md`, written for a developer who opens the ma
 - **CSS minification with esbuild**: the Arco theme bundled with easy-email contains invalid CSS that Vite's default minifier (lightningcss) rejects.
 - **API base path**: the generated client already contains `/tapirmail` in every path, so the mail UI uses an empty base path, while `REACT_APP_API_ROOT` (with `/tapirmail`) is still used for the filepond and media library URLs.
 - **Build order**: the root `vite build` empties `dist/`, including `dist/mail/`. The root `pnpm build` therefore builds the mail package last; running only the root Vite build removes the mail build.
-- Any further oddity found during phases 5–6 is added here.
+- **Opening `/tapirmail/` directly shows "Route not found"**: the UI reads its basename from the parent window, so it only works inside the `/mailing/` iframe.
+- Any further oddity found during phase 6 is added here.
 
 Only the oddities that phase 7 keeps go into the page. For those left for a follow-up, the page names the follow-up.
 
@@ -130,6 +131,7 @@ For each oddity, check whether it can be removed with reasonable effort now that
 - **Two `useApi` hooks**: the mail UI has its own copy of `src_frontend/hooks/useApi.ts`. Tapir's hook only uses `useMemo`, which works with React 18 too, so the mail UI could reuse it.
 - **Dead CORS settings**: `CORS_*` in `tapir/settings/base.py` have no effect, since `corsheaders` was never installed in Tapir (it was a dependency of the standalone mail server). Remove them, unless the Vite dev servers need them.
 - **Path-based permission middleware**: replace `TapirMailPermissionMiddleware` with permission classes on the mail views.
+- **`OnboardingTrigger` ID from the module path**: `tapir/wirgarten/triggers/onboarding_trigger.py` still derives its ID from `__name__`, like the mail triggers did. Moving that file would break stored triggers again.
 
 Out of scope even if possible: the iframe itself and the React 18 package (see above), and refactoring to Tapir's conventions.
 
@@ -143,7 +145,11 @@ Out of scope even if possible: the iframe itself and the React 18 package (see a
   - Updated: `react-router-dom` 7, `react-spinners` 0.17, `@fortawesome/fontawesome-free` 7, minor updates within the ranges, `flufl-bounce` 6 (drops `zope-interface`).
   - Removed: `framer-motion`, which only faded between pages.
   - Kept: React / `react-dom` / `@types` 18 and `react-final-form` 6 (easy-email), `mjml-browser` 4 (easy-email's peer range is `^4`), `filepond` 4 (5 is a beta), TypeScript 6 (same as the root package).
-- [ ] Phase 6 — smoke test on a local instance: editor popups/tooltips, media library upload, dispatch, bounce check, category registration pages
+- [x] Phase 6 — smoke test on a local instance: editor popups/tooltips, media library upload, dispatch, bounce check, category registration pages
+  - Checked in the browser (dev mode, through the `/mailing/` iframe): dashboard, email configuration editor (easy-email toolbar and popovers), template editor, segment picker, date picker, categories modal, media library upload and delete, test mail, public category registration. A transactional mail went through the Celery tasks to Mailpit.
+  - Not checked live: the bounce check (no IMAP mailbox locally; unit tests only).
+  - Found and fixed: trigger IDs were derived from the module path, so the move broke every stored trigger. `TransactionalTrigger` and `TimeTrigger` now use stable IDs, migration `0052_stable_trigger_ids` rewrites the stored ones (with forward and backward tests).
+  - Found and fixed: in Vite dev mode, URLs inside CSS (Font Awesome fonts) pointed to Django instead of the dev server; `server.origin` in the mail Vite config.
 - [ ] Phase 7 — evening out oddities: go through the oddities listed under Docs plus those found in phases 1–6. For each one, decide whether to remove it now, leave it for a follow-up, or keep it for good (see below). Present the list for review before changing anything.
 - [ ] Phase 8 — review the mail code for worst offenders (known so far: `EmailBounces.determine_bounce_type` checks a `str` address against the `bytes` sets returned by `flufl.bounce`, so DSN bounces are never classified as soft or hard): code that is very far from Tapir's conventions, or badly written or designed in general (e.g. huge view classes, module-level global state, logic in serializers, missing cache parameter on hot paths, untested areas). Present a ranked list with a short reason and a rough effort for each, for review before changing anything. Each item is either fixed in this branch or becomes a follow-up issue.
 - [ ] Phase 9 — docs: `docs/dev/mail_module.md` (conventions warning, the oddities that remain after phase 7, links to the follow-up issues from phases 5 and 8), `docs/dev/index.md` link, `AGENTS.md`

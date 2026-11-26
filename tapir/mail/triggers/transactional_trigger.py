@@ -173,7 +173,7 @@ class TransactionalTrigger(Trigger[TransactionalTriggerData]):
 
     @classmethod
     def get_id(cls) -> str:
-        return f"{__name__}.transactional_trigger"
+        return "transactional_trigger"
 
     @classmethod
     def get_display_name(cls) -> str:

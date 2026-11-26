@@ -320,8 +320,7 @@ const EmailConfigurationEditor = () => {
     let combinedTokens: any = {};
     triggers.forEach((trigger) => {
       if (
-        trigger.triggerId ===
-          "tapir_mail.triggers.transactional_trigger.transactional_trigger" &&
+        trigger.triggerId === "transactional_trigger" &&
         trigger.triggerFieldValues["key"] &&
         triggerTokens.hasOwnProperty(trigger.triggerFieldValues["key"])
       ) {
