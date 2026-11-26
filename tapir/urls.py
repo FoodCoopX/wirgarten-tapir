@@ -19,14 +19,9 @@ from django.conf.urls.static import static
 from django.urls import include, path
 from django.views.generic import RedirectView, TemplateView
 
+from tapir.mail.config import MAIL_URL_PREFIX
 from tapir.wirgarten.views.default_redirect import wirgarten_redirect_view
 from tapir.wirgarten.views.mailing import TapirMailView
-
-tapir_mail_path = (
-    settings.TAPIR_MAIL_PATH[1:]
-    if settings.TAPIR_MAIL_PATH.startswith("/")
-    else settings.TAPIR_MAIL_PATH
-) + "/"
 
 urlpatterns = [
     path("", wirgarten_redirect_view, name="index"),
@@ -58,9 +53,8 @@ urlpatterns = [
         "mailing/",
         TapirMailView.as_view(),
         name="tapir_mail",
-        kwargs={"TAPIR_MAIL_PATH": settings.TAPIR_MAIL_PATH},
     ),
-    path(tapir_mail_path, include("tapir.mail.urls")),
+    path(f"{MAIL_URL_PREFIX}/", include("tapir.mail.urls")),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 if settings.ENABLE_SILK_PROFILING:

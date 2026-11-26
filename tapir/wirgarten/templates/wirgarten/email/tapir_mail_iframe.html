@@ -24,12 +24,12 @@
                 subpage = "";
             }
 
-            iframe.src = "{{TAPIR_MAIL_PATH}}" + subpage;
+            iframe.src = "/{{ mail_url_prefix }}" + subpage;
 
             const checkIframeUrl = () => {
                 try {
                     window.location.hash = iframe.contentWindow.location.pathname.replace(
-                        "/tapirmail",
+                        "/{{ mail_url_prefix }}",
                         ""
                     );
                 } catch (e) {

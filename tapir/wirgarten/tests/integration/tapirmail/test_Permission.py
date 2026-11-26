@@ -1,8 +1,8 @@
-from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.test import RequestFactory
 
 from tapir.accounts.models import TapirUser
+from tapir.mail.config import MAIL_URL_PREFIX
 from tapir.wirgarten.middleware.mailing import TapirMailPermissionMiddleware
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
@@ -18,8 +18,8 @@ class TapirMailPermissionMiddlewareTest(TapirIntegrationTest):
         self.middleware = TapirMailPermissionMiddleware(
             get_response=lambda request: None
         )
-        self.tracking_url = settings.TAPIR_MAIL_PATH + "/api/tracking/12345/track"
-        self.other_url = settings.TAPIR_MAIL_PATH
+        self.tracking_url = f"/{MAIL_URL_PREFIX}/api/tracking/12345/track"
+        self.other_url = f"/{MAIL_URL_PREFIX}"
 
     def test_tapirMailPermissionMiddleWare_publicTrackingAccess_requestIsPassedThrough(
         self,

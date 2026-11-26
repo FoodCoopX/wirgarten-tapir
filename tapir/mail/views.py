@@ -21,7 +21,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from tapir.mail.config import TransactionalTriggerKeys
+from tapir.mail.config import MAIL_URL_PREFIX, TransactionalTriggerKeys
 from tapir.mail.forms import RegisterToMailCategoryForm, ExternalRecipientManagementForm
 from tapir.mail.models import (
     EmailConfiguration,
@@ -1281,8 +1281,8 @@ class MailUiView(TemplateView):
     def get_context_data(self, **kwargs):
         context_data = super().get_context_data(**kwargs)
         context_data["env_vars"] = {
-            "REACT_APP_API_ROOT": settings.SITE_URL + settings.TAPIR_MAIL_PATH,
-            "REACT_APP_BASENAME": settings.TAPIR_MAIL_PATH,
+            "REACT_APP_API_ROOT": f"{settings.SITE_URL}/{MAIL_URL_PREFIX}",
+            "REACT_APP_BASENAME": f"/{MAIL_URL_PREFIX}",
         }
         return context_data
 

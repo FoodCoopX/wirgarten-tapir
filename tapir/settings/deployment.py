@@ -228,7 +228,6 @@ CACHES = {
     }
 }
 
-TAPIR_MAIL_PATH = "/tapirmail"
 
 if DEBUG:
     CSRF_TRUSTED_ORIGINS = ["http://localhost:8000", SITE_URL]

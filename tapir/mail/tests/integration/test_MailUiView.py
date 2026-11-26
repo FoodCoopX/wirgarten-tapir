@@ -1,8 +1,8 @@
 import json
 
-from django.conf import settings
 from django.test import override_settings
 
+from tapir.mail.config import MAIL_URL_PREFIX
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
@@ -11,7 +11,7 @@ class MailUiViewTest(TapirIntegrationTest):
     def test_get_default_rendersEnvironmentVariablesForTheMailUi(self):
         self._login_as_admin()
 
-        response = self.client.get(f"{settings.TAPIR_MAIL_PATH}/editor/123")
+        response = self.client.get(f"/{MAIL_URL_PREFIX}/editor/123")
 
         self.assertStatusCode(response, 200)
         self.assertEqual(

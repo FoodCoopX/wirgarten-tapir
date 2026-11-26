@@ -2,6 +2,8 @@ from typing import Callable
 
 from django.db import models
 
+MAIL_URL_PREFIX = "tapirmail"
+
 
 class TransactionalTriggerKeys:
     MAIL_CATEGORY_REGISTRATION_CONFIRMATION_LINK = (
