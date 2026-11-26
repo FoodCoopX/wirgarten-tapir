@@ -4,6 +4,7 @@ import logging
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.core.cache import cache
 from django.db import transaction
 from django.db.models import Count, QuerySet
 from django.shortcuts import get_object_or_404, redirect
@@ -1165,6 +1166,9 @@ class MailCategoryViewSet(viewsets.ModelViewSet):
 
 @method_decorator(xframe_options_exempt, name="dispatch")
 class RegisterToMailCategoryView(FormView):
+    # Limits how often the public form can make Tapir send a confirmation mail to the same address.
+    CONFIRMATION_MAIL_COOLDOWN_SECONDS = 15 * 60
+
     form_class = RegisterToMailCategoryForm
     template_name = "tapir_mail/external.html"
 
@@ -1193,15 +1197,19 @@ class RegisterToMailCategoryView(FormView):
             args=[self.get_category().id],
         )
 
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs.update({"category": self.get_category()})
-        return kwargs
-
     def form_valid(self, form):
         response = super().form_valid(form)
         email_address = form.cleaned_data["email"]
         first_name = form.cleaned_data["first_name"]
+
+        # Both cases end on the same page as a successful registration, so that the
+        # form reveals neither registered addresses nor the cooldown.
+        if ExternalRecipientManager.is_email_address_registered_to_category(
+            mail_category=self.get_category(), email=email_address
+        ):
+            return response
+        if not self._claim_confirmation_mail_cooldown(email_address=email_address):
+            return response
 
         external_recipient, _ = ExternalRecipient.objects.get_or_create(
             email=email_address, defaults={"first_name": first_name}
@@ -1231,6 +1239,12 @@ class RegisterToMailCategoryView(FormView):
         )
 
         return response
+
+    def _claim_confirmation_mail_cooldown(self, email_address: str) -> bool:
+        cache_key = f"mail_category_registration_confirmation:{self.get_category().id}:{email_address.strip().lower()}"
+        return cache.add(
+            cache_key, True, timeout=self.CONFIRMATION_MAIL_COOLDOWN_SECONDS
+        )
 
 
 @method_decorator(xframe_options_exempt, name="get")

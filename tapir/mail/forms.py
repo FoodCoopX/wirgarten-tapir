@@ -1,5 +1,4 @@
 from django import forms
-from django.core.exceptions import ValidationError
 from django.forms.forms import Form
 
 from tapir.mail.models import MailCategory, ExternalRecipient
@@ -9,19 +8,6 @@ from tapir.mail.service.external_recipient_manager import ExternalRecipientManag
 class RegisterToMailCategoryForm(Form):
     email = forms.EmailField(required=True, label="E-Mail-Adresse")
     first_name = forms.CharField(required=True, label="Vorname")
-
-    def __init__(self, *args, **kwargs):
-        self.category: MailCategory = kwargs.pop("category")
-        super().__init__(*args, **kwargs)
-
-    def clean_email(self):
-        if ExternalRecipientManager.is_email_address_registered_to_category(
-            mail_category=self.category, email=self.cleaned_data["email"]
-        ):
-            raise ValidationError(
-                "Diese Mail-Adresse ist schon für diesen Newsletter eingetragen"
-            )
-        return self.cleaned_data["email"]
 
 
 class ExternalRecipientManagementForm(Form):
