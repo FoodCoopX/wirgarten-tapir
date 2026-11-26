@@ -64,6 +64,7 @@ urlpatterns = [
         ExternalRecipientManagementView.as_view(),
         name="external_recipient_manager",
     ),
+    path("", MailUiView.as_view(), name="mail_ui"),
     re_path(
         r"^(?!api/).*$",
         MailUiView.as_view(),

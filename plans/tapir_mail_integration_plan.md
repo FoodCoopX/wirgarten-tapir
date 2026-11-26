@@ -71,27 +71,19 @@ The label stays `tapir_mail`, so the following stay valid without data migration
 ### Serving
 
 - `django-vite`: a second config `"mail"` with `manifest_path: ./dist/mail/manifest.json`, `static_url_prefix: "mail"` and `dev_server_port: 5174`. `dist/mail/` is served at `/static/mail/` through the existing `STATICFILES_DIRS = ["dist"]`.
-- The iframe stays for this plan. It isolates the mail UI's Bootstrap and Arco global CSS from Tapir's pages.
-  - The iframe's `src` now points to `tapir/mail/templates/tapir_mail/ui.html`, which loads `main.tsx` via `{% vite_asset ... app="mail" %}`. It replaces the CRA `index.html` in `__ui__`. The mail URLs no longer append their own `static()` route.
+- `tapir/mail/templates/tapir_mail/ui.html` extends Tapir's `core/base.html` and loads `main.tsx` via `{% vite_asset ... app="mail" %}`. It replaces the CRA `index.html` in `__ui__`. The mail URLs no longer append their own `static()` route.
+- No iframe (decided in phase 7): the mail UI renders inside Tapir's layout at `/tapirmail/…` with real URLs. The mail CSS only loads on the mail pages; `index.css` resets the body font that the Arco theme would otherwise change for Tapir's header and sidebar.
   - `TAPIRMAIL_REACT_APP_API_ROOT` / `_BASENAME` keep working through `env.ts`.
 - Docker:
   - `vite.Dockerfile` also copies `src_frontend_mail/package.json` before `pnpm install`.
   - The `vite` service runs both dev servers (`pnpm --parallel --recursive --include-workspace-root run dev`), exposes 5174 and keeps the mail package's `node_modules` in its own volume.
   - `.github/workflows/docker-build.yml` needs no change beyond the root `build` script.
 
-### Later, separate: drop the iframe
-
-Render the mail UI directly in Tapir's layout at `/mailing/<path>`, with a router `basename` instead of hash syncing. This removes `env.ts`'s parent-window lookup, the `postMessage` origin check in `App.js` and the polling in `tapir_mail_iframe.html`. First, scope the Arco and Bootstrap CSS so it doesn't leak into Tapir's styles. That's why it isn't part of this plan.
-
 ## Docs
 
 New dev page `docs/dev/mail_module.md`, written for a developer who opens the mail code for the first time. Each oddity gets its reason and what would remove it:
 - **Separate frontend build**: `src_frontend_mail` is its own workspace package on React 18, because easy-email needs React 18 (see the findings above). Upgrade it independently of the root package. It can join the main build once easy-email is replaced or supports React 19.
-- **Iframe**: the mail UI's global Bootstrap and Arco CSS would leak into Tapir's pages, and the other way round. Explain how the wrapper works:
-  - `/mailing/` is the Tapir page holding the iframe.
-  - `/tapirmail/` serves the mail UI and its API.
-  - The iframe's path is synced into the outer URL hash so links and reloads keep the subpage.
-  - The `beforeunload` guard lives in the wrapper.
+- **Body font reset**: the Arco theme bundled with easy-email sets the `body` font and size; `src_frontend_mail/src/index.css` resets them to Bootstrap's, so Tapir's header and sidebar look the same on the mail pages.
 - **Shared API client**: the mail UI imports `src_frontend/api-client` across the React 18/19 boundary. This is safe because the generated client doesn't depend on React.
 - **Two Vite configs**: the dev servers run on 5173 and 5174, the manifests are `dist/` and `dist/mail/`, and django-vite uses the `"mail"` config for the mail entry.
 - **Module path vs. app label**: the code lives in `tapir.mail` but the label is `tapir_mail`, to keep tables, migration history, content types and permissions.
@@ -113,15 +105,15 @@ Only the oddities that phase 7 keeps go into the page. For those left for a foll
 Other docs:
 - `docs/dev/index.md`: link the new page.
 - `docs/`: replace mentions of the separate mail repo and its releases.
-- `AGENTS.md`: in the app table, add `mail/` with a pointer to `docs/dev/mail_module.md`. Add a short rule: never upgrade React in `src_frontend_mail` together with the root package, and don't change the iframe without reading the doc page.
+- `AGENTS.md`: in the app table, add `mail/` with a pointer to `docs/dev/mail_module.md`. Add a short rule: never upgrade React in `src_frontend_mail` together with the root package.
 
 ## Evening out oddities (phase 7)
 
 For each oddity, check whether it can be removed with reasonable effort now that the code lives in Tapir. Candidates:
-- **Two URL prefixes** (`/mailing/` wrapper, `/tapirmail/` UI and API): mount the mail API under Tapir's usual URL scheme, and serve the iframe content from a path next to the wrapper.
+- [x] **Two URL prefixes**: resolved by dropping the iframe; `/mailing/` is gone, UI and API live under `/tapirmail/`.
 - [x] **`env.ts` parent-window config**: `MailUiView` renders `window._env_` (API root, basename) into `tapir_mail/ui.html`; `env.ts` only reads it. The `TAPIRMAIL_REACT_APP_*` settings and env vars are gone, and `/tapirmail/…` works without the iframe.
-- **Hash syncing by polling**: replace the 500 ms interval with a `postMessage` from the mail UI's router on navigation.
-- **`beforeunload` guard in the wrapper**: move it into the mail UI, so the wrapper doesn't need to know the editor's routes.
+- [x] **Iframe** (replaces "hash syncing by polling"): dropped. The UI renders in Tapir's layout, `TapirMailView` and `tapir_mail_iframe.html` are gone, the editor page grid uses `minmax(0, …)` columns, and the sidebar marks a link as active for its subpages too (`is_path_in_section`). Old `/mailing/#/…` bookmarks are not redirected.
+- [x] **`beforeunload` guard in the wrapper**: moved into the mail UI as `usePreventUnload`, used by both editor pages.
 - **CSRF / `credentials: "include"` handling in `useApi.ts` / `requests.ts`**: align with how `src_frontend` calls the API, if the shared client makes it redundant.
 - **Mail-specific UI components that duplicate `src_frontend/components`** (`TapirButton`, pagination, modals): reuse is blocked by the React version, so only list them.
 - **Settings only the mail module reads**: drop those Tapir never changes from their defaults.
@@ -131,7 +123,7 @@ For each oddity, check whether it can be removed with reasonable effort now that
 - **Path-based permission middleware**: replace `TapirMailPermissionMiddleware` with permission classes on the mail views.
 - **`OnboardingTrigger` ID from the module path**: `tapir/wirgarten/triggers/onboarding_trigger.py` still derives its ID from `__name__`, like the mail triggers did. Moving that file would break stored triggers again.
 
-Out of scope even if possible: the iframe itself and the React 18 package (see above), and refactoring to Tapir's conventions.
+Out of scope even if possible: the React 18 package (see above), and refactoring to Tapir's conventions.
 
 ## Phases
 

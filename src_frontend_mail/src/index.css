@@ -1,19 +1,7 @@
-body {
-  margin: 0;
-  font-family:
-  -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
-  "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-code {
-  font-family:
-  source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
-}
-
-.container {
-  margin-top: 2em;
+/* The Arco theme bundled with easy-email sets the body font, which would also restyle Tapir's header and sidebar. */
+html body {
+  font-family: var(--bs-body-font-family);
+  font-size: var(--bs-body-font-size);
 }
 
 [data-type="TAPIR_MAIL_BODY_EXISTS"] {

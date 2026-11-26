@@ -21,7 +21,6 @@ from django.views.generic import RedirectView, TemplateView
 
 from tapir.mail.config import MAIL_URL_PREFIX
 from tapir.wirgarten.views.default_redirect import wirgarten_redirect_view
-from tapir.wirgarten.views.mailing import TapirMailView
 
 urlpatterns = [
     path("", wirgarten_redirect_view, name="index"),
@@ -49,11 +48,6 @@ urlpatterns = [
     path("utils/", include("tapir.utils.urls")),
     path("waiting_list/", include("tapir.waiting_list.urls")),
     path("tapir/", include("tapir.wirgarten.urls")),
-    path(
-        "mailing/",
-        TapirMailView.as_view(),
-        name="tapir_mail",
-    ),
     path(f"{MAIL_URL_PREFIX}/", include("tapir.mail.urls")),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 

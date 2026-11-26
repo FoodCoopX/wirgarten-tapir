@@ -8,6 +8,7 @@ import LabelHelp from "../components/LabelHelp";
 import Loading from "../components/loading";
 import { useAlert } from "../contexts/alerts";
 import { useApi } from "../hooks/useApi";
+import { usePreventUnload } from "../hooks/usePreventUnload";
 import { getApiErrorMessage } from "../utils/apiErrorMessage";
 import {
   containsLayoutBodySection,
@@ -17,6 +18,7 @@ import {
 } from "../utils/mjml";
 
 const TemplateEditor = () => {
+  usePreventUnload();
   const showAlert = useAlert();
   const navigate = useNavigate();
   const api = useApi(TapirmailApi);

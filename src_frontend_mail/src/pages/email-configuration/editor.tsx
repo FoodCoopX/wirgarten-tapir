@@ -26,6 +26,7 @@ import MultipleTriggerInput from "../../components/multipleTriggerInput";
 import SegmentInput from "../../components/segments/segmentInput";
 import { useAlert } from "../../contexts/alerts";
 import { useApi } from "../../hooks/useApi";
+import { usePreventUnload } from "../../hooks/usePreventUnload";
 import Paths from "../../routing";
 import { getApiErrorMessage } from "../../utils/apiErrorMessage";
 import { formatDate } from "../../utils/formatDate";
@@ -44,6 +45,7 @@ const stringToStatus = (
 };
 
 const EmailConfigurationEditor = () => {
+  usePreventUnload();
   const params = useParams();
   const [currentId, setCurrentId] = useState<string | undefined>(params.id);
   const [loading, setLoading] = useState<boolean>(Boolean(params.id));
@@ -414,7 +416,12 @@ const EmailConfigurationEditor = () => {
     <Loading />
   ) : (
     <>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 5fr" }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "minmax(0, 1fr) minmax(0, 5fr)",
+        }}
+      >
         <div style={{ margin: "1em", height: "100%" }}>
           <Link to={Paths.dashboard}>
             <Button

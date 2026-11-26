@@ -3,10 +3,15 @@ import json
 from django.test import override_settings
 
 from tapir.mail.config import MAIL_URL_PREFIX
+from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
 class MailUiViewTest(TapirIntegrationTest):
+    @classmethod
+    def setUpTestData(cls):
+        ParameterDefinitions().import_definitions(bulk_create=True)
+
     @override_settings(SITE_URL="https://tapir.example.com")
     def test_get_default_rendersEnvironmentVariablesForTheMailUi(self):
         self._login_as_admin()
