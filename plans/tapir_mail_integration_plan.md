@@ -103,7 +103,7 @@ New dev page `docs/dev/mail_module.md`, written for a developer who opens the ma
 Only the oddities that phase 7 keeps go into the page. For those left for a follow-up, the page names the follow-up.
 
 Other docs:
-- `docs/dev/index.md`: link the new page.
+- `docs/dev/index.md`: deleted; it was a placeholder, and the navigation lists the dev pages anyway.
 - `docs/`: replace mentions of the separate mail repo and its releases.
 - `AGENTS.md`: in the app table, add `mail/` with a pointer to `docs/dev/mail_module.md`. Add a short rule: never upgrade React in `src_frontend_mail` together with the root package.
 
@@ -150,7 +150,8 @@ Out of scope even if possible: the React 18 package (see above), and refactoring
   - Done: `tapir/mail/views.py` split into a `views/` package by topic (`email_templates`, `email_configurations`, `dispatches`, `segments`, `triggers`, `mail_categories`, `external`, `ui`), and `tapir/mail/service/` renamed to `services/`.
   - Fixed: public registration form sends at most one confirmation mail per address and category every 15 minutes (cache cooldown), and no longer reveals whether an address is registered.
   - Not decided yet: `str(e)` returned to clients, remaining per-row queries in the dispatch lists (counts and serializer method fields; the version relations are now loaded up front), recipient resolution per row in `MailCategorySerializer`, duplicated create/update logic in `EmailConfigurationVersionViewSet`, DB validation in serializers, module-level registries, untested public flow and viewsets, `any` and the 662-line configuration editor page in the mail UI.
-- [ ] Phase 9 — docs: `docs/dev/mail_module.md` (conventions warning, the oddities that remain after phase 7, links to the follow-up issues from phases 5 and 8), `docs/dev/index.md` link, `AGENTS.md`
+- [x] Phase 9 — docs: `docs/dev/mail_module.md` (conventions warning, the oddities that remain after phase 7, links to the follow-up issues from phases 5 and 8), `docs/dev/index.md` removed, `AGENTS.md`
+  - The page lists the follow-ups as text; no issues exist yet.
 - [ ] Phase 10 — archive `tapir-mail-module` and `tapir-mail-releases` (after deploy)
 - [ ] Phase 11 — delete this plan file (`plans/tapir_mail_integration_plan.md`)
 
