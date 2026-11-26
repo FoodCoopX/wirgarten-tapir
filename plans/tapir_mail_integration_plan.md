@@ -115,7 +115,7 @@ For each oddity, check whether it can be removed with reasonable effort now that
 - [x] **Iframe** (replaces "hash syncing by polling"): dropped. The UI renders in Tapir's layout, `TapirMailView` and `tapir_mail_iframe.html` are gone, the editor page grid uses `minmax(0, …)` columns, and the sidebar marks a link as active for its subpages too (`is_path_in_section`). Old `/mailing/#/…` bookmarks are not redirected.
 - [x] **`beforeunload` guard in the wrapper**: moved into the mail UI as `usePreventUnload`, used by both editor pages.
 - [x] **Dead `NEW_TOKEN` message handler** in `App.tsx`: removed.
-- **CSRF / `credentials: "include"` handling in `useApi.ts` / `requests.ts`**: align with how `src_frontend` calls the API, if the shared client makes it redundant.
+- [x] **Duplicate `getCookie` and `credentials: "include"` in `useApi.ts`**: `useApi` uses `utils/cookies.ts`; `credentials: "include"` is dropped (same origin).
 - **Mail-specific UI components that duplicate `src_frontend/components`** (`TapirButton`, pagination, modals): reuse is blocked by the React version, so only list them.
 - **Settings only the mail module reads**: drop those Tapir never changes from their defaults.
 - [x] **`TAPIR_MAIL_PATH` is effectively fixed**: replaced by the constant `MAIL_URL_PREFIX` in `tapir/mail/config.py`; changing it requires regenerating the schema and client.
