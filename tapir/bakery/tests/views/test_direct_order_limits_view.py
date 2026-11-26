@@ -25,7 +25,7 @@ class TestDirectOrderLimitsView(TapirIntegrationTest):
         self.url = reverse("bakery:direct-order-limits")
         self.client.force_login(MemberFactory.create(is_superuser=True))
 
-    def test_get_returnsTheBreadsAndGroupsOfTheDay(self):
+    def test_get_default_returnsTheBreadsAndGroupsOfTheDay(self):
         group = BreadGroupFactory.create(name="Teig1")
         bread_a = BreadFactory.create(
             name="Brot A", group=group, max_pieces=40, min_remaining_pieces=0
@@ -76,7 +76,7 @@ class TestDirectOrderLimitsView(TapirIntegrationTest):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_get_plainMember_isForbidden(self):
+    def test_get_loggedInAsNormalMember_returns403(self):
         self.client.force_login(MemberFactory.create())
 
         response = self.client.get(

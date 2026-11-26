@@ -371,7 +371,7 @@ export const DirectOrderLimitsModal: React.FC<DirectOrderLimitsModalProps> = ({
 
       <Modal.Footer>
         <TapirButton
-          variant="secondary"
+          variant="outline-secondary"
           text="Abbrechen"
           icon="close"
           onClick={onClose}

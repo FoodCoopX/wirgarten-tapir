@@ -1,4 +1,5 @@
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
 from drf_spectacular.utils import (
     OpenApiParameter,
     OpenApiResponse,
@@ -39,6 +40,7 @@ from tapir.bakery.serializers import (
 from tapir.bakery.services.bread_choice_deadline_service import (
     BreadChoiceDeadlineService,
 )
+from tapir.bakery.services.copy_week_validator import CopyWeekValidator
 from tapir.bakery.services.direct_order_limit_service import (
     DirectOrderLimitService,
 )
@@ -775,6 +777,18 @@ class CopyWeekSettingsView(APIView):
         serializer = CopyWeekSettingsRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
+
+        try:
+            CopyWeekValidator.validate(
+                source_year=data["source_year"],
+                source_week=data["source_week"],
+                target_year=data["target_year"],
+                target_week=data["target_week"],
+            )
+        except ValidationError as error:
+            return Response(
+                {"error": error.message}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         result = WeeklyPlanService.copy_week(
             source_year=data["source_year"],

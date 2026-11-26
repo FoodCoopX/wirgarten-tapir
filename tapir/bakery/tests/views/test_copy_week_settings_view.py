@@ -2,6 +2,7 @@ from django.urls import reverse
 from rest_framework import status
 
 from tapir.bakery.models import AvailableBreadsForDeliveryDay
+from tapir.bakery.services.copy_week_validator import CopyWeekValidator
 from tapir.bakery.tests.factories import (
     AvailableBreadsForDeliveryDayFactory,
     BreadFactory,
@@ -39,7 +40,7 @@ class TestCopyWeekSettingsView(TapirIntegrationTest):
         }
         return self.client.post(self.url, data, content_type="application/json")
 
-    def test_get_listsTheEarlierWeeks(self):
+    def test_get_default_listsTheEarlierWeeks(self):
         response = self.client.get(self.url, {"year": FUTURE_YEAR, "delivery_week": 2})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -48,7 +49,7 @@ class TestCopyWeekSettingsView(TapirIntegrationTest):
             [{"year": FUTURE_YEAR, "delivery_week": 1, "bread_count": 1}],
         )
 
-    def test_post_copiesTheWeek(self):
+    def test_post_default_copiesTheWeek(self):
         response = self._post()
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -79,6 +80,10 @@ class TestCopyWeekSettingsView(TapirIntegrationTest):
                 response = self._post(source_week=source_week)
 
                 self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+                self.assertEqual(
+                    response.data["error"],
+                    CopyWeekValidator.SOURCE_NOT_BEFORE_TARGET,
+                )
 
     def test_post_weekNotInTheYear_returns400(self):
         # 2027 has 52 ISO weeks.
@@ -88,13 +93,16 @@ class TestCopyWeekSettingsView(TapirIntegrationTest):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_plainMember_isForbidden(self):
+    def test_get_loggedInAsNormalMember_returns403(self):
         self.client.force_login(MemberFactory.create())
 
-        get_response = self.client.get(
-            self.url, {"year": FUTURE_YEAR, "delivery_week": 2}
-        )
-        post_response = self._post()
+        response = self.client.get(self.url, {"year": FUTURE_YEAR, "delivery_week": 2})
 
-        self.assertEqual(get_response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(post_response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_post_loggedInAsNormalMember_returns403(self):
+        self.client.force_login(MemberFactory.create())
+
+        response = self._post()
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

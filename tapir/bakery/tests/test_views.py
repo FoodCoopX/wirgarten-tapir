@@ -65,7 +65,7 @@ class TestAvailableBreadsForDeliveryListViewGet(TapirIntegrationTest):
         self.assertEqual(response.data["delivery_week"], WEEK)
         self.assertEqual(response.data["delivery_day"], DAY)
 
-    def test_get_saysWhetherTheDayIsOver(self):
+    def test_get_default_saysWhetherTheDayIsOver(self):
         self.client.force_login(MemberFactory.create(is_superuser=True))
 
         for year, is_over in ((2020, True), (2099, False)):

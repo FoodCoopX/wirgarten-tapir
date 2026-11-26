@@ -1,125 +1,23 @@
-import datetime
-
 from tapir.bakery.models import (
     AvailableBreadsForDeliveryDay,
     BreadSpecificsPerDeliveryDay,
 )
-from tapir.bakery.services.weekly_plan_service import (
-    DeliveryDayIsOver,
-    WeeklyPlanService,
-)
+from tapir.bakery.services.weekly_plan_service import WeeklyPlanService
 from tapir.bakery.tests.factories import (
-    AvailableBreadsForDeliveryDayFactory,
-    BreadDeliveryFactory,
     BreadFactory,
     BreadSpecificsPerDeliveryDayFactory,
 )
-from tapir.pickup_locations.tests.factories import (
-    create_pickup_location_with_opening_times,
+from tapir.bakery.tests.services.weekly_plan_service.weekly_plan_service_test_case import (
+    SOURCE_WEEK,
+    TARGET_WEEK,
+    YEAR,
+    WeeklyPlanServiceTestCase,
+    bake,
+    plan,
 )
-from tapir.wirgarten.parameters import ParameterDefinitions
-from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
-
-YEAR = 2026
-FROZEN_DATE = datetime.date(2026, 3, 14)  # Saturday, week 11
-SOURCE_WEEK = 10
-TARGET_WEEK = 12
 
 
-def bake(bread, week, day, year=YEAR):
-    AvailableBreadsForDeliveryDayFactory.create(
-        year=year, delivery_week=week, delivery_day=day, bread=bread
-    )
-
-
-def plan(week, year=YEAR):
-    return set(
-        AvailableBreadsForDeliveryDay.objects.filter(
-            year=year, delivery_week=week
-        ).values_list("delivery_day", "bread__name")
-    )
-
-
-class WeeklyPlanTestCase(TapirIntegrationTest):
-    @classmethod
-    def setUpTestData(cls):
-        ParameterDefinitions().import_definitions(bulk_create=True)
-
-    def setUp(self):
-        super().setUp()
-        mock_timezone(self, datetime.datetime.combine(FROZEN_DATE, datetime.time(12)))
-        self.roggen = BreadFactory.create(name="Roggen")
-        self.dinkel = BreadFactory.create(name="Dinkel")
-        self.kuerbis = BreadFactory.create(name="Kürbis")
-
-    def _choice(self, bread, week, day):
-        return BreadDeliveryFactory.create(
-            year=YEAR,
-            delivery_week=week,
-            pickup_location=create_pickup_location_with_opening_times(open_days=[day]),
-            bread=bread,
-        )
-
-
-class TestSetBreadBaked(WeeklyPlanTestCase):
-    def _set(self, bread, is_baked, dry_run=False, week=TARGET_WEEK, day=4):
-        return WeeklyPlanService.set_bread_baked(
-            bread_id=bread.id,
-            year=YEAR,
-            delivery_week=week,
-            delivery_day=day,
-            is_baked=is_baked,
-            cache={},
-            dry_run=dry_run,
-        )
-
-    def test_switchingOn_bakesTheBread(self):
-        result = self._set(self.roggen, is_baked=True)
-
-        self.assertTrue(result.created)
-        self.assertEqual(plan(TARGET_WEEK), {(4, "Roggen")})
-
-    def test_switchingOff_clearsTheChoicesOfThatDay(self):
-        bake(self.roggen, TARGET_WEEK, day=4)
-        choice = self._choice(self.roggen, TARGET_WEEK, day=4)
-
-        result = self._set(self.roggen, is_baked=False)
-
-        self.assertTrue(result.deleted)
-        self.assertEqual(result.cleared_choices, 1)
-        self.assertEqual(plan(TARGET_WEEK), set())
-        choice.refresh_from_db()
-        self.assertIsNone(choice.bread_id)
-
-    def test_dayThatIsOver_isRefused(self):
-        # Tuesday of the frozen week 11 is over.
-        bake(self.roggen, 11, day=1)
-
-        for is_baked in (True, False):
-            with self.subTest(is_baked=is_baked):
-                with self.assertRaises(DeliveryDayIsOver):
-                    self._set(
-                        self.dinkel if is_baked else self.roggen,
-                        is_baked,
-                        week=11,
-                        day=1,
-                    )
-
-        self.assertEqual(plan(11), {(1, "Roggen")})
-
-    def test_switchingOff_dryRun_countsAndChangesNothing(self):
-        bake(self.roggen, TARGET_WEEK, day=4)
-        choice = self._choice(self.roggen, TARGET_WEEK, day=4)
-
-        result = self._set(self.roggen, is_baked=False, dry_run=True)
-
-        self.assertEqual(result.cleared_choices, 1)
-        self.assertEqual(plan(TARGET_WEEK), {(4, "Roggen")})
-        choice.refresh_from_db()
-        self.assertEqual(choice.bread_id, self.roggen.id)
-
-
-class TestCopyWeek(WeeklyPlanTestCase):
+class TestCopyWeek(WeeklyPlanServiceTestCase):
     def _copy(self, target_week=TARGET_WEEK, dry_run=False):
         return WeeklyPlanService.copy_week(
             source_year=YEAR,
@@ -130,7 +28,7 @@ class TestCopyWeek(WeeklyPlanTestCase):
             dry_run=dry_run,
         )
 
-    def test_copy_replacesTheBreadsOfEachDay(self):
+    def test_copyWeek_default_replacesTheBreadsOfEachDay(self):
         bake(self.roggen, SOURCE_WEEK, day=1)
         bake(self.dinkel, SOURCE_WEEK, day=1)
         bake(self.roggen, SOURCE_WEEK, day=4)
@@ -149,7 +47,7 @@ class TestCopyWeek(WeeklyPlanTestCase):
             plan(SOURCE_WEEK), {(1, "Roggen"), (1, "Dinkel"), (4, "Roggen")}
         )
 
-    def test_copy_dayOnlyInTheTargetWeek_isEmptied(self):
+    def test_copyWeek_dayOnlyInTheTargetWeek_emptiesTheDay(self):
         bake(self.roggen, SOURCE_WEEK, day=1)
         bake(self.dinkel, TARGET_WEEK, day=4)
 
@@ -158,7 +56,7 @@ class TestCopyWeek(WeeklyPlanTestCase):
         self.assertEqual(plan(TARGET_WEEK), {(1, "Roggen")})
         self.assertEqual(result.copied_days, [1, 4])
 
-    def test_copy_replacesTheDaySettings(self):
+    def test_copyWeek_default_replacesTheDaySettings(self):
         bake(self.roggen, SOURCE_WEEK, day=1)
         BreadSpecificsPerDeliveryDayFactory.create(
             year=YEAR,
@@ -203,7 +101,7 @@ class TestCopyWeek(WeeklyPlanTestCase):
             1,
         )
 
-    def test_copy_clearsChoicesOfBreadsNoLongerBakedThatDay(self):
+    def test_copyWeek_breadNoLongerBakedThatDay_clearsItsChoices(self):
         bake(self.roggen, SOURCE_WEEK, day=4)
         bake(self.roggen, TARGET_WEEK, day=4)
         bake(self.dinkel, TARGET_WEEK, day=4)
@@ -218,7 +116,7 @@ class TestCopyWeek(WeeklyPlanTestCase):
         self.assertEqual(kept.bread_id, self.roggen.id)
         self.assertIsNone(cleared.bread_id)
 
-    def test_copy_dryRun_countsAndChangesNothing(self):
+    def test_copyWeek_dryRun_countsAndChangesNothing(self):
         bake(self.roggen, SOURCE_WEEK, day=4)
         bake(self.dinkel, TARGET_WEEK, day=4)
         BreadSpecificsPerDeliveryDayFactory.create(
@@ -243,7 +141,7 @@ class TestCopyWeek(WeeklyPlanTestCase):
         choice.refresh_from_db()
         self.assertEqual(choice.bread_id, self.dinkel.id)
 
-    def test_copy_daysThatAreOver_keepTheirSettings(self):
+    def test_copyWeek_daysThatAreOver_keepTheirSettings(self):
         # Week 11 is the frozen week: only Sunday (6) is still ahead, the
         # frozen Saturday (5) counts as over.
         bake(self.roggen, SOURCE_WEEK, day=1)
@@ -268,7 +166,7 @@ class TestCopyWeek(WeeklyPlanTestCase):
         choice.refresh_from_db()
         self.assertEqual(choice.bread_id, self.kuerbis.id)
 
-    def test_copy_breadAlreadyBakedInTheTargetWeek_staysAsItIs(self):
+    def test_copyWeek_breadAlreadyBakedInTheTargetWeek_keepsItsEntry(self):
         bake(self.roggen, SOURCE_WEEK, day=4)
         bake(self.roggen, TARGET_WEEK, day=4)
         entry = AvailableBreadsForDeliveryDay.objects.get(
@@ -281,7 +179,7 @@ class TestCopyWeek(WeeklyPlanTestCase):
             AvailableBreadsForDeliveryDay.objects.filter(pk=entry.pk).exists()
         )
 
-    def test_copy_inactiveBreads_areLeftAlone(self):
+    def test_copyWeek_inactiveBreads_leavesThemAlone(self):
         inactive = BreadFactory.create(name="Alt", is_active=False)
         bake(self.roggen, SOURCE_WEEK, day=4)
         bake(inactive, SOURCE_WEEK, day=4)
@@ -302,30 +200,4 @@ class TestCopyWeek(WeeklyPlanTestCase):
             BreadSpecificsPerDeliveryDay.objects.filter(
                 delivery_week=TARGET_WEEK, bread=inactive
             ).exists()
-        )
-
-
-class TestGetSourceWeeks(TapirIntegrationTest):
-    @classmethod
-    def setUpTestData(cls):
-        ParameterDefinitions().import_definitions(bulk_create=True)
-
-    def test_getSourceWeeks_earlierWeeksWithActiveBreads_latestFirst(self):
-        roggen = BreadFactory.create(name="Roggen")
-        dinkel = BreadFactory.create(name="Dinkel")
-        inactive = BreadFactory.create(name="Alt", is_active=False)
-        bake(roggen, 52, day=1, year=2025)
-        bake(roggen, 9, day=1)
-        bake(roggen, 10, day=1)
-        bake(roggen, 10, day=4)
-        bake(dinkel, 10, day=4)
-        bake(inactive, 11, day=1)
-        bake(roggen, 12, day=1)
-        bake(roggen, 13, day=1)
-
-        sources = WeeklyPlanService.get_source_weeks(2026, 12, cache={})
-
-        self.assertEqual(
-            [(s.year, s.delivery_week, s.bread_count) for s in sources],
-            [(2026, 10, 2), (2026, 9, 1), (2025, 52, 1)],
         )

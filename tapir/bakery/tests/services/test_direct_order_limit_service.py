@@ -59,7 +59,7 @@ class TestDirectOrderLimitService(TapirIntegrationTest):
             year=YEAR, delivery_week=WEEK, delivery_day=DAY, cache={}, **kwargs
         )
 
-    def test_limit_isThePercentageOfTheCapacityLessMinRest(self):
+    def test_getLimitsForDay_default_limitIsThePercentageOfTheCapacityLessMinRest(self):
         # The example of the user story: 80 % of 60 less 10 are 40.
         bread = self._bread(
             max_pieces=60, min_remaining_pieces=10, max_direct_order_percent=80
@@ -71,22 +71,22 @@ class TestDirectOrderLimitService(TapirIntegrationTest):
         self.assertEqual(limit.total_capacity_source, CAPACITY_SOURCE_BREAD_MAX)
         self.assertEqual(limit.limit, 40)
 
-    def test_limit_isRoundedDown(self):
+    def test_getLimitsForDay_fractionalLimit_roundsDown(self):
         bread = self._bread(max_pieces=10, max_direct_order_percent=33)
 
         self.assertEqual(self._limits().breads[bread.id].limit, 3)
 
-    def test_limit_withoutAnySetting_isEverythingButMinRest(self):
+    def test_getLimitsForDay_withoutAnySetting_limitIsEverythingButMinRest(self):
         bread = self._bread(max_pieces=20, min_remaining_pieces=5)
 
         self.assertEqual(self._limits().breads[bread.id].limit, 15)
 
-    def test_limit_minRestAboveTheCapacity_isZero(self):
+    def test_getLimitsForDay_minRestAboveTheCapacity_limitIsZero(self):
         bread = self._bread(max_pieces=5, min_remaining_pieces=8)
 
         self.assertEqual(self._limits().breads[bread.id].limit, 0)
 
-    def test_limit_withoutMax_isUnlimited(self):
+    def test_getLimitsForDay_withoutMax_limitIsUnlimited(self):
         bread = self._bread(max_pieces=None)
         self._order(bread)
 
@@ -95,7 +95,7 @@ class TestDirectOrderLimitService(TapirIntegrationTest):
         self.assertIsNone(limits.breads[bread.id].limit)
         self.assertIsNone(limits.remaining(bread.id))
 
-    def test_limit_dayPercentageOverridesTheBreads(self):
+    def test_getLimitsForDay_dayPercentage_overridesTheBreads(self):
         bread = self._bread(max_pieces=10, max_direct_order_percent=80)
         self._day_settings(bread, max_direct_order_percent=50)
 
@@ -105,7 +105,7 @@ class TestDirectOrderLimitService(TapirIntegrationTest):
         self.assertEqual(limit.default_percent, 80)
         self.assertEqual(limit.limit, 5)
 
-    def test_limit_dayMaxAndMinRestOverrideTheBreads(self):
+    def test_getLimitsForDay_dayMaxAndMinRest_overrideTheBreads(self):
         bread = self._bread(max_pieces=10, min_remaining_pieces=2)
         self._day_settings(bread, max_pieces=30, min_remaining_pieces=10)
 
@@ -114,7 +114,7 @@ class TestDirectOrderLimitService(TapirIntegrationTest):
         self.assertEqual(limit.total_capacity_source, CAPACITY_SOURCE_DAY_MAX)
         self.assertEqual(limit.limit, 20)
 
-    def test_limit_fixedPiecesOverrideMax(self):
+    def test_getLimitsForDay_fixedPieces_overrideMax(self):
         bread = self._bread(max_pieces=10)
         self._day_settings(bread, max_pieces=30, fixed_pieces=12)
 
@@ -123,7 +123,7 @@ class TestDirectOrderLimitService(TapirIntegrationTest):
         self.assertEqual(limit.total_capacity, 12)
         self.assertEqual(limit.total_capacity_source, CAPACITY_SOURCE_FIXED)
 
-    def test_limit_zeroOnTheDay_overridesTheBreadsValues(self):
+    def test_getLimitsForDay_zeroOnTheDay_overridesTheBreadsValues(self):
         fixed_zero = self._bread(name="Brot A", max_pieces=10)
         self._day_settings(fixed_zero, fixed_pieces=0)
         percent_zero = self._bread(name="Brot B", max_pieces=10)
@@ -151,7 +151,7 @@ class TestDirectOrderLimitService(TapirIntegrationTest):
         self.assertEqual(limits.breads[bread.id].ordered, 3)
         self.assertEqual(limits.remaining(bread.id), 0)
 
-    def test_breads_notBakedThatDayOrInactive_areLeftOut(self):
+    def test_getLimitsForDay_breadNotBakedThatDayOrInactive_leavesItOut(self):
         other_day = BreadFactory.create(name="Dinkelbrot")
         offer_bread_at_pickup_location(
             other_day,
@@ -167,7 +167,9 @@ class TestDirectOrderLimitService(TapirIntegrationTest):
         self.assertNotIn(inactive.id, limits.breads)
         self.assertEqual(limits.remaining(inactive.id), 0)
 
-    def test_ordered_countsAllStationsOfTheDayOnly(self):
+    def test_getLimitsForDay_ordersAtSeveralStations_countsAllStationsOfTheDayOnly(
+        self,
+    ):
         bread = self._bread(max_pieces=10)
         self._order(bread)
         self._order(bread, create_pickup_location_with_opening_times([DAY]))
@@ -178,7 +180,7 @@ class TestDirectOrderLimitService(TapirIntegrationTest):
         self.assertEqual(limits.breads[bread.id].ordered, 2)
         self.assertEqual(limits.remaining(bread.id), 8)
 
-    def test_ordered_leavesOutJokeredSlotsAndTheExcludedDelivery(self):
+    def test_getLimitsForDay_jokeredSlotOrExcludedDelivery_leavesItOutOfTheOrders(self):
         bread = self._bread(max_pieces=10)
         mine = self._order(bread)
         self._order(bread, joker_taken=True)
@@ -187,7 +189,7 @@ class TestDirectOrderLimitService(TapirIntegrationTest):
 
         self.assertEqual(limits.breads[bread.id].ordered, 0)
 
-    def test_group_breadsUseTheGroupMaxAndTheHighestPercentage(self):
+    def test_getLimitsForDay_breadsInAGroup_useTheGroupMaxAndTheHighestPercentage(self):
         group = BreadGroupFactory.create(name="Teig1")
         bread_a = self._bread(
             name="Brot A", group=group, max_pieces=48, max_direct_order_percent=80
@@ -209,7 +211,9 @@ class TestDirectOrderLimitService(TapirIntegrationTest):
         self.assertEqual(group_limit.percent, 80)
         self.assertEqual(group_limit.limit, 38)
 
-    def test_group_remainingIsTheSmallerOfTheBreadsAndTheGroups(self):
+    def test_getLimitsForDay_breadInAGroup_remainingIsTheSmallerOfTheBreadsAndTheGroups(
+        self,
+    ):
         group = BreadGroupFactory.create(name="Teig1")
         bread_a = self._bread(
             name="Brot A", group=group, max_pieces=48, max_direct_order_percent=80
@@ -226,7 +230,7 @@ class TestDirectOrderLimitService(TapirIntegrationTest):
         self.assertEqual(limits.remaining(bread_b.id), 8)
         self.assertEqual(limits.remaining(bread_a.id), 8)
 
-    def test_group_minRestOfAllItsBreadsIsSubtracted(self):
+    def test_getLimitsForDay_breadsInAGroup_subtractsTheMinRestOfAllOfThem(self):
         group = BreadGroupFactory.create(name="Teig1")
         self._bread(name="Brot A", group=group, max_pieces=40, min_remaining_pieces=5)
         self._bread(name="Brot B", group=group, max_pieces=40, min_remaining_pieces=3)
@@ -236,7 +240,9 @@ class TestDirectOrderLimitService(TapirIntegrationTest):
         self.assertEqual(group_limit.min_remaining, 8)
         self.assertEqual(group_limit.limit, 32)
 
-    def test_group_breadWithDayMax_usesItButStillCountsTowardTheGroup(self):
+    def test_getLimitsForDay_groupBreadWithDayMax_usesItButStillCountsTowardTheGroup(
+        self,
+    ):
         group = BreadGroupFactory.create(name="Teig1")
         bread_a = self._bread(name="Brot A", group=group, max_pieces=10)
         bread_b = self._bread(name="Brot B", group=group, max_pieces=10)
@@ -252,7 +258,9 @@ class TestDirectOrderLimitService(TapirIntegrationTest):
         self.assertEqual(limits.remaining(bread_a.id), 0)
         self.assertEqual(limits.remaining(bread_b.id), 6)
 
-    def test_group_dayPercentageAndMinRestOfItsBreadsCount(self):
+    def test_getLimitsForDay_groupBreadsWithDaySettings_countTheirDayPercentageAndMinRest(
+        self,
+    ):
         group = BreadGroupFactory.create(name="Teig1")
         bread_a = self._bread(
             name="Brot A", group=group, max_pieces=40, max_direct_order_percent=50
@@ -269,7 +277,7 @@ class TestDirectOrderLimitService(TapirIntegrationTest):
         self.assertEqual(group_limit.min_remaining, 8)
         self.assertEqual(group_limit.limit, 24)
 
-    def test_group_breadWithFixedPieces_takesItsAmountOffTheGroup(self):
+    def test_getLimitsForDay_groupBreadWithFixedPieces_takesItsAmountOffTheGroup(self):
         group = BreadGroupFactory.create(name="Teig1")
         fixed = self._bread(name="Brot A", group=group, max_pieces=12)
         other = self._bread(name="Brot B", group=group, max_pieces=10)
@@ -290,7 +298,9 @@ class TestDirectOrderLimitService(TapirIntegrationTest):
         self.assertEqual(limits.breads[other.id].total_capacity, 6)
         self.assertEqual(limits.remaining(other.id), 6)
 
-    def test_group_ordersOfTheFixedBread_doNotCountAgainstTheOthers(self):
+    def test_getLimitsForDay_ordersOfTheGroupsFixedBread_doNotCountAgainstTheOthers(
+        self,
+    ):
         group = BreadGroupFactory.create(name="Teig1")
         fixed = self._bread(name="Brot A", group=group, max_pieces=10)
         other = self._bread(name="Brot B", group=group, max_pieces=10)
@@ -304,7 +314,7 @@ class TestDirectOrderLimitService(TapirIntegrationTest):
         self.assertEqual(limits.groups[group.id].ordered, 0)
         self.assertEqual(limits.remaining(other.id), 4)
 
-    def test_group_breadWithFixedPieces_isNotBoundByTheGroupsLimit(self):
+    def test_getLimitsForDay_groupBreadWithFixedPieces_isNotBoundByTheGroupsLimit(self):
         # The group has 12 - 10 = 2 left for Brot B; Brot A's 10 are baked
         # anyway, so all of them stay orderable once B's 2 are taken.
         group = BreadGroupFactory.create(name="Teig1")
@@ -319,7 +329,7 @@ class TestDirectOrderLimitService(TapirIntegrationTest):
         self.assertEqual(limits.remaining(other.id), 0)
         self.assertEqual(limits.remaining(fixed.id), 10)
 
-    def test_group_dayMinimumOfAnotherBread_isHeldBack(self):
+    def test_getLimitsForDay_dayMinimumOfAnotherGroupBread_isHeldBack(self):
         # Brot A is baked at least 10 times, so of the group's 20 only 10
         # are left for Brot B, as in the solver.
         group = BreadGroupFactory.create(name="Teig1")
@@ -332,7 +342,9 @@ class TestDirectOrderLimitService(TapirIntegrationTest):
         self.assertEqual(limits.groups[group.id].open_min_pieces, 10)
         self.assertEqual(limits.remaining(bread_b.id), 10)
 
-    def test_group_ordersWithinABreadsDayMinimum_takeNothingFromTheOthers(self):
+    def test_getLimitsForDay_ordersWithinAGroupBreadsDayMinimum_takeNothingFromTheOthers(
+        self,
+    ):
         group = BreadGroupFactory.create(name="Teig1")
         bread_a = self._bread(name="Brot A", group=group, max_pieces=20)
         bread_b = self._bread(name="Brot B", group=group, max_pieces=20)
@@ -350,7 +362,7 @@ class TestDirectOrderLimitService(TapirIntegrationTest):
         self.assertEqual(limits.groups[group.id].open_min_pieces, 0)
         self.assertEqual(limits.remaining(bread_b.id), 8)
 
-    def test_group_openDayMinimum_doesNotBlockItsOwnBread(self):
+    def test_getLimitsForDay_openDayMinimumInAGroup_doesNotBlockItsOwnBread(self):
         # The 15 of Brot A are baked anyway, so members may order all of them
         # once Brot B has taken the rest of the group's 20.
         group = BreadGroupFactory.create(name="Teig1")
@@ -365,7 +377,7 @@ class TestDirectOrderLimitService(TapirIntegrationTest):
         self.assertEqual(limits.remaining(bread_b.id), 0)
         self.assertEqual(limits.remaining(bread_a.id), 15)
 
-    def test_group_onlyBreadsWithFixedPieces_hasNoGroupLimit(self):
+    def test_getLimitsForDay_groupOfOnlyFixedBreads_hasNoGroupLimit(self):
         group = BreadGroupFactory.create(name="Teig1")
         bread_a = self._bread(name="Brot A", group=group, max_pieces=10)
         bread_b = self._bread(name="Brot B", group=group, max_pieces=10)
@@ -377,7 +389,7 @@ class TestDirectOrderLimitService(TapirIntegrationTest):
         self.assertEqual(limits.groups, {})
         self.assertEqual(limits.remaining(bread_b.id), 5)
 
-    def test_group_breadAloneInItsGroupThatDay_usesItsOwnMax(self):
+    def test_getLimitsForDay_breadAloneInItsGroupThatDay_usesItsOwnMax(self):
         group = BreadGroupFactory.create(name="Teig1")
         bread = self._bread(group=group, max_pieces=12)
         BreadFactory.create(name="Dinkelbrot", group=group, max_pieces=5)
@@ -390,7 +402,7 @@ class TestDirectOrderLimitService(TapirIntegrationTest):
         self.assertEqual(limits.breads[bread.id].limit, 12)
         self.assertEqual(limits.groups, {})
 
-    def test_group_withoutAnyMax_isUnlimited(self):
+    def test_getLimitsForDay_groupWithoutAnyMax_isUnlimited(self):
         group = BreadGroupFactory.create(name="Teig1")
         bread = self._bread(name="Brot A", group=group, max_pieces=None)
         self._bread(name="Brot B", group=group, max_pieces=None)

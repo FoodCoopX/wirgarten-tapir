@@ -456,7 +456,7 @@ class TestCapacities:
         roggen_at_loc = result.plan.distribution.get((1, 1), 0)
         assert roggen_at_loc <= 3
 
-    def test_choiceOfABreadNotBakedThatDay_isOnlyAWarning(self):
+    def test_solveBreadPlanning_choiceOfABreadNotBakedThatDay_onlyWarns(self):
         # E.g. a bread deactivated after members chose it: it has no capacity
         # entry, which must not read as an over-subscribed one.
         breads = [make_bread(bread_id=1, name="Roggen", pieces_per_layer=[10])]
@@ -2421,7 +2421,9 @@ class TestGroupDiagnostics:
             for i, (name, (min_pieces, max_pieces)) in enumerate(zip("AB", limits))
         ]
 
-    def test_ordersAndAnotherBreadsDayMinimum_aboveTheGroupMax_areNamed(self):
+    def test_diagnoseInfeasibility_ordersAndAnotherBreadsDayMinimumAboveTheGroupMax_namesBoth(
+        self,
+    ):
         # A is baked at least 12 times, so of the group's 24 only 12 are left
         # for the 18 members who chose B.
         bread_a, bread_b = self._dough([(None, 24), (None, 24)])

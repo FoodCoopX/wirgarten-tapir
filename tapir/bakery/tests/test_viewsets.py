@@ -1565,7 +1565,7 @@ class TestBreadChoiceCapacityGuard(TapirIntegrationTest):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("nicht verfügbar", response.data["error"])
 
-    def test_patch_locksTheDaysEntriesOfTheGroupOnly(self):
+    def test_patch_breadOfAGroup_locksOnlyTheGroupsEntriesOfThatDay(self):
         other = self._group_of_two_with_max(10)
         delivery = self._delivery()
 

@@ -421,13 +421,6 @@ class CopyWeekSettingsRequestSerializer(serializers.Serializer):
     def validate(self, data):
         validate_iso_week(data, "source_year", "source_week")
         validate_iso_week(data, "target_year", "target_week")
-        if (data["source_year"], data["source_week"]) >= (
-            data["target_year"],
-            data["target_week"],
-        ):
-            raise serializers.ValidationError(
-                "Die Vorlage muss eine frühere Woche sein."
-            )
         return data
 
 
