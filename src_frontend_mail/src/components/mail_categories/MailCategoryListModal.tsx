@@ -74,7 +74,7 @@ const MailCategoryListModal: React.FC<MailCategoryListModalProps> = ({
 
   function onDelete() {
     if (categorySelectedForDeletion === undefined) {
-      alert("Keine Kategorie ausgewählt");
+      showAlert("Keine Kategorie ausgewählt", "danger");
       return;
     }
 

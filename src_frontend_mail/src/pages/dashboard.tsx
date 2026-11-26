@@ -14,12 +14,14 @@ import DispatchesWithErrorsModal from "../components/DispatchesWithErrorsModal";
 import MailCategoryListModal from "../components/mail_categories/MailCategoryListModal";
 import StaticSegmentsListModal from "../components/static_segments/StaticSegmentsListModal";
 import TapirButton from "../components/TapirButton";
+import { useAlert } from "../contexts/alerts";
 import { useApi } from "../hooks/useApi";
 import Paths from "../routing";
 import MissingTriggersModal from "./missing_triggers/MissingTriggersModal";
 
 function Dashboard() {
   const api = useApi(TapirmailApi);
+  const showAlert = useAlert();
   const [dispatchesWithErrorModalOpen, setDispatchesWithErrorModalOpen] =
     useState(false);
   const [staticSegmentListModalOpen, setStaticSegmentListModalOpen] =
@@ -46,7 +48,7 @@ function Dashboard() {
       .then(setMissingTriggers)
       .catch((error) => {
         console.log(error);
-        alert("Fehler beim laden der fehlende triggers");
+        showAlert("Fehler beim Laden der fehlenden Trigger", "danger");
       });
   }
 

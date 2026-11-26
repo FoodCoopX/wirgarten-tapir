@@ -4,6 +4,7 @@ import { Modal } from "react-bootstrap";
 import { MissingTrigger, TapirmailApi } from "tapir-api-client";
 import { createEmptyMjml } from "../../components/editor";
 import TapirButton from "../../components/TapirButton";
+import { useAlert } from "../../contexts/alerts";
 import { useApi } from "../../hooks/useApi";
 
 interface MissingTriggersModalProps {
@@ -20,6 +21,7 @@ const MissingTriggersModal: React.FC<MissingTriggersModalProps> = ({
   reloadData,
 }) => {
   const api = useApi(TapirmailApi);
+  const showAlert = useAlert();
   const [loading, setLoading] = useState(false);
 
   function onCreate(key: string) {
@@ -35,7 +37,7 @@ const MissingTriggersModal: React.FC<MissingTriggersModalProps> = ({
       .then(reloadData)
       .catch((error) => {
         console.error(error);
-        alert("Failed to create missing trigger");
+        showAlert("Fehler beim Erstellen des Mail-Entwurfs", "danger");
       })
       .finally(() => setLoading(false));
   }
