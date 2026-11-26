@@ -10,6 +10,9 @@ from tapir.utils.config import Organization
 from tapir.utils.services.test_data_generation.product_generator import (
     BREAD_PRODUCT_TYPE_NAME,
 )
+from tapir.utils.services.test_data_generation.vierlande_generator import (
+    VierlandeGenerator,
+)
 from tapir.wirgarten.models import (
     PickupLocation,
     PickupLocationCapability,
@@ -33,6 +36,8 @@ class PickupLocationGenerator:
                 cls.generate_pickup_locations_for_biotop()
             case Organization.VEREIN:
                 cls.generate_pickup_locations_for_wirgarten()
+            case Organization.VIERLANDE:
+                VierlandeGenerator.generate_pickup_locations()
             case Organization.L2G:
                 cls.generate_pickup_locations_for_l2g()
             case Organization.MM:
