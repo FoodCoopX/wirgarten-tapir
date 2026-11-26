@@ -121,6 +121,7 @@ For each oddity, check whether it can be removed with reasonable effort now that
 - [x] **`TAPIR_MAIL_PATH` is effectively fixed**: replaced by the constant `MAIL_URL_PREFIX` in `tapir/mail/config.py`; changing it requires regenerating the schema and client.
 - **Two `useApi` hooks**: the mail UI has its own copy of `src_frontend/hooks/useApi.ts`. Tapir's hook only uses `useMemo`, which works with React 18 too, so the mail UI could reuse it.
 - [x] **Dead CORS settings**: removed from `tapir/settings/base.py`; mail UI and Jasmin checked locally.
+- [x] **`STATIC_SEGMENTS` / `static_segments` command**: the command is removed; Tapir never set `STATIC_SEGMENTS`.
 - **Path-based permission middleware**: replace `TapirMailPermissionMiddleware` with permission classes on the mail views.
 - **`OnboardingTrigger` ID from the module path**: `tapir/wirgarten/triggers/onboarding_trigger.py` still derives its ID from `__name__`, like the mail triggers did. Moving that file would break stored triggers again.
 
