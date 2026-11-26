@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db import transaction
 from django.db.models import Count, QuerySet
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.decorators import method_decorator
@@ -24,9 +24,6 @@ from rest_framework.views import APIView
 
 from tapir.mail.config import MAIL_URL_PREFIX, TransactionalTriggerKeys
 from tapir.mail.forms import RegisterToMailCategoryForm, ExternalRecipientManagementForm
-from tapir.mail.permissions import HasEmailManagePermission
-from tapir.wirgarten.constants import Permission
-from tapir.wirgarten.utils import get_now
 from tapir.mail.models import (
     EmailConfiguration,
     EmailConfigurationDispatch,
@@ -41,6 +38,7 @@ from tapir.mail.models import (
     ExternalRecipient,
     ExternalRecipientConfirmation,
 )
+from tapir.mail.permissions import HasEmailManagePermission
 from tapir.mail.registries import get_mail_segment_definitions
 from tapir.mail.serializers import (
     BundledEmailConfigurationSerializer,
@@ -65,16 +63,16 @@ from tapir.mail.serializers import (
     PreviewResponseSerializer,
 )
 from tapir.mail.service.email import prepare_email
+from tapir.mail.service.email_dispatch import RetryEmailDispatch
+from tapir.mail.service.external_recipient_manager import ExternalRecipientManager
 from tapir.mail.service.layout import (
     BODY_PLACEHOLDER_SECTION_RE,
     BODY_TOKEN_RE,
     apply_layout,
     render_email_mjml,
 )
-from tapir.mail.service.mjml import mjml2html
-from tapir.mail.service.email_dispatch import RetryEmailDispatch
-from tapir.mail.service.external_recipient_manager import ExternalRecipientManager
 from tapir.mail.service.mail_content_validator import MailContentValidator
+from tapir.mail.service.mjml import mjml2html
 from tapir.mail.service.segment import (
     resolve_segments,
 )
@@ -85,6 +83,8 @@ from tapir.mail.triggers.transactional_trigger import (
     TransactionalTrigger,
     TransactionalTriggerData,
 )
+from tapir.wirgarten.constants import Permission
+from tapir.wirgarten.utils import get_now
 
 LOG = logging.getLogger(__name__)
 
@@ -1246,19 +1246,25 @@ class ConfirmationMailSentView(TemplateView):
 
 
 class ConfirmRegistrationToMailCategoryView(TemplateView):
-    template_name = "tapir_mail/confirmation_registration_complete.html"
-
-    def get_external_recipient_confirmation(self):
-        return get_object_or_404(
-            ExternalRecipientConfirmation, confirmation_secret=self.kwargs["secret"]
+    def setup(self, request, *args, **kwargs):
+        super().setup(request, *args, **kwargs)
+        self.external_recipient_confirmation = get_object_or_404(
+            ExternalRecipientConfirmation, confirmation_secret=kwargs["secret"]
         )
 
-    @transaction.atomic
-    def get(self, request, *args, **kwargs):
-        external_recipient_confirmation = self.get_external_recipient_confirmation()
-        if external_recipient_confirmation.confirmed_at is not None:
-            return super().get(request, *args, **kwargs)
+    def get_template_names(self):
+        if self.external_recipient_confirmation.confirmed_at is None:
+            return ["tapir_mail/confirm_registration.html"]
+        return ["tapir_mail/confirmation_registration_complete.html"]
 
+    @transaction.atomic
+    def post(self, request, *args, **kwargs):
+        if self.external_recipient_confirmation.confirmed_at is None:
+            self._confirm_registration()
+        return redirect(request.path)
+
+    def _confirm_registration(self):
+        external_recipient_confirmation = self.external_recipient_confirmation
         external_recipient_confirmation.confirmed_at = get_now(cache={})
         external_recipient_confirmation.save()
 
@@ -1287,12 +1293,10 @@ class ConfirmRegistrationToMailCategoryView(TemplateView):
             )
         )
 
-        return super().get(request, *args, **kwargs)
-
     def get_context_data(self, **kwargs):
         context_data = super().get_context_data(**kwargs)
         context_data["mail_category_name"] = (
-            self.get_external_recipient_confirmation().mail_category.name
+            self.external_recipient_confirmation.mail_category.name
         )
         return context_data
 

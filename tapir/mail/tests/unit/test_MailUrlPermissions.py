@@ -12,7 +12,6 @@ PUBLIC_URL_NAMES = {
     "category_registration_external_form",
     "confirmation_mail_sent",
     "user_confirms_registration",
-    "confirmation_registration_complete",
     "external_recipient_manager",
 }
 

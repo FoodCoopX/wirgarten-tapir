@@ -1,5 +1,4 @@
 from django.urls import include, path, re_path
-from django.views.generic.base import TemplateView
 from rest_framework import routers
 
 from tapir.mail import views
@@ -51,13 +50,6 @@ urlpatterns = [
         "external/confirm/<uuid:secret>",
         ConfirmRegistrationToMailCategoryView.as_view(),
         name="user_confirms_registration",
-    ),
-    path(
-        "external/confirmation_registration_complete",
-        TemplateView.as_view(
-            template_name="tapir_mail/confirmation_registration_complete.html"
-        ),
-        name="confirmation_registration_complete",
     ),
     path(
         "external/manage/<uuid:recipient_secret>",
