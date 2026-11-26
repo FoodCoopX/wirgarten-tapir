@@ -102,12 +102,21 @@ class SegmentAndFilterViewSet(viewsets.ViewSet):
                 static_segment_ids_additive=data["static_segment_ids_additive"],
                 static_segment_ids_subtractive=data["static_segment_ids_subtractive"],
                 mail_category_ids_additive=data["mail_category_ids_additive"],
+                cache={},
             )
             return Response(
                 {
                     "count": len(combined),
                     "recipients": [
-                        {"name": f"{r}", "email": r.email} for r in combined
+                        {
+                            "name": (
+                                f"{r.recipient} (zusätzliche Adresse)"
+                                if r.is_copy
+                                else f"{r.recipient}"
+                            ),
+                            "email": r.email,
+                        }
+                        for r in combined
                     ],
                 },
                 status=status.HTTP_200_OK,

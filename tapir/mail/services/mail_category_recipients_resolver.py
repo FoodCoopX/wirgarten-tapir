@@ -1,5 +1,6 @@
 from django.db.models import QuerySet
 
+from tapir.mail.addressed_recipient import AddressedRecipient
 from tapir.mail.exceptions import TapirMailException
 from tapir.mail.models import (
     MailCategory,
@@ -7,23 +8,29 @@ from tapir.mail.models import (
     InternalRecipientCategoryRegistration,
 )
 from tapir.mail.registries import get_mail_segments
+from tapir.wirgarten.models import Member
 
 
 class MailCategoryRecipientResolver:
     @classmethod
-    def resolve_recipients(cls, mail_category: MailCategory):
+    def resolve_recipients(
+        cls, mail_category: MailCategory
+    ) -> list[AddressedRecipient]:
         internal_recipients = cls.get_internal_segment(
             mail_category=mail_category,
         )
 
         external_recipients = mail_category.static_segment.recipients.all()
 
-        return list(internal_recipients) + list(external_recipients)
+        return [
+            AddressedRecipient.at_own_address(recipient)
+            for recipient in [*internal_recipients, *external_recipients]
+        ]
 
     @classmethod
-    def get_internal_segment(cls, mail_category: MailCategory) -> QuerySet | list:
+    def get_internal_segment(cls, mail_category: MailCategory) -> QuerySet[Member]:
         if mail_category.dynamic_segment_name == "":
-            return []
+            return Member.objects.none()
 
         segment = get_mail_segments()[mail_category.dynamic_segment_name]()
 

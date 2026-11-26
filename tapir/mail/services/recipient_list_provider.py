@@ -1,28 +1,14 @@
-from tapir.mail.models import EmailConfigurationDispatch, EmailConfigurationVersion
+from tapir.mail.addressed_recipient import AddressedRecipient
+from tapir.mail.models import EmailConfigurationDispatch
 from tapir.mail.services.segment import resolve_segments
 
 
 class RecipientListProvider:
-    @classmethod
-    def get_recipient_list_from_email_configuration_dispatch(
-        cls,
-        email_configuration_dispatch: EmailConfigurationDispatch,
-    ) -> list:
-        if email_configuration_dispatch.is_sent:
-            return [
-                dispatch.recipient
-                for dispatch in email_configuration_dispatch.emaildispatch_set.all()
-            ]
-
-        return cls.get_recipient_list_from_email_configuration_version(
-            version=email_configuration_dispatch.email_configuration_version,
-            override_recipients=email_configuration_dispatch.override_recipients,
-        )
-
     @staticmethod
-    def get_recipient_list_from_email_configuration_version(
-        version: EmailConfigurationVersion, override_recipients: list | None
-    ) -> list:
+    def get_recipient_list_from_email_configuration_dispatch(
+        email_configuration_dispatch: EmailConfigurationDispatch, cache: dict
+    ) -> list[AddressedRecipient]:
+        version = email_configuration_dispatch.email_configuration_version
         return resolve_segments(
             dynamic_segment_names_additive=version.dynamic_segments_additive,
             dynamic_segment_names_subtractive=version.dynamic_segments_subtractive,
@@ -35,5 +21,6 @@ class RecipientListProvider:
             mail_category_ids_additive=version.mail_categories_additive.values_list(
                 "id", flat=True
             ),
-            override_recipients=override_recipients,
+            override_recipients=email_configuration_dispatch.override_recipients,
+            cache=cache,
         )

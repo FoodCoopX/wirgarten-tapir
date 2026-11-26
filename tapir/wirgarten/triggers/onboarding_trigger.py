@@ -41,13 +41,22 @@ class OnboardingTrigger(Trigger[OnboardingTriggerData]):
         email_configuration_version: EmailConfigurationVersion,
         trigger_data: OnboardingTriggerData,
     ):
-        for recipient in resolve_segments(
+        cache = {}
+        addressed_recipients = resolve_segments(
             dynamic_segment_names_additive=email_configuration_version.dynamic_segments_additive,
             dynamic_segment_names_subtractive=email_configuration_version.dynamic_segments_subtractive,
             static_segment_ids_additive=email_configuration_version.static_segments_additive.all(),
             static_segment_ids_subtractive=email_configuration_version.static_segments_subtractive.all(),
             mail_category_ids_additive=email_configuration_version.mail_categories_additive.all(),
-        ):
+            cache=cache,
+        )
+        deduplicated_recipients = list(
+            dict.fromkeys(
+                addressed_recipient.recipient
+                for addressed_recipient in addressed_recipients
+            )
+        )
+        for recipient in deduplicated_recipients:
             cls._delete_unsent_config_dispatch(
                 version=email_configuration_version, recipient=recipient
             )
@@ -64,7 +73,7 @@ class OnboardingTrigger(Trigger[OnboardingTriggerData]):
                 version=email_configuration_version,
                 recipient=recipient,
                 trigger_data=trigger_data,
-                cache={},
+                cache=cache,
             )
 
     @classmethod

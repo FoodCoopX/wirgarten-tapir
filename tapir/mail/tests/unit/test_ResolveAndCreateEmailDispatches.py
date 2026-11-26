@@ -44,5 +44,11 @@ class TestResolveAndCreateEmailDispatches(TapirUnitTest):
 
         ResolveAndCreateEmailDispatches.resolve_and_create()
 
-        mock_create_dispatches.assert_called_with(mock_config)
+        self.assertEqual(10, mock_create_dispatches.call_count)
+        shared_cache = mock_create_dispatches.call_args_list[0].kwargs["cache"]
+        for call in mock_create_dispatches.call_args_list:
+            self.assertEqual(
+                {"config_dispatch": mock_config, "cache": shared_cache}, call.kwargs
+            )
+            self.assertIs(shared_cache, call.kwargs["cache"])
         mock_lock_instance.release.assert_called_once()

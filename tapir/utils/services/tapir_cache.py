@@ -48,6 +48,7 @@ from tapir.wirgarten.models import (
     TaxRate,
     MandateReference,
     Payment,
+    MemberExtraEmail,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import get_today
@@ -112,6 +113,23 @@ class TapirCache:
             cache, "all_solidarity_contributions_by_member_id", compute
         )
         return contributions_by_member_id.get(member_id, [])
+
+    @classmethod
+    def get_confirmed_member_extra_emails_for_member(
+        cls, member_id: str, cache: dict
+    ) -> list[MemberExtraEmail]:
+        def compute():
+            result = {}
+            for extra_email in MemberExtraEmail.objects.filter(
+                confirmed_on__isnull=False
+            ).order_by("email"):
+                result.setdefault(extra_email.member_id, []).append(extra_email)
+            return result
+
+        extra_emails_by_member_id = get_from_cache_or_compute(
+            cache, "confirmed_member_extra_emails_by_member_id", compute
+        )
+        return extra_emails_by_member_id.get(member_id, [])
 
     @classmethod
     def get_subscriptions_active_at_date(

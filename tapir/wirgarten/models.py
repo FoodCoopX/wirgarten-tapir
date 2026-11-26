@@ -23,13 +23,11 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 from tapir.accounts.models import TapirUser
 from tapir.accounts.services.email_normaliser import EmailNormaliser
-from tapir.configuration.parameter import get_parameter_value
 from tapir.core.models import TapirModel
 from tapir.log.models import LogEntry, UpdateModelLogEntry
 from tapir.subscriptions.config import NOTICE_PERIOD_UNIT_OPTIONS
 from tapir.utils.models import CountryField
 from tapir.wirgarten.constants import NO_DELIVERY, DeliveryCycle, OPTIONS_WEEKDAYS
-from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import format_currency, format_date, get_today
 
 PICKUP_LOCATION_START_DATE_HELP_TEXT = (
@@ -468,14 +466,6 @@ class Member(TapirUser):
 
     def __str__(self):
         return f"[{self.member_no or '---'}] {self.first_name} {self.last_name} ({self.email})"
-
-    def get_extra_recipients(self, cache: dict):
-        if not get_parameter_value(
-            ParameterKeys.ENABLE_EXTRA_MAIL_ADDRESSES, cache=cache
-        ):
-            return []
-
-        return list(self.memberextraemail_set.filter(confirmed_on__isnull=False))
 
 
 class MemberPickupLocation(TapirModel):

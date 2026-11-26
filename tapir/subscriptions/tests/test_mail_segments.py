@@ -37,11 +37,12 @@ class TestMailSegments(TapirIntegrationTest):
         MemberFactory.create()
 
         result = resolve_segments(
+            cache={},
             dynamic_segment_names_additive=[
                 SubscriptionsConfig._build_segment_name_subscription_with_product_type(
                     product_type
                 )
-            ]
+            ],
         )
 
         self.assertEqual([], result)
@@ -56,11 +57,12 @@ class TestMailSegments(TapirIntegrationTest):
         )
 
         result = resolve_segments(
+            cache={},
             dynamic_segment_names_additive=[
                 SubscriptionsConfig._build_segment_name_subscription_with_product_type(
                     product_type_1
                 )
-            ]
+            ],
         )
 
         self.assertEqual([], result)
@@ -77,11 +79,12 @@ class TestMailSegments(TapirIntegrationTest):
         )
 
         result = resolve_segments(
+            cache={},
             dynamic_segment_names_additive=[
                 SubscriptionsConfig._build_segment_name_subscription_with_product_type(
                     product_type
                 )
-            ]
+            ],
         )
 
         self.assertEqual([], result)
@@ -94,14 +97,15 @@ class TestMailSegments(TapirIntegrationTest):
         )
 
         result = resolve_segments(
+            cache={},
             dynamic_segment_names_additive=[
                 SubscriptionsConfig._build_segment_name_subscription_with_product_type(
                     product_type
                 )
-            ]
+            ],
         )
 
-        self.assertEqual([member], result)
+        self.assertEqual([member], [addressed.recipient for addressed in result])
 
     def test_subscriptionMailSegment_memberHasFutureSubscription_memberIncluded(self):
         product_type = ProductTypeFactory.create()
@@ -116,14 +120,15 @@ class TestMailSegments(TapirIntegrationTest):
         )
 
         result = resolve_segments(
+            cache={},
             dynamic_segment_names_additive=[
                 SubscriptionsConfig._build_segment_name_subscription_with_product_type(
                     product_type
                 )
-            ]
+            ],
         )
 
-        self.assertEqual([member], result)
+        self.assertEqual([member], [addressed.recipient for addressed in result])
 
     def test_deliveryThisWeekMailSegment_memberHasJokerThisWeek_onlyOtherMemberIncluded(
         self,
@@ -140,14 +145,17 @@ class TestMailSegments(TapirIntegrationTest):
         )
 
         result = resolve_segments(
+            cache={},
             dynamic_segment_names_additive=[
                 SubscriptionsConfig._build_segment_name_delivery_this_week_with_product_type(
                     product_type
                 )
-            ]
+            ],
         )
 
-        self.assertEqual([member_with_delivery], result)
+        self.assertEqual(
+            [member_with_delivery], [addressed.recipient for addressed in result]
+        )
 
     def test_deliveryNextWeekMailSegment_memberHasJokerThisWeek_memberIncluded(self):
         product_type = ProductTypeFactory.create(delivery_cycle=WEEKLY[0])
@@ -160,14 +168,15 @@ class TestMailSegments(TapirIntegrationTest):
         )
 
         result = resolve_segments(
+            cache={},
             dynamic_segment_names_additive=[
                 SubscriptionsConfig._build_segment_name_delivery_next_week_with_product_type(
                     product_type
                 )
-            ]
+            ],
         )
 
-        self.assertEqual([member], result)
+        self.assertEqual([member], [addressed.recipient for addressed in result])
 
     def test_deliveryThisWeekForAllProductsMailSegment_membersWithSubscriptionsOfDifferentTypes_bothIncluded(
         self,
@@ -183,9 +192,10 @@ class TestMailSegments(TapirIntegrationTest):
             members.append(member)
 
         result = resolve_segments(
-            dynamic_segment_names_additive=[Segments.WITH_DELIVERY_THIS_WEEK]
+            cache={}, dynamic_segment_names_additive=[Segments.WITH_DELIVERY_THIS_WEEK]
         )
 
         self.assertEqual(
-            {member.id for member in members}, {member.id for member in result}
+            {member.id for member in members},
+            {addressed.recipient.id for addressed in result},
         )

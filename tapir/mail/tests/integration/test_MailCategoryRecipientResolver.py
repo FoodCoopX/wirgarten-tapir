@@ -31,7 +31,9 @@ class TestMailCategoryRecipientResolver(TapirIntegrationTest):
             mail_category=mail_category
         )
 
-        self.assertEqual([external_recipient], result)
+        self.assertEqual(
+            [external_recipient], [addressed.recipient for addressed in result]
+        )
 
     def test_resolveRecipients_hasDynamicSegment_returnsStaticAndDynamicRecipients(
         self,
@@ -56,7 +58,10 @@ class TestMailCategoryRecipientResolver(TapirIntegrationTest):
             mail_category=mail_category
         )
 
-        self.assertEqual({internal_recipient, external_recipient}, set(result))
+        self.assertEqual(
+            {internal_recipient, external_recipient},
+            {addressed.recipient for addressed in result},
+        )
 
     def test_resolveRecipients_modeIsAlwaysOn_userIsAlwaysIncluded(
         self,
@@ -77,7 +82,9 @@ class TestMailCategoryRecipientResolver(TapirIntegrationTest):
         result = MailCategoryRecipientResolver.resolve_recipients(
             mail_category=mail_category
         )
-        self.assertEqual([internal_recipient], result)
+        self.assertEqual(
+            [internal_recipient], [addressed.recipient for addressed in result]
+        )
 
         InternalRecipientCategoryRegistration.objects.create(
             internal_recipient_id=internal_recipient.id,
@@ -87,13 +94,17 @@ class TestMailCategoryRecipientResolver(TapirIntegrationTest):
         result = MailCategoryRecipientResolver.resolve_recipients(
             mail_category=mail_category
         )
-        self.assertEqual([internal_recipient], result)
+        self.assertEqual(
+            [internal_recipient], [addressed.recipient for addressed in result]
+        )
 
         InternalRecipientCategoryRegistration.objects.update(is_registered=False)
         result = MailCategoryRecipientResolver.resolve_recipients(
             mail_category=mail_category
         )
-        self.assertEqual([internal_recipient], result)
+        self.assertEqual(
+            [internal_recipient], [addressed.recipient for addressed in result]
+        )
 
     def test_resolveRecipients_modeIsDefaultOn_userOnlyExcludedIfExplicitlyUnregistered(
         self,
@@ -115,7 +126,9 @@ class TestMailCategoryRecipientResolver(TapirIntegrationTest):
         result = MailCategoryRecipientResolver.resolve_recipients(
             mail_category=mail_category
         )
-        self.assertEqual([internal_recipient], result)
+        self.assertEqual(
+            [internal_recipient], [addressed.recipient for addressed in result]
+        )
 
         InternalRecipientCategoryRegistration.objects.create(
             internal_recipient_id=internal_recipient.id,
@@ -125,13 +138,15 @@ class TestMailCategoryRecipientResolver(TapirIntegrationTest):
         result = MailCategoryRecipientResolver.resolve_recipients(
             mail_category=mail_category
         )
-        self.assertEqual([internal_recipient], result)
+        self.assertEqual(
+            [internal_recipient], [addressed.recipient for addressed in result]
+        )
 
         InternalRecipientCategoryRegistration.objects.update(is_registered=False)
         result = MailCategoryRecipientResolver.resolve_recipients(
             mail_category=mail_category
         )
-        self.assertEqual([], result)
+        self.assertEqual([], [addressed.recipient for addressed in result])
 
     def test_resolveRecipients_modeIsDefaultOff_userOnlyIncludedIfExplicitlyRegistered(
         self,
@@ -153,7 +168,7 @@ class TestMailCategoryRecipientResolver(TapirIntegrationTest):
         result = MailCategoryRecipientResolver.resolve_recipients(
             mail_category=mail_category
         )
-        self.assertEqual([], result)
+        self.assertEqual([], [addressed.recipient for addressed in result])
 
         InternalRecipientCategoryRegistration.objects.create(
             internal_recipient_id=internal_recipient.id,
@@ -163,10 +178,12 @@ class TestMailCategoryRecipientResolver(TapirIntegrationTest):
         result = MailCategoryRecipientResolver.resolve_recipients(
             mail_category=mail_category
         )
-        self.assertEqual([internal_recipient], result)
+        self.assertEqual(
+            [internal_recipient], [addressed.recipient for addressed in result]
+        )
 
         InternalRecipientCategoryRegistration.objects.update(is_registered=False)
         result = MailCategoryRecipientResolver.resolve_recipients(
             mail_category=mail_category
         )
-        self.assertEqual([], result)
+        self.assertEqual([], [addressed.recipient for addressed in result])

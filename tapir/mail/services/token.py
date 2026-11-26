@@ -4,6 +4,7 @@ from typing import Any, Callable
 
 from django.conf import settings
 
+from tapir.mail.addressed_recipient import MailRecipient
 from tapir.mail.services.segment import _check_base_queryset
 
 LOG = logging.getLogger(__name__)
@@ -104,7 +105,7 @@ def find_tokens(mjml: str, token_type: str = TOKEN_TYPE_RECIPIENT) -> list[Any]:
 
 
 def resolve_recipient_tokens(
-    tokens_to_resolve: list[str], recipient: object, cache: dict
+    tokens_to_resolve: list[str], recipient: MailRecipient, cache: dict
 ) -> dict:
     """
     Resolve all tokens that are registered as recipient tokens and return them as a dict.
@@ -127,7 +128,7 @@ def resolve_recipient_tokens(
 
 
 def resolve_dynamic_tokens(
-    tokens_to_resolve: list[str], recipient: object, cache: dict
+    tokens_to_resolve: list[str], recipient: MailRecipient, cache: dict
 ) -> dict:
     dynamic_tokens = {}
     for token in tokens_to_resolve:
