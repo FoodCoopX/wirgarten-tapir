@@ -24,7 +24,6 @@ import ConfirmModal from "../ConfirmModal";
 import TapirButton from "../TapirButton";
 import TapirTooltip from "../TapirTooltip";
 import EmailConfigurationVersionSelect from "../emailConfigurationVersionSelect";
-import HtmlInDiv from "../htmlInDiv";
 import SendTestMailModal from "./SendTestMailModal";
 
 const SelectVersionModal = ({
@@ -316,7 +315,15 @@ const SelectVersionModal = ({
               <strong>Betreff:</strong>&nbsp;{selectedVersion?.subject}
             </div>
             {selectedVersion?.content && (
-              <HtmlInDiv htmlContent={htmlContent} />
+              <iframe
+                title="E-Mail-Vorschau"
+                srcDoc={htmlContent}
+                style={{
+                  width: "100%",
+                  height: "60vh",
+                  border: "1px solid black",
+                }}
+              />
             )}
           </Modal.Body>
         )}
