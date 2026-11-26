@@ -27,4 +27,5 @@ class MemberExtraRecipientProvider:
             for extra_email in TapirCache.get_confirmed_member_extra_emails_for_member(
                 member_id=member.id, cache=cache
             )
+            if extra_email.receives_direct_mails
         ]

@@ -52,6 +52,7 @@ class TestMemberExtraEmailApiViewPost(TapirIntegrationTest):
                 "member_id": member.id,
                 "first_name": "test_first",
                 "last_name": "test_last",
+                "receives_direct_mails": False,
             },
         )
 
@@ -62,6 +63,7 @@ class TestMemberExtraEmailApiViewPost(TapirIntegrationTest):
         self.assertEqual("test@example.com", extra_email.email)
         self.assertEqual(member, extra_email.member)
         self.assertIsNone(extra_email.confirmed_on)
+        self.assertFalse(extra_email.receives_direct_mails)
 
         self.assertEqual(1, MemberExtraEmailCreatedLogEntry.objects.count())
         log_entry = MemberExtraEmailCreatedLogEntry.objects.get()
@@ -101,6 +103,7 @@ class TestMemberExtraEmailApiViewPost(TapirIntegrationTest):
                 "member_id": other_member.id,
                 "first_name": "test_first",
                 "last_name": "test_last",
+                "receives_direct_mails": False,
             },
         )
 
@@ -112,6 +115,7 @@ class TestMemberExtraEmailApiViewPost(TapirIntegrationTest):
         self.assertEqual(other_member, extra_email.member)
         self.assertEqual("test_first", extra_email.first_name)
         self.assertEqual("test_last", extra_email.last_name)
+        self.assertFalse(extra_email.receives_direct_mails)
 
         self.assertEqual(1, MemberExtraEmailCreatedLogEntry.objects.count())
         log_entry = MemberExtraEmailCreatedLogEntry.objects.get()
@@ -151,6 +155,7 @@ class TestMemberExtraEmailApiViewPost(TapirIntegrationTest):
                 "member_id": other_member.id,
                 "first_name": "test_first",
                 "last_name": "test_last",
+                "receives_direct_mails": False,
             },
         )
 

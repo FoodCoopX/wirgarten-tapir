@@ -18,12 +18,14 @@ class MemberExtraEmailCreateRequest(serializers.Serializer):
     extra_email = serializers.EmailField()
     first_name = serializers.CharField()
     last_name = serializers.CharField()
+    receives_direct_mails = serializers.BooleanField()
 
 
 class MemberExtraEmailUpdateRequest(serializers.Serializer):
     extra_email_id = serializers.CharField()
     first_name = serializers.CharField()
     last_name = serializers.CharField()
+    receives_direct_mails = serializers.BooleanField()
 
 
 class MailingListSerializer(serializers.Serializer):

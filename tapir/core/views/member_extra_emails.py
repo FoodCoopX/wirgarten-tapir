@@ -110,6 +110,7 @@ class MemberExtraEmailApiView(APIView):
             email=extra_email_address,
             first_name=serializer.validated_data["first_name"],
             last_name=serializer.validated_data["last_name"],
+            receives_direct_mails=serializer.validated_data["receives_direct_mails"],
         )
 
         MemberExtraEmailCreatedLogEntry().populate_email(
@@ -154,6 +155,9 @@ class MemberExtraEmailApiView(APIView):
 
         extra_email.first_name = serializer.validated_data["first_name"].strip()
         extra_email.last_name = serializer.validated_data["last_name"].strip()
+        extra_email.receives_direct_mails = serializer.validated_data[
+            "receives_direct_mails"
+        ]
 
         with transaction.atomic():
             extra_email.save()

@@ -14535,6 +14535,8 @@ components:
         secret:
           type: string
           format: uuid
+        receives_direct_mails:
+          type: boolean
         member:
           type: string
       required:
@@ -14558,11 +14560,14 @@ components:
         last_name:
           type: string
           minLength: 1
+        receives_direct_mails:
+          type: boolean
       required:
       - extra_email
       - first_name
       - last_name
       - member_id
+      - receives_direct_mails
     MemberExtraMailData:
       type: object
       properties:
@@ -15634,6 +15639,8 @@ components:
         last_name:
           type: string
           minLength: 1
+        receives_direct_mails:
+          type: boolean
     PatchedMemberProfilePersonalDataRequestRequest:
       type: object
       properties:

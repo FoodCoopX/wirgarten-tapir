@@ -77,3 +77,41 @@ class TestGetDirectMailRecipients(TapirUnitTest):
         mock_get_confirmed_member_extra_emails_for_member.assert_called_once_with(
             member_id=member.id, cache=cache
         )
+
+    def test_getDirectMailRecipients_extraDoesNotReceiveDirectMails_extraIsSkipped(
+        self, mock_get_confirmed_member_extra_emails_for_member: MagicMock
+    ):
+        member = MemberFactory.build()
+        mock_get_confirmed_member_extra_emails_for_member.return_value = [
+            MemberExtraEmailFactory.build(
+                member=member,
+                email="direct@example.com",
+                first_name="F1",
+                last_name="L1",
+                receives_direct_mails=True,
+            ),
+            MemberExtraEmailFactory.build(
+                member=member,
+                email="subscriptions_only@example.com",
+                receives_direct_mails=False,
+            ),
+        ]
+        cache = {}
+        mock_parameter_value(
+            cache=cache, key=ParameterKeys.ENABLE_EXTRA_MAIL_ADDRESSES, value=True
+        )
+
+        result = MemberExtraRecipientProvider.get_direct_mail_recipients(
+            member=member, cache=cache
+        )
+
+        self.assertEqual(
+            [
+                AddressedRecipient(
+                    recipient=member,
+                    email="direct@example.com",
+                    token_overrides={"first_name": "F1", "last_name": "L1"},
+                ),
+            ],
+            result,
+        )
