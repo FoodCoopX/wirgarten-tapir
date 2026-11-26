@@ -116,9 +116,9 @@ def offer_bread_at_pickup_location(
     bread, pickup_location, year, delivery_week, delivery_day=2
 ):
     """
-    Bakes the bread on the station's delivery day that week, which is what
-    makes the station offer it. A station without opening times first gets
-    delivery_day as its only one.
+    Bakes the bread on the pickup location's delivery day that week, which is
+    what makes the pickup location offer it. One without opening times first
+    gets delivery_day as its only one.
     """
     if not PickupLocationOpeningTime.objects.filter(
         pickup_location=pickup_location

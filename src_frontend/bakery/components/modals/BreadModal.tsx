@@ -403,7 +403,7 @@ export const BreadModal: React.FC<BreadModalProps> = ({
                   style={{ fontSize: "0.75rem", marginBottom: "0.5rem" }}
                 >
                   Brote einer Gruppe (z.B. aus einem Teig) können zusammen auf
-                  einer Etage gebacken werden. Min. und Max. Stücke gelten dann
+                  einer Etage gebacken werden. Min. und Max. Stück gelten dann
                   für alle am Backtag verfügbaren Brote der Gruppe zusammen.
                   Tageseinstellungen gelten dagegen nur für das einzelne Brot.
                 </span>
@@ -436,7 +436,7 @@ export const BreadModal: React.FC<BreadModalProps> = ({
                       htmlFor="minPieces"
                       className="form-label fw-bold small"
                     >
-                      Min. Stücke
+                      Min. Stück
                     </label>
                     <input
                       type="number"
@@ -468,7 +468,7 @@ export const BreadModal: React.FC<BreadModalProps> = ({
                       htmlFor="maxPieces"
                       className="form-label fw-bold small"
                     >
-                      Max. Stücke
+                      Max. Stück
                     </label>
                     <input
                       type="number"
@@ -500,7 +500,7 @@ export const BreadModal: React.FC<BreadModalProps> = ({
                       htmlFor="minRemainingPieces"
                       className="form-label fw-bold small"
                     >
-                      Min. Übrig
+                      Min. Rest
                     </label>
                     <input
                       type="number"
@@ -550,11 +550,11 @@ export const BreadModal: React.FC<BreadModalProps> = ({
                       required
                     />
                     <small className="text-muted">
-                      Anteil der Gesamtkapazität des Tages abzüglich Min. Übrig,
+                      Anteil der Gesamtkapazität des Tages abzüglich Min. Rest,
                       den Mitglieder direkt bestellen können. Die
-                      Gesamtkapazität ist meist Max. Stücke; Tageseinstellungen
+                      Gesamtkapazität ist meist Max. Stück; Tageseinstellungen
                       und Gruppen können sie ändern. Gilt für alle Wochen, wenn
-                      die Wochenplanung nichts anderes sagt.
+                      der Wochenplan nichts anderes sagt.
                     </small>
                   </div>
                 </div>

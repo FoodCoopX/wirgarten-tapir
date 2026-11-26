@@ -40,7 +40,6 @@ from tapir.bakery.serializers import (
 from tapir.bakery.services.bread_choice_deadline_service import (
     BreadChoiceDeadlineService,
 )
-from tapir.bakery.services.copy_week_validator import CopyWeekValidator
 from tapir.bakery.services.direct_order_limit_service import (
     DirectOrderLimitService,
 )
@@ -55,10 +54,8 @@ from tapir.bakery.services.preference_satisfaction_service import (
 from tapir.bakery.services.preferred_bread_statistics_service import (
     PreferredBreadStatisticsService,
 )
-from tapir.bakery.services.weekly_plan_service import (
-    DeliveryDayIsOver,
-    WeeklyPlanService,
-)
+from tapir.bakery.services.weekly_plan_service import WeeklyPlanService
+from tapir.bakery.services.weekly_plan_validator import WeeklyPlanValidator
 from tapir.bakery.utils import parse_week_params
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.pickup_locations.services.pickup_location_delivery_day_service import (
@@ -155,18 +152,28 @@ class AvailableBreadsForDeliveryListView(APIView):
                 {"error": "Bread not found"}, status=status.HTTP_404_NOT_FOUND
             )
 
+        cache = {}
         try:
-            result = WeeklyPlanService.set_bread_baked(
-                bread_id=bread.id,
+            WeeklyPlanValidator.validate_set_bread_baked(
                 year=year,
                 delivery_week=delivery_week,
                 delivery_day=delivery_day,
-                is_baked=is_active,
-                cache={},
-                dry_run=data["dry_run"],
+                cache=cache,
             )
-        except DeliveryDayIsOver as error:
-            return Response({"error": str(error)}, status=status.HTTP_400_BAD_REQUEST)
+        except ValidationError as error:
+            return Response(
+                {"error": error.message}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        result = WeeklyPlanService.set_bread_baked(
+            bread_id=bread.id,
+            year=year,
+            delivery_week=delivery_week,
+            delivery_day=delivery_day,
+            is_baked=is_active,
+            cache=cache,
+            dry_run=data["dry_run"],
+        )
         response = {"success": True, "bread_id": str(bread_id)}
         if data["dry_run"]:
             response["cleared_choices"] = result.cleared_choices
@@ -768,7 +775,8 @@ class CopyWeekSettingsView(APIView):
             400: OpenApiResponse(
                 description=(
                     "Validation errors: a week that does not exist, or a "
-                    "source week that is not before the target week"
+                    "source week that is not before the target week or bakes "
+                    "no active bread"
                 )
             ),
         },
@@ -779,7 +787,7 @@ class CopyWeekSettingsView(APIView):
         data = serializer.validated_data
 
         try:
-            CopyWeekValidator.validate(
+            WeeklyPlanValidator.validate_copy_week(
                 source_year=data["source_year"],
                 source_week=data["source_week"],
                 target_year=data["target_year"],

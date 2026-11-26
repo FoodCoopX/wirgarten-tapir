@@ -377,6 +377,23 @@ class TestDirectOrderLimitService(TapirIntegrationTest):
         self.assertEqual(limits.remaining(bread_b.id), 0)
         self.assertEqual(limits.remaining(bread_a.id), 15)
 
+    def test_getLimitsForDay_groupOverbookedByAnotherBread_keepsTheOpenDayMinimumOrderable(
+        self,
+    ):
+        # The group's limit is 20 less Brot A's 5 baked anyway: 15. Brot B
+        # got 18 before the limit was lowered; Brot A's 5 are still baked.
+        group = BreadGroupFactory.create(name="Teig1")
+        bread_a = self._bread(name="Brot A", group=group, max_pieces=20)
+        bread_b = self._bread(name="Brot B", group=group, max_pieces=20)
+        self._day_settings(bread_a, min_pieces=5)
+        for _ in range(18):
+            self._order(bread_b)
+
+        limits = self._limits()
+
+        self.assertEqual(limits.remaining(bread_b.id), 0)
+        self.assertEqual(limits.remaining(bread_a.id), 5)
+
     def test_getLimitsForDay_groupOfOnlyFixedBreads_hasNoGroupLimit(self):
         group = BreadGroupFactory.create(name="Teig1")
         bread_a = self._bread(name="Brot A", group=group, max_pieces=10)

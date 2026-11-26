@@ -50,7 +50,10 @@ from tapir.bakery.services.bread_choice_service import (
 from tapir.bakery.services.bread_delivery_context_service import (
     BreadDeliveryContextService,
 )
-from tapir.bakery.services.bread_specifics_service import BreadSpecificsService
+from tapir.bakery.services.bread_specifics_service import (
+    BreadSpecificsService,
+    BreadSpecificsUpdate,
+)
 from tapir.bakery.utils import (
     ISO_WEEK_MISSING_MESSAGE,
     int_query_param,
@@ -259,7 +262,7 @@ class BreadViewSet(RequestCacheMixin, ProtectedDeleteMixin, viewsets.ModelViewSe
         if pickup_location_id and year and week:
             if not is_valid_iso_week(year, week):
                 raise ValidationError({"week": ISO_WEEK_MISSING_MESSAGE})
-            queryset = BreadAvailabilityService.annotate_remaining_capacity(
+            queryset = BreadAvailabilityService.annotate_direct_order_limits(
                 queryset,
                 pickup_location_id=pickup_location_id,
                 year=year,
@@ -401,12 +404,17 @@ class BreadDeliveryViewSet(RequestCacheMixin, viewsets.ModelViewSet):
             return super().partial_update(request, *args, **kwargs)
 
         new_bread_id = request.data.get("bread")
+        if new_bread_id is not None and not isinstance(new_bread_id, str):
+            raise ValidationError({"bread": "Erwartet eine Brot-ID oder null."})
 
         with transaction.atomic():
             # select_related(None): Postgres refuses FOR UPDATE on the nullable
-            # side of an outer join.
+            # side of an outer join. of=("self",): only the delivery row, not
+            # the subscription a member's queryset joins.
             delivery = get_object_or_404(
-                self.get_queryset().select_related(None).select_for_update(),
+                self.get_queryset()
+                .select_related(None)
+                .select_for_update(of=("self",)),
                 pk=kwargs["pk"],
             )
 
@@ -424,7 +432,7 @@ class BreadDeliveryViewSet(RequestCacheMixin, viewsets.ModelViewSet):
                             delivery, pickup_location_id, cache=cache
                         )
                     if new_bread_id and pickup_location_id:
-                        BreadChoiceService.check_capacity_available(
+                        BreadChoiceService.check_direct_order_limit(
                             delivery, new_bread_id, pickup_location_id, cache=cache
                         )
                 except BreadChoiceNotAllowed as error:
@@ -436,8 +444,8 @@ class BreadDeliveryViewSet(RequestCacheMixin, viewsets.ModelViewSet):
             serializer.is_valid(raise_exception=True)
             self.perform_update(serializer)
 
-        # Built once the locks are released: the response reads stations and
-        # deadlines the choice does not depend on.
+        # Built once the locks are released: the response reads pickup
+        # locations and deadlines the choice does not depend on.
         return Response(self.get_serializer(self.get_object()).data)
 
 
@@ -712,7 +720,17 @@ class BreadSpecificsPerDeliveryDayViewSet(viewsets.ModelViewSet):
             year=data["year"],
             delivery_week=data["delivery_week"],
             delivery_day=data["delivery_day"],
-            updates=data["updates"],
+            updates=[
+                BreadSpecificsUpdate(
+                    bread_id=update["bread"].id,
+                    values={
+                        field: update[field]
+                        for field in BreadSpecificsService.FIELDS
+                        if field in update
+                    },
+                )
+                for update in data["updates"]
+            ],
             cache={},
         )
 

@@ -124,9 +124,9 @@ class BreadContent(TapirModel):
 
 class BreadCapacityPickupLocation(TapirModel):
     """
-    No longer read: a bread is offered at every station of the days it is baked
-    on, and DirectOrderLimitService limits direct orders per bread and day.
-    Kept until the test data generator in tapir.utils stops writing it.
+    No longer read nor written: a bread is offered at every pickup location of
+    the days it is baked on, and DirectOrderLimitService limits direct orders
+    per bread and day. Kept until a follow-up migration drops it.
     """
 
     year = models.PositiveIntegerField(help_text="Year for which this capacity applies")

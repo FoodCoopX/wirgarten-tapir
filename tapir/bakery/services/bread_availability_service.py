@@ -16,8 +16,8 @@ from tapir.pickup_locations.services.pickup_location_delivery_day_service import
 
 class BreadAvailabilityService:
     """
-    Whether a bread may be put on a delivery slot: a station offers every
-    bread baked on its delivery day that week.
+    Whether a bread may be put on a delivery slot: a pickup location offers
+    every bread baked on its delivery day that week.
     """
 
     @classmethod
@@ -40,8 +40,8 @@ class BreadAvailabilityService:
     @classmethod
     def is_bread_available_for_delivery(cls, delivery, bread, cache: dict) -> bool:
         """
-        A member with no station for that week has nothing to check against, so
-        the choice is allowed rather than blocked by missing setup.
+        A member with no pickup location for that week has nothing to check
+        against, so the choice is allowed rather than blocked by missing setup.
         """
         if bread is None:
             return True
@@ -61,7 +61,7 @@ class BreadAvailabilityService:
         )
 
     @classmethod
-    def annotate_remaining_capacity(
+    def annotate_direct_order_limits(
         cls,
         breads,
         pickup_location_id,
@@ -71,15 +71,15 @@ class BreadAvailabilityService:
         exclude_delivery_ids: Collection[str] = (),
     ):
         """
-        Narrow a Bread queryset to what members of the station can still choose
-        that week, annotated with capacity (the direct-order limit),
-        delivery_count (the direct orders on that delivery day, all stations)
-        and available_capacity (what is left of the bread's limit and its
-        group's). capacity is None when the bread has no limit of its own,
-        available_capacity when neither it nor its group has one.
+        Narrow a Bread queryset to what members of the pickup location can
+        still choose that week, annotated with direct_order_limit,
+        direct_orders (on that delivery day, over all pickup locations) and
+        remaining_direct_orders (what is left of the bread's limit and its
+        group's). direct_order_limit is None when the bread has no limit of
+        its own, remaining_direct_orders when neither it nor its group has one.
 
         exclude_delivery_ids leaves the slot being chosen for out of the
-        counts, as BreadChoiceService.check_capacity_available does.
+        counts, as BreadChoiceService.check_direct_order_limit does.
         """
         delivery_day = PickupLocationDeliveryDayService.get_delivery_day(
             pickup_location_id, cache=cache
@@ -110,11 +110,11 @@ class BreadAvailabilityService:
             )
 
         return breads.filter(pk__in=open_bread_ids).annotate(
-            capacity=per_bread(
+            direct_order_limit=per_bread(
                 {bread_id: limit.limit for bread_id, limit in limits.breads.items()}
             ),
-            delivery_count=per_bread(
+            direct_orders=per_bread(
                 {bread_id: limit.ordered for bread_id, limit in limits.breads.items()}
             ),
-            available_capacity=per_bread(remaining),
+            remaining_direct_orders=per_bread(remaining),
         )

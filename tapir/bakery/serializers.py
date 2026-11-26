@@ -143,33 +143,36 @@ PIECE_COUNT_LIMITS = {
 }
 
 
-CAPACITY_HELP = (
-    "Set for a station's week only: the bread's direct-order limit on the "
-    "station's delivery day, null when unlimited."
+DIRECT_ORDER_LIMIT_HELP = (
+    "Set for a pickup location's week only: the bread's direct-order limit on "
+    "the pickup location's delivery day, null when unlimited."
 )
-DELIVERY_COUNT_HELP = (
-    "Set for a station's week only: direct orders of the bread on the "
-    "station's delivery day, over all stations delivered that day."
+DIRECT_ORDERS_HELP = (
+    "Set for a pickup location's week only: direct orders of the bread on that "
+    "delivery day, over all pickup locations delivered that day."
 )
-AVAILABLE_CAPACITY_HELP = (
-    "Set for a station's week only: what is left of the bread's limit and "
-    "its group's, null when neither has one."
+REMAINING_DIRECT_ORDERS_HELP = (
+    "Set for a pickup location's week only: what is left of the bread's limit "
+    "and its group's, null when neither has one."
 )
 
 
 class BreadListSerializer(serializers.ModelSerializer):
     serializer_field_mapping = BREAD_PICTURE_FIELD_MAPPING
-    capacity = serializers.IntegerField(
-        read_only=True, required=False, allow_null=True, help_text=CAPACITY_HELP
-    )
-    delivery_count = serializers.IntegerField(
-        read_only=True, required=False, help_text=DELIVERY_COUNT_HELP
-    )
-    available_capacity = serializers.IntegerField(
+    direct_order_limit = serializers.IntegerField(
         read_only=True,
         required=False,
         allow_null=True,
-        help_text=AVAILABLE_CAPACITY_HELP,
+        help_text=DIRECT_ORDER_LIMIT_HELP,
+    )
+    direct_orders = serializers.IntegerField(
+        read_only=True, required=False, help_text=DIRECT_ORDERS_HELP
+    )
+    remaining_direct_orders = serializers.IntegerField(
+        read_only=True,
+        required=False,
+        allow_null=True,
+        help_text=REMAINING_DIRECT_ORDERS_HELP,
     )
     contents = BreadContentSerializer(many=True, read_only=True)
     group_name = serializers.CharField(
@@ -189,17 +192,20 @@ class BreadDetailSerializer(serializers.ModelSerializer):
     labels = BreadLabelSerializer(many=True, read_only=True)
     contents = BreadContentSerializer(many=True, read_only=True)
     label_names = serializers.SerializerMethodField()
-    capacity = serializers.IntegerField(
-        read_only=True, required=False, allow_null=True, help_text=CAPACITY_HELP
-    )
-    delivery_count = serializers.IntegerField(
-        read_only=True, required=False, help_text=DELIVERY_COUNT_HELP
-    )
-    available_capacity = serializers.IntegerField(
+    direct_order_limit = serializers.IntegerField(
         read_only=True,
         required=False,
         allow_null=True,
-        help_text=AVAILABLE_CAPACITY_HELP,
+        help_text=DIRECT_ORDER_LIMIT_HELP,
+    )
+    direct_orders = serializers.IntegerField(
+        read_only=True, required=False, help_text=DIRECT_ORDERS_HELP
+    )
+    remaining_direct_orders = serializers.IntegerField(
+        read_only=True,
+        required=False,
+        allow_null=True,
+        help_text=REMAINING_DIRECT_ORDERS_HELP,
     )
 
     class Meta:
@@ -214,15 +220,15 @@ class BreadDetailSerializer(serializers.ModelSerializer):
             "label_names",
             "contents",
             "is_active",
-            "capacity",
-            "delivery_count",
-            "available_capacity",
+            "direct_order_limit",
+            "direct_orders",
+            "remaining_direct_orders",
         ]
         read_only_fields = [
             "id",
-            "capacity",
-            "delivery_count",
-            "available_capacity",
+            "direct_order_limit",
+            "direct_orders",
+            "remaining_direct_orders",
         ]
 
     def get_label_names(self, obj) -> list[str]:
@@ -675,7 +681,8 @@ class BreadSpecificsPerDeliveryDaySerializer(serializers.ModelSerializer):
         model = BreadSpecificsPerDeliveryDay
         fields = "__all__"
         extra_kwargs = PIECE_COUNT_LIMITS | {
-            "fixed_pieces": {"max_value": MAX_PIECES_PER_ENTRY}
+            "fixed_pieces": {"max_value": MAX_PIECES_PER_ENTRY},
+            "delivery_day": {"min_value": 0, "max_value": 6},
         }
         # See BreadLabelSerializer.
         read_only_fields = ["id"]

@@ -1,5 +1,5 @@
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 from django.conf import settings
 from django.db import models
@@ -77,18 +77,23 @@ class BreadDeliveryService:
 
     @classmethod
     def clear_breads_unavailable_at_pickup_location(
-        cls, member: Member, cache: dict | None = None
+        cls,
+        member: Member,
+        previous_pickup_location_id: str | None,
+        valid_from: date,
+        cache: dict,
     ):
         """
-        Drop bread choices the member's station cannot supply any more: a
-        station offers the breads baked on its delivery day, and the choices
-        kept must fit that day's direct-order limits like a new choice.
+        After the member changed pickup location, drop the bread choices it
+        cannot supply: a pickup location offers the breads baked on its
+        delivery day. A choice the change moves to another delivery day must
+        also fit that day's direct-order limits like a new choice; one that
+        stays on its day keeps its place, as existing orders do when a limit
+        is lowered.
 
         Only current and future weeks: past deliveries are a record of what was
         handed over.
         """
-        if cache is None:
-            cache = {}
         if not settings.BAKERY_ENABLED:
             return
 
@@ -117,9 +122,10 @@ class BreadDeliveryService:
             ).values_list("year", "delivery_week", "delivery_day", "bread_id")
         )
         delivery_days = TapirCache.get_delivery_day_by_pickup_location_id(cache=cache)
+        previous_delivery_day = delivery_days.get(previous_pickup_location_id)
 
         to_clear = []
-        kept_by_day = defaultdict(list)
+        moved_by_day = defaultdict(list)
         for delivery in deliveries:
             pickup_location_id = BreadDeliveryContextService.get_pickup_location_id(
                 delivery, cache=cache
@@ -133,19 +139,25 @@ class BreadDeliveryService:
             )
             if key not in available:
                 to_clear.append(delivery)
-            elif not BreadDeliveryContextService.is_joker_taken(
-                delivery, cache=cache
-            ) and not BreadChoiceDeadlineService.is_delivery_day_over(
-                delivery.year, delivery.delivery_week, delivery_day, cache=cache
+            elif (
+                cls._is_moved_to_another_day(
+                    delivery, delivery_day, previous_delivery_day, valid_from, cache
+                )
+                and not BreadDeliveryContextService.is_joker_taken(
+                    delivery, cache=cache
+                )
+                and not BreadChoiceDeadlineService.is_delivery_day_over(
+                    delivery.year, delivery.delivery_week, delivery_day, cache=cache
+                )
             ):
-                kept_by_day[
+                moved_by_day[
                     (delivery.year, delivery.delivery_week, delivery_day)
                 ].append(delivery)
 
-        for (year, delivery_week, delivery_day), kept in kept_by_day.items():
+        for (year, delivery_week, delivery_day), moved in moved_by_day.items():
             to_clear.extend(
                 cls._choices_over_the_limit(
-                    kept, year, delivery_week, delivery_day, cache=cache
+                    moved, year, delivery_week, delivery_day, cache=cache
                 )
             )
 
@@ -153,6 +165,25 @@ class BreadDeliveryService:
             delivery.bread = None
         if to_clear:
             BreadDelivery.objects.bulk_update(to_clear, ["bread"])
+
+    @classmethod
+    def _is_moved_to_another_day(
+        cls,
+        delivery: BreadDelivery,
+        delivery_day: int | None,
+        previous_delivery_day: int | None,
+        valid_from: date,
+        cache: dict,
+    ) -> bool:
+        """
+        Whether the change of pickup location puts the delivery on another
+        delivery day: it applies from valid_from on, the reference date by
+        which the delivery's pickup location is resolved.
+        """
+        reference_date = BreadDeliveryContextService.get_reference_date(
+            delivery.year, delivery.delivery_week, cache=cache
+        )
+        return reference_date >= valid_from and delivery_day != previous_delivery_day
 
     @classmethod
     def _choices_over_the_limit(
@@ -197,7 +228,7 @@ class BreadDeliveryService:
     ) -> list[BreadDelivery]:
         """
         The slots where members chose one of the breads for that delivery day,
-        at every station delivered that day, jokered ones included. Nothing
+        at every pickup location delivered that day, jokered ones included. Nothing
         once the day is over (see BreadChoiceDeadlineService.is_delivery_day_over).
         """
         if not bread_ids or BreadChoiceDeadlineService.is_delivery_day_over(

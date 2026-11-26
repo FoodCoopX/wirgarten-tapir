@@ -105,13 +105,14 @@ class BakeryGenerator:
 
     @classmethod
     def generate_week_data(cls):
+        cache = {}
         print("Creating the weekly bread plans...")
         weeks = cls.get_weeks_with_data()
-        cls.generate_available_breads_per_delivery_day(weeks)
+        cls.generate_available_breads_per_delivery_day(weeks, cache=cache)
         print("Creating bread deliveries...")
-        cls.generate_bread_deliveries()
+        cls.generate_bread_deliveries(cache=cache)
         print("Choosing breads for some deliveries...")
-        cls.assign_breads_to_deliveries(weeks)
+        cls.assign_breads_to_deliveries(weeks, cache=cache)
         cls.generate_preferred_breads()
 
     @classmethod
@@ -139,8 +140,10 @@ class BakeryGenerator:
         )
 
     @classmethod
-    def generate_available_breads_per_delivery_day(cls, weeks: list[tuple[int, int]]):
-        delivery_days = cls.get_delivery_days(cache={})
+    def generate_available_breads_per_delivery_day(
+        cls, weeks: list[tuple[int, int]], cache: dict
+    ):
+        delivery_days = cls.get_delivery_days(cache=cache)
         breads = list(Bread.objects.all())
         available = []
         for year, week in weeks:
@@ -157,19 +160,17 @@ class BakeryGenerator:
         AvailableBreadsForDeliveryDay.objects.bulk_create(available)
 
     @classmethod
-    def generate_bread_deliveries(cls):
-        cache = {}
+    def generate_bread_deliveries(cls, cache: dict):
         member_ids = Subscription.objects.values_list("member_id", flat=True).distinct()
         for member in Member.objects.filter(id__in=list(member_ids)):
             BreadDeliveryService.ensure_bread_deliveries_for_member(member, cache=cache)
 
     @classmethod
-    def assign_breads_to_deliveries(cls, weeks: list[tuple[int, int]]):
+    def assign_breads_to_deliveries(cls, weeks: list[tuple[int, int]], cache: dict):
         """
         Chooses a bread for about two thirds of the slots, among the breads
         still within their direct-order limit on the slot's delivery day.
         """
-        cache = {}
         for year, week in weeks:
             for delivery_day in cls.get_delivery_days(cache=cache):
                 deliveries_by_location = (

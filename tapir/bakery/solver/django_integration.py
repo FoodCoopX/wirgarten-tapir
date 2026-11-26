@@ -166,8 +166,9 @@ def collect_solver_input(
         logger.debug("No pickup locations found!")
         return None
 
-    # Every station offers every bread of its day; how many members may choose
-    # directly is limited per bread and day, see DirectOrderLimitService.
+    # Every pickup location offers every bread of its day; how many members
+    # may choose directly is limited per bread and day, see
+    # DirectOrderLimitService.
     capacities = {
         (bread.bread_id, loc.location_id): loc.total_deliveries
         for bread in available_breads

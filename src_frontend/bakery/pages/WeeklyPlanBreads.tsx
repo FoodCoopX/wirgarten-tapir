@@ -21,6 +21,7 @@ import {
   DirectOrderLimitsModal,
 } from "../components/modals";
 import "../styles/bakery_styles.css";
+import { byCount, choicesText } from "../utils/breadChoices";
 import {
   DAY_LABELS,
   currentIsoWeek,
@@ -41,13 +42,10 @@ interface DayConfig {
 const currentWeek = currentIsoWeek();
 const currentYear = currentIsoYear();
 
-const choicesText = (count: number) =>
-  `${count} ${count === 1 ? "Brotwahl" : "Brotwahlen"}`;
-
 // After the members' deadline they cannot choose again; the solver then
-// shares out breads to their slots, by their preferences where it can.
+// shares out breads to their slots, by their favourites where it can.
 const clearedChoicesNote = (count: number) =>
-  `${choicesText(count)} ${count === 1 ? "wurde" : "wurden"} zurückgesetzt. Ist die Wahlfrist schon vorbei, bekommen diese Mitglieder ein Brot möglichst nach ihren Vorlieben. Einen schon berechneten Backplan bitte neu berechnen.`;
+  `${choicesText(count)} ${byCount(count, "wurde", "wurden")} zurückgesetzt. Ist die Wahlfrist schon vorbei, bekommen diese Mitglieder ein Brot möglichst nach ihren Lieblingsbroten. Einen schon berechneten Backplan bitte neu berechnen.`;
 
 interface WeeklyPlanBreadsProps {
   csrfToken: string;
@@ -67,6 +65,8 @@ export const WeeklyPlanBreads: React.FC<WeeklyPlanBreadsProps> = ({
   // The switches with a request on the way: a second click would ask again
   // or overtake the first request.
   const [busySwitches, setBusySwitches] = useState<Set<string>>(new Set());
+  // While a week is copied into the selected one, nothing else may change it.
+  const [copyingWeek, setCopyingWeek] = useState(false);
   const [days, setDays] = useState<DayConfig[]>([]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -159,12 +159,18 @@ export const WeeklyPlanBreads: React.FC<WeeklyPlanBreadsProps> = ({
             return {
               ...dayConfig,
               breads,
+              failed: false,
               isOver: response.deliveryDayIsOver,
             };
           })
           .catch((error) => {
             console.error(`Wochenplan: Tag ${dayConfig.day}`, error);
-            return { ...dayConfig, breads: {}, failed: true };
+            return {
+              ...dayConfig,
+              breads: {},
+              failed: true,
+              isOver: undefined,
+            };
           }),
       ),
     )
@@ -228,6 +234,8 @@ export const WeeklyPlanBreads: React.FC<WeeklyPlanBreadsProps> = ({
     // Switching a bread off clears the members' choices of it for that day,
     // so count them first and ask.
     const requestedFor = `${year}/${week}`;
+    const breadName = allBreads.find((bread) => bread.id === breadId)?.name;
+    const dayAndWeek = `${days[dayIndex].label}, KW ${week}/${year}`;
     setPendingSaves((count) => count + 1);
     bakeryApi
       .bakeryAvailableBreadsForDeliveryCreate({
@@ -241,12 +249,23 @@ export const WeeklyPlanBreads: React.FC<WeeklyPlanBreadsProps> = ({
         },
       })
       .then((response) => {
-        if (selectionRef.current !== requestedFor) return;
+        if (selectionRef.current !== requestedFor) {
+          addToast(
+            {
+              title: `${breadName} nicht abgeschaltet (${dayAndWeek})`,
+              message: "Inzwischen ist eine andere Woche ausgewählt.",
+              variant: "info",
+              id: uuidv4(),
+            },
+            setToastDatas,
+          );
+          return;
+        }
         const count = response.clearedChoices ?? 0;
         if (
           count > 0 &&
           !confirm(
-            `${choicesText(count)} von Mitgliedern für diesen Tag ${count === 1 ? "wird" : "werden"} zurückgesetzt und beim Wiedereinschalten nicht wiederhergestellt. Trotzdem abschalten?`,
+            `${choicesText(count)} von Mitgliedern für ${breadName} (${dayAndWeek}) ${byCount(count, "wird", "werden")} zurückgesetzt und beim Wiedereinschalten nicht wiederhergestellt. Trotzdem abschalten?`,
           )
         ) {
           return;
@@ -368,12 +387,14 @@ export const WeeklyPlanBreads: React.FC<WeeklyPlanBreadsProps> = ({
             selectedWeek={week}
             onYearChange={setYear}
             onWeekChange={setWeek}
+            disabled={copyingWeek}
           >
             <CopyWeekSettingsSelector
               year={year}
               week={week}
               csrfToken={csrfToken}
               disabled={loading || saving}
+              onBusyChange={setCopyingWeek}
               onCopied={handleWeekSettingsCopied}
               setToastDatas={setToastDatas}
             />
@@ -430,6 +451,7 @@ export const WeeklyPlanBreads: React.FC<WeeklyPlanBreadsProps> = ({
                         const isActive = dayConfig.breads[bread.id!] ?? false;
                         const locked =
                           dayConfig.isOver ||
+                          copyingWeek ||
                           busySwitches.has(switchKey(dayConfig.day, bread.id!));
                         return (
                           <div
@@ -464,6 +486,7 @@ export const WeeklyPlanBreads: React.FC<WeeklyPlanBreadsProps> = ({
                               <input
                                 className={`form-check-input ${isActive ? "checkbox-bakery" : ""}`}
                                 type="checkbox"
+                                aria-label={`${bread.name} am ${dayConfig.label} backen`}
                                 checked={isActive}
                                 disabled={locked}
                                 onChange={() =>
@@ -496,7 +519,7 @@ export const WeeklyPlanBreads: React.FC<WeeklyPlanBreadsProps> = ({
                     onClick={() =>
                       handleOpenModal(dayConfig.day, dayConfig.label)
                     }
-                    disabled={loading}
+                    disabled={loading || copyingWeek}
                   />
 
                   <DailySettingsModal

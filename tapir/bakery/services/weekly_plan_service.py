@@ -15,13 +15,6 @@ from tapir.bakery.services.bread_specifics_service import BreadSpecificsService
 from tapir.bakery.services.breaddelivery_service import BreadDeliveryService
 
 
-class DeliveryDayIsOver(Exception):
-    """The message is written for the admin and is handed back by the API."""
-
-    def __init__(self):
-        super().__init__("Dieser Liefertag ist schon vorbei.")
-
-
 @dataclass
 class BreadBakedResult:
     created: bool
@@ -69,12 +62,13 @@ class WeeklyPlanService:
 
     The breads of a day that is over
     (BreadChoiceDeadlineService.is_delivery_day_over) no longer change:
-    switching one on or off is refused and a copy leaves the day alone.
+    WeeklyPlanValidator refuses switching one on or off, and a copy leaves the
+    day alone.
 
     A bread that stops being baked on a day loses the members' choices of it
     for that day. Its entry is deleted and committed before the choices are
     cleared: a member choosing the bread at that moment waits on the row lock
-    BreadChoiceService.check_capacity_available takes on the entry, then
+    BreadChoiceService.check_direct_order_limit takes on the entry, then
     finds it gone, and a choice made before is cleared afterwards. Clearing
     in the same transaction as the delete could deadlock with such a choice,
     which already holds its delivery row.
@@ -91,12 +85,7 @@ class WeeklyPlanService:
         cache: dict,
         dry_run: bool = False,
     ) -> BreadBakedResult:
-        """Raises DeliveryDayIsOver for a day that is over."""
-        if BreadChoiceDeadlineService.is_delivery_day_over(
-            year, delivery_week, delivery_day, cache=cache
-        ):
-            raise DeliveryDayIsOver()
-
+        """Expects a day that is not over, see WeeklyPlanValidator."""
         if is_baked:
             if dry_run:
                 return BreadBakedResult(created=False, deleted=False, cleared_choices=0)
@@ -175,7 +164,7 @@ class WeeklyPlanService:
 
         with transaction.atomic():
             # The target week's entries are read under lock, in id order as
-            # BreadChoiceService.check_capacity_available locks them: a bread
+            # BreadChoiceService.check_direct_order_limit locks them: a bread
             # switched on or off meanwhile is not missed.
             list(
                 AvailableBreadsForDeliveryDay.objects.select_for_update()

@@ -761,7 +761,7 @@ paths:
           description: ''
         '400':
           description: 'Validation errors: a week that does not exist, or a source
-            week that is not before the target week'
+            week that is not before the target week or bakes no active bread'
   /bakery/api/delivery-days/:
     get:
       operationId: bakery_api_delivery_days_retrieve
@@ -10428,32 +10428,32 @@ components:
           readOnly: true
         is_active:
           type: boolean
-        capacity:
+        direct_order_limit:
           type: integer
           readOnly: true
           nullable: true
-          description: 'Set for a station''s week only: the bread''s direct-order
-            limit on the station''s delivery day, null when unlimited.'
-        delivery_count:
+          description: 'Set for a pickup location''s week only: the bread''s direct-order
+            limit on the pickup location''s delivery day, null when unlimited.'
+        direct_orders:
           type: integer
           readOnly: true
-          description: 'Set for a station''s week only: direct orders of the bread
-            on the station''s delivery day, over all stations delivered that day.'
-        available_capacity:
+          description: 'Set for a pickup location''s week only: direct orders of the
+            bread on that delivery day, over all pickup locations delivered that day.'
+        remaining_direct_orders:
           type: integer
           readOnly: true
           nullable: true
-          description: 'Set for a station''s week only: what is left of the bread''s
-            limit and its group''s, null when neither has one.'
+          description: 'Set for a pickup location''s week only: what is left of the
+            bread''s limit and its group''s, null when neither has one.'
       required:
-      - available_capacity
-      - capacity
       - contents
-      - delivery_count
+      - direct_order_limit
+      - direct_orders
       - id
       - label_names
       - labels
       - name
+      - remaining_direct_orders
       - weight
     BreadDirectOrderLimit:
       type: object
@@ -10580,23 +10580,23 @@ components:
         id:
           type: string
           readOnly: true
-        capacity:
+        direct_order_limit:
           type: integer
           readOnly: true
           nullable: true
-          description: 'Set for a station''s week only: the bread''s direct-order
-            limit on the station''s delivery day, null when unlimited.'
-        delivery_count:
+          description: 'Set for a pickup location''s week only: the bread''s direct-order
+            limit on the pickup location''s delivery day, null when unlimited.'
+        direct_orders:
           type: integer
           readOnly: true
-          description: 'Set for a station''s week only: direct orders of the bread
-            on the station''s delivery day, over all stations delivered that day.'
-        available_capacity:
+          description: 'Set for a pickup location''s week only: direct orders of the
+            bread on that delivery day, over all pickup locations delivered that day.'
+        remaining_direct_orders:
           type: integer
           readOnly: true
           nullable: true
-          description: 'Set for a station''s week only: what is left of the bread''s
-            limit and its group''s, null when neither has one.'
+          description: 'Set for a pickup location''s week only: what is left of the
+            bread''s limit and its group''s, null when neither has one.'
         contents:
           type: array
           items:
@@ -10675,14 +10675,14 @@ components:
           items:
             type: string
       required:
-      - available_capacity
-      - capacity
       - contents
       - created_at
-      - delivery_count
+      - direct_order_limit
+      - direct_orders
       - group_name
       - id
       - name
+      - remaining_direct_orders
       - updated_at
       - weight
     BreadListRequest:
@@ -10781,7 +10781,7 @@ components:
           minimum: 0
         delivery_day:
           type: integer
-          maximum: 2147483647
+          maximum: 6
           minimum: 0
         min_pieces:
           type: integer
@@ -10901,7 +10901,7 @@ components:
           minimum: 0
         delivery_day:
           type: integer
-          maximum: 2147483647
+          maximum: 6
           minimum: 0
         min_pieces:
           type: integer
@@ -15530,7 +15530,7 @@ components:
           minimum: 0
         delivery_day:
           type: integer
-          maximum: 2147483647
+          maximum: 6
           minimum: 0
         min_pieces:
           type: integer

@@ -1,6 +1,16 @@
+from dataclasses import dataclass
+
 from django.db import transaction
 
 from tapir.bakery.models import BreadSpecificsPerDeliveryDay
+
+
+@dataclass
+class BreadSpecificsUpdate:
+    bread_id: str
+    # Only the fields sent, among BreadSpecificsService.FIELDS. A field left
+    # out keeps its value; None clears it.
+    values: dict[str, int | None]
 
 
 class BreadSpecificsService:
@@ -18,28 +28,22 @@ class BreadSpecificsService:
         year: int,
         delivery_week: int,
         delivery_day: int,
-        updates: list[dict],
+        updates: list[BreadSpecificsUpdate],
         cache: dict,
     ):
         """
-        Each update holds a bread and any of FIELDS. A field left out keeps its
-        value: the day settings and the direct-order limits are edited in
-        different dialogs, each sending only its own fields. A row left without
-        any value is deleted.
+        The day settings and the direct-order limits are edited in different
+        dialogs, each sending only its own fields. A row left without any
+        value is deleted.
         """
         with transaction.atomic():
             for update in updates:
-                keys = {
-                    "year": year,
-                    "delivery_week": delivery_week,
-                    "delivery_day": delivery_day,
-                    "bread_id": update["bread"].pk,
-                }
                 specifics, _ = BreadSpecificsPerDeliveryDay.objects.update_or_create(
-                    **keys,
-                    defaults={
-                        field: update[field] for field in cls.FIELDS if field in update
-                    },
+                    year=year,
+                    delivery_week=delivery_week,
+                    delivery_day=delivery_day,
+                    bread_id=update.bread_id,
+                    defaults=update.values,
                 )
                 if all(getattr(specifics, field) is None for field in cls.FIELDS):
                     specifics.delete()

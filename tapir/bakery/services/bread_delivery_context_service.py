@@ -104,7 +104,7 @@ class BreadDeliveryContextService:
     ) -> Counter:
         """
         How many slots members chose each of the breads for, over all
-        stations delivered that day; jokered slots left out. The same
+        pickup locations delivered that day; jokered slots left out. The same
         deliveries get_deliveries_by_location_for_week finds, read as
         (bread, member) pairs only: a member's choice is checked against these
         counts while it holds row locks (see warm_caches_for_week).

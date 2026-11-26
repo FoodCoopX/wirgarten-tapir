@@ -10,6 +10,7 @@ import { useApi } from "../../../hooks/useApi";
 import { ToastData } from "../../../types/ToastData";
 import { addToast } from "../../../utils/addToast";
 import { handleRequestError } from "../../../utils/handleRequestError";
+import { byCount, choicesText } from "../../utils/breadChoices";
 import { DAY_LABELS } from "../../utils/weekdays";
 
 interface CopyWeekSettingsSelectorProps {
@@ -17,12 +18,22 @@ interface CopyWeekSettingsSelectorProps {
   week: number;
   csrfToken: string;
   disabled: boolean;
+  // While copying, the rest of the weekly plan must not change.
+  onBusyChange: (busy: boolean) => void;
   onCopied: (
     result: CopyWeekSettingsResponse,
     target: { year: number; week: number },
   ) => void;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
+
+type SourcesState = "loading" | "loaded" | "failed";
+
+const EMPTY_OPTION_TEXT: Record<SourcesState, string> = {
+  loading: "Lade Wochen…",
+  failed: "Wochen konnten nicht geladen werden",
+  loaded: "keine frühere Woche geplant",
+};
 
 const sourceKey = (source: WeekSettingsSource) =>
   `${source.year}/${source.deliveryWeek}`;
@@ -32,26 +43,43 @@ const dayNames = (days: number[]) =>
 
 export const CopyWeekSettingsSelector: React.FC<
   CopyWeekSettingsSelectorProps
-> = ({ year, week, csrfToken, disabled, onCopied, setToastDatas }) => {
+> = ({
+  year,
+  week,
+  csrfToken,
+  disabled,
+  onBusyChange,
+  onCopied,
+  setToastDatas,
+}) => {
   const bakeryApi = useApi(BakeryApi, csrfToken);
   const [sources, setSources] = useState<WeekSettingsSource[]>([]);
+  const [sourcesState, setSourcesState] = useState<SourcesState>("loading");
   const [selectedKey, setSelectedKey] = useState("");
   const [copying, setCopying] = useState(false);
   const selectionRef = useRef(`${year}/${week}`);
+
+  useEffect(() => {
+    onBusyChange(copying);
+  }, [copying]);
 
   useEffect(() => {
     let cancelled = false;
     selectionRef.current = `${year}/${week}`;
     // The previous week's sources would offer later weeks as a template.
     setSources([]);
+    setSourcesState("loading");
     setSelectedKey("");
     bakeryApi
       .bakeryApiCopyWeekSettingsRetrieve({ year, deliveryWeek: week })
       .then((response) => {
-        if (!cancelled) setSources(response.sources);
+        if (cancelled) return;
+        setSources(response.sources);
+        setSourcesState("loaded");
       })
       .catch((error) => {
         if (cancelled) return;
+        setSourcesState("failed");
         handleRequestError(
           error,
           "Fehler beim Laden der Vorwochen",
@@ -80,9 +108,10 @@ export const CopyWeekSettingsSelector: React.FC<
         `Schon vorbei und unverändert: ${dayNames(preview.keptDays)}.`,
       );
     }
-    if (preview.clearedChoices > 0) {
+    const count = preview.clearedChoices;
+    if (count > 0) {
       lines.push(
-        `${preview.clearedChoices} ${preview.clearedChoices === 1 ? "Brotwahl" : "Brotwahlen"} von Mitgliedern werden zurückgesetzt, weil ihr Brot an dem Tag nicht mehr gebacken wird. Sie werden nicht wiederhergestellt.`,
+        `${choicesText(count)} von Mitgliedern ${byCount(count, "wird", "werden")} zurückgesetzt, weil ihr Brot an dem Tag nicht mehr gebacken wird. ${byCount(count, "Sie wird", "Sie werden")} nicht wiederhergestellt.`,
       );
     }
     return lines.join("\n\n");
@@ -159,7 +188,7 @@ export const CopyWeekSettingsSelector: React.FC<
       >
         <option value="">
           {sources.length === 0
-            ? "keine frühere Woche geplant"
+            ? EMPTY_OPTION_TEXT[sourcesState]
             : "Woche wählen"}
         </option>
         {sources.map((source) => (

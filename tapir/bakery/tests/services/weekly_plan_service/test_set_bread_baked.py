@@ -1,7 +1,4 @@
-from tapir.bakery.services.weekly_plan_service import (
-    DeliveryDayIsOver,
-    WeeklyPlanService,
-)
+from tapir.bakery.services.weekly_plan_service import WeeklyPlanService
 from tapir.bakery.tests.services.weekly_plan_service.weekly_plan_service_test_case import (
     TARGET_WEEK,
     YEAR,
@@ -40,22 +37,6 @@ class TestSetBreadBaked(WeeklyPlanServiceTestCase):
         self.assertEqual(plan(TARGET_WEEK), set())
         choice.refresh_from_db()
         self.assertIsNone(choice.bread_id)
-
-    def test_setBreadBaked_dayIsOver_raisesDeliveryDayIsOver(self):
-        # Tuesday of the frozen week 11 is over.
-        bake(self.roggen, 11, day=1)
-
-        for is_baked in (True, False):
-            with self.subTest(is_baked=is_baked):
-                with self.assertRaises(DeliveryDayIsOver):
-                    self._set(
-                        self.dinkel if is_baked else self.roggen,
-                        is_baked,
-                        week=11,
-                        day=1,
-                    )
-
-        self.assertEqual(plan(11), {(1, "Roggen")})
 
     def test_setBreadBaked_switchedOffAsDryRun_countsAndChangesNothing(self):
         bake(self.roggen, TARGET_WEEK, day=4)

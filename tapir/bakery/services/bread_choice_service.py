@@ -55,7 +55,7 @@ class BreadChoiceService:
         )
 
     @classmethod
-    def check_capacity_available(
+    def check_direct_order_limit(
         cls, delivery: BreadDelivery, new_bread_id, pickup_location_id, cache: dict
     ):
         """

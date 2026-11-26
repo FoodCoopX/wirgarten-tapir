@@ -15,7 +15,6 @@ from tapir.bakery.models import (
 from tapir.bakery.services.bread_delivery_context_service import (
     BreadDeliveryContextService,
 )
-from tapir.bakery.services.direct_order_limit_service import DirectOrderLimitService
 from tapir.pickup_locations.services.pickup_location_delivery_day_service import (
     PickupLocationDeliveryDayService,
 )
@@ -69,11 +68,6 @@ class TestBakeryGenerator(TapirIntegrationTest):
             self.assertTrue(bread.pieces_per_stove_layer)
             self.assertGreater(bread.weight, 0)
 
-    def test_generateMasterdata_default_givesEveryBreadAMax(self):
-        BakeryGenerator.generate_masterdata()
-
-        self.assertFalse(Bread.objects.filter(max_pieces__isnull=True).exists())
-
     def test_generateProductsBakery_createsTheWeeklyBreadShare(self):
         ProductGenerator.generate_products_bakery()
 
@@ -110,7 +104,13 @@ class TestBakeryGenerator(TapirIntegrationTest):
             expected,
         )
 
-    def _create_bread_member(self, pickup_location, quantity: int):
+    def test_generateWeekData_assignedBreadsAreAvailableAtTheMembersStation(self):
+        pickup_location = create_pickup_location_with_opening_times(
+            [4], name="Hofladen"
+        )
+        BakeryGenerator.generate_masterdata()
+        ProductGenerator.generate_products_bakery()
+
         member = MemberFactory.create()
         MemberPickupLocationFactory.create(
             member=member,
@@ -121,20 +121,10 @@ class TestBakeryGenerator(TapirIntegrationTest):
         SubscriptionFactory.create(
             member=member,
             product=Product.objects.filter(type__name=BREAD_PRODUCT_TYPE_NAME).first(),
-            quantity=quantity,
+            quantity=2,
             start_date=datetime.date.fromisocalendar(year, week, 1),
             end_date=datetime.date.fromisocalendar(year, week, 7),
         )
-        return member
-
-    def test_generateWeekData_assignedBreadsAreAvailableAtTheMembersStation(self):
-        pickup_location = create_pickup_location_with_opening_times(
-            [4], name="Hofladen"
-        )
-        BakeryGenerator.generate_masterdata()
-        ProductGenerator.generate_products_bakery()
-        self._create_bread_member(pickup_location, quantity=2)
-
         BakeryGenerator.generate_week_data()
 
         self.assertTrue(BreadDelivery.objects.exists())
@@ -157,31 +147,6 @@ class TestBakeryGenerator(TapirIntegrationTest):
                     bread=delivery.bread,
                 ).exists(),
             )
-
-    def test_generateWeekData_moreSlotsThanTheLimitsAllow_staysWithinTheLimits(self):
-        pickup_location = create_pickup_location_with_opening_times(
-            [4], name="Hofladen"
-        )
-        BakeryGenerator.generate_masterdata()
-        Bread.objects.update(max_pieces=1)
-        ProductGenerator.generate_products_bakery()
-        for _ in range(4):
-            self._create_bread_member(pickup_location, quantity=3)
-
-        BakeryGenerator.generate_week_data()
-
-        year, week = BakeryGenerator.get_weeks_with_data()[0]
-        limits = DirectOrderLimitService.get_limits_for_day(
-            year=year, delivery_week=week, delivery_day=4, cache={}
-        )
-        self.assertEqual(
-            {bread.ordered for bread in limits.breads.values()} - {0, 1}, set()
-        )
-        self.assertTrue(
-            BreadDelivery.objects.filter(
-                year=year, delivery_week=week, bread__isnull=True
-            ).exists()
-        )
 
     @patch.object(BakeryGenerator, "SHARE_OF_MEMBERS_WITH_PREFERENCES", 1.0)
     def test_generateWeekData_givesMembersFavourites(self):

@@ -341,9 +341,9 @@ class TestBreadViewSet(TapirIntegrationTest):
 
         breads = self._list_for_station(pl)
 
-        self.assertEqual(breads["Roggenbrot"]["capacity"], 5)
-        self.assertEqual(breads["Roggenbrot"]["delivery_count"], 1)
-        self.assertEqual(breads["Roggenbrot"]["available_capacity"], 4)
+        self.assertEqual(breads["Roggenbrot"]["direct_order_limit"], 5)
+        self.assertEqual(breads["Roggenbrot"]["direct_orders"], 1)
+        self.assertEqual(breads["Roggenbrot"]["remaining_direct_orders"], 4)
 
     def test_list_filterByPickupLocation_breadWithoutMax_isUnlimited(self):
         pl = create_pickup_location_with_opening_times([DAY])
@@ -352,8 +352,8 @@ class TestBreadViewSet(TapirIntegrationTest):
 
         breads = self._list_for_station(pl)
 
-        self.assertIsNone(breads["Roggenbrot"]["capacity"])
-        self.assertIsNone(breads["Roggenbrot"]["available_capacity"])
+        self.assertIsNone(breads["Roggenbrot"]["direct_order_limit"])
+        self.assertIsNone(breads["Roggenbrot"]["remaining_direct_orders"])
 
     def test_list_filterByPickupLocation_breadNotBakedThatDay_excluded(self):
         pl = create_pickup_location_with_opening_times([DAY])
@@ -1156,6 +1156,24 @@ class TestBreadSpecificsPerDeliveryDayViewSet(TapirIntegrationTest):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertFalse(BreadSpecificsPerDeliveryDay.objects.exists())
 
+    def test_create_dayOutOfRange_returns400(self):
+        bread = BreadFactory.create(name="Roggenbrot")
+
+        response = self.client.post(
+            reverse("bakery:bread-specifics-list"),
+            data={
+                "year": 2026,
+                "delivery_week": 11,
+                "delivery_day": 9,
+                "bread": str(bread.id),
+                "max_pieces": 5,
+            },
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(BreadSpecificsPerDeliveryDay.objects.exists())
+
     def test_bulkUpdate_weekNotInTheYear_returns400(self):
         # 2027 has 52 ISO weeks.
         bread = BreadFactory.create(name="Roggenbrot")
@@ -1589,6 +1607,36 @@ class TestBreadChoiceCapacityGuard(TapirIntegrationTest):
         self.assertIn(
             'FOR UPDATE OF "bakery_availablebreadsfordeliveryday"', entries_lock
         )
+
+    def test_patch_loggedInAsTheMember_locksTheDeliveryRowOnly(self):
+        # A member's queryset joins the subscription, which must stay unlocked.
+        member = MemberFactory.create()
+        self.client.force_login(member)
+        self._offer(max_pieces=10)
+        delivery = self._delivery(member=member)
+
+        with CaptureQueriesContext(connection) as queries:
+            self._patch(delivery, self.bread)
+
+        [delivery_lock] = [
+            query["sql"]
+            for query in queries.captured_queries
+            if "FOR UPDATE" in query["sql"] and "bakery_breaddelivery" in query["sql"]
+        ]
+        self.assertIn('FOR UPDATE OF "bakery_breaddelivery"', delivery_lock)
+
+    def test_patch_breadIsNotAnId_returns400(self):
+        delivery = self._delivery()
+
+        for bread in ([str(self.bread.id)], {"id": str(self.bread.id)}, 5):
+            with self.subTest(bread=bread):
+                response = self.client.patch(
+                    reverse("bakery:bread-deliveries-detail", args=[delivery.id]),
+                    {"bread": bread},
+                    content_type="application/json",
+                )
+
+                self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_patch_takenAtAnotherStationOfTheSameDay_returns400(self):
         self._offer(max_pieces=1)

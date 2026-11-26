@@ -27,7 +27,7 @@ interface DirectOrderLimitsModalProps {
 const CAPACITY_SOURCE_LABELS: Record<TotalCapacitySourceEnum, string> = {
   fixed: "Fixe Stück des Tages",
   day_max: "Max. Stück des Tages",
-  group_max: "Max. der Gruppe",
+  group_max: "Max. Stück der Gruppe",
   bread_max: "Max. Stück des Brots",
 };
 
@@ -99,7 +99,14 @@ export const DirectOrderLimitsModal: React.FC<DirectOrderLimitsModalProps> = ({
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Enter" && !saving && !loading && !loadFailed) {
+    // Only in a field: on a button, Enter presses that button.
+    if (
+      e.key === "Enter" &&
+      e.target instanceof HTMLInputElement &&
+      !saving &&
+      !loading &&
+      !loadFailed
+    ) {
       e.preventDefault();
       handleSaveAndClose();
     }
@@ -148,23 +155,25 @@ export const DirectOrderLimitsModal: React.FC<DirectOrderLimitsModalProps> = ({
 
   // bakeable is the limit at 100 %: beyond it the day's plan cannot be
   // computed at all, while beyond a lower percentage only new orders stop.
+  // capacityName says what bounds the capacity, to raise it.
   function renderOrderedWarning(
     ordered: number,
     limit: number | null,
     bakeable: number | null,
+    capacityName: string,
   ) {
     if (bakeable != null && ordered > bakeable) {
       return (
         <small className="text-danger d-flex align-items-center gap-1">
           <ExclamationTriangle size={12} />
           Mehr bestellt als gebacken werden kann: so lässt sich kein Backplan
-          berechnen. Max. Stück erhöhen oder Brotwahlen zurücksetzen.
+          berechnen. {capacityName} erhöhen oder Brotwahlen zurücksetzen.
         </small>
       );
     }
     if (limit == null || ordered <= limit) return null;
     return (
-      <small className="text-warning d-flex align-items-center gap-1">
+      <small className="text-warning-emphasis d-flex align-items-center gap-1">
         <ExclamationTriangle size={12} />
         Mehr bestellt als erlaubt: bestehende Bestellungen bleiben, neue werden
         abgelehnt.
@@ -208,12 +217,14 @@ export const DirectOrderLimitsModal: React.FC<DirectOrderLimitsModalProps> = ({
         <td className="align-middle" style={{ minWidth: "220px" }}>
           {unlimited ? (
             <small className="text-muted">
-              Unbegrenzt bestellbar: für eine Grenze Max. Stück setzen
+              Unbegrenzt bestellbar: für eine Grenze Max. Stück beim Brot oder
+              in den Tageseinstellungen setzen
             </small>
           ) : (
             <>
               <div className="d-flex align-items-center gap-2">
                 <Form.Range
+                  aria-label={`Max. direkt bestellbar (%): ${bread.breadName}`}
                   min={0}
                   max={100}
                   step={1}
@@ -240,7 +251,13 @@ export const DirectOrderLimitsModal: React.FC<DirectOrderLimitsModalProps> = ({
         </td>
         <td className="text-center align-middle">
           {bread.ordered}
-          {renderOrderedWarning(bread.ordered, limit, bakeable)}
+          {!unlimited &&
+            renderOrderedWarning(
+              bread.ordered,
+              limit,
+              bakeable,
+              CAPACITY_SOURCE_LABELS[bread.totalCapacitySource!],
+            )}
         </td>
       </tr>
     );
@@ -257,6 +274,7 @@ export const DirectOrderLimitsModal: React.FC<DirectOrderLimitsModalProps> = ({
     );
     const heldBack = group.minRemaining + group.openMinPieces;
     const limit = computeLimit(percent, group.totalCapacity, heldBack);
+    // The percentage applies to what is left after the deductions.
     const bakeable = computeLimit(100, group.totalCapacity, heldBack);
     const deductions = [
       group.fixedPieces > 0 ? `${group.fixedPieces} Fixe Stück` : null,
@@ -273,17 +291,22 @@ export const DirectOrderLimitsModal: React.FC<DirectOrderLimitsModalProps> = ({
     return (
       <li key={group.groupId}>
         <strong>Gruppe {group.groupName}</strong> zusammen
-        {group.fixedPieces > 0 && " (ohne Brote mit Fixe Stück)"}:{" "}
+        {group.fixedPieces > 0 && " (ohne Brote mit „Fixe Stück“)"}:{" "}
         {limit == null ? (
-          "unbegrenzt (kein Max. bei den Broten der Gruppe)"
+          "unbegrenzt (kein Max. Stück bei den Broten der Gruppe)"
         ) : (
           <>
-            höchstens <strong>{limit}</strong> ({percent} % von{" "}
+            höchstens <strong>{limit}</strong> ({percent} % von {bakeable}:{" "}
             {group.maxPieces} abzüglich {deductionText}), bereits bestellt{" "}
             {group.ordered}
           </>
         )}
-        {renderOrderedWarning(group.ordered, limit, bakeable)}
+        {renderOrderedWarning(
+          group.ordered,
+          limit,
+          bakeable,
+          "Max. Stück der Brote",
+        )}
       </li>
     );
   }
@@ -336,8 +359,8 @@ export const DirectOrderLimitsModal: React.FC<DirectOrderLimitsModalProps> = ({
               <th>Brot</th>
               <th className="text-center">Gesamtkapazität</th>
               <th className="text-center">Min. Rest</th>
-              <th className="text-center">Direkt bestellbar</th>
-              <th className="text-center">Stück</th>
+              <th className="text-center">Max. direkt bestellbar (%)</th>
+              <th className="text-center">Max. direkt bestellbar (Stück)</th>
               <th className="text-center">Bereits bestellt</th>
             </tr>
           </thead>
@@ -353,7 +376,12 @@ export const DirectOrderLimitsModal: React.FC<DirectOrderLimitsModalProps> = ({
   return (
     <Modal
       show={isOpen}
-      onHide={onClose}
+      // Closing while saving would drop the edits if the save then fails.
+      onHide={() => {
+        if (!saving) onClose();
+      }}
+      backdrop={saving ? "static" : true}
+      keyboard={!saving}
       size="xl"
       centered
       scrollable
@@ -362,7 +390,7 @@ export const DirectOrderLimitsModal: React.FC<DirectOrderLimitsModalProps> = ({
       <Modal.Header closeButton className="header-white-on-middle-brown">
         <Modal.Title>
           <h5 className="mb-0">
-            Max. Bestellmengen - {dayLabel}, KW {week}/{year}
+            Max. Bestellmengen — {dayLabel}, KW {week}/{year}
           </h5>
         </Modal.Title>
       </Modal.Header>

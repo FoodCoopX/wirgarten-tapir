@@ -79,19 +79,18 @@ class DayDirectOrderLimits:
             and group.limit is not None
             and bread_id in group.bread_ids
         ):
-            group_left = group.limit - group.ordered
             # Orders of the bread up to its own open minimum are baked anyway,
-            # so they take nothing from the group's other breads.
-            remainders.append(
-                group_left + bread.open_min_pieces if group_left >= 0 else group_left
-            )
+            # so they take nothing from the group's other breads, even when
+            # those overbooked the group.
+            group_left = max(group.limit - group.ordered, 0)
+            remainders.append(group_left + bread.open_min_pieces)
         return max(min(remainders), 0) if remainders else None
 
 
 class DirectOrderLimitService:
     """
     How many loaves of a bread members may choose directly for one delivery
-    day, counted over all stations delivered that day.
+    day, counted over all pickup locations delivered that day.
 
     The limit is a percentage of the day's capacity less Min. Rest, rounded
     down. The capacity is, in this order: the day's fixed pieces, the day's

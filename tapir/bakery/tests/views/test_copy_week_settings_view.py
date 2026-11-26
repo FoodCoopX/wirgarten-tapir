@@ -2,7 +2,7 @@ from django.urls import reverse
 from rest_framework import status
 
 from tapir.bakery.models import AvailableBreadsForDeliveryDay
-from tapir.bakery.services.copy_week_validator import CopyWeekValidator
+from tapir.bakery.services.weekly_plan_validator import WeeklyPlanValidator
 from tapir.bakery.tests.factories import (
     AvailableBreadsForDeliveryDayFactory,
     BreadFactory,
@@ -82,8 +82,25 @@ class TestCopyWeekSettingsView(TapirIntegrationTest):
                 self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
                 self.assertEqual(
                     response.data["error"],
-                    CopyWeekValidator.SOURCE_NOT_BEFORE_TARGET,
+                    WeeklyPlanValidator.SOURCE_NOT_BEFORE_TARGET,
                 )
+
+    def test_post_sourceWithoutBreads_returns400AndKeepsTheTargetWeek(self):
+        AvailableBreadsForDeliveryDayFactory.create(
+            year=FUTURE_YEAR, delivery_week=3, delivery_day=DAY, bread=self.bread
+        )
+
+        response = self._post(source_week=2, target_week=3)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data["error"], WeeklyPlanValidator.SOURCE_WITHOUT_BREADS
+        )
+        self.assertTrue(
+            AvailableBreadsForDeliveryDay.objects.filter(
+                year=FUTURE_YEAR, delivery_week=3
+            ).exists()
+        )
 
     def test_post_weekNotInTheYear_returns400(self):
         # 2027 has 52 ISO weeks.
