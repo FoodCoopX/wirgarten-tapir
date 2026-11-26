@@ -1,4 +1,4 @@
-import { Suspense, useEffect } from "react";
+import { Suspense } from "react";
 import {
   Route,
   BrowserRouter as Router,
@@ -15,28 +15,6 @@ import { routes } from "./routing";
 // add new routes in routing.ts
 
 const InnerApp = () => {
-  useEffect(() => {
-    const setCookie = (name: string, value: string) => {
-      document.cookie = name + "=" + value + "; Path=/; SameSite=Lax;";
-    };
-
-    const handleMessage = (event: MessageEvent) => {
-      if (!env.REACT_APP_API_ROOT.startsWith(event.origin)) {
-        console.log("Ignoring message from unknown origin", event.origin);
-        return;
-      }
-
-      if (event.data.type === "NEW_TOKEN") {
-        const newToken = event.data.token;
-        setCookie("token", newToken);
-      }
-    };
-
-    window.addEventListener("message", handleMessage);
-
-    return () => window.removeEventListener("message", handleMessage);
-  }, []);
-
   const location = useLocation();
   return (
     <Suspense

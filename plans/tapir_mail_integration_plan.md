@@ -114,6 +114,7 @@ For each oddity, check whether it can be removed with reasonable effort now that
 - [x] **`env.ts` parent-window config**: `MailUiView` renders `window._env_` (API root, basename) into `tapir_mail/ui.html`; `env.ts` only reads it. The `TAPIRMAIL_REACT_APP_*` settings and env vars are gone, and `/tapirmail/…` works without the iframe.
 - [x] **Iframe** (replaces "hash syncing by polling"): dropped. The UI renders in Tapir's layout, `TapirMailView` and `tapir_mail_iframe.html` are gone, the editor page grid uses `minmax(0, …)` columns, and the sidebar marks a link as active for its subpages too (`is_path_in_section`). Old `/mailing/#/…` bookmarks are not redirected.
 - [x] **`beforeunload` guard in the wrapper**: moved into the mail UI as `usePreventUnload`, used by both editor pages.
+- [x] **Dead `NEW_TOKEN` message handler** in `App.tsx`: removed.
 - **CSRF / `credentials: "include"` handling in `useApi.ts` / `requests.ts`**: align with how `src_frontend` calls the API, if the shared client makes it redundant.
 - **Mail-specific UI components that duplicate `src_frontend/components`** (`TapirButton`, pagination, modals): reuse is blocked by the React version, so only list them.
 - **Settings only the mail module reads**: drop those Tapir never changes from their defaults.
