@@ -123,7 +123,7 @@ For each oddity, check whether it can be removed with reasonable effort now that
 - [x] **Dead CORS settings**: removed from `tapir/settings/base.py`; mail UI and Jasmin checked locally.
 - [x] **`STATIC_SEGMENTS` / `static_segments` command**: the command is removed; Tapir never set `STATIC_SEGMENTS`.
 - **Path-based permission middleware**: replace `TapirMailPermissionMiddleware` with permission classes on the mail views.
-- **`OnboardingTrigger` ID from the module path**: `tapir/wirgarten/triggers/onboarding_trigger.py` still derives its ID from `__name__`, like the mail triggers did. Moving that file would break stored triggers again.
+- [x] **`OnboardingTrigger` ID from the module path**: now `onboarding_trigger`; migration `wirgarten.0153_stable_onboarding_trigger_id` rewrites the stored IDs (forward and backward tests).
 
 Out of scope even if possible: the React 18 package (see above), and refactoring to Tapir's conventions.
 

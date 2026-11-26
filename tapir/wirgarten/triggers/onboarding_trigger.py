@@ -28,7 +28,7 @@ class OnboardingTriggerData:
 class OnboardingTrigger(Trigger[OnboardingTriggerData]):
     @classmethod
     def get_id(cls) -> str:
-        return f"{__name__}.onboarding_trigger"
+        return "onboarding_trigger"
 
     @classmethod
     def get_display_name(cls) -> str:
