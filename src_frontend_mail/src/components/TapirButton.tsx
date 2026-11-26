@@ -5,7 +5,7 @@ import { ButtonVariant } from "react-bootstrap/types";
 interface TapirButtonProps {
   variant?: ButtonVariant;
   text?: string;
-  icon?: React.ComponentType<{ style: any }>;
+  icon?: React.ComponentType<{ style?: React.CSSProperties }>;
   onClick?: React.MouseEventHandler<HTMLButtonElement>;
   disabled?: boolean;
   size?: "sm" | "lg" | undefined;

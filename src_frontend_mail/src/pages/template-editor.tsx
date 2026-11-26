@@ -31,15 +31,16 @@ const TemplateEditor = () => {
     TemplateTypeEnum.Start,
   );
   const [isDefaultLayout, setIsDefaultLayout] = useState(false);
-  const [content, setContent] = useState<any>(EMPTY_PAGE);
-  const [savedContent, setSavedContent] = useState<any>(EMPTY_PAGE);
+  const [content, setContent] = useState<IEmailTemplate["content"]>(EMPTY_PAGE);
+  const [savedContent, setSavedContent] =
+    useState<IEmailTemplate["content"]>(EMPTY_PAGE);
   const [savedName, setSavedName] = useState("");
   const [savedTemplateType, setSavedTemplateType] = useState<TemplateTypeEnum>(
     TemplateTypeEnum.Start,
   );
   const [savedIsDefaultLayout, setSavedIsDefaultLayout] = useState(false);
   const [hasLayoutBodyBlock, setHasLayoutBodyBlock] = useState(false);
-  const latestEditorContent = useRef<any>(EMPTY_PAGE);
+  const latestEditorContent = useRef<IEmailTemplate["content"]>(EMPTY_PAGE);
   const [showSaveGateModal, setShowSaveGateModal] = useState(false);
   const [loading, setLoading] = useState(Boolean(id));
   const [sourceMode, setSourceMode] = useState<"mjml" | "json" | null>(null);

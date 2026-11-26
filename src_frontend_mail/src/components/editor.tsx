@@ -175,7 +175,7 @@ type EditorProps = {
   onTemplateNameChange?: (name: string) => void;
   templateName?: string;
   mergeTags?: any;
-  content?: any;
+  content?: IEmailTemplate["content"];
   onContentChange?: (values: IEmailTemplate) => void;
   showLayoutBodyBlock?: boolean;
   layoutBodyBlockExists?: boolean;
@@ -286,7 +286,7 @@ export default Editor;
 type CustomEmailEditorProps = {
   onContentChange?: (values: IEmailTemplate) => void;
   values: IEmailTemplate;
-  content?: any;
+  content?: IEmailTemplate["content"];
   templateName?: string;
   onTemplateNameChange?: (name: string) => void;
   onGoBack?: (values: IEmailTemplate) => void;

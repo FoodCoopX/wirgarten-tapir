@@ -15,8 +15,10 @@ const EmailConfigurationVersionSelect = ({
   selectedVersionId: string;
   onChange: (version: string) => void;
 }) => {
-  const handleSelect = (key: any, event: any) => {
-    onChange(key);
+  const handleSelect = (key: string | null) => {
+    if (key !== null) {
+      onChange(key);
+    }
   };
 
   const selectedVersion: EmailConfigurationVersion | undefined =

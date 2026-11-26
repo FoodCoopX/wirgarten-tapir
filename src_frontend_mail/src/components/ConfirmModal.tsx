@@ -10,7 +10,7 @@ interface ConfirmDeleteModalProps {
   confirmButtonText: string;
   confirmButtonVariant: ButtonVariant;
   confirmButtonIcon: React.ComponentType<{
-    style: any;
+    style?: React.CSSProperties;
   }>;
   onConfirm: () => void;
   onCancel: () => void;

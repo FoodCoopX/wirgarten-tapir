@@ -23,9 +23,9 @@ const CreateRecipientModal: React.FC<CreateRecipientModalProps> = ({
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
-  const [firstNameError, setFirstNameError] = useState();
-  const [lastNameError, setLastNameError] = useState();
-  const [emailError, setEmailError] = useState();
+  const [firstNameError, setFirstNameError] = useState<string | undefined>();
+  const [lastNameError, setLastNameError] = useState<string | undefined>();
+  const [emailError, setEmailError] = useState<string | undefined>();
 
   function onCreateClicked() {
     setLoading(true);
@@ -52,7 +52,7 @@ const CreateRecipientModal: React.FC<CreateRecipientModalProps> = ({
 
         error.response
           .json()
-          .then((fieldErrors: any) => {
+          .then((fieldErrors: Record<string, string[]>) => {
             if ("first_name" in fieldErrors) {
               setFirstNameError(fieldErrors["first_name"][0]);
             }
