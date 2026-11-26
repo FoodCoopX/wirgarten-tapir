@@ -134,8 +134,9 @@ Out of scope even if possible: the iframe itself and the React 18 package (see a
 - [ ] Phase 5 — smoke test on a local instance: editor popups/tooltips, media library upload, dispatch, bounce check, category registration pages
 - [ ] Phase 6 — evening out oddities: go through the oddities listed under Docs plus those found in phases 1–5. For each one, decide whether to remove it now, leave it for a follow-up, or keep it for good (see below). Present the list for review before changing anything.
 - [ ] Phase 7 — docs: `docs/dev/mail_module.md` (conventions warning, the oddities that remain after phase 6), `docs/dev/index.md` link, `AGENTS.md`
-- [ ] Phase 8 — archive `tapir-mail-module` and `tapir-mail-releases` (after deploy)
-- [ ] Phase 9 — delete this plan file (`plans/tapir_mail_integration_plan.md`)
+- [ ] Phase 8 — review the mail code for worst offenders: code that is very far from Tapir's conventions, or badly written or designed in general (e.g. huge view classes, module-level global state, logic in serializers, missing cache parameter on hot paths, untested areas). Present a ranked list with a short reason and a rough effort for each, for review before changing anything. Each item is either fixed in this branch or becomes a follow-up issue.
+- [ ] Phase 9 — archive `tapir-mail-module` and `tapir-mail-releases` (after deploy)
+- [ ] Phase 10 — delete this plan file (`plans/tapir_mail_integration_plan.md`)
 
 ## Decisions
 
