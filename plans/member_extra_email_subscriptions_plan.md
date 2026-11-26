@@ -148,10 +148,12 @@ All endpoints are public (`permission_classes = []`). The token is validated in 
 
 When a member leaves the organisation, their main address and all their extra addresses are removed from every list. This also applies to members without extras, so it closes an existing gap.
 
-**Who counts as former member** (new service `FormerMemberProvider.get_former_member_ids(reference_date, cache)`), depending on `ORGANISATION_LEGAL_STATUS`:
-- Cooperative: no shares at the reference date and no future `PURCHASE` / `TRANSFER_IN` (same queries as in `MemberSegmentProvider.get_queryset_active_members`).
-- Association: no `AssociationMembership` active at or after the reference date.
-- Company: no active or future subscriptions (`get_active_and_future_subscriptions`).
+**Who counts as former member**: every member who isn't active. Active is the existing definition of the "Aktive Mitglieder" segment, independent of `ORGANISATION_LEGAL_STATUS`: shares at the reference date, future `PURCHASE` / `TRANSFER_IN`, active or future subscriptions, association membership, or solidarity contribution. Mass mails and list membership thus agree on who is a member.
+
+New service `ActiveMemberProvider` in `tapir/core/services/active_member_provider.py`:
+- `get_active_members(reference_datetime, cache)`: moved from `MemberSegmentProvider.get_queryset_active_members`, with both parameters required and a return annotation. Its tests move along.
+- `get_former_members(reference_datetime, cache)`: all members excluding the active ones.
+- Callers switch to it directly: the `ALL_USERS` segment in `tapir/coop/apps.py` (through a lambda that passes a fresh cache, since segments only pass `reference_datetime`), `UnverifiedMembersService`, `send_verify_emails`. `MemberSegmentProvider.get_queryset_active_members` is deleted.
 
 **Nightly celery beat task** `unsubscribe_former_members_from_mailing_lists`:
 - Gated by `MAILING_LISTS_ENABLED`. Runs regardless of `ENABLE_EXTRA_MAIL_ADDRESSES`, so extras of former members are removed even while the feature is off.
@@ -198,7 +200,7 @@ Rejoining restores nothing: the member subscribes again through self-service.
 - [ ] Phase 5 — access token service, send-link endpoint + trigger, public request page, "Abos verwalten Link" token
 - [ ] Phase 6 — management API + island (categories, lists, self-removal), log entry, throttling (optional: decide at the beginning of the phase whether it's necessary; if yes, it also covers the phase 5 request-link endpoint)
 - [ ] Phase 7 — mailman subscriptions follow the member's email change
-- [ ] Phase 8 — former members: `FormerMemberProvider`, nightly unsubscription task + log entry, blocking new subscriptions (self-service, access link, admin views, snapshot), list unsubscription + registration cleanup in `DeleteMemberApiView`
+- [ ] Phase 8 — former members: `ActiveMemberProvider` (move `get_queryset_active_members`, add `get_former_members`, update callers), nightly unsubscription task + log entry, blocking new subscriptions (self-service, access link, admin views, snapshot), list unsubscription + registration cleanup in `DeleteMemberApiView`
 - [ ] Phase 9 — test data generation (extras with and without direct mails, with registrations)
 - [ ] Phase 10 — docs (`docs/admins`, explanation text)
 - [ ] Phase 11 — delete this plan file (`plans/member_extra_email_subscriptions_plan.md`)
