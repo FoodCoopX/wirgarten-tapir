@@ -190,7 +190,13 @@ DJANGO_VITE = {
     "default": {
         "dev_mode": env.bool("DJANGO_VITE_DEBUG", default=False),
         "manifest_path": "./dist/manifest.json",
-    }
+    },
+    "mail": {
+        "dev_mode": env.bool("DJANGO_VITE_DEBUG", default=False),
+        "dev_server_port": 5174,
+        "static_url_prefix": "mail",
+        "manifest_path": "./dist/mail/manifest.json",
+    },
 }
 
 # CORS

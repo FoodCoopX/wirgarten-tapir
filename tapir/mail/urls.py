@@ -1,5 +1,3 @@
-from django.conf import settings
-from django.conf.urls.static import static
 from django.urls import include, path, re_path
 from django.views.generic.base import TemplateView
 from rest_framework import routers
@@ -66,9 +64,9 @@ urlpatterns = [
         name="external_recipient_manager",
     ),
     re_path(
-        r"^(?!(api|config\.js|static)/).*$",
-        TemplateView.as_view(template_name="index.html"),
-    ),  # React index.html
+        r"^(?!api/).*$",
+        TemplateView.as_view(template_name="tapir_mail/ui.html"),
+    ),
     path(
         "api/missing_triggers",
         views.MissingTriggersView.as_view(),
@@ -79,6 +77,4 @@ urlpatterns = [
         views.CreateMissingTriggerMailView.as_view(),
         name="create_missing_trigger",
     ),
-] + static(
-    settings.STATIC_URL, document_root=settings.STATIC_ROOT  # React static files
-)
+]

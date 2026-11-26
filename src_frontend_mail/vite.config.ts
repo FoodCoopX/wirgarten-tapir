@@ -4,15 +4,20 @@ import { defineConfig } from "vite";
 
 export default defineConfig({
   plugins: [react()],
-  root: resolve(__dirname, "src"),
+  root: resolve(import.meta.dirname, "src"),
   base: "/static/mail/",
   resolve: {
     alias: {
-      "tapir-api-client": resolve(__dirname, "../src_frontend/api-client"),
+      "tapir-api-client": resolve(
+        import.meta.dirname,
+        "../src_frontend/api-client",
+      ),
     },
   },
   server: {
+    host: "0.0.0.0",
     port: 5174,
+    cors: true,
   },
   build: {
     sourcemap: true,
@@ -20,9 +25,9 @@ export default defineConfig({
     cssMinify: "esbuild",
     manifest: "manifest.json",
     emptyOutDir: true,
-    outDir: resolve(__dirname, "../dist/mail"),
+    outDir: resolve(import.meta.dirname, "../dist/mail"),
     rollupOptions: {
-      input: { main: resolve(__dirname, "src/main.tsx") },
+      input: { main: resolve(import.meta.dirname, "src/main.tsx") },
     },
   },
 });

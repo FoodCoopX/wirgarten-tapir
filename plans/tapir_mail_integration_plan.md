@@ -70,13 +70,13 @@ The label stays `tapir_mail`, so the following stay valid without data migration
 
 ### Serving
 
-- `django-vite`: add a second config `"mail"` with `manifest_path: ./dist/mail/manifest.json` and `dev_server_port: 5174`.
+- `django-vite`: a second config `"mail"` with `manifest_path: ./dist/mail/manifest.json`, `static_url_prefix: "mail"` and `dev_server_port: 5174`. `dist/mail/` is served at `/static/mail/` through the existing `STATICFILES_DIRS = ["dist"]`.
 - The iframe stays for this plan. It isolates the mail UI's Bootstrap and Arco global CSS from Tapir's pages.
-  - The iframe's `src` now points to a Django template in `tapir/mail/templates/` that loads the entry via `{% vite_asset ... app="mail" %}`. This replaces the CRA `index.html` in `__ui__`.
+  - The iframe's `src` now points to `tapir/mail/templates/tapir_mail/ui.html`, which loads `main.tsx` via `{% vite_asset ... app="mail" %}`. It replaces the CRA `index.html` in `__ui__`. The mail URLs no longer append their own `static()` route.
   - `TAPIRMAIL_REACT_APP_API_ROOT` / `_BASENAME` keep working through `env.ts`.
 - Docker:
   - `vite.Dockerfile` also copies `src_frontend_mail/package.json` before `pnpm install`.
-  - The `vite` service runs both dev servers (`pnpm -r --parallel dev`) and exposes 5174.
+  - The `vite` service runs both dev servers (`pnpm --parallel --recursive --include-workspace-root run dev`), exposes 5174 and keeps the mail package's `node_modules` in its own volume.
   - `.github/workflows/docker-build.yml` needs no change beyond the root `build` script.
 
 ### Later, separate: drop the iframe
@@ -106,7 +106,8 @@ New dev page `docs/dev/mail_module.md`, written for a developer who opens the ma
 - **React 18 types in a React 19 workspace**: pnpm hoists `@types/react` 19 from the root, so third-party typings in the mail package would pick it up. `src_frontend_mail/tsconfig.json` pins `react` / `react-dom` to the package's own `@types` via `paths`.
 - **CSS minification with esbuild**: the Arco theme bundled with easy-email contains invalid CSS that Vite's default minifier (lightningcss) rejects.
 - **API base path**: the generated client already contains `/tapirmail` in every path, so the mail UI uses an empty base path, while `REACT_APP_API_ROOT` (with `/tapirmail`) is still used for the filepond and media library URLs.
-- Any further oddity found during phases 4–6 is added here.
+- **Build order**: the root `vite build` empties `dist/`, including `dist/mail/`. The root `pnpm build` therefore builds the mail package last; running only the root Vite build removes the mail build.
+- Any further oddity found during phases 5–6 is added here.
 
 Only the oddities that phase 7 keeps go into the page. For those left for a follow-up, the page names the follow-up.
 
@@ -137,7 +138,7 @@ Out of scope even if possible: the iframe itself and the React 18 package (see a
 - [x] Phase 1 — backend move: copy to `tapir/mail/`, label `tapir_mail`, rewrite imports, dependencies, settings, celery task names, drop the wheel
 - [x] Phase 2 — backend tests: move, replace `dummy_accounts` usages
 - [x] Phase 3 — frontend package: workspace package, CRA → Vite, React 18, shared API client, tests
-- [ ] Phase 4 — serving: django-vite `mail` config, iframe target template, Docker dev servers, build scripts
+- [x] Phase 4 — serving: django-vite `mail` config, iframe target template, Docker dev servers, build scripts
 - [ ] Phase 5 — update dependencies where possible: the npm packages of `src_frontend_mail` and the Python packages the mail app brought in (`beautifulsoup4`, `django-drf-filepond`, `django-redis`, `flufl-bounce`). Within the constraints: React 18 and everything pinned by easy-email (`react-final-form` 6 / `final-form` 4), and pnpm's `minimumReleaseAge`. Major updates (e.g. `react-router-dom` 7, `framer-motion` → `motion`) only if the code changes stay small; otherwise list them as follow-ups. Before the smoke test, so it covers the updates.
 - [ ] Phase 6 — smoke test on a local instance: editor popups/tooltips, media library upload, dispatch, bounce check, category registration pages
 - [ ] Phase 7 — evening out oddities: go through the oddities listed under Docs plus those found in phases 1–6. For each one, decide whether to remove it now, leave it for a follow-up, or keep it for good (see below). Present the list for review before changing anything.

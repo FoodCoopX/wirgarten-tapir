@@ -1,0 +1,15 @@
+{% load django_vite %}
+<!doctype html>
+<html lang="de">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Tapir Mail</title>
+        {% vite_hmr_client app="mail" %}
+        {% vite_react_refresh app="mail" %}
+        {% vite_asset "main.tsx" app="mail" %}
+    </head>
+    <body>
+        <div id="root"></div>
+    </body>
+</html>
