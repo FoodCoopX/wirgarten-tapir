@@ -21,7 +21,7 @@ Category mails reach an extra address only through its own registrations, regard
 
 - `MemberExtraEmail` (`tapir/wirgarten/models.py:1140`): `member`, `email`, `first_name`, `last_name`, `confirmed_on`, `secret` (permanent UUID, used for confirmation). Unique on `(member, email)`; the same address can belong to several members.
 - Log entries: created / updated / deleted / confirmed.
-- `Member.get_extra_recipients(cache)` (`models.py:471`): confirmed extras if `ENABLE_EXTRA_MAIL_ADDRESSES` is on.
+- `Member.get_extra_recipients(cache)` (`models.py:472`): confirmed extras if `ENABLE_EXTRA_MAIL_ADDRESSES` is on.
 - `tapir/core/views/member_extra_emails.py`: CRUD API (`check_permission_or_self`), confirmation redirect + confirmed page. Confirmation mail via `Events.EXTRA_MAIL_CONFIRMATION`.
 - Frontend: `src_frontend/member_profile/personal_data/MemberExtraEmailsModal.tsx`.
 - Parameters: `ENABLE_EXTRA_MAIL_ADDRESSES`, `EXPLANATION_TEXT_EXTRA_MAIL_ADDRESSES` (`parameter_definitions_emails.py`). They are saved by the legacy Django form `ParameterView` (`tapir/configuration/views.py:39`), which has no change hooks.
@@ -33,13 +33,14 @@ Category mails reach an extra address only through its own registrations, regard
   - Admin: subscribe internal (member, by invitation), subscribe external address (invitation), unsubscribe by address, recipient list linking to the member profile by main address only.
 - `MailChangeService.apply_mail_change` (`tapir/accounts/services/mail_change_service.py`) moves `StaticSegmentRecipient` rows to the new address, but not mailman subscriptions.
 
-### Mail module (`tapir-mail-module`)
+### Mail module (`tapir/mail`)
 
-- Recipient resolution (`service/segment.py`):
+- Recipient resolution (`services/segment.py`):
   - Union of the dynamic segments (deduplicated), then category recipients (`add_mail_categories`), then static segments appended.
   - No deduplication across these sources: a member in a segment and in a category of the same mail gets it twice.
-- Dispatch (`service/email_dispatch.py:153`): for each recipient, `get_extra_recipients(cache)` is called if it exists. One extra `EmailDispatch` is built per extra. Tokens resolve against the member; `first_name` / `last_name` are overridden.
-- `MailCategoryRecipientResolver` (`service/mail_category_recipients_resolver.py`): dynamic segment filtered by mode and `InternalRecipientCategoryRegistration`, plus the static segment recipients. No host hook for extra recipients.
+- Dispatch (`services/email_dispatch.py:153`): for each recipient, `get_extra_recipients(cache)` is looked up by name (`getattr`, a leftover from the separate package) and called if it exists. One extra `EmailDispatch` is built per extra. Tokens resolve against the member; `first_name` / `last_name` are overridden.
+- Every registered dynamic segment returns a `Member` queryset.
+- `MailCategoryRecipientResolver` (`services/mail_category_recipients_resolver.py`): dynamic segment filtered by mode and `InternalRecipientCategoryRegistration`, plus the static segment recipients.
 - External recipients: `ExternalRecipient` (permanent `secret_key`), `ExternalRecipientConfirmation`, and `StaticSegmentRecipient` in the category's static segment. There is a public registration form per category (`available_for_external_recipients=True` only) and a permanent management page.
 
 ### Why extras are not `ExternalRecipient`s
@@ -69,21 +70,19 @@ Extras without direct mails get nothing at confirmation: the category defaults a
 
 ### Mail module changes
 
-1. **`AddressedRecipient`** dataclass in the mail module:
+1. **`AddressedRecipient`** dataclass in `tapir/mail`:
    - `recipient`: the base object that tokens are resolved against.
    - `email`.
    - `token_overrides: dict`.
-   - It never gets extras.
 
-   Dispatch builds exactly one `EmailDispatch` for it. Tokens resolve against `recipient`, then `token_overrides` are applied. This replaces the current hard-coded `first_name` / `last_name` override.
-2. **`get_extra_recipients(cache)`** returns `list[AddressedRecipient]`. Wirgarten returns confirmed extras with `receives_direct_mails`, with overrides for `first_name`, `last_name` and the manage link token.
-3. **Category recipients don't get copies:** `add_mail_categories` wraps internal category recipients as `AddressedRecipient(member, member.email, {})`.
-4. **Category hook:** `register_additional_category_recipients_provider(fn)` in `registries.py`, with `fn(mail_category, cache) -> list[AddressedRecipient]`. `MailCategoryRecipientResolver.resolve_recipients` appends its result and takes a `cache` parameter; the callers are adapted (`serializers.py:424`, `segment.py:163`).
-5. **Deduplication by email per config dispatch**, first occurrence wins. Dynamic segment recipients come first, so a member reached through both a segment and a category gets the segment version, with copies. This also fixes the existing double send for members in a segment and a category of the same mail.
-6. Release a new tapir-mail version and bump the wheel URL in `pyproject.toml`.
+   Recipient resolution (`services/segment.py`) returns only `list[AddressedRecipient]`. Dispatch builds exactly one `EmailDispatch` per entry, with no type branching and no `getattr` lookup. Tokens resolve against `recipient`, then `token_overrides` are applied. This replaces the current hard-coded `first_name` / `last_name` override.
+2. **Direct-mail copies are expanded during resolution:** members from dynamic segments become their main address plus their direct-mail extras. A new service `MemberExtraRecipientProvider.get_direct_mail_recipients(member, cache) -> list[AddressedRecipient]` in `tapir/core/services/` replaces `Member.get_extra_recipients`, which is deleted. It returns confirmed extras with `receives_direct_mails`, with overrides for `first_name`, `last_name` and the manage link token, and `[]` if `ENABLE_EXTRA_MAIL_ADDRESSES` is off.
+3. **Category and static recipients don't get copies:** `add_mail_categories` wraps internal category recipients as `AddressedRecipient(member, member.email, {})`; static segment recipients are wrapped the same way.
+4. **Extras in categories:** `MailCategoryRecipientResolver.resolve_recipients` takes a `cache` parameter and appends the extras' `AddressedRecipient`s, queried directly from `MemberExtraEmail`. The callers are adapted (`serializers.py:424`, `segment.py:163`).
+5. **Deduplication by email per config dispatch**, a single pass over the resolved list, first occurrence wins. Dynamic segment recipients come first, so a member reached through both a segment and a category gets the segment version, with copies. This also fixes the existing double send for members in a segment and a category of the same mail.
 
-Wirgarten category provider:
-- Takes all confirmed extras whose member is in the category's unfiltered dynamic segment. The member's own registration doesn't matter.
+Extra recipients of a category:
+- All confirmed extras whose member is in the category's unfiltered dynamic segment. The member's own registration doesn't matter.
 - Filters them by their own registrations and the extra defaults.
 - Returns `AddressedRecipient(member, extra.email, overrides)`.
 - Returns `[]` if `ENABLE_EXTRA_MAIL_ADDRESSES` is off.
@@ -102,7 +101,7 @@ Admin recipient list (`MailingListRecipientListView`):
 
 When `ENABLE_EXTRA_MAIL_ADDRESSES` is switched off, nothing is deleted or unsubscribed:
 - Extra addresses, category registrations and mailman subscriptions stay as they are. Extras keep receiving list mails.
-- Tapir stops sending to extras: the category provider and `get_extra_recipients` return nothing.
+- Tapir stops sending to extras: the category resolver skips them and `MemberExtraRecipientProvider` returns nothing.
 - The member profile modal, the access link pages and the request page are disabled, like the existing extra email views (`FEATURE_DISABLED_MESSAGE`).
 - Admins can still remove extra addresses from lists through the recipient list.
 - Switching the feature back on restores everything as it was.
@@ -192,10 +191,10 @@ Rejoining restores nothing: the member subscribes again through self-service.
 
 ## Phases
 
-- [ ] Phase 0 — consider merging the mail module into this repo first. If merged, phase 1 is done in this repo: the category provider hook and the release + wheel bump are dropped, and the resolver queries `MemberExtraEmail` directly.
-- [ ] Phase 1 — mail module: `AddressedRecipient`, category recipients without copies, category provider hook, dedup by email; tests, release, bump wheel
-- [ ] Phase 2 — `receives_direct_mails` field + migration, `get_extra_recipients` returns `AddressedRecipient`s, API/serializer/modal checkbox
-- [ ] Phase 3 — category provider + extra defaults, snapshot at confirmation (categories + lists)
+- [x] Phase 0 — merge the mail module into this repo (#1447)
+- [ ] Phase 1 — mail module (`tapir/mail`): `AddressedRecipient`, resolution returns only `AddressedRecipient`s (segment members expanded through `MemberExtraRecipientProvider`, replacing `Member.get_extra_recipients` and the `getattr` lookup), category and static recipients without copies, dedup by email; tests
+- [ ] Phase 2 — `receives_direct_mails` field + migration, `MemberExtraRecipientProvider` filters on it, API/serializer/modal checkbox
+- [ ] Phase 3 — extras in `MailCategoryRecipientResolver` + extra defaults, snapshot at confirmation (categories + lists)
 - [ ] Phase 4 — extra mailing list manager, unsubscribe on deletion, recipient list display, parameter description update
 - [ ] Phase 5 — access token service, send-link endpoint + trigger, public request page, "Abos verwalten Link" token
 - [ ] Phase 6 — management API + island (categories, lists, self-removal), log entry, throttling (optional: decide at the beginning of the phase whether it's necessary; if yes, it also covers the phase 5 request-link endpoint)
