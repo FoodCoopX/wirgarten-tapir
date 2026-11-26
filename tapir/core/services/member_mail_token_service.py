@@ -1,6 +1,6 @@
 from collections import Counter
 
-from tapir_mail.models import StaticSegmentRecipient
+from tapir.mail.models import StaticSegmentRecipient
 
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.user_utils import UserUtils

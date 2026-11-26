@@ -2,8 +2,8 @@ import datetime
 from unittest.mock import patch, MagicMock
 
 from django.utils import timezone
-from tapir_mail.models import StaticSegment, StaticSegmentRecipient, ExternalRecipient
-from tapir_mail.triggers.transactional_trigger import (
+from tapir.mail.models import StaticSegment, StaticSegmentRecipient, ExternalRecipient
+from tapir.mail.triggers.transactional_trigger import (
     TransactionalTrigger,
     TransactionalTriggerData,
 )

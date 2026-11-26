@@ -6,7 +6,7 @@ from unittest.mock import patch, Mock
 
 from django.urls import reverse
 from keycloak import KeycloakPutError
-from tapir_mail.triggers.transactional_trigger import (
+from tapir.mail.triggers.transactional_trigger import (
     TransactionalTrigger,
 )
 

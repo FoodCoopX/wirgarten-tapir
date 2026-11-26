@@ -3,7 +3,7 @@ from decimal import Decimal
 from unittest.mock import patch, Mock, ANY
 
 from django.urls import reverse
-from tapir_mail.triggers.transactional_trigger import (
+from tapir.mail.triggers.transactional_trigger import (
     TransactionalTrigger,
     TransactionalTriggerData,
 )

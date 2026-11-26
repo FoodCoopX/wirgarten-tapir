@@ -4545,40 +4545,6 @@ pure-eval = "*"
 tests = ["cython", "littleutils", "pygments", "pytest", "typeguard"]
 
 [[package]]
-name = "tapir-mail"
-version = "0.0.0.dev1794939135"
-description = ""
-optional = false
-python-versions = ">=3.14,<4.0"
-groups = ["main"]
-files = [
-    {file = "tapir_mail-0.0.0.dev1794939135-py3-none-any.whl", hash = "sha256:17793395366a16ab26626fdb731fa4d0c41991c58bd324c8a6cf44b6147c1d98"},
-]
-
-[package.dependencies]
-beautifulsoup4 = ">=4.15.0,<5.0.0"
-celery = ">=5.5.0,<6.0.0"
-django = ">=6.0.7,<7.0.0"
-django-bootstrap5 = ">=26.2,<27.0"
-django-cors-headers = ">=4.9.0,<5.0.0"
-django-drf-filepond = ">=0.5.2,<0.6.0"
-django-environ = ">=0.14.0,<0.15.0"
-django-filter = ">=26.1,<27.0"
-django-redis = ">=7.0.0,<8.0.0"
-djangorestframework = ">=3.17.1,<4.0.0"
-drf-spectacular = ">=0.30.0,<0.31.0"
-flufl-bounce = ">=4.0,<5.0"
-lxml = ">=6.1.1,<7.0.0"
-nanoid = ">=2.0.0,<3.0.0"
-psycopg2-binary = ">=2.9.11,<3.0.0"
-redis = ">=8.1.0,<9.0.0"
-whitenoise = ">=6.12.0,<7.0.0"
-
-[package.source]
-type = "url"
-url = "https://github.com/FoodCoopX/tapir-mail-releases/releases/download/0.0.0-dev-1794939135/tapir_mail-0.0.0.dev1794939135-py3-none-any.whl"
-
-[[package]]
 name = "termcolor"
 version = "3.3.0"
 description = "ANSI color formatting for output in terminal"
@@ -5031,4 +4997,4 @@ bakery = ["ortools"]
 [metadata]
 lock-version = "2.1"
 python-versions = "3.14.10"
-content-hash = "69c3c0319bd628fb695c00d0f5c248366c38232c6dc840f5f48c195596e9ab91"
+content-hash = "b12bc7ed3429890bbe0b0567a140c1be268e4a4d43433b24d02a0ef0b3c41929"

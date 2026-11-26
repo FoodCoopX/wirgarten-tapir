@@ -45,7 +45,7 @@ INSTALLED_APPS = [
     "django.contrib.postgres",
     "django_bootstrap5",
     "django_drf_filepond",
-    "tapir_mail",
+    "tapir.mail",
     "tapir.bakery",
     "tapir.core",
     "tapir.log",
@@ -109,14 +109,8 @@ ROOT_URLCONF = "tapir.urls"
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 
-def get_tapir_mail_template_dir():
-    with resources.path("tapir_mail", "__ui__") as path:
-        return str(path)
-
-
 DIRS = [
     os.path.join(BASE_DIR, "tapir/templates"),
-    get_tapir_mail_template_dir(),
 ]
 
 TEMPLATES = [
@@ -152,14 +146,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 
-def get_tapir_mail_static_dir():
-    with resources.path("tapir_mail", "__static__") as path:
-        return str(path)
-
-
 STATIC_URL = "/static/"
 STATIC_ROOT = "static"
-STATICFILES_DIRS = [get_tapir_mail_static_dir(), "dist"]
+STATICFILES_DIRS = ["dist"]
 
 
 SELECT2_JS = "core/select2/4.0.13/js/select2.min.js"

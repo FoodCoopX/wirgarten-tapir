@@ -1,6 +1,6 @@
 import datetime
 
-from tapir_mail.service.segment import resolve_segments
+from tapir.mail.service.segment import resolve_segments
 
 from tapir.deliveries.tests.factories import JokerFactory
 from tapir.subscriptions.apps import SubscriptionsConfig

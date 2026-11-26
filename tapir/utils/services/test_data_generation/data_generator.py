@@ -2,7 +2,7 @@ import datetime
 
 import factory.random
 from django.core.management import call_command
-from tapir_mail.models import EmailConfiguration, EmailConfigurationVersion
+from tapir.mail.models import EmailConfiguration, EmailConfigurationVersion
 
 from tapir.accounts.models import EmailChangeRequest
 from tapir.accounts.services.keycloak_user_delete_service import (

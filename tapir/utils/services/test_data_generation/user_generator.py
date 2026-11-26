@@ -9,7 +9,7 @@ from typing import List, Set
 
 from django.db.models import F
 from faker import Faker
-from tapir_mail.service.shortcuts import make_timezone_aware
+from tapir.mail.service.shortcuts import make_timezone_aware
 
 from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
 from tapir.associations.models import AssociationMembershipType, AssociationMembership

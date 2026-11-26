@@ -1,0 +1,17 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8">
+    <title>Tapir Newsletter-Anmeldung</title>
+    <link rel="stylesheet" href="{% static 'core/bootstrap/5.3.8/css/bootstrap.min.css' %}">
+  </head>
+  <body>
+    <div class="card">
+      <div class="card-header"><h5>Anmeldungsanfrage: {{ category_name }}</h5></div>
+      <div class="card-body">
+        <p>Deine Anmeldungsanfrage ist angekommen. Du musst noch deine E-Mail-Adresse bestätigen. Du bekommst dafür in den kommenden 5 Minuten eine Mail.</p>
+      </div>
+    </div>
+  </body>
+</html>

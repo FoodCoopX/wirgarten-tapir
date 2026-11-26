@@ -65,15 +65,15 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": celery.schedules.crontab(minute="0", hour="10"),
     },
     "resolve_segment_and_create_email_dispatches_task": {
-        "task": "tapir_mail.tasks.resolve_segment_and_create_email_dispatches_task",
+        "task": "tapir.mail.tasks.resolve_segment_and_create_email_dispatches_task",
         "schedule": datetime.timedelta(minutes=1),
     },
     "send_email_dispatch_batch_task": {
-        "task": "tapir_mail.tasks.send_email_dispatch_batch_task",
+        "task": "tapir.mail.tasks.send_email_dispatch_batch_task",
         "schedule": datetime.timedelta(minutes=1),
     },
     "check_email_bounces": {
-        "task": "tapir_mail.tasks.check_email_bounces",
+        "task": "tapir.mail.tasks.check_email_bounces",
         "schedule": datetime.timedelta(minutes=5),
     },
     "do_automated_exports": {
@@ -146,7 +146,7 @@ if EMAIL_ENV == "dev":
 else:
     MAILERS = {
         "default": {
-            "BACKEND": "tapir_mail.service.smtp_backend_with_dsn.SmtpBackendWithDsn",
+            "BACKEND": "tapir.mail.service.smtp_backend_with_dsn.SmtpBackendWithDsn",
             "OPTIONS": {
                 "host": _smtp_host,
                 "port": env.int("EMAIL_PORT", default=587),
@@ -169,7 +169,7 @@ EMAIL_BOUNCE_ADDRESS = email_setting("EMAIL_BOUNCE_ADDRESS", "bounce@example.com
 EMAIL_AUTO_BCC = env.str("EMAIL_AUTO_BCC", default=None)
 EMAIL_BOUNCE_USER = env.str("EMAIL_BOUNCE_USER", default=None)
 EMAIL_BOUNCE_PASSWORD = env.str("EMAIL_BOUNCE_PASSWORD", default=None)
-# IMAP host of the bounce mailbox. Always set: tapir_mail's fallback to settings.EMAIL_HOST fails with MAILERS.
+# IMAP host of the bounce mailbox.
 EMAIL_BOUNCE_HOST = env.str("EMAIL_BOUNCE_HOST", default=None) or _smtp_host
 EMAIL_REPLY_TO = env.str("EMAIL_REPLY_TO", default=None)
 

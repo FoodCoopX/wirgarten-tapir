@@ -2,7 +2,7 @@ import datetime
 
 from django.urls import reverse
 from rest_framework import status
-from tapir_mail.service.shortcuts import make_timezone_aware
+from tapir.mail.service.shortcuts import make_timezone_aware
 
 from tapir.associations.tests.factories import (
     AssociationMembershipFactory,

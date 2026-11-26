@@ -1,7 +1,7 @@
 import datetime
 
 from django.urls import reverse
-from tapir_mail.service.shortcuts import make_timezone_aware
+from tapir.mail.service.shortcuts import make_timezone_aware
 
 from tapir.waiting_list.tests.factories import WaitingListEntryFactory
 from tapir.wirgarten.models import (

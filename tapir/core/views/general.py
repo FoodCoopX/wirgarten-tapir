@@ -6,9 +6,9 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serial
 from rest_framework import status, serializers
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from tapir_mail.models import MailCategory, InternalRecipientCategoryRegistration
-from tapir_mail.registries import get_mail_segments
-from tapir_mail.serializers import MailCategorySerializer
+from tapir.mail.models import MailCategory, InternalRecipientCategoryRegistration
+from tapir.mail.registries import get_mail_segments
+from tapir.mail.serializers import MailCategorySerializer
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.core.serializers import (

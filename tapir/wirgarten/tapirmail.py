@@ -3,11 +3,11 @@ from typing import Callable
 from django.conf import settings
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
-from tapir_mail.models import StaticSegment, StaticSegmentRecipient
-from tapir_mail.service.segment import register_base_segment
-from tapir_mail.service.token import register_tokens
-from tapir_mail.service.triggers import register_trigger
-from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
+from tapir.mail.models import StaticSegment, StaticSegmentRecipient
+from tapir.mail.service.segment import register_base_segment
+from tapir.mail.service.token import register_tokens
+from tapir.mail.service.triggers import register_trigger
+from tapir.mail.triggers.transactional_trigger import TransactionalTrigger
 
 from tapir.bakery.services.bread_mail_token_service import BreadMailTokenService
 from tapir.configuration.parameter import get_parameter_value

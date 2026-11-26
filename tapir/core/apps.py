@@ -1,5 +1,5 @@
 from django.apps import AppConfig
-from tapir_mail.config import ExternalConfig
+from tapir.mail.config import ExternalConfig
 
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
