@@ -1,12 +1,13 @@
 import datetime
-from decimal import Decimal
+
+from django.db.models import Sum
 
 from tapir.generic_exports.services.export_segment_manager import ExportSegment
 from tapir.payments.dataclasses import MonthlyActualIncome
 from tapir.payments.services.monthly_actual_income_column_provider import (
     MonthlyActualIncomeColumnProvider,
 )
-from tapir.wirgarten.models import PaymentTransaction
+from tapir.wirgarten.models import Payment
 
 
 class MonthlyActualIncomeSegmentProvider:
@@ -28,20 +29,16 @@ class MonthlyActualIncomeSegmentProvider:
     def get_list_actual_income(
         cls, reference_datetime: datetime.datetime
     ) -> list[MonthlyActualIncome]:
-        all_income_data = {}
-
-        transactions = PaymentTransaction.objects.filter(
-            month__year=reference_datetime.year, month__month=reference_datetime.month
+        income_by_type = (
+            Payment.objects.filter(
+                transaction__month__year=reference_datetime.year,
+                transaction__month__month=reference_datetime.month,
+            )
+            .values("type")
+            .annotate(income=Sum("amount"))
+            .order_by("type")
         )
-        payments = []
-        for transaction in transactions:
-            payments.extend(transaction.payment_set.all())
-
-        for payment in payments:
-            if payment.type not in all_income_data:
-                all_income_data[payment.type] = MonthlyActualIncome(
-                    source_name=payment.type, income=Decimal(0)
-                )
-            all_income_data[payment.type].income += payment.amount
-
-        return list(all_income_data.values())
+        return [
+            MonthlyActualIncome(source_name=row["type"], income=row["income"])
+            for row in income_by_type
+        ]

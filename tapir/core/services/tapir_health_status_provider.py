@@ -67,7 +67,7 @@ class TapirHealthStatusProvider:
 
     @classmethod
     def _get_smtp_connection_status(cls):
-        with mail.get_connection():
+        with mail.mailers.default:
             # If the connection doesn't succeed an exception will be thrown.
             pass
 
@@ -80,10 +80,9 @@ class TapirHealthStatusProvider:
         if not bounce_password:
             return "Missing setting EMAIL_BOUNCE_PASSWORD"
 
-        bounce_host = (
-            getattr(settings, "EMAIL_BOUNCE_HOST", None) or settings.EMAIL_HOST
+        mail_client = IMAP4_SSL(
+            settings.EMAIL_BOUNCE_HOST, port=settings.EMAIL_PORT_IMAP
         )
-        mail_client = IMAP4_SSL(bounce_host, port=settings.EMAIL_PORT_IMAP)
         return_code, _ = mail_client.login(
             settings.EMAIL_BOUNCE_USER, settings.EMAIL_BOUNCE_PASSWORD
         )

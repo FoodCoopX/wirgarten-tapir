@@ -24,12 +24,6 @@ export interface PickupLocationCapacityCheckRequestRequest {
    * @memberof PickupLocationCapacityCheckRequestRequest
    */
   shoppingCart: { [key: string]: number };
-  /**
-   *
-   * @type {string}
-   * @memberof PickupLocationCapacityCheckRequestRequest
-   */
-  growingPeriodId: string | null;
 }
 
 /**
@@ -39,8 +33,6 @@ export function instanceOfPickupLocationCapacityCheckRequestRequest(
   value: object,
 ): value is PickupLocationCapacityCheckRequestRequest {
   if (!("shoppingCart" in value) || value["shoppingCart"] === undefined)
-    return false;
-  if (!("growingPeriodId" in value) || value["growingPeriodId"] === undefined)
     return false;
   return true;
 }
@@ -60,7 +52,6 @@ export function PickupLocationCapacityCheckRequestRequestFromJSONTyped(
   }
   return {
     shoppingCart: json["shopping_cart"],
-    growingPeriodId: json["growing_period_id"],
   };
 }
 
@@ -80,6 +71,5 @@ export function PickupLocationCapacityCheckRequestRequestToJSONTyped(
 
   return {
     shopping_cart: value["shoppingCart"],
-    growing_period_id: value["growingPeriodId"],
   };
 }

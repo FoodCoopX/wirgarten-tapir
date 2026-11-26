@@ -14,6 +14,7 @@ import { useApi } from "../hooks/useApi.ts";
 import { CustomCycleDeliveryWeeks } from "../types/CustomCycleDeliveryWeeks.ts";
 import { ToastData } from "../types/ToastData.ts";
 import { addToast } from "../utils/addToast.ts";
+import { fromApiDate, toApiDate } from "../utils/apiDate.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import {
   getPeriodIdFromUrl,
@@ -128,7 +129,9 @@ const ProductTypeEditModal: React.FC<ProductTypeEditModalProps> = ({
             NoticePeriodUnitEnum.Months,
         );
         setTaxRate(result.extendedProductType.taxRate);
-        setTaxRateChangeDate(result.extendedProductType.taxRateChangeDate);
+        setTaxRateChangeDate(
+          fromApiDate(result.extendedProductType.taxRateChangeDate),
+        );
         setSingleSubscriptionOnly(
           result.extendedProductType.singleSubscriptionOnly,
         );
@@ -150,7 +153,7 @@ const ProductTypeEditModal: React.FC<ProductTypeEditModalProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der ProduktTyp-Daten",
+          "Fehler beim Laden der Daten des Produktanteils",
           setToastDatas,
         ),
       )
@@ -200,7 +203,7 @@ const ProductTypeEditModal: React.FC<ProductTypeEditModalProps> = ({
               ? noticePeriodUnit
               : undefined,
             taxRate: taxRate,
-            taxRateChangeDate: taxRateChangeDate,
+            taxRateChangeDate: toApiDate(taxRateChangeDate),
             singleSubscriptionOnly: singleSubscriptionOnly,
             mustBeSubscribedTo: mustBeSubscribedTo,
             descriptionBestellwizardShort: descriptionBestellwizardShort,
@@ -225,7 +228,7 @@ const ProductTypeEditModal: React.FC<ProductTypeEditModalProps> = ({
               id: uuidv4(),
               variant: "danger",
               message: response.error!,
-              title: "Fehler beim Speichern der Produkt-Typ",
+              title: "Fehler beim Speichern des Produktanteils",
             },
             setToastDatas,
           );
@@ -234,7 +237,7 @@ const ProductTypeEditModal: React.FC<ProductTypeEditModalProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Speichern der Produkt-Typ",
+          "Fehler beim Speichern des Produktanteils",
           setToastDatas,
         ),
       )
@@ -313,7 +316,7 @@ const ProductTypeEditModal: React.FC<ProductTypeEditModalProps> = ({
   return (
     <Modal show={show} onHide={onHide} centered={true} size={"xl"}>
       <Modal.Header closeButton>
-        <h5 className={"mb-0"}>Produkt-Typ bearbeiten</h5>
+        <h5 className={"mb-0"}>Produktanteil bearbeiten</h5>
       </Modal.Header>
       {getModalBody()}
       <Modal.Footer>

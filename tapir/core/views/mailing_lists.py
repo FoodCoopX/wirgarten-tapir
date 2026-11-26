@@ -127,7 +127,7 @@ class MailingListCreateView(APIView):
         domain = TapirMailmanClient.get_domain(cache)
 
         list_name: str = create_serializer.validated_data["name"]
-        suffix = f"@{settings.EMAIL_HOST}"
+        suffix = f"@{settings.MAILING_LIST_DOMAIN}"
         if list_name.endswith(suffix):
             list_name = list_name.replace(suffix, "")
         created_list = domain.create_list(list_name=list_name)
@@ -221,7 +221,7 @@ class MailingListRecipientListView(APIView):
         )
         recipients = [
             {
-                "address": recipient.address,
+                "address": str(recipient.address),
                 "user_confirmed": True,
             }
             for recipient in mailing_list.members
@@ -325,7 +325,7 @@ class MailingListUnsubscribeRecipientView(APIView):
             list_name=serializer.validated_data["list_name"], cache=cache
         )
         address = serializer.validated_data["address"]
-        if address in {member.address for member in mailing_list.members}:
+        if address in {str(member.address) for member in mailing_list.members}:
             mailing_list.unsubscribe(
                 email=serializer.validated_data["address"], pre_confirmed=True
             )

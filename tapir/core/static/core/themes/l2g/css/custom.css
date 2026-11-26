@@ -158,11 +158,6 @@ body {
     color: var(--black);
 }
 
-/* Variable fonts usage:
-:root { font-family: "Inter", sans-serif; }
-@supports (font-variation-settings: normal) {
-  :root { font-family: "InterVariable", sans-serif; font-optical-sizing: auto; }
-} */
 @font-face {
     font-family: InterVariable;
     font-style: normal;

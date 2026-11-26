@@ -15,6 +15,7 @@ from tapir.log.util import freeze_for_log
 from tapir.pickup_locations.services.basket_size_capacities_service import (
     BasketSizeCapacitiesService,
 )
+from tapir.products.services.product_name_validator import ProductNameValidator
 from tapir.products.serializers import (
     ExtendedProductSerializer,
     PublicProductTypeSerializer,
@@ -25,13 +26,15 @@ from tapir.solidarity_contribution.services.solidarity_validator import (
 )
 from tapir.subscriptions.models import (
     SubscriptionPriceChangedLogEntry,
+    SubscriptionTrialChangedLogEntry,
 )
 from tapir.subscriptions.serializers import (
     OrderConfirmationResponseSerializer,
     SubscriptionDateChangeRequestSerializer,
-    ConvertWeekToDateForSubscriptionChangesResponseSerializer,
+    ConvertWeekToDateForSubscriptionChangeRequestSerializer,
+    ConvertWeekToDateForSubscriptionChangeResponseSerializer,
     SubscriptionPriceOverrideChangeRequestSerializer,
-    SubscriptionTrialFieldsSerializer,
+    SubscriptionDetailsSerializer,
     SubscriptionTrialChangeRequestSerializer,
 )
 from tapir.subscriptions.services.product_updater import ProductUpdater
@@ -129,6 +132,11 @@ class ExtendedProductView(APIView):
             SolidarityValidator.validate_solidarity_dropdown_values(
                 request_serializer.validated_data["solidarity_choices"]
             )
+            ProductNameValidator.validate_name_is_unique(
+                product_name=request_serializer.validated_data["name"],
+                product_id=request_serializer.validated_data["id"],
+                cache={},
+            )
         except ValidationError as error:
             return Response(data=error.message, status=status.HTTP_400_BAD_REQUEST)
 
@@ -157,8 +165,8 @@ class PublicProductTypeViewSet(viewsets.ReadOnlyModelViewSet):
 
 class SubscriptionViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
-    queryset = Subscription.objects.select_related("product")
-    serializer_class = SubscriptionTrialFieldsSerializer
+    queryset = Subscription.objects.select_related("product", "period")
+    serializer_class = SubscriptionDetailsSerializer
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -187,52 +195,33 @@ class SubscriptionDateChangeApiView(APIView):
             Subscription, id=serializer.validated_data["subscription_id"]
         )
 
-        if serializer.validated_data["start_date_is_on_period_start"]:
-            start_date = subscription.period.start_date
-        else:
-            start_week = serializer.validated_data["start_week"]
-            start_date = (
-                SubscriptionChangeWeekToDateConverter.get_date_from_calendar_week(
-                    week=start_week,
-                    growing_period=subscription.period,
-                    boundary="start",
-                )
-            )
-
-        if serializer.validated_data["end_date_is_on_period_end"]:
-            end_date = subscription.period.end_date
-        else:
-            end_week = serializer.validated_data["end_week"]
-            end_date = (
-                SubscriptionChangeWeekToDateConverter.get_date_from_calendar_week(
-                    week=end_week, growing_period=subscription.period, boundary="end"
-                )
-            )
+        action = serializer.validated_data["action"]
+        update_other_contracts = serializer.validated_data["update_other_contracts"]
+        date = serializer.validated_data.get("date")
 
         try:
-            SubscriptionDateChangeApplier.validate_dates(
+            SubscriptionDateChangeApplier.validate(
                 subscription=subscription,
-                start_date=start_date,
-                end_date=end_date,
+                action=action,
+                date=date,
+                update_other_contracts=update_other_contracts,
                 cache=self.cache,
             )
-
-            with transaction.atomic():
-                SubscriptionDateChangeApplier.apply_changes(
-                    actor=request.user,
-                    start_date=start_date,
-                    end_date=end_date,
-                    subscription=subscription,
-                    update_end_date_of_other_contracts=serializer.validated_data[
-                        "update_end_date_of_other_contracts"
-                    ],
-                    cache=self.cache,
-                )
         except ValidationError as error:
             return Response(
                 OrderConfirmationResponseSerializer(
                     {"order_confirmed": False, "error": error.message}
                 ).data
+            )
+
+        with transaction.atomic():
+            SubscriptionDateChangeApplier.apply_changes(
+                actor=request.user,
+                subscription=subscription,
+                action=action,
+                date=date,
+                update_other_contracts=update_other_contracts,
+                cache=self.cache,
             )
 
         return Response(
@@ -290,39 +279,38 @@ class SubscriptionPriceOverrideApiView(APIView):
         )
 
 
-class ConvertWeeksToDateForSubscriptionChangesApiView(APIView):
+class ConvertWeekToDateForSubscriptionChangeApiView(APIView):
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
 
     @extend_schema(
-        responses={200: ConvertWeekToDateForSubscriptionChangesResponseSerializer},
-        parameters=[
-            OpenApiParameter(name="start_week", type=int),
-            OpenApiParameter(name="end_week", type=int),
-            OpenApiParameter(name="subscription_id", type=str),
-        ],
+        responses={200: ConvertWeekToDateForSubscriptionChangeResponseSerializer},
+        parameters=[ConvertWeekToDateForSubscriptionChangeRequestSerializer],
     )
     def get(self, request):
-        start_week = int(request.query_params.get("start_week"))
-        end_week = int(request.query_params.get("end_week"))
+        serializer = ConvertWeekToDateForSubscriptionChangeRequestSerializer(
+            data=request.query_params
+        )
+        serializer.is_valid(raise_exception=True)
         growing_period = get_object_or_404(
-            Subscription, id=request.query_params.get("subscription_id")
+            Subscription, id=serializer.validated_data["subscription_id"]
         ).period
 
-        start_date = SubscriptionChangeWeekToDateConverter.get_date_from_calendar_week(
-            week=start_week,
-            growing_period=growing_period,
-            boundary="start",
-        )
-
-        end_date = SubscriptionChangeWeekToDateConverter.get_date_from_calendar_week(
-            week=end_week,
-            growing_period=growing_period,
-            boundary="end",
-        )
+        try:
+            date = SubscriptionChangeWeekToDateConverter.get_date_from_calendar_week(
+                week=serializer.validated_data["week"],
+                growing_period=growing_period,
+                boundary=serializer.validated_data["boundary"],
+            )
+        except ValidationError as error:
+            return Response(
+                ConvertWeekToDateForSubscriptionChangeResponseSerializer(
+                    {"date": None, "error": error.message}
+                ).data
+            )
 
         return Response(
-            ConvertWeekToDateForSubscriptionChangesResponseSerializer(
-                {"start_date": start_date, "end_date": end_date}
+            ConvertWeekToDateForSubscriptionChangeResponseSerializer(
+                {"date": date, "error": None}
             ).data
         )
 
@@ -377,10 +365,21 @@ class SubscriptionTrialChangeApiView(APIView):
         if trial_disabled:
             trial_end_date_override = None
 
+        trial_disabled_before = subscription.trial_disabled
+        trial_end_date_override_before = subscription.trial_end_date_override
+
         with transaction.atomic():
             subscription.trial_disabled = trial_disabled
             subscription.trial_end_date_override = trial_end_date_override
             subscription.save()
+
+            SubscriptionTrialChangedLogEntry().populate_trial_change(
+                subscription=subscription,
+                trial_disabled_before=trial_disabled_before,
+                trial_end_date_override_before=trial_end_date_override_before,
+                actor=request.user,
+                user=subscription.member,
+            ).save()
 
         return Response(
             OrderConfirmationResponseSerializer(

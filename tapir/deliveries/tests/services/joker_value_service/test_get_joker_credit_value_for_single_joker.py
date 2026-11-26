@@ -17,6 +17,7 @@ from tapir.wirgarten.tests.factories import (
     GrowingPeriodFactory,
     MemberPickupLocationFactory,
     PickupLocationFactory,
+    PickupLocationOpeningTimesFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
@@ -190,3 +191,84 @@ class TestGetJokerCreditValueForSingleJoker(TapirIntegrationTest):
 
         # (10 + 20) * 12 / 53 + 1.50
         self.assertAlmostEqual(Decimal("8.29"), self.get_value(), places=2)
+
+    def test_getJokerCreditValue_memberSwitchedToLocationWithDeliveryInNextMonth_usesActualDeliveryDate(
+        self,
+    ):
+        # Week of Monday 28.09.2026: the default delivery day is Wednesday 30.09.,
+        # the member's new location delivers on Thursday 01.10.
+        self._set_parameter(
+            key=ParameterKeys.PAYMENT_PARTIAL_MONTH_PROPORTIONAL_START_DATE,
+            value=datetime.date(year=2026, month=10, day=1),
+        )
+        growing_period = GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2026, month=1, day=1)
+        )
+        SubscriptionFactory.create(
+            member=self.member,
+            product=self.weekly_product,
+            quantity=1,
+            period=growing_period,
+            start_date=datetime.date(year=2026, month=10, day=1),
+        )
+        thursday_location = PickupLocationFactory.create()
+        PickupLocationOpeningTimesFactory.create(
+            pickup_location=thursday_location, day_of_week=3
+        )
+        MemberPickupLocationFactory.create(
+            member=self.member,
+            pickup_location=thursday_location,
+            valid_from=datetime.date(year=2026, month=9, day=28),
+        )
+
+        value = JokerValueService.get_joker_credit_value_for_single_joker(
+            member=self.member,
+            joker_date=datetime.date(year=2026, month=9, day=30),
+            cache={},
+        )
+
+        # 10 € monthly ÷ 5 Thursdays in October 2026
+        self.assertEqual(Decimal(2), value)
+
+    def test_getJokerCreditValue_jokersOnAllDatesOfMonth_sumIsMonthlyPrice(self):
+        self._set_parameter(
+            key=ParameterKeys.PAYMENT_PARTIAL_MONTH_PROPORTIONAL_START_DATE,
+            value=datetime.date(year=2026, month=1, day=1),
+        )
+        self.configure_solidarity_contribution_product_type(self.weekly_product)
+        growing_period = GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2026, month=1, day=1)
+        )
+        SubscriptionFactory.create(
+            member=self.member,
+            product=self.weekly_product,
+            quantity=1,
+            period=growing_period,
+        )
+        SolidarityContributionFactory.create(
+            member=self.member,
+            amount=Decimal(5),
+            start_date=datetime.date(year=2026, month=1, day=1),
+        )
+        thursday_location = PickupLocationFactory.create()
+        PickupLocationOpeningTimesFactory.create(
+            pickup_location=thursday_location, day_of_week=3
+        )
+        MemberPickupLocationFactory.create(
+            member=self.member,
+            pickup_location=thursday_location,
+            valid_from=datetime.date(year=2026, month=1, day=1),
+        )
+        cache = {}
+
+        total = sum(
+            JokerValueService.get_joker_credit_value_for_single_joker(
+                member=self.member,
+                joker_date=datetime.date(year=2026, month=10, day=day),
+                cache=cache,
+            )
+            for day in [1, 8, 15, 22, 29]
+        )
+
+        # 10 € price + 5 € solidarity contribution
+        self.assertEqual(Decimal(15), total)

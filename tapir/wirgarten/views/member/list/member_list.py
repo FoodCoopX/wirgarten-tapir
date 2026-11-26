@@ -47,13 +47,18 @@ from tapir.wirgarten.service.member import (
     annotate_member_queryset_with_coop_shares_total_value,
     annotate_member_queryset_with_monthly_payment,
 )
-from tapir.wirgarten.service.products import get_next_growing_period
 from tapir.wirgarten.utils import (
     get_today,
     legal_status_is_cooperative,
     legal_status_is_association,
     legal_status_is_company,
 )
+
+
+class ContractStatus(models.TextChoices):
+    CONTRACT_RENEWED = "Contract Renewed", "Verträge verlängert"
+    CONTRACT_CANCELLED = "Contract Cancelled", "Explizit nicht verlängert"
+    UNDECIDED = "Undecided", "Keine Reaktion"
 
 
 class ContractStatusFilter(ChoiceFilter):
@@ -65,7 +70,7 @@ class ContractStatusFilter(ChoiceFilter):
         if not value:
             return qs
 
-        if value not in ["Contract Renewed", "Contract Cancelled", "Undecided"]:
+        if value not in ContractStatus.values:
             raise ValueError(f"Unknown filter value: {value}")
 
         # Filter members with an active subscription which is not cancelled
@@ -75,18 +80,20 @@ class ContractStatusFilter(ChoiceFilter):
             subscription__end_date__gte=today,
         )
 
-        if value == "Contract Renewed":
+        if value == ContractStatus.CONTRACT_RENEWED:
             qs = self.filter_contract_renewed(qs)
-        elif value == "Contract Cancelled":
+        elif value == ContractStatus.CONTRACT_CANCELLED:
             qs = self.filter_contract_cancelled(qs)
-        elif value == "Undecided":
+        elif value == ContractStatus.UNDECIDED:
             qs = self.filter_undecided(qs)
 
         return qs.distinct()
 
     def filter_contract_renewed(self, qs):
         # Get the upcoming growing period
-        growing_period = get_next_growing_period(cache=self.cache)
+        growing_period = TapirCache.get_first_growing_period_starting_after(
+            reference_date=get_today(cache=self.cache), cache=self.cache
+        )
 
         # Filter members with at least one subscription starting in the upcoming growing period
         return qs.filter(
@@ -110,7 +117,9 @@ class ContractStatusFilter(ChoiceFilter):
         )
 
     def filter_undecided(self, qs):
-        growing_period = get_next_growing_period(cache=self.cache)
+        growing_period = TapirCache.get_first_growing_period_starting_after(
+            reference_date=get_today(cache=self.cache), cache=self.cache
+        )
 
         # Calculate the trial period start date
         trial_period_start = get_today(cache=self.cache) + relativedelta(
@@ -137,11 +146,7 @@ class MemberFilter(FilterSet):
     )
     contract_status = ContractStatusFilter(
         label="Verträge verlängert",
-        choices=(
-            ("Contract Renewed", "Verträge verlängert"),
-            ("Contract Cancelled", "Explizit nicht verlängert"),
-            ("Undecided", "Keine Reaktion"),
-        ),
+        choices=ContractStatus.choices,
     )
     email_verified = BooleanFilter(
         label="Email verifiziert",
@@ -215,7 +220,12 @@ class MemberFilter(FilterSet):
             ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=self.cache
         ):
             del self.form.fields["contract_status"]
-        elif get_next_growing_period(cache=self.cache) is None:
+        elif (
+            TapirCache.get_first_growing_period_starting_after(
+                reference_date=get_today(cache=self.cache), cache=self.cache
+            )
+            is None
+        ):
             w = self.form.fields["contract_status"].widget
             w.attrs["disabled"] = True
             w.attrs["title"] = "Es gibt noch keine neue Vertragsperiode!"

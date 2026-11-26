@@ -17,6 +17,8 @@
 {% block card_header %}
     <h4 class="mb-0">{{ number_of_contracts }} {% translate 'Verträge' %}, {{ quantity_sum }} Anteile</h4>
     <span style="display: flex; flex-direction:row;">
+        <span id="admin_subscription_addition_button" class="mx-1 p-0"></span>
+        <span id="admin_subscription_change_button" class="mx-1 p-0"></span>
         <span id="subscription_change_dates_button" class="mx-1 p-0"></span>
         {% if trial_period_enabled %}
             <span id="subscription_trial_period_button" class="mx-1 p-0"></span>
@@ -110,7 +112,7 @@
 
             const rows = document.getElementsByClassName('entry-row');
             const buttons = document.getElementsByClassName('needs-contract');
-            for (row of rows) {
+            for (const row of rows) {
                 if (row.id === `entry-${params.contract}`) {
                     row.classList.add('table-active');
                 } else {
@@ -118,7 +120,7 @@
                 }
             }
 
-            for (btn of buttons) {
+            for (const btn of buttons) {
                 btn.disabled = !params.contract;
             }
         }

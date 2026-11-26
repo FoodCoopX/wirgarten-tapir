@@ -251,7 +251,7 @@ export const RunSolverCard: React.FC<RunSolverCardProps> = ({
         </div>
       )}
 
-      {previewResponse && previewResponse.totalSolutions === 0 && (
+      {previewResponse?.totalSolutions === 0 && (
         <small className="text-warning d-block mt-1">
           Keine Lösung gefunden.
         </small>

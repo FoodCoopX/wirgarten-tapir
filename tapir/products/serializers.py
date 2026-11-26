@@ -107,7 +107,7 @@ class ExtendedProductSerializer(serializers.Serializer):
     basket_size_equivalences = ProductBasketSizeEquivalenceSerializer(many=True)
     growing_period_id = serializers.CharField(required=False)
     picking_mode = serializers.ChoiceField(choices=OPTIONS_PICKING_MODE, read_only=True)
-    description_in_bestellwizard = serializers.CharField()
+    description_in_bestellwizard = serializers.CharField(allow_blank=True)
     url_of_image_in_bestellwizard = serializers.CharField(allow_blank=True)
     capacity = serializers.IntegerField(allow_null=True)
     min_coop_shares = serializers.IntegerField()
@@ -128,6 +128,7 @@ class PublicProductSerializer(serializers.ModelSerializer):
             "url_of_image_in_bestellwizard",
             "hidden_in_bestell_wizard",
             "solidarity_choices",
+            "min_coop_shares",
         ]
 
     price = SerializerMethodField()
@@ -136,9 +137,10 @@ class PublicProductSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(OpenApiTypes.FLOAT)
     def get_price(self, product: Product):
-        cache = self.context["cache"]
         return get_product_price(
-            product=product, reference_date=get_today(cache=cache), cache=cache
+            product=product,
+            reference_date=self.context.get("reference_date"),
+            cache=self.context["cache"],
         ).price
 
     @extend_schema_field(serializers.ListField(child=serializers.FloatField()))
@@ -178,7 +180,9 @@ class PublicProductTypeSerializer(serializers.ModelSerializer):
     def get_tax_rate(self, product_type: ProductType) -> float:
         cache = self.context["cache"]
         return TaxRateService.get_tax_rate(
-            product_type=product_type, at_date=get_today(cache=cache), cache=cache
+            product_type=product_type,
+            at_date=self.context.get("reference_date", get_today(cache=cache)),
+            cache=cache,
         )
 
     @staticmethod

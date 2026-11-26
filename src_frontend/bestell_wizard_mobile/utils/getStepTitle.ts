@@ -18,9 +18,13 @@ export function getStepTitle(
       return settings.strings.step3bTitle;
     case "5a_pickup_location_intro":
       return settings.strings.step5aTitle;
-    case "5b_pickup_location_choice":
+    case "5b_delivery_mode_choice":
+      return "Abholung oder Hauslieferung?";
+    case "5c_pickup_location_choice":
       return settings.strings.step5bTitle;
-    case "5c_pickup_location_confirm_waiting_list":
+    case "5d_home_delivery_choice":
+      return settings.strings.step5bHomeDeliveryTitle;
+    case "5e_pickup_location_confirm_waiting_list":
       return settings.strings.step5cTitle;
     case "6a_coop_intro":
       return settings.strings.step6aTitle;
@@ -33,6 +37,8 @@ export function getStepTitle(
       return settings.strings.step4dTitle;
     case "8_personal_data":
       return settings.strings.step8Title;
+    case "8b_delivery_address":
+      return "Lieferadresse";
     case "9_banking_data":
       return settings.strings.step9Title;
     case "10_summary":

@@ -1,2 +1,2 @@
 mkdocs==1.6.1
-mkdocs-awesome-pages-plugin
+mkdocs-awesome-pages-plugin==2.10.1

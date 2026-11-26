@@ -85,7 +85,10 @@ class TestSaveCharge(TapirIntegrationTest):
     def test_saveCharge_validFromInThePast_raisesValidationError(self):
         mock_timezone(test=self, now=datetime.datetime(year=2026, month=6, day=1))
 
-        with self.assertRaises(ValidationError) as error_context:
+        with self.assertRaisesMessage(
+            ValidationError,
+            "Ein Lieferzuschlag kann nur für die Zukunft angelegt oder geändert werden.",
+        ):
             PickupLocationDeliveryChargeService.save_charge(
                 pickup_location=self.pickup_location,
                 amount=Decimal("2.50"),
@@ -93,16 +96,15 @@ class TestSaveCharge(TapirIntegrationTest):
                 cache={},
             )
 
-        self.assertEqual(
-            "['Ein Lieferzuschlag kann nur für die Zukunft angelegt oder geändert werden.']",
-            str(error_context.exception),
-        )
         self.assertFalse(PickupLocationDeliveryCharge.objects.exists())
 
     def test_saveCharge_validFromIsToday_raisesValidationError(self):
         mock_timezone(test=self, now=datetime.datetime(year=2026, month=6, day=1))
 
-        with self.assertRaises(ValidationError) as error_context:
+        with self.assertRaisesMessage(
+            ValidationError,
+            "Ein Lieferzuschlag kann nur für die Zukunft angelegt oder geändert werden.",
+        ):
             PickupLocationDeliveryChargeService.save_charge(
                 pickup_location=self.pickup_location,
                 amount=Decimal("2.50"),
@@ -110,16 +112,14 @@ class TestSaveCharge(TapirIntegrationTest):
                 cache={},
             )
 
-        self.assertEqual(
-            "['Ein Lieferzuschlag kann nur für die Zukunft angelegt oder geändert werden.']",
-            str(error_context.exception),
-        )
         self.assertFalse(PickupLocationDeliveryCharge.objects.exists())
 
     def test_saveCharge_validFromIsNotMonday_raisesValidationError(self):
         mock_timezone(test=self, now=datetime.datetime(year=2026, month=6, day=1))
 
-        with self.assertRaises(ValidationError) as error_context:
+        with self.assertRaisesMessage(
+            ValidationError, "Lieferzuschläge müssen am Montag starten"
+        ):
             PickupLocationDeliveryChargeService.save_charge(
                 pickup_location=self.pickup_location,
                 amount=Decimal("2.50"),
@@ -127,7 +127,4 @@ class TestSaveCharge(TapirIntegrationTest):
                 cache={},
             )
 
-        self.assertEqual(
-            "['Lieferzuschläge müssen am Montag starten']", str(error_context.exception)
-        )
         self.assertFalse(PickupLocationDeliveryCharge.objects.exists())

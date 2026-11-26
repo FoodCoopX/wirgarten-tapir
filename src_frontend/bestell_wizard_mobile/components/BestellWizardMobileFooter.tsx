@@ -95,10 +95,14 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
         return "3B: Vertragsperiode-Auswahl";
       case "5a_pickup_location_intro":
         return "5A: Verteilstation (Intro)";
-      case "5b_pickup_location_choice":
-        return "5B: Verteilstation (Auswahl)";
-      case "5c_pickup_location_confirm_waiting_list":
-        return "5C: Verteilstation (Bestätigung Warteliste)";
+      case "5b_delivery_mode_choice":
+        return "5B: Abholung oder Hauslieferung";
+      case "5c_pickup_location_choice":
+        return "5C: Verteilstation (Auswahl)";
+      case "5d_home_delivery_choice":
+        return "5D: Hauslieferung (Auswahl)";
+      case "5e_pickup_location_confirm_waiting_list":
+        return "5E: Verteilstation (Bestätigung Warteliste)";
       case "6a_coop_intro":
         return "6A: Genossenschaft (Intro)";
       case "6b_association_membership":
@@ -111,6 +115,8 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
         return "7: Solidarbeitrag";
       case "8_personal_data":
         return "8: Persönliche Daten";
+      case "8b_delivery_address":
+        return "8B: Lieferadresse";
       case "9_banking_data":
         return "9: Bank Daten";
       case "10_summary":

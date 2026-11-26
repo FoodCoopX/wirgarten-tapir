@@ -117,9 +117,9 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
       .then((valid) => {
         setEmailAddressAlreadyInUse(!valid);
       })
-      .catch(async (error) => {
+      .catch((error) => {
         if (error.cause?.name === "AbortError") return;
-        await handleRequestError(
+        handleRequestError(
           error,
           "Fehler beim Prüfen der Mail-Gültigkeit",
           setToastDatas,

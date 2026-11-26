@@ -11,6 +11,7 @@ from django.db.models import (
     Index,
     JSONField,
     OuterRef,
+    Q,
     Subquery,
     Sum,
     UniqueConstraint,
@@ -56,11 +57,19 @@ class PickupLocation(TapirModel):
     """
 
     name = models.TextField(_("Name"), max_length=150)
-    coords_lon = models.DecimalField(
-        _("Coordinates Longitude"), decimal_places=10, max_digits=12
+    latitude = models.DecimalField(
+        _("Breitengrad"),
+        decimal_places=10,
+        max_digits=12,
+        null=True,
+        blank=True,
     )
-    coords_lat = models.DecimalField(
-        _("Coordinates Latitude"), decimal_places=10, max_digits=12
+    longitude = models.DecimalField(
+        _("Längengrad"),
+        decimal_places=10,
+        max_digits=12,
+        null=True,
+        blank=True,
     )
     street = models.CharField(_("Straße und Hausnummer"), max_length=150)
     street_2 = models.CharField(_("Adresszusatz"), max_length=150, blank=True)
@@ -95,12 +104,13 @@ class PickupLocation(TapirModel):
         _("Im Gesamtkistenanzahls-Zettel Details anzeigen"),
         default=False,
     )
+    is_home_delivery = models.BooleanField(_("Hauslieferung"), default=False)
 
     class Meta:
         constraints = [
             UniqueConstraint(
-                fields=["name", "coords_lat", "coords_lon"],
-                name="unique_location",
+                fields=["name"],
+                name="unique_pickup_location_name",
             ),
         ]
 
@@ -381,6 +391,12 @@ class Member(TapirUser):
     is_student = models.BooleanField(_("Student*in"), default=False)
     pseudonym = models.CharField(_("Pseudonym"), max_length=150, blank=True)
     has_received_membership_started_mail = models.BooleanField(default=False)
+    delivery_same_as_billing_address = models.BooleanField(default=True)
+    delivery_street = models.CharField(max_length=150, blank=True)
+    delivery_street_2 = models.CharField(max_length=150, blank=True)
+    delivery_postcode = models.CharField(max_length=32, blank=True)
+    delivery_city = models.CharField(max_length=50, blank=True)
+    delivery_country = CountryField(blank=True, default="DE")
 
     @property
     def pickup_location(self):
@@ -450,65 +466,6 @@ class Member(TapirUser):
             )["total_value"]
         )
 
-    @property
-    def base_subscriptions_text(self):
-        """
-        Returns a human-readable string stating which base products the member has subscribed,
-        sorted by their price in ascending order.
-
-        Examples:
-        - “einen M-Ernteanteil”
-        - “2 M-Ernteanteile”
-        - “einen S-Ernteanteil + 2 M-Ernteanteile”
-        - “einen S-Ernteanteil + M-Ernteanteil + L-Ernteanteil”
-        """
-
-        from collections import Counter
-        from tapir.wirgarten.service.products import (
-            get_product_price,
-            get_active_subscriptions,
-        )
-
-        cache = {}
-
-        subscriptions = get_active_subscriptions(cache={}).filter(
-            member_id=self.id, product__type__must_be_subscribed_to=True
-        )
-
-        if not subscriptions:
-            return ""
-
-        # Count the quantity of each base product subscribed
-        product_counts = Counter()
-        for sub in subscriptions:
-            product_counts[sub.product] += sub.quantity
-
-        # Create a list of tuples (product, quantity, price) and sort by price
-        product_info = []
-        today = get_today(cache=cache)
-        for product, quantity in product_counts.items():
-            price = get_product_price(product, today).price
-            product_info.append(
-                (
-                    f"{product.name}-{product.type.name[:-1] if quantity == 1 else product.type.name}",
-                    quantity,
-                    price,
-                )
-            )
-
-        # Sort products by price (ascending)
-        product_info.sort(key=lambda x: x[2])
-
-        # Create the human-readable text
-        base_subscription_texts = []
-        for product_name, quantity, _ in product_info:
-            if quantity == 1:
-                base_subscription_texts.append(f"einen {product_name}")
-            else:
-                base_subscription_texts.append(f"{quantity} {product_name}")
-
-        return " + ".join(base_subscription_texts)
-
     def __str__(self):
         return f"[{self.member_no or '---'}] {self.first_name} {self.last_name} ({self.email})"
 
@@ -573,9 +530,16 @@ class Product(TapirModel):
 
     class Meta:
         indexes = [Index(fields=["type"], name="idx_product_type")]
+        constraints = [
+            UniqueConstraint(
+                fields=["name"],
+                condition=Q(deleted=False),
+                name="unique_non_deleted_product_name",
+            )
+        ]
 
     def __str__(self):
-        return f"{self.name} ({self.type.name})"
+        return self.name
 
 
 class ProductPrice(TapirModel):
@@ -707,17 +671,17 @@ class Subscription(TapirModel, AdminConfirmableMixin):
 
     def __str__(self):
         return (
-            f"{self.quantity} × {self.product.name} {self.product.type.name}; "
+            f"{self.quantity} × {self.product.name}; "
             f"from {self.start_date} to {self.end_date}"
         )
 
     def short_str(self):
-        return f"{self.quantity}×{self.product.name},{self.product.type.name}"
+        return f"{self.quantity}×{self.product.name}"
 
     def long_str(self):
         return (
-            f"{self.quantity} × {self.product.name} {self.product.type.name} "
-            + f" ({format_date(self.start_date)} - {format_date(self.end_date)})"
+            f"{self.quantity} × {self.product.name} "
+            f"({format_date(self.start_date)} - {format_date(self.end_date)})"
         )
 
 
@@ -776,10 +740,10 @@ class Payment(TapirModel):
         choices=PaymentStatus.choices,
         default=PaymentStatus.DUE,
     )
-    edited = models.BooleanField(default=False)
     transaction = models.ForeignKey(
         PaymentTransaction, on_delete=models.DO_NOTHING, null=True
     )
+    excluded_from_export = models.BooleanField(default=False)
     type = models.CharField(max_length=64)
     subscription_payment_range_start = models.DateField(null=True)
     subscription_payment_range_end = models.DateField(null=True)
@@ -798,6 +762,7 @@ class Payment(TapirModel):
     )
     # Only set if the coop shares are paid in instalments
     instalment_number = models.PositiveSmallIntegerField(null=True)
+    calculation_explanation = models.TextField(blank=True, default="")
 
     class Meta:
         indexes = [
@@ -1072,6 +1037,12 @@ class WaitingListEntry(TapirModel):
     category = models.CharField(max_length=100, null=True)
     confirmation_link_key = models.UUIDField(null=True)
     link_sent_date = models.DateTimeField(null=True)
+    delivery_same_as_billing_address = models.BooleanField(default=True)
+    delivery_street = models.CharField(max_length=150, blank=True)
+    delivery_street_2 = models.CharField(max_length=150, blank=True)
+    delivery_postcode = models.CharField(max_length=32, blank=True)
+    delivery_city = models.CharField(max_length=50, blank=True)
+    delivery_country = CountryField(blank=True, default="DE")
 
 
 class WaitingListPickupLocationWish(TapirModel):

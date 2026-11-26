@@ -3,7 +3,6 @@ const init = (c_p_map_json, pe_c_map_json) => {
   activateCapacityList(c_p_map_json);
   activateProductList();
   manageButtons();
-  activateDetails();
 };
 
 const CLASS_ROW_ACTIVE = "table-active";
@@ -151,7 +150,7 @@ const getProductEditForm = () => {
     const url = `/tapir/product/${params.periodId}/${params.capacityId}/${
       params.prodId
     }/edit${Tapir.stringifyUrlParams(params)}`;
-    FormModal.load(url, "Produkt editieren");
+    FormModal.load(url, "Anteilsgröße bearbeiten");
   }
 };
 
@@ -160,7 +159,7 @@ const getProductAddForm = () => {
   const url = `/tapir/product/${params.periodId}/${
     params.capacityId
   }/add${Tapir.stringifyUrlParams(params)}`;
-  FormModal.load(url, "Neues Produkt hinzufügen");
+  FormModal.load(url, "Neue Anteilsgröße hinzufügen");
 };
 
 const getGrowingPeriodAddForm = () => {
@@ -170,7 +169,7 @@ const getGrowingPeriodAddForm = () => {
   FormModal.load(
     url,
     title,
-    "Es wird empfohlen stattdessen die Copy Funktion auf die letzte Periode anzuwenden, damit Produkte und weitere Einstellungen übernommen werden. Diese sind nachträglich noch editierbar.",
+    "Es wird empfohlen stattdessen die Copy Funktion auf die letzte Periode anzuwenden, damit Produktanteile, Anteilsgrößen und weitere Einstellungen übernommen werden. Diese sind nachträglich noch editierbar.",
     "warning",
   );
 };
@@ -183,7 +182,7 @@ const getGrowingPeriodCopyForm = () => {
   FormModal.load(
     url,
     "Neue Vertragsperiode anlegen",
-    "Produkte werden von der gewählten Vertragsperiode übernommen.",
+    "Produktanteile und Anteilsgrößen werden von der gewählten Vertragsperiode übernommen.",
   );
 };
 
@@ -225,7 +224,7 @@ const select_product = (productId) => {
 const deleteProduct = () => {
   ConfirmationModal.open(
     "Bist du dir sicher?",
-    "Möchtest du dieses Produkt wirklich löschen?",
+    "Möchtest du diese Anteilsgröße wirklich löschen?",
     "Löschen",
     "danger",
     () => {
@@ -241,7 +240,7 @@ const deleteProduct = () => {
 const deleteCapacity = () => {
   ConfirmationModal.open(
     "Bist du dir sicher?",
-    "Möchtest du den Produkttypen wirklich für diese Vertragsperiode löschen?",
+    "Möchtest du den Produktanteil wirklich für diese Vertragsperiode löschen?",
     "Löschen",
     "danger",
     () => {

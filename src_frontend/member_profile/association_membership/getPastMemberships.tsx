@@ -1,8 +1,9 @@
 import { AssociationMembership } from "../../api-client";
+import { toApiDate } from "../../utils/apiDate.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 
 export function getPastMemberships(memberships: AssociationMembership[]) {
-  const today = new Date();
+  const today = toApiDate(new Date());
   const pastMemberships = memberships.filter(
     (membership) => membership.endDate && membership.endDate < today,
   );

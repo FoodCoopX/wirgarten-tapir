@@ -98,6 +98,18 @@ class ParameterDefinitionsPayments:
         order_priority -= 1
 
         importer.parameter_definition(
+            key=ParameterKeys.PAYMENT_PARTIAL_MONTH_PROPORTIONAL_START_DATE,
+            label="Start-Datum für anteilige Abrechnung von Teilmonaten",
+            datatype=TapirParameterDatatype.DATE,
+            initial_value=datetime.date(year=2028, month=1, day=1),
+            description="Ab diesem Monat kosten Teilmonate den Monatspreis × eigene Liefertermine ÷ alle Liefertermine des Monats, und ein Joker wird mit Monatspreis ÷ Liefertermine des Monats gutgeschrieben. Monate davor werden nach der alten Formel abgerechnet: voller Monatspreis ab einer Mindestanzahl Lieferungen im Monat (wöchentlich 4, 14-täglich 2, 4-wöchentlich 1), sonst pro Lieferung bzw. Joker Monatspreis × 12 ÷ Wochen im Jahr (× 2 bei 14-täglich, × 4 bei 4-wöchentlich).",
+            category=ParameterCategory.PAYMENT,
+            meta=ParameterMeta(validators=[validate_date_is_first_of_month]),
+            order_priority=order_priority,
+        )
+        order_priority -= 1
+
+        importer.parameter_definition(
             key=ParameterKeys.PAYMENT_ORGANISATION_IBAN,
             label="IBAN der Organisation",
             datatype=TapirParameterDatatype.STRING,
@@ -344,6 +356,20 @@ class ParameterDefinitionsPayments:
             datatype=TapirParameterDatatype.BOOLEAN,
             initial_value=True,
             description="",
+            category=ParameterCategory.PAYMENT,
+            order_priority=order_priority,
+        )
+        order_priority -= 1
+
+        importer.parameter_definition(
+            key=ParameterKeys.PAYMENT_EXPORT_EXCLUSION_ENABLED,
+            label="Mitglieder zeitweise vom Zahlungsexport ausschließen",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=False,
+            description="Wenn aktiviert, können Admins auf der Mitgliedsseite Zeiträume eintragen, in denen die regelmäßigen Zahlungen "
+            "des Mitglieds (Verträge, Solidarbeitrag, Vereinsbeitrag, Liefergebühren) nicht in die Lastschrift-Exporte übernommen werden, "
+            "z. B. weil die Organisation dem Mitglied ein Darlehen über seinen Anteil zurückzahlt. Genossenschaftsanteile werden weiterhin eingezogen. "
+            "Wenn deaktiviert, werden eingetragene Zeiträume ignoriert, bleiben aber gespeichert.",
             category=ParameterCategory.PAYMENT,
             order_priority=order_priority,
         )

@@ -30,12 +30,9 @@ const WaitingListConfirmBase: React.FC<WaitingListConfirmBaseProps> = ({
         linkKey: waitingListLinkKey,
       })
       .then(setWaitingListEntryDetails)
-      .catch(async (error) => {
+      .catch((error) => {
         if (error?.response?.status === 404) return;
-        await handleRequestError(
-          error,
-          "Fehler beim Laden der Warteliste-Eintrag!",
-        );
+        handleRequestError(error, "Fehler beim Laden der Warteliste-Eintrag!");
       })
       .finally(() => setLoading(false));
   }, []);

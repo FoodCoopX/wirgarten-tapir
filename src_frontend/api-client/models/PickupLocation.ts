@@ -12,6 +12,9 @@
  * Do not edit the class manually.
  */
 
+import type { PickupLocationOpeningTime } from "./PickupLocationOpeningTime";
+import { PickupLocationOpeningTimeFromJSON } from "./PickupLocationOpeningTime";
+
 /**
  *
  * @export
@@ -30,6 +33,12 @@ export interface PickupLocation {
    * @memberof PickupLocation
    */
   readonly deliveryDay: number | null;
+  /**
+   *
+   * @type {Array<PickupLocationOpeningTime>}
+   * @memberof PickupLocation
+   */
+  readonly openingTimes: Array<PickupLocationOpeningTime>;
   /**
    *
    * @type {Date}
@@ -53,13 +62,13 @@ export interface PickupLocation {
    * @type {string}
    * @memberof PickupLocation
    */
-  coordsLon: string;
+  latitude?: string | null;
   /**
    *
    * @type {string}
    * @memberof PickupLocation
    */
-  coordsLat: string;
+  longitude?: string | null;
   /**
    *
    * @type {string}
@@ -122,22 +131,28 @@ export interface PickupLocation {
   routeInfo?: string;
   /**
    * Leer = ab sofort verfügbar. Neuanlagen nur an einem Montag möglich.
-   * @type {Date}
+   * @type {string}
    * @memberof PickupLocation
    */
-  startDate?: Date | null;
+  startDate?: string | null;
   /**
    * Leer = dauerhaft verfügbar. Schließen nur an einem Sonntag möglich.
-   * @type {Date}
+   * @type {string}
    * @memberof PickupLocation
    */
-  endDate?: Date | null;
+  endDate?: string | null;
   /**
    *
    * @type {boolean}
    * @memberof PickupLocation
    */
   showDetailsInBasketTotalsExport?: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof PickupLocation
+   */
+  isHomeDelivery?: boolean;
   /**
    *
    * @type {string}
@@ -154,11 +169,11 @@ export function instanceOfPickupLocation(
 ): value is PickupLocation {
   if (!("deliveryDay" in value) || value["deliveryDay"] === undefined)
     return false;
+  if (!("openingTimes" in value) || value["openingTimes"] === undefined)
+    return false;
   if (!("createdAt" in value) || value["createdAt"] === undefined) return false;
   if (!("updatedAt" in value) || value["updatedAt"] === undefined) return false;
   if (!("name" in value) || value["name"] === undefined) return false;
-  if (!("coordsLon" in value) || value["coordsLon"] === undefined) return false;
-  if (!("coordsLat" in value) || value["coordsLat"] === undefined) return false;
   if (!("street" in value) || value["street"] === undefined) return false;
   if (!("postcode" in value) || value["postcode"] === undefined) return false;
   if (!("city" in value) || value["city"] === undefined) return false;
@@ -179,11 +194,14 @@ export function PickupLocationFromJSONTyped(
   return {
     id: json["id"] == null ? undefined : json["id"],
     deliveryDay: json["delivery_day"],
+    openingTimes: (json["opening_times"] as Array<any>).map(
+      PickupLocationOpeningTimeFromJSON,
+    ),
     createdAt: new Date(json["created_at"]),
     updatedAt: new Date(json["updated_at"]),
     name: json["name"],
-    coordsLon: json["coords_lon"],
-    coordsLat: json["coords_lat"],
+    latitude: json["latitude"] == null ? undefined : json["latitude"],
+    longitude: json["longitude"] == null ? undefined : json["longitude"],
     street: json["street"],
     street2: json["street_2"] == null ? undefined : json["street_2"],
     postcode: json["postcode"],
@@ -198,13 +216,14 @@ export function PickupLocationFromJSONTyped(
       json["contact_name"] == null ? undefined : json["contact_name"],
     photoLink: json["photo_link"] == null ? undefined : json["photo_link"],
     routeInfo: json["route_info"] == null ? undefined : json["route_info"],
-    startDate:
-      json["start_date"] == null ? undefined : new Date(json["start_date"]),
-    endDate: json["end_date"] == null ? undefined : new Date(json["end_date"]),
+    startDate: json["start_date"] == null ? undefined : json["start_date"],
+    endDate: json["end_date"] == null ? undefined : json["end_date"],
     showDetailsInBasketTotalsExport:
       json["show_details_in_basket_totals_export"] == null
         ? undefined
         : json["show_details_in_basket_totals_export"],
+    isHomeDelivery:
+      json["is_home_delivery"] == null ? undefined : json["is_home_delivery"],
     locationRoute:
       json["location_route"] == null ? undefined : json["location_route"],
   };
@@ -217,7 +236,7 @@ export function PickupLocationToJSON(json: any): PickupLocation {
 export function PickupLocationToJSONTyped(
   value?: Omit<
     PickupLocation,
-    "delivery_day" | "created_at" | "updated_at"
+    "delivery_day" | "opening_times" | "created_at" | "updated_at"
   > | null,
   ignoreDiscriminator: boolean = false,
 ): any {
@@ -228,8 +247,8 @@ export function PickupLocationToJSONTyped(
   return {
     id: value["id"],
     name: value["name"],
-    coords_lon: value["coordsLon"],
-    coords_lat: value["coordsLat"],
+    latitude: value["latitude"],
+    longitude: value["longitude"],
     street: value["street"],
     street_2: value["street2"],
     postcode: value["postcode"],
@@ -240,16 +259,11 @@ export function PickupLocationToJSONTyped(
     contact_name: value["contactName"],
     photo_link: value["photoLink"],
     route_info: value["routeInfo"],
-    start_date:
-      value["startDate"] == null
-        ? undefined
-        : (value["startDate"] as any).toISOString().substring(0, 10),
-    end_date:
-      value["endDate"] == null
-        ? undefined
-        : (value["endDate"] as any).toISOString().substring(0, 10),
+    start_date: value["startDate"],
+    end_date: value["endDate"],
     show_details_in_basket_totals_export:
       value["showDetailsInBasketTotalsExport"],
+    is_home_delivery: value["isHomeDelivery"],
     location_route: value["locationRoute"],
   };
 }

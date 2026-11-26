@@ -8,7 +8,7 @@ from tapir.generic_exports.services.member_segment_provider import MemberSegment
 
 
 class TemplateMemberListGeng:
-    ID = "location_routes"
+    ID = "member_list_geng"
     NAME = "Mitgliederliste nach GenG."
     DESCRIPTION = "Erzeugt eine einzige CSV-Datei mit der Liste der Mitglieder nach Genossenschaftsgesetz."
 

@@ -1,5 +1,5 @@
 from django.db import migrations
-from tapir_mail.models import ReleaseStatus
+from tapir.mail.models import ReleaseStatus
 
 OLD_TOKEN_LABEL = "Beitrittsdatum in der Genossenschaft"
 NEW_TOKEN_LABEL = "Beitrittsdatum Geno/Verein"

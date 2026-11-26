@@ -6,6 +6,7 @@ import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 import { MapRef } from "react-leaflet/MapContainer";
 import { PublicPickupLocation } from "../../api-client";
 import formatAddress from "../../utils/formatAddress.ts";
+import { getPickupLocationLatLng } from "../../utils/getPickupLocationLatLng.ts";
 import "../map.css";
 import { formatOpeningTimes } from "../utils/formatOpeningTimes.ts";
 
@@ -29,20 +30,21 @@ const PickupLocationSelector: React.FC<PickupLocationSelectorProps> = ({
   disabledLocationIds,
 }) => {
   const [map, setMap] = useState<MapRef>(null);
+  const pickupLocationsOnMap = pickupLocations.filter(
+    (pickupLocation) => getPickupLocationLatLng(pickupLocation) !== null,
+  );
 
   useEffect(() => {
     if (selectedPickupLocations.length === 0 || map === null) {
       return;
     }
 
-    map.setView(
-      {
-        lat: Number.parseFloat(selectedPickupLocations[0].coordsLon),
-        lng: Number.parseFloat(selectedPickupLocations[0].coordsLat),
-      },
-      12,
-      { animate: true },
-    );
+    const latLng = getPickupLocationLatLng(selectedPickupLocations[0]);
+    if (latLng === null) {
+      return;
+    }
+
+    map.setView(latLng, 12, { animate: true });
   }, [selectedPickupLocations]);
 
   function getClassForPickupLocationListItem(
@@ -93,73 +95,78 @@ const PickupLocationSelector: React.FC<PickupLocationSelectorProps> = ({
                 setSelectedPickupLocations([pickupLocation]);
               }}
               className={getClassForPickupLocationListItem(pickupLocation)}
-              disabled={disabledLocationIds?.includes(pickupLocation.id!)}
+              disabled={disabledLocationIds?.includes(pickupLocation.id)}
             >
               <strong>{pickupLocation.name}</strong>{" "}
               {buildCapacityIndicator(pickupLocation)}
-              <br />
-              <small>
-                {formatAddress(
-                  pickupLocation.street,
-                  pickupLocation.street2,
-                  pickupLocation.postcode,
-                  pickupLocation.city,
-                )}
-              </small>
-              <br />
-              <small>{formatOpeningTimes(pickupLocation)}</small>
-            </ListGroupItem>
-          ))}
-        </ListGroup>
-      </Col>
-      <Col xs={12} md className={"mt-3 mt-md-0"}>
-        <MapContainer
-          className={"pickup-location-map"}
-          center={[
-            Number.parseFloat(pickupLocations[0].coordsLon),
-            Number.parseFloat(pickupLocations[0].coordsLat),
-          ]}
-          zoom={13}
-          scrollWheelZoom={true}
-          ref={setMap}
-        >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            referrerPolicy={"no-referrer-when-downgrade"}
-          />
-          {pickupLocations.map((pickupLocation) => (
-            <Marker
-              position={[
-                Number.parseFloat(pickupLocation.coordsLon),
-                Number.parseFloat(pickupLocation.coordsLat),
-              ]}
-              icon={L.icon({
-                iconUrl: "/static/subscriptions/marker-icon.png",
-                shadowUrl: "/static/subscriptions/marker-shadow.png",
-                iconAnchor: [13, 35],
-                popupAnchor: [0, -33],
-              })}
-              key={pickupLocation.id}
-            >
-              <Popup>
-                <div className={"d-flex flex-column gap-2 align-items-center"}>
-                  <strong>{pickupLocation.name}</strong>
-                  <div>
+              {!pickupLocation.isHomeDelivery && (
+                <>
+                  <br />
+                  <small>
                     {formatAddress(
                       pickupLocation.street,
                       pickupLocation.street2,
                       pickupLocation.postcode,
                       pickupLocation.city,
                     )}
-                  </div>
-                  <div>{formatOpeningTimes(pickupLocation)}</div>
-                </div>
-              </Popup>
-            </Marker>
+                  </small>
+                </>
+              )}
+              <br />
+              <small>
+                {pickupLocation.isHomeDelivery && "Lieferfenster: "}
+                {formatOpeningTimes(pickupLocation)}
+              </small>
+            </ListGroupItem>
           ))}
-        </MapContainer>
+        </ListGroup>
       </Col>
+      {pickupLocationsOnMap.length > 0 && (
+        <Col xs={12} md className={"mt-3 mt-md-0"}>
+          <MapContainer
+            className={"pickup-location-map"}
+            center={getPickupLocationLatLng(pickupLocationsOnMap[0])!}
+            zoom={13}
+            scrollWheelZoom={true}
+            ref={setMap}
+          >
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              referrerPolicy={"no-referrer-when-downgrade"}
+            />
+            {pickupLocationsOnMap.map((pickupLocation) => (
+              <Marker
+                position={getPickupLocationLatLng(pickupLocation)!}
+                icon={L.icon({
+                  iconUrl: "/static/subscriptions/marker-icon.png",
+                  shadowUrl: "/static/subscriptions/marker-shadow.png",
+                  iconAnchor: [13, 35],
+                  popupAnchor: [0, -33],
+                })}
+                key={pickupLocation.id}
+              >
+                <Popup>
+                  <div
+                    className={"d-flex flex-column gap-2 align-items-center"}
+                  >
+                    <strong>{pickupLocation.name}</strong>
+                    <div>
+                      {formatAddress(
+                        pickupLocation.street,
+                        pickupLocation.street2,
+                        pickupLocation.postcode,
+                        pickupLocation.city,
+                      )}
+                    </div>
+                    <div>{formatOpeningTimes(pickupLocation)}</div>
+                  </div>
+                </Popup>
+              </Marker>
+            ))}
+          </MapContainer>
+        </Col>
+      )}
     </Row>
   );
 };

@@ -332,7 +332,7 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
                         <option value="">Filter gerade nicht aktiv</option>
                         {products.map((product) => (
                           <option key={product.id} value={product.id}>
-                            {product.type.name}: {product.name}
+                            {product.name}
                           </option>
                         ))}
                       </Form.Select>

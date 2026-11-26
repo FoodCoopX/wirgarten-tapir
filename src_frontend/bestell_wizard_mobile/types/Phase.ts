@@ -1,3 +1,5 @@
+type ProductTypeId = string & {};
+
 export type Phase =
   | "loading"
   | "intro"
@@ -7,4 +9,5 @@ export type Phase =
   | "personal_data"
   | "feedback"
   | "confirmation"
-  | string;
+  | "unknown"
+  | ProductTypeId;

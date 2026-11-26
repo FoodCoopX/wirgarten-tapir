@@ -116,7 +116,7 @@ geckodriver.log
 /static/
 /real_data_lueneburg/
 /error_logs
-/node_modules/
+node_modules/
 tapir/filepond_stored_uploads/*
 !tapir/filepond_stored_uploads/.gitkeep
 tapir/filepond_temp_uploads/*
@@ -130,6 +130,7 @@ docker-compose.override.yml
 
 # TypeScript incremental build state
 tsconfig.app.tsbuildinfo
+src_frontend_mail/tsconfig.tsbuildinfo
 
 # The project uses pnpm; an npm lockfile here would drift from pnpm-lock.yaml
 package-lock.json

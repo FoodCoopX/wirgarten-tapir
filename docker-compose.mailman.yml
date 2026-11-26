@@ -14,7 +14,6 @@ services:
 
   mailman-core:
     image: maxking/mailman-core:rolling
-    restart: unless-stopped
     # volumes:
     #   - mailman-core:/opt/mailman
     stop_grace_period: 30s
@@ -37,7 +36,6 @@ services:
 
   mailman-web:
     image: maxking/mailman-web:rolling
-    restart: unless-stopped
     depends_on:
       mailman-db:
         condition: service_healthy
@@ -66,9 +64,9 @@ services:
       - POSTGRES_DB=mailmandb
       - POSTGRES_USER=mailman
       - POSTGRES_PASSWORD=mailmanpass
-    image: postgres:14
+    image: postgres:18
     # volumes:
-    #   - mailman-db:/var/lib/postgresql/data
+    #   - mailman-db:/var/lib/postgresql
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready --dbname mailmandb --username mailman" ]
       interval: 10s

@@ -75,9 +75,6 @@
   /* Tokens used by this theme's own rules below */
   --primary: var(--solawi-primary);
   --secondary: var(--solawi-secondary);
-  --platinum: var(--solawi-light-gray);
-  --white: var(--solawi-white);
-  --black: var(--solawi-black);
   --active-color: var(--solawi-light-teal);
 }
 
@@ -192,17 +189,9 @@ html .btn-primary {
 
 html .btn-secondary {
   --bs-btn-color: var(--solawi-black);
-  --bs-btn-bg: var(--solawi-secondary);
-  --bs-btn-border-color: var(--solawi-secondary);
   --bs-btn-hover-color: var(--solawi-black);
-  --bs-btn-hover-bg: var(--solawi-dark-carrot);
-  --bs-btn-hover-border-color: var(--solawi-dark-carrot);
   --bs-btn-active-color: var(--solawi-black);
-  --bs-btn-active-bg: var(--solawi-dark-carrot);
-  --bs-btn-active-border-color: var(--solawi-dark-carrot);
   --bs-btn-disabled-color: var(--solawi-black);
-  --bs-btn-disabled-bg: var(--solawi-secondary);
-  --bs-btn-disabled-border-color: var(--solawi-secondary);
 }
 
 html .btn-success {
@@ -392,143 +381,13 @@ html .list-group-item.active .text-success {
 }
 
 /* ----- Tables ----------------------------------------------------------- */
-html .table-active,
-html tr.tr-href.active,
-html tr.tr-clickable.active {
+html .table-active {
   background: var(--active-color);
   color: var(--solawi-black);
 }
 
-html tr.tr-href:hover:not(.active),
-html tr.tr-clickable:hover:not(.active) {
-  background: var(--bs-gray-100);
-}
-
-/* ----- Steps / status --------------------------------------------------- */
-html .step.active .step-icon {
-  background: var(--solawi-accent);
-}
-
-.is-valid {
-  border-color: var(--primary) !important;
-}
-
-div.option.selected {
-  background-color: var(--primary);
-}
-
-/* ----- Theme structural rules (kept from the original theme) ------------ */
-.photo {
-  border-top-left-radius: 10px;
-  border-top-right-radius: 10px;
-  border-bottom-left-radius: 10px;
-  border-bottom-right-radius: 10px;
-  box-shadow: 2px 2px 18px 2px rgb(2 0 1 / 7%);
-  animation: fadeIn 0.8s;
-}
-
-nav-item .hidden {
-  display: none;
-}
-
-tr.tr-href,
-tr.tr-clickable {
-  transition: background 0.2s;
-  cursor: pointer;
-}
-
-@keyframes fadeIn {
-  0% {
-    opacity: 0;
-  }
-
-  100% {
-    opacity: 1;
-  }
-}
-
-.card {
-  animation: fadeIn 0.3s;
-}
-
-/* ===== Scrollbar CSS ===== */
-/* Chrome, Edge, and Safari */
-*::-webkit-scrollbar {
-  width: 16px;
-}
-
-*::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-*::-webkit-scrollbar-thumb {
-  background-color: gray;
-  border-radius: 10px;
-  border: 2px solid #ffffff;
-}
-
-.tapir-btn:disabled {
-  background-color: gray !important;
-  color: white !important;
-  border-color: grey;
-}
-
-.selectize-input {
-  background: #ffffff !important;
-  min-height: 2.375em !important;
-  font-size: 1em !important;
-  padding: 0.5rem 2.25rem 0.25rem 0.75rem;
-}
-
 .table td,
 .table tr {
-  padding: 0.3rem;
-  font-size: 16px;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.navbar.sticky-top {
-  z-index: 995;
-}
-
-.custom-sidebar {
-  width: 4em;
-  transition: width 0.3s ease;
-  position: absolute;
-  padding-top: 4.5em;
-  white-space: nowrap;
-  z-index: 990;
-  box-shadow: 3px 0 8px rgba(0, 0, 0, 0.2);
-}
-
-.sidebar-item-details {
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.sidebar-group {
-  margin-top: 1em;
-}
-
-.custom-sidebar:hover {
-  width: 16em;
-}
-
-.custom-sidebar:hover > div > .sidebar-item-details,
-.custom-sidebar:hover > div > ul > li > a > span.sidebar-item-details {
-  opacity: 1;
-}
-
-.material-icons {
-  display: inline-block;
-  width: 1em; /* Set the width to be equivalent to 2 normal characters */
-  overflow: hidden;
-  text-align: center;
-  vertical-align: middle;
-}
-
-main {
-  padding-left: 1em;
-  padding-right: 1em;
 }

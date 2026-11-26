@@ -80,10 +80,10 @@ export interface CoopShareTransaction {
   timestamp?: Date;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof CoopShareTransaction
    */
-  validAt: Date;
+  validAt: string;
   /**
    *
    * @type {string}
@@ -150,7 +150,7 @@ export function CoopShareTransactionFromJSONTyped(
     sharePrice: json["share_price"],
     timestamp:
       json["timestamp"] == null ? undefined : new Date(json["timestamp"]),
-    validAt: new Date(json["valid_at"]),
+    validAt: json["valid_at"],
     member: json["member"],
     mandateRef: json["mandate_ref"] == null ? undefined : json["mandate_ref"],
     transferMember:
@@ -185,7 +185,7 @@ export function CoopShareTransactionToJSONTyped(
     share_price: value["sharePrice"],
     timestamp:
       value["timestamp"] == null ? undefined : value["timestamp"].toISOString(),
-    valid_at: value["validAt"].toISOString().substring(0, 10),
+    valid_at: value["validAt"],
     member: value["member"],
     mandate_ref: value["mandateRef"],
     transfer_member: value["transferMember"],

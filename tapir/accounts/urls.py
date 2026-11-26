@@ -5,6 +5,7 @@ from tapir.accounts.views import (
     change_email,
     AdminApplyMailChangeView,
     PasswordChangeRedirectView,
+    UnverifiedMembersApiView,
 )
 
 app_name = "accounts"
@@ -21,6 +22,11 @@ urlpatterns = [
         "admin_apply_mail_change",
         AdminApplyMailChangeView.as_view(),
         name="admin_apply_mail_change",
+    ),
+    path(
+        "api/unverified_members",
+        UnverifiedMembersApiView.as_view(),
+        name="unverified_members",
     ),
     path(
         "link_expired",

@@ -32,10 +32,10 @@ export interface MemberSolidarityContributionsResponse {
   contributions: Array<SolidarityContribution>;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof MemberSolidarityContributionsResponse
    */
-  changeValidFrom: Date;
+  changeValidFrom: string;
   /**
    *
    * @type {boolean}
@@ -50,10 +50,10 @@ export interface MemberSolidarityContributionsResponse {
   userCanUpdateContribution: boolean;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof MemberSolidarityContributionsResponse
    */
-  alternativeChangeValidFrom: Date | null;
+  alternativeChangeValidFrom: string | null;
 }
 
 /**
@@ -101,13 +101,10 @@ export function MemberSolidarityContributionsResponseFromJSONTyped(
     contributions: (json["contributions"] as Array<any>).map(
       SolidarityContributionFromJSON,
     ),
-    changeValidFrom: new Date(json["change_valid_from"]),
+    changeValidFrom: json["change_valid_from"],
     userCanSetLowerValue: json["user_can_set_lower_value"],
     userCanUpdateContribution: json["user_can_update_contribution"],
-    alternativeChangeValidFrom:
-      json["alternative_change_valid_from"] == null
-        ? null
-        : new Date(json["alternative_change_valid_from"]),
+    alternativeChangeValidFrom: json["alternative_change_valid_from"],
   };
 }
 
@@ -129,14 +126,9 @@ export function MemberSolidarityContributionsResponseToJSONTyped(
     contributions: (value["contributions"] as Array<any>).map(
       SolidarityContributionToJSON,
     ),
-    change_valid_from: value["changeValidFrom"].toISOString().substring(0, 10),
+    change_valid_from: value["changeValidFrom"],
     user_can_set_lower_value: value["userCanSetLowerValue"],
     user_can_update_contribution: value["userCanUpdateContribution"],
-    alternative_change_valid_from:
-      value["alternativeChangeValidFrom"] == null
-        ? null
-        : (value["alternativeChangeValidFrom"] as any)
-            .toISOString()
-            .substring(0, 10),
+    alternative_change_valid_from: value["alternativeChangeValidFrom"],
   };
 }

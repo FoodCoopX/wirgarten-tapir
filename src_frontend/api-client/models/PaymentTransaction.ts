@@ -38,6 +38,18 @@ export interface PaymentTransaction {
   readonly paymentsSum: number;
   /**
    *
+   * @type {number}
+   * @memberof PaymentTransaction
+   */
+  readonly excludedPaymentsCount: number;
+  /**
+   *
+   * @type {number}
+   * @memberof PaymentTransaction
+   */
+  readonly excludedPaymentsSum: number;
+  /**
+   *
    * @type {string}
    * @memberof PaymentTransaction
    */
@@ -68,10 +80,10 @@ export interface PaymentTransaction {
   type: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof PaymentTransaction
    */
-  month: Date;
+  month: string;
   /**
    *
    * @type {string}
@@ -95,6 +107,16 @@ export function instanceOfPaymentTransaction(
   if (!("paymentsCount" in value) || value["paymentsCount"] === undefined)
     return false;
   if (!("paymentsSum" in value) || value["paymentsSum"] === undefined)
+    return false;
+  if (
+    !("excludedPaymentsCount" in value) ||
+    value["excludedPaymentsCount"] === undefined
+  )
+    return false;
+  if (
+    !("excludedPaymentsSum" in value) ||
+    value["excludedPaymentsSum"] === undefined
+  )
     return false;
   if (!("csvDownloadUrl" in value) || value["csvDownloadUrl"] === undefined)
     return false;
@@ -123,12 +145,14 @@ export function PaymentTransactionFromJSONTyped(
     id: json["id"] == null ? undefined : json["id"],
     paymentsCount: json["payments_count"],
     paymentsSum: json["payments_sum"],
+    excludedPaymentsCount: json["excluded_payments_count"],
+    excludedPaymentsSum: json["excluded_payments_sum"],
     csvDownloadUrl: json["csv_download_url"],
     xmlDownloadUrl: json["xml_download_url"],
     createdAt: new Date(json["created_at"]),
     updatedAt: new Date(json["updated_at"]),
     type: json["type"],
-    month: new Date(json["month"]),
+    month: json["month"],
     csvFile: json["csv_file"],
     xmlFile: json["xml_file"] == null ? undefined : json["xml_file"],
   };
@@ -143,6 +167,8 @@ export function PaymentTransactionToJSONTyped(
     PaymentTransaction,
     | "payments_count"
     | "payments_sum"
+    | "excluded_payments_count"
+    | "excluded_payments_sum"
     | "csv_download_url"
     | "xml_download_url"
     | "created_at"
@@ -157,7 +183,7 @@ export function PaymentTransactionToJSONTyped(
   return {
     id: value["id"],
     type: value["type"],
-    month: value["month"].toISOString().substring(0, 10),
+    month: value["month"],
     csv_file: value["csvFile"],
     xml_file: value["xmlFile"],
   };

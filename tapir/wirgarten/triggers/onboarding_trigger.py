@@ -4,13 +4,13 @@ from dataclasses import dataclass
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
 from django.utils import timezone
-from tapir_mail.models import (
+from tapir.mail.models import (
     EmailConfigurationDispatch,
     EmailConfigurationVersion,
     ReleaseStatus,
 )
-from tapir_mail.service.segment import resolve_segments
-from tapir_mail.service.triggers import Trigger
+from tapir.mail.services.segment import resolve_segments
+from tapir.mail.services.triggers import Trigger
 
 from tapir.wirgarten.models import Member, Subscription
 from tapir.wirgarten.service.get_next_delivery_date import get_next_delivery_date
@@ -28,7 +28,7 @@ class OnboardingTriggerData:
 class OnboardingTrigger(Trigger[OnboardingTriggerData]):
     @classmethod
     def get_id(cls) -> str:
-        return f"{__name__}.onboarding_trigger"
+        return "onboarding_trigger"
 
     @classmethod
     def get_display_name(cls) -> str:
@@ -148,7 +148,6 @@ class OnboardingTrigger(Trigger[OnboardingTriggerData]):
 
     @classmethod
     def get_field_definitions(cls):
-        Choice = Trigger.DropdownFieldDefinition.Choice
         return [
             cls.FieldDefinition(
                 field_name="days_offset",
@@ -159,10 +158,15 @@ class OnboardingTrigger(Trigger[OnboardingTriggerData]):
                 field_name="delivery",
                 label="Nummer der Lieferung",
                 choices=[
-                    Choice(value=0, label="1ste Lieferung"),
-                    Choice(value=1, label="2te Lieferung"),
-                    Choice(value=2, label="3te Lieferung"),
-                    Choice(value=3, label="4te Lieferung"),
+                    Trigger.DropdownFieldDefinition.Choice(value=index, label=label)
+                    for index, label in enumerate(
+                        [
+                            "1ste Lieferung",
+                            "2te Lieferung",
+                            "3te Lieferung",
+                            "4te Lieferung",
+                        ]
+                    )
                 ],
             ),
         ]

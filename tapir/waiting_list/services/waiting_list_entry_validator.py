@@ -20,7 +20,7 @@ class WaitingListEntryValidator:
         cls, order: TapirOrder, number_of_coop_shares: int, email: str, cache: dict
     ):
         if not RequiredProductTypesValidator.does_order_contain_all_required_product_types(
-            order=order
+            order=order, cache=cache
         ):
             raise ValidationError("Some required products have not been selected")
 

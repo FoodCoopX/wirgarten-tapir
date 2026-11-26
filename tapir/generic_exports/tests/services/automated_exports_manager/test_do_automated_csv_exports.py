@@ -1,7 +1,7 @@
 import datetime
 from unittest.mock import patch, Mock
 
-from tapir_mail.service.shortcuts import make_timezone_aware
+from tapir.mail.services.shortcuts import make_timezone_aware
 
 from tapir.generic_exports.models import AutomatedCsvExportResult, AutomatedExportCycle
 from tapir.generic_exports.services.automated_exports_manager import (

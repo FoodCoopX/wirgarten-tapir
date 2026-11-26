@@ -1,0 +1,7 @@
+{% load wirgarten %}
+Vom Zahlungsexport ausgeschlossen:
+<ul>
+    <li>Von: {{ entry.values.start_date|format_date }}</li>
+    <li>Bis: {% if entry.values.end_date %}{{ entry.values.end_date|format_date }}{% else %}unbefristet{% endif %}</li>
+    {% if entry.values.comment %}<li>Kommentar: {{ entry.values.comment|linebreaksbr }}</li>{% endif %}
+</ul>

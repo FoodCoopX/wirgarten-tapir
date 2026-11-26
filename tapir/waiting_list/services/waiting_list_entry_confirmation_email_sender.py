@@ -1,4 +1,4 @@
-from tapir_mail.triggers.transactional_trigger import (
+from tapir.mail.triggers.transactional_trigger import (
     TransactionalTriggerData,
     TransactionalTrigger,
 )

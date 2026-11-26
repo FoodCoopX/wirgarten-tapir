@@ -84,13 +84,13 @@ const EmailInput: React.FC<EmailInputProps> = ({
       {!isValidEmail && <Alert variant="warning">Invalid email address</Alert>}
       {addresses.length > 0 && (
         <div className={"d-flex flex-row gap-2 mb-2"}>
-          {addresses.map((address, index) => (
+          {addresses.map((address) => (
             <Badge
               title="Click to remove"
               style={{
                 cursor: "pointer",
               }}
-              key={index}
+              key={address}
               onClick={() => removeEmail(address)}
             >
               {address}

@@ -37,21 +37,22 @@ class DeliveryPriceCalculator:
     def get_price_of_single_delivery_for_subscription(
         cls, subscription: Subscription, at_date: datetime.date, cache: dict
     ) -> Decimal:
-        product_price = get_product_price(
-            subscription.product, at_date, cache=cache
-        ).price
-
         delivery_cycle = subscription.product.type.delivery_cycle
-        if delivery_cycle == CUSTOM_CYCLE[0]:
-            return product_price
-
-        return (
-            cls.get_price_of_single_delivery_from_monthly_price(
-                monthly_price=product_price,
-                delivery_cycle=delivery_cycle,
-                at_date=at_date,
+        if subscription.price_override is not None:
+            price = subscription.price_override
+        else:
+            price = (
+                get_product_price(subscription.product, at_date, cache=cache).price
+                * subscription.quantity
             )
-            * subscription.quantity
+
+        if delivery_cycle == CUSTOM_CYCLE[0]:
+            return price
+
+        return cls.get_price_of_single_delivery_from_monthly_price(
+            monthly_price=price,
+            delivery_cycle=delivery_cycle,
+            at_date=at_date,
         )
 
     @classmethod

@@ -4,7 +4,14 @@ from django.urls import reverse
 
 from tapir.configuration.models import TapirParameter
 from tapir.waiting_list.tests.factories import WaitingListEntryFactory
-from tapir.wirgarten.models import WaitingListPickupLocationWish, WaitingListProductWish
+from tapir.pickup_locations.services.home_delivery_address_validator import (
+    HomeDeliveryAddressValidator,
+)
+from tapir.wirgarten.models import (
+    WaitingListEntry,
+    WaitingListPickupLocationWish,
+    WaitingListProductWish,
+)
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
@@ -16,6 +23,32 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
 class TestWaitingListEntryUpdateView(TapirIntegrationTest):
+    @staticmethod
+    def _build_request_data(
+        entry: WaitingListEntry, pickup_location_ids: list[str]
+    ) -> dict:
+        return {
+            "id": entry.id,
+            "first_name": entry.first_name,
+            "last_name": entry.last_name,
+            "email": entry.email,
+            "phone_number": str(entry.phone_number),
+            "street": entry.street,
+            "street_2": entry.street_2,
+            "postcode": entry.postcode,
+            "city": entry.city,
+            "pickup_location_ids": pickup_location_ids,
+            "shopping_cart": {},
+            "comment": "",
+        }
+
+    def _post(self, data: dict):
+        return self.client.post(
+            reverse("waiting_list:update_entry"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
@@ -96,3 +129,94 @@ class TestWaitingListEntryUpdateView(TapirIntegrationTest):
                 waiting_list_entry=entry, product=product_1
             ).quantity,
         )
+
+    def test_post_deliveryAddressGiven_savesDeliveryAddress(self):
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+        entry = WaitingListEntryFactory.create()
+        pickup_location = PickupLocationFactory.create(is_home_delivery=True)
+        data = self._build_request_data(
+            entry=entry, pickup_location_ids=[pickup_location.id]
+        )
+        data["delivery_address"] = {
+            "same_as_billing_address": False,
+            "street": "Lieferweg 1",
+            "street_2": "Hinterhaus",
+            "postcode": "12345",
+            "city": "Lieferstadt",
+            "country": "DE",
+        }
+
+        response = self._post(data)
+
+        self.assertEqual(200, response.status_code)
+        entry.refresh_from_db()
+        self.assertFalse(entry.delivery_same_as_billing_address)
+        self.assertEqual("Lieferweg 1", entry.delivery_street)
+        self.assertEqual("Hinterhaus", entry.delivery_street_2)
+        self.assertEqual("12345", entry.delivery_postcode)
+        self.assertEqual("Lieferstadt", entry.delivery_city)
+
+    def test_post_homeDeliveryWishWithIncompleteAddress_returns400AndDoesNotSave(
+        self,
+    ):
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+        entry = WaitingListEntryFactory.create(comment="old_comment")
+        normal_location = PickupLocationFactory.create()
+        home_delivery_location = PickupLocationFactory.create(is_home_delivery=True)
+        data = self._build_request_data(
+            entry=entry,
+            pickup_location_ids=[normal_location.id, home_delivery_location.id],
+        )
+        data["comment"] = "new_comment"
+        data["delivery_address"] = {
+            "same_as_billing_address": False,
+            "street": "Lieferweg 1",
+            "postcode": "",
+            "city": "Lieferstadt",
+        }
+
+        response = self._post(data)
+
+        self.assertEqual(400, response.status_code)
+        self.assertEqual(
+            HomeDeliveryAddressValidator.MISSING_ADDRESS_MESSAGE, response.json()
+        )
+        entry.refresh_from_db()
+        self.assertEqual("old_comment", entry.comment)
+        self.assertTrue(entry.delivery_same_as_billing_address)
+        self.assertEqual(0, entry.pickup_location_wishes.count())
+
+    def test_post_incompleteAddressWithoutHomeDeliveryWish_savesEntry(self):
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+        entry = WaitingListEntryFactory.create()
+        pickup_location = PickupLocationFactory.create()
+        data = self._build_request_data(
+            entry=entry, pickup_location_ids=[pickup_location.id]
+        )
+        data["delivery_address"] = {"same_as_billing_address": False}
+
+        response = self._post(data)
+
+        self.assertEqual(200, response.status_code)
+        entry.refresh_from_db()
+        self.assertFalse(entry.delivery_same_as_billing_address)
+
+    def test_post_noDeliveryAddressGiven_keepsStoredDeliveryAddress(self):
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+        entry = WaitingListEntryFactory.create(
+            delivery_same_as_billing_address=False,
+            delivery_street="Lieferweg 1",
+            delivery_postcode="12345",
+            delivery_city="Lieferstadt",
+        )
+        pickup_location = PickupLocationFactory.create(is_home_delivery=True)
+        data = self._build_request_data(
+            entry=entry, pickup_location_ids=[pickup_location.id]
+        )
+
+        response = self._post(data)
+
+        self.assertEqual(200, response.status_code)
+        entry.refresh_from_db()
+        self.assertFalse(entry.delivery_same_as_billing_address)
+        self.assertEqual("Lieferweg 1", entry.delivery_street)

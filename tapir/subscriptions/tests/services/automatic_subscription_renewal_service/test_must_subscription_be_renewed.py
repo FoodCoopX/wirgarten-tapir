@@ -10,6 +10,7 @@ from tapir.wirgarten.models import Subscription
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.tests.test_utils import TapirUnitTest
 from tapir.wirgarten.tests.test_utils import mock_timezone
+from tapir.wirgarten.utils import get_today
 
 
 class TestMustSubscriptionBeRenewed(TapirUnitTest):
@@ -53,21 +54,20 @@ class TestMustSubscriptionBeRenewed(TapirUnitTest):
             ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
         )
 
-    @patch(
-        "tapir.subscriptions.services.automatic_subscription_renewal_service.get_next_growing_period",
-        autospec=True,
-    )
+    @patch.object(TapirCache, "get_first_growing_period_starting_after", autospec=True)
     @patch(
         "tapir.subscriptions.services.automatic_subscription_renewal_service.get_parameter_value",
         autospec=True,
     )
     def test_mustSubscriptionBeRenewed_noFutureGrowingPeriod_returnFalse(
-        self, mock_get_parameter_value: Mock, mock_get_next_growing_period: Mock
+        self,
+        mock_get_parameter_value: Mock,
+        mock_get_first_growing_period_starting_after: Mock,
     ):
         mock_get_parameter_value.return_value = True
         subscription = Mock()
         subscription.cancellation_ts = None
-        mock_get_next_growing_period.return_value = None
+        mock_get_first_growing_period_starting_after.return_value = None
 
         cache = {}
         result = AutomaticSubscriptionRenewalService.must_subscription_be_renewed(
@@ -78,13 +78,12 @@ class TestMustSubscriptionBeRenewed(TapirUnitTest):
         mock_get_parameter_value.assert_called_once_with(
             ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
         )
-        mock_get_next_growing_period.assert_called_once_with(cache=cache)
+        mock_get_first_growing_period_starting_after.assert_called_once_with(
+            reference_date=get_today(cache=cache), cache=cache
+        )
 
     @patch.object(Subscription, "objects")
-    @patch(
-        "tapir.subscriptions.services.automatic_subscription_renewal_service.get_next_growing_period",
-        autospec=True,
-    )
+    @patch.object(TapirCache, "get_first_growing_period_starting_after", autospec=True)
     @patch(
         "tapir.subscriptions.services.automatic_subscription_renewal_service.get_parameter_value",
         autospec=True,
@@ -92,7 +91,7 @@ class TestMustSubscriptionBeRenewed(TapirUnitTest):
     def test_mustSubscriptionBeRenewed_futureSubscriptionAlreadyExists_returnFalse(
         self,
         mock_get_parameter_value: Mock,
-        mock_get_next_growing_period: Mock,
+        mock_get_first_growing_period_starting_after: Mock,
         mock_subscription_objects: Mock,
     ):
         mock_get_parameter_value.return_value = True
@@ -104,7 +103,7 @@ class TestMustSubscriptionBeRenewed(TapirUnitTest):
         subscription.product = product
         product.deleted = False
         next_growing_period = Mock()
-        mock_get_next_growing_period.return_value = next_growing_period
+        mock_get_first_growing_period_starting_after.return_value = next_growing_period
         mock_subscription_objects.filter.return_value.exists.return_value = True
 
         cache = {}
@@ -116,7 +115,9 @@ class TestMustSubscriptionBeRenewed(TapirUnitTest):
         mock_get_parameter_value.assert_called_once_with(
             ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
         )
-        mock_get_next_growing_period.assert_called_once_with(cache=cache)
+        mock_get_first_growing_period_starting_after.assert_called_once_with(
+            reference_date=get_today(cache=cache), cache=cache
+        )
         mock_subscription_objects.filter.assert_called_once_with(
             member=member, period=next_growing_period, product=product
         )
@@ -124,10 +125,7 @@ class TestMustSubscriptionBeRenewed(TapirUnitTest):
 
     @patch.object(NoticePeriodManager, "get_max_cancellation_date_subscription")
     @patch.object(Subscription, "objects")
-    @patch(
-        "tapir.subscriptions.services.automatic_subscription_renewal_service.get_next_growing_period",
-        autospec=True,
-    )
+    @patch.object(TapirCache, "get_first_growing_period_starting_after", autospec=True)
     @patch(
         "tapir.subscriptions.services.automatic_subscription_renewal_service.get_parameter_value",
         autospec=True,
@@ -135,7 +133,7 @@ class TestMustSubscriptionBeRenewed(TapirUnitTest):
     def test_mustSubscriptionBeRenewed_maxCancellationIsInTheFuture_returnFalse(
         self,
         mock_get_parameter_value: Mock,
-        mock_get_next_growing_period: Mock,
+        mock_get_first_growing_period_starting_after: Mock,
         mock_subscription_objects: Mock,
         mock_get_max_cancellation_date_subscription: Mock,
     ):
@@ -148,7 +146,7 @@ class TestMustSubscriptionBeRenewed(TapirUnitTest):
         subscription.product = product
         product.deleted = False
         next_growing_period = Mock()
-        mock_get_next_growing_period.return_value = next_growing_period
+        mock_get_first_growing_period_starting_after.return_value = next_growing_period
         mock_subscription_objects.filter.return_value.exists.return_value = False
         mock_get_max_cancellation_date_subscription.return_value = datetime.date(
             year=2025, month=3, day=2
@@ -164,7 +162,9 @@ class TestMustSubscriptionBeRenewed(TapirUnitTest):
         mock_get_parameter_value.assert_called_once_with(
             ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
         )
-        mock_get_next_growing_period.assert_called_once_with(cache=cache)
+        mock_get_first_growing_period_starting_after.assert_called_once_with(
+            reference_date=get_today(cache=cache), cache=cache
+        )
         mock_subscription_objects.filter.assert_called_once_with(
             member=member, period=next_growing_period, product=product
         )
@@ -175,10 +175,7 @@ class TestMustSubscriptionBeRenewed(TapirUnitTest):
 
     @patch.object(NoticePeriodManager, "get_max_cancellation_date_subscription")
     @patch.object(Subscription, "objects")
-    @patch(
-        "tapir.subscriptions.services.automatic_subscription_renewal_service.get_next_growing_period",
-        autospec=True,
-    )
+    @patch.object(TapirCache, "get_first_growing_period_starting_after", autospec=True)
     @patch(
         "tapir.subscriptions.services.automatic_subscription_renewal_service.get_parameter_value",
         autospec=True,
@@ -186,7 +183,7 @@ class TestMustSubscriptionBeRenewed(TapirUnitTest):
     def test_mustSubscriptionBeRenewed_maxCancellationIsOnSameDay_returnFalse(
         self,
         mock_get_parameter_value: Mock,
-        mock_get_next_growing_period: Mock,
+        mock_get_first_growing_period_starting_after: Mock,
         mock_subscription_objects: Mock,
         mock_get_max_cancellation_date_subscription: Mock,
     ):
@@ -199,7 +196,7 @@ class TestMustSubscriptionBeRenewed(TapirUnitTest):
         subscription.product = product
         product.deleted = False
         next_growing_period = Mock()
-        mock_get_next_growing_period.return_value = next_growing_period
+        mock_get_first_growing_period_starting_after.return_value = next_growing_period
         mock_subscription_objects.filter.return_value.exists.return_value = False
         mock_get_max_cancellation_date_subscription.return_value = datetime.date(
             year=2025, month=3, day=2
@@ -215,7 +212,9 @@ class TestMustSubscriptionBeRenewed(TapirUnitTest):
         mock_get_parameter_value.assert_called_once_with(
             ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
         )
-        mock_get_next_growing_period.assert_called_once_with(cache=cache)
+        mock_get_first_growing_period_starting_after.assert_called_once_with(
+            reference_date=get_today(cache=cache), cache=cache
+        )
         mock_subscription_objects.filter.assert_called_once_with(
             member=member, period=next_growing_period, product=product
         )
@@ -229,10 +228,7 @@ class TestMustSubscriptionBeRenewed(TapirUnitTest):
         NoticePeriodManager, "get_max_cancellation_date_subscription", autospec=True
     )
     @patch.object(Subscription, "objects")
-    @patch(
-        "tapir.subscriptions.services.automatic_subscription_renewal_service.get_next_growing_period",
-        autospec=True,
-    )
+    @patch.object(TapirCache, "get_first_growing_period_starting_after", autospec=True)
     @patch(
         "tapir.subscriptions.services.automatic_subscription_renewal_service.get_parameter_value",
         autospec=True,
@@ -240,7 +236,7 @@ class TestMustSubscriptionBeRenewed(TapirUnitTest):
     def test_mustSubscriptionBeRenewed_productTypeHasNoCapacityInFutureGrowingPeriod_returnFalse(
         self,
         mock_get_parameter_value: Mock,
-        mock_get_next_growing_period: Mock,
+        mock_get_first_growing_period_starting_after: Mock,
         mock_subscription_objects: Mock,
         mock_get_max_cancellation_date_subscription: Mock,
         mock_get_product_type_capacity_at_date: Mock,
@@ -254,7 +250,7 @@ class TestMustSubscriptionBeRenewed(TapirUnitTest):
         subscription.product = product
         product.deleted = False
         next_growing_period = Mock()
-        mock_get_next_growing_period.return_value = next_growing_period
+        mock_get_first_growing_period_starting_after.return_value = next_growing_period
         mock_subscription_objects.filter.return_value.exists.return_value = False
         mock_get_max_cancellation_date_subscription.return_value = datetime.date(
             year=2025, month=3, day=2
@@ -271,7 +267,9 @@ class TestMustSubscriptionBeRenewed(TapirUnitTest):
         mock_get_parameter_value.assert_called_once_with(
             ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
         )
-        mock_get_next_growing_period.assert_called_once_with(cache=cache)
+        mock_get_first_growing_period_starting_after.assert_called_once_with(
+            reference_date=get_today(cache=cache), cache=cache
+        )
         mock_subscription_objects.filter.assert_called_once_with(
             member=member, period=next_growing_period, product=product
         )
@@ -288,10 +286,7 @@ class TestMustSubscriptionBeRenewed(TapirUnitTest):
         NoticePeriodManager, "get_max_cancellation_date_subscription", autospec=True
     )
     @patch.object(Subscription, "objects")
-    @patch(
-        "tapir.subscriptions.services.automatic_subscription_renewal_service.get_next_growing_period",
-        autospec=True,
-    )
+    @patch.object(TapirCache, "get_first_growing_period_starting_after", autospec=True)
     @patch(
         "tapir.subscriptions.services.automatic_subscription_renewal_service.get_parameter_value",
         autospec=True,
@@ -299,7 +294,7 @@ class TestMustSubscriptionBeRenewed(TapirUnitTest):
     def test_mustSubscriptionBeRenewed_maxCancellationIsInThePast_returnTrue(
         self,
         mock_get_parameter_value: Mock,
-        mock_get_next_growing_period: Mock,
+        mock_get_first_growing_period_starting_after: Mock,
         mock_subscription_objects: Mock,
         mock_get_max_cancellation_date_subscription: Mock,
         mock_get_product_type_capacity_at_date: Mock,
@@ -313,7 +308,7 @@ class TestMustSubscriptionBeRenewed(TapirUnitTest):
         subscription.product = product
         product.deleted = False
         next_growing_period = Mock()
-        mock_get_next_growing_period.return_value = next_growing_period
+        mock_get_first_growing_period_starting_after.return_value = next_growing_period
         mock_subscription_objects.filter.return_value.exists.return_value = False
         mock_get_max_cancellation_date_subscription.return_value = datetime.date(
             year=2025, month=3, day=2
@@ -330,7 +325,9 @@ class TestMustSubscriptionBeRenewed(TapirUnitTest):
         mock_get_parameter_value.assert_called_once_with(
             ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
         )
-        mock_get_next_growing_period.assert_called_once_with(cache=cache)
+        mock_get_first_growing_period_starting_after.assert_called_once_with(
+            reference_date=get_today(cache=cache), cache=cache
+        )
         mock_subscription_objects.filter.assert_called_once_with(
             member=member, period=next_growing_period, product=product
         )

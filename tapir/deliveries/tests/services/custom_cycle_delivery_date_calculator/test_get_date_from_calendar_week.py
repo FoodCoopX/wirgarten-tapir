@@ -62,12 +62,10 @@ class TestGetDateFromWeekObject(TapirUnitTest):
         )
         week = 53
 
-        with self.assertRaises(ValueError) as error:
+        with self.assertRaisesMessage(ValueError, "Invalid week: 53"):
             CustomCycleDeliveryDateCalculator.get_date_from_calendar_week(
                 week=week, growing_period=growing_period
             )
-
-        self.assertEqual("Invalid week: 53", str(error.exception))
 
     def test_getDateFromCalendarWeek_givenWeekOverlapsWithGrowingPeriodBoundaries_raisesException(
         self,
@@ -80,12 +78,10 @@ class TestGetDateFromWeekObject(TapirUnitTest):
         )
         week = 40
 
-        with self.assertRaises(TapirCustomCycleException) as error:
+        with self.assertRaisesMessage(
+            TapirCustomCycleException,
+            "Die ganze Woche muss innerhalb der Vertragsperiode liegen. KW40 geht vom 28.09.2026 bis zum 04.10.2026",
+        ):
             CustomCycleDeliveryDateCalculator.get_date_from_calendar_week(
                 week=week, growing_period=growing_period
             )
-
-        self.assertEqual(
-            "Die ganze Woche muss innerhalb der Vertragsperiode liegen. KW40 geht vom 28.09.2026 bis zum 04.10.2026",
-            str(error.exception),
-        )

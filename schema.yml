@@ -3,6 +3,43 @@ info:
   title: ''
   version: 0.0.0
 paths:
+  /accounts/api/unverified_members:
+    get:
+      operationId: accounts_api_unverified_members_retrieve
+      tags:
+      - accounts
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnverifiedMembersResponse'
+          description: ''
+    post:
+      operationId: accounts_api_unverified_members_create
+      tags:
+      - accounts
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SendVerificationEmailsResponse'
+          description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
   /associations/api/admin_create_membership:
     post:
       operationId: associations_api_admin_create_membership_create
@@ -2482,62 +2519,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/BestellWizardBaseDataResponse'
           description: ''
-  /bestell_wizard/api/bestell_wizard_capacity_check:
-    post:
-      operationId: bestell_wizard_api_bestell_wizard_capacity_check_create
-      tags:
-      - bestell_wizard
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/BestellWizardCapacityCheckRequestRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/BestellWizardCapacityCheckRequestRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/BestellWizardCapacityCheckRequestRequest'
-        required: true
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BestellWizardCapacityCheckResponse'
-          description: ''
-  /bestell_wizard/api/bestell_wizard_delivery_dates:
-    post:
-      operationId: bestell_wizard_api_bestell_wizard_delivery_dates_create
-      tags:
-      - bestell_wizard
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/BestellWizardDeliveryDatesForOrderRequestRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/BestellWizardDeliveryDatesForOrderRequestRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/BestellWizardDeliveryDatesForOrderRequestRequest'
-        required: true
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BestellWizardDeliveryDatesForOrderResponse'
-          description: ''
   /bestell_wizard/api/contract_start_date_waiting_list_entry:
     get:
       operationId: bestell_wizard_api_contract_start_date_waiting_list_entry_retrieve
@@ -2598,16 +2579,23 @@ paths:
               schema:
                 type: boolean
           description: ''
-  /bestell_wizard/api/product_prices:
-    get:
-      operationId: bestell_wizard_api_product_prices_retrieve
-      parameters:
-      - in: query
-        name: growing_period_id
-        schema:
-          type: string
+  /bestell_wizard/api/order_evaluation:
+    post:
+      operationId: bestell_wizard_api_order_evaluation_create
       tags:
       - bestell_wizard
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BestellWizardOrderEvaluationRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BestellWizardOrderEvaluationRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BestellWizardOrderEvaluationRequestRequest'
+        required: true
       security:
       - tokenAuth: []
       - cookieAuth: []
@@ -2617,7 +2605,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PublicProductPricesResponse'
+                $ref: '#/components/schemas/BestellWizardOrderEvaluationResponse'
           description: ''
   /bestell_wizard/bestell_wizard_confirm_order:
     post:
@@ -2888,35 +2876,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OrderConfirmationResponse'
-          description: ''
-  /coop/api/minimum_number_of_shares:
-    get:
-      operationId: coop_api_minimum_number_of_shares_retrieve
-      parameters:
-      - in: query
-        name: product_ids
-        schema:
-          type: array
-          items:
-            type: string
-      - in: query
-        name: quantities
-        schema:
-          type: array
-          items:
-            type: integer
-      tags:
-      - coop
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MinimumNumberOfSharesResponse'
           description: ''
   /coop/members/:
     get:
@@ -3235,6 +3194,49 @@ paths:
             application/json:
               schema:
                 type: string
+          description: ''
+  /core/api/member_data_disclosure:
+    get:
+      operationId: core_api_member_data_disclosure_retrieve
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - core
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberDataDisclosure'
+          description: ''
+  /core/api/member_data_disclosure_pdf:
+    get:
+      operationId: core_api_member_data_disclosure_pdf_retrieve
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - core
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+                format: binary
           description: ''
   /core/api/member_extra_emails:
     get:
@@ -4677,6 +4679,134 @@ paths:
                 items:
                   $ref: '#/components/schemas/MemberNeedingBankingData'
           description: ''
+  /payments/api/payment_export_exclusion_periods:
+    get:
+      operationId: payments_api_payment_export_exclusion_periods_list
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - payments
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PaymentExportExclusionPeriod'
+          description: ''
+    post:
+      operationId: payments_api_payment_export_exclusion_periods_create
+      tags:
+      - payments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentExportExclusionPeriodCreateRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PaymentExportExclusionPeriodCreateRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PaymentExportExclusionPeriodCreateRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderConfirmationResponse'
+          description: ''
+    put:
+      operationId: payments_api_payment_export_exclusion_periods_update
+      tags:
+      - payments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentExportExclusionPeriodUpdateRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PaymentExportExclusionPeriodUpdateRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PaymentExportExclusionPeriodUpdateRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderConfirmationResponse'
+          description: ''
+    delete:
+      operationId: payments_api_payment_export_exclusion_periods_destroy
+      parameters:
+      - in: query
+        name: period_id
+        schema:
+          type: string
+      tags:
+      - payments
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
+  /payments/api/payment_export_exclusion_periods_overview:
+    get:
+      operationId: payments_api_payment_export_exclusion_periods_overview_list
+      parameters:
+      - in: query
+        name: include_expired
+        schema:
+          type: boolean
+      - in: query
+        name: limit
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: offset
+        schema:
+          type: integer
+        required: true
+      tags:
+      - payments
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPaymentExportExclusionPeriodOverviewList'
+          description: ''
   /payments/api/payment_transaction_details:
     get:
       operationId: payments_api_payment_transaction_details_retrieve
@@ -4806,17 +4936,20 @@ paths:
   /pickup_locations/api/change_member_pickup_location:
     post:
       operationId: pickup_locations_api_change_member_pickup_location_create
-      parameters:
-      - in: query
-        name: member_id
-        schema:
-          type: string
-      - in: query
-        name: pickup_location_id
-        schema:
-          type: string
       tags:
       - pickup_locations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangeMemberPickupLocationRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ChangeMemberPickupLocationRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ChangeMemberPickupLocationRequestRequest'
+        required: true
       security:
       - tokenAuth: []
       - cookieAuth: []
@@ -4852,6 +4985,59 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/mpl'
+          description: ''
+  /pickup_locations/api/member_delivery_address:
+    get:
+      operationId: pickup_locations_api_member_delivery_address_retrieve
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - pickup_locations
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberDeliveryAddress'
+          description: ''
+    put:
+      operationId: pickup_locations_api_member_delivery_address_update
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - pickup_locations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeliveryAddressRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DeliveryAddressRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DeliveryAddressRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderConfirmationResponse'
           description: ''
   /pickup_locations/api/pickup_location_capacities:
     get:
@@ -5206,6 +5392,40 @@ paths:
                 items:
                   $ref: '#/components/schemas/PickupLocation'
           description: ''
+    post:
+      operationId: pickup_locations_pickup_locations_create
+      tags:
+      - pickup_locations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PickupLocationSaveRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PickupLocationSaveRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PickupLocationSaveRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PickupLocation'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /pickup_locations/pickup_locations/{id}/:
     get:
       operationId: pickup_locations_pickup_locations_retrieve
@@ -5228,6 +5448,71 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PickupLocation'
+          description: ''
+    put:
+      operationId: pickup_locations_pickup_locations_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der pickup location identifiziert.
+        required: true
+      tags:
+      - pickup_locations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PickupLocationSaveRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PickupLocationSaveRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PickupLocationSaveRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PickupLocation'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+    delete:
+      operationId: pickup_locations_pickup_locations_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der pickup location identifiziert.
+        required: true
+      tags:
+      - pickup_locations
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '204':
+          description: No response body
+        '400':
+          content:
+            application/json:
+              schema:
+                type: string
           description: ''
   /pickup_locations/public_pickup_locations/:
     get:
@@ -5255,7 +5540,6 @@ paths:
         name: id
         schema:
           type: string
-        description: Ein eindeutiger Wert, der pickup location identifiziert.
         required: true
       tags:
       - pickup_locations
@@ -5424,6 +5708,204 @@ paths:
               schema:
                 $ref: '#/components/schemas/UpdateMemberSolidarityContributionResponse'
           description: ''
+  /subscriptions/api/admin_size_change_apply:
+    post:
+      operationId: subscriptions_api_admin_size_change_apply_create
+      tags:
+      - subscriptions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminSizeChangeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AdminSizeChangeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AdminSizeChangeRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderConfirmationResponse'
+          description: ''
+  /subscriptions/api/admin_size_change_check:
+    post:
+      operationId: subscriptions_api_admin_size_change_check_create
+      tags:
+      - subscriptions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminSizeChangeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AdminSizeChangeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AdminSizeChangeRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderConfirmationResponse'
+          description: ''
+  /subscriptions/api/admin_size_change_date_options:
+    get:
+      operationId: subscriptions_api_admin_size_change_date_options_retrieve
+      parameters:
+      - in: query
+        name: subscription_id
+        schema:
+          type: string
+      tags:
+      - subscriptions
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminStartDateOptions'
+          description: ''
+  /subscriptions/api/admin_subscription_addition_apply:
+    post:
+      operationId: subscriptions_api_admin_subscription_addition_apply_create
+      tags:
+      - subscriptions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminSubscriptionAdditionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AdminSubscriptionAdditionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AdminSubscriptionAdditionRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderConfirmationResponse'
+          description: ''
+  /subscriptions/api/admin_subscription_addition_check:
+    post:
+      operationId: subscriptions_api_admin_subscription_addition_check_create
+      tags:
+      - subscriptions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminSubscriptionAdditionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AdminSubscriptionAdditionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AdminSubscriptionAdditionRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderConfirmationResponse'
+          description: ''
+  /subscriptions/api/admin_subscription_addition_date_options:
+    get:
+      operationId: subscriptions_api_admin_subscription_addition_date_options_retrieve
+      parameters:
+      - in: query
+        name: product_type_id
+        schema:
+          type: string
+      tags:
+      - subscriptions
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminStartDateOptions'
+          description: ''
+  /subscriptions/api/admin_subscription_change_member_data:
+    get:
+      operationId: subscriptions_api_admin_subscription_change_member_data_retrieve
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - subscriptions
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminSubscriptionChangeMemberData'
+          description: ''
+  /subscriptions/api/admin_subscription_change_member_search:
+    get:
+      operationId: subscriptions_api_admin_subscription_change_member_search_list
+      parameters:
+      - in: query
+        name: search
+        schema:
+          type: string
+      tags:
+      - subscriptions
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AdminSubscriptionChangeMemberSummary'
+          description: ''
   /subscriptions/api/confirm_subscription_changes:
     post:
       operationId: subscriptions_api_confirm_subscription_changes_create
@@ -5452,22 +5934,33 @@ paths:
               schema:
                 type: string
           description: ''
-  /subscriptions/api/convert_weeks_to_date_for_subscription_change:
+  /subscriptions/api/convert_week_to_date_for_subscription_change:
     get:
-      operationId: subscriptions_api_convert_weeks_to_date_for_subscription_change_retrieve
+      operationId: subscriptions_api_convert_week_to_date_for_subscription_change_retrieve
       parameters:
       - in: query
-        name: end_week
+        name: boundary
         schema:
-          type: integer
-      - in: query
-        name: start_week
-        schema:
-          type: integer
+          enum:
+          - start
+          - end
+          type: string
+          minLength: 1
+        description: |-
+          * `start` - start
+          * `end` - end
+        required: true
       - in: query
         name: subscription_id
         schema:
           type: string
+          minLength: 1
+        required: true
+      - in: query
+        name: week
+        schema:
+          type: integer
+        required: true
       tags:
       - subscriptions
       security:
@@ -5479,7 +5972,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ConvertWeekToDateForSubscriptionChangesResponse'
+                $ref: '#/components/schemas/ConvertWeekToDateForSubscriptionChangeResponse'
           description: ''
   /subscriptions/api/dates_change:
     post:
@@ -5890,7 +6383,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/SubscriptionTrialFields'
+                  $ref: '#/components/schemas/SubscriptionDetails'
           description: ''
   /subscriptions/subscriptions/{id}/:
     get:
@@ -5913,7 +6406,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SubscriptionTrialFields'
+                $ref: '#/components/schemas/SubscriptionDetails'
           description: ''
   /tapirmail/api/create_missing_trigger:
     post:
@@ -6464,23 +6957,6 @@ paths:
                 $ref: '#/components/schemas/PaginatedEmailConfigurationDispatchList'
           description: ''
   /tapirmail/api/email_configuration_version/:
-    get:
-      operationId: tapirmail_api_email_configuration_version_list
-      tags:
-      - tapirmail
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/BundledEmailConfiguration'
-          description: ''
     post:
       operationId: tapirmail_api_email_configuration_version_create
       tags:
@@ -6510,28 +6986,6 @@ paths:
                 additionalProperties: {}
           description: ''
   /tapirmail/api/email_configuration_version/{id}/:
-    get:
-      operationId: tapirmail_api_email_configuration_version_retrieve
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: string
-        description: Ein eindeutiger Wert, der email configuration version identifiziert.
-        required: true
-      tags:
-      - tapirmail
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BundledEmailConfiguration'
-          description: ''
     put:
       operationId: tapirmail_api_email_configuration_version_update
       parameters:
@@ -6747,6 +7201,34 @@ paths:
               schema:
                 type: object
                 additionalProperties: {}
+          description: ''
+  /tapirmail/api/email_configuration_version/preview/:
+    post:
+      operationId: email_configuration_version_preview
+      tags:
+      - tapirmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PreviewRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PreviewRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PreviewRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreviewResponse'
           description: ''
   /tapirmail/api/email_dispatch/:
     get:
@@ -7504,6 +7986,26 @@ paths:
   /tapirmail/api/media_library/stored_upload/:
     get:
       operationId: storeduploads_list
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Anzahl der pro Seite zurückzugebenden Ergebnisse.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: Der initiale Index, von dem die Ergebnisse zurückgegeben werden
+          sollen.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: Ein Suchbegriff.
+        schema:
+          type: string
       tags:
       - tapirmail
       security:
@@ -7515,9 +8017,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/StoredUpload'
+                $ref: '#/components/schemas/PaginatedStoredUploadList'
           description: ''
     post:
       operationId: storeduploads_create
@@ -7657,6 +8157,20 @@ paths:
   /tapirmail/api/media_library/temporary_upload/:
     get:
       operationId: temporaryuploads_list
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Anzahl der pro Seite zurückzugebenden Ergebnisse.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: Der initiale Index, von dem die Ergebnisse zurückgegeben werden
+          sollen.
+        schema:
+          type: integer
       tags:
       - tapirmail
       security:
@@ -7668,9 +8182,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/TemporaryUpload'
+                $ref: '#/components/schemas/PaginatedTemporaryUploadList'
           description: ''
     post:
       operationId: temporaryuploads_create
@@ -8736,6 +9248,16 @@ paths:
           description: No response body
 components:
   schemas:
+    ActionEnum:
+      enum:
+      - change_start
+      - change_end
+      - cancel_renewal
+      type: string
+      description: |-
+        * `change_start` - change_start
+        * `change_end` - change_end
+        * `cancel_renewal` - cancel_renewal
     AdminSetAssociationMembershipRequestRequest:
       type: object
       properties:
@@ -8752,6 +9274,183 @@ components:
       - member_id
       - membership_type_id
       - start_date
+    AdminSizeChangeRequest:
+      type: object
+      properties:
+        member_id:
+          type: string
+          minLength: 1
+        subscription_id:
+          type: string
+          minLength: 1
+        new_product_id:
+          type: string
+          minLength: 1
+        change_date:
+          type: string
+          format: date
+        prerequisites:
+          $ref: '#/components/schemas/SubscriptionPrerequisitesInputRequest'
+      required:
+      - change_date
+      - member_id
+      - new_product_id
+      - prerequisites
+      - subscription_id
+    AdminStartDateOption:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+          nullable: true
+        enabled:
+          type: boolean
+      required:
+      - date
+      - enabled
+    AdminStartDateOptions:
+      type: object
+      properties:
+        next_possible_start:
+          $ref: '#/components/schemas/AdminStartDateOption'
+        weeks:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminStartDateWeekOption'
+        next_period_start:
+          $ref: '#/components/schemas/AdminStartDateOption'
+      required:
+      - next_period_start
+      - next_possible_start
+      - weeks
+    AdminStartDateWeekOption:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        is_before_next_possible_start:
+          type: boolean
+        has_no_delivery:
+          type: boolean
+      required:
+      - date
+      - has_no_delivery
+      - is_before_next_possible_start
+    AdminSubscriptionAdditionRequest:
+      type: object
+      properties:
+        member_id:
+          type: string
+          minLength: 1
+        product_id:
+          type: string
+          minLength: 1
+        quantity:
+          type: integer
+        start_date:
+          type: string
+          format: date
+        prerequisites:
+          $ref: '#/components/schemas/SubscriptionPrerequisitesInputRequest'
+      required:
+      - member_id
+      - prerequisites
+      - product_id
+      - quantity
+      - start_date
+    AdminSubscriptionChangeMemberData:
+      type: object
+      properties:
+        member:
+          $ref: '#/components/schemas/AdminSubscriptionChangeMemberSummary'
+        subscription_units:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminSubscriptionChangeSubscriptionUnit'
+        prerequisites:
+          $ref: '#/components/schemas/AdminSubscriptionChangePrerequisitesStatus'
+        payment_rhythm_label:
+          type: string
+      required:
+      - member
+      - payment_rhythm_label
+      - prerequisites
+      - subscription_units
+    AdminSubscriptionChangeMemberSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        display_name:
+          type: string
+        member_number:
+          type: string
+          nullable: true
+      required:
+      - display_name
+      - id
+      - member_number
+    AdminSubscriptionChangePrerequisitesStatus:
+      type: object
+      properties:
+        pickup_location_name:
+          type: string
+          nullable: true
+        has_banking_data:
+          type: boolean
+      required:
+      - has_banking_data
+      - pickup_location_name
+    AdminSubscriptionChangeSubscriptionUnit:
+      type: object
+      properties:
+        subscription_id:
+          type: string
+        unit_number:
+          type: integer
+        product_type_id:
+          type: string
+        product_type_name:
+          type: string
+        product_id:
+          type: string
+        product_name:
+          type: string
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        status:
+          $ref: '#/components/schemas/AdminSubscriptionChangeSubscriptionUnitStatusEnum'
+        price_category:
+          $ref: '#/components/schemas/PriceCategoryEnum'
+      required:
+      - end_date
+      - price_category
+      - product_id
+      - product_name
+      - product_type_id
+      - product_type_name
+      - start_date
+      - status
+      - subscription_id
+      - unit_number
+    AdminSubscriptionChangeSubscriptionUnitStatusEnum:
+      enum:
+      - running
+      - planned
+      - cancelled
+      - ended
+      type: string
+      description: |-
+        * `running` - running
+        * `planned` - planned
+        * `cancelled` - cancelled
+        * `ended` - ended
     AssignmentLogEntry:
       type: object
       properties:
@@ -9006,6 +9705,8 @@ components:
         price_of_a_share:
           type: number
           format: double
+        coop_min_shares:
+          type: integer
         coop_share_instalments_enabled:
           type: boolean
         coop_share_instalment_amount:
@@ -9015,18 +9716,10 @@ components:
           type: string
         allow_investing_membership:
           type: boolean
-        product_types:
-          type: array
-          items:
-            $ref: '#/components/schemas/PublicProductType'
         association_membership_types:
           type: array
           items:
             $ref: '#/components/schemas/AssociationMembershipType'
-        pickup_locations:
-          type: array
-          items:
-            $ref: '#/components/schemas/PublicPickupLocation'
         force_waiting_list:
           type: boolean
         intro_enabled:
@@ -9051,14 +9744,6 @@ components:
             type: string
         default_payment_rhythm:
           type: string
-        product_type_ids_that_are_already_at_capacity:
-          type: array
-          items:
-            type: string
-        product_ids_that_are_already_at_capacity:
-          type: array
-          items:
-            type: string
         coop_statute_link:
           type: string
         organization_name:
@@ -9079,10 +9764,6 @@ components:
           type: array
           items:
             type: string
-        solidarity_contribution_minimum:
-          type: number
-          format: double
-          nullable: true
         solidarity_contribution_default:
           type: number
           format: double
@@ -9091,7 +9772,7 @@ components:
         growing_period_choices:
           type: array
           items:
-            $ref: '#/components/schemas/PublicGrowingPeriod'
+            $ref: '#/components/schemas/BestellWizardGrowingPeriodChoice'
         solidarity_step_position:
           $ref: '#/components/schemas/SolidarityStepPositionEnum'
         legal_status:
@@ -9109,6 +9790,7 @@ components:
       - association_membership_types
       - associations_allow_investing_membership
       - contact_mail_address
+      - coop_min_shares
       - coop_share_instalment_amount
       - coop_share_instalments_enabled
       - coop_statute_link
@@ -9127,35 +9809,17 @@ components:
       - organization_name
       - payment_rhythm_choices
       - phone_number_required
-      - pickup_locations
       - price_of_a_share
-      - product_ids_that_are_already_at_capacity
-      - product_type_ids_that_are_already_at_capacity
-      - product_types
       - pseudonym_enabled
       - show_coop_content
       - solidarity_contribution_choices
       - solidarity_contribution_default
-      - solidarity_contribution_minimum
       - solidarity_step_position
       - strings
       - student_status_allowed
       - theme
       - trial_period_length_in_weeks
       - website_url
-    BestellWizardCapacityCheckRequestRequest:
-      type: object
-      properties:
-        shopping_cart:
-          type: object
-          additionalProperties:
-            type: integer
-        growing_period_id:
-          type: string
-          minLength: 1
-      required:
-      - growing_period_id
-      - shopping_cart
     BestellWizardCapacityCheckResponse:
       type: object
       properties:
@@ -9226,6 +9890,8 @@ components:
           type: string
         association_membership_type_id:
           type: string
+        delivery_address:
+          $ref: '#/components/schemas/DeliveryAddressRequest'
       required:
       - become_member_now
       - cancellation_policy_read
@@ -9243,33 +9909,51 @@ components:
       - solidarity_contribution
       - statute_accepted
       - student_status_enabled
-    BestellWizardDeliveryDatesForOrderRequestRequest:
+    BestellWizardGrowingPeriodChoice:
       type: object
       properties:
-        shopping_cart:
-          type: object
-          additionalProperties:
-            type: integer
-        waiting_list_entry_id:
+        id:
           type: string
-          minLength: 1
-        growing_period_id:
+        start_date:
           type: string
-          minLength: 1
+          format: date
+        end_date:
+          type: string
+          format: date
+        contract_start_date:
+          type: string
+          format: date
+        product_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicProductType'
+          readOnly: true
+        product_type_ids_that_are_already_at_capacity:
+          type: array
+          items:
+            type: string
+        product_ids_that_are_already_at_capacity:
+          type: array
+          items:
+            type: string
+        pickup_locations:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicPickupLocation'
+          readOnly: true
+        solidarity_contribution_minimum:
+          type: number
+          format: double
       required:
-      - shopping_cart
-    BestellWizardDeliveryDatesForOrderResponse:
-      type: object
-      properties:
-        delivery_date_by_pickup_location_id_and_product_type_id:
-          type: object
-          additionalProperties:
-            type: object
-            additionalProperties:
-              type: string
-              format: date
-      required:
-      - delivery_date_by_pickup_location_id_and_product_type_id
+      - contract_start_date
+      - end_date
+      - id
+      - pickup_locations
+      - product_ids_that_are_already_at_capacity
+      - product_type_ids_that_are_already_at_capacity
+      - product_types
+      - solidarity_contribution_minimum
+      - start_date
     BestellWizardImages:
       type: object
       properties:
@@ -9326,6 +10010,46 @@ components:
       - step6_background_image
       - step8_background_image
       - step9_background_image
+    BestellWizardOrderEvaluationRequestRequest:
+      type: object
+      properties:
+        shopping_cart:
+          type: object
+          additionalProperties:
+            type: integer
+        growing_period_id:
+          type: string
+          minLength: 1
+      required:
+      - growing_period_id
+      - shopping_cart
+    BestellWizardOrderEvaluationResponse:
+      type: object
+      properties:
+        ids_of_product_types_over_capacity:
+          type: array
+          items:
+            type: string
+        ids_of_products_over_capacity:
+          type: array
+          items:
+            type: string
+        pickup_location_ids_with_enough_capacity_for_order:
+          type: array
+          items:
+            type: string
+        delivery_date_by_pickup_location_id_and_product_type_id:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties:
+              type: string
+              format: date
+      required:
+      - delivery_date_by_pickup_location_id_and_product_type_id
+      - ids_of_product_types_over_capacity
+      - ids_of_products_over_capacity
+      - pickup_location_ids_with_enough_capacity_for_order
     BestellWizardStrings:
       type: object
       properties:
@@ -9369,9 +10093,13 @@ components:
           type: string
         step5b_title:
           type: string
+        step5b_home_delivery_title:
+          type: string
         step5c_title:
           type: string
         step5c_text:
+          type: string
+        home_delivery_choice_text:
           type: string
         step6a_title:
           type: string
@@ -9441,6 +10169,7 @@ components:
         student_checkbox_explanation_text:
           type: string
       required:
+      - home_delivery_choice_text
       - label_student_checkbox
       - privacy_policy_url
       - step10_flag_student
@@ -9478,6 +10207,7 @@ components:
       - step4d_title
       - step5a_text
       - step5a_title
+      - step5b_home_delivery_title
       - step5b_title
       - step5c_text
       - step5c_title
@@ -10354,6 +11084,11 @@ components:
           nullable: true
         segment_data:
           $ref: '#/components/schemas/SegmentData'
+        layout_template_id:
+          type: string
+          nullable: true
+        layout_enabled:
+          type: boolean
       required:
       - content
       - name
@@ -10387,6 +11122,11 @@ components:
           nullable: true
         segment_data:
           $ref: '#/components/schemas/SegmentDataRequest'
+        layout_template_id:
+          type: string
+          nullable: true
+        layout_enabled:
+          type: boolean
       required:
       - content
       - name
@@ -10479,6 +11219,20 @@ components:
       - subscribed_products
       - trial_period_duration
       - trial_period_is_flexible
+    ChangeMemberPickupLocationRequestRequest:
+      type: object
+      properties:
+        member_id:
+          type: string
+          minLength: 1
+        pickup_location_id:
+          type: string
+          minLength: 1
+        delivery_address:
+          $ref: '#/components/schemas/DeliveryAddressRequest'
+      required:
+      - member_id
+      - pickup_location_id
     ChangeTypeEnum:
       enum:
       - ADDED
@@ -10518,18 +11272,19 @@ components:
       - confirm_creation_ids
       - confirm_deletion_ids
       - confirm_purchase_ids
-    ConvertWeekToDateForSubscriptionChangesResponse:
+    ConvertWeekToDateForSubscriptionChangeResponse:
       type: object
       properties:
-        start_date:
+        date:
           type: string
           format: date
-        end_date:
+          nullable: true
+        error:
           type: string
-          format: date
+          nullable: true
       required:
-      - end_date
-      - start_date
+      - date
+      - error
     CoopShareTransaction:
       type: object
       properties:
@@ -11307,6 +12062,510 @@ components:
       - pickup_location
       - pickup_location_opening_times
       - subscriptions
+    DeliveryAddressRequest:
+      type: object
+      properties:
+        same_as_billing_address:
+          type: boolean
+        street:
+          type: string
+          default: ''
+        street_2:
+          type: string
+          default: ''
+        postcode:
+          type: string
+          default: ''
+        city:
+          type: string
+          default: ''
+        country:
+          type: string
+          default: DE
+      required:
+      - same_as_billing_address
+    DeliveryCountryEnum:
+      enum:
+      - AD
+      - AE
+      - AF
+      - AG
+      - AI
+      - AL
+      - AM
+      - AN
+      - AO
+      - AQ
+      - AR
+      - AS
+      - AT
+      - AU
+      - AW
+      - AZ
+      - BA
+      - BB
+      - BD
+      - BE
+      - BF
+      - BG
+      - BH
+      - BI
+      - BJ
+      - BM
+      - BN
+      - BO
+      - BR
+      - BS
+      - BT
+      - BV
+      - BW
+      - BY
+      - BZ
+      - CA
+      - CC
+      - CF
+      - CG
+      - CH
+      - CI
+      - CK
+      - CL
+      - CM
+      - CN
+      - CO
+      - CR
+      - CU
+      - CV
+      - CX
+      - CY
+      - CZ
+      - DE
+      - DJ
+      - DK
+      - DM
+      - DO
+      - DZ
+      - EC
+      - EE
+      - EG
+      - EH
+      - ER
+      - ES
+      - ET
+      - FI
+      - FJ
+      - FK
+      - FM
+      - FO
+      - FR
+      - FX
+      - GA
+      - GB
+      - GD
+      - GE
+      - GF
+      - GH
+      - GI
+      - GL
+      - GM
+      - GN
+      - GP
+      - GQ
+      - GR
+      - GS
+      - GT
+      - GU
+      - GW
+      - GY
+      - HK
+      - HM
+      - HN
+      - HR
+      - HT
+      - HU
+      - ID
+      - IE
+      - IL
+      - IN
+      - IO
+      - IQ
+      - IR
+      - IS
+      - IT
+      - JM
+      - JO
+      - JP
+      - KE
+      - KG
+      - KH
+      - KI
+      - KM
+      - KN
+      - KP
+      - KR
+      - KW
+      - KY
+      - KZ
+      - LA
+      - LB
+      - LC
+      - LI
+      - LK
+      - LR
+      - LS
+      - LT
+      - LU
+      - LV
+      - LY
+      - MA
+      - MC
+      - MD
+      - MG
+      - MH
+      - ML
+      - MN
+      - MM
+      - MO
+      - MP
+      - MQ
+      - MR
+      - MS
+      - MT
+      - MU
+      - MV
+      - MW
+      - MX
+      - MY
+      - MZ
+      - NA
+      - NC
+      - NE
+      - NF
+      - NG
+      - NI
+      - NL
+      - 'NO'
+      - NP
+      - NR
+      - NU
+      - NZ
+      - OM
+      - PA
+      - PE
+      - PF
+      - PG
+      - PH
+      - PK
+      - PL
+      - PM
+      - PN
+      - PR
+      - PT
+      - PW
+      - PY
+      - QA
+      - RE
+      - RO
+      - RU
+      - RW
+      - SA
+      - SB
+      - SC
+      - SD
+      - SE
+      - SG
+      - SH
+      - SI
+      - SJ
+      - SK
+      - SL
+      - SM
+      - SN
+      - SO
+      - SR
+      - ST
+      - SV
+      - SY
+      - SZ
+      - TC
+      - TD
+      - TF
+      - TG
+      - TH
+      - TJ
+      - TK
+      - TM
+      - TN
+      - TO
+      - TP
+      - TR
+      - TT
+      - TV
+      - TW
+      - TZ
+      - UA
+      - UG
+      - UM
+      - US
+      - UY
+      - UZ
+      - VA
+      - VC
+      - VE
+      - VG
+      - VI
+      - VN
+      - VU
+      - WF
+      - WS
+      - YE
+      - YT
+      - YU
+      - ZA
+      - ZM
+      - ZR
+      - ZW
+      - ZZ
+      type: string
+      description: |-
+        * `AD` - Andorra
+        * `AE` - United Arab Emirates
+        * `AF` - Afghanistan
+        * `AG` - Antigua & Barbuda
+        * `AI` - Anguilla
+        * `AL` - Albania
+        * `AM` - Armenia
+        * `AN` - Netherlands Antilles
+        * `AO` - Angola
+        * `AQ` - Antarctica
+        * `AR` - Argentina
+        * `AS` - American Samoa
+        * `AT` - Austria
+        * `AU` - Australia
+        * `AW` - Aruba
+        * `AZ` - Azerbaijan
+        * `BA` - Bosnia and Herzegovina
+        * `BB` - Barbados
+        * `BD` - Bangladesh
+        * `BE` - Belgium
+        * `BF` - Burkina Faso
+        * `BG` - Bulgaria
+        * `BH` - Bahrain
+        * `BI` - Burundi
+        * `BJ` - Benin
+        * `BM` - Bermuda
+        * `BN` - Brunei Darussalam
+        * `BO` - Bolivia
+        * `BR` - Brazil
+        * `BS` - Bahama
+        * `BT` - Bhutan
+        * `BV` - Bouvet Island
+        * `BW` - Botswana
+        * `BY` - Belarus
+        * `BZ` - Belize
+        * `CA` - Canada
+        * `CC` - Cocos (Keeling) Islands
+        * `CF` - Central African Republic
+        * `CG` - Congo
+        * `CH` - Switzerland
+        * `CI` - Ivory Coast
+        * `CK` - Cook Iislands
+        * `CL` - Chile
+        * `CM` - Cameroon
+        * `CN` - China
+        * `CO` - Colombia
+        * `CR` - Costa Rica
+        * `CU` - Cuba
+        * `CV` - Cape Verde
+        * `CX` - Christmas Island
+        * `CY` - Cyprus
+        * `CZ` - Czech Republic
+        * `DE` - Germany
+        * `DJ` - Djibouti
+        * `DK` - Denmark
+        * `DM` - Dominica
+        * `DO` - Dominican Republic
+        * `DZ` - Algeria
+        * `EC` - Ecuador
+        * `EE` - Estonia
+        * `EG` - Egypt
+        * `EH` - Western Sahara
+        * `ER` - Eritrea
+        * `ES` - Spain
+        * `ET` - Ethiopia
+        * `FI` - Finland
+        * `FJ` - Fiji
+        * `FK` - Falkland Islands (Malvinas)
+        * `FM` - Micronesia
+        * `FO` - Faroe Islands
+        * `FR` - France
+        * `FX` - France, Metropolitan
+        * `GA` - Gabon
+        * `GB` - United Kingdom (Great Britain)
+        * `GD` - Grenada
+        * `GE` - Georgia
+        * `GF` - French Guiana
+        * `GH` - Ghana
+        * `GI` - Gibraltar
+        * `GL` - Greenland
+        * `GM` - Gambia
+        * `GN` - Guinea
+        * `GP` - Guadeloupe
+        * `GQ` - Equatorial Guinea
+        * `GR` - Greece
+        * `GS` - South Georgia and the South Sandwich Islands
+        * `GT` - Guatemala
+        * `GU` - Guam
+        * `GW` - Guinea-Bissau
+        * `GY` - Guyana
+        * `HK` - Hong Kong
+        * `HM` - Heard & McDonald Islands
+        * `HN` - Honduras
+        * `HR` - Croatia
+        * `HT` - Haiti
+        * `HU` - Hungary
+        * `ID` - Indonesia
+        * `IE` - Ireland
+        * `IL` - Israel
+        * `IN` - India
+        * `IO` - British Indian Ocean Territory
+        * `IQ` - Iraq
+        * `IR` - Islamic Republic of Iran
+        * `IS` - Iceland
+        * `IT` - Italy
+        * `JM` - Jamaica
+        * `JO` - Jordan
+        * `JP` - Japan
+        * `KE` - Kenya
+        * `KG` - Kyrgyzstan
+        * `KH` - Cambodia
+        * `KI` - Kiribati
+        * `KM` - Comoros
+        * `KN` - St. Kitts and Nevis
+        * `KP` - Korea, Democratic People's Republic of
+        * `KR` - Korea, Republic of
+        * `KW` - Kuwait
+        * `KY` - Cayman Islands
+        * `KZ` - Kazakhstan
+        * `LA` - Lao People's Democratic Republic
+        * `LB` - Lebanon
+        * `LC` - Saint Lucia
+        * `LI` - Liechtenstein
+        * `LK` - Sri Lanka
+        * `LR` - Liberia
+        * `LS` - Lesotho
+        * `LT` - Lithuania
+        * `LU` - Luxemburg
+        * `LV` - Latvia
+        * `LY` - Libyan Arab Jamahiriya
+        * `MA` - Morocco
+        * `MC` - Monaco
+        * `MD` - Moldova, Republic of
+        * `MG` - Madagascar
+        * `MH` - Marshall Islands
+        * `ML` - Mali
+        * `MN` - Mongolia
+        * `MM` - Myanmar
+        * `MO` - Macau
+        * `MP` - Northern Mariana Islands
+        * `MQ` - Martinique
+        * `MR` - Mauritania
+        * `MS` - Monserrat
+        * `MT` - Malta
+        * `MU` - Mauritius
+        * `MV` - Maldives
+        * `MW` - Malawi
+        * `MX` - Mexico
+        * `MY` - Malaysia
+        * `MZ` - Mozambique
+        * `NA` - Namibia
+        * `NC` - New Caledonia
+        * `NE` - Niger
+        * `NF` - Norfolk Island
+        * `NG` - Nigeria
+        * `NI` - Nicaragua
+        * `NL` - Netherlands
+        * `NO` - Norway
+        * `NP` - Nepal
+        * `NR` - Nauru
+        * `NU` - Niue
+        * `NZ` - New Zealand
+        * `OM` - Oman
+        * `PA` - Panama
+        * `PE` - Peru
+        * `PF` - French Polynesia
+        * `PG` - Papua New Guinea
+        * `PH` - Philippines
+        * `PK` - Pakistan
+        * `PL` - Poland
+        * `PM` - St. Pierre & Miquelon
+        * `PN` - Pitcairn
+        * `PR` - Puerto Rico
+        * `PT` - Portugal
+        * `PW` - Palau
+        * `PY` - Paraguay
+        * `QA` - Qatar
+        * `RE` - Reunion
+        * `RO` - Romania
+        * `RU` - Russian Federation
+        * `RW` - Rwanda
+        * `SA` - Saudi Arabia
+        * `SB` - Solomon Islands
+        * `SC` - Seychelles
+        * `SD` - Sudan
+        * `SE` - Sweden
+        * `SG` - Singapore
+        * `SH` - St. Helena
+        * `SI` - Slovenia
+        * `SJ` - Svalbard & Jan Mayen Islands
+        * `SK` - Slovakia
+        * `SL` - Sierra Leone
+        * `SM` - San Marino
+        * `SN` - Senegal
+        * `SO` - Somalia
+        * `SR` - Suriname
+        * `ST` - Sao Tome & Principe
+        * `SV` - El Salvador
+        * `SY` - Syrian Arab Republic
+        * `SZ` - Swaziland
+        * `TC` - Turks & Caicos Islands
+        * `TD` - Chad
+        * `TF` - French Southern Territories
+        * `TG` - Togo
+        * `TH` - Thailand
+        * `TJ` - Tajikistan
+        * `TK` - Tokelau
+        * `TM` - Turkmenistan
+        * `TN` - Tunisia
+        * `TO` - Tonga
+        * `TP` - East Timor
+        * `TR` - Turkey
+        * `TT` - Trinidad & Tobago
+        * `TV` - Tuvalu
+        * `TW` - Taiwan, Province of China
+        * `TZ` - Tanzania, United Republic of
+        * `UA` - Ukraine
+        * `UG` - Uganda
+        * `UM` - United States Minor Outlying Islands
+        * `US` - United States of America
+        * `UY` - Uruguay
+        * `UZ` - Uzbekistan
+        * `VA` - Vatican City State (Holy See)
+        * `VC` - St. Vincent & the Grenadines
+        * `VE` - Venezuela
+        * `VG` - British Virgin Islands
+        * `VI` - United States Virgin Islands
+        * `VN` - Viet Nam
+        * `VU` - Vanuatu
+        * `WF` - Wallis & Futuna Islands
+        * `WS` - Samoa
+        * `YE` - Yemen
+        * `YT` - Mayotte
+        * `YU` - Yugoslavia
+        * `ZA` - South Africa
+        * `ZM` - Zambia
+        * `ZR` - Zaire
+        * `ZW` - Zimbabwe
+        * `ZZ` - Unknown or unspecified country
     DeliveryCycleEnum:
       enum:
       - no_delivery
@@ -11573,6 +12832,11 @@ components:
           items:
             type: string
             maxLength: 100
+        layout_enabled:
+          type: boolean
+        layout_template:
+          type: string
+          nullable: true
         static_segments_additive:
           type: array
           items:
@@ -11628,6 +12892,12 @@ components:
             type: string
             minLength: 1
             maxLength: 100
+        layout_enabled:
+          type: boolean
+        layout_template:
+          type: string
+          minLength: 1
+          nullable: true
         static_segments_additive:
           type: array
           items:
@@ -11882,6 +13152,8 @@ components:
         id:
           type: string
           maxLength: 10
+        is_default_layout:
+          type: boolean
         created_at:
           type: string
           format: date-time
@@ -11895,6 +13167,8 @@ components:
           maxLength: 255
         content:
           type: string
+        template_type:
+          $ref: '#/components/schemas/TemplateTypeEnum'
       required:
       - content
       - created_at
@@ -11907,6 +13181,8 @@ components:
           type: string
           minLength: 1
           maxLength: 10
+        is_default_layout:
+          type: boolean
         name:
           type: string
           minLength: 1
@@ -11914,6 +13190,8 @@ components:
         content:
           type: string
           minLength: 1
+        template_type:
+          $ref: '#/components/schemas/TemplateTypeEnum'
       required:
       - content
       - name
@@ -12035,11 +13313,14 @@ components:
         number_of_instalments:
           type: integer
           nullable: true
+        excluded_from_export:
+          type: boolean
       required:
       - association_memberships
       - coop_share_transactions
       - delivery_charge_pickup_location
       - delivery_dates
+      - excluded_from_export
       - number_of_instalments
       - payment
       - solidarity_contributions
@@ -13100,6 +14381,24 @@ components:
           maxLength: 150
         has_received_membership_started_mail:
           type: boolean
+        delivery_same_as_billing_address:
+          type: boolean
+        delivery_street:
+          type: string
+          maxLength: 150
+        delivery_street_2:
+          type: string
+          maxLength: 150
+        delivery_postcode:
+          type: string
+          maxLength: 32
+        delivery_city:
+          type: string
+          maxLength: 50
+        delivery_country:
+          oneOf:
+          - $ref: '#/components/schemas/DeliveryCountryEnum'
+          - $ref: '#/components/schemas/BlankEnum'
       required:
       - created_at
       - first_name
@@ -13199,6 +14498,119 @@ components:
             minLength: 1
       required:
       - credit_ids
+    MemberDataDisclosure:
+      type: object
+      properties:
+        generated_at:
+          type: string
+          format: date-time
+        member:
+          $ref: '#/components/schemas/MemberDataMember'
+        sections:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemberDataSection'
+        log_overview:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemberDataLogOverview'
+        mail_overview:
+          $ref: '#/components/schemas/MemberDataMailOverview'
+        pdf_url:
+          type: string
+      required:
+      - generated_at
+      - log_overview
+      - mail_overview
+      - member
+      - pdf_url
+      - sections
+    MemberDataField:
+      type: object
+      properties:
+        name:
+          type: string
+        label:
+          type: string
+        value:
+          type: string
+          nullable: true
+      required:
+      - label
+      - name
+      - value
+    MemberDataLogOverview:
+      type: object
+      properties:
+        type:
+          type: string
+        count:
+          type: integer
+        first:
+          type: string
+          format: date-time
+        last:
+          type: string
+          format: date-time
+      required:
+      - count
+      - first
+      - last
+      - type
+    MemberDataMailOverview:
+      type: object
+      properties:
+        count:
+          type: integer
+        first:
+          type: string
+          format: date-time
+          nullable: true
+        last:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - count
+      - first
+      - last
+    MemberDataMember:
+      type: object
+      properties:
+        id:
+          type: string
+        member_no:
+          type: integer
+          nullable: true
+        name:
+          type: string
+      required:
+      - id
+      - member_no
+      - name
+    MemberDataSection:
+      type: object
+      properties:
+        key:
+          type: string
+        title:
+          type: string
+        purpose:
+          type: string
+        retention:
+          type: string
+        records:
+          type: array
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/MemberDataField'
+      required:
+      - key
+      - purpose
+      - records
+      - retention
+      - title
     MemberDataToConfirm:
       type: object
       properties:
@@ -13245,6 +14657,31 @@ components:
       - subscription_changes
       - subscription_creations
       - subscriptions_deleted
+    MemberDeliveryAddress:
+      type: object
+      properties:
+        same_as_billing_address:
+          type: boolean
+        street:
+          type: string
+        street_2:
+          type: string
+        postcode:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+        change_warning_text:
+          type: string
+      required:
+      - change_warning_text
+      - city
+      - country
+      - postcode
+      - same_as_billing_address
+      - street
+      - street_2
     MemberEmailRequestRequest:
       type: object
       properties:
@@ -13581,13 +15018,6 @@ components:
       - bestell_wizard_url_template
       - product_types
       - subscriptions
-    MinimumNumberOfSharesResponse:
-      type: object
-      properties:
-        minimum_number_of_shares:
-          type: integer
-      required:
-      - minimum_number_of_shares
     MissingTrigger:
       type: object
       properties:
@@ -13825,6 +15255,29 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/GroupedEmailDispatch'
+    PaginatedPaymentExportExclusionPeriodOverviewList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentExportExclusionPeriodOverview'
     PaginatedPaymentTransactionList:
       type: object
       required:
@@ -13848,6 +15301,52 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PaymentTransaction'
+    PaginatedStoredUploadList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/StoredUpload'
+    PaginatedTemporaryUploadList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/TemporaryUpload'
     PaginatedWaitingListEntryDetailsList:
       type: object
       required:
@@ -14100,6 +15599,11 @@ components:
           nullable: true
         segment_data:
           $ref: '#/components/schemas/SegmentDataRequest'
+        layout_template_id:
+          type: string
+          nullable: true
+        layout_enabled:
+          type: boolean
     PatchedCsvExportModelRequest:
       type: object
       properties:
@@ -14187,6 +15691,8 @@ components:
           type: string
           minLength: 1
           maxLength: 10
+        is_default_layout:
+          type: boolean
         name:
           type: string
           minLength: 1
@@ -14194,6 +15700,8 @@ components:
         content:
           type: string
           minLength: 1
+        template_type:
+          $ref: '#/components/schemas/TemplateTypeEnum'
     PatchedExtendedProductRequest:
       type: object
       properties:
@@ -14222,7 +15730,6 @@ components:
           minLength: 1
         description_in_bestellwizard:
           type: string
-          minLength: 1
         url_of_image_in_bestellwizard:
           type: string
         capacity:
@@ -14619,6 +16126,24 @@ components:
           type: string
           format: date-time
           nullable: true
+        delivery_same_as_billing_address:
+          type: boolean
+        delivery_street:
+          type: string
+          maxLength: 150
+        delivery_street_2:
+          type: string
+          maxLength: 150
+        delivery_postcode:
+          type: string
+          maxLength: 32
+        delivery_city:
+          type: string
+          maxLength: 50
+        delivery_country:
+          oneOf:
+          - $ref: '#/components/schemas/DeliveryCountryEnum'
+          - $ref: '#/components/schemas/BlankEnum'
         member:
           type: string
           minLength: 1
@@ -14645,7 +16170,7 @@ components:
           format: date
         status:
           $ref: '#/components/schemas/PaymentStatusEnum'
-        edited:
+        excluded_from_export:
           type: boolean
         type:
           type: string
@@ -14663,6 +16188,8 @@ components:
           maximum: 32767
           minimum: 0
           nullable: true
+        calculation_explanation:
+          type: string
         mandate_ref:
           type: string
         transaction:
@@ -14681,6 +16208,98 @@ components:
       - mandate_ref
       - type
       - updated_at
+    PaymentExportExclusionPeriod:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        comment:
+          type: string
+      required:
+      - start_date
+    PaymentExportExclusionPeriodCreateRequestRequest:
+      type: object
+      properties:
+        member_id:
+          type: string
+          minLength: 1
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        comment:
+          type: string
+      required:
+      - comment
+      - end_date
+      - member_id
+      - start_date
+    PaymentExportExclusionPeriodOverview:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        comment:
+          type: string
+        member_no:
+          type: integer
+          nullable: true
+        first_name:
+          type: string
+        last_name:
+          type: string
+        member_url:
+          type: string
+          readOnly: true
+        is_active:
+          type: boolean
+          readOnly: true
+      required:
+      - first_name
+      - is_active
+      - last_name
+      - member_no
+      - member_url
+      - start_date
+    PaymentExportExclusionPeriodUpdateRequestRequest:
+      type: object
+      properties:
+        period_id:
+          type: string
+          minLength: 1
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        comment:
+          type: string
+      required:
+      - comment
+      - end_date
+      - period_id
+      - start_date
     PaymentIntendedUsePreviewResponse:
       type: object
       properties:
@@ -14743,6 +16362,13 @@ components:
           type: number
           format: double
           readOnly: true
+        excluded_payments_count:
+          type: integer
+          readOnly: true
+        excluded_payments_sum:
+          type: number
+          format: double
+          readOnly: true
         csv_download_url:
           type: string
           readOnly: true
@@ -14772,6 +16398,8 @@ components:
       - created_at
       - csv_download_url
       - csv_file
+      - excluded_payments_count
+      - excluded_payments_sum
       - month
       - payments_count
       - payments_sum
@@ -15052,6 +16680,11 @@ components:
           type: integer
           nullable: true
           readOnly: true
+        opening_times:
+          type: array
+          items:
+            $ref: '#/components/schemas/PickupLocationOpeningTime'
+          readOnly: true
         created_at:
           type: string
           format: date-time
@@ -15063,16 +16696,18 @@ components:
         name:
           type: string
           maxLength: 150
-        coords_lon:
+        latitude:
           type: string
           format: decimal
           pattern: ^-?\d{0,2}(?:\.\d{0,10})?$
-          title: Coordinates Longitude
-        coords_lat:
+          nullable: true
+          title: Breitengrad
+        longitude:
           type: string
           format: decimal
           pattern: ^-?\d{0,2}(?:\.\d{0,10})?$
-          title: Coordinates Latitude
+          nullable: true
+          title: Längengrad
         street:
           type: string
           title: Straße und Hausnummer
@@ -15127,16 +16762,18 @@ components:
         show_details_in_basket_totals_export:
           type: boolean
           title: Im Gesamtkistenanzahls-Zettel Details anzeigen
+        is_home_delivery:
+          type: boolean
+          title: Hauslieferung
         location_route:
           type: string
           nullable: true
       required:
       - city
-      - coords_lat
-      - coords_lon
       - created_at
       - delivery_day
       - name
+      - opening_times
       - postcode
       - street
       - updated_at
@@ -15201,12 +16838,7 @@ components:
           type: object
           additionalProperties:
             type: integer
-        growing_period_id:
-          type: string
-          nullable: true
-          minLength: 1
       required:
-      - growing_period_id
       - shopping_cart
     PickupLocationCapacityCheckResponse:
       type: object
@@ -15327,6 +16959,104 @@ components:
       - open_time
       - pickup_location
       - updated_at
+    PickupLocationOpeningTimeInputRequest:
+      type: object
+      properties:
+        day_of_week:
+          $ref: '#/components/schemas/DayOfWeekEnum'
+        open_time:
+          type: string
+          format: time
+        close_time:
+          type: string
+          format: time
+      required:
+      - close_time
+      - day_of_week
+      - open_time
+    PickupLocationSaveRequestRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+        latitude:
+          type: string
+          format: decimal
+          nullable: true
+        longitude:
+          type: string
+          format: decimal
+          nullable: true
+        street:
+          type: string
+          minLength: 1
+          maxLength: 150
+        street_2:
+          type: string
+          default: ''
+          maxLength: 150
+        postcode:
+          type: string
+          minLength: 1
+          maxLength: 32
+        city:
+          type: string
+          minLength: 1
+          maxLength: 50
+        info:
+          type: string
+          default: ''
+          maxLength: 3000
+        access_code:
+          type: string
+          default: ''
+          maxLength: 20
+        messenger_group_link:
+          type: string
+          default: ''
+          maxLength: 150
+        contact_name:
+          type: string
+          default: ''
+          maxLength: 150
+        photo_link:
+          type: string
+          default: ''
+          maxLength: 512
+        location_route_id:
+          type: string
+          nullable: true
+          minLength: 1
+        route_info:
+          type: string
+          default: ''
+          maxLength: 3000
+        start_date:
+          type: string
+          format: date
+          nullable: true
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        show_details_in_basket_totals_export:
+          type: boolean
+          default: false
+        is_home_delivery:
+          type: boolean
+          default: false
+        opening_times:
+          type: array
+          items:
+            $ref: '#/components/schemas/PickupLocationOpeningTimeInputRequest'
+      required:
+      - city
+      - name
+      - opening_times
+      - postcode
+      - street
     PickupLocationsByDeliveryDayResponse:
       type: object
       properties:
@@ -15426,6 +17156,36 @@ components:
       type: string
       description: "* `de` - \U0001F1E9\U0001F1EA Deutsch\n* `en` - \U0001F1EC\U0001F1E7
         English"
+    PreviewRequest:
+      type: object
+      properties:
+        content:
+          type: string
+          minLength: 1
+        layout_template_id:
+          type: string
+          nullable: true
+        layout_enabled:
+          type: boolean
+      required:
+      - content
+    PreviewResponse:
+      type: object
+      properties:
+        html:
+          type: string
+      required:
+      - html
+    PriceCategoryEnum:
+      enum:
+      - standard
+      - personalised
+      - exempt
+      type: string
+      description: |-
+        * `standard` - standard
+        * `personalised` - personalised
+        * `exempt` - exempt
     Product:
       type: object
       properties:
@@ -15449,6 +17209,7 @@ components:
           maxLength: 128
         deleted:
           type: boolean
+          default: false
         base:
           type: boolean
           nullable: true
@@ -15507,7 +17268,7 @@ components:
         cancellation_date:
           type: string
           format: date
-        last_day_of_notice_period:
+        last_day_to_give_notice:
           type: string
           format: date
         date_limit_for_trial_cancellation:
@@ -15517,17 +17278,17 @@ components:
           type: integer
         notice_period_unit:
           $ref: '#/components/schemas/NoticePeriodUnitEnum'
-        subscription_end_date:
+        post_trial_subscription_end_date:
           type: string
           format: date
       required:
       - cancellation_date
       - is_in_trial
-      - last_day_of_notice_period
+      - last_day_to_give_notice
       - notice_period_duration
       - notice_period_unit
+      - post_trial_subscription_end_date
       - product
-      - subscription_end_date
     ProductType:
       type: object
       properties:
@@ -15695,67 +17456,45 @@ components:
       - payment_rhythm
       - sepa_allowed
       - solidarity_contribution
-    PublicGrowingPeriod:
-      type: object
-      properties:
-        id:
-          type: string
-          maxLength: 10
-        start_date:
-          type: string
-          format: date
-        end_date:
-          type: string
-          format: date
-        contract_start_date:
-          type: string
-          format: date
-          readOnly: true
-        product_types:
-          type: array
-          items:
-            $ref: '#/components/schemas/PublicProductType'
-          readOnly: true
-      required:
-      - contract_start_date
-      - end_date
-      - product_types
-      - start_date
     PublicPickupLocation:
       type: object
       properties:
         id:
           type: string
-          maxLength: 10
+          readOnly: true
         name:
           type: string
-          maxLength: 150
-        coords_lon:
+          readOnly: true
+        latitude:
           type: string
           format: decimal
           pattern: ^-?\d{0,2}(?:\.\d{0,10})?$
-          title: Coordinates Longitude
-        coords_lat:
+          readOnly: true
+          nullable: true
+          title: Breitengrad
+        longitude:
           type: string
           format: decimal
           pattern: ^-?\d{0,2}(?:\.\d{0,10})?$
-          title: Coordinates Latitude
+          readOnly: true
+          nullable: true
+          title: Längengrad
         street:
           type: string
+          readOnly: true
           title: Straße und Hausnummer
-          maxLength: 150
         street_2:
           type: string
+          readOnly: true
           title: Adresszusatz
-          maxLength: 150
         postcode:
           type: string
+          readOnly: true
           title: Postleitzahl
-          maxLength: 32
         city:
           type: string
+          readOnly: true
           title: Ort
-          maxLength: 50
         opening_times:
           type: array
           items:
@@ -15770,16 +17509,23 @@ components:
           type: integer
           nullable: true
           readOnly: true
+        is_home_delivery:
+          type: boolean
+          readOnly: true
+          title: Hauslieferung
       required:
       - city
-      - coords_lat
-      - coords_lon
       - current_delivery_charge
       - delivery_day
+      - id
+      - is_home_delivery
+      - latitude
+      - longitude
       - name
       - opening_times
       - postcode
       - street
+      - street_2
     PublicProduct:
       type: object
       properties:
@@ -15805,21 +17551,15 @@ components:
             type: number
             format: double
           readOnly: true
+        min_coop_shares:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
       required:
       - name
       - price
       - solidarity_choices
       - url_of_image_in_bestellwizard
-    PublicProductPricesResponse:
-      type: object
-      properties:
-        prices_by_product_id:
-          type: object
-          additionalProperties:
-            type: number
-            format: double
-      required:
-      - prices_by_product_id
     PublicProductType:
       type: object
       properties:
@@ -16040,6 +17780,16 @@ components:
             minLength: 1
       required:
       - recipients
+    RenewalCancellationStatusEnum:
+      enum:
+      - available
+      - before_notice_period_end
+      - not_available
+      type: string
+      description: |-
+        * `available` - available
+        * `before_notice_period_end` - before_notice_period_end
+        * `not_available` - not_available
     RhythmEnum:
       enum:
       - monthly
@@ -16148,6 +17898,16 @@ components:
       - id
       - label
       - type
+    SendVerificationEmailsResponse:
+      type: object
+      properties:
+        member_count:
+          type: integer
+        estimated_duration_seconds:
+          type: integer
+      required:
+      - estimated_duration_seconds
+      - member_count
     SetAssociationMembershipEndDateRequestRequest:
       type: object
       properties:
@@ -16532,6 +18292,28 @@ components:
           maxLength: 255
       required:
       - name
+    StoredDeliveryAddress:
+      type: object
+      properties:
+        same_as_billing_address:
+          type: boolean
+        street:
+          type: string
+        street_2:
+          type: string
+        postcode:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+      required:
+      - city
+      - country
+      - postcode
+      - same_as_billing_address
+      - street
+      - street_2
     StoredUpload:
       type: object
       properties:
@@ -16778,55 +18560,22 @@ components:
     SubscriptionDateChangeRequestRequest:
       type: object
       properties:
-        start_date_is_on_period_start:
-          type: boolean
-        end_date_is_on_period_end:
-          type: boolean
-        start_week:
-          type: integer
-        end_week:
-          type: integer
         subscription_id:
           type: string
           minLength: 1
-        update_end_date_of_other_contracts:
-          type: boolean
-      required:
-      - end_date_is_on_period_end
-      - end_week
-      - start_date_is_on_period_start
-      - start_week
-      - subscription_id
-      - update_end_date_of_other_contracts
-    SubscriptionPriceOverrideChangeRequestRequest:
-      type: object
-      properties:
-        subscription_id:
-          type: string
-          minLength: 1
-        price_override:
-          type: number
-          format: double
-          nullable: true
-      required:
-      - price_override
-      - subscription_id
-    SubscriptionTrialChangeRequestRequest:
-      type: object
-      properties:
-        subscription_id:
-          type: string
-          minLength: 1
-        trial_disabled:
-          type: boolean
-        trial_end_date_override:
+        action:
+          $ref: '#/components/schemas/ActionEnum'
+        date:
           type: string
           format: date
           nullable: true
+        update_other_contracts:
+          type: boolean
       required:
+      - action
       - subscription_id
-      - trial_disabled
-    SubscriptionTrialFields:
+      - update_other_contracts
+    SubscriptionDetails:
       type: object
       properties:
         id:
@@ -16842,6 +18591,23 @@ components:
           readOnly: true
         effective_trial_end_date:
           type: string
+          readOnly: true
+        renewal_cancellation_status:
+          allOf:
+          - $ref: '#/components/schemas/RenewalCancellationStatusEnum'
+          readOnly: true
+        renewal_start_date:
+          type: string
+          format: date
+          nullable: true
+          readOnly: true
+        growing_period_start_date:
+          type: string
+          format: date
+          readOnly: true
+        growing_period_end_date:
+          type: string
+          format: date
           readOnly: true
         created_at:
           type: string
@@ -16914,6 +18680,8 @@ components:
       - default_trial_end_date
       - effective_trial_end_date
       - end_date
+      - growing_period_end_date
+      - growing_period_start_date
       - is_in_trial
       - mandate_ref
       - member
@@ -16921,8 +18689,63 @@ components:
       - notice_period_unit
       - product
       - quantity
+      - renewal_cancellation_status
+      - renewal_start_date
       - start_date
       - updated_at
+    SubscriptionPrerequisitesInputRequest:
+      type: object
+      properties:
+        pickup_location_id:
+          type: string
+          nullable: true
+          minLength: 1
+        account_owner:
+          type: string
+        iban:
+          type: string
+        sepa_mandate_confirmed:
+          type: boolean
+      required:
+      - account_owner
+      - iban
+      - sepa_mandate_confirmed
+    SubscriptionPriceOverrideChangeRequestRequest:
+      type: object
+      properties:
+        subscription_id:
+          type: string
+          minLength: 1
+        price_override:
+          type: number
+          format: double
+          nullable: true
+      required:
+      - price_override
+      - subscription_id
+    SubscriptionTrialChangeRequestRequest:
+      type: object
+      properties:
+        subscription_id:
+          type: string
+          minLength: 1
+        trial_disabled:
+          type: boolean
+        trial_end_date_override:
+          type: string
+          format: date
+          nullable: true
+      required:
+      - subscription_id
+      - trial_disabled
+    TemplateTypeEnum:
+      enum:
+      - start
+      - layout
+      type: string
+      description: |-
+        * `start` - Start-Vorlage
+        * `layout` - Layout-Vorlage
     TemporaryUpload:
       type: object
       properties:
@@ -17129,6 +18952,54 @@ components:
         * `dynamic` - dynamic
         * `static` - static
         * `category` - category
+    UnverifiedMember:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        member_no:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
+          title: Mitgliedsnummer
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        email:
+          type: string
+          title: E-Mail-Adresse
+          maxLength: 150
+        has_keycloak_account:
+          type: boolean
+          readOnly: true
+        profile_url:
+          type: string
+          readOnly: true
+      required:
+      - first_name
+      - has_keycloak_account
+      - last_name
+      - profile_url
+    UnverifiedMembersResponse:
+      type: object
+      properties:
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/UnverifiedMember'
+        estimated_duration_seconds:
+          type: integer
+        sending_in_progress:
+          type: boolean
+      required:
+      - estimated_duration_seconds
+      - members
+      - sending_in_progress
     UpdateMemberSolidarityContributionRequestRequest:
       type: object
       properties:
@@ -17189,6 +19060,8 @@ components:
         payment_rhythm:
           type: string
           minLength: 1
+        delivery_address:
+          $ref: '#/components/schemas/DeliveryAddressRequest'
       required:
       - account_owner
       - cancellation_policy_read
@@ -17305,6 +19178,24 @@ components:
           type: string
           format: date-time
           nullable: true
+        delivery_same_as_billing_address:
+          type: boolean
+        delivery_street:
+          type: string
+          maxLength: 150
+        delivery_street_2:
+          type: string
+          maxLength: 150
+        delivery_postcode:
+          type: string
+          maxLength: 32
+        delivery_city:
+          type: string
+          maxLength: 50
+        delivery_country:
+          oneOf:
+          - $ref: '#/components/schemas/DeliveryCountryEnum'
+          - $ref: '#/components/schemas/BlankEnum'
         member:
           type: string
           nullable: true
@@ -17399,10 +19290,13 @@ components:
           type: string
         can_be_fulfilled:
           type: boolean
+        delivery_address:
+          $ref: '#/components/schemas/StoredDeliveryAddress'
       required:
       - city
       - comment
       - country
+      - delivery_address
       - email
       - first_name
       - id
@@ -17489,6 +19383,24 @@ components:
           type: string
           format: date-time
           nullable: true
+        delivery_same_as_billing_address:
+          type: boolean
+        delivery_street:
+          type: string
+          maxLength: 150
+        delivery_street_2:
+          type: string
+          maxLength: 150
+        delivery_postcode:
+          type: string
+          maxLength: 32
+        delivery_city:
+          type: string
+          maxLength: 50
+        delivery_country:
+          oneOf:
+          - $ref: '#/components/schemas/DeliveryCountryEnum'
+          - $ref: '#/components/schemas/BlankEnum'
         member:
           type: string
           minLength: 1
@@ -17546,6 +19458,8 @@ components:
           type: string
         category:
           type: string
+        delivery_address:
+          $ref: '#/components/schemas/DeliveryAddressRequest'
       required:
       - city
       - comment

@@ -3,7 +3,7 @@ from unittest.mock import patch, Mock
 from django.conf import settings
 from django.urls import reverse
 from rest_framework import status
-from tapir_mail.triggers.transactional_trigger import (
+from tapir.mail.triggers.transactional_trigger import (
     TransactionalTrigger,
     TransactionalTriggerData,
 )

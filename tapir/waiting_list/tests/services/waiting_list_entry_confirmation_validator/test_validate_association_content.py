@@ -11,14 +11,12 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 class TestValidateAssociationContent(TapirUnitTest):
     def test_validateAssociationContent_membershipTypeIdIsNone_raisesError(self):
-        with self.assertRaises(ValidationError) as error_context:
+        with self.assertRaisesMessage(
+            ValidationError, "Keine Vereinsmitgliedschaft ausgewählt"
+        ):
             WaitingListEntryConfirmationValidator.validate_association_content(
                 association_membership_type_id=None
             )
-
-        self.assertEqual(
-            "Keine Vereinsmitgliedschaft ausgewählt", error_context.exception.message
-        )
 
     @patch.object(AssociationMembershipType, "objects", autospec=False)
     def test_validateAssociationContent_membershipTypeDoesntExist_raisesError(
@@ -26,15 +24,12 @@ class TestValidateAssociationContent(TapirUnitTest):
     ):
         mock_objects.filter.return_value.first.return_value = None
 
-        with self.assertRaises(ValidationError) as error_context:
+        with self.assertRaisesMessage(
+            ValidationError, "Unbekannte Vereinsmitgliedschafttyp-ID: invalid_id"
+        ):
             WaitingListEntryConfirmationValidator.validate_association_content(
                 association_membership_type_id="invalid_id"
             )
-
-        self.assertEqual(
-            "Unbekannte Vereinsmitgliedschafttyp-ID: invalid_id",
-            error_context.exception.message,
-        )
 
         mock_objects.filter.assert_called_once_with(id="invalid_id")
         mock_objects.filter.return_value.first.assert_called_once_with()

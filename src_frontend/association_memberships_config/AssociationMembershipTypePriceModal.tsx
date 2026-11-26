@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import React, { useEffect, useState } from "react";
 import { Alert, Form, Modal, Table } from "react-bootstrap";
 import {
@@ -39,8 +40,7 @@ const AssociationMembershipTypePriceModal: React.FC<
   }, [addPriceDate, addPriceAmount]);
 
   function onAddPrice() {
-    const validFrom = new Date(addPriceDate);
-    if (Number.isNaN(validFrom.valueOf())) {
+    if (!dayjs(addPriceDate).isValid()) {
       setError("Ungültiges Datum");
       return;
     }
@@ -58,7 +58,7 @@ const AssociationMembershipTypePriceModal: React.FC<
         associationMembershipTypePriceRequest: {
           type: membershipType.id!,
           price: price.toFixed(2),
-          validFrom: validFrom,
+          validFrom: addPriceDate,
         },
       })
       .then(onEdited)

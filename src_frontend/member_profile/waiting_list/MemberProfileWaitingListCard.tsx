@@ -27,11 +27,8 @@ const MemberProfileWaitingListCard: React.FC<
       .then((result) => {
         setWaitingListEntry(result.entry);
       })
-      .catch(async (error) => {
-        await handleRequestError(
-          error,
-          "Fehler beim Laden des Wartelisteneintrags.",
-        );
+      .catch((error) => {
+        handleRequestError(error, "Fehler beim Laden des Wartelisteneintrags.");
       })
       .finally(() => setLoading(false));
   }, [memberId]);

@@ -58,10 +58,8 @@ class TestPdfExportTemplateManager(TapirUnitTest):
             cache=cache, key=ParameterKeys.ORGANISATION_THEME, value=THEME_TEST
         )
 
-        with self.assertRaises(Http404) as error:
-            PdfExportTemplateManager.create_exports_from_template("unknown", cache)
-
-        self.assertEqual(
+        with self.assertRaisesMessage(
+            Http404,
             "Unknown template id \"unknown\", available IDs: ['pick_list_by_pickup_location', 'location_routes', 'basket_totals_by_route']",
-            str(error.exception),
-        )
+        ):
+            PdfExportTemplateManager.create_exports_from_template("unknown", cache)

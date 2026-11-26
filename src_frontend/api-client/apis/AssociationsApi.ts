@@ -63,18 +63,18 @@ export interface AssociationsApiMemberAssociationMembershipsRetrieveRequest {
 }
 
 export interface AssociationsApiNumberOfAssociationMembersPerMonthRetrieveRequest {
-  endDate?: Date;
-  startDate?: Date;
+  endDate?: string;
+  startDate?: string;
 }
 
 export interface AssociationsApiNumberOfAssociationMembershipCancellationsPerMonthRelativeToCancellationRetrieveRequest {
-  endDate?: Date;
-  startDate?: Date;
+  endDate?: string;
+  startDate?: string;
 }
 
 export interface AssociationsApiNumberOfAssociationMembershipCancellationsPerMonthRetrieveRequest {
-  endDate?: Date;
-  startDate?: Date;
+  endDate?: string;
+  startDate?: string;
 }
 
 export interface AssociationsApiSetMembershipEndDateCreateRequest {
@@ -450,15 +450,11 @@ export class AssociationsApi extends runtime.BaseAPI {
     const queryParameters: any = {};
 
     if (requestParameters["endDate"] != null) {
-      queryParameters["end_date"] = (requestParameters["endDate"] as any)
-        .toISOString()
-        .substring(0, 10);
+      queryParameters["end_date"] = requestParameters["endDate"];
     }
 
     if (requestParameters["startDate"] != null) {
-      queryParameters["start_date"] = (requestParameters["startDate"] as any)
-        .toISOString()
-        .substring(0, 10);
+      queryParameters["start_date"] = requestParameters["startDate"];
     }
 
     const headerParameters: runtime.HTTPHeaders = {};
@@ -515,15 +511,11 @@ export class AssociationsApi extends runtime.BaseAPI {
     const queryParameters: any = {};
 
     if (requestParameters["endDate"] != null) {
-      queryParameters["end_date"] = (requestParameters["endDate"] as any)
-        .toISOString()
-        .substring(0, 10);
+      queryParameters["end_date"] = requestParameters["endDate"];
     }
 
     if (requestParameters["startDate"] != null) {
-      queryParameters["start_date"] = (requestParameters["startDate"] as any)
-        .toISOString()
-        .substring(0, 10);
+      queryParameters["start_date"] = requestParameters["startDate"];
     }
 
     const headerParameters: runtime.HTTPHeaders = {};
@@ -580,15 +572,11 @@ export class AssociationsApi extends runtime.BaseAPI {
     const queryParameters: any = {};
 
     if (requestParameters["endDate"] != null) {
-      queryParameters["end_date"] = (requestParameters["endDate"] as any)
-        .toISOString()
-        .substring(0, 10);
+      queryParameters["end_date"] = requestParameters["endDate"];
     }
 
     if (requestParameters["startDate"] != null) {
-      queryParameters["start_date"] = (requestParameters["startDate"] as any)
-        .toISOString()
-        .substring(0, 10);
+      queryParameters["start_date"] = requestParameters["startDate"];
     }
 
     const headerParameters: runtime.HTTPHeaders = {};

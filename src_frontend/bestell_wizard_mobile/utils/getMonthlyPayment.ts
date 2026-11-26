@@ -10,7 +10,7 @@ export function getMonthlyPayment(
   settings: BestellWizardSettings,
   productTypesInWaitingList: Set<PublicProductType>,
   associationMembershipType: AssociationMembershipType | undefined,
-  contractStartDate: Date,
+  contractStartDate: Date | undefined,
 ) {
   let monthlyPayment = solidarityContribution;
   for (const [productId, quantity] of Object.entries(shoppingCart)) {

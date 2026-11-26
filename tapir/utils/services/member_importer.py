@@ -19,6 +19,9 @@ from tapir.log.util import freeze_for_log
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
+from tapir.pickup_locations.services.home_delivery_address_validator import (
+    HomeDeliveryAddressValidator,
+)
 from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.utils.config import (
     MEMBER_IMPORT_STATUS_UPDATED,
@@ -37,6 +40,13 @@ from tapir.wirgarten.models import (
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import get_now, get_today
 
+DELIVERY_ADDRESS_COLUMNS = {
+    "Lieferadresse Straße": "delivery_street",
+    "Lieferadresse Adresszusatz": "delivery_street_2",
+    "Lieferadresse PLZ": "delivery_postcode",
+    "Lieferadresse Ort": "delivery_city",
+}
+
 
 class MemberImporter:
     @classmethod
@@ -50,7 +60,9 @@ class MemberImporter:
         if DataImportUtils.is_row_empty(row):
             return None
 
-        member_no = int(DataImportUtils.normalize_cell(row.get("Nr")))
+        member_no = DataImportUtils.parse_member_number(value=row.get("Nr"), cache={})
+        if member_no is None:
+            raise TapirDataImportException("Missing member number in column 'Nr'")
         member = Member.objects.filter(member_no=member_no).first()
 
         if member:
@@ -230,6 +242,9 @@ class MemberImporter:
         if DataImportUtils.update_if_diff(member, "street", new_street):
             member_updated = True
 
+        if cls.update_delivery_address(member=member, row=row):
+            member_updated = True
+
         target_mail = cls.build_mail(row=row, member_no=member.member_no)
         if DataImportUtils.update_if_diff(
             member,
@@ -249,6 +264,26 @@ class MemberImporter:
         if member_updated:
             member.save()
 
+        return member_updated
+
+    @classmethod
+    def update_delivery_address(cls, member: Member, row: dict[str, str]) -> bool:
+        if not any(
+            DataImportUtils.is_cell_filled(row=row, column=column)
+            for column in DELIVERY_ADDRESS_COLUMNS
+        ):
+            return False
+
+        member_updated = DataImportUtils.update_if_diff(
+            member, "delivery_same_as_billing_address", False
+        )
+        for column, member_attribute in DELIVERY_ADDRESS_COLUMNS.items():
+            if DataImportUtils.update_if_diff(
+                member,
+                member_attribute,
+                DataImportUtils.normalize_cell(row.get(column)),
+            ):
+                member_updated = True
         return member_updated
 
     @classmethod
@@ -290,6 +325,10 @@ class MemberImporter:
 
             MemberPickupLocation.objects.filter(member=member).delete()
             return True
+
+        HomeDeliveryAddressValidator.validate(
+            address_owner=member, pickup_location=target_pickup_location
+        )
 
         if member_pickup_location is None:
             MemberPickupLocation.objects.create(
@@ -410,6 +449,9 @@ class MemberImporter:
             name=DataImportUtils.normalize_cell(row.get("Abholort"))
         )
         if pickup_location:
+            HomeDeliveryAddressValidator.validate(
+                address_owner=member, pickup_location=pickup_location
+            )
             member_pickup_location = MemberPickupLocation(
                 member=member,
                 pickup_location=pickup_location,

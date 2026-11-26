@@ -1,9 +1,5 @@
 import React from "react";
-import {
-  PickupLocationsApi,
-  PublicGrowingPeriod,
-  PublicPickupLocation,
-} from "../../api-client";
+import { PickupLocationsApi, PublicPickupLocation } from "../../api-client";
 import { ToastData } from "../../types/ToastData.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 import { ShoppingCart } from "../types/ShoppingCart.ts";
@@ -19,7 +15,7 @@ export function checkPickupLocationCapacities(
     React.SetStateAction<Set<PublicPickupLocation>>
   >,
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>,
-  growingPeriod: PublicGrowingPeriod | undefined,
+  isIgnored: () => boolean,
 ) {
   setPickupLocationsCapacityCheckLoading(true);
 
@@ -27,30 +23,32 @@ export function checkPickupLocationCapacities(
     .pickupLocationsApiPickupLocationCapacityCheckCreate({
       pickupLocationCapacityCheckRequestRequest: {
         shoppingCart: shoppingCart,
-        growingPeriodId: growingPeriod ? growingPeriod.id! : null,
       },
     })
     .then((response) => {
+      if (isIgnored()) return;
       setPickupLocationsWithCapacityFull(
         new Set(
           pickupLocations.filter(
             (location) =>
               !response.pickupLocationIdsWithEnoughCapacityForOrder.includes(
-                location.id!,
+                location.id,
               ),
           ),
         ),
       );
     })
-    .catch((error) =>
+    .catch((error) => {
+      if (isIgnored()) return;
       handleRequestError(
         error,
         "Fehler bei der Bestätigung der Verteilstationen-Kapazitäten: " +
           error.message,
         setToastDatas,
-      ),
-    )
+      );
+    })
     .finally(() => {
+      if (isIgnored()) return;
       setPickupLocationsCapacityCheckLoading(false);
     });
 }

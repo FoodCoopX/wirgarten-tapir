@@ -118,7 +118,7 @@ export const DailySettingsModal: React.FC<DailySettingsModalProps> = ({
         });
 
         setSpecifics(initial);
-        setInitialSpecifics(JSON.parse(JSON.stringify(initial)));
+        setInitialSpecifics(structuredClone(initial));
       })
       .catch((error) => {
         handleRequestError(error, "Fehler beim Laden der Tageseinstellungen");
@@ -188,7 +188,7 @@ export const DailySettingsModal: React.FC<DailySettingsModalProps> = ({
     value: string,
   ) => {
     const sanitized = value.trim();
-    if (sanitized !== "" && isNaN(Number(sanitized))) return;
+    if (sanitized !== "" && Number.isNaN(Number(sanitized))) return;
 
     setSpecifics((prev) => ({
       ...prev,

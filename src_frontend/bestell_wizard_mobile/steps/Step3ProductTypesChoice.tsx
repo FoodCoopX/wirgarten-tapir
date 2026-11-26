@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Form, Modal } from "react-bootstrap";
-import { PublicGrowingPeriod, PublicProductType } from "../../api-client";
+import { PublicProductType } from "../../api-client";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { buildEmptyShoppingCart } from "../../bestell_wizard/utils/buildEmptyShoppingCart.ts";
@@ -22,7 +22,6 @@ interface Step3ProductTypeChoiceProps {
   investingMembership: boolean;
   setInvestingMembership: (investing: boolean) => void;
   setShoppingCart: (cart: ShoppingCart) => void;
-  selectedGrowingPeriod: PublicGrowingPeriod | undefined;
   stepActive: boolean;
 }
 
@@ -35,7 +34,6 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
   investingMembership,
   setInvestingMembership,
   setShoppingCart,
-  selectedGrowingPeriod,
   stepActive,
 }) => {
   const [productTypeForModal, setProductTypeForModal] =
@@ -48,7 +46,7 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
       setShoppingCart(buildEmptyShoppingCart(settings.productTypes));
     } else {
       selectAllRequiredProductTypes(
-        selectedGrowingPeriod?.productTypes ?? settings.productTypes,
+        settings.productTypes,
         selectedProductTypes,
         setSelectedProductTypes,
       );
@@ -131,9 +129,7 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
           id={"product_types_choice"}
           className={"d-flex gap-2 justify-content-center align-items-center"}
         >
-          {sortProductTypes(
-            selectedGrowingPeriod?.productTypes ?? settings.productTypes,
-          ).map((productType) => (
+          {settings.productTypes.map((productType) => (
             <div key={productType.id}>
               <input
                 type="checkbox"

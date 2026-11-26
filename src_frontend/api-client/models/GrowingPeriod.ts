@@ -38,16 +38,16 @@ export interface GrowingPeriod {
   readonly updatedAt: Date;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof GrowingPeriod
    */
-  startDate: Date;
+  startDate: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof GrowingPeriod
    */
-  endDate: Date;
+  endDate: string;
   /**
    *
    * @type {Array<number>}
@@ -100,8 +100,8 @@ export function GrowingPeriodFromJSONTyped(
     id: json["id"] == null ? undefined : json["id"],
     createdAt: new Date(json["created_at"]),
     updatedAt: new Date(json["updated_at"]),
-    startDate: new Date(json["start_date"]),
-    endDate: new Date(json["end_date"]),
+    startDate: json["start_date"],
+    endDate: json["end_date"],
     weeksWithoutDelivery:
       json["weeks_without_delivery"] == null
         ? undefined
@@ -135,8 +135,8 @@ export function GrowingPeriodToJSONTyped(
 
   return {
     id: value["id"],
-    start_date: value["startDate"].toISOString().substring(0, 10),
-    end_date: value["endDate"].toISOString().substring(0, 10),
+    start_date: value["startDate"],
+    end_date: value["endDate"],
     weeks_without_delivery: value["weeksWithoutDelivery"],
     max_jokers_per_member: value["maxJokersPerMember"],
     joker_restrictions: value["jokerRestrictions"],

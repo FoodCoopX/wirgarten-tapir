@@ -60,6 +60,7 @@
             </div>
         {% endif %}
         {% include 'wirgarten/generic/action-button.html' with onclick='handleResendVerifyEmail()' disabled=True title='Email Verifizierungslink erneut senden (z. B. wenn die erste Mail nicht angekommen ist)' type='primary' icon='mark_email_read' class='needs-member' %}
+        <span id="send_verification_emails_button"></span>
         <div style="width: 1em"></div>
         <div class="d-flex gap-2">
             <span id="subscription_cancellation_button"></span>
@@ -149,7 +150,7 @@
             const params = Tapir.getUrlParams();
 
             if (params.member) {
-                for (row of memberRows) {
+                for (const row of memberRows) {
                     if (row.id === `member-${params.member}`) {
                         row.classList.add('table-active');
                     } else {
@@ -157,11 +158,11 @@
                     }
                 }
 
-                for (btn of buttons) {
+                for (const btn of buttons) {
                     btn.disabled = false;
                 }
 
-                for (btn of trialDependentButtons) {
+                for (const btn of trialDependentButtons) {
                     if (params.trial === "true") {
                         btn.classList.add('btn-outline-warning')
                         btn.classList.remove('btn-outline-danger')

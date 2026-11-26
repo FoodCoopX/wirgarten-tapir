@@ -1,0 +1,16 @@
+/* The Arco theme bundled with easy-email sets the body font, which would also restyle Tapir's header and sidebar. */
+html body {
+  font-family: var(--bs-body-font-family);
+  font-size: var(--bs-body-font-size);
+}
+
+[data-type="TAPIR_MAIL_BODY_EXISTS"] {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.tapir-layout-body-token,
+.tapir-layout-body-token * {
+  pointer-events: none !important;
+  user-select: none !important;
+}

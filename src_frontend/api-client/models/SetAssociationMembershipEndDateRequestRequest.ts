@@ -26,10 +26,10 @@ export interface SetAssociationMembershipEndDateRequestRequest {
   membershipId: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof SetAssociationMembershipEndDateRequestRequest
    */
-  endDate: Date;
+  endDate: string;
 }
 
 /**
@@ -62,7 +62,7 @@ export function SetAssociationMembershipEndDateRequestRequestFromJSONTyped(
   }
   return {
     membershipId: json["membership_id"],
-    endDate: new Date(json["end_date"]),
+    endDate: json["end_date"],
   };
 }
 
@@ -82,6 +82,6 @@ export function SetAssociationMembershipEndDateRequestRequestToJSONTyped(
 
   return {
     membership_id: value["membershipId"],
-    end_date: value["endDate"].toISOString().substring(0, 10),
+    end_date: value["endDate"],
   };
 }

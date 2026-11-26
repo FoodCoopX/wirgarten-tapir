@@ -8,8 +8,11 @@ import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { areAllOrderedProductsInWaitingList } from "../../bestell_wizard/utils/areAllOrderedProductsInWaitingList.ts";
 import { isAtLeastOneOrderedProductWithDelivery } from "../../bestell_wizard/utils/isAtLeastOneOrderedProductWithDelivery.ts";
 import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
+import { DeliveryMode } from "../types/DeliveryMode.ts";
 import { Step } from "../types/Step.ts";
+import { getPickupLocationsForDeliveryMode } from "./getPickupLocationsForDeliveryMode.ts";
 import { isOrderWaitingListOnly } from "./isOrderWaitingListOnly.ts";
+import { isSolidarityContributionSkipped } from "./isSolidarityContributionSkipped.ts";
 import { shouldConfirmMemberNow } from "./shouldConfirmMemberNow.ts";
 import { shouldIncludeStepGrowingPeriodChoice } from "./shouldIncludeStepGrowingPeriodChoice.ts";
 import { willBecomeMemberNow } from "./willBecomeMemberNow.ts";
@@ -22,6 +25,7 @@ export function buildSteps(
   productTypesInWaitingList: Set<PublicProductType>,
   selectedPickupLocation: PublicPickupLocation[],
   pickupLocationsWithCapacityFull: Set<PublicPickupLocation>,
+  deliveryMode: DeliveryMode,
   waitingListEntryDetails?: PublicWaitingListEntryDetails,
 ) {
   const newSteps: Step[] = [];
@@ -45,7 +49,7 @@ export function buildSteps(
 
   for (const productType of selectedProductTypes) {
     if (!productType.noDelivery) {
-      newSteps.push(productType.id! + "_intro", productType.id! + "_order");
+      newSteps.push(`${productType.id!}_intro`, `${productType.id!}_order`);
     }
   }
 
@@ -54,32 +58,48 @@ export function buildSteps(
       settings,
       waitingListEntryDetails,
       shoppingCart,
+      productTypesInWaitingList,
+      becomeMemberNow,
     )
   ) {
     newSteps.push("7_solidarity_contribution");
   }
 
-  if (
-    shouldIncludeStepsPickupLocations(
-      settings,
-      waitingListEntryDetails,
-      shoppingCart,
-    )
-  ) {
-    newSteps.push("5a_pickup_location_intro", "5b_pickup_location_choice");
+  const includeStepsPickupLocations = shouldIncludeStepsPickupLocations(
+    settings,
+    waitingListEntryDetails,
+    shoppingCart,
+  );
+  const homeDeliveryLocations = getPickupLocationsForDeliveryMode(
+    settings.pickupLocations,
+    "home_delivery",
+  );
+  if (includeStepsPickupLocations) {
+    newSteps.push("5a_pickup_location_intro");
+
+    if (!waitingListEntryDetails && homeDeliveryLocations.length > 0) {
+      newSteps.push("5b_delivery_mode_choice");
+    }
+
+    if (deliveryMode === "pickup") {
+      newSteps.push("5c_pickup_location_choice");
+    } else if (homeDeliveryLocations.length > 1) {
+      newSteps.push("5d_home_delivery_choice");
+    }
 
     if (
       selectedPickupLocation.length === 1 &&
       pickupLocationsWithCapacityFull.has(selectedPickupLocation[0]) &&
-      !waitingListEntryDetails
+      !waitingListEntryDetails &&
+      !(deliveryMode === "home_delivery" && homeDeliveryLocations.length === 1)
     ) {
-      newSteps.push("5c_pickup_location_confirm_waiting_list");
+      newSteps.push("5e_pickup_location_confirm_waiting_list");
     }
   }
 
   for (const productType of selectedProductTypes) {
     if (productType.noDelivery) {
-      newSteps.push(productType.id! + "_intro", productType.id! + "_order");
+      newSteps.push(`${productType.id!}_intro`, `${productType.id!}_order`);
     }
   }
 
@@ -105,12 +125,22 @@ export function buildSteps(
       settings,
       waitingListEntryDetails,
       shoppingCart,
+      productTypesInWaitingList,
+      becomeMemberNow,
     )
   ) {
     newSteps.push("7_solidarity_contribution");
   }
 
   newSteps.push("8_personal_data");
+
+  if (
+    includeStepsPickupLocations &&
+    deliveryMode === "home_delivery" &&
+    !waitingListEntryDetails
+  ) {
+    newSteps.push("8b_delivery_address");
+  }
 
   if (
     willBecomeMemberNow(settings, becomeMemberNow) &&
@@ -189,21 +219,41 @@ function shouldIncludeStepsPickupLocations(
 }
 
 function shouldShowStepSolidarityContribution(
+  settings: BestellWizardSettings,
   waitingListEntryDetails: PublicWaitingListEntryDetails | undefined,
+  shoppingCart: ShoppingCart,
+  productTypesInWaitingList: Set<PublicProductType>,
+  becomeMemberNow: boolean | null,
 ) {
-  if (waitingListEntryDetails === undefined) {
-    return true;
+  if (waitingListEntryDetails !== undefined) {
+    return waitingListEntryDetails.shouldShowSolidarityStep;
   }
 
-  return waitingListEntryDetails.shouldShowSolidarityStep;
+  return !isSolidarityContributionSkipped(
+    settings,
+    shoppingCart,
+    productTypesInWaitingList,
+    becomeMemberNow,
+    waitingListEntryDetails,
+  );
 }
 
 function shouldShowStepSolidarityContributionBeforeStepPickupLocation(
   settings: BestellWizardSettings,
   waitingListEntryDetails: PublicWaitingListEntryDetails | undefined,
   shoppingCart: ShoppingCart,
+  productTypesInWaitingList: Set<PublicProductType>,
+  becomeMemberNow: boolean | null,
 ) {
-  if (!shouldShowStepSolidarityContribution(waitingListEntryDetails)) {
+  if (
+    !shouldShowStepSolidarityContribution(
+      settings,
+      waitingListEntryDetails,
+      shoppingCart,
+      productTypesInWaitingList,
+      becomeMemberNow,
+    )
+  ) {
     return false;
   }
 
@@ -218,8 +268,18 @@ function shouldShowStepSolidarityContributionBeforeStepPersonalData(
   settings: BestellWizardSettings,
   waitingListEntryDetails: PublicWaitingListEntryDetails | undefined,
   shoppingCart: ShoppingCart,
+  productTypesInWaitingList: Set<PublicProductType>,
+  becomeMemberNow: boolean | null,
 ) {
-  if (!shouldShowStepSolidarityContribution(waitingListEntryDetails)) {
+  if (
+    !shouldShowStepSolidarityContribution(
+      settings,
+      waitingListEntryDetails,
+      shoppingCart,
+      productTypesInWaitingList,
+      becomeMemberNow,
+    )
+  ) {
     return false;
   }
 
@@ -229,6 +289,8 @@ function shouldShowStepSolidarityContributionBeforeStepPersonalData(
       settings,
       waitingListEntryDetails,
       shoppingCart,
+      productTypesInWaitingList,
+      becomeMemberNow,
     )
   );
 }

@@ -11,9 +11,11 @@ import "../../fixed_header.css";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
 import { TransactionsByDueDate } from "../../types/TransactionsByDueDate.ts";
+import { fromApiDate } from "../../utils/apiDate.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { formatDateText } from "../../utils/formatDateText.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
+import CalculationExplanation from "./CalculationExplanation.tsx";
 import { groupTransactionsByDueDate } from "./groupTransactionsByDueDate.ts";
 import PaymentComponent from "./PaymentComponent.tsx";
 
@@ -52,14 +54,10 @@ function getExplanationText(deliveryChargeEnabled: boolean) {
         Monat.
       </p>
       <p>
-        In Monaten, in denen du aufgrund deines Vertragsstartes nicht alle
-        Abholungen / Lieferungen mitmachen kannst, wird dein monatlicher Betrag
-        auf Basis des Kistenpreises berechnet ((Monatspreis * 12 Monate) / 52
-        Wochen) und mit der Anzahl der wahrgenommenen Lieferungen multipliziert.
-        Der Kistenpreis ergibt sich nicht aus dem Monatspreis geteilt durch
-        vier, da abhängig vom Monat 4 oder 5 Lieferungen stattfinden und dies
-        auf das Jahr gleichverteilt wird, damit die Finanzierung der Solawi
-        gesichert ist.
+        In Monaten, in denen dein Vertrag nicht den ganzen Monat läuft, z. B.
+        bei Vertragsbeginn, Vertragsende oder einer Vertragsänderung, zahlst du
+        nur einen Teil des Monatspreises. Wie dieser Teil berechnet wurde,
+        siehst du bei jeder Zahlung und Gutschrift unter "Berechnung anzeigen".
       </p>
       <p>
         Ein ggf. ausgewählter Solidarpreis wird taggenau auf den Monat
@@ -116,8 +114,8 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
           groupTransactionsByDueDate(response.payments, response.credits),
         );
       })
-      .catch(async (error) => {
-        await handleRequestError(
+      .catch((error) => {
+        handleRequestError(
           error,
           "Fehler beim Laden der vergangenen Zahlungen",
           setToastDatas,
@@ -131,6 +129,7 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
         <div className={"d-flex flex-column align-items-center"}>
           <strong>{formatCurrency(credit.amount)}</strong>
           <Badge bg={"success"}>Gutschrift</Badge>
+          <CalculationExplanation text={credit.comment} />
         </div>
       </div>
     );
@@ -156,8 +155,8 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
       <tr key={dueDateAsString}>
         <td style={{ textAlign: "center" }}>
           <div className={"d-flex flex-column"}>
-            <strong>{formatDateText(new Date(dueDateAsString))}</strong>
-            <span>{dayjs().to(new Date(dueDateAsString))}</span>
+            <strong>{formatDateText(dueDateAsString)}</strong>
+            <span>{dayjs().to(fromApiDate(dueDateAsString))}</span>
           </div>
         </td>
         <td>
@@ -181,10 +180,7 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
 
   function buildTableContentPastPayments() {
     return Object.entries(pastTransactionsByDueDate)
-      .toSorted(
-        ([dueDateA], [dueDateB]) =>
-          new Date(dueDateB).getTime() - new Date(dueDateA).getTime(),
-      )
+      .toSorted(([dueDateA], [dueDateB]) => dueDateB.localeCompare(dueDateA))
       .map(([dueDateAsString, objects]) => buildRow(dueDateAsString, objects));
   }
 

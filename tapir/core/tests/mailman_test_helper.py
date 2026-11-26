@@ -31,6 +31,14 @@ class MockMailingListData:
     description: str = field(default="")
 
 
+class MockAddress:
+    def __init__(self, email: str):
+        self.email = email
+
+    def __str__(self):
+        return self.email
+
+
 class MockListSettings:
     def __init__(self, mock_list: Mock):
         self._settings = {}
@@ -81,9 +89,11 @@ class MailmanTestHelper:
     @classmethod
     def build_mock_list(cls, mailing_list_data: MockMailingListData):
         mock_list = Mock()
-        mock_list.fqdn_listname = f"{mailing_list_data.name}@{settings.EMAIL_HOST}"
+        mock_list.fqdn_listname = (
+            f"{mailing_list_data.name}@{settings.MAILING_LIST_DOMAIN}"
+        )
         mock_list.members = [
-            Mock(address=recipient)
+            Mock(address=MockAddress(recipient))
             for recipient in mailing_list_data.confirmed_recipients
         ]
         mock_list.requests = [

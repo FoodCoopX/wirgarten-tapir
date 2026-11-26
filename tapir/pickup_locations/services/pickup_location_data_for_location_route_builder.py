@@ -2,6 +2,9 @@ import datetime
 from decimal import Decimal
 
 from tapir.deliveries.services.delivery_cycle_service import DeliveryCycleService
+from tapir.deliveries.services.pickup_location_delivery_date_calculator import (
+    PickupLocationDeliveryDateCalculator,
+)
 from tapir.pickup_locations.config import PICKING_MODE_BASKET, PICKING_MODE_SHARE
 from tapir.pickup_locations.services.basket_size_capacities_service import (
     BasketSizeCapacitiesService,
@@ -11,7 +14,9 @@ from tapir.pickup_locations.services.subscription_with_deliveries_provider impor
     SubscriptionsWithDeliveriesProvider,
 )
 from tapir.utils.services.tapir_cache import TapirCache
+from tapir.utils.shortcuts import get_monday
 from tapir.wirgarten.models import PickupLocation, Subscription, Product
+from tapir.wirgarten.service.get_next_delivery_date import get_next_delivery_date
 from tapir.wirgarten.service.products import get_product_price
 
 
@@ -88,6 +93,13 @@ class PickupLocationDataForLocationRouteBuilder:
                 for member in members
             ],
             "calendar_week": reference_datetime.isocalendar().week,
+            "delivery_date": PickupLocationDeliveryDateCalculator.get_delivery_date_at_pickup_location(
+                pickup_location_id=pickup_location.id,
+                delivery_date=get_next_delivery_date(
+                    reference_date=get_monday(reference_datetime.date()), cache=cache
+                ),
+                cache=cache,
+            ),
         }
 
     @classmethod

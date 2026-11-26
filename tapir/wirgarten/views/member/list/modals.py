@@ -14,6 +14,8 @@ from tapir.wirgarten.forms.member import (
 from tapir.wirgarten.service.member import cancel_coop_shares, transfer_coop_shares
 from tapir.wirgarten.views.modal import get_form_modal
 
+MEMBER_LIST_URL = reverse_lazy("wirgarten:member_list")
+
 
 @require_http_methods(["GET", "POST"])
 @permission_required(Permission.Coop.MANAGE)
@@ -28,7 +30,7 @@ def get_coop_share_transfer_form(request, **kwargs):
             quantity=x.cleaned_data["quantity"],
             actor=request.user,
         ),
-        redirect_url_resolver=lambda x: reverse_lazy("wirgarten:member_list"),
+        redirect_url_resolver=lambda _: MEMBER_LIST_URL,
         **kwargs,
     )
 
@@ -47,7 +49,7 @@ def get_coop_share_cancel_form(request, **kwargs):
             valid_at=x.cleaned_data["valid_at"],
             actor=request.user,
         ),
-        redirect_url_resolver=lambda x: reverse_lazy("wirgarten:member_list"),
+        redirect_url_resolver=lambda _: MEMBER_LIST_URL,
         **kwargs,
     )
 
@@ -60,7 +62,7 @@ def get_member_personal_data_create_form(request, **kwargs):
         request=request,
         form_class=PersonalDataForm,
         handler=save_member_and_assign_number,
-        redirect_url_resolver=lambda x: reverse_lazy("wirgarten:member_list"),
+        redirect_url_resolver=lambda _: MEMBER_LIST_URL,
         **kwargs,
     )
 

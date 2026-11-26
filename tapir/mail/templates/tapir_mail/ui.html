@@ -1,0 +1,14 @@
+{% extends "core/base.html" %}
+{% load django_vite %}
+{% block head %}
+    {{ env_vars|json_script:"tapir-mail-env" }}
+    <script>
+        window._env_ = JSON.parse(document.getElementById("tapir-mail-env").textContent);
+    </script>
+    {% vite_hmr_client app="mail" %}
+    {% vite_react_refresh app="mail" %}
+    {% vite_asset "main.tsx" app="mail" %}
+{% endblock %}
+{% block content %}
+    <div id="root"></div>
+{% endblock %}

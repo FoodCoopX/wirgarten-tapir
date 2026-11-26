@@ -48,13 +48,18 @@ class GetExportSegmentsView(APIView):
         if not request.user.has_perm(Permission.Coop.MANAGE):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
+        cache = {}
         segment_datas = []
         for segment in ExportSegmentManager.registered_export_segments.values():
             segment_datas.append(
                 {
                     "id": segment.id,
                     "display_name": segment.display_name,
-                    "description": segment.description,
+                    "description": (
+                        segment.get_description(cache)
+                        if segment.get_description is not None
+                        else segment.description
+                    ),
                     "columns": [
                         {
                             "id": column.id,
@@ -212,7 +217,7 @@ class CsvExportTemplateListApiView(APIView):
 
         return Response(
             PdfExportTemplateSerializer(
-                CsvExportTemplateManager.get_templates().values(), many=True
+                CsvExportTemplateManager.get_templates(cache={}).values(), many=True
             ).data,
             status=status.HTTP_200_OK,
         )
@@ -230,7 +235,7 @@ class CreateCsvExportFromTemplateApiView(APIView):
         try:
             with transaction.atomic():
                 CsvExportTemplateManager.create_exports_from_template(
-                    request.query_params.get("template_id")
+                    template_id=request.query_params.get("template_id"), cache={}
                 )
         except TemplateAlreadyExistsException as error:
             return Response(

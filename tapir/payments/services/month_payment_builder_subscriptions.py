@@ -3,25 +3,32 @@ from datetime import date
 from decimal import Decimal
 
 from dateutil.relativedelta import relativedelta
+from django.utils.formats import date_format
 
 from tapir.core.exceptions import TapirImproperlyConfigured
-from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
+from tapir.deliveries.services.monthly_delivery_date_counter import (
+    MonthlyDeliveryDateCounter,
+)
+from tapir.deliveries.services.partial_month_calculation_mode_decider import (
+    PartialMonthCalculationModeDecider,
+)
 from tapir.deliveries.services.subscription_price_type_decider import (
     SubscriptionPricingStrategyDecider,
 )
+from tapir.utils.dataclasses import CalculationPart
 from tapir.payments.models import MemberPaymentRhythm
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
 from tapir.payments.services.month_payment_builder_utils import MonthPaymentBuilderUtils
-from tapir.pickup_locations.services.member_pickup_location_getter import (
-    MemberPickupLocationGetter,
-)
 from tapir.subscriptions.services.automatic_subscription_renewal_service import (
     AutomaticSubscriptionRenewalService,
 )
 from tapir.subscriptions.services.delivery_price_calculator import (
     DeliveryPriceCalculator,
+)
+from tapir.subscriptions.services.subscription_calculation_name_builder import (
+    SubscriptionCalculationNameBuilder,
 )
 from tapir.subscriptions.services.subscription_price_calculator import (
     SubscriptionPriceCalculator,
@@ -29,7 +36,7 @@ from tapir.subscriptions.services.subscription_price_calculator import (
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.utils.services.date_range_overlap_checker import DateRangeOverlapChecker
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.utils.shortcuts import get_last_day_of_month, get_any_element_from_set
+from tapir.utils.shortcuts import get_last_day_of_month, get_any_element
 from tapir.wirgarten.constants import (
     NO_DELIVERY,
     WEEKLY,
@@ -38,6 +45,7 @@ from tapir.wirgarten.constants import (
     EVERY_FOUR_WEEKS,
     CUSTOM_CYCLE,
 )
+from tapir.wirgarten.utils import format_currency
 from tapir.wirgarten.models import (
     Subscription,
     Payment,
@@ -94,7 +102,7 @@ class MonthPaymentBuilderSubscriptions:
                         cache=cache,
                         generated_payments=generated_payments,
                         in_trial=in_trial,
-                        total_to_pay_function=cls.get_total_to_pay,
+                        calculation_parts_function=cls.get_calculation_parts,
                         allow_negative_amounts=False,
                     )
                 )
@@ -132,7 +140,7 @@ class MonthPaymentBuilderSubscriptions:
             return False
 
         return (
-            get_any_element_from_set(subscriptions).product.type.delivery_cycle
+            get_any_element(subscriptions).product.type.delivery_cycle
             == CUSTOM_CYCLE[0]
         )
 
@@ -144,111 +152,244 @@ class MonthPaymentBuilderSubscriptions:
         contracts: list[Subscription],
         cache: dict,
     ) -> Decimal:
-        subscriptions_active_within_period = [
-            subscription
-            for subscription in contracts
-            if DateRangeOverlapChecker.do_ranges_overlap(
-                range_1_start=range_start,
-                range_1_end=range_end,
-                range_2_start=subscription.start_date,
-                range_2_end=subscription.end_date,
-            )
-        ]
-        total_to_pay = sum(
-            [
-                cls.get_amount_to_pay_for_subscription_within_range(
-                    subscription=subscription,
+        return sum(
+            (
+                part.value
+                for part in cls.get_calculation_parts(
                     range_start=range_start,
                     range_end=range_end,
+                    contracts=contracts,
                     cache=cache,
                 )
-                for subscription in subscriptions_active_within_period
-            ],
+            ),
             Decimal(0),
         )
-        return total_to_pay
 
     @classmethod
-    def get_amount_to_pay_for_subscription_within_range(
+    def get_calculation_parts(
+        cls,
+        range_start: datetime.date,
+        range_end: datetime.date,
+        contracts: list[Subscription],
+        cache: dict,
+    ) -> list[CalculationPart]:
+        subscriptions_active_within_period = sorted(
+            (
+                subscription
+                for subscription in contracts
+                if DateRangeOverlapChecker.do_ranges_overlap(
+                    range_1_start=range_start,
+                    range_1_end=range_end,
+                    range_2_start=subscription.start_date,
+                    range_2_end=subscription.end_date,
+                )
+            ),
+            key=lambda subscription: (
+                subscription.start_date,
+                subscription.product.name,
+            ),
+        )
+        return [
+            part
+            for subscription in subscriptions_active_within_period
+            for part in cls._get_calculation_parts_for_subscription_within_range(
+                subscription=subscription,
+                range_start=range_start,
+                range_end=range_end,
+                cache=cache,
+            )
+        ]
+
+    @classmethod
+    def _get_calculation_parts_for_subscription_within_range(
         cls,
         subscription: Subscription,
         range_start: datetime.date,
         range_end: datetime.date,
         cache: dict,
-    ) -> Decimal:
-        number_of_full_month_to_pay, number_of_single_deliveries_to_pay = (
-            cls.get_number_of_months_and_deliveries_to_pay(
-                range_start=range_start,
-                range_end=range_end,
-                subscription=subscription,
-                cache=cache,
-            )
-        )
-
+    ) -> list[CalculationPart]:
         monthly_price = SubscriptionPriceCalculator.get_monthly_price(
             subscription=subscription, reference_date=range_start, cache=cache
         )
-        full_months_price = monthly_price * number_of_full_month_to_pay
-
-        single_deliveries_price = (
-            number_of_single_deliveries_to_pay
-            * DeliveryPriceCalculator.get_price_of_single_delivery_for_subscription(
+        price_of_single_delivery = (
+            DeliveryPriceCalculator.get_price_of_single_delivery_for_subscription(
                 subscription=subscription, at_date=range_start, cache=cache
             )
         )
 
-        return full_months_price + single_deliveries_price
+        parts = []
+        current_month = range_start
+        while current_month < range_end:
+            part = cls._build_calculation_part_for_subscription_within_month(
+                subscription=subscription,
+                first_of_month=current_month,
+                monthly_price=monthly_price,
+                price_of_single_delivery=price_of_single_delivery,
+                cache=cache,
+            )
+            if part is not None:
+                parts.append(part)
+            current_month += relativedelta(months=1)
+
+        return parts
 
     @classmethod
-    def get_number_of_months_and_deliveries_to_pay(
+    def _build_calculation_part_for_subscription_within_month(
         cls,
-        range_start: datetime.date,
-        range_end: datetime.date,
         subscription: Subscription,
+        first_of_month: datetime.date,
+        monthly_price: Decimal,
+        price_of_single_delivery: Decimal,
         cache: dict,
-    ):
-        current_month = range_start
-        number_of_full_month_to_pay = 0
-        number_of_single_deliveries_to_pay = 0
-        force_price_per_delivery = (
-            SubscriptionPricingStrategyDecider.is_price_by_delivery(
-                subscription.product.type.delivery_cycle
+    ) -> CalculationPart | None:
+        if not DateRangeOverlapChecker.do_ranges_overlap(
+            range_1_start=first_of_month,
+            range_1_end=get_last_day_of_month(first_of_month),
+            range_2_start=subscription.start_date,
+            range_2_end=subscription.end_date,
+        ):
+            return None
+
+        prefix = f"{date_format(first_of_month, "F Y")}, {SubscriptionCalculationNameBuilder.build_name(subscription=subscription)}"
+        delivery_cycle = subscription.product.type.delivery_cycle
+
+        if SubscriptionPricingStrategyDecider.is_price_by_delivery(delivery_cycle):
+            return cls._build_price_per_delivery_part(
+                prefix=prefix,
+                number_of_deliveries=cls._count_delivery_dates_of_subscription_in_month(
+                    subscription=subscription,
+                    first_of_month=first_of_month,
+                    cache=cache,
+                ),
+                price_of_single_delivery=price_of_single_delivery,
             )
+
+        if cls.is_month_fully_covered_by_subscription(
+            subscription=subscription, first_of_month=first_of_month
+        ):
+            return CalculationPart(
+                explanation=f"{prefix}: {format_currency(monthly_price)} € monatlich (voller Monat)",
+                value=monthly_price,
+            )
+
+        if PartialMonthCalculationModeDecider.is_proportional_mode_active(
+            first_of_month=first_of_month, cache=cache
+        ):
+            if delivery_cycle == NO_DELIVERY[0]:
+                return cls._build_days_covered_part(
+                    prefix=prefix,
+                    subscription=subscription,
+                    first_of_month=first_of_month,
+                    monthly_price=monthly_price,
+                )
+            return cls._build_delivery_dates_covered_part(
+                prefix=prefix,
+                subscription=subscription,
+                first_of_month=first_of_month,
+                monthly_price=monthly_price,
+                cache=cache,
+            )
+
+        number_of_deliveries = cls._count_delivery_dates_of_subscription_in_month(
+            subscription=subscription, first_of_month=first_of_month, cache=cache
+        )
+        if cls.should_pay_full_month_price(
+            number_of_deliveries=number_of_deliveries, delivery_cycle=delivery_cycle
+        ):
+            threshold = cls.get_number_of_deliveries_for_full_month_price(
+                delivery_cycle
+            )
+            return CalculationPart(
+                explanation=f"{prefix}: {format_currency(monthly_price)} € monatlich ({cls._build_count_label(number_of_deliveries, "Lieferung", "Lieferungen")}, voller Monatspreis ab {threshold})",
+                value=monthly_price,
+            )
+        return cls._build_price_per_delivery_part(
+            prefix=prefix,
+            number_of_deliveries=number_of_deliveries,
+            price_of_single_delivery=price_of_single_delivery,
         )
 
-        while current_month < range_end:
-            if not DateRangeOverlapChecker.do_ranges_overlap(
-                range_1_start=range_start,
-                range_1_end=range_end,
-                range_2_start=subscription.start_date,
-                range_2_end=subscription.end_date,
-            ):
-                continue
+    @classmethod
+    def _build_price_per_delivery_part(
+        cls,
+        prefix: str,
+        number_of_deliveries: int,
+        price_of_single_delivery: Decimal,
+    ) -> CalculationPart:
+        value = number_of_deliveries * price_of_single_delivery
+        return CalculationPart(
+            explanation=f"{prefix}: {cls._build_count_label(number_of_deliveries, "Lieferung", "Lieferungen")} à {format_currency(price_of_single_delivery)} € = {format_currency(value)} €",
+            value=value,
+        )
 
-            if (
-                cls.is_month_fully_covered_by_subscription(
-                    subscription=subscription, first_of_month=current_month
-                )
-                and not force_price_per_delivery
-            ):
-                number_of_full_month_to_pay += 1
-            else:
-                number_of_deliveries = cls.get_number_of_deliveries_in_month(
-                    subscription=subscription, first_of_month=current_month, cache=cache
-                )
-                if (
-                    cls.should_pay_full_month_price(
-                        number_of_deliveries=number_of_deliveries,
-                        delivery_cycle=subscription.product.type.delivery_cycle,
-                    )
-                    and not force_price_per_delivery
-                ):
-                    number_of_full_month_to_pay += 1
-                else:
-                    number_of_single_deliveries_to_pay += number_of_deliveries
+    @classmethod
+    def _build_days_covered_part(
+        cls,
+        prefix: str,
+        subscription: Subscription,
+        first_of_month: datetime.date,
+        monthly_price: Decimal,
+    ) -> CalculationPart:
+        days_covered = MonthPaymentBuilderUtils.get_number_of_days_covered_in_month(
+            first_of_month=first_of_month,
+            contract_start=subscription.start_date,
+            contract_end=subscription.end_date,
+        )
+        days_in_month = get_last_day_of_month(first_of_month).day
+        value = monthly_price * days_covered / days_in_month
+        return CalculationPart(
+            explanation=f"{prefix}: {format_currency(monthly_price)} € × {days_covered} von {days_in_month} Tagen = {format_currency(value)} €",
+            value=value,
+        )
 
-            current_month += MemberPaymentRhythmService.RELATIVE_DELTA_ONE_MONTH
-        return number_of_full_month_to_pay, number_of_single_deliveries_to_pay
+    @classmethod
+    def _build_delivery_dates_covered_part(
+        cls,
+        prefix: str,
+        subscription: Subscription,
+        first_of_month: datetime.date,
+        monthly_price: Decimal,
+        cache: dict,
+    ) -> CalculationPart:
+        total_dates = MonthlyDeliveryDateCounter.count_delivery_dates_in_month(
+            member_id=subscription.member_id,
+            product_type=subscription.product.type,
+            first_of_month=first_of_month,
+            contract_start=None,
+            contract_end=None,
+            cache=cache,
+        )
+        if total_dates == 0:
+            return CalculationPart(
+                explanation=f"{prefix}: keine Liefertermine im Monat = {format_currency(0)} €",
+                value=Decimal(0),
+            )
+
+        subscription_dates = cls._count_delivery_dates_of_subscription_in_month(
+            subscription=subscription, first_of_month=first_of_month, cache=cache
+        )
+        value = monthly_price * subscription_dates / total_dates
+        return CalculationPart(
+            explanation=f"{prefix}: {format_currency(monthly_price)} € × {subscription_dates} ÷ {cls._build_count_label(total_dates, "Liefertermin", "Liefertermine")} = {format_currency(value)} €",
+            value=value,
+        )
+
+    @classmethod
+    def _count_delivery_dates_of_subscription_in_month(
+        cls, subscription: Subscription, first_of_month: datetime.date, cache: dict
+    ) -> int:
+        return MonthlyDeliveryDateCounter.count_delivery_dates_in_month(
+            member_id=subscription.member_id,
+            product_type=subscription.product.type,
+            first_of_month=first_of_month,
+            contract_start=subscription.start_date,
+            contract_end=subscription.end_date,
+            cache=cache,
+        )
+
+    @staticmethod
+    def _build_count_label(count: int, singular: str, plural: str) -> str:
+        return f"{count} {singular if count == 1 else plural}"
 
     @classmethod
     def is_month_fully_covered_by_subscription(
@@ -285,41 +426,6 @@ class MonthPaymentBuilderSubscriptions:
             number_of_deliveries
             >= cls.get_number_of_deliveries_for_full_month_price(delivery_cycle)
         )
-
-    @classmethod
-    def get_number_of_deliveries_in_month(
-        cls,
-        subscription: Subscription,
-        first_of_month: datetime.date,
-        cache: dict,
-    ):
-        last_of_month = get_last_day_of_month(first_of_month)
-        number_of_deliveries = 0
-
-        # we start one day back so that deliveries on the first day of the month are counted
-        current_date = first_of_month - datetime.timedelta(days=1)
-
-        while current_date <= last_of_month:
-            current_date = DeliveryDateCalculator.get_next_delivery_date_for_product_type(
-                reference_date=current_date,
-                pickup_location_id=MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
-                    member_id=subscription.member_id,
-                    reference_date=current_date,
-                    cache=cache,
-                ),
-                product_type=subscription.product.type,
-                check_for_weeks_without_delivery=False,
-                cache=cache,
-            )
-            if current_date is None:
-                break
-            if (
-                current_date <= last_of_month
-                and subscription.start_date <= current_date <= subscription.end_date
-            ):
-                number_of_deliveries += 1
-
-        return number_of_deliveries
 
     @classmethod
     def group_subscriptions_by_member_and_product_type(

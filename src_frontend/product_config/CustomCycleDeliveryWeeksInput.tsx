@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { Alert, Form, Spinner } from "react-bootstrap";
 import { DeliveriesApi, GrowingPeriod } from "../api-client";
-import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
-import { CustomCycleDeliveryWeeks } from "../types/CustomCycleDeliveryWeeks.ts";
 import TapirButton from "../components/TapirButton.tsx";
+import TapirHelpButton from "../components/TapirHelpButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
+import { CustomCycleDeliveryWeeks } from "../types/CustomCycleDeliveryWeeks.ts";
+import { fromApiDate, toApiDate } from "../utils/apiDate.ts";
+import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
 import { getCsrfToken } from "../utils/getCsrfToken.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
-import TapirHelpButton from "../components/TapirHelpButton.tsx";
 import { getParameterFromUrl } from "./get_parameter_from_url.ts";
 
 interface CustomCycleDeliveryWeeksInputProps {
@@ -26,7 +27,7 @@ function getDefaultSelectedGrowingPeriod(allGrowingPeriods: GrowingPeriod[]) {
     }
   }
 
-  const today = new Date();
+  const today = toApiDate(new Date());
   for (const growingPeriod of allGrowingPeriods) {
     if (growingPeriod.startDate <= today && today <= growingPeriod.endDate) {
       return growingPeriod;
@@ -44,7 +45,7 @@ const CustomCycleDeliveryWeeksInput: React.FC<
     useState<GrowingPeriod>();
   const [abortController, setAbortController] = useState<AbortController>();
   const [deliveryDates, setDeliveryDates] = useState<{
-    [key: string]: { [key: string]: Date };
+    [key: string]: { [key: string]: string };
   }>({});
   const [internalWeeks, setInternalWeeks] = useState<{
     [growingPeriodId: string]: string[];
@@ -104,12 +105,9 @@ const CustomCycleDeliveryWeeksInput: React.FC<
           setDeliveryDates(response.customCycleDeliveryWeeksDates);
         }
       })
-      .catch(async (error) => {
+      .catch((error) => {
         if (error.cause?.name === "AbortError") return;
-        await handleRequestError(
-          error,
-          "Fehler beim Laden der Lieferung-Daten",
-        );
+        handleRequestError(error, "Fehler beim Laden der Lieferung-Daten");
       });
   }, [deliveryWeeks]);
 
@@ -185,7 +183,7 @@ const CustomCycleDeliveryWeeksInput: React.FC<
     if (!(periodId in deliveryDates) || !(week in deliveryDates[periodId])) {
       return undefined;
     }
-    return new Date(deliveryDates[periodId][week]);
+    return fromApiDate(deliveryDates[periodId][week]);
   }
 
   function getDateDisplay(week: number) {
@@ -226,10 +224,10 @@ const CustomCycleDeliveryWeeksInput: React.FC<
         </Form.Select>
       </Form.Group>
       <div className={"d-flex flex-row gap-2 align-items-center"}>
-        <span>Lieferwochen für dieses Produkt</span>
+        <span>Lieferwochen für diesen Produktanteil</span>
         <TapirHelpButton
           text={
-            "Bitte gib an, in welchen Wochen das Produkt abgeholt bzw. geliefert wird. Du kannst beliebig viele Wochen angeben und auch wieder löschen. Änderungen können für zukünftige Abholungen / Lieferungen vorgenommen werden."
+            "Bitte gib an, in welchen Wochen der Produktanteil abgeholt bzw. geliefert wird. Du kannst beliebig viele Wochen angeben und auch wieder löschen. Änderungen können für zukünftige Abholungen / Lieferungen vorgenommen werden."
           }
           buttonSize={"sm"}
         />

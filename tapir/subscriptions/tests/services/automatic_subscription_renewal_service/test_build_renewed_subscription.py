@@ -5,6 +5,7 @@ from tapir.subscriptions.services.automatic_subscription_renewal_service import 
     AutomaticSubscriptionRenewalService,
 )
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
     ProductFactory,
@@ -21,13 +22,10 @@ class TestBuildRenewedSubscription(TapirUnitTest):
     )
     @patch.object(NoticePeriodManager, "get_notice_period_unit", autospec=True)
     @patch.object(NoticePeriodManager, "get_notice_period_duration", autospec=True)
-    @patch(
-        "tapir.subscriptions.services.automatic_subscription_renewal_service.get_next_growing_period",
-        autospec=True,
-    )
+    @patch.object(TapirCache, "get_first_growing_period_starting_after", autospec=True)
     def test_buildRenewedSubscription_default_buildsFutureSubscription(
         self,
-        mock_get_next_growing_period: Mock,
+        mock_get_first_growing_period_starting_after: Mock,
         mock_get_notice_period_duration: Mock,
         mock_get_notice_period_unit: Mock,
         mock_get_renewed_trial_data: Mock,
@@ -54,7 +52,7 @@ class TestBuildRenewedSubscription(TapirUnitTest):
         next_growing_period.start_date = start_date
         end_date = Mock()
         next_growing_period.end_date = end_date
-        mock_get_next_growing_period.return_value = next_growing_period
+        mock_get_first_growing_period_starting_after.return_value = next_growing_period
 
         mock_get_notice_period_duration.return_value = 4
         mock_get_notice_period_unit.return_value = NOTICE_PERIOD_UNIT_WEEKS
@@ -73,7 +71,7 @@ class TestBuildRenewedSubscription(TapirUnitTest):
             )
         )
 
-        mock_get_next_growing_period.assert_called_once_with(
+        mock_get_first_growing_period_starting_after.assert_called_once_with(
             reference_date=original_subscription.end_date, cache=cache
         )
         mock_get_notice_period_duration.assert_called_once_with(

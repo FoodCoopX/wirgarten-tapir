@@ -49,6 +49,7 @@ body {
 
 @font-face {
   font-family: "UbuntuCondensed";
+  font-display: swap;
   font-style: normal;
   src: url("/static/core/themes/alfter/fonts/UbuntuCondensed-Regular.woff2")
        format("woff2");

@@ -140,9 +140,13 @@ def export_coop_member_list(request, **kwargs):
             )
         )
 
-        columns.append(KEY_ASSOCIATION_MEMBERSHIP_START)
-        columns.append(KEY_ASSOCIATION_MEMBERSHIP_END)
-        columns.append(KEY_ASSOCIATION_MEMBERSHIP_CANCELLATION_DATE)
+        columns.extend(
+            [
+                KEY_ASSOCIATION_MEMBERSHIP_START,
+                KEY_ASSOCIATION_MEMBERSHIP_END,
+                KEY_ASSOCIATION_MEMBERSHIP_CANCELLATION_DATE,
+            ]
+        )
 
     output, writer = begin_csv_string(columns)
 
@@ -203,8 +207,8 @@ def export_coop_member_list(request, **kwargs):
             KEY_COOP_SHARES_CANCELLATION_DATE: cancelled_coop_shares_dates,
             KEY_COOP_SHARES_CANCELLATION_AMOUNT: cancelled_coop_shares_amounts,
             KEY_COOP_SHARES_CANCELLATION_CONTRACT_END_DATE: cancelled_coop_shares_valid_at,
-            KEY_COOP_SHARES_PAYBACK_EURO: "",  # TODO: how??? Cancelled coop shares?
-            KEY_COMMENT: "",  # TODO: join comment log entries?
+            KEY_COOP_SHARES_PAYBACK_EURO: "",
+            KEY_COMMENT: "",
         }
 
         for i, share in enumerate(coop_shares, start=1):
@@ -235,18 +239,14 @@ def export_coop_member_list(request, **kwargs):
 
         data[KEY_COOP_SHARES_TRANSFER_EURO] = transfer_euro_string
         data[KEY_COOP_SHARES_TRANSFER_FROM_TO] = "\n".join(
-            map(
-                lambda x: f"Übertragung {format_currency(abs(x.quantity) * get_parameter_value(
-                    ParameterKeys.COOP_SHARE_PRICE, cache=cache
-                ))} € {get_transaction_verb(x)} {x.transfer_member.first_name} {x.transfer_member.last_name} (Nr. {MemberNumberService.format_member_number(x.transfer_member.member_no, cache=cache)})",
-                transfers,
-            )
+            f"Übertragung {format_currency(abs(x.quantity) * get_parameter_value(
+                ParameterKeys.COOP_SHARE_PRICE, cache=cache
+            ))} € {get_transaction_verb(x)} {x.transfer_member.first_name} {x.transfer_member.last_name} (Nr. {MemberNumberService.format_member_number(x.transfer_member.member_no, cache=cache)})"
+            for x in transfers
         )
         data[KEY_COOP_SHARES_TRANSFER_DATE] = "\n".join(
-            map(
-                lambda x: f"{get_transaction_verb(x)} {x.transfer_member.first_name} {x.transfer_member.last_name}: {format_date(x.valid_at)}",
-                transfers,
-            )
+            f"{get_transaction_verb(x)} {x.transfer_member.first_name} {x.transfer_member.last_name}: {format_date(x.valid_at)}"
+            for x in transfers
         )
 
         if legal_status_is_association(cache=cache):

@@ -43,7 +43,7 @@ class CsvExportBuilder:
         writer = csv.writer(result, delimiter=csv_export.separator)
 
         # Header row
-        writer.writerow([name for name in csv_export.custom_column_names])
+        writer.writerow(csv_export.custom_column_names)
 
         previous_locale = locale.getlocale()
         locale.setlocale(locale.LC_NUMERIC, csv_export.locale)

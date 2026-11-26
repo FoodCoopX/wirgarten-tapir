@@ -97,10 +97,46 @@ class TestExtendedProductViewPatch(TapirIntegrationTest):
 
         mock_update_product.assert_not_called()
 
+    @patch.object(ProductUpdater, "update_product", autospec=True)
+    def test_patch_nameUsedByOtherProduct_returns400(self, mock_update_product: Mock):
+        member = MemberFactory.create(is_superuser=True)
+        self.client.force_login(member)
+        product = ProductFactory.create()
+        other_product = ProductFactory.create()
+
+        data = {
+            "id": product.id,
+            "name": other_product.name,
+            "deleted": product.deleted,
+            "base": product.base,
+            "price": 0,
+            "size": 0,
+            "basket_size_equivalences": [],
+            "description_in_bestellwizard": "test description",
+            "url_of_image_in_bestellwizard": "https://test.url.com",
+            "capacity": 123,
+            "min_coop_shares": 2,
+            "hidden_in_bestell_wizard": True,
+            "solidarity_choices": "-10,0,10",
+        }
+
+        url = reverse("subscriptions:extended_product")
+        response = self.client.patch(
+            f"{url}?product_id={product.id}",
+            data=data,
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 400)
+        self.assertIn(other_product.name, response.json())
+        mock_update_product.assert_not_called()
+
     def test_patch_default_solidarityChoicesSaved(self):
         member = MemberFactory.create(is_superuser=True)
         self.client.force_login(member)
-        product = ProductFactory.create(solidarity_choices="")
+        product = ProductFactory.create(
+            solidarity_choices="", description_in_bestellwizard=""
+        )
         growing_period = GrowingPeriodFactory.create()
 
         data = {
@@ -112,7 +148,7 @@ class TestExtendedProductViewPatch(TapirIntegrationTest):
             "size": 1,
             "basket_size_equivalences": [],
             "growing_period_id": growing_period.id,
-            "description_in_bestellwizard": "test description",
+            "description_in_bestellwizard": "",
             "url_of_image_in_bestellwizard": "https://test.url.com",
             "capacity": 123,
             "min_coop_shares": 2,
@@ -130,3 +166,4 @@ class TestExtendedProductViewPatch(TapirIntegrationTest):
         self.assertStatusCode(response, 200)
         product.refresh_from_db()
         self.assertEqual("-10,0,10", product.solidarity_choices)
+        self.assertEqual("", product.description_in_bestellwizard)

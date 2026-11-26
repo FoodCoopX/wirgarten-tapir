@@ -1,4 +1,3 @@
-import dayjs from "dayjs";
 import "dayjs/locale/de";
 import React, { useEffect, useState } from "react";
 import { Card, Spinner } from "react-bootstrap";
@@ -44,16 +43,16 @@ const FuturePaymentsCard: React.FC<FuturePaymentsCardProps> = ({
       .then((response) => {
         setTrialPeriodEnabled(response.trialPeriodEnabled);
 
-        const extendedPayments = response.payments.toSorted(
-          (a, b) => a.payment.dueDate.getTime() - b.payment.dueDate.getTime(),
+        const extendedPayments = response.payments.toSorted((a, b) =>
+          a.payment.dueDate.localeCompare(b.payment.dueDate),
         );
         setExtendedPayments(extendedPayments);
         setTransactionsByDueDate(
           groupTransactionsByDueDate(extendedPayments, response.credits),
         );
       })
-      .catch(async (error) => {
-        await handleRequestError(
+      .catch((error) => {
+        handleRequestError(
           error,
           "Fehler beim Laden der Zahlungen",
           setToastDatas,
@@ -63,11 +62,11 @@ const FuturePaymentsCard: React.FC<FuturePaymentsCardProps> = ({
   }, []);
 
   function getEarliestDueDateAsString() {
-    const dueDates = extendedPayments.map((payment) =>
-      payment.payment.dueDate.getTime(),
+    return (
+      extendedPayments
+        .map((payment) => payment.payment.dueDate)
+        .toSorted()[0] ?? ""
     );
-    const earliestDate = new Date(Math.min(...dueDates));
-    return dayjs(earliestDate).format("YYYY-MM-DD");
   }
 
   function getSumOfNextPayments() {
@@ -124,7 +123,7 @@ const FuturePaymentsCard: React.FC<FuturePaymentsCardProps> = ({
               </div>
               {extendedPayments.length > 0 && (
                 <small>
-                  am {formatDateText(new Date(getEarliestDueDateAsString()))}
+                  am {formatDateText(getEarliestDueDateAsString())}
                   <br />
                   {getMandateRefForNextPayments()}
                 </small>

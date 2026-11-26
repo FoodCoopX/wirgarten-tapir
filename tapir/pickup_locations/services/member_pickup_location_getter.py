@@ -146,6 +146,39 @@ class MemberPickupLocationGetter:
         return get_from_cache_or_compute(cache, key, build_if_cache_miss)
 
     @classmethod
+    def get_current_and_future_pickup_locations(
+        cls, member_id: str, reference_date: datetime.date, cache: dict
+    ) -> list[PickupLocation]:
+        # Sorted newest first: future links, then the current one.
+        member_pickup_locations = cls.get_member_pickup_locations_objects_by_member_id(
+            cache
+        ).get(member_id, [])
+        pickup_locations = []
+        for member_pickup_location in member_pickup_locations:
+            if member_pickup_location.pickup_location_id is not None:
+                pickup_locations.append(
+                    TapirCache.get_pickup_location_by_id(
+                        cache=cache,
+                        pickup_location_id=member_pickup_location.pickup_location_id,
+                    )
+                )
+            if member_pickup_location.valid_from <= reference_date:
+                break
+        return pickup_locations
+
+    @classmethod
+    def get_current_and_future_home_delivery_locations(
+        cls, member_id: str, reference_date: datetime.date, cache: dict
+    ) -> list[PickupLocation]:
+        return [
+            pickup_location
+            for pickup_location in cls.get_current_and_future_pickup_locations(
+                member_id=member_id, reference_date=reference_date, cache=cache
+            )
+            if pickup_location.is_home_delivery
+        ]
+
+    @classmethod
     def get_member_pickup_location_id_from_cache(
         cls, member_id: str, reference_date: datetime.date, cache: dict
     ):

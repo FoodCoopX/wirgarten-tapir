@@ -81,7 +81,7 @@ class ProductFactory(factory.django.DjangoModelFactory[Product]):
         model = Product
 
     type = factory.SubFactory(ProductTypeFactory)
-    name = factory.Faker("sentence", nb_words=3)
+    name = factory.Sequence(lambda n: f"Produkt {n}")
     capacity = factory.Faker("pyint", min_value=100, max_value=1000)
 
     _type_counts = defaultdict(int)  # Track counts of Products for each ProductType
@@ -173,13 +173,13 @@ class PickupLocationFactory(factory.django.DjangoModelFactory[PickupLocation]):
     class Meta:
         model = PickupLocation
 
-    name = factory.Faker("company")
+    name = factory.Sequence(lambda n: f"Abholort {n}")
     street = factory.Faker("street_address")
     postcode = factory.Faker("postcode")
     city = factory.Faker("city")
     info = factory.Faker("sentence")
-    coords_lon = 0
-    coords_lat = 0
+    latitude = 0
+    longitude = 0
     route_info = factory.Faker("sentence")
 
 

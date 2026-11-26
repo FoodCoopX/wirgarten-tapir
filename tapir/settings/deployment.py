@@ -65,15 +65,15 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": celery.schedules.crontab(minute="0", hour="10"),
     },
     "resolve_segment_and_create_email_dispatches_task": {
-        "task": "tapir_mail.tasks.resolve_segment_and_create_email_dispatches_task",
+        "task": "tapir.mail.tasks.resolve_segment_and_create_email_dispatches_task",
         "schedule": datetime.timedelta(minutes=1),
     },
     "send_email_dispatch_batch_task": {
-        "task": "tapir_mail.tasks.send_email_dispatch_batch_task",
+        "task": "tapir.mail.tasks.send_email_dispatch_batch_task",
         "schedule": datetime.timedelta(minutes=1),
     },
     "check_email_bounces": {
-        "task": "tapir_mail.tasks.check_email_bounces",
+        "task": "tapir.mail.tasks.check_email_bounces",
         "schedule": datetime.timedelta(minutes=5),
     },
     "do_automated_exports": {
@@ -122,17 +122,7 @@ EMAIL_DISPATCH_BATCH_SIZE = (
 EMAIL_TOKENS_STRICT_VALIDATION = True
 
 EMAIL_ENV = env("EMAIL_ENV", default="dev")
-EMAIL_PORT_IMAP = env.str("EMAIL_PORT_IMAP", default=993)
-EMAIL_PORT = env.str("EMAIL_PORT", default=587)
-# the next 2 options are mutually exclusive!
-EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
-EMAIL_USE_SSL = env.bool("EMAIL_USE_SSL", default=False)
-if EMAIL_ENV == "dev":
-    EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
-    EMAIL_FILE_PATH = BASE_DIR / "../emails_from_celery"
-elif EMAIL_ENV == "prod":
-    EMAIL_BACKEND = "tapir_mail.service.smtp_backend_with_dsn.SmtpBackendWithDsn"
-else:
+if EMAIL_ENV not in ("dev", "prod"):
     raise ImproperlyConfigured(
         f"Unknown EMAIL_ENV '{EMAIL_ENV}', expected 'dev' or 'prod'"
     )
@@ -145,19 +135,42 @@ def email_setting(name: str, dev_default: str) -> str:
     return env.str(name)
 
 
-EMAIL_HOST = email_setting("EMAIL_HOST", "example.com")
+_smtp_host = email_setting("EMAIL_HOST", "example.com")
+if EMAIL_ENV == "dev":
+    MAILERS = {
+        "default": {
+            "BACKEND": "django.core.mail.backends.filebased.EmailBackend",
+            "OPTIONS": {"file_path": BASE_DIR / "../emails_from_celery"},
+        }
+    }
+else:
+    MAILERS = {
+        "default": {
+            "BACKEND": "tapir.mail.services.smtp_backend_with_dsn.SmtpBackendWithDsn",
+            "OPTIONS": {
+                "host": _smtp_host,
+                "port": env.int("EMAIL_PORT", default=587),
+                "username": email_setting("EMAIL_HOST_USER", "email_host_user"),
+                "password": email_setting("EMAIL_HOST_PASSWORD", "email_host_password"),
+                # use_tls and use_ssl are mutually exclusive
+                "use_tls": env.bool("EMAIL_USE_TLS", default=True),
+                "use_ssl": env.bool("EMAIL_USE_SSL", default=False),
+            },
+        }
+    }
+
+MAILING_LIST_DOMAIN = _smtp_host
+EMAIL_PORT_IMAP = env.str("EMAIL_PORT_IMAP", default=993)
 # The address that the client will see
 EMAIL_HOST_SENDER = email_setting("EMAIL_HOST_SENDER", "test_host_sender@example.com")
 EMAIL_HOST_SENDER_NAME = email_setting("EMAIL_HOST_SENDER_NAME", "Test host sender")
 # The address that the mail will be sent from
 EMAIL_BOUNCE_ADDRESS = email_setting("EMAIL_BOUNCE_ADDRESS", "bounce@example.com")
-EMAIL_HOST_USER = email_setting("EMAIL_HOST_USER", "email_host_user")
-EMAIL_HOST_PASSWORD = email_setting("EMAIL_HOST_PASSWORD", "email_host_password")
 EMAIL_AUTO_BCC = env.str("EMAIL_AUTO_BCC", default=None)
 EMAIL_BOUNCE_USER = env.str("EMAIL_BOUNCE_USER", default=None)
 EMAIL_BOUNCE_PASSWORD = env.str("EMAIL_BOUNCE_PASSWORD", default=None)
-# IMAP host of the bounce mailbox, only needed if it differs from EMAIL_HOST
-EMAIL_BOUNCE_HOST = env.str("EMAIL_BOUNCE_HOST", default=None)
+# IMAP host of the bounce mailbox.
+EMAIL_BOUNCE_HOST = env.str("EMAIL_BOUNCE_HOST", default=None) or _smtp_host
 EMAIL_REPLY_TO = env.str("EMAIL_REPLY_TO", default=None)
 
 # Crash emails will come from this address.
@@ -187,6 +200,21 @@ CSP_FRAME_SRC = ["'self'", KEYCLOAK_ADMIN_CONFIG["PUBLIC_URL"]]
 # Tapir Mail
 DJANGO_DRF_FILEPOND_UPLOAD_TMP = os.path.join(BASE_DIR, "filepond_temp_uploads")
 DJANGO_DRF_FILEPOND_FILE_STORE_PATH = os.path.join(BASE_DIR, "filepond_stored_uploads")
+# Without an entry, django_drf_filepond allows anonymous access to the endpoint.
+DJANGO_DRF_FILEPOND_PERMISSION_CLASSES = {
+    endpoint: [
+        "rest_framework.permissions.IsAuthenticated",
+        "tapir.mail.permissions.HasEmailManagePermission",
+    ]
+    for endpoint in [
+        "GET_FETCH",
+        "GET_LOAD",
+        "POST_PROCESS",
+        "GET_RESTORE",
+        "DELETE_REVERT",
+        "PATCH_PATCH",
+    ]
+}
 
 MJML_BACKEND_MODE = "cmd"
 MJML_EXEC_CMD = [
@@ -215,9 +243,6 @@ CACHES = {
     }
 }
 
-TAPIR_MAIL_PATH = "/tapirmail"
-TAPIRMAIL_REACT_APP_API_ROOT = SITE_URL + TAPIR_MAIL_PATH
-TAPIRMAIL_REACT_APP_BASENAME = TAPIR_MAIL_PATH
 
 if DEBUG:
     CSRF_TRUSTED_ORIGINS = ["http://localhost:8000", SITE_URL]

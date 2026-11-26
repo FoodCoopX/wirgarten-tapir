@@ -81,7 +81,7 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
 
   useEffect(() => {
     if (settingsLoaded) {
-      const newSteps = ["6a_coop_intro", "6b_coop_shares"];
+      const newSteps: Step[] = ["6a_coop_intro", "6b_coop_shares"];
       if (needsBankingData) {
         newSteps.push("9_banking_data");
       }

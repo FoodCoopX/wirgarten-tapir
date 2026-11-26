@@ -38,7 +38,7 @@ export const ChoosePreferredBreadsCard: React.FC<
 
   useEffect(() => {
     loadData();
-    // eslint-disable-next-line
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [memberId]);
 
   const loadData = () => {

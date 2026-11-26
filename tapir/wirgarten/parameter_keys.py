@@ -37,6 +37,9 @@ class ParameterKeys:
     PAYMENT_DEFAULT_RHYTHM = f"{PREFIX}.payment.default_rhythm"
     PAYMENT_ALLOWED_RHYTHMS = f"{PREFIX}.payment.allowed_rhythms"
     PAYMENT_START_DATE = f"{PREFIX}.payment.start_date"
+    PAYMENT_PARTIAL_MONTH_PROPORTIONAL_START_DATE = (
+        f"{PREFIX}.payment.partial_month_proportional_start_date"
+    )
     PAYMENT_ORGANISATION_IBAN = f"{PREFIX}.payment.organisation_iban"
     PAYMENT_ORGANISATION_BIC = f"{PREFIX}.payment.organisation_bic"
     PAYMENT_CREDITOR_IDENTIFIER = f"{PREFIX}.payment.creditor_identifier"
@@ -62,6 +65,7 @@ class ParameterKeys:
     PAYMENT_INTENDED_USE_JOKER_CREDIT = f"{PREFIX}.payment.intended_use.joker_credit"
     PAYMENT_SEND_CSV_FILE_PER_MAIL = f"{PREFIX}.payment.send_csv_file_per_mail"
     PAYMENT_SEND_XML_FILE_PER_MAIL = f"{PREFIX}.payment.send_xml_file_per_mail"
+    PAYMENT_EXPORT_EXCLUSION_ENABLED = f"{PREFIX}.payment.export_exclusion_enabled"
     MEMBERS_CAN_SEE_OWN_PAYMENTS = (
         f"{PREFIX}.member.dashboard.members_can_see_own_payments"
     )
@@ -73,6 +77,9 @@ class ParameterKeys:
     )
     MEMBER_DASHBOARD_PICKUP_LOCATION_LABEL = (
         f"{PREFIX}.member.dashboard.pickup_location_label"
+    )
+    MEMBER_DELIVERY_ADDRESS_CHANGE_WARNING_TEXT = (
+        f"{PREFIX}.member.dashboard.delivery_address_change_warning_text"
     )
     DELIVERY_DAY = f"{PREFIX}.delivery.weekday"
     DELIVERY_CHARGE_PER_PICKUP_LOCATION_ENABLED = (
@@ -217,11 +224,17 @@ class ParameterKeys:
     BESTELLWIZARD_STEP5A_TITLE = f"{PREFIX}.bestellwizard.step5a.title"
     BESTELLWIZARD_STEP5A_TEXT = f"{PREFIX}.bestellwizard.step5a.text"
     BESTELLWIZARD_STEP5B_TITLE = f"{PREFIX}.bestellwizard.step5b.title"
+    BESTELLWIZARD_STEP5B_HOME_DELIVERY_TITLE = (
+        f"{PREFIX}.bestellwizard.step5b.home_delivery_title"
+    )
     BESTELLWIZARD_STEP5_BACKGROUND_IMAGE = (
         f"{PREFIX}.bestellwizard.step5.background_image"
     )
     BESTELLWIZARD_STEP5C_TITLE = f"{PREFIX}.bestellwizard.step5c.title"
     BESTELLWIZARD_STEP5C_TEXT = f"{PREFIX}.bestellwizard.step5c.text"
+    BESTELLWIZARD_HOME_DELIVERY_CHOICE_TEXT = (
+        f"{PREFIX}.bestellwizard.home_delivery_choice.text"
+    )
     BESTELLWIZARD_STEP6A_TITLE = f"{PREFIX}.bestellwizard.step6a.title"
     BESTELLWIZARD_STEP6A_TEXT = f"{PREFIX}.bestellwizard.step6a.text"
     BESTELLWIZARD_STEP6_BACKGROUND_IMAGE = (

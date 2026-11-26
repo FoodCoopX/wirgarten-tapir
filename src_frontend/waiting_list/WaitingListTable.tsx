@@ -80,16 +80,11 @@ const WaitingListTable: React.FC<WaitingListTableProps> = ({
           <td>{formatDateNumeric(entry.dateOfEntryInCooperative)}</td>
         )}
         <td>
-          {entry.currentProducts
-            ?.map((product) => product.type.name + " " + product.name)
-            .join(", ")}
+          {entry.currentProducts?.map((product) => product.name).join(", ")}
         </td>
         <td>
           {entry.productWishes
-            ?.map(
-              (productWish) =>
-                productWish.product.type.name + " " + productWish.product.name,
-            )
+            ?.map((productWish) => productWish.product.name)
             .join(", ")}
         </td>
         <td>{entry.currentPickupLocation?.name}</td>
@@ -122,7 +117,7 @@ const WaitingListTable: React.FC<WaitingListTableProps> = ({
           >
             &nbsp;
           </span>
-          Kann erfüllt werden
+          <span>Kann erfüllt werden</span>
         </span>
         <span>
           <span
@@ -131,7 +126,7 @@ const WaitingListTable: React.FC<WaitingListTableProps> = ({
           >
             &nbsp;
           </span>
-          Link bereits versendet
+          <span>Link bereits versendet</span>
         </span>
       </div>
       <Table striped hover responsive className={"max-column-width"}>

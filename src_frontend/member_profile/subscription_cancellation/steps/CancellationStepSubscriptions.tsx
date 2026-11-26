@@ -7,6 +7,7 @@ import {
 } from "../../../api-client";
 import TapirButton from "../../../components/TapirButton.tsx";
 import TapirHelpButton from "../../../components/TapirHelpButton.tsx";
+import { fromApiDate } from "../../../utils/apiDate.ts";
 import { formatDateNumeric } from "../../../utils/formatDateNumeric.ts";
 import { formatDateText } from "../../../utils/formatDateText.ts";
 import { formatDateTextLong } from "../../../utils/formatDateTextLong.ts";
@@ -32,10 +33,8 @@ interface CancellationStepSubscriptionsProps {
 
 function getCheckboxLabelProduct(subscribedProduct: ProductForCancellation) {
   let result =
-    subscribedProduct.product.type.name +
-    " (" +
     subscribedProduct.product.name +
-    ") zum " +
+    " zum " +
     formatDateText(subscribedProduct.cancellationDate) +
     " kündigen";
   if (subscribedProduct.isInTrial) {
@@ -71,7 +70,8 @@ function buildNoticePeriodText(subscribedProduct: ProductForCancellation) {
       Beachte: Nach Ablauf der Probezeit kannst du erst wieder unter
       Berücksichtigung der regulären Kündigungsfrist (
       {subscribedProduct.noticePeriodDuration} {unit}) zum{" "}
-      {formatDateNumeric(subscribedProduct.subscriptionEndDate)} kündigen.
+      {formatDateNumeric(subscribedProduct.postTrialSubscriptionEndDate)}{" "}
+      kündigen.
     </p>
   );
 }
@@ -84,7 +84,7 @@ function buildHelpText(
     return (
       <p>
         Du kannst deinen Vertrag bis zum{" "}
-        {formatDateNumeric(subscribedProduct.lastDayOfNoticePeriod)} zum{" "}
+        {formatDateNumeric(subscribedProduct.lastDayToGiveNotice)} zum{" "}
         {formatDateNumeric(subscribedProduct.cancellationDate)} kündigen. Nach
         Ablauf der Kündigungsfrist verlängert sich dein Vertrag automatisch um
         ein weiteres Jahr.
@@ -103,10 +103,9 @@ function buildHelpText(
           Wenn du deine komplette Probezeit nutzen willst, dann kündige in der
           letzten Lieferwoche bis zum{" "}
           {subscribedProduct.dateLimitForTrialCancellation
-            ? subscribedProduct.dateLimitForTrialCancellation.toLocaleDateString(
-                "de-DE",
-                { weekday: "long" },
-              )
+            ? fromApiDate(
+                subscribedProduct.dateLimitForTrialCancellation,
+              ).toLocaleDateString("de-DE", { weekday: "long" })
             : "Kein Datum"}{" "}
           um 23:59 Uhr.
         </p>

@@ -1,5 +1,7 @@
+import { fromApiDate } from "./apiDate.ts";
+
 export function formatDateTextLong(
-  date: Date | undefined | null,
+  date: Date | string | undefined | null,
   includeTime = false,
 ): string {
   if (!date) {
@@ -17,5 +19,6 @@ export function formatDateTextLong(
     options.minute = "2-digit";
   }
 
-  return date.toLocaleDateString("de-DE", options);
+  const dateObject = typeof date === "string" ? fromApiDate(date) : date;
+  return dateObject.toLocaleDateString("de-DE", options);
 }

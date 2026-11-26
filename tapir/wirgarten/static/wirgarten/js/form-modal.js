@@ -40,11 +40,11 @@ const FormModal = {
       if (modalInfoContent) {
         modalInfoContent.innerText = info;
 
-        for (clazz of modalInfoContent.classList) {
-          if (clazz.startsWith("alert-")) {
-            modalInfoContent.classList.remove(clazz);
-          }
-        }
+        modalInfoContent.classList.remove(
+          ...[...modalInfoContent.classList].filter((clazz) =>
+            clazz.startsWith("alert-"),
+          ),
+        );
         modalInfoContent.classList.add("alert-" + infoType);
       }
     }
@@ -93,7 +93,7 @@ const FormModal = {
   },
 };
 
-MSG_HANDLERS = [
+const MSG_HANDLERS = [
   ["modal-close", FormModal.close],
   [
     "modal-save-successful",
@@ -121,7 +121,7 @@ const initMessageHandlers = () => {
 
   eventer(messageEvent, (e) => {
     MSG_HANDLERS.forEach(([msgType, handler]) =>
-      handleMessage(event, msgType, handler),
+      handleMessage(e, msgType, handler),
     );
   });
 };

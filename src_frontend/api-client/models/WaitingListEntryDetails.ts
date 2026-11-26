@@ -16,6 +16,11 @@ import type { PickupLocation } from "./PickupLocation";
 import { PickupLocationFromJSON, PickupLocationToJSON } from "./PickupLocation";
 import type { Product } from "./Product";
 import { ProductFromJSON, ProductToJSON } from "./Product";
+import type { StoredDeliveryAddress } from "./StoredDeliveryAddress";
+import {
+  StoredDeliveryAddressFromJSON,
+  StoredDeliveryAddressToJSON,
+} from "./StoredDeliveryAddress";
 import type { Subscription } from "./Subscription";
 import { SubscriptionFromJSON, SubscriptionToJSON } from "./Subscription";
 import type { WaitingListPickupLocationWish } from "./WaitingListPickupLocationWish";
@@ -127,10 +132,10 @@ export interface WaitingListEntryDetails {
   country: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof WaitingListEntryDetails
    */
-  birthdate?: Date;
+  birthdate?: string;
   /**
    *
    * @type {string}
@@ -145,10 +150,10 @@ export interface WaitingListEntryDetails {
   iban?: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof WaitingListEntryDetails
    */
-  dateOfEntryInCooperative?: Date;
+  dateOfEntryInCooperative?: string;
   /**
    *
    * @type {PickupLocation}
@@ -175,10 +180,10 @@ export interface WaitingListEntryDetails {
   productWishes?: Array<WaitingListProductWish>;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof WaitingListEntryDetails
    */
-  desiredStartDate?: Date;
+  desiredStartDate?: string;
   /**
    *
    * @type {number}
@@ -227,6 +232,12 @@ export interface WaitingListEntryDetails {
    * @memberof WaitingListEntryDetails
    */
   canBeFulfilled?: boolean;
+  /**
+   *
+   * @type {StoredDeliveryAddress}
+   * @memberof WaitingListEntryDetails
+   */
+  deliveryAddress: StoredDeliveryAddress;
 }
 
 /**
@@ -260,6 +271,8 @@ export function instanceOfWaitingListEntryDetails(
   )
     return false;
   if (!("comment" in value) || value["comment"] === undefined) return false;
+  if (!("deliveryAddress" in value) || value["deliveryAddress"] === undefined)
+    return false;
   return true;
 }
 
@@ -295,15 +308,14 @@ export function WaitingListEntryDetailsFromJSONTyped(
     postcode: json["postcode"],
     city: json["city"],
     country: json["country"],
-    birthdate:
-      json["birthdate"] == null ? undefined : new Date(json["birthdate"]),
+    birthdate: json["birthdate"] == null ? undefined : json["birthdate"],
     accountOwner:
       json["account_owner"] == null ? undefined : json["account_owner"],
     iban: json["iban"] == null ? undefined : json["iban"],
     dateOfEntryInCooperative:
       json["date_of_entry_in_cooperative"] == null
         ? undefined
-        : new Date(json["date_of_entry_in_cooperative"]),
+        : json["date_of_entry_in_cooperative"],
     currentPickupLocation:
       json["current_pickup_location"] == null
         ? undefined
@@ -327,7 +339,7 @@ export function WaitingListEntryDetailsFromJSONTyped(
     desiredStartDate:
       json["desired_start_date"] == null
         ? undefined
-        : new Date(json["desired_start_date"]),
+        : json["desired_start_date"],
     numberOfCoopShares: json["number_of_coop_shares"],
     comment: json["comment"],
     category: json["category"] == null ? undefined : json["category"],
@@ -346,6 +358,7 @@ export function WaitingListEntryDetailsFromJSONTyped(
       json["payment_rhythm"] == null ? undefined : json["payment_rhythm"],
     canBeFulfilled:
       json["can_be_fulfilled"] == null ? undefined : json["can_be_fulfilled"],
+    deliveryAddress: StoredDeliveryAddressFromJSON(json["delivery_address"]),
   };
 }
 
@@ -379,16 +392,10 @@ export function WaitingListEntryDetailsToJSONTyped(
     postcode: value["postcode"],
     city: value["city"],
     country: value["country"],
-    birthdate:
-      value["birthdate"] == null
-        ? undefined
-        : value["birthdate"].toISOString().substring(0, 10),
+    birthdate: value["birthdate"],
     account_owner: value["accountOwner"],
     iban: value["iban"],
-    date_of_entry_in_cooperative:
-      value["dateOfEntryInCooperative"] == null
-        ? undefined
-        : value["dateOfEntryInCooperative"].toISOString().substring(0, 10),
+    date_of_entry_in_cooperative: value["dateOfEntryInCooperative"],
     current_pickup_location: PickupLocationToJSON(
       value["currentPickupLocation"],
     ),
@@ -408,10 +415,7 @@ export function WaitingListEntryDetailsToJSONTyped(
         : (value["productWishes"] as Array<any>).map(
             WaitingListProductWishToJSON,
           ),
-    desired_start_date:
-      value["desiredStartDate"] == null
-        ? undefined
-        : value["desiredStartDate"].toISOString().substring(0, 10),
+    desired_start_date: value["desiredStartDate"],
     number_of_coop_shares: value["numberOfCoopShares"],
     comment: value["comment"],
     category: value["category"],
@@ -426,5 +430,6 @@ export function WaitingListEntryDetailsToJSONTyped(
     link: value["link"],
     payment_rhythm: value["paymentRhythm"],
     can_be_fulfilled: value["canBeFulfilled"],
+    delivery_address: StoredDeliveryAddressToJSON(value["deliveryAddress"]),
   };
 }

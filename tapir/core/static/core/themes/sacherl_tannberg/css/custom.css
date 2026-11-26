@@ -49,6 +49,7 @@ body {
 
 @font-face {
   font-family: "DinNextLight";
+  font-display: swap;
   font-style: normal;
   src: url("/static/core/themes/sacherl_tannberg/fonts/din-next-light.woff2")
        format("woff2");

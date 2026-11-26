@@ -39,8 +39,23 @@ const PaymentTransactionsTable: React.FC<PaymentTransactionsTableProps> = ({
             <td>{formatDateMonthAndYear(transaction.month)}</td>
             <td>{formatDateNumeric(transaction.createdAt)}</td>
             <td>{transaction.type}</td>
-            <td>{transaction.paymentsCount}</td>
-            <td>{formatCurrency(transaction.paymentsSum)}</td>
+            <td>
+              {transaction.paymentsCount}
+              {transaction.excludedPaymentsCount > 0 && (
+                <div className={"text-muted small"}>
+                  + {transaction.excludedPaymentsCount} nicht eingezogen
+                </div>
+              )}
+            </td>
+            <td>
+              {formatCurrency(transaction.paymentsSum)}
+              {transaction.excludedPaymentsCount > 0 && (
+                <div className={"text-muted small"}>
+                  + {formatCurrency(transaction.excludedPaymentsSum)} nicht
+                  eingezogen
+                </div>
+              )}
+            </td>
             <td>
               <div className={"d-flex flex-row gap-2"}>
                 <TapirButton

@@ -14,6 +14,11 @@
 
 import type { Land } from "./Land";
 import { LandFromJSON, LandToJSON } from "./Land";
+import type { MemberDeliveryCountry } from "./MemberDeliveryCountry";
+import {
+  MemberDeliveryCountryFromJSON,
+  MemberDeliveryCountryToJSON,
+} from "./MemberDeliveryCountry";
 
 /**
  *
@@ -113,10 +118,10 @@ export interface WaitingListEntry {
   numberOfCoopShares: number;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof WaitingListEntry
    */
-  desiredStartDate?: Date | null;
+  desiredStartDate?: string | null;
   /**
    *
    * @type {string}
@@ -141,6 +146,42 @@ export interface WaitingListEntry {
    * @memberof WaitingListEntry
    */
   linkSentDate?: Date | null;
+  /**
+   *
+   * @type {boolean}
+   * @memberof WaitingListEntry
+   */
+  deliverySameAsBillingAddress?: boolean;
+  /**
+   *
+   * @type {string}
+   * @memberof WaitingListEntry
+   */
+  deliveryStreet?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof WaitingListEntry
+   */
+  deliveryStreet2?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof WaitingListEntry
+   */
+  deliveryPostcode?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof WaitingListEntry
+   */
+  deliveryCity?: string;
+  /**
+   *
+   * @type {MemberDeliveryCountry}
+   * @memberof WaitingListEntry
+   */
+  deliveryCountry?: MemberDeliveryCountry;
   /**
    *
    * @type {string}
@@ -203,7 +244,7 @@ export function WaitingListEntryFromJSONTyped(
     desiredStartDate:
       json["desired_start_date"] == null
         ? undefined
-        : new Date(json["desired_start_date"]),
+        : json["desired_start_date"],
     comment: json["comment"] == null ? undefined : json["comment"],
     category: json["category"] == null ? undefined : json["category"],
     confirmationLinkKey:
@@ -214,6 +255,22 @@ export function WaitingListEntryFromJSONTyped(
       json["link_sent_date"] == null
         ? undefined
         : new Date(json["link_sent_date"]),
+    deliverySameAsBillingAddress:
+      json["delivery_same_as_billing_address"] == null
+        ? undefined
+        : json["delivery_same_as_billing_address"],
+    deliveryStreet:
+      json["delivery_street"] == null ? undefined : json["delivery_street"],
+    deliveryStreet2:
+      json["delivery_street_2"] == null ? undefined : json["delivery_street_2"],
+    deliveryPostcode:
+      json["delivery_postcode"] == null ? undefined : json["delivery_postcode"],
+    deliveryCity:
+      json["delivery_city"] == null ? undefined : json["delivery_city"],
+    deliveryCountry:
+      json["delivery_country"] == null
+        ? undefined
+        : MemberDeliveryCountryFromJSON(json["delivery_country"]),
     member: json["member"] == null ? undefined : json["member"],
   };
 }
@@ -244,10 +301,7 @@ export function WaitingListEntryToJSONTyped(
     pseudonym: value["pseudonym"],
     privacy_consent: value["privacyConsent"].toISOString(),
     number_of_coop_shares: value["numberOfCoopShares"],
-    desired_start_date:
-      value["desiredStartDate"] == null
-        ? undefined
-        : (value["desiredStartDate"] as any).toISOString().substring(0, 10),
+    desired_start_date: value["desiredStartDate"],
     comment: value["comment"],
     category: value["category"],
     confirmation_link_key: value["confirmationLinkKey"],
@@ -255,6 +309,12 @@ export function WaitingListEntryToJSONTyped(
       value["linkSentDate"] == null
         ? undefined
         : (value["linkSentDate"] as any).toISOString(),
+    delivery_same_as_billing_address: value["deliverySameAsBillingAddress"],
+    delivery_street: value["deliveryStreet"],
+    delivery_street_2: value["deliveryStreet2"],
+    delivery_postcode: value["deliveryPostcode"],
+    delivery_city: value["deliveryCity"],
+    delivery_country: MemberDeliveryCountryToJSON(value["deliveryCountry"]),
     member: value["member"],
   };
 }

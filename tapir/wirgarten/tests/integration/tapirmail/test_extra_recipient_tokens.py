@@ -1,9 +1,9 @@
 import datetime
 
-from tapir_mail.models import EmailDispatch, EmailConfigurationDispatch, ReleaseStatus
-from tapir_mail.service.email_dispatch import ResolveAndCreateEmailDispatches
-from tapir_mail.service.token import register_tokens
-from tapir_mail.tests.factories import EmailConfigurationVersionFactory
+from tapir.mail.models import EmailDispatch, EmailConfigurationDispatch, ReleaseStatus
+from tapir.mail.services.email_dispatch import ResolveAndCreateEmailDispatches
+from tapir.mail.services.token import register_tokens
+from tapir.mail.tests.factories import EmailConfigurationVersionFactory
 
 from tapir.wirgarten.models import MemberExtraEmail
 from tapir.wirgarten.parameter_keys import ParameterKeys

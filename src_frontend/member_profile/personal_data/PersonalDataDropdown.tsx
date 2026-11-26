@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { Dropdown } from "react-bootstrap";
 import TapirToastContainer from "../../components/TapirToastContainer.tsx";
 import { ToastData } from "../../types/ToastData.ts";
+import DeliveryAddressModal from "./DeliveryAddressModal.tsx";
 import MemberEmailModal from "./MemberEmailModal.tsx";
 import MemberExtraEmailsModal from "./MemberExtraEmailsModal.tsx";
 import MemberPersonalDataModal from "./MemberPersonalDataModal.tsx";
@@ -11,16 +12,20 @@ interface PersonalDataDropdownProps {
   memberId: string;
   csrfToken: string;
   extraEmailAddressesEnabled: boolean;
+  hasHomeDelivery: boolean;
 }
 
 const PersonalDataDropdown: React.FC<PersonalDataDropdownProps> = ({
   memberId,
   csrfToken,
   extraEmailAddressesEnabled,
+  hasHomeDelivery,
 }) => {
   const [showPersonalDataModal, setShowPersonalDataModal] = useState(false);
   const [showMailEmailModal, setShowMailEmailModal] = useState(false);
   const [showExtraEmailsModal, setShowExtraEmailsModal] = useState(false);
+  const [showDeliveryAddressModal, setShowDeliveryAddressModal] =
+    useState(false);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
 
   return (
@@ -39,6 +44,11 @@ const PersonalDataDropdown: React.FC<PersonalDataDropdownProps> = ({
           {extraEmailAddressesEnabled && (
             <Dropdown.Item onClick={() => setShowExtraEmailsModal(true)}>
               Zusätzliche E-Mail-Adressen
+            </Dropdown.Item>
+          )}
+          {hasHomeDelivery && (
+            <Dropdown.Item onClick={() => setShowDeliveryAddressModal(true)}>
+              Lieferadresse
             </Dropdown.Item>
           )}
         </Dropdown.Menu>
@@ -64,6 +74,15 @@ const PersonalDataDropdown: React.FC<PersonalDataDropdownProps> = ({
         show={showExtraEmailsModal}
         onHide={() => setShowExtraEmailsModal(false)}
       />
+      {hasHomeDelivery && (
+        <DeliveryAddressModal
+          memberId={memberId}
+          csrfToken={csrfToken}
+          setToastDatas={setToastDatas}
+          show={showDeliveryAddressModal}
+          onHide={() => setShowDeliveryAddressModal(false)}
+        />
+      )}
       <div className={"d-flex gap-2"}>
         <TapirToastContainer
           toastDatas={toastDatas}

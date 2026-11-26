@@ -20,7 +20,11 @@
                         <h4 style="padding-right: 0.8em">{% translate "Konfiguration" %}</h4>
                     </div>
                     <div style="margin-left:auto" id="search-input">
-                        <input type="text" class="form-control" placeholder="Search..." />
+                        <label for="parameter_search" class="visually-hidden">{% translate "Suche" %}</label>
+                        <input type="text"
+                               id="parameter_search"
+                               class="form-control"
+                               placeholder="Search..." />
                     </div>
                 </div>
                 <div id="config-view"

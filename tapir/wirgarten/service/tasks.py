@@ -3,7 +3,7 @@ import datetime
 from celery import Celery
 from django.conf import settings
 from django.db import transaction
-from tapir_mail.service.shortcuts import make_timezone_aware
+from tapir.mail.services.shortcuts import make_timezone_aware
 
 app = Celery("tapir", broker=settings.CELERY_BROKER_URL)
 
@@ -24,8 +24,8 @@ def schedule_task_unique(task, eta: datetime.datetime, args=(), kwargs=None):
 
     existing = ScheduledTask.objects.filter(**st_args)
     if existing.exists():
+        print("Deleted duplicate task: ", ", ".join(str(e) for e in existing))
         existing.delete()
-    print("Deleted duplicate task: ", ", ".join([e for e in existing]))
 
     if not isinstance(eta, datetime.datetime) and isinstance(eta, datetime.date):
         eta = datetime.datetime.combine(eta, datetime.time())

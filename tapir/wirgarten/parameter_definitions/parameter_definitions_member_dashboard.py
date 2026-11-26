@@ -239,6 +239,20 @@ class ParameterDefinitionsMemberDashboard:
         )
 
         importer.parameter_definition(
+            key=ParameterKeys.MEMBER_DELIVERY_ADDRESS_CHANGE_WARNING_TEXT,
+            label="Hinweis bei Änderung der Lieferadresse nach der Kommissionierfrist",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Die Kommissionierlisten für diese Woche sind schon erstellt. Deine Änderung gilt "
+            "eventuell erst ab der nächsten Lieferung. Bitte melde dich bei der Verwaltung, wenn die Lieferung "
+            "dieser Woche an die neue Adresse gehen soll.",
+            description="Wird im Mitgliederbereich beim Ändern der Lieferadresse angezeigt, wenn die "
+            "Kommissioniervariable für die nächste Lieferung schon überschritten ist.",
+            category=ParameterCategory.MEMBER_DASHBOARD,
+            order_priority=148,
+            meta=ParameterMeta(textarea=True),
+        )
+
+        importer.parameter_definition(
             key=ParameterKeys.MEMBER_NUMBER_PREFIX,
             label="Mitgliedsnummer: Präfix",
             datatype=TapirParameterDatatype.STRING,
