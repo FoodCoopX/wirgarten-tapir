@@ -3,7 +3,7 @@ import datetime
 from django.utils.html import escape
 from tapir.mail.models import StaticSegmentRecipient
 
-from tapir.bakery.models import AvailableBreadsForDeliveryDay, Bread
+from tapir.bakery.models import Bread
 from tapir.bakery.services.bread_delivery_context_service import (
     BreadDeliveryContextService,
 )
@@ -15,7 +15,7 @@ from tapir.pickup_locations.services.pickup_location_delivery_day_service import
     PickupLocationDeliveryDayService,
 )
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.utils.shortcuts import get_from_cache_or_compute, week_to_monday
+from tapir.utils.shortcuts import week_to_monday
 from tapir.wirgarten.constants import OPTIONS_WEEKDAYS
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.utils import format_date, get_today
@@ -76,8 +76,8 @@ class BreadMailTokenService:
         if delivery_day is None:
             return cls.NOT_APPLICABLE
 
-        breads = cls._get_breads_baked_by_delivery_day(
-            year=year, delivery_week=delivery_week, cache=cache
+        breads = TapirCache.get_active_breads_by_delivery_day(
+            cache=cache, year=year, delivery_week=delivery_week
         ).get(delivery_day, [])
         if not breads:
             return cls.BREADS_NOT_SET_YET
@@ -86,35 +86,6 @@ class BreadMailTokenService:
             days=delivery_day
         )
         return cls._format(delivery_date=delivery_date, breads=breads)
-
-    @staticmethod
-    def _get_breads_baked_by_delivery_day(
-        year: int, delivery_week: int, cache: dict
-    ) -> dict[int, list[Bread]]:
-        """
-        A station offers the active breads baked on its delivery day, sorted by
-        name. Cached per week: a mailing builds the token for every recipient.
-        """
-
-        def compute():
-            breads_by_delivery_day = {}
-            for entry in (
-                AvailableBreadsForDeliveryDay.objects.filter(
-                    year=year, delivery_week=delivery_week, bread__is_active=True
-                )
-                .select_related("bread")
-                .prefetch_related("bread__contents__ingredient")
-                .order_by("bread__name")
-            ):
-                breads_by_delivery_day.setdefault(entry.delivery_day, []).append(
-                    entry.bread
-                )
-            return breads_by_delivery_day
-
-        breads_by_week = get_from_cache_or_compute(
-            cache, "breads_baked_by_delivery_day_by_week", lambda: {}
-        )
-        return get_from_cache_or_compute(breads_by_week, (year, delivery_week), compute)
 
     @classmethod
     def _format(cls, delivery_date: datetime.date, breads: list[Bread]) -> str:

@@ -6,12 +6,14 @@ from django.test import override_settings
 from tapir.bakery.models import (
     AvailableBreadsForDeliveryDay,
     Bread,
-    BreadCapacityPickupLocation,
     BreadDelivery,
     PreferredBread,
 )
 from tapir.bakery.services.bread_delivery_context_service import (
     BreadDeliveryContextService,
+)
+from tapir.pickup_locations.services.pickup_location_delivery_day_service import (
+    PickupLocationDeliveryDayService,
 )
 from tapir.utils.config import Organization
 from tapir.utils.services.test_data_generation.bakery_generator import BakeryGenerator
@@ -39,7 +41,6 @@ class TestGenerateAllWithBakery(TapirIntegrationTest):
         self.assertTrue(Bread.objects.exists())
         self.assertTrue(BreadDelivery.objects.exists())
         self.assertTrue(PreferredBread.objects.exists())
-        self.assertTrue(BreadCapacityPickupLocation.objects.exists())
         self.assertTrue(AvailableBreadsForDeliveryDay.objects.exists())
         self.assertEqual(
             list(ProductType.objects.values_list("name", flat=True)),
@@ -67,13 +68,16 @@ class TestGenerateAllWithBakery(TapirIntegrationTest):
             year=year, delivery_week=week, bread__isnull=False
         ).select_related("subscription__member", "bread"):
             self.assertTrue(
-                BreadCapacityPickupLocation.objects.filter(
+                AvailableBreadsForDeliveryDay.objects.filter(
                     year=delivery.year,
                     delivery_week=delivery.delivery_week,
-                    bread=delivery.bread,
-                    pickup_location_id=BreadDeliveryContextService.get_pickup_location_id(
-                        delivery, cache=cache
+                    delivery_day=PickupLocationDeliveryDayService.get_delivery_day(
+                        pickup_location_id=BreadDeliveryContextService.get_pickup_location_id(
+                            delivery, cache=cache
+                        ),
+                        cache=cache,
                     ),
+                    bread=delivery.bread,
                 ).exists()
             )
 

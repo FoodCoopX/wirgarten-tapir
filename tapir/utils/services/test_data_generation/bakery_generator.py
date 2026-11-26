@@ -4,14 +4,17 @@ import random
 from tapir.bakery.models import (
     AvailableBreadsForDeliveryDay,
     Bread,
-    BreadCapacityPickupLocation,
     BreadContent,
     BreadDelivery,
     BreadLabel,
     Ingredient,
     PreferredBread,
 )
+from tapir.bakery.services.bread_delivery_context_service import (
+    BreadDeliveryContextService,
+)
 from tapir.bakery.services.breaddelivery_service import BreadDeliveryService
+from tapir.bakery.services.direct_order_limit_service import DirectOrderLimitService
 from tapir.configuration.models import TapirParameter
 from tapir.pickup_locations.services.pickup_location_delivery_day_service import (
     PickupLocationDeliveryDayService,
@@ -20,14 +23,15 @@ from tapir.wirgarten.models import Member, PickupLocation, Subscription
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import get_today
 
-# name -> (weight in grams, pieces that fit on one stove layer)
+# name -> (weight in grams, pieces that fit on one stove layer, max pieces per
+# baking day). The max bounds how many members may choose the bread a day.
 BREADS = {
-    "Roggenbrot": (1000, [10, 11, 12]),
-    "Dinkelkruste": (750, [12, 14]),
-    "Vollkornbrot": (1000, [10, 12]),
-    "Sauerteigbrot": (1250, [8, 9]),
-    "Weizenmischbrot": (750, [12, 14, 16]),
-    "Kürbiskernbrot": (500, [16, 18]),
+    "Roggenbrot": (1000, [10, 11, 12], 10),
+    "Dinkelkruste": (750, [12, 14], 8),
+    "Vollkornbrot": (1000, [10, 12], 8),
+    "Sauerteigbrot": (1250, [8, 9], 10),
+    "Weizenmischbrot": (750, [12, 14, 16], 12),
+    "Kürbiskernbrot": (500, [16, 18], 6),
 }
 
 LABELS = ["Vollkorn", "Sauerteig", "Dinkel", "Roggen"]
@@ -46,7 +50,6 @@ INGREDIENTS = {
 
 class BakeryGenerator:
     NUMBER_OF_WEEKS_WITH_DATA = 6
-    CAPACITY_PER_BREAD_AND_STATION = 25
     SHARE_OF_MEMBERS_WITH_PREFERENCES = 0.6
 
     @classmethod
@@ -68,12 +71,13 @@ class BakeryGenerator:
             for name, is_organic in INGREDIENTS.items()
         }
 
-        for name, (weight, pieces_per_stove_layer) in BREADS.items():
+        for name, (weight, pieces_per_stove_layer, max_pieces) in BREADS.items():
             bread = Bread.objects.create(
                 name=name,
                 weight=weight,
                 description=f"{name} aus der Hofbäckerei.",
                 pieces_per_stove_layer=pieces_per_stove_layer,
+                max_pieces=max_pieces,
                 is_active=True,
             )
             bread.labels.set(
@@ -101,9 +105,8 @@ class BakeryGenerator:
 
     @classmethod
     def generate_week_data(cls):
-        print("Creating bakery capacities...")
+        print("Creating the weekly bread plans...")
         weeks = cls.get_weeks_with_data()
-        cls.generate_capacities(weeks)
         cls.generate_available_breads_per_delivery_day(weeks)
         print("Creating bread deliveries...")
         cls.generate_bread_deliveries()
@@ -121,41 +124,27 @@ class BakeryGenerator:
         return weeks
 
     @classmethod
-    def generate_capacities(cls, weeks: list[tuple[int, int]]):
-        breads = list(Bread.objects.all())
-        capacities = []
-        for pickup_location in PickupLocation.objects.all():
-            for year, week in weeks:
-                for bread in breads:
-                    capacities.append(
-                        BreadCapacityPickupLocation(
-                            year=year,
-                            delivery_week=week,
-                            pickup_location=pickup_location,
-                            bread=bread,
-                            capacity=cls.CAPACITY_PER_BREAD_AND_STATION,
-                        )
+    def get_delivery_days(cls, cache: dict) -> list[int]:
+        return sorted(
+            {
+                day
+                for day in (
+                    PickupLocationDeliveryDayService.get_delivery_day(
+                        pickup_location_id=pickup_location.id, cache=cache
                     )
-        BreadCapacityPickupLocation.objects.bulk_create(capacities)
+                    for pickup_location in PickupLocation.objects.all()
+                )
+                if day is not None
+            }
+        )
 
     @classmethod
     def generate_available_breads_per_delivery_day(cls, weeks: list[tuple[int, int]]):
-        cache = {}
-        delivery_days = {
-            day
-            for day in (
-                PickupLocationDeliveryDayService.get_delivery_day(
-                    pickup_location_id=pickup_location.id, cache=cache
-                )
-                for pickup_location in PickupLocation.objects.all()
-            )
-            if day is not None
-        }
-
+        delivery_days = cls.get_delivery_days(cache={})
         breads = list(Bread.objects.all())
         available = []
         for year, week in weeks:
-            for delivery_day in sorted(delivery_days):
+            for delivery_day in delivery_days:
                 for bread in breads:
                     available.append(
                         AvailableBreadsForDeliveryDay(
@@ -176,19 +165,52 @@ class BakeryGenerator:
 
     @classmethod
     def assign_breads_to_deliveries(cls, weeks: list[tuple[int, int]]):
-        breads = list(Bread.objects.all())
-        if not breads:
-            return
-
+        """
+        Chooses a bread for about two thirds of the slots, among the breads
+        still within their direct-order limit on the slot's delivery day.
+        """
+        cache = {}
         for year, week in weeks:
-            deliveries = list(
-                BreadDelivery.objects.filter(year=year, delivery_week=week)
-            )
-            for delivery in deliveries:
-                if random.random() < 0.35:
-                    continue
-                delivery.bread = random.choice(breads)
-            BreadDelivery.objects.bulk_update(deliveries, ["bread"])
+            for delivery_day in cls.get_delivery_days(cache=cache):
+                deliveries_by_location = (
+                    BreadDeliveryContextService.get_deliveries_by_location_for_week(
+                        year=year,
+                        delivery_week=week,
+                        cache=cache,
+                        delivery_day=delivery_day,
+                    )
+                )
+                for deliveries in deliveries_by_location.values():
+                    for delivery in deliveries:
+                        if random.random() < 0.35:
+                            continue
+                        cls.choose_a_bread_within_the_limits(
+                            delivery, year, week, delivery_day, cache=cache
+                        )
+
+    @classmethod
+    def choose_a_bread_within_the_limits(
+        cls,
+        delivery: BreadDelivery,
+        year: int,
+        delivery_week: int,
+        delivery_day: int,
+        cache: dict,
+    ):
+        # Read again for every slot: each choice counts against the limits.
+        limits = DirectOrderLimitService.get_limits_for_day(
+            year=year,
+            delivery_week=delivery_week,
+            delivery_day=delivery_day,
+            cache=cache,
+        )
+        bread_ids = [
+            bread_id for bread_id in limits.breads if limits.remaining(bread_id) != 0
+        ]
+        if not bread_ids:
+            return
+        delivery.bread_id = random.choice(bread_ids)
+        delivery.save(update_fields=["bread"])
 
     @classmethod
     def generate_preferred_breads(cls):

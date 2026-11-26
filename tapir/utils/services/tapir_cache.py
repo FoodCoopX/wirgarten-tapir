@@ -8,8 +8,8 @@ from tapir.associations.models import (
     AssociationMembership,
 )
 from tapir.bakery.models import (
+    AvailableBreadsForDeliveryDay,
     Bread,
-    BreadCapacityPickupLocation,
     BreadDelivery,
 )
 from tapir.configuration.parameter import get_parameter_value
@@ -1038,27 +1038,27 @@ class TapirCache:
         )
 
     @classmethod
-    def get_breads_with_capacity_by_pickup_location_id(
+    def get_active_breads_by_delivery_day(
         cls, cache: dict, year: int, delivery_week: int
-    ) -> dict[str, list[Bread]]:
+    ) -> dict[int, list[Bread]]:
+        """The active breads baked on each delivery day of the week, by name."""
+
         def compute():
-            capacities = (
-                BreadCapacityPickupLocation.objects.filter(
-                    year=year, delivery_week=delivery_week, capacity__gt=0
+            breads_by_delivery_day = {}
+            for entry in (
+                AvailableBreadsForDeliveryDay.objects.filter(
+                    year=year, delivery_week=delivery_week, bread__is_active=True
                 )
                 .select_related("bread")
                 .prefetch_related("bread__contents__ingredient")
                 .order_by("bread__name")
-            )
-
-            breads_by_pickup_location_id = {}
-            for capacity in capacities:
-                breads_by_pickup_location_id.setdefault(
-                    capacity.pickup_location_id, []
-                ).append(capacity.bread)
-            return breads_by_pickup_location_id
+            ):
+                breads_by_delivery_day.setdefault(entry.delivery_day, []).append(
+                    entry.bread
+                )
+            return breads_by_delivery_day
 
         breads_by_week = get_from_cache_or_compute(
-            cache, "breads_with_capacity_by_pickup_location_id_by_week", lambda: {}
+            cache, "active_breads_by_delivery_day_by_week", lambda: {}
         )
         return get_from_cache_or_compute(breads_by_week, (year, delivery_week), compute)
