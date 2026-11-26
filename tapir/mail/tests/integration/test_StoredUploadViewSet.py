@@ -3,6 +3,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django_drf_filepond.models import StoredUpload
 
+from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
@@ -31,3 +32,10 @@ class StoredUploadViewSetTest(TapirIntegrationTest):
         self.assertStatusCode(response, 200)
         self.assertEqual(1, response.json()["count"])
         self.assertEqual(matching_id, response.json()["results"][0]["upload_id"])
+
+    def test_list_loggedInAsNormalUser_returns403(self):
+        self.client.force_login(MemberFactory.create(is_superuser=False))
+
+        response = self.client.get(reverse("storedupload-list"))
+
+        self.assertStatusCode(response, 403)

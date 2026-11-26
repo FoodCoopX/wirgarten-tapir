@@ -4,6 +4,7 @@ from django.test import override_settings
 
 from tapir.mail.config import MAIL_URL_PREFIX
 from tapir.wirgarten.parameters import ParameterDefinitions
+from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
@@ -31,3 +32,10 @@ class MailUiViewTest(TapirIntegrationTest):
             f'<script id="tapir-mail-env" type="application/json">{json.dumps(response.context["env_vars"])}</script>',
             html=False,
         )
+
+    def test_get_loggedInAsNormalUser_returns403(self):
+        self.client.force_login(MemberFactory.create(is_superuser=False))
+
+        response = self.client.get(f"/{MAIL_URL_PREFIX}/editor/123")
+
+        self.assertStatusCode(response, 403)

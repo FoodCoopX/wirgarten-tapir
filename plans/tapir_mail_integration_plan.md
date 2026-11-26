@@ -90,7 +90,7 @@ New dev page `docs/dev/mail_module.md`, written for a developer who opens the ma
 - **Conventions** (as a warning admonition at the top of the page): the mail app may not follow all of Tapir's conventions (cache parameter, service classes, test layout, one test class per file, keyword arguments, …).
   - Why: it was developed as a separate, standalone package with its own dummy accounts and test setup, and was only moved into Tapir later, without a full refactoring.
   - Suggestion: update the code to Tapir's conventions as you go. When touching a part of the mail app, bring that part in line. New code follows Tapir's conventions from the start.
-- **Permission check by path**: `TapirMailPermissionMiddleware` (`tapir/wirgarten/middleware/mailing.py`) guards everything under `TAPIR_MAIL_PATH` with `Permission.Email.MANAGE`, except for public paths matched by regex. The mail views themselves only require a login (Tapir's DRF default).
+- **Permissions on the views, with a safety-net test**: every mail view requires `Permission.Email.MANAGE` (`HasEmailManagePermission` for DRF views, `PermissionRequiredMixin` for Django views, `DJANGO_DRF_FILEPOND_PERMISSION_CLASSES` for the filepond endpoints), except the public ones listed in `PUBLIC_URL_NAMES` of `tapir/mail/tests/unit/test_MailUrlPermissions.py`. That test fails for any new mail URL that is neither protected nor listed. The mail app imports Tapir's `Permission` constants for this.
 - **Global registries**: apps register segment providers, tokens and triggers at startup into module-level registries. Tests that add a segment provider use `add_mail_segment_provider` (`tapir/mail/tests/test_utils.py`), which removes it again on cleanup. Test segment names must not collide with Tapir's (e.g. "Alle Benutzer").
 - **Redis in tests**: the dispatch tasks use `django_redis` locks, so the tests need a real Redis. `tapir/conftest.py` gives each xdist worker its own Redis database, because `cache.clear()` flushes the whole database.
 - **`tapir.mail` vs. `tapir.wirgarten.tapirmail`**: the mail module is generic; `tapir/wirgarten/tapirmail.py` configures it for Tapir (base segment, tokens, triggers).
@@ -122,7 +122,7 @@ For each oddity, check whether it can be removed with reasonable effort now that
 - **Two `useApi` hooks**: the mail UI has its own copy of `src_frontend/hooks/useApi.ts`. Tapir's hook only uses `useMemo`, which works with React 18 too, so the mail UI could reuse it.
 - [x] **Dead CORS settings**: removed from `tapir/settings/base.py`; mail UI and Jasmin checked locally.
 - [x] **`STATIC_SEGMENTS` / `static_segments` command**: the command is removed; Tapir never set `STATIC_SEGMENTS`.
-- **Path-based permission middleware**: replace `TapirMailPermissionMiddleware` with permission classes on the mail views.
+- [x] **Path-based permission middleware**: replaced by permissions on the views (see Docs); the middleware, its `MIDDLEWARE` entry and its test are gone, and the routers are `SimpleRouter`s (no API root views).
 - [x] **`OnboardingTrigger` ID from the module path**: now `onboarding_trigger`; migration `wirgarten.0153_stable_onboarding_trigger_id` rewrites the stored IDs (forward and backward tests).
 
 Out of scope even if possible: the React 18 package (see above), and refactoring to Tapir's conventions.

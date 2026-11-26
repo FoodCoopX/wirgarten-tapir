@@ -95,7 +95,6 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "tapir.wirgarten.middleware.error.GlobalServerErrorHandlerMiddleware",
-    "tapir.wirgarten.middleware.mailing.TapirMailPermissionMiddleware",
 ]
 
 X_FRAME_OPTIONS = "ALLOWALL"

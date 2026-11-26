@@ -3,6 +3,7 @@ import logging
 
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db import transaction
 from django.db.models import Count, QuerySet
 from django.shortcuts import get_object_or_404
@@ -13,7 +14,7 @@ from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.generic import FormView, TemplateView
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
-from rest_framework import mixins, status, viewsets
+from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.pagination import LimitOffsetPagination
@@ -23,6 +24,8 @@ from rest_framework.views import APIView
 
 from tapir.mail.config import MAIL_URL_PREFIX, TransactionalTriggerKeys
 from tapir.mail.forms import RegisterToMailCategoryForm, ExternalRecipientManagementForm
+from tapir.mail.permissions import HasEmailManagePermission
+from tapir.wirgarten.constants import Permission
 from tapir.mail.models import (
     EmailConfiguration,
     EmailConfigurationDispatch,
@@ -86,6 +89,7 @@ LOG = logging.getLogger(__name__)
 
 
 class EmailTemplateViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasEmailManagePermission]
     queryset = EmailTemplate.objects.all()
     serializer_class = EmailTemplateSerializer
 
@@ -145,6 +149,7 @@ class PaginatedEmailTemplateViewSet(EmailTemplateViewSet):
 
 
 class EmailConfigurationViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasEmailManagePermission]
     queryset = EmailConfiguration.objects.all().distinct()
     filterset_fields = ["versions__status"]
     serializer_class = EmailConfigurationSerializer
@@ -309,6 +314,7 @@ class EmailConfigurationVersionViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
+    permission_classes = [permissions.IsAuthenticated, HasEmailManagePermission]
     queryset = EmailConfigurationVersion.objects.all()
     serializer_class = BundledEmailConfigurationSerializer
 
@@ -650,6 +656,7 @@ class EmailConfigurationVersionViewSet(
 
 
 class EmailConfigurationDispatchViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasEmailManagePermission]
     queryset = EmailConfigurationDispatch.objects.select_related(
         "email_configuration_version"
     ).all()
@@ -698,6 +705,8 @@ class EmailConfigurationDispatchViewSet(viewsets.ModelViewSet):
 
 
 class TriggerListView(viewsets.ViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasEmailManagePermission]
+
     @extend_schema(
         responses={
             200: TriggerDefinitionSerializer,
@@ -720,6 +729,7 @@ class TriggerListView(viewsets.ViewSet):
 
 
 class EmailDispatchViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasEmailManagePermission]
     queryset = EmailDispatch.objects.filter(next_retry__isnull=True).order_by(
         "-sent_time"
     )
@@ -838,6 +848,8 @@ class EmailDispatchViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class SegmentAndFilterViewSet(viewsets.ViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasEmailManagePermission]
+
     @extend_schema(
         responses={
             200: AvailableSegmentsResponseSerializer,
@@ -937,6 +949,8 @@ class SegmentAndFilterViewSet(viewsets.ViewSet):
 
 
 class TokensView(viewsets.ViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasEmailManagePermission]
+
     @extend_schema(
         responses={200: {"type": "object"}},
     )
@@ -974,6 +988,8 @@ class TrackingView(viewsets.ViewSet):
 
 
 class TransactionalTriggerTokenView(viewsets.ViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasEmailManagePermission]
+
     @extend_schema(
         responses={200: {"type": "object"}},
     )
@@ -990,16 +1006,20 @@ class TransactionalTriggerTokenView(viewsets.ViewSet):
 
 
 class StaticSegmentViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasEmailManagePermission]
     queryset = StaticSegment.objects.all()
     serializer_class = StaticSegmentSerializer
 
 
 class StaticSegmentRecipientViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasEmailManagePermission]
     queryset = StaticSegmentRecipient.objects.all()
     serializer_class = StaticSegmentRecipientSerializer
 
 
 class MissingTriggersView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasEmailManagePermission]
+
     @extend_schema(
         responses={200: MissingTriggerSerializer(many=True)},
     )
@@ -1056,6 +1076,8 @@ class MissingTriggersView(APIView):
 
 
 class CreateMissingTriggerMailView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasEmailManagePermission]
+
     @extend_schema(
         responses={200: str},
         request=CreateMissingTriggerMailSerializer,
@@ -1107,6 +1129,7 @@ class CreateMissingTriggerMailView(APIView):
 
 
 class MailCategoryViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasEmailManagePermission]
     queryset = MailCategory.objects.order_by("name")
     serializer_class = MailCategorySerializer
 
@@ -1275,7 +1298,8 @@ class ConfirmRegistrationToMailCategoryView(TemplateView):
         return context_data
 
 
-class MailUiView(TemplateView):
+class MailUiView(PermissionRequiredMixin, TemplateView):
+    permission_required = Permission.Email.MANAGE
     template_name = "tapir_mail/ui.html"
 
     def get_context_data(self, **kwargs):

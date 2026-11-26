@@ -200,6 +200,21 @@ CSP_FRAME_SRC = ["'self'", KEYCLOAK_ADMIN_CONFIG["PUBLIC_URL"]]
 # Tapir Mail
 DJANGO_DRF_FILEPOND_UPLOAD_TMP = os.path.join(BASE_DIR, "filepond_temp_uploads")
 DJANGO_DRF_FILEPOND_FILE_STORE_PATH = os.path.join(BASE_DIR, "filepond_stored_uploads")
+# Without an entry, django_drf_filepond allows anonymous access to the endpoint.
+DJANGO_DRF_FILEPOND_PERMISSION_CLASSES = {
+    endpoint: [
+        "rest_framework.permissions.IsAuthenticated",
+        "tapir.mail.permissions.HasEmailManagePermission",
+    ]
+    for endpoint in [
+        "GET_FETCH",
+        "GET_LOAD",
+        "POST_PROCESS",
+        "GET_RESTORE",
+        "DELETE_REVERT",
+        "PATCH_PATCH",
+    ]
+}
 
 MJML_BACKEND_MODE = "cmd"
 MJML_EXEC_CMD = [

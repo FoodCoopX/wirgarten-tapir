@@ -9,7 +9,7 @@ urlpatterns = [
     path("get_file/<str:upload_id>", views.get_file_view, name="get_file"),
 ]
 
-router = routers.DefaultRouter()
+router = routers.SimpleRouter()
 router.register("temporary_upload", views.TemporaryUploadViewSet)
 router.register("stored_upload", views.StoredUploadViewSet)
 

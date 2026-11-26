@@ -13,6 +13,7 @@ import json
 import logging
 import os
 
+from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.http import Http404
 from django.http.response import (
     HttpResponse,
@@ -28,10 +29,12 @@ from django_drf_filepond.api import store_upload, delete_stored_upload
 from django_drf_filepond.models import TemporaryUpload, StoredUpload
 from drf_spectacular.utils import extend_schema_view, extend_schema
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets
+from rest_framework import permissions, viewsets
 from rest_framework.filters import SearchFilter
 from rest_framework.pagination import LimitOffsetPagination
 
+from tapir.mail.permissions import HasEmailManagePermission
+from tapir.wirgarten.constants import Permission
 from tapir.mail.media_library.serializers import (
     TemporaryUploadSerializer,
     StoredUploadSerializer,
@@ -42,7 +45,9 @@ LOG = logging.getLogger(__name__)
 CONTENT_TYPE_JSON = "application/json"
 
 
-class ConfirmUploadView(View):
+class ConfirmUploadView(PermissionRequiredMixin, View):
+    permission_required = Permission.Email.MANAGE
+
     # Handle POST request
     def post(self, request):
         # Get the post request and extract the IDs of the temporary upload(s)
@@ -123,6 +128,7 @@ def delete_abandoned_temporary_uploads():
     destroy=extend_schema(operation_id="temporaryuploads_destroy"),
 )
 class TemporaryUploadViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasEmailManagePermission]
     serializer_class = TemporaryUploadSerializer
     queryset = TemporaryUpload.objects.order_by("-uploaded")
     pagination_class = LimitOffsetPagination
@@ -137,6 +143,7 @@ class TemporaryUploadViewSet(viewsets.ModelViewSet):
     destroy=extend_schema(operation_id="storeduploads_destroy"),
 )
 class StoredUploadViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasEmailManagePermission]
     serializer_class = StoredUploadSerializer
     queryset = StoredUpload.objects.order_by("-stored")
     pagination_class = LimitOffsetPagination

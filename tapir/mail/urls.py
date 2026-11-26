@@ -11,7 +11,7 @@ from tapir.mail.views import (
     MailUiView,
 )
 
-router = routers.DefaultRouter()
+router = routers.SimpleRouter()
 router.register("email_template", views.EmailTemplateViewSet, basename="email_template")
 router.register(
     "email_template_paginated",
