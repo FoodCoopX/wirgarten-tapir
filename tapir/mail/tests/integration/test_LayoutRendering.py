@@ -2,8 +2,8 @@ from tapir.wirgarten.parameters import ParameterDefinitions
 from django.core import mail
 
 from tapir.mail.models import EmailTemplate, EmailTemplateType, ReleaseStatus
-from tapir.mail.service.email_dispatch import SendEmailBatch
-from tapir.mail.service.layout import (
+from tapir.mail.services.email_dispatch import SendEmailBatch
+from tapir.mail.services.layout import (
     BODY_PLACEHOLDER_CSS_CLASS,
     get_effective_layout,
 )

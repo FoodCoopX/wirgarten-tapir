@@ -1,4 +1,4 @@
-from tapir.mail.service.mjml import mjml2html
+from tapir.mail.services.mjml import mjml2html
 from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 

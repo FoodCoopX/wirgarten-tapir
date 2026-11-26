@@ -5,7 +5,7 @@ from tapir.mail.models import (
     MailCategory,
     MailCategoryMode,
 )
-from tapir.mail.service.segment import resolve_segments
+from tapir.mail.services.segment import resolve_segments
 from tapir.mail.tests.factories import StaticSegmentRecipientFactory, MailSegmentFactory
 from tapir.mail.tests.test_utils import add_mail_segment_provider
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest

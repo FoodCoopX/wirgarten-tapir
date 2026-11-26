@@ -5,7 +5,7 @@ from django.db.models import QuerySet
 
 from tapir.mail.models import StaticSegment, MailCategory
 from tapir.mail.registries import get_mail_segments, SegmentQuerysetRegistry
-from tapir.mail.service.mail_category_recipients_resolver import (
+from tapir.mail.services.mail_category_recipients_resolver import (
     MailCategoryRecipientResolver,
 )
 from tapir.mail.triggers.transactional_trigger import TransactionalTriggerData

@@ -1,5 +1,5 @@
 from tapir.mail.exceptions import TapirMailException
-from tapir.mail.service.layout import (
+from tapir.mail.services.layout import (
     BODY_PLACEHOLDER_CSS_CLASS,
     apply_layout,
     extract_mj_body_inner,

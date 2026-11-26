@@ -1,5 +1,5 @@
 from tapir.mail.models import EmailConfigurationDispatch, EmailConfigurationVersion
-from tapir.mail.service.segment import resolve_segments
+from tapir.mail.services.segment import resolve_segments
 
 
 class RecipientListProvider:

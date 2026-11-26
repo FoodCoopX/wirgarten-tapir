@@ -6,7 +6,7 @@ from unittest.mock import patch
 from django.core import mail
 
 from tapir.mail.models import EmailDispatch, ReleaseStatus
-from tapir.mail.service.email_dispatch import RetryEmailDispatch, SendEmailBatch
+from tapir.mail.services.email_dispatch import RetryEmailDispatch, SendEmailBatch
 from tapir.mail.tests.factories import (
     EmailConfigurationDispatchFactory,
     EmailConfigurationVersionFactory,
@@ -35,7 +35,7 @@ class AutomaticRetryTest(TapirIntegrationTest):
 
     def send_batch_with_connection_error(self):
         with patch(
-            "tapir.mail.service.email_dispatch.get_connection",
+            "tapir.mail.services.email_dispatch.get_connection",
             side_effect=ConnectionRefusedError("Connection refused"),
         ):
             SendEmailBatch.send_email_dispatches()
@@ -73,7 +73,7 @@ class AutomaticRetryTest(TapirIntegrationTest):
     def test_sendEmailDispatches_failedDispatch_notPickedUpAgain(self):
         TestUtils.create_email_dispatches(1, config_dispatch=self.config_dispatch)
         with patch(
-            "tapir.mail.service.email_dispatch.build_email",
+            "tapir.mail.services.email_dispatch.build_email",
             side_effect=Exception("Template error"),
         ):
             SendEmailBatch.send_email_dispatches()

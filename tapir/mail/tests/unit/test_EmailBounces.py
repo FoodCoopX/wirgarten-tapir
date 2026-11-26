@@ -6,7 +6,7 @@ from django.conf import settings
 from django.test import override_settings
 
 from tapir.mail.models import EmailDispatch
-from tapir.mail.service.email_bounces import EmailBounces
+from tapir.mail.services.email_bounces import EmailBounces
 from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 BOUNCE_DOMAIN = "mail.net"
@@ -22,7 +22,7 @@ BOUNCE_PASSWORD = "Email bounce password"
     EMAIL_BOUNCE_PASSWORD=BOUNCE_PASSWORD,
 )
 class TestEmailBounces(TapirUnitTest):
-    @patch("tapir.mail.service.email_bounces.IMAP4_SSL")
+    @patch("tapir.mail.services.email_bounces.IMAP4_SSL")
     def test_checkForBounces_loginFails_raisesException(
         self, mock_mail_client_constructor: Mock
     ):
@@ -42,7 +42,7 @@ class TestEmailBounces(TapirUnitTest):
         mock_mail_client.search.assert_not_called()
 
     @override_settings(EMAIL_BOUNCE_USER=None, EMAIL_BOUNCE_PASSWORD=None)
-    @patch("tapir.mail.service.email_bounces.IMAP4_SSL")
+    @patch("tapir.mail.services.email_bounces.IMAP4_SSL")
     def test_checkForBounces_missingCredentials_doesNothing(
         self, mock_mail_client_constructor: Mock
     ):
@@ -50,7 +50,7 @@ class TestEmailBounces(TapirUnitTest):
 
         mock_mail_client_constructor.assert_not_called()
 
-    @patch("tapir.mail.service.email_bounces.IMAP4_SSL")
+    @patch("tapir.mail.services.email_bounces.IMAP4_SSL")
     def test_checkForBounces_searchFails_raisesExceptionAndLogsOut(
         self, mock_mail_client_constructor: Mock
     ):
@@ -74,8 +74,8 @@ class TestEmailBounces(TapirUnitTest):
         )
         mock_mail_client.logout.assert_called_once_with()
 
-    @patch("tapir.mail.service.email_bounces.IMAP4_SSL")
-    @patch("tapir.mail.service.email_bounces.EmailBounces.process_message")
+    @patch("tapir.mail.services.email_bounces.IMAP4_SSL")
+    @patch("tapir.mail.services.email_bounces.EmailBounces.process_message")
     def test_checkForBounces_default_processesAllMessagesReturnedByImapSearch(
         self, mock_process_message: Mock, mock_mail_client_constructor: Mock
     ):
@@ -105,7 +105,7 @@ class TestEmailBounces(TapirUnitTest):
         )
         mock_mail_client.logout.assert_called_once_with()
 
-    @patch("tapir.mail.service.email_bounces.all_failures")
+    @patch("tapir.mail.services.email_bounces.all_failures")
     def test_determineBounceType_recipientAddressIsInBothSoftAndHard_returnsHard(
         self, mock_all_failures: Mock
     ):
@@ -121,7 +121,7 @@ class TestEmailBounces(TapirUnitTest):
         mock_all_failures.assert_called_once_with(message)
         self.assertEqual(EmailDispatch.BounceTypes.HARD, result)
 
-    @patch("tapir.mail.service.email_bounces.all_failures")
+    @patch("tapir.mail.services.email_bounces.all_failures")
     def test_determineBounceType_recipientAddressIsOnlyInHard_returnsHard(
         self, mock_all_failures: Mock
     ):
@@ -137,7 +137,7 @@ class TestEmailBounces(TapirUnitTest):
         mock_all_failures.assert_called_once_with(message)
         self.assertEqual(EmailDispatch.BounceTypes.HARD, result)
 
-    @patch("tapir.mail.service.email_bounces.all_failures")
+    @patch("tapir.mail.services.email_bounces.all_failures")
     def test_determineBounceType_recipientAddressIsOnlyInSoft_returnsSoft(
         self, mock_all_failures: Mock
     ):
@@ -153,7 +153,7 @@ class TestEmailBounces(TapirUnitTest):
         mock_all_failures.assert_called_once_with(message)
         self.assertEqual(EmailDispatch.BounceTypes.SOFT, result)
 
-    @patch("tapir.mail.service.email_bounces.all_failures")
+    @patch("tapir.mail.services.email_bounces.all_failures")
     def test_determineBounceType_recipientAddressIsNotReturned_returnsUnknown(
         self, mock_all_failures: Mock
     ):
@@ -207,7 +207,7 @@ class TestEmailBounces(TapirUnitTest):
 
         mail_client.fetch.assert_called_once_with(message_id, "(BODY.PEEK[])")
 
-    @patch("tapir.mail.service.email_bounces.email.message_from_bytes")
+    @patch("tapir.mail.services.email_bounces.email.message_from_bytes")
     def test_processMessage_noDispatchId_doesNothing(
         self, mock_message_from_bytes: Mock
     ):
@@ -226,9 +226,9 @@ class TestEmailBounces(TapirUnitTest):
         mail_client.fetch.assert_called_once_with(message_id, "(BODY.PEEK[])")
         mock_message_from_bytes.assert_called_once_with(message_content)
 
-    @patch("tapir.mail.service.email_bounces.LOG")
+    @patch("tapir.mail.services.email_bounces.LOG")
     @patch.object(EmailDispatch.objects, "filter")
-    @patch("tapir.mail.service.email_bounces.email.message_from_bytes")
+    @patch("tapir.mail.services.email_bounces.email.message_from_bytes")
     def test_processMessage_noDispatchForId_logsWarning(
         self, mock_message_from_bytes: Mock, mock_filter: Mock, mock_log: Mock
     ):
@@ -252,9 +252,9 @@ class TestEmailBounces(TapirUnitTest):
         mock_log.debug.assert_called_once()
         mock_filter.return_value.first.assert_called_once_with()
 
-    @patch("tapir.mail.service.email_bounces.EmailBounces.determine_bounce_type")
+    @patch("tapir.mail.services.email_bounces.EmailBounces.determine_bounce_type")
     @patch.object(EmailDispatch.objects, "filter")
-    @patch("tapir.mail.service.email_bounces.email.message_from_bytes")
+    @patch("tapir.mail.services.email_bounces.email.message_from_bytes")
     def test_processMessage_dispatchFound_dispatchGetsUpdated(
         self,
         mock_message_from_bytes: Mock,
@@ -299,9 +299,9 @@ class TestEmailBounces(TapirUnitTest):
             message, "recipient.@test.de"
         )
 
-    @patch("tapir.mail.service.email_bounces.EmailBounces.determine_bounce_type")
+    @patch("tapir.mail.services.email_bounces.EmailBounces.determine_bounce_type")
     @patch.object(EmailDispatch.objects, "filter")
-    @patch("tapir.mail.service.email_bounces.email.message_from_bytes")
+    @patch("tapir.mail.services.email_bounces.email.message_from_bytes")
     def test_processMessage_messageHasNoReturnPath_otherHeaderGetsUsed(
         self,
         mock_message_from_bytes: Mock,
@@ -355,7 +355,7 @@ class TestEmailBounces(TapirUnitTest):
         self.assertFalse(EmailBounces.belongs_to_this_instance(message))
 
     @patch.object(EmailDispatch.objects, "filter")
-    @patch("tapir.mail.service.email_bounces.email.message_from_bytes")
+    @patch("tapir.mail.services.email_bounces.email.message_from_bytes")
     def test_processMessage_messageOfAnotherInstance_leavesItUnread(
         self, mock_message_from_bytes: Mock, mock_filter: Mock
     ):

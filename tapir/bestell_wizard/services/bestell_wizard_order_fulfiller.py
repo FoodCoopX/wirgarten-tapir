@@ -3,7 +3,7 @@ from decimal import Decimal
 
 from keycloak import KeycloakPutError
 from tapir.mail.models import MailCategory, MailCategoryMode
-from tapir.mail.service.external_recipient_manager import ExternalRecipientManager
+from tapir.mail.services.external_recipient_manager import ExternalRecipientManager
 
 from tapir.accounts.models import TapirUser
 from tapir.accounts.services.email_verification_service import EmailVerificationService

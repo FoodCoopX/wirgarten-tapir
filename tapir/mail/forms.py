@@ -2,7 +2,7 @@ from django import forms
 from django.forms.forms import Form
 
 from tapir.mail.models import MailCategory, ExternalRecipient
-from tapir.mail.service.external_recipient_manager import ExternalRecipientManager
+from tapir.mail.services.external_recipient_manager import ExternalRecipientManager
 
 
 class RegisterToMailCategoryForm(Form):

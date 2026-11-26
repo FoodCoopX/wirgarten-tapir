@@ -7,9 +7,9 @@ from django.core import mail
 
 from tapir.mail.config import ExternalConfig
 from tapir.mail.models import EmailDispatch, ReleaseStatus
-from tapir.mail.service.email import _get_dispatch_id_from_email_return_path
-from tapir.mail.service.email_dispatch import RetryEmailDispatch, SendEmailBatch
-from tapir.mail.service.mjml import mjml2html
+from tapir.mail.services.email import _get_dispatch_id_from_email_return_path
+from tapir.mail.services.email_dispatch import RetryEmailDispatch, SendEmailBatch
+from tapir.mail.services.mjml import mjml2html
 from tapir.mail.tests.factories import (
     EmailConfigurationDispatchFactory,
     EmailConfigurationVersionFactory,
@@ -60,7 +60,7 @@ class SendEmailBatchTest(TapirIntegrationTest):
         TestUtils.create_email_dispatches(3, config_dispatch=self.config_dispatch)
 
         with patch(
-            "tapir.mail.service.email_dispatch.mjml2html",
+            "tapir.mail.services.email_dispatch.mjml2html",
             autospec=True,
             side_effect=mjml2html,
         ) as mock_mjml2html:
@@ -97,11 +97,11 @@ class SendEmailBatchTest(TapirIntegrationTest):
     def test_sendEmailDispatches_errorSendingEmail_logsError(self):
         TestUtils.create_email_dispatches(1, config_dispatch=self.config_dispatch)
         with patch(
-            "tapir.mail.service.email_dispatch.build_email",
+            "tapir.mail.services.email_dispatch.build_email",
             side_effect=Exception("Test exception"),
         ):
             with patch(
-                "tapir.mail.service.email_dispatch.LOG.exception"
+                "tapir.mail.services.email_dispatch.LOG.exception"
             ) as mock_log_exception:
                 SendEmailBatch.send_email_dispatches()
 

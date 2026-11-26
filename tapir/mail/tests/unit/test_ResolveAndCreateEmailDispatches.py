@@ -3,7 +3,7 @@ from django.core import mail
 from unittest.mock import patch, Mock
 from tapir.mail.models import EmailConfigurationDispatch, EmailDispatch, ReleaseStatus
 from django.core.cache import cache
-from tapir.mail.service.email_dispatch import (
+from tapir.mail.services.email_dispatch import (
     ResolveAndCreateEmailDispatches,
 )
 from tapir.mail.tests.test_utils import mock_timezone_now

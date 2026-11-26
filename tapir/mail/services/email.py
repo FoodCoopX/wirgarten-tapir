@@ -2,8 +2,8 @@ from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 
 from tapir.mail.config import BccProvider
-from tapir.mail.service.mjml import mjml2html
-from tapir.mail.service.tracking import add_tracking_pixel
+from tapir.mail.services.mjml import mjml2html
+from tapir.mail.services.tracking import add_tracking_pixel
 
 
 def prepare_email(

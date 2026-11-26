@@ -1,7 +1,7 @@
 from celery import shared_task
 
-from tapir.mail.service.email_bounces import EmailBounces
-from tapir.mail.service.email_dispatch import (
+from tapir.mail.services.email_bounces import EmailBounces
+from tapir.mail.services.email_dispatch import (
     ResolveAndCreateEmailDispatches,
     SendEmailBatch,
 )

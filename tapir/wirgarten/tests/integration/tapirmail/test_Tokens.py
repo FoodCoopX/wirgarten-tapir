@@ -1,4 +1,4 @@
-from tapir.mail.service.token import token_registry
+from tapir.mail.services.token import token_registry
 
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tapirmail import _register_tokens

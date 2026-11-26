@@ -3,7 +3,7 @@ import datetime
 from celery import Celery
 from django.conf import settings
 from django.db import transaction
-from tapir.mail.service.shortcuts import make_timezone_aware
+from tapir.mail.services.shortcuts import make_timezone_aware
 
 app = Celery("tapir", broker=settings.CELERY_BROKER_URL)
 

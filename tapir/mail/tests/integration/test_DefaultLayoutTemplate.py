@@ -1,5 +1,5 @@
 from tapir.mail.models import EmailTemplate, EmailTemplateType
-from tapir.mail.service.layout import (
+from tapir.mail.services.layout import (
     BODY_PLACEHOLDER_CSS_CLASS,
     apply_layout,
 )

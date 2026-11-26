@@ -6,7 +6,7 @@ from rest_framework import serializers
 
 from tapir.mail.models import EmailConfigurationDispatch
 from tapir.mail.serializers import TriggersSerializationMixin
-from tapir.mail.service.triggers import Trigger
+from tapir.mail.services.triggers import Trigger
 
 
 class DummySerializer(TriggersSerializationMixin, serializers.Serializer):

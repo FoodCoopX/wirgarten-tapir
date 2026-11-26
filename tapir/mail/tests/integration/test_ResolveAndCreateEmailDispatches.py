@@ -10,9 +10,9 @@ from tapir.mail.models import (
     EmailDispatch,
     ReleaseStatus,
 )
-from tapir.mail.service.email_dispatch import ResolveAndCreateEmailDispatches
-from tapir.mail.service.recipient_list_provider import RecipientListProvider
-from tapir.mail.service.token import register_tokens
+from tapir.mail.services.email_dispatch import ResolveAndCreateEmailDispatches
+from tapir.mail.services.recipient_list_provider import RecipientListProvider
+from tapir.mail.services.token import register_tokens
 from tapir.mail.tests.factories import (
     EmailConfigurationVersionFactory,
     StaticSegmentFactory,
@@ -61,7 +61,7 @@ class ResolveAndCreateEmailDispatchesTest(TapirIntegrationTest):
         ResolveAndCreateEmailDispatches.resolve_and_create()
         self.assertEqual(EmailDispatch.objects.count(), 0)
 
-    @patch("tapir.mail.service.email_dispatch.LOG.error")
+    @patch("tapir.mail.services.email_dispatch.LOG.error")
     def test_resolveAndCreate_noRecipients_noDispatchesCreated(self, mock_log_error):
         config_dispatch = self.create_email_config_dispatch(scheduled_time=self.NOW)
         config_dispatch.override_recipients = []
@@ -70,7 +70,7 @@ class ResolveAndCreateEmailDispatchesTest(TapirIntegrationTest):
         self.assertEqual(EmailDispatch.objects.count(), 0)
         mock_log_error.assert_called_once()
 
-    @patch("tapir.mail.service.email_dispatch.LOG.error")
+    @patch("tapir.mail.services.email_dispatch.LOG.error")
     def test_resolveAndCreate_errorCreatingDispatches_logsError(self, mock_log_error):
         config_dispatch = self.create_email_config_dispatch(scheduled_time=self.NOW)
         config_dispatch.email_configuration_version.segment_data = None
@@ -102,14 +102,14 @@ class ResolveAndCreateEmailDispatchesTest(TapirIntegrationTest):
         )
         self.assertEqual(len(result), 10)
 
-    @patch("tapir.mail.service.email_dispatch.LOG.error")
+    @patch("tapir.mail.services.email_dispatch.LOG.error")
     def test_resolveAndCreate_alreadySent_noDispatchesCreated(self, mock_log_error):
         self.create_email_config_dispatch(scheduled_time=self.NOW, is_sent=True)
         ResolveAndCreateEmailDispatches.resolve_and_create()
         self.assertEqual(EmailDispatch.objects.count(), 0)
         mock_log_error.assert_not_called()
 
-    @patch("tapir.mail.service.email_dispatch.LOG.error")
+    @patch("tapir.mail.services.email_dispatch.LOG.error")
     def test_resolveAndCreate_scheduledFuture_noDispatchesCreated(self, mock_log_error):
         future_time = self.NOW + relativedelta(days=1)
         self.create_email_config_dispatch(scheduled_time=future_time)
@@ -124,7 +124,7 @@ class ResolveAndCreateEmailDispatchesTest(TapirIntegrationTest):
         ResolveAndCreateEmailDispatches.resolve_and_create()
         self.assertEqual(EmailDispatch.objects.count(), 10 * self.RECIPIENT_COUNT)
 
-    @patch("tapir.mail.service.email_dispatch.LOG.error")
+    @patch("tapir.mail.services.email_dispatch.LOG.error")
     def test_resolveAndCreate_notReleased_noDispatchesCreated(self, mock_log_error):
         self.email_config_version.status = ReleaseStatus.DRAFT
         self.email_config_version.save()

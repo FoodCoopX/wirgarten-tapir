@@ -1,5 +1,5 @@
 from tapir.mail.exceptions import TapirMailException
-from tapir.mail.service.email_configuration_version_release_validator import (
+from tapir.mail.services.email_configuration_version_release_validator import (
     EmailConfigurationVersionReleaseValidator,
 )
 from tapir.mail.tests.factories import (

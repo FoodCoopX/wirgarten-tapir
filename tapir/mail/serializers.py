@@ -18,11 +18,11 @@ from tapir.mail.models import (
     MailCategory,
 )
 from tapir.mail.registries import get_mail_segments
-from tapir.mail.service.mail_category_recipients_resolver import (
+from tapir.mail.services.mail_category_recipients_resolver import (
     MailCategoryRecipientResolver,
 )
-from tapir.mail.service.segment import BASE_QUERYSET
-from tapir.mail.service.triggers import Trigger, trigger_registry
+from tapir.mail.services.segment import BASE_QUERYSET
+from tapir.mail.services.triggers import Trigger, trigger_registry
 
 
 class TriggerDataSerializer(serializers.Serializer):

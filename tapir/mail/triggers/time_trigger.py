@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 from rest_framework import serializers
 
-from tapir.mail.service.triggers import Trigger
+from tapir.mail.services.triggers import Trigger
 
 
 @dataclass

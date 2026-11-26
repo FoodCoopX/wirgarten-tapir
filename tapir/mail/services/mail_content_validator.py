@@ -2,7 +2,7 @@ import re
 
 from rest_framework.exceptions import ValidationError
 
-from tapir.mail.service.token import token_registry
+from tapir.mail.services.token import token_registry
 from tapir.mail.triggers.transactional_trigger import TransactionalTrigger
 
 

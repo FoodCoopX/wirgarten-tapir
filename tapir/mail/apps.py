@@ -4,7 +4,7 @@ from typing import Callable
 from django.apps import AppConfig
 
 from tapir.mail.config import TransactionalTriggerKeys
-from tapir.mail.service.triggers import register_trigger
+from tapir.mail.services.triggers import register_trigger
 from tapir.mail.triggers.time_trigger import TimeTrigger
 from tapir.mail.triggers.transactional_trigger import TransactionalTrigger
 

@@ -12,13 +12,13 @@ from django.utils import timezone
 
 from tapir.mail.config import BccProvider, ExternalConfig
 from tapir.mail.models import EmailConfigurationDispatch, EmailDispatch, ReleaseStatus
-from tapir.mail.service.email import build_email
-from tapir.mail.service.layout import render_email_mjml
-from tapir.mail.service.mjml import mjml2html
-from tapir.mail.service.recipient_list_provider import (
+from tapir.mail.services.email import build_email
+from tapir.mail.services.layout import render_email_mjml
+from tapir.mail.services.mjml import mjml2html
+from tapir.mail.services.recipient_list_provider import (
     RecipientListProvider,
 )
-from tapir.mail.service.token import (
+from tapir.mail.services.token import (
     find_tokens,
     replace_tokens,
     resolve_recipient_tokens,
@@ -26,8 +26,8 @@ from tapir.mail.service.token import (
     TOKEN_TYPE_DYNAMIC,
     resolve_dynamic_tokens,
 )
-from tapir.mail.service.tracking import get_tracking_url
-from tapir.mail.service.triggers import trigger_registry
+from tapir.mail.services.tracking import get_tracking_url
+from tapir.mail.services.triggers import trigger_registry
 from tapir.mail.triggers.time_trigger import TimeTrigger
 
 LOG = logging.getLogger(__name__)

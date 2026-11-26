@@ -1,6 +1,6 @@
 import datetime
 
-from tapir.mail.service.shortcuts import make_timezone_aware
+from tapir.mail.services.shortcuts import make_timezone_aware
 
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.parameters import ParameterDefinitions

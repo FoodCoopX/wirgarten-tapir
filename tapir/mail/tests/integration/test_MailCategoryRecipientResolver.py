@@ -1,6 +1,6 @@
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.mail.models import MailCategoryMode, InternalRecipientCategoryRegistration
-from tapir.mail.service.mail_category_recipients_resolver import (
+from tapir.mail.services.mail_category_recipients_resolver import (
     MailCategoryRecipientResolver,
 )
 

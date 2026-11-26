@@ -5,11 +5,11 @@ from django.http import Http404
 from rest_framework.response import Response
 from tapir.mail.models import EmailConfigurationVersion
 from tapir.wirgarten.tests.test_utils import TapirUnitTest
-from tapir.mail.views import EmailConfigurationVersionViewSet
+from tapir.mail.views.email_configurations import EmailConfigurationVersionViewSet
 
 
 class TestEmailConfigurationVersion(TapirUnitTest):
-    @patch("tapir.mail.views.get_object_or_404")
+    @patch("tapir.mail.views.email_configurations.get_object_or_404")
     def test_sendTestEmail_emailConfigurationDoesntExist_throwsException(
         self, mock_get_object_or_404: Mock
     ):
@@ -30,7 +30,9 @@ class TestEmailConfigurationVersion(TapirUnitTest):
                 mock_request = Mock()
                 mock_request.data.get.return_value = recipients
                 email_configuration_version_id = 123
-                patcher = patch("tapir.mail.views.get_object_or_404")
+                patcher = patch(
+                    "tapir.mail.views.email_configurations.get_object_or_404"
+                )
                 mock_get_object_or_404 = patcher.start()
                 self.addCleanup(patcher.stop)
 
@@ -46,12 +48,12 @@ class TestEmailConfigurationVersion(TapirUnitTest):
                 self.assertEqual(400, response.status_code)
 
     @patch(
-        "tapir.mail.views.replace_tokens",
+        "tapir.mail.views.email_configurations.replace_tokens",
         autospec=True,
         side_effect=lambda mjml, *_, **__: mjml,
     )
-    @patch("tapir.mail.views.prepare_email")
-    @patch("tapir.mail.views.get_object_or_404")
+    @patch("tapir.mail.views.email_configurations.prepare_email")
+    @patch("tapir.mail.views.email_configurations.get_object_or_404")
     def test_sendTestMail_validRecipient_sendsMailAndReturns200Response(
         self,
         mock_get_object_or_404: Mock,

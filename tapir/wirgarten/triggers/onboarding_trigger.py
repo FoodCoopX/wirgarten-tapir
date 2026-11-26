@@ -9,8 +9,8 @@ from tapir.mail.models import (
     EmailConfigurationVersion,
     ReleaseStatus,
 )
-from tapir.mail.service.segment import resolve_segments
-from tapir.mail.service.triggers import Trigger
+from tapir.mail.services.segment import resolve_segments
+from tapir.mail.services.triggers import Trigger
 
 from tapir.wirgarten.models import Member, Subscription
 from tapir.wirgarten.service.get_next_delivery_date import get_next_delivery_date

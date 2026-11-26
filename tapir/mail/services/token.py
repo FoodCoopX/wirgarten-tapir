@@ -4,7 +4,7 @@ from typing import Any, Callable
 
 from django.conf import settings
 
-from tapir.mail.service.segment import _check_base_queryset
+from tapir.mail.services.segment import _check_base_queryset
 
 LOG = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ def _register_user_tokens(user_tokens: dict):
 
     LOG.info(f"Registering tokens {user_tokens}")
 
-    from tapir.mail.service.segment import BASE_QUERYSET
+    from tapir.mail.services.segment import BASE_QUERYSET
 
     for label, value in user_tokens.items():
         if callable(value):

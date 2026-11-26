@@ -1,36 +1,61 @@
 from django.urls import include, path, re_path
 from rest_framework import routers
 
-from tapir.mail import views
-from tapir.mail.views import (
-    RegisterToMailCategoryView,
-    ConfirmationMailSentView,
-    ConfirmRegistrationToMailCategoryView,
-    ExternalRecipientManagementView,
-    MailUiView,
+from tapir.mail.views.email_templates import (
+    EmailTemplateViewSet,
+    PaginatedEmailTemplateViewSet,
 )
+from tapir.mail.views.email_configurations import (
+    EmailConfigurationVersionViewSet,
+    EmailConfigurationViewSet,
+)
+from tapir.mail.views.dispatches import (
+    EmailConfigurationDispatchViewSet,
+    EmailDispatchViewSet,
+    TrackingView,
+)
+from tapir.mail.views.segments import (
+    SegmentAndFilterViewSet,
+    StaticSegmentRecipientViewSet,
+    StaticSegmentViewSet,
+)
+from tapir.mail.views.triggers import (
+    CreateMissingTriggerMailView,
+    MissingTriggersView,
+    TokensView,
+    TransactionalTriggerTokenView,
+    TriggerListView,
+)
+from tapir.mail.views.mail_categories import MailCategoryViewSet
+from tapir.mail.views.external import (
+    ConfirmRegistrationToMailCategoryView,
+    ConfirmationMailSentView,
+    ExternalRecipientManagementView,
+    RegisterToMailCategoryView,
+)
+from tapir.mail.views.ui import MailUiView
 
 router = routers.SimpleRouter()
-router.register("email_template", views.EmailTemplateViewSet, basename="email_template")
+router.register("email_template", EmailTemplateViewSet, basename="email_template")
 router.register(
     "email_template_paginated",
-    views.PaginatedEmailTemplateViewSet,
+    PaginatedEmailTemplateViewSet,
     basename="email_template_paginated",
 )
-router.register("email_configuration", views.EmailConfigurationViewSet)
-router.register("email_configuration_version", views.EmailConfigurationVersionViewSet)
-router.register("email_configuration_dispatch", views.EmailConfigurationDispatchViewSet)
-router.register("email_dispatch", views.EmailDispatchViewSet)
-router.register("triggers", views.TriggerListView, basename="Triggers")
+router.register("email_configuration", EmailConfigurationViewSet)
+router.register("email_configuration_version", EmailConfigurationVersionViewSet)
+router.register("email_configuration_dispatch", EmailConfigurationDispatchViewSet)
+router.register("email_dispatch", EmailDispatchViewSet)
+router.register("triggers", TriggerListView, basename="Triggers")
 router.register(
-    "trigger_tokens", views.TransactionalTriggerTokenView, basename="Trigger Tokens"
+    "trigger_tokens", TransactionalTriggerTokenView, basename="Trigger Tokens"
 )
-router.register("segment", views.SegmentAndFilterViewSet, basename="segment")
-router.register("tokens", views.TokensView, basename="tokens")
-router.register("tracking", views.TrackingView, basename="tracking")
-router.register("static_segment", views.StaticSegmentViewSet)
-router.register("static_segment_recipient", views.StaticSegmentRecipientViewSet)
-router.register("mail_category", views.MailCategoryViewSet)
+router.register("segment", SegmentAndFilterViewSet, basename="segment")
+router.register("tokens", TokensView, basename="tokens")
+router.register("tracking", TrackingView, basename="tracking")
+router.register("static_segment", StaticSegmentViewSet)
+router.register("static_segment_recipient", StaticSegmentRecipientViewSet)
+router.register("mail_category", MailCategoryViewSet)
 
 
 urlpatterns = [
@@ -63,12 +88,12 @@ urlpatterns = [
     ),
     path(
         "api/missing_triggers",
-        views.MissingTriggersView.as_view(),
+        MissingTriggersView.as_view(),
         name="missing_triggers",
     ),
     path(
         "api/create_missing_trigger",
-        views.CreateMissingTriggerMailView.as_view(),
+        CreateMissingTriggerMailView.as_view(),
         name="create_missing_trigger",
     ),
 ]

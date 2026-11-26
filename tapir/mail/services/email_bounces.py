@@ -9,7 +9,7 @@ from django.utils import timezone
 from flufl.bounce import all_failures
 
 from tapir.mail.models import EmailDispatch
-from tapir.mail.service.email import _get_dispatch_id_from_email_return_path
+from tapir.mail.services.email import _get_dispatch_id_from_email_return_path
 
 LOG = logging.getLogger(__name__)
 

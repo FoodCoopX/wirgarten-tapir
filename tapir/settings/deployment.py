@@ -146,7 +146,7 @@ if EMAIL_ENV == "dev":
 else:
     MAILERS = {
         "default": {
-            "BACKEND": "tapir.mail.service.smtp_backend_with_dsn.SmtpBackendWithDsn",
+            "BACKEND": "tapir.mail.services.smtp_backend_with_dsn.SmtpBackendWithDsn",
             "OPTIONS": {
                 "host": _smtp_host,
                 "port": env.int("EMAIL_PORT", default=587),

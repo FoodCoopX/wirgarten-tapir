@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from tapir.mail.service.triggers import register_trigger
+from tapir.mail.services.triggers import register_trigger
 from tapir.mail.tests.integration.triggers.DummyTriggerClasses import (
     DummySerializer,
     DummyTrigger,

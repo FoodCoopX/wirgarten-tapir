@@ -157,7 +157,7 @@ class EmailConfigurationVersion(BaseModel):
 
     @transaction.atomic
     def release(self):
-        from tapir.mail.service.email_configuration_version_release_validator import (
+        from tapir.mail.services.email_configuration_version_release_validator import (
             EmailConfigurationVersionReleaseValidator,
         )
 

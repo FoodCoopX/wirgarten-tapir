@@ -5,8 +5,8 @@ from unittest.mock import patch
 from django.core import mail
 
 from tapir.mail.models import EmailDispatch, ReleaseStatus
-from tapir.mail.service.email_dispatch import SendEmailBatch
-from tapir.mail.service.tracking import get_tracking_url
+from tapir.mail.services.email_dispatch import SendEmailBatch
+from tapir.mail.services.tracking import get_tracking_url
 from tapir.mail.tests.factories import (
     EmailConfigurationDispatchFactory,
     EmailConfigurationVersionFactory,

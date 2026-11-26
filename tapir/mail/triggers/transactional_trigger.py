@@ -5,7 +5,7 @@ from typing import Callable
 from dateutil.relativedelta import relativedelta
 from django.utils import timezone
 
-from tapir.mail.service.triggers import Trigger
+from tapir.mail.services.triggers import Trigger
 
 
 @dataclass

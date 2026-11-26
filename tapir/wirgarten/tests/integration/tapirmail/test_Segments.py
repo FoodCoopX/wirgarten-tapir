@@ -2,7 +2,7 @@ import datetime
 
 from dateutil.relativedelta import relativedelta
 from tapir.mail.registries import get_mail_segment_definitions
-from tapir.mail.service.segment import resolve_segments
+from tapir.mail.services.segment import resolve_segments
 
 from tapir.configuration.models import TapirParameter
 from tapir.core.config import LEGAL_STATUS_ASSOCIATION

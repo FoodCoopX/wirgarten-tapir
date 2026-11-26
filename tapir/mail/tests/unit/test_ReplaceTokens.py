@@ -1,7 +1,7 @@
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from tapir.mail.service.token import (
+from tapir.mail.services.token import (
     TOKEN_TYPE_DYNAMIC,
     TOKEN_TYPE_GENERAL,
     TOKEN_TYPE_RECIPIENT,
