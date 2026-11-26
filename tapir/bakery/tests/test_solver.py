@@ -1,5 +1,6 @@
 import random
 from collections import defaultdict
+from dataclasses import replace
 from decimal import Decimal
 from unittest.mock import patch
 
@@ -29,7 +30,6 @@ from tapir.bakery.solver.solve import (
 from tapir.bakery.solver.solver_model import build_model
 from tapir.bakery.tests.factories import (
     AvailableBreadsForDeliveryDayFactory,
-    BreadCapacityPickupLocationFactory,
     BreadDeliveryFactory,
     BreadFactory,
     BreadGroupFactory,
@@ -40,7 +40,7 @@ from tapir.pickup_locations.tests.factories import (
     create_pickup_location_with_opening_times,
 )
 from tapir.wirgarten.parameters import ParameterDefinitions
-from tapir.wirgarten.tests.factories import MemberFactory, PickupLocationFactory
+from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 _SENTINEL = object()
@@ -109,16 +109,6 @@ def assert_solver_failed(result):
     assert isinstance(result, SolverResult)
     assert result.status != "optimal"
     assert result.plan is None
-
-
-def setup_bread_at_location(year, week, loc, bread, capacity=10):
-    BreadCapacityPickupLocationFactory(
-        year=year,
-        delivery_week=week,
-        pickup_location=loc,
-        bread=bread,
-        capacity=capacity,
-    )
 
 
 def create_bread_delivery_without_validation(year, week, pickup_location, bread=None):
@@ -465,6 +455,24 @@ class TestCapacities:
         assert_solver_success(result)
         roggen_at_loc = result.plan.distribution.get((1, 1), 0)
         assert roggen_at_loc <= 3
+
+    def test_solveBreadPlanning_choiceOfABreadNotBakedThatDay_onlyWarns(self):
+        # E.g. a bread deactivated after members chose it: it has no capacity
+        # entry, which must not read as an over-subscribed one.
+        breads = [make_bread(bread_id=1, name="Roggen", pieces_per_layer=[10])]
+        locations = [
+            make_location(location_id=1, total_deliveries=10, fixed_demand={99: 2})
+        ]
+        caps = make_capacities(breads, locations)
+
+        result = solve_bread_planning(
+            breads, locations, caps, max_sessions=5, stove_layers=4
+        )
+
+        assert_solver_success(result)
+        categories = {d.category for d in result.diagnostics}
+        assert "fixed_demand_unavailable" in categories
+        assert "fixed_demand_exceeds_capacity" not in categories
 
 
 class TestDistribution:
@@ -1192,21 +1200,6 @@ class TestCollectSolverInput(TapirIntegrationTest):
             year=year, delivery_week=week, delivery_day=2, bread=bread2
         )
 
-        BreadCapacityPickupLocationFactory(
-            year=year,
-            delivery_week=week,
-            pickup_location=loc,
-            bread=bread1,
-            capacity=10,
-        )
-        BreadCapacityPickupLocationFactory(
-            year=year,
-            delivery_week=week,
-            pickup_location=loc,
-            bread=bread2,
-            capacity=10,
-        )
-
         create_bread_delivery_without_validation(
             year=year, week=week, pickup_location=loc, bread=bread1
         )
@@ -1255,21 +1248,6 @@ class TestCollectSolverInput(TapirIntegrationTest):
             year=year, delivery_week=week, delivery_day=2, bread=bread2
         )
 
-        BreadCapacityPickupLocationFactory(
-            year=year,
-            delivery_week=week,
-            pickup_location=loc,
-            bread=bread1,
-            capacity=10,
-        )
-        BreadCapacityPickupLocationFactory(
-            year=year,
-            delivery_week=week,
-            pickup_location=loc,
-            bread=bread2,
-            capacity=10,
-        )
-
         create_bread_delivery_without_validation(
             year=year, week=week, pickup_location=loc, bread=bread1
         )
@@ -1306,8 +1284,6 @@ class TestCollectSolverInput(TapirIntegrationTest):
         AvailableBreadsForDeliveryDayFactory(
             year=year, delivery_week=week, delivery_day=3, bread=bread
         )
-
-        setup_bread_at_location(year, week, loc, bread)
 
         create_bread_delivery_without_validation(
             year=year, week=week, pickup_location=loc, bread=bread
@@ -1351,8 +1327,6 @@ class TestCollectSolverInput(TapirIntegrationTest):
             year=year, delivery_week=week, delivery_day=1, bread=bread
         )
 
-        setup_bread_at_location(year, week, loc, bread)
-
         create_bread_delivery_without_validation(
             year=year, week=week, pickup_location=loc, bread=bread
         )
@@ -1388,8 +1362,6 @@ class TestCollectSolverInput(TapirIntegrationTest):
             year=year, delivery_week=week, delivery_day=2, bread=bread
         )
 
-        setup_bread_at_location(year, week, loc, bread)
-
         create_bread_delivery_without_validation(
             year=year, week=week, pickup_location=loc, bread=bread
         )
@@ -1418,21 +1390,6 @@ class TestCollectSolverInput(TapirIntegrationTest):
             year=year, delivery_week=week, delivery_day=4, bread=bread
         )
 
-        BreadCapacityPickupLocationFactory(
-            year=year,
-            delivery_week=week,
-            pickup_location=loc_day2,
-            bread=bread,
-            capacity=10,
-        )
-        BreadCapacityPickupLocationFactory(
-            year=year,
-            delivery_week=week,
-            pickup_location=loc_day4,
-            bread=bread,
-            capacity=10,
-        )
-
         create_bread_delivery_without_validation(
             year=year, week=week, pickup_location=loc_day2, bread=bread
         )
@@ -1459,7 +1416,6 @@ class TestCollectSolverInput(TapirIntegrationTest):
             AvailableBreadsForDeliveryDayFactory(
                 year=year, delivery_week=week, delivery_day=day, bread=bread
             )
-            setup_bread_at_location(year, week, loc, bread)
             create_bread_delivery_without_validation(
                 year=year, week=week, pickup_location=loc, bread=bread
             )
@@ -1553,21 +1509,6 @@ class TestCollectSolverInput(TapirIntegrationTest):
                 year=year, delivery_week=week, pickup_location=loc2, bread=None
             )
 
-        BreadCapacityPickupLocationFactory(
-            year=year,
-            delivery_week=week,
-            pickup_location=loc1,
-            bread=bread,
-            capacity=10,
-        )
-        BreadCapacityPickupLocationFactory(
-            year=year,
-            delivery_week=week,
-            pickup_location=loc2,
-            bread=bread,
-            capacity=10,
-        )
-
         result = collect_solver_input(year=year, delivery_week=week, delivery_day=2)
 
         self.assertIsNotNone(result)
@@ -1609,21 +1550,6 @@ class TestCollectSolverInput(TapirIntegrationTest):
 
         BreadDeliveryFactory(
             year=year, delivery_week=week, pickup_location=loc, bread=None
-        )
-
-        BreadCapacityPickupLocationFactory(
-            year=year,
-            delivery_week=week,
-            pickup_location=loc,
-            bread=bread_span,
-            capacity=10,
-        )
-        BreadCapacityPickupLocationFactory(
-            year=year,
-            delivery_week=week,
-            pickup_location=loc,
-            bread=bread_no_span,
-            capacity=10,
         )
 
         result = collect_solver_input(year=year, delivery_week=week, delivery_day=2)
@@ -2105,14 +2031,6 @@ class TestSolveAndSave(TapirIntegrationTest):
             year=year, delivery_week=week, delivery_day=2, bread=bread
         )
 
-        BreadCapacityPickupLocationFactory(
-            year=year,
-            delivery_week=week,
-            pickup_location=loc,
-            bread=bread,
-            capacity=10,
-        )
-
         for _ in range(5):
             BreadDeliveryFactory(
                 year=year, delivery_week=week, pickup_location=loc, bread=None
@@ -2143,13 +2061,6 @@ class TestSolveAndSave(TapirIntegrationTest):
         loc = create_pickup_location_with_opening_times([day], name="FixedPiecesTest")
         AvailableBreadsForDeliveryDayFactory(
             year=year, delivery_week=week, delivery_day=day, bread=bread
-        )
-        BreadCapacityPickupLocationFactory(
-            year=year,
-            delivery_week=week,
-            pickup_location=loc,
-            bread=bread,
-            capacity=10,
         )
         for _ in range(5):
             BreadDeliveryFactory(
@@ -2509,6 +2420,27 @@ class TestGroupDiagnostics:
             )
             for i, (name, (min_pieces, max_pieces)) in enumerate(zip("AB", limits))
         ]
+
+    def test_diagnoseInfeasibility_ordersAndAnotherBreadsDayMinimumAboveTheGroupMax_namesBoth(
+        self,
+    ):
+        # A is baked at least 12 times, so of the group's 24 only 12 are left
+        # for the 18 members who chose B.
+        bread_a, bread_b = self._dough([(None, 24), (None, 24)])
+        bread_a = replace(bread_a, min_pieces=12)
+
+        diagnostics = self._diagnose(
+            [bread_a, bread_b], total_deliveries=30, fixed_demand={bread_b.bread_id: 18}
+        )
+
+        overflow = next(
+            d
+            for d in diagnostics
+            if d.category == "fixed_demand_exceeds_production" and d.bread_name is None
+        )
+        assert overflow.level == "error"
+        assert "18 Stück" in overflow.message
+        assert "12, die die Gruppe ohnehin backt" in overflow.message
 
     def test_largestMinimumAboveSmallestMaximum_isAConflict(self):
         diagnostics = self._diagnose(self._dough([(24, 48), (12, 12)]))

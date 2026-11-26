@@ -116,7 +116,7 @@ export const GroupsCard: React.FC<GroupsCardProps> = ({
       <div className="card-body card-body-bakery">
         <p className="text-muted small mb-3">
           Brote einer Gruppe (z.B. aus einem Teig) teilen sich am Backtag Min.
-          und Max. Stücke und können zusammen auf einer Etage gebacken werden.
+          und Max. Stück und können zusammen auf einer Etage gebacken werden.
           Zuordnen im Pop-Up „Brot bearbeiten“.
         </p>
 

@@ -33,11 +33,9 @@ export const SingleBreadCard: React.FC<SingleBreadCardProps> = ({
   footerText,
   showAvailability = false,
 }) => {
-  const availableCapacity = bread.availableCapacity;
-  const hasLimitedCapacity =
-    showAvailability &&
-    availableCapacity !== undefined &&
-    availableCapacity <= 5;
+  // null: the bread has no limit on direct orders that day.
+  const remaining = bread.remainingDirectOrders;
+  const hasFewLeft = showAvailability && remaining != null && remaining <= 5;
   return (
     <div style={{ width, flex: `0 0 ${width}` }}>
       <div
@@ -103,13 +101,13 @@ export const SingleBreadCard: React.FC<SingleBreadCardProps> = ({
             </small>
           )}
 
-          {showAvailability && availableCapacity !== undefined && (
+          {showAvailability && remaining != null && (
             <div className="mb-2">
               <span
-                className={`badge ${hasLimitedCapacity ? "bg-warning text-dark" : "badge-bakery-success"}`}
+                className={`badge ${hasFewLeft ? "bg-warning text-dark" : "badge-bakery-success"}`}
                 style={{ fontSize: "0.7rem" }}
               >
-                {availableCapacity} verfügbar
+                {remaining} verfügbar
               </span>
             </div>
           )}

@@ -73,6 +73,12 @@ export interface BreadListRequest {
    */
   minRemainingPieces?: number | null;
   /**
+   * Share of a baking day's capacity (max_pieces, less min_remaining_pieces) that members may order directly, in percent. See DirectOrderLimitService.
+   * @type {number}
+   * @memberof BreadListRequest
+   */
+  maxDirectOrderPercent?: number;
+  /**
    *
    * @type {boolean}
    * @memberof BreadListRequest
@@ -133,6 +139,10 @@ export function BreadListRequestFromJSONTyped(
       json["min_remaining_pieces"] == null
         ? undefined
         : json["min_remaining_pieces"],
+    maxDirectOrderPercent:
+      json["max_direct_order_percent"] == null
+        ? undefined
+        : json["max_direct_order_percent"],
     isActive: json["is_active"] == null ? undefined : json["is_active"],
     group: json["group"] == null ? undefined : json["group"],
     labels: json["labels"] == null ? undefined : json["labels"],
@@ -162,6 +172,7 @@ export function BreadListRequestToJSONTyped(
     min_pieces: value["minPieces"],
     max_pieces: value["maxPieces"],
     min_remaining_pieces: value["minRemainingPieces"],
+    max_direct_order_percent: value["maxDirectOrderPercent"],
     is_active: value["isActive"],
     group: value["group"],
     labels: value["labels"],

@@ -37,6 +37,12 @@ export interface ToggleBreadResponse {
    */
   deleted?: boolean;
   /**
+   * Members' choices of the bread on that day, cleared when it is switched off, or that would be with dry_run.
+   * @type {number}
+   * @memberof ToggleBreadResponse
+   */
+  clearedChoices?: number;
+  /**
    *
    * @type {string}
    * @memberof ToggleBreadResponse
@@ -70,6 +76,8 @@ export function ToggleBreadResponseFromJSONTyped(
     success: json["success"],
     created: json["created"] == null ? undefined : json["created"],
     deleted: json["deleted"] == null ? undefined : json["deleted"],
+    clearedChoices:
+      json["cleared_choices"] == null ? undefined : json["cleared_choices"],
     breadId: json["bread_id"],
   };
 }
@@ -90,6 +98,7 @@ export function ToggleBreadResponseToJSONTyped(
     success: value["success"],
     created: value["created"],
     deleted: value["deleted"],
+    cleared_choices: value["clearedChoices"],
     bread_id: value["breadId"],
   };
 }

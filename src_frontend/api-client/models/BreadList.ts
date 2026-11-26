@@ -28,23 +28,23 @@ export interface BreadList {
    */
   readonly id: string;
   /**
-   *
+   * Set for a pickup location's week only: the bread's direct-order limit on the pickup location's delivery day, null when unlimited.
    * @type {number}
    * @memberof BreadList
    */
-  readonly capacity: number;
+  readonly directOrderLimit: number | null;
   /**
-   *
+   * Set for a pickup location's week only: direct orders of the bread on that delivery day, over all pickup locations delivered that day.
    * @type {number}
    * @memberof BreadList
    */
-  readonly deliveryCount: number;
+  readonly directOrders: number;
   /**
-   *
+   * Set for a pickup location's week only: what is left of the bread's limit and its group's, null when neither has one.
    * @type {number}
    * @memberof BreadList
    */
-  readonly availableCapacity: number;
+  readonly remainingDirectOrders: number | null;
   /**
    *
    * @type {Array<BreadContent>}
@@ -124,6 +124,12 @@ export interface BreadList {
    */
   minRemainingPieces?: number | null;
   /**
+   * Share of a baking day's capacity (max_pieces, less min_remaining_pieces) that members may order directly, in percent. See DirectOrderLimitService.
+   * @type {number}
+   * @memberof BreadList
+   */
+  maxDirectOrderPercent?: number;
+  /**
    *
    * @type {boolean}
    * @memberof BreadList
@@ -148,12 +154,13 @@ export interface BreadList {
  */
 export function instanceOfBreadList(value: object): value is BreadList {
   if (!("id" in value) || value["id"] === undefined) return false;
-  if (!("capacity" in value) || value["capacity"] === undefined) return false;
-  if (!("deliveryCount" in value) || value["deliveryCount"] === undefined)
+  if (!("directOrderLimit" in value) || value["directOrderLimit"] === undefined)
+    return false;
+  if (!("directOrders" in value) || value["directOrders"] === undefined)
     return false;
   if (
-    !("availableCapacity" in value) ||
-    value["availableCapacity"] === undefined
+    !("remainingDirectOrders" in value) ||
+    value["remainingDirectOrders"] === undefined
   )
     return false;
   if (!("contents" in value) || value["contents"] === undefined) return false;
@@ -178,9 +185,9 @@ export function BreadListFromJSONTyped(
   }
   return {
     id: json["id"],
-    capacity: json["capacity"],
-    deliveryCount: json["delivery_count"],
-    availableCapacity: json["available_capacity"],
+    directOrderLimit: json["direct_order_limit"],
+    directOrders: json["direct_orders"],
+    remainingDirectOrders: json["remaining_direct_orders"],
     contents: (json["contents"] as Array<any>).map(BreadContentFromJSON),
     groupName: json["group_name"],
     createdAt: new Date(json["created_at"]),
@@ -203,6 +210,10 @@ export function BreadListFromJSONTyped(
       json["min_remaining_pieces"] == null
         ? undefined
         : json["min_remaining_pieces"],
+    maxDirectOrderPercent:
+      json["max_direct_order_percent"] == null
+        ? undefined
+        : json["max_direct_order_percent"],
     isActive: json["is_active"] == null ? undefined : json["is_active"],
     group: json["group"] == null ? undefined : json["group"],
     labels: json["labels"] == null ? undefined : json["labels"],
@@ -217,9 +228,9 @@ export function BreadListToJSONTyped(
   value?: Omit<
     BreadList,
     | "id"
-    | "capacity"
-    | "delivery_count"
-    | "available_capacity"
+    | "direct_order_limit"
+    | "direct_orders"
+    | "remaining_direct_orders"
     | "contents"
     | "group_name"
     | "created_at"
@@ -242,6 +253,7 @@ export function BreadListToJSONTyped(
     min_pieces: value["minPieces"],
     max_pieces: value["maxPieces"],
     min_remaining_pieces: value["minRemainingPieces"],
+    max_direct_order_percent: value["maxDirectOrderPercent"],
     is_active: value["isActive"],
     group: value["group"],
     labels: value["labels"],

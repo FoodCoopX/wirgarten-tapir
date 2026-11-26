@@ -62,6 +62,18 @@ class TestParseWeekParams(TestCase):
         self.assertIsInstance(result, Response)
         self.assertEqual(result.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_parseWeekParams_weekNotInTheYear_returnsErrorResponse(self):
+        params = {"year": "2027", "delivery_week": "53"}
+        result = parse_week_params(params)
+        self.assertIsInstance(result, Response)
+        self.assertEqual(result.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_parseWeekParams_dayOutOfRange_returnsErrorResponse(self):
+        params = {"year": "2026", "delivery_week": "11", "delivery_day": "7"}
+        result = parse_week_params(params)
+        self.assertIsInstance(result, Response)
+        self.assertEqual(result.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_nonNumericDay_returnsErrorResponse(self):
         params = {"year": "2026", "delivery_week": "11", "delivery_day": "abc"}
         result = parse_week_params(params)

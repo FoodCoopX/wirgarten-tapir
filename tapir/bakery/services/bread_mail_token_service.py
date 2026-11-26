@@ -76,9 +76,9 @@ class BreadMailTokenService:
         if delivery_day is None:
             return cls.NOT_APPLICABLE
 
-        breads = TapirCache.get_breads_with_capacity_by_pickup_location_id(
+        breads = TapirCache.get_active_breads_by_delivery_day(
             cache=cache, year=year, delivery_week=delivery_week
-        ).get(pickup_location_id, [])
+        ).get(delivery_day, [])
         if not breads:
             return cls.BREADS_NOT_SET_YET
 

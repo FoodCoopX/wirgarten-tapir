@@ -17,7 +17,6 @@ def collect_solver_input(
     from tapir.bakery.models import (
         AvailableBreadsForDeliveryDay,
         Bread,
-        BreadCapacityPickupLocation,
         BreadSpecificsPerDeliveryDay,
     )
     from tapir.bakery.services.bread_delivery_context_service import (
@@ -167,32 +166,14 @@ def collect_solver_input(
         logger.debug("No pickup locations found!")
         return None
 
-    caps_qs = BreadCapacityPickupLocation.objects.filter(
-        year=year, delivery_week=delivery_week
-    )
-
-    if delivery_day is not None:
-        delivery_days = TapirCache.get_delivery_day_by_pickup_location_id(
-            cache=tapir_cache
-        )
-        caps_list = [
-            c
-            for c in caps_qs
-            if delivery_days.get(c.pickup_location_id) == delivery_day
-        ]
-    else:
-        caps_list = list(caps_qs)
-
-    capacities = {(c.bread_id, c.pickup_location_id): c.capacity for c in caps_list}
-
-    for bread in available_breads:
-        for loc in pickup_locations:
-            if (bread.bread_id, loc.location_id) not in capacities:
-                capacities[(bread.bread_id, loc.location_id)] = loc.total_deliveries
-                logger.debug(
-                    f"  ⚠️  Missing capacity for {bread.name} at {loc.name}, "
-                    f"defaulting to {loc.total_deliveries}"
-                )
+    # Every pickup location offers every bread of its day; how many members
+    # may choose directly is limited per bread and day, see
+    # DirectOrderLimitService.
+    capacities = {
+        (bread.bread_id, loc.location_id): loc.total_deliveries
+        for bread in available_breads
+        for loc in pickup_locations
+    }
 
     member_preferences = get_member_preferences(
         year, delivery_week, delivery_day, cache=tapir_cache

@@ -6,7 +6,6 @@ from django.test import override_settings
 from tapir.bakery.models import (
     AvailableBreadsForDeliveryDay,
     Bread,
-    BreadCapacityPickupLocation,
     BreadContent,
     BreadDelivery,
     BreadLabel,
@@ -77,17 +76,6 @@ class TestBakeryGenerator(TapirIntegrationTest):
         self.assertTrue(product_type.must_be_subscribed_to)
         self.assertEqual(product_type.product_set.count(), 3)
 
-    def test_generateWeekData_capacityForEveryStationWeekAndBread(self):
-        create_pickup_location_with_opening_times([4], name="Hofladen")
-        BakeryGenerator.generate_masterdata()
-
-        BakeryGenerator.generate_week_data()
-
-        self.assertEqual(
-            BreadCapacityPickupLocation.objects.count(),
-            Bread.objects.count() * BakeryGenerator.NUMBER_OF_WEEKS_WITH_DATA,
-        )
-
     def test_generateWeekData_coversEveryStationsOwnDeliveryDay(self):
         thursday_only = create_pickup_location_with_opening_times(
             [4, 5], name="Warenhaus"
@@ -147,13 +135,16 @@ class TestBakeryGenerator(TapirIntegrationTest):
             if delivery.bread is None:
                 continue
             self.assertTrue(
-                BreadCapacityPickupLocation.objects.filter(
+                AvailableBreadsForDeliveryDay.objects.filter(
                     year=delivery.year,
                     delivery_week=delivery.delivery_week,
-                    bread=delivery.bread,
-                    pickup_location_id=BreadDeliveryContextService.get_pickup_location_id(
-                        delivery, cache=cache
+                    delivery_day=PickupLocationDeliveryDayService.get_delivery_day(
+                        pickup_location_id=BreadDeliveryContextService.get_pickup_location_id(
+                            delivery, cache=cache
+                        ),
+                        cache=cache,
                     ),
+                    bread=delivery.bread,
                 ).exists(),
             )
 
@@ -197,7 +188,6 @@ class TestBakeryGenerator(TapirIntegrationTest):
             BreadLabel,
             Ingredient,
             BreadContent,
-            BreadCapacityPickupLocation,
             AvailableBreadsForDeliveryDay,
             BreadDelivery,
         ]:

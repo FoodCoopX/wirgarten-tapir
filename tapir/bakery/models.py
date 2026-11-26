@@ -1,4 +1,4 @@
-from django.core.validators import MinValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from tapir.core.models import TapirModel
@@ -77,6 +77,11 @@ class Bread(TapirModel):
         null=True,
         help_text="Minimum amount of breads that should remain available for this bread on a baking day (e.g., for walk-in customers)",
     )
+    max_direct_order_percent = models.PositiveSmallIntegerField(
+        default=100,
+        validators=[MaxValueValidator(100)],
+        help_text="Share of a baking day's capacity (max_pieces, less min_remaining_pieces) that members may order directly, in percent. See DirectOrderLimitService.",
+    )
 
     is_active = models.BooleanField(default=True)
 
@@ -118,6 +123,12 @@ class BreadContent(TapirModel):
 
 
 class BreadCapacityPickupLocation(TapirModel):
+    """
+    No longer read nor written: a bread is offered at every pickup location of
+    the days it is baked on, and DirectOrderLimitService limits direct orders
+    per bread and day. Kept until a follow-up migration drops it.
+    """
+
     year = models.PositiveIntegerField(help_text="Year for which this capacity applies")
     delivery_week = models.PositiveIntegerField(help_text="Delivery week number (1-53)")
     pickup_location = models.ForeignKey(
@@ -371,6 +382,12 @@ class BreadSpecificsPerDeliveryDay(TapirModel):
         blank=True,
         null=True,
         help_text="If set, exactly this number of pieces should be baked for this bread on this delivery day (overrides min/max)",
+    )
+    max_direct_order_percent = models.PositiveSmallIntegerField(
+        blank=True,
+        null=True,
+        validators=[MaxValueValidator(100)],
+        help_text="Overrides the bread's max_direct_order_percent on this delivery day",
     )
 
     class Meta:

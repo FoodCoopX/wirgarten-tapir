@@ -4,7 +4,7 @@ from tapir.mail.models import StaticSegmentRecipient
 
 from tapir.bakery.services.bread_mail_token_service import BreadMailTokenService
 from tapir.bakery.tests.factories import (
-    BreadCapacityPickupLocationFactory,
+    AvailableBreadsForDeliveryDayFactory,
     BreadContentFactory,
     BreadDeliveryFactory,
     BreadFactory,
@@ -60,27 +60,25 @@ class TestBreadMailTokenService(TapirIntegrationTest):
         return delivery.subscription.member
 
     @staticmethod
-    def _add_capacity(
-        pickup_location: PickupLocation,
+    def _bake(
         name: str,
+        delivery_day: int,
         description: str = "",
         ingredients: tuple[str, ...] = (),
         week: int = THIS_WEEK,
-        capacity: int = 10,
+        is_active: bool = True,
     ):
-        bread = BreadFactory.create(name=name, description=description)
+        bread = BreadFactory.create(
+            name=name, description=description, is_active=is_active
+        )
         for sort_order, ingredient_name in enumerate(ingredients):
             BreadContentFactory.create(
                 bread=bread,
                 ingredient=IngredientFactory.create(name=ingredient_name),
                 sort_order=sort_order,
             )
-        BreadCapacityPickupLocationFactory.create(
-            year=YEAR,
-            delivery_week=week,
-            pickup_location=pickup_location,
-            bread=bread,
-            capacity=capacity,
+        AvailableBreadsForDeliveryDayFactory.create(
+            year=YEAR, delivery_week=week, delivery_day=delivery_day, bread=bread
         )
 
     def test_breadsThisWeek_default_returnsDayAndBreadsSortedByName(self):
@@ -88,15 +86,15 @@ class TestBreadMailTokenService(TapirIntegrationTest):
         member = self._create_member_with_bread_delivery(
             pickup_location=pickup_location
         )
-        self._add_capacity(
-            pickup_location=pickup_location,
+        self._bake(
             name="Roggenbrot",
+            delivery_day=1,
             description="Kräftig",
             ingredients=("Roggen", "Salz"),
         )
-        self._add_capacity(
-            pickup_location=pickup_location,
+        self._bake(
             name="Dinkelkruste",
+            delivery_day=1,
             description="Mild & locker",
             ingredients=("Dinkel",),
         )
@@ -115,38 +113,33 @@ class TestBreadMailTokenService(TapirIntegrationTest):
         member = self._create_member_with_bread_delivery(
             pickup_location=pickup_location
         )
-        self._add_capacity(pickup_location=pickup_location, name="Roggenbrot")
+        self._bake(name="Roggenbrot", delivery_day=1)
 
         self.assertEqual(
             "Dienstag, 10.03.2026<br>Roggenbrot",
             BreadMailTokenService.breads_this_week(recipient=member, cache={}),
         )
 
-    def test_breadsThisWeek_breadWithZeroCapacity_isNotListed(self):
+    def test_breadsThisWeek_breadBakedOnAnotherDay_isNotListed(self):
         pickup_location = self._create_pickup_location(delivery_day=1)
         member = self._create_member_with_bread_delivery(
             pickup_location=pickup_location
         )
-        self._add_capacity(pickup_location=pickup_location, name="Roggenbrot")
-        self._add_capacity(
-            pickup_location=pickup_location, name="Dinkelkruste", capacity=0
-        )
+        self._bake(name="Roggenbrot", delivery_day=1)
+        self._bake(name="Dinkelkruste", delivery_day=3)
 
         self.assertEqual(
             "Dienstag, 10.03.2026<br>Roggenbrot",
             BreadMailTokenService.breads_this_week(recipient=member, cache={}),
         )
 
-    def test_breadsThisWeek_breadOfAnotherPickupLocation_isNotListed(self):
+    def test_breadsThisWeek_inactiveBread_isNotListed(self):
         pickup_location = self._create_pickup_location(delivery_day=1)
         member = self._create_member_with_bread_delivery(
             pickup_location=pickup_location
         )
-        self._add_capacity(pickup_location=pickup_location, name="Roggenbrot")
-        self._add_capacity(
-            pickup_location=self._create_pickup_location(delivery_day=1),
-            name="Dinkelkruste",
-        )
+        self._bake(name="Roggenbrot", delivery_day=1)
+        self._bake(name="Dinkelkruste", delivery_day=1, is_active=False)
 
         self.assertEqual(
             "Dienstag, 10.03.2026<br>Roggenbrot",
@@ -170,7 +163,7 @@ class TestBreadMailTokenService(TapirIntegrationTest):
             pickup_location=pickup_location,
             valid_from=datetime.date(2000, 1, 1),
         )
-        self._add_capacity(pickup_location=pickup_location, name="Roggenbrot")
+        self._bake(name="Roggenbrot", delivery_day=1)
 
         self.assertEqual(
             BreadMailTokenService.NOT_APPLICABLE,
@@ -182,7 +175,7 @@ class TestBreadMailTokenService(TapirIntegrationTest):
         member = self._create_member_with_bread_delivery(
             pickup_location=pickup_location, joker_taken=True
         )
-        self._add_capacity(pickup_location=pickup_location, name="Roggenbrot")
+        self._bake(name="Roggenbrot", delivery_day=1)
 
         self.assertEqual(
             BreadMailTokenService.JOKER_TAKEN,
@@ -197,7 +190,7 @@ class TestBreadMailTokenService(TapirIntegrationTest):
             BreadMailTokenService.breads_this_week(recipient=member, cache={}),
         )
 
-    def test_breadsThisWeek_noCapacitiesYet_returnsBreadsNotSetYet(self):
+    def test_breadsThisWeek_noBreadsBakedYet_returnsBreadsNotSetYet(self):
         pickup_location = self._create_pickup_location(delivery_day=1)
         member = self._create_member_with_bread_delivery(
             pickup_location=pickup_location
@@ -219,13 +212,9 @@ class TestBreadMailTokenService(TapirIntegrationTest):
             pickup_location=new_pickup_location,
             valid_from=datetime.date(2026, 3, 16),
         )
-        self._add_capacity(
-            pickup_location=old_pickup_location, name="Roggenbrot", week=NEXT_WEEK
-        )
-        self._add_capacity(
-            pickup_location=new_pickup_location, name="Dinkelkruste", week=NEXT_WEEK
-        )
-        self._add_capacity(pickup_location=new_pickup_location, name="Vollkornbrot")
+        self._bake(name="Roggenbrot", delivery_day=1, week=NEXT_WEEK)
+        self._bake(name="Dinkelkruste", delivery_day=3, week=NEXT_WEEK)
+        self._bake(name="Vollkornbrot", delivery_day=3)
 
         self.assertEqual(
             "Donnerstag, 19.03.2026<br>Dinkelkruste",

@@ -6,7 +6,6 @@ from tapir.bakery.models import (
     AvailableBreadsForDeliveryDay,
     BreadsToBakePerWeek,
     Bread,
-    BreadCapacityPickupLocation,
     BreadContent,
     BreadDelivery,
     BreadGroup,
@@ -18,11 +17,15 @@ from tapir.bakery.models import (
     StoveSession,
 )
 from tapir.deliveries.models import Joker
-from tapir.wirgarten.models import MemberPickupLocation
+from tapir.pickup_locations.services.pickup_location_delivery_day_service import (
+    PickupLocationDeliveryDayService,
+)
+from tapir.wirgarten.models import MemberPickupLocation, PickupLocationOpeningTime
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
     MemberPickupLocationFactory,
     PickupLocationFactory,
+    PickupLocationOpeningTimesFactory,
     ProductFactory,
     ProductTypeFactory,
     SubscriptionFactory,
@@ -99,17 +102,6 @@ class BreadContentFactory(factory.django.DjangoModelFactory):
     sort_order = factory.Sequence(lambda n: n)
 
 
-class BreadCapacityPickupLocationFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = BreadCapacityPickupLocation
-
-    year = 2026
-    delivery_week = factory.Faker("random_int", min=1, max=53)
-    pickup_location = factory.SubFactory(PickupLocationFactory)
-    bread = factory.SubFactory(BreadFactory)
-    capacity = factory.Faker("random_int", min=5, max=50)
-
-
 class AvailableBreadsForDeliveryDayFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = AvailableBreadsForDeliveryDay
@@ -118,6 +110,31 @@ class AvailableBreadsForDeliveryDayFactory(factory.django.DjangoModelFactory):
     delivery_week = factory.Faker("random_int", min=1, max=53)
     delivery_day = factory.Faker("random_int", min=0, max=6)
     bread = factory.SubFactory(BreadFactory)
+
+
+def offer_bread_at_pickup_location(
+    bread, pickup_location, year, delivery_week, delivery_day=2
+):
+    """
+    Bakes the bread on the pickup location's delivery day that week, which is
+    what makes the pickup location offer it. One without opening times first
+    gets delivery_day as its only one.
+    """
+    if not PickupLocationOpeningTime.objects.filter(
+        pickup_location=pickup_location
+    ).exists():
+        PickupLocationOpeningTimesFactory.create(
+            pickup_location=pickup_location, day_of_week=delivery_day
+        )
+    entry, _ = AvailableBreadsForDeliveryDay.objects.get_or_create(
+        year=year,
+        delivery_week=delivery_week,
+        delivery_day=PickupLocationDeliveryDayService.get_delivery_day(
+            pickup_location.id, cache={}
+        ),
+        bread=bread,
+    )
+    return entry
 
 
 class BreadDeliveryFactory(factory.django.DjangoModelFactory):

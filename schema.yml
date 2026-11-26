@@ -698,12 +698,95 @@ paths:
               schema:
                 $ref: '#/components/schemas/SolverError'
           description: ''
-  /bakery/api/bread-capacity-allocations/:
+  /bakery/api/copy-week-settings/:
     get:
-      operationId: bakery_api_bread_capacity_allocations_retrieve
-      description: The capacities of one delivery day, shaped the way the allocation
-        table needs them.
-      summary: Get the bread capacities of every station delivered on a weekday
+      operationId: bakery_api_copy_week_settings_retrieve
+      description: Weeks before the given one that bake an active bread, latest first.
+      summary: List the earlier weeks whose bread plan can be copied into a week
+      parameters:
+      - in: query
+        name: delivery_week
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: year
+        schema:
+          type: integer
+        required: true
+      tags:
+      - bakery
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WeekSettingsSourcesResponse'
+          description: ''
+    post:
+      operationId: bakery_api_copy_week_settings_create
+      description: Replaces, on each delivery day of the target week that is not over,
+        the breads baked and their day settings with the source week's, and clears
+        members' choices of breads no longer baked. With dry_run, only says what it
+        would do.
+      summary: Copy the bread plan and day settings of an earlier week into a week
+      tags:
+      - bakery
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CopyWeekSettingsRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CopyWeekSettingsRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CopyWeekSettingsRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CopyWeekSettingsResponse'
+          description: ''
+        '400':
+          description: 'Validation errors: a week that does not exist, or a source
+            week that is not before the target week or bakes no active bread'
+  /bakery/api/delivery-days/:
+    get:
+      operationId: bakery_api_delivery_days_retrieve
+      description: Returns the earliest delivery day per pickup location, 0=Montag.
+      summary: Get distinct list of delivery days
+      tags:
+      - bakery
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeliveryDaysResponse'
+          description: ''
+  /bakery/api/direct-order-limits/:
+    get:
+      operationId: bakery_api_direct_order_limits_retrieve
+      description: |-
+        What members may order directly of each bread on one delivery day. The
+        percentages are saved through the bread specifics bulk update.
+      summary: Get the direct-order limits of every bread baked on a delivery day
       parameters:
       - in: query
         name: delivery_day
@@ -731,53 +814,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BreadCapacityAllocationResponse'
-          description: ''
-    post:
-      operationId: bakery_api_bread_capacity_allocations_create
-      description: The capacities of one delivery day, shaped the way the allocation
-        table needs them.
-      summary: Create, update and delete bread capacities in one request
-      tags:
-      - bakery
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/BreadCapacityBulkUpdateRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/BreadCapacityBulkUpdateRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/BreadCapacityBulkUpdateRequest'
-        required: true
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          description: '{"status": "success"}'
-        '400':
-          description: Validation errors
-  /bakery/api/delivery-days/:
-    get:
-      operationId: bakery_api_delivery_days_retrieve
-      description: Returns the earliest delivery day per pickup location, 0=Montag.
-      summary: Get distinct list of delivery days
-      tags:
-      - bakery
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DeliveryDaysResponse'
+                $ref: '#/components/schemas/DirectOrderLimitsResponse'
           description: ''
   /bakery/api/pickup-locations-by-delivery-day/:
     get:
@@ -872,7 +909,8 @@ paths:
           description: ''
     post:
       operationId: bakery_available_breads_for_delivery_create
-      description: Get or toggle breads for a specific year, week and day
+      description: Switching a bread off clears the members' choices of it for that
+        day. With dry_run, only counts them. A day that is over can no longer be changed.
       summary: Toggle bread availability for a delivery day
       tags:
       - bakery
@@ -899,6 +937,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/ToggleBreadResponse'
           description: ''
+        '400':
+          description: Validation errors, or the delivery day is over
+        '404':
+          description: Bread not found
   /bakery/bread-deliveries/:
     get:
       operationId: bakery_bread_deliveries_list
@@ -1525,6 +1567,13 @@ paths:
       operationId: bakery_breads_list_list
       description: One TapirCache for the whole request, shared with the serializer.
       parameters:
+      - in: query
+        name: delivery_id
+        schema:
+          type: string
+        description: 'The slot being chosen for (with pickup_location_id, year and
+          week): its own choice is left out of the counts, so a switch to another
+          bread of a full group is offered.'
       - in: query
         name: is_active
         schema:
@@ -9629,6 +9678,9 @@ components:
           type: integer
         delivery_day:
           type: integer
+        delivery_day_is_over:
+          type: boolean
+          description: Its breads can no longer be switched on or off.
         breads:
           type: array
           items:
@@ -9636,6 +9688,7 @@ components:
       required:
       - breads
       - delivery_day
+      - delivery_day_is_over
       - delivery_week
       - year
     AvailableSegmentsResponse:
@@ -10205,58 +10258,6 @@ components:
       - bread_name
       - count
       - directly_chosen
-    BreadCapacityAllocationResponse:
-      type: object
-      properties:
-        pickup_locations:
-          type: array
-          items:
-            $ref: '#/components/schemas/PickupLocationDeliveryDay'
-        allocations:
-          type: object
-          additionalProperties:
-            type: object
-            additionalProperties:
-              type: integer
-              nullable: true
-      required:
-      - allocations
-      - pickup_locations
-    BreadCapacityBulkUpdateRequest:
-      type: object
-      properties:
-        year:
-          type: integer
-          minimum: 0
-        delivery_week:
-          type: integer
-          maximum: 53
-          minimum: 1
-        updates:
-          type: array
-          items:
-            $ref: '#/components/schemas/BreadCapacityUpdateItemRequest'
-      required:
-      - delivery_week
-      - updates
-      - year
-    BreadCapacityUpdateItemRequest:
-      type: object
-      properties:
-        pickup_location:
-          type: string
-          minLength: 1
-        bread:
-          type: string
-          minLength: 1
-        capacity:
-          type: integer
-          maximum: 1000
-          minimum: 0
-          nullable: true
-      required:
-      - bread
-      - pickup_location
     BreadContent:
       type: object
       properties:
@@ -10427,25 +10428,80 @@ components:
           readOnly: true
         is_active:
           type: boolean
-        capacity:
+        direct_order_limit:
           type: integer
           readOnly: true
-        delivery_count:
+          nullable: true
+          description: 'Set for a pickup location''s week only: the bread''s direct-order
+            limit on the pickup location''s delivery day, null when unlimited.'
+        direct_orders:
           type: integer
           readOnly: true
-        available_capacity:
+          description: 'Set for a pickup location''s week only: direct orders of the
+            bread on that delivery day, over all pickup locations delivered that day.'
+        remaining_direct_orders:
           type: integer
           readOnly: true
+          nullable: true
+          description: 'Set for a pickup location''s week only: what is left of the
+            bread''s limit and its group''s, null when neither has one.'
       required:
-      - available_capacity
-      - capacity
       - contents
-      - delivery_count
+      - direct_order_limit
+      - direct_orders
       - id
       - label_names
       - labels
       - name
+      - remaining_direct_orders
       - weight
+    BreadDirectOrderLimit:
+      type: object
+      properties:
+        bread_id:
+          type: string
+        bread_name:
+          type: string
+        group_id:
+          type: string
+          nullable: true
+        group_name:
+          type: string
+          nullable: true
+        total_capacity:
+          type: integer
+          nullable: true
+          description: What may be baked of the bread that day; null when nothing
+            bounds it.
+        total_capacity_source:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/TotalCapacitySourceEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        min_remaining:
+          type: integer
+        default_percent:
+          type: integer
+        percent:
+          type: integer
+        limit:
+          type: integer
+          nullable: true
+          description: How many members may choose directly; null means unlimited.
+        ordered:
+          type: integer
+      required:
+      - bread_id
+      - bread_name
+      - default_percent
+      - group_id
+      - group_name
+      - limit
+      - min_remaining
+      - ordered
+      - percent
+      - total_capacity
+      - total_capacity_source
     BreadGroup:
       type: object
       properties:
@@ -10524,15 +10580,23 @@ components:
         id:
           type: string
           readOnly: true
-        capacity:
+        direct_order_limit:
           type: integer
           readOnly: true
-        delivery_count:
+          nullable: true
+          description: 'Set for a pickup location''s week only: the bread''s direct-order
+            limit on the pickup location''s delivery day, null when unlimited.'
+        direct_orders:
           type: integer
           readOnly: true
-        available_capacity:
+          description: 'Set for a pickup location''s week only: direct orders of the
+            bread on that delivery day, over all pickup locations delivered that day.'
+        remaining_direct_orders:
           type: integer
           readOnly: true
+          nullable: true
+          description: 'Set for a pickup location''s week only: what is left of the
+            bread''s limit and its group''s, null when neither has one.'
         contents:
           type: array
           items:
@@ -10595,6 +10659,12 @@ components:
           nullable: true
           description: Minimum amount of breads that should remain available for this
             bread on a baking day (e.g., for walk-in customers)
+        max_direct_order_percent:
+          type: integer
+          maximum: 100
+          minimum: 0
+          description: Share of a baking day's capacity (max_pieces, less min_remaining_pieces)
+            that members may order directly, in percent. See DirectOrderLimitService.
         is_active:
           type: boolean
         group:
@@ -10605,14 +10675,14 @@ components:
           items:
             type: string
       required:
-      - available_capacity
-      - capacity
       - contents
       - created_at
-      - delivery_count
+      - direct_order_limit
+      - direct_orders
       - group_name
       - id
       - name
+      - remaining_direct_orders
       - updated_at
       - weight
     BreadListRequest:
@@ -10664,6 +10734,12 @@ components:
           nullable: true
           description: Minimum amount of breads that should remain available for this
             bread on a baking day (e.g., for walk-in customers)
+        max_direct_order_percent:
+          type: integer
+          maximum: 100
+          minimum: 0
+          description: Share of a baking day's capacity (max_pieces, less min_remaining_pieces)
+            that members may order directly, in percent. See DirectOrderLimitService.
         is_active:
           type: boolean
         group:
@@ -10705,7 +10781,7 @@ components:
           minimum: 0
         delivery_day:
           type: integer
-          maximum: 2147483647
+          maximum: 6
           minimum: 0
         min_pieces:
           type: integer
@@ -10737,6 +10813,13 @@ components:
           nullable: true
           description: If set, exactly this number of pieces should be baked for this
             bread on this delivery day (overrides min/max)
+        max_direct_order_percent:
+          type: integer
+          maximum: 100
+          minimum: 0
+          nullable: true
+          description: Overrides the bread's max_direct_order_percent on this delivery
+            day
         bread:
           type: string
       required:
@@ -10750,6 +10833,7 @@ components:
       - year
     BreadSpecificsPerDeliveryDayBulkUpdateItemRequest:
       type: object
+      description: A field left out keeps its value; null clears it.
       properties:
         bread:
           type: string
@@ -10772,6 +10856,11 @@ components:
         fixed_pieces:
           type: integer
           maximum: 1000
+          minimum: 0
+          nullable: true
+        max_direct_order_percent:
+          type: integer
+          maximum: 100
           minimum: 0
           nullable: true
       required:
@@ -10812,7 +10901,7 @@ components:
           minimum: 0
         delivery_day:
           type: integer
-          maximum: 2147483647
+          maximum: 6
           minimum: 0
         min_pieces:
           type: integer
@@ -10844,6 +10933,13 @@ components:
           nullable: true
           description: If set, exactly this number of pieces should be baked for this
             bread on this delivery day (overrides min/max)
+        max_direct_order_percent:
+          type: integer
+          maximum: 100
+          minimum: 0
+          nullable: true
+          description: Overrides the bread's max_direct_order_percent on this delivery
+            day
         bread:
           type: string
           minLength: 1
@@ -11244,6 +11340,50 @@ components:
       - transaction_type
       - updated_at
       - valid_at
+    CopyWeekSettingsRequestRequest:
+      type: object
+      properties:
+        source_year:
+          type: integer
+        source_week:
+          type: integer
+          maximum: 53
+          minimum: 1
+        target_year:
+          type: integer
+        target_week:
+          type: integer
+          maximum: 53
+          minimum: 1
+        dry_run:
+          type: boolean
+          default: false
+          description: Changes nothing; the response says what copying would do.
+      required:
+      - source_week
+      - source_year
+      - target_week
+      - target_year
+    CopyWeekSettingsResponse:
+      type: object
+      properties:
+        copied_days:
+          type: array
+          items:
+            type: integer
+          description: Days of the target week replaced, or that would be with dry_run.
+        kept_days:
+          type: array
+          items:
+            type: integer
+          description: Days of the target week that are over and keep their settings.
+        cleared_choices:
+          type: integer
+          description: Members' choices of breads the copy stops baking on their day.
+      required:
+      - cleared_choices
+      - copied_days
+      - kept_days
     CountryEnum:
       enum:
       - AD
@@ -12511,6 +12651,20 @@ components:
       - cancellation_limit
       - delivery_date
       - donation
+    DirectOrderLimitsResponse:
+      type: object
+      properties:
+        breads:
+          type: array
+          items:
+            $ref: '#/components/schemas/BreadDirectOrderLimit'
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/GroupDirectOrderLimit'
+      required:
+      - breads
+      - groups
     DispatchStatusEnum:
       enum:
       - error
@@ -13460,6 +13614,54 @@ components:
       - color
       - name
       - values
+    GroupDirectOrderLimit:
+      type: object
+      properties:
+        group_id:
+          type: string
+        group_name:
+          type: string
+        bread_ids:
+          type: array
+          items:
+            type: string
+          description: 'The breads sharing the group''s limit: those without a fixed
+            amount.'
+        max_pieces:
+          type: integer
+          nullable: true
+        fixed_pieces:
+          type: integer
+          description: What the group's breads with a fixed amount take of max_pieces.
+        total_capacity:
+          type: integer
+          nullable: true
+          description: max_pieces less fixed_pieces.
+        min_remaining:
+          type: integer
+        open_min_pieces:
+          type: integer
+          description: Day minimums of the group's breads not yet covered by their
+            own orders and Min. Rest, held back like Min. Rest.
+        percent:
+          type: integer
+        limit:
+          type: integer
+          nullable: true
+        ordered:
+          type: integer
+      required:
+      - bread_ids
+      - fixed_pieces
+      - group_id
+      - group_name
+      - limit
+      - max_pieces
+      - min_remaining
+      - open_min_pieces
+      - ordered
+      - percent
+      - total_capacity
     GroupedEmailDispatch:
       type: object
       properties:
@@ -14858,6 +15060,9 @@ components:
       description: |-
         * `months` - Monate
         * `weeks` - Wochen
+    NullEnum:
+      enum:
+      - null
     NumberOfAssociationMembersPerMonthResponse:
       type: object
       properties:
@@ -15295,6 +15500,12 @@ components:
           nullable: true
           description: Minimum amount of breads that should remain available for this
             bread on a baking day (e.g., for walk-in customers)
+        max_direct_order_percent:
+          type: integer
+          maximum: 100
+          minimum: 0
+          description: Share of a baking day's capacity (max_pieces, less min_remaining_pieces)
+            that members may order directly, in percent. See DirectOrderLimitService.
         is_active:
           type: boolean
         group:
@@ -15319,7 +15530,7 @@ components:
           minimum: 0
         delivery_day:
           type: integer
-          maximum: 2147483647
+          maximum: 6
           minimum: 0
         min_pieces:
           type: integer
@@ -15351,6 +15562,13 @@ components:
           nullable: true
           description: If set, exactly this number of pieces should be baked for this
             bread on this delivery day (overrides min/max)
+        max_direct_order_percent:
+          type: integer
+          maximum: 100
+          minimum: 0
+          nullable: true
+          description: Overrides the bread's max_direct_order_percent on this delivery
+            day
         bread:
           type: string
           minLength: 1
@@ -18606,13 +18824,22 @@ components:
           type: integer
         delivery_week:
           type: integer
+          maximum: 53
+          minimum: 1
         delivery_day:
           type: integer
+          maximum: 6
+          minimum: 0
         bread_id:
           type: string
           minLength: 1
         is_active:
           type: boolean
+        dry_run:
+          type: boolean
+          default: false
+          description: Changes nothing; cleared_choices says how many choices switching
+            the bread off would clear.
       required:
       - bread_id
       - delivery_day
@@ -18628,11 +18855,27 @@ components:
           type: boolean
         deleted:
           type: boolean
+        cleared_choices:
+          type: integer
+          description: Members' choices of the bread on that day, cleared when it
+            is switched off, or that would be with dry_run.
         bread_id:
           type: string
       required:
       - bread_id
       - success
+    TotalCapacitySourceEnum:
+      enum:
+      - fixed
+      - day_max
+      - group_max
+      - bread_max
+      type: string
+      description: |-
+        * `fixed` - fixed
+        * `day_max` - day_max
+        * `group_max` - group_max
+        * `bread_max` - bread_max
     TransactionTypeEnum:
       enum:
       - purchase
@@ -19267,6 +19510,31 @@ components:
       - product
       - quantity
       - waiting_list_entry
+    WeekSettingsSource:
+      type: object
+      properties:
+        year:
+          type: integer
+        delivery_week:
+          type: integer
+        bread_count:
+          type: integer
+          description: Distinct active breads baked that week, over all its days.
+      required:
+      - bread_count
+      - delivery_week
+      - year
+    WeekSettingsSourcesResponse:
+      type: object
+      properties:
+        sources:
+          type: array
+          items:
+            $ref: '#/components/schemas/WeekSettingsSource'
+          description: Weeks before the given one that bake an active bread, latest
+            first.
+      required:
+      - sources
     counts:
       type: object
       properties:

@@ -27,8 +27,17 @@ from tapir.bakery.services.bread_choice_deadline_service import (
 from tapir.bakery.services.bread_delivery_context_service import (
     BreadDeliveryContextService,
 )
-from tapir.bakery.utils import MAX_PREFERRED_BREADS
-from tapir.pickup_locations.models import PickupLocation
+from tapir.bakery.services.direct_order_limit_service import (
+    CAPACITY_SOURCE_BREAD_MAX,
+    CAPACITY_SOURCE_DAY_MAX,
+    CAPACITY_SOURCE_FIXED,
+    CAPACITY_SOURCE_GROUP_MAX,
+)
+from tapir.bakery.utils import (
+    ISO_WEEK_MISSING_MESSAGE,
+    MAX_PREFERRED_BREADS,
+    is_valid_iso_week,
+)
 from tapir.pickup_locations.services.pickup_location_delivery_day_service import (
     PickupLocationDeliveryDayService,
 )
@@ -36,6 +45,12 @@ from tapir.pickup_locations.services.pickup_location_delivery_day_service import
 # A plausibility limit, not a column limit: a station gets loaves in the
 # hundreds, so anything above this is a typo rather than an order.
 MAX_PIECES_PER_ENTRY = 1000
+
+
+def validate_iso_week(data: dict, year_field: str, week_field: str):
+    """For a serializer's validate(): KW 53 exists only in some years."""
+    if not is_valid_iso_week(data[year_field], data[week_field]):
+        raise serializers.ValidationError({week_field: ISO_WEEK_MISSING_MESSAGE})
 
 
 def _piece_count():
@@ -128,11 +143,37 @@ PIECE_COUNT_LIMITS = {
 }
 
 
+DIRECT_ORDER_LIMIT_HELP = (
+    "Set for a pickup location's week only: the bread's direct-order limit on "
+    "the pickup location's delivery day, null when unlimited."
+)
+DIRECT_ORDERS_HELP = (
+    "Set for a pickup location's week only: direct orders of the bread on that "
+    "delivery day, over all pickup locations delivered that day."
+)
+REMAINING_DIRECT_ORDERS_HELP = (
+    "Set for a pickup location's week only: what is left of the bread's limit "
+    "and its group's, null when neither has one."
+)
+
+
 class BreadListSerializer(serializers.ModelSerializer):
     serializer_field_mapping = BREAD_PICTURE_FIELD_MAPPING
-    capacity = serializers.IntegerField(read_only=True, required=False)
-    delivery_count = serializers.IntegerField(read_only=True, required=False)
-    available_capacity = serializers.IntegerField(read_only=True, required=False)
+    direct_order_limit = serializers.IntegerField(
+        read_only=True,
+        required=False,
+        allow_null=True,
+        help_text=DIRECT_ORDER_LIMIT_HELP,
+    )
+    direct_orders = serializers.IntegerField(
+        read_only=True, required=False, help_text=DIRECT_ORDERS_HELP
+    )
+    remaining_direct_orders = serializers.IntegerField(
+        read_only=True,
+        required=False,
+        allow_null=True,
+        help_text=REMAINING_DIRECT_ORDERS_HELP,
+    )
     contents = BreadContentSerializer(many=True, read_only=True)
     group_name = serializers.CharField(
         source="group.name", read_only=True, allow_null=True
@@ -151,9 +192,21 @@ class BreadDetailSerializer(serializers.ModelSerializer):
     labels = BreadLabelSerializer(many=True, read_only=True)
     contents = BreadContentSerializer(many=True, read_only=True)
     label_names = serializers.SerializerMethodField()
-    capacity = serializers.IntegerField(read_only=True, required=False)
-    delivery_count = serializers.IntegerField(read_only=True, required=False)
-    available_capacity = serializers.IntegerField(read_only=True, required=False)
+    direct_order_limit = serializers.IntegerField(
+        read_only=True,
+        required=False,
+        allow_null=True,
+        help_text=DIRECT_ORDER_LIMIT_HELP,
+    )
+    direct_orders = serializers.IntegerField(
+        read_only=True, required=False, help_text=DIRECT_ORDERS_HELP
+    )
+    remaining_direct_orders = serializers.IntegerField(
+        read_only=True,
+        required=False,
+        allow_null=True,
+        help_text=REMAINING_DIRECT_ORDERS_HELP,
+    )
 
     class Meta:
         model = Bread
@@ -167,15 +220,15 @@ class BreadDetailSerializer(serializers.ModelSerializer):
             "label_names",
             "contents",
             "is_active",
-            "capacity",
-            "delivery_count",
-            "available_capacity",
+            "direct_order_limit",
+            "direct_orders",
+            "remaining_direct_orders",
         ]
         read_only_fields = [
             "id",
-            "capacity",
-            "delivery_count",
-            "available_capacity",
+            "direct_order_limit",
+            "direct_orders",
+            "remaining_direct_orders",
         ]
 
     def get_label_names(self, obj) -> list[str]:
@@ -303,22 +356,92 @@ class AvailableBreadsForDeliveryListResponseSerializer(serializers.Serializer):
     year = serializers.IntegerField()
     delivery_week = serializers.IntegerField()
     delivery_day = serializers.IntegerField()
+    delivery_day_is_over = serializers.BooleanField(
+        help_text="Its breads can no longer be switched on or off."
+    )
     breads = BreadListSerializer(many=True)
 
 
 class ToggleBreadRequestSerializer(serializers.Serializer):
     year = serializers.IntegerField()
-    delivery_week = serializers.IntegerField()
-    delivery_day = serializers.IntegerField()
+    delivery_week = serializers.IntegerField(min_value=1, max_value=53)
+    delivery_day = serializers.IntegerField(min_value=0, max_value=6)
     bread_id = serializers.CharField()
     is_active = serializers.BooleanField()
+    dry_run = serializers.BooleanField(
+        required=False,
+        default=False,
+        help_text=(
+            "Changes nothing; cleared_choices says how many choices switching "
+            "the bread off would clear."
+        ),
+    )
+
+    def validate(self, data):
+        validate_iso_week(data, "year", "delivery_week")
+        return data
 
 
 class ToggleBreadResponseSerializer(serializers.Serializer):
     success = serializers.BooleanField()
     created = serializers.BooleanField(required=False)
     deleted = serializers.BooleanField(required=False)
+    cleared_choices = serializers.IntegerField(
+        required=False,
+        help_text=(
+            "Members' choices of the bread on that day, cleared when it is "
+            "switched off, or that would be with dry_run."
+        ),
+    )
     bread_id = serializers.CharField()
+
+
+class WeekSettingsSourceSerializer(serializers.Serializer):
+    year = serializers.IntegerField()
+    delivery_week = serializers.IntegerField()
+    bread_count = serializers.IntegerField(
+        help_text="Distinct active breads baked that week, over all its days."
+    )
+
+
+class WeekSettingsSourcesResponseSerializer(serializers.Serializer):
+    sources = WeekSettingsSourceSerializer(
+        many=True,
+        help_text=(
+            "Weeks before the given one that bake an active bread, latest first."
+        ),
+    )
+
+
+class CopyWeekSettingsRequestSerializer(serializers.Serializer):
+    source_year = serializers.IntegerField()
+    source_week = serializers.IntegerField(min_value=1, max_value=53)
+    target_year = serializers.IntegerField()
+    target_week = serializers.IntegerField(min_value=1, max_value=53)
+    dry_run = serializers.BooleanField(
+        required=False,
+        default=False,
+        help_text="Changes nothing; the response says what copying would do.",
+    )
+
+    def validate(self, data):
+        validate_iso_week(data, "source_year", "source_week")
+        validate_iso_week(data, "target_year", "target_week")
+        return data
+
+
+class CopyWeekSettingsResponseSerializer(serializers.Serializer):
+    copied_days = serializers.ListField(
+        child=serializers.IntegerField(),
+        help_text="Days of the target week replaced, or that would be with dry_run.",
+    )
+    kept_days = serializers.ListField(
+        child=serializers.IntegerField(),
+        help_text="Days of the target week that are over and keep their settings.",
+    )
+    cleared_choices = serializers.IntegerField(
+        help_text="Members' choices of breads the copy stops baking on their day."
+    )
 
 
 class PreferredBreadSerializer(serializers.ModelSerializer):
@@ -379,24 +502,6 @@ class PickupListsResponseSerializer(serializers.Serializer):
     """Several stations of one week in a single response."""
 
     lists = PickupListForLocationSerializer(many=True)
-
-
-class BreadCapacityUpdateItemSerializer(serializers.Serializer):
-    pickup_location = serializers.PrimaryKeyRelatedField(
-        queryset=PickupLocation.objects.all(), required=True
-    )
-    bread = serializers.PrimaryKeyRelatedField(
-        queryset=Bread.objects.all(), required=True
-    )
-    capacity = serializers.IntegerField(
-        required=False, allow_null=True, min_value=0, max_value=MAX_PIECES_PER_ENTRY
-    )
-
-
-class BreadCapacityBulkUpdateSerializer(serializers.Serializer):
-    year = serializers.IntegerField(required=True, min_value=0)
-    delivery_week = serializers.IntegerField(required=True, min_value=1, max_value=53)
-    updates = BreadCapacityUpdateItemSerializer(many=True, required=True)
 
 
 class PreferredBreadStatisticSerializer(serializers.Serializer):
@@ -576,19 +681,39 @@ class BreadSpecificsPerDeliveryDaySerializer(serializers.ModelSerializer):
         model = BreadSpecificsPerDeliveryDay
         fields = "__all__"
         extra_kwargs = PIECE_COUNT_LIMITS | {
-            "fixed_pieces": {"max_value": MAX_PIECES_PER_ENTRY}
+            "fixed_pieces": {"max_value": MAX_PIECES_PER_ENTRY},
+            "delivery_day": {"min_value": 0, "max_value": 6},
         }
         # See BreadLabelSerializer.
         read_only_fields = ["id"]
 
+    def validate(self, data):
+        # A partial update may change only one of the two.
+        validate_iso_week(
+            {
+                "year": data.get("year", getattr(self.instance, "year", None)),
+                "delivery_week": data.get(
+                    "delivery_week", getattr(self.instance, "delivery_week", None)
+                ),
+            },
+            "year",
+            "delivery_week",
+        )
+        return data
+
 
 class BreadSpecificsPerDeliveryDayBulkUpdateItemSerializer(serializers.Serializer):
+    """A field left out keeps its value; null clears it."""
+
     bread = serializers.PrimaryKeyRelatedField(queryset=Bread.objects.all())
     # All four are PositiveIntegerField columns with CHECK (>= 0).
     min_pieces = _piece_count()
     max_pieces = _piece_count()
     min_remaining_pieces = _piece_count()
     fixed_pieces = _piece_count()
+    max_direct_order_percent = serializers.IntegerField(
+        required=False, allow_null=True, min_value=0, max_value=100
+    )
 
 
 class BreadSpecificsPerDeliveryDayBulkUpdateSerializer(serializers.Serializer):
@@ -596,6 +721,10 @@ class BreadSpecificsPerDeliveryDayBulkUpdateSerializer(serializers.Serializer):
     delivery_week = serializers.IntegerField(min_value=1, max_value=53)
     delivery_day = serializers.IntegerField(min_value=0, max_value=6)
     updates = BreadSpecificsPerDeliveryDayBulkUpdateItemSerializer(many=True)
+
+    def validate(self, data):
+        validate_iso_week(data, "year", "delivery_week")
+        return data
 
 
 class PickupLocationDeliveryDaySerializer(serializers.Serializer):
@@ -611,8 +740,60 @@ class DeliveryDaysResponseSerializer(serializers.Serializer):
     days = serializers.ListField(child=serializers.IntegerField())
 
 
-class BreadCapacityAllocationResponseSerializer(serializers.Serializer):
-    pickup_locations = PickupLocationDeliveryDaySerializer(many=True)
-    allocations = serializers.DictField(
-        child=serializers.DictField(child=serializers.IntegerField(allow_null=True))
+class BreadDirectOrderLimitSerializer(serializers.Serializer):
+    bread_id = serializers.CharField()
+    bread_name = serializers.CharField()
+    group_id = serializers.CharField(allow_null=True)
+    group_name = serializers.CharField(allow_null=True)
+    total_capacity = serializers.IntegerField(
+        allow_null=True,
+        help_text="What may be baked of the bread that day; null when nothing bounds it.",
     )
+    total_capacity_source = serializers.ChoiceField(
+        choices=[
+            CAPACITY_SOURCE_FIXED,
+            CAPACITY_SOURCE_DAY_MAX,
+            CAPACITY_SOURCE_GROUP_MAX,
+            CAPACITY_SOURCE_BREAD_MAX,
+        ],
+        allow_null=True,
+    )
+    min_remaining = serializers.IntegerField()
+    default_percent = serializers.IntegerField()
+    percent = serializers.IntegerField()
+    limit = serializers.IntegerField(
+        allow_null=True,
+        help_text="How many members may choose directly; null means unlimited.",
+    )
+    ordered = serializers.IntegerField()
+
+
+class GroupDirectOrderLimitSerializer(serializers.Serializer):
+    group_id = serializers.CharField()
+    group_name = serializers.CharField()
+    bread_ids = serializers.ListField(
+        child=serializers.CharField(),
+        help_text="The breads sharing the group's limit: those without a fixed amount.",
+    )
+    max_pieces = serializers.IntegerField(allow_null=True)
+    fixed_pieces = serializers.IntegerField(
+        help_text="What the group's breads with a fixed amount take of max_pieces."
+    )
+    total_capacity = serializers.IntegerField(
+        allow_null=True, help_text="max_pieces less fixed_pieces."
+    )
+    min_remaining = serializers.IntegerField()
+    open_min_pieces = serializers.IntegerField(
+        help_text=(
+            "Day minimums of the group's breads not yet covered by their own "
+            "orders and Min. Rest, held back like Min. Rest."
+        )
+    )
+    percent = serializers.IntegerField()
+    limit = serializers.IntegerField(allow_null=True)
+    ordered = serializers.IntegerField()
+
+
+class DirectOrderLimitsResponseSerializer(serializers.Serializer):
+    breads = BreadDirectOrderLimitSerializer(many=True)
+    groups = GroupDirectOrderLimitSerializer(many=True)

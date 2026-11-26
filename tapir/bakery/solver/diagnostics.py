@@ -250,7 +250,9 @@ def diagnose_infeasibility(
             bread_obj = bread_map.get(bread_id, None)
             bname = bread_obj.name if bread_obj else f"ID={bread_id}"
 
-            if demand > cap:
+            # A bread not baked that day is not in the model at all, so its
+            # choices cannot overflow anything; the warning below reports them.
+            if bread_obj is not None and demand > cap:
                 diagnostics.append(
                     SolverDiagnostic(
                         level="error",
@@ -315,9 +317,25 @@ def diagnose_infeasibility(
         demand = sum(total_fixed_demand[b.bread_id] for b in chosen)
         # A chosen bread is baked, so it also keeps its minimum behind.
         remaining = sum(b.min_remaining_pieces or 0 for b in chosen)
+        # What the day's minimums and fixed amounts ask of the group beyond
+        # the orders: baked whether ordered or not.
+        baked_anyway = sum(
+            max(
+                _day_min(b)
+                - total_fixed_demand.get(b.bread_id, 0)
+                - (b.min_remaining_pieces or 0 if b in chosen else 0),
+                0,
+            )
+            for b in members
+        )
         ceiling = _group_max_baked(members, max_sessions, stove_layers)
-        if demand + remaining > ceiling:
+        if demand + remaining + baked_anyway > ceiling:
             kept_back = f" plus mindestens {remaining} als Rest" if remaining else ""
+            if baked_anyway:
+                kept_back += (
+                    f" und {baked_anyway}, die die Gruppe ohnehin backt "
+                    f"(Min. Stück oder Fixe Stück)"
+                )
             group_max = group_max_pieces(members)
             limit = (
                 f" (Max. {group_max})"

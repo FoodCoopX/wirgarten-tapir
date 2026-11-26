@@ -7,10 +7,10 @@ from tapir.bakery.services.bread_choice_deadline_service import (
     BreadChoiceDeadlineService,
 )
 from tapir.bakery.tests.factories import (
-    BreadCapacityPickupLocationFactory,
     BreadDeliveryFactory,
     BreadFactory,
     BreadSubscriptionFactory,
+    offer_bread_at_pickup_location,
 )
 from tapir.pickup_locations.tests.factories import (
     create_pickup_location_with_opening_times,
@@ -37,12 +37,8 @@ class TestBreadChoiceDeadline(TapirIntegrationTest):
         self.bread = BreadFactory.create()
 
     def _delivery(self, member, year, week):
-        BreadCapacityPickupLocationFactory.create(
-            year=year,
-            delivery_week=week,
-            pickup_location=self.pickup_location,
-            bread=self.bread,
-            capacity=10,
+        offer_bread_at_pickup_location(
+            self.bread, self.pickup_location, year=year, delivery_week=week
         )
         return BreadDeliveryFactory.create(
             year=year,

@@ -1,39 +1,39 @@
 :root {
   /* Bakery color palette - Browns */
-  --bakery-primary: #D4A574;
+  --bakery-primary: #d4a574;
   --bakery-primary-dark: #9c5e07ce;
-  --bakery-primary-darker: #8B4513;
-  --bakery-brown-medium: #8B6F47;
+  --bakery-primary-darker: #8b4513;
+  --bakery-brown-medium: #8b6f47;
 
   /* Bakery backgrounds */
-  --bakery-bg-cream: #F5E6D3;
-  --bakery-bg-light: #FBF8F3;
-  --bakery-bg-lighter: #FAF8F5;
+  --bakery-bg-cream: #f5e6d3;
+  --bakery-bg-light: #fbf8f3;
+  --bakery-bg-lighter: #faf8f5;
   --bakery-bg-chart: #f0e6d9;
 
   /* Ingredients/Labels greens */
-  --bakery-ingredients-green: #5D7A4A;
-  --bakery-ingredients-bg: #F0F4E8;
-  --bakery-ingredients-body: #F9FBF7;
-  --bakery-labels-bg: #E8F5E9;
-  --bakery-labels-body: #F1F8F4;
+  --bakery-ingredients-green: #5d7a4a;
+  --bakery-ingredients-bg: #f0f4e8;
+  --bakery-ingredients-body: #f9fbf7;
+  --bakery-labels-bg: #e8f5e9;
+  --bakery-labels-body: #f1f8f4;
 
   /* Success colors */
   --bakery-success: #28a745;
-  --bakery-success-dark: #2E7D32;
-  --bakery-bio-green: #81C784;
+  --bakery-success-dark: #2e7d32;
+  --bakery-bio-green: #81c784;
   --bakery-checked-row: #d4edda;
 
   /* Other colors */
-  --bakery-gold: #FFD700;
+  --bakery-gold: #ffd700;
   --bakery-muted: #6c757d;
-  --bakery-muted-light: #9E9E9E;
+  --bakery-muted-light: #9e9e9e;
   --bakery-icon-muted: #757575;
-  --bakery-content-label: #C4A882;
-  --bakery-content-text: #B8A99A;
+  --bakery-content-label: #c4a882;
+  --bakery-content-text: #b8a99a;
   --bakery-white: #ffffff;
   --bakery-danger: #dc3545;
-  --bakery-gray-light: #F8F9FA;
+  --bakery-gray-light: #f8f9fa;
   --bakery-text-light: #ccc;
   --bakery-checked-border: #c3e6cb;
   --bakery-highlight: #dd1755;
@@ -110,10 +110,6 @@
 
 .bg-bakery-lighter {
   background-color: var(--bakery-bg-lighter) !important;
-}
-
-.bg-bakery-primary {
-  background-color: var(--bakery-primary) !important;
 }
 
 .bg-bakery-primary-darker {
@@ -389,7 +385,10 @@
   border: 3px solid var(--bakery-success-dark) !important;
   background-color: var(--bakery-checked-row) !important;
   transform: scale(1.02);
-  transition: border 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+  transition:
+    border 0.2s ease,
+    background-color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .bread-preferred {

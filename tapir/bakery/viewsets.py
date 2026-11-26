@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import APIException
+from rest_framework.exceptions import APIException, ValidationError
 from rest_framework.request import Request
 from rest_framework.response import Response
 
@@ -50,7 +50,16 @@ from tapir.bakery.services.bread_choice_service import (
 from tapir.bakery.services.bread_delivery_context_service import (
     BreadDeliveryContextService,
 )
-from tapir.bakery.utils import int_query_param, str_to_bool
+from tapir.bakery.services.bread_specifics_service import (
+    BreadSpecificsService,
+    BreadSpecificsUpdate,
+)
+from tapir.bakery.utils import (
+    ISO_WEEK_MISSING_MESSAGE,
+    int_query_param,
+    is_valid_iso_week,
+    str_to_bool,
+)
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.pickup_locations.services.pickup_location_delivery_day_service import (
     PickupLocationDeliveryDayService,
@@ -220,6 +229,15 @@ class BreadViewSet(RequestCacheMixin, ProtectedDeleteMixin, viewsets.ModelViewSe
                 type=int,
                 description="Filter by delivery week (requires pickup_location_id and year)",
             ),
+            OpenApiParameter(
+                name="delivery_id",
+                type=str,
+                description=(
+                    "The slot being chosen for (with pickup_location_id, year "
+                    "and week): its own choice is left out of the counts, so a "
+                    "switch to another bread of a full group is offered."
+                ),
+            ),
         ]
     )
     def list(self, request, *args, **kwargs):
@@ -232,6 +250,7 @@ class BreadViewSet(RequestCacheMixin, ProtectedDeleteMixin, viewsets.ModelViewSe
         pickup_location_id = self.request.query_params.get("pickup_location_id", None)
         year = int_query_param(self.request, "year")
         week = int_query_param(self.request, "week")
+        delivery_id = self.request.query_params.get("delivery_id", None)
         if label_id:
             queryset = queryset.filter(labels__id=label_id)
 
@@ -241,12 +260,15 @@ class BreadViewSet(RequestCacheMixin, ProtectedDeleteMixin, viewsets.ModelViewSe
             queryset = queryset.filter(is_active=is_active)
 
         if pickup_location_id and year and week:
-            queryset = BreadAvailabilityService.annotate_remaining_capacity(
+            if not is_valid_iso_week(year, week):
+                raise ValidationError({"week": ISO_WEEK_MISSING_MESSAGE})
+            queryset = BreadAvailabilityService.annotate_direct_order_limits(
                 queryset,
                 pickup_location_id=pickup_location_id,
                 year=year,
                 delivery_week=week,
                 cache=self.tapir_cache,
+                exclude_delivery_ids=[delivery_id] if delivery_id else [],
             )
 
         queryset = queryset.order_by("name")
@@ -382,41 +404,49 @@ class BreadDeliveryViewSet(RequestCacheMixin, viewsets.ModelViewSet):
             return super().partial_update(request, *args, **kwargs)
 
         new_bread_id = request.data.get("bread")
+        if new_bread_id is not None and not isinstance(new_bread_id, str):
+            raise ValidationError({"bread": "Erwartet eine Brot-ID oder null."})
 
         with transaction.atomic():
             # select_related(None): Postgres refuses FOR UPDATE on the nullable
-            # side of an outer join.
+            # side of an outer join. of=("self",): only the delivery row, not
+            # the subscription a member's queryset joins.
             delivery = get_object_or_404(
-                self.get_queryset().select_related(None).select_for_update(),
+                self.get_queryset()
+                .select_related(None)
+                .select_for_update(of=("self",)),
                 pk=kwargs["pk"],
             )
 
             old_bread_id = str(delivery.bread_id) if delivery.bread_id else None
-            if old_bread_id == new_bread_id:
-                return super().partial_update(request, *args, **kwargs)
-
-            cache = self.tapir_cache
-            pickup_location_id = BreadDeliveryContextService.get_pickup_location_id(
-                delivery, cache=cache
-            )
-
-            try:
-                # A member is bound by the choosing rules; staff answering the
-                # phone are not.
-                if not request.user.has_perm(Permission.Accounts.MANAGE):
-                    BreadChoiceService.check_member_may_change(
-                        delivery, pickup_location_id, cache=cache
-                    )
-                if new_bread_id and pickup_location_id:
-                    BreadChoiceService.check_capacity_available(
-                        delivery, new_bread_id, pickup_location_id, cache=cache
-                    )
-            except BreadChoiceNotAllowed as error:
-                return Response(
-                    {"error": str(error)}, status=status.HTTP_400_BAD_REQUEST
+            if old_bread_id != new_bread_id:
+                cache = self.tapir_cache
+                pickup_location_id = BreadDeliveryContextService.get_pickup_location_id(
+                    delivery, cache=cache
                 )
+                try:
+                    # A member is bound by the choosing rules; staff answering
+                    # the phone are not.
+                    if not request.user.has_perm(Permission.Accounts.MANAGE):
+                        BreadChoiceService.check_member_may_change(
+                            delivery, pickup_location_id, cache=cache
+                        )
+                    if new_bread_id and pickup_location_id:
+                        BreadChoiceService.check_direct_order_limit(
+                            delivery, new_bread_id, pickup_location_id, cache=cache
+                        )
+                except BreadChoiceNotAllowed as error:
+                    return Response(
+                        {"error": str(error)}, status=status.HTTP_400_BAD_REQUEST
+                    )
 
-            return super().partial_update(request, *args, **kwargs)
+            serializer = self.get_serializer(delivery, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)
+
+        # Built once the locks are released: the response reads pickup
+        # locations and deadlines the choice does not depend on.
+        return Response(self.get_serializer(self.get_object()).data)
 
 
 @extend_schema(
@@ -686,36 +716,22 @@ class BreadSpecificsPerDeliveryDayViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
-        year = data["year"]
-        delivery_week = data["delivery_week"]
-        delivery_day = data["delivery_day"]
-
-        for update in data["updates"]:
-            bread_id = update["bread"].pk
-            field_values = {
-                k: update.get(k)
-                for k in [
-                    "min_pieces",
-                    "max_pieces",
-                    "min_remaining_pieces",
-                    "fixed_pieces",
-                ]
-            }
-
-            if all(v is None for v in field_values.values()):
-                BreadSpecificsPerDeliveryDay.objects.filter(
-                    year=year,
-                    delivery_week=delivery_week,
-                    delivery_day=delivery_day,
-                    bread_id=bread_id,
-                ).delete()
-            else:
-                BreadSpecificsPerDeliveryDay.objects.update_or_create(
-                    year=year,
-                    delivery_week=delivery_week,
-                    delivery_day=delivery_day,
-                    bread_id=bread_id,
-                    defaults=field_values,
+        BreadSpecificsService.apply_updates(
+            year=data["year"],
+            delivery_week=data["delivery_week"],
+            delivery_day=data["delivery_day"],
+            updates=[
+                BreadSpecificsUpdate(
+                    bread_id=update["bread"].id,
+                    values={
+                        field: update[field]
+                        for field in BreadSpecificsService.FIELDS
+                        if field in update
+                    },
                 )
+                for update in data["updates"]
+            ],
+            cache={},
+        )
 
         return Response({"status": "success"})

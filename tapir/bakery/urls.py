@@ -3,8 +3,9 @@ from rest_framework.routers import DefaultRouter
 
 from tapir.bakery.views import (
     AvailableBreadsForDeliveryListView,
-    BreadCapacityAllocationView,
+    CopyWeekSettingsView,
     DeliveryDaysView,
+    DirectOrderLimitsView,
     PickupListView,
     PickupLocationsByDeliveryDayView,
     PreferenceSatisfactionMetricsView,
@@ -102,9 +103,14 @@ urlpatterns = [
         name="preferred-bread-statistics",
     ),
     path(
-        "api/bread-capacity-allocations/",
-        BreadCapacityAllocationView.as_view(),
-        name="bread-capacity-allocations",
+        "api/direct-order-limits/",
+        DirectOrderLimitsView.as_view(),
+        name="direct-order-limits",
+    ),
+    path(
+        "api/copy-week-settings/",
+        CopyWeekSettingsView.as_view(),
+        name="copy-week-settings",
     ),
     path("api/delivery-days/", DeliveryDaysView.as_view(), name="delivery-days"),
     path(

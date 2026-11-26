@@ -39,6 +39,7 @@ export const BreadModal: React.FC<BreadModalProps> = ({
     minPieces: undefined,
     maxPieces: undefined,
     minRemainingPieces: undefined,
+    maxDirectOrderPercent: 100,
     group: null,
   });
   const [availableLabels, setAvailableLabels] = useState<BreadLabel[]>([]);
@@ -67,6 +68,7 @@ export const BreadModal: React.FC<BreadModalProps> = ({
         minPieces: bread.minPieces,
         maxPieces: bread.maxPieces,
         minRemainingPieces: bread.minRemainingPieces,
+        maxDirectOrderPercent: bread.maxDirectOrderPercent ?? 100,
         group: bread.group ?? null,
       });
     }
@@ -401,7 +403,7 @@ export const BreadModal: React.FC<BreadModalProps> = ({
                   style={{ fontSize: "0.75rem", marginBottom: "0.5rem" }}
                 >
                   Brote einer Gruppe (z.B. aus einem Teig) können zusammen auf
-                  einer Etage gebacken werden. Min. und Max. Stücke gelten dann
+                  einer Etage gebacken werden. Min. und Max. Stück gelten dann
                   für alle am Backtag verfügbaren Brote der Gruppe zusammen.
                   Tageseinstellungen gelten dagegen nur für das einzelne Brot.
                 </span>
@@ -434,7 +436,7 @@ export const BreadModal: React.FC<BreadModalProps> = ({
                       htmlFor="minPieces"
                       className="form-label fw-bold small"
                     >
-                      Min. Stücke
+                      Min. Stück
                     </label>
                     <input
                       type="number"
@@ -466,7 +468,7 @@ export const BreadModal: React.FC<BreadModalProps> = ({
                       htmlFor="maxPieces"
                       className="form-label fw-bold small"
                     >
-                      Max. Stücke
+                      Max. Stück
                     </label>
                     <input
                       type="number"
@@ -498,7 +500,7 @@ export const BreadModal: React.FC<BreadModalProps> = ({
                       htmlFor="minRemainingPieces"
                       className="form-label fw-bold small"
                     >
-                      Min. Übrig
+                      Min. Rest
                     </label>
                     <input
                       type="number"
@@ -517,6 +519,43 @@ export const BreadModal: React.FC<BreadModalProps> = ({
                       placeholder="z.B. 5"
                     />
                     <small className="text-muted">Für Laufkundschaft</small>
+                  </div>
+                </div>
+              </div>
+
+              <div className="row">
+                <div className="col-md-4">
+                  <div className="mb-3">
+                    <label
+                      htmlFor="maxDirectOrderPercent"
+                      className="form-label fw-bold small"
+                    >
+                      Max. direkt bestellbar (%)
+                    </label>
+                    <input
+                      type="number"
+                      className="form-control form-control-sm"
+                      id="maxDirectOrderPercent"
+                      value={formData.maxDirectOrderPercent ?? ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          maxDirectOrderPercent: e.target.value
+                            ? parseInt(e.target.value)
+                            : undefined,
+                        })
+                      }
+                      min="0"
+                      max="100"
+                      required
+                    />
+                    <small className="text-muted">
+                      Anteil der Gesamtkapazität des Tages abzüglich Min. Rest,
+                      den Mitglieder direkt bestellen können. Die
+                      Gesamtkapazität ist meist Max. Stück; Tageseinstellungen
+                      und Gruppen können sie ändern. Gilt für alle Wochen, wenn
+                      der Wochenplan nichts anderes sagt.
+                    </small>
                   </div>
                 </div>
               </div>

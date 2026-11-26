@@ -13,7 +13,7 @@
  */
 
 /**
- *
+ * A field left out keeps its value; null clears it.
  * @export
  * @interface BreadSpecificsPerDeliveryDayBulkUpdateItemRequest
  */
@@ -48,6 +48,12 @@ export interface BreadSpecificsPerDeliveryDayBulkUpdateItemRequest {
    * @memberof BreadSpecificsPerDeliveryDayBulkUpdateItemRequest
    */
   fixedPieces?: number | null;
+  /**
+   *
+   * @type {number}
+   * @memberof BreadSpecificsPerDeliveryDayBulkUpdateItemRequest
+   */
+  maxDirectOrderPercent?: number | null;
 }
 
 /**
@@ -86,6 +92,10 @@ export function BreadSpecificsPerDeliveryDayBulkUpdateItemRequestFromJSONTyped(
         : json["min_remaining_pieces"],
     fixedPieces:
       json["fixed_pieces"] == null ? undefined : json["fixed_pieces"],
+    maxDirectOrderPercent:
+      json["max_direct_order_percent"] == null
+        ? undefined
+        : json["max_direct_order_percent"],
   };
 }
 
@@ -112,5 +122,6 @@ export function BreadSpecificsPerDeliveryDayBulkUpdateItemRequestToJSONTyped(
     max_pieces: value["maxPieces"],
     min_remaining_pieces: value["minRemainingPieces"],
     fixed_pieces: value["fixedPieces"],
+    max_direct_order_percent: value["maxDirectOrderPercent"],
   };
 }

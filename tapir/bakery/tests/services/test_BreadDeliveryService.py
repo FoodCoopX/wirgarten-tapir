@@ -9,12 +9,15 @@ from tapir.bakery.services.bread_delivery_context_service import (
 )
 from tapir.bakery.services.breaddelivery_service import BreadDeliveryService
 from tapir.bakery.tests.factories import (
-    BreadCapacityPickupLocationFactory,
     BreadDeliveryFactory,
     BreadFactory,
+    offer_bread_at_pickup_location,
 )
 from tapir.pickup_locations.services.member_pickup_location_setter import (
     MemberPickupLocationSetter,
+)
+from tapir.pickup_locations.tests.factories import (
+    create_pickup_location_with_opening_times,
 )
 from tapir.utils.shortcuts import week_to_monday
 from tapir.wirgarten.constants import NO_DELIVERY
@@ -492,11 +495,8 @@ class TestEnsureBreadDeliveries(TapirIntegrationTest):
 
         bread = BreadFactory.create(name="Roggenbrot")
         delivery = BreadDelivery.objects.filter(subscription=sub).first()
-        BreadCapacityPickupLocationFactory.create(
-            year=delivery.year,
-            delivery_week=delivery.delivery_week,
-            pickup_location=pl,
-            bread=bread,
+        offer_bread_at_pickup_location(
+            bread, pl, year=delivery.year, delivery_week=delivery.delivery_week
         )
         delivery.bread = bread
         delivery.save()
@@ -666,9 +666,7 @@ class TestEnsureBreadDeliveries(TapirIntegrationTest):
 
         year, week, _ = FROZEN_DATE.isocalendar()
         bread = BreadFactory.create(name="Roggenbrot")
-        BreadCapacityPickupLocationFactory.create(
-            year=year, delivery_week=week, pickup_location=pl, bread=bread
-        )
+        offer_bread_at_pickup_location(bread, pl, year=year, delivery_week=week)
         slot_two = BreadDelivery.objects.get(
             subscription=sub, year=year, delivery_week=week, slot_number=2
         )
@@ -689,12 +687,11 @@ class TestEnsureBreadDeliveries(TapirIntegrationTest):
 
     def _choose_bread(self, delivery, pickup_location):
         bread = BreadFactory.create()
-        BreadCapacityPickupLocationFactory.create(
+        offer_bread_at_pickup_location(
+            bread,
+            pickup_location,
             year=delivery.year,
             delivery_week=delivery.delivery_week,
-            pickup_location=pickup_location,
-            bread=bread,
-            capacity=10,
         )
         delivery.bread = bread
         delivery.save()
@@ -720,7 +717,9 @@ class TestEnsureBreadDeliveries(TapirIntegrationTest):
         delivery = BreadDelivery.objects.filter(subscription=sub).last()
         self._choose_bread(delivery, old_location)
 
-        self._move_member(member, PickupLocationFactory.create(), FROZEN_DATE)
+        # Delivered on Friday, while the bread is baked for Wednesday only.
+        new_location = create_pickup_location_with_opening_times(open_days=[4])
+        self._move_member(member, new_location, FROZEN_DATE)
 
         delivery.refresh_from_db()
         self.assertIsNone(delivery.bread)
@@ -736,14 +735,8 @@ class TestEnsureBreadDeliveries(TapirIntegrationTest):
         delivery = BreadDelivery.objects.filter(subscription=sub).last()
         bread = self._choose_bread(delivery, old_location)
 
-        new_location = PickupLocationFactory.create()
-        BreadCapacityPickupLocationFactory.create(
-            year=delivery.year,
-            delivery_week=delivery.delivery_week,
-            pickup_location=new_location,
-            bread=bread,
-            capacity=10,
-        )
+        # Delivered on the same day as the old station.
+        new_location = create_pickup_location_with_opening_times(open_days=[2])
         self._move_member(member, new_location, FROZEN_DATE)
 
         delivery.refresh_from_db()

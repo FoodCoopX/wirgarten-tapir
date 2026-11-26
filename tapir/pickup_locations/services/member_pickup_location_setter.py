@@ -80,7 +80,12 @@ class MemberPickupLocationSetter:
         ).save()
 
         BreadDeliveryService.clear_breads_unavailable_at_pickup_location(
-            member, cache=cache
+            member,
+            previous_pickup_location_id=(
+                old_pickup_location.id if old_pickup_location is not None else None
+            ),
+            valid_from=valid_from,
+            cache=cache,
         )
 
         if old_pickup_location is not None and pickup_location_id is not None:

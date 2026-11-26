@@ -78,23 +78,23 @@ export interface BreadDetail {
    */
   isActive?: boolean;
   /**
-   *
+   * Set for a pickup location's week only: the bread's direct-order limit on the pickup location's delivery day, null when unlimited.
    * @type {number}
    * @memberof BreadDetail
    */
-  readonly capacity: number;
+  readonly directOrderLimit: number | null;
   /**
-   *
+   * Set for a pickup location's week only: direct orders of the bread on that delivery day, over all pickup locations delivered that day.
    * @type {number}
    * @memberof BreadDetail
    */
-  readonly deliveryCount: number;
+  readonly directOrders: number;
   /**
-   *
+   * Set for a pickup location's week only: what is left of the bread's limit and its group's, null when neither has one.
    * @type {number}
    * @memberof BreadDetail
    */
-  readonly availableCapacity: number;
+  readonly remainingDirectOrders: number | null;
 }
 
 /**
@@ -108,12 +108,13 @@ export function instanceOfBreadDetail(value: object): value is BreadDetail {
   if (!("labelNames" in value) || value["labelNames"] === undefined)
     return false;
   if (!("contents" in value) || value["contents"] === undefined) return false;
-  if (!("capacity" in value) || value["capacity"] === undefined) return false;
-  if (!("deliveryCount" in value) || value["deliveryCount"] === undefined)
+  if (!("directOrderLimit" in value) || value["directOrderLimit"] === undefined)
+    return false;
+  if (!("directOrders" in value) || value["directOrders"] === undefined)
     return false;
   if (
-    !("availableCapacity" in value) ||
-    value["availableCapacity"] === undefined
+    !("remainingDirectOrders" in value) ||
+    value["remainingDirectOrders"] === undefined
   )
     return false;
   return true;
@@ -140,9 +141,9 @@ export function BreadDetailFromJSONTyped(
     labelNames: json["label_names"],
     contents: (json["contents"] as Array<any>).map(BreadContentFromJSON),
     isActive: json["is_active"] == null ? undefined : json["is_active"],
-    capacity: json["capacity"],
-    deliveryCount: json["delivery_count"],
-    availableCapacity: json["available_capacity"],
+    directOrderLimit: json["direct_order_limit"],
+    directOrders: json["direct_orders"],
+    remainingDirectOrders: json["remaining_direct_orders"],
   };
 }
 
@@ -157,9 +158,9 @@ export function BreadDetailToJSONTyped(
     | "labels"
     | "label_names"
     | "contents"
-    | "capacity"
-    | "delivery_count"
-    | "available_capacity"
+    | "direct_order_limit"
+    | "direct_orders"
+    | "remaining_direct_orders"
   > | null,
   ignoreDiscriminator: boolean = false,
 ): any {
