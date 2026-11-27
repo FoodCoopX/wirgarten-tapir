@@ -11,7 +11,6 @@ export default defineConfig(() => {
     root: resolve(INPUT_DIR),
     base: "/static/",
     build: {
-      sourcemap: true,
       manifest: "manifest.json",
       emptyOutDir: true,
       outDir: resolve(OUTPUT_DIR),

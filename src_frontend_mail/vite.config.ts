@@ -22,7 +22,6 @@ export default defineConfig({
     origin: "http://localhost:5174",
   },
   build: {
-    sourcemap: true,
     // The Arco theme bundled with easy-email contains invalid CSS that lightningcss refuses to minify.
     cssMinify: "esbuild",
     manifest: "manifest.json",
