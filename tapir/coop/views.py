@@ -345,7 +345,9 @@ class DeleteMemberApiView(APIView):
             ).delete()
 
             addresses = [member.email] + list(
-                member.memberextraemail_set.values_list("email", flat=True)
+                member.memberextraemail_set.filter(
+                    confirmed_on__isnull=False
+                ).values_list("email", flat=True)
             )
             member.delete()
             transaction.on_commit(

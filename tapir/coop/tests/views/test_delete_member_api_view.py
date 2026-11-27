@@ -56,18 +56,16 @@ class TestDeleteMemberApiView(TapirIntegrationTest):
     @patch.object(
         MailingListUnsubscriber, "unsubscribe_if_address_unused", autospec=True
     )
-    def test_delete_memberWithExtras_unsubscribesAllItsAddressesAfterCommit(
+    def test_delete_memberWithExtras_unsubscribesMainAndConfirmedExtraAddressesAfterCommit(
         self, mock_unsubscribe_if_address_unused: MagicMock
     ):
         to_delete = MemberFactory.create(email="deleted@example.com")
-        for address in ["confirmed@example.com", "unconfirmed@example.com"]:
-            MemberExtraEmailFactory.create(
-                member=to_delete,
-                email=address,
-                confirmed_on=(
-                    timezone.now() if address.startswith("confirmed") else None
-                ),
-            )
+        MemberExtraEmailFactory.create(
+            member=to_delete, email="confirmed@example.com", confirmed_on=timezone.now()
+        )
+        MemberExtraEmailFactory.create(
+            member=to_delete, email="unconfirmed@example.com", confirmed_on=None
+        )
         self.client.force_login(MemberFactory.create(is_superuser=True))
 
         with self.captureOnCommitCallbacks(execute=True):
@@ -77,7 +75,7 @@ class TestDeleteMemberApiView(TapirIntegrationTest):
 
         self.assertStatusCode(response, status.HTTP_200_OK)
         self.assertEqual(
-            {"deleted@example.com", "confirmed@example.com", "unconfirmed@example.com"},
+            {"deleted@example.com", "confirmed@example.com"},
             {
                 call.kwargs["email"]
                 for call in mock_unsubscribe_if_address_unused.call_args_list
