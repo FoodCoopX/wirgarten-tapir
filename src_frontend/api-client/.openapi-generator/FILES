@@ -173,6 +173,7 @@ models/MemberEmailRequestRequest.ts
 models/MemberEmailResponse.ts
 models/MemberExtraEmail.ts
 models/MemberExtraEmailCreateRequestRequest.ts
+models/MemberExtraEmailSendManagementLinkRequestRequest.ts
 models/MemberExtraMailData.ts
 models/MemberJokerInformation.ts
 models/MemberMailCategoryData.ts

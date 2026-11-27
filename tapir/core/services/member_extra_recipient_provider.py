@@ -1,4 +1,7 @@
 from tapir.configuration.parameter import get_parameter_value
+from tapir.core.services.subscription_management_link_provider import (
+    SubscriptionManagementLinkProvider,
+)
 from tapir.mail.addressed_recipient import AddressedRecipient
 from tapir.mail.models import (
     InternalRecipientCategoryRegistration,
@@ -22,7 +25,9 @@ class MemberExtraRecipientProvider:
             return []
 
         return [
-            cls._build_addressed_recipient(extra_email=extra_email, member=member)
+            cls._build_addressed_recipient(
+                extra_email=extra_email, member=member, cache=cache
+            )
             for extra_email in TapirCache.get_confirmed_member_extra_emails_for_member(
                 member_id=member.id, cache=cache
             )
@@ -62,14 +67,14 @@ class MemberExtraRecipientProvider:
 
         return [
             cls._build_addressed_recipient(
-                extra_email=extra_email, member=extra_email.member
+                extra_email=extra_email, member=extra_email.member, cache=cache
             )
             for extra_email in extra_emails.select_related("member").order_by("email")
         ]
 
     @staticmethod
     def _build_addressed_recipient(
-        extra_email: MemberExtraEmail, member: Member
+        extra_email: MemberExtraEmail, member: Member, cache: dict
     ) -> AddressedRecipient:
         return AddressedRecipient(
             recipient=member,
@@ -77,5 +82,8 @@ class MemberExtraRecipientProvider:
             token_overrides={
                 "first_name": extra_email.first_name,
                 "last_name": extra_email.last_name,
+                SubscriptionManagementLinkProvider.TOKEN_NAME: SubscriptionManagementLinkProvider.build_link_for_address(
+                    address=extra_email.email, cache=cache
+                ),
             },
         )

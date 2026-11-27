@@ -28,6 +28,10 @@ class MemberExtraEmailUpdateRequest(serializers.Serializer):
     receives_direct_mails = serializers.BooleanField()
 
 
+class MemberExtraEmailSendManagementLinkRequest(serializers.Serializer):
+    extra_email_id = serializers.CharField()
+
+
 class MailingListSerializer(serializers.Serializer):
     name = serializers.CharField()
     nb_recipients = serializers.IntegerField()

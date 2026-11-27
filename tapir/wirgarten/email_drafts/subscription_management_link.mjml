@@ -1,0 +1,34 @@
+<mj-wrapper padding="20px 0px 20px 0px" border="none" direction="ltr" text-align="center">
+    <mj-section padding="0px" text-align="left">
+        <mj-column>
+            <mj-text padding="10px 25px 10px 25px" align="left">
+Trigger: Transaktionale Mail mit einem Link zur Verwaltung der Mail-Abos einer Adresse ohne eigenes Mitgliedskonto (zusätzliche Adresse eines Mitglieds oder externe Empfänger). Sie wird versendet, wenn ein Mitglied den Link für eine seiner zusätzlichen Adressen im Mitgliederbereich anfordert, oder wenn der Link über die öffentliche Seite zum Anfordern eines Links angefordert wird. Hauptadressen von Mitgliedern bekommen diese Mail nicht, sie verwalten ihre Abos im Mitgliederbereich. <br /><br />
+Zweck: Über den Link kann die Adresse ihre Anmeldungen zu Mail-Kategorien und Mailinglisten verwalten. Der Link ist nur für die angegebene Zeit gültig. <br /><br />
+Text-Vorschlag: Ihr könnt diesen kopieren und nach dem Laden eurer Vorlage einfügen. Ihr könnt diesen Text natürlich jederzeit nach euren Bedürfnissen anpassen. <br /><br />
+
+________________ <br /><br />
+
+"Moin {{Empfänger.Vorname}}, <br /><br />
+hier ist dein Link, um deine Mail-Abos zu verwalten: {{Link zur Verwaltung der Mail-Abos.Verwaltungslink}} <br /><br />
+
+Gültigkeit des Links: {{Link zur Verwaltung der Mail-Abos.Gültigkeit}} <br /><br />
+
+Wenn du diesen Link nicht angefordert hast, musst du nichts weiter unternehmen. <br /><br />
+
+Wenn Du noch eine Frage oder Rückmeldung hast, melde Dich gerne bei uns! <br /><br />
+
+Liebe Grüße, <br />
+Dein {{Allgemein.Admin Name}} <br />
+{{Allgemein.Admin Telefonnr}} <br />
+{{Allgemein.Admin Email}} <br />
+{{Allgemein.WirGarten Standort}}" <br />
+
+_________________ <br /><br />
+
+Folgende Token sind hier relevant: <br />
+Link zur Verwaltung der Mail-Abos: {{Link zur Verwaltung der Mail-Abos.Verwaltungslink}} <br />
+Gültigkeit des Links (72 Stunden): {{Link zur Verwaltung der Mail-Abos.Gültigkeit}}
+            </mj-text>
+        </mj-column>
+    </mj-section>
+</mj-wrapper>

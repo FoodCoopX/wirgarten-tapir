@@ -344,7 +344,6 @@ class StaticSegmentRecipient(BaseModel):
 
 
 class ExternalRecipient(BaseModel):
-    secret_key = models.UUIDField(default=uuid.uuid4)
     email = models.EmailField()
     first_name = models.CharField(max_length=100)
 

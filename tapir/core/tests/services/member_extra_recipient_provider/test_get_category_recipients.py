@@ -1,7 +1,14 @@
+from django.test import override_settings
 from django.utils import timezone
 
 from tapir.core.services.member_extra_recipient_provider import (
     MemberExtraRecipientProvider,
+)
+from tapir.core.services.subscription_management_link_provider import (
+    SubscriptionManagementLinkProvider,
+)
+from tapir.core.services.subscription_management_token_signer import (
+    SubscriptionManagementTokenSigner,
 )
 from tapir.mail.addressed_recipient import AddressedRecipient
 from tapir.mail.models import (
@@ -63,6 +70,7 @@ class TestGetCategoryRecipients(TapirIntegrationTest):
 
         self.assertEqual([], result)
 
+    @override_settings(SITE_URL="https://tapir.example")
     def test_getCategoryRecipients_default_returnsConfirmedExtrasOfMembersInSegmentWithTokenOverrides(
         self,
     ):
@@ -75,6 +83,9 @@ class TestGetCategoryRecipients(TapirIntegrationTest):
             mail_category=mail_category, cache={}
         )
 
+        management_link = result[0].token_overrides[
+            SubscriptionManagementLinkProvider.TOKEN_NAME
+        ]
         self.assertEqual(
             [
                 AddressedRecipient(
@@ -83,10 +94,19 @@ class TestGetCategoryRecipients(TapirIntegrationTest):
                     token_overrides={
                         "first_name": extra_email.first_name,
                         "last_name": extra_email.last_name,
+                        SubscriptionManagementLinkProvider.TOKEN_NAME: management_link,
                     },
                 )
             ],
             result,
+        )
+        link_prefix = "https://tapir.example/core/subscription_management/"
+        self.assertTrue(management_link.startswith(link_prefix))
+        self.assertEqual(
+            extra_email.email,
+            SubscriptionManagementTokenSigner.get_address(
+                token=management_link.removeprefix(link_prefix)
+            ),
         )
 
     def test_getCategoryRecipients_extraDoesNotReceiveDirectMails_extraIsIncluded(

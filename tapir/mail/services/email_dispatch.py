@@ -142,22 +142,19 @@ class ResolveAndCreateEmailDispatches:
         cache: dict,
     ):
         recipient = addressed_recipient.recipient
-        resolved_recipient_tokens = resolve_recipient_tokens(
+        resolved_tokens = resolve_recipient_tokens(
             tokens_to_resolve=recipient_tokens, recipient=recipient, cache=cache
+        ) | resolve_dynamic_tokens(
+            tokens_to_resolve=dynamic_tokens, recipient=recipient, cache=cache
         )
         for token, value in addressed_recipient.token_overrides.items():
-            if token in resolved_recipient_tokens:
-                resolved_recipient_tokens[token] = value
+            if token in resolved_tokens:
+                resolved_tokens[token] = value
 
         return EmailDispatch(
             email_configuration_dispatch=config_dispatch,
             recipient=addressed_recipient.email,
-            recipient_tokens=resolved_recipient_tokens
-            | resolve_dynamic_tokens(
-                dynamic_tokens,
-                recipient,
-                cache,
-            ),
+            recipient_tokens=resolved_tokens,
             additional_tokens=config_dispatch.additional_tokens,
             created_at=config_dispatch.scheduled_time,
         )

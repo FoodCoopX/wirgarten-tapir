@@ -22,6 +22,7 @@ import type {
   MailingListSubscribeInternalRecipientRequestRequest,
   MemberDataDisclosure,
   MemberExtraEmailCreateRequestRequest,
+  MemberExtraEmailSendManagementLinkRequestRequest,
   MemberExtraMailData,
   MemberMailCategoryData,
   MemberMailCategoryRequestRequest,
@@ -38,6 +39,7 @@ import {
   MailingListSubscribeInternalRecipientRequestRequestToJSON,
   MemberDataDisclosureFromJSON,
   MemberExtraEmailCreateRequestRequestToJSON,
+  MemberExtraEmailSendManagementLinkRequestRequestToJSON,
   MemberExtraMailDataFromJSON,
   MemberMailCategoryDataFromJSON,
   MemberMailCategoryRequestRequestToJSON,
@@ -88,6 +90,10 @@ export interface CoreApiMemberDataDisclosurePdfRetrieveRequest {
 
 export interface CoreApiMemberDataDisclosureRetrieveRequest {
   memberId?: string;
+}
+
+export interface CoreApiMemberExtraEmailSendManagementLinkCreateRequest {
+  memberExtraEmailSendManagementLinkRequestRequest: MemberExtraEmailSendManagementLinkRequestRequest;
 }
 
 export interface CoreApiMemberExtraEmailsCreateRequest {
@@ -944,6 +950,76 @@ export class CoreApi extends runtime.BaseAPI {
       requestParameters,
       initOverrides,
     );
+    return await response.value();
+  }
+
+  /**
+   */
+  async coreApiMemberExtraEmailSendManagementLinkCreateRaw(
+    requestParameters: CoreApiMemberExtraEmailSendManagementLinkCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<boolean>> {
+    if (
+      requestParameters["memberExtraEmailSendManagementLinkRequestRequest"] ==
+      null
+    ) {
+      throw new runtime.RequiredError(
+        "memberExtraEmailSendManagementLinkRequestRequest",
+        'Required parameter "memberExtraEmailSendManagementLinkRequestRequest" was null or undefined when calling coreApiMemberExtraEmailSendManagementLinkCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/core/api/member_extra_email_send_management_link`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: MemberExtraEmailSendManagementLinkRequestRequestToJSON(
+          requestParameters["memberExtraEmailSendManagementLinkRequestRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    if (this.isJsonMime(response.headers.get("content-type"))) {
+      return new runtime.JSONApiResponse<boolean>(response);
+    } else {
+      return new runtime.TextApiResponse(response) as any;
+    }
+  }
+
+  /**
+   */
+  async coreApiMemberExtraEmailSendManagementLinkCreate(
+    requestParameters: CoreApiMemberExtraEmailSendManagementLinkCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<boolean> {
+    const response =
+      await this.coreApiMemberExtraEmailSendManagementLinkCreateRaw(
+        requestParameters,
+        initOverrides,
+      );
     return await response.value();
   }
 

@@ -4,6 +4,7 @@ from tapir.core.views import general
 from tapir.core.views import mailing_lists
 from tapir.core.views import member_data
 from tapir.core.views import member_extra_emails
+from tapir.core.views import subscription_management
 
 app_name = "core"
 urlpatterns = [
@@ -31,6 +32,26 @@ urlpatterns = [
         "member_extra_email_confirmed/<uuid:secret>",
         member_extra_emails.MemberExtraEmailConfirmedView.as_view(),
         name="member_extra_email_confirmed",
+    ),
+    path(
+        "api/member_extra_email_send_management_link",
+        member_extra_emails.MemberExtraEmailSendManagementLinkApiView.as_view(),
+        name="member_extra_email_send_management_link",
+    ),
+    path(
+        "subscription_management/<str:token>",
+        subscription_management.SubscriptionManagementView.as_view(),
+        name="subscription_management",
+    ),
+    path(
+        "subscription_management_link_request",
+        subscription_management.SubscriptionManagementLinkRequestView.as_view(),
+        name="subscription_management_link_request",
+    ),
+    path(
+        "subscription_management_link_requested",
+        subscription_management.SubscriptionManagementLinkRequestedView.as_view(),
+        name="subscription_management_link_requested",
     ),
     path(
         "mailing_lists",

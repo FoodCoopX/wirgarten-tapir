@@ -75,7 +75,7 @@ An address is either the main address of one member or the confirmed extra of on
 - **Addresses are stored normalised** (`EmailNormaliser`: trimmed, lowercase) in every address field (`TapirUser.email`, `EmailChangeRequest.new_email`, `WaitingListEntry.email`, `MemberExtraEmail.email` and its log entries, `ExternalRecipient.email`, `StaticSegmentRecipient.email`, `EmailDispatch.recipient`, the exports' `email_recipients`). The views and services where an address enters normalise it explicitly; lookups compare stored values directly.
 - **Creating an extra** refuses only the member's own main address and the member's own existing extras. Refusing addresses of other members here would tell the member that someone else uses the address.
 - **Confirming an extra** (`ConfirmMemberExtraEmailView`: GET shows a page with a confirmation button, POST confirms, so link scanners opening the mail's link confirm nothing; checked by `MemberExtraEmailConfirmationValidator` on both) is refused if the address is a member's main address or a confirmed extra of another member. Only the address owner sees this. The confirmation page shows "Diese Adresse ist bereits die Hauptadresse eines Mitglieds" or "Diese Adresse ist bereits als zusätzliche Adresse eines anderen Mitglieds bestätigt"; `confirmed_on` stays empty and nothing is logged.
-- **An address becoming a main address wins**: on a confirmed email change (`MailChangeService.apply_mail_change`) and on member creation, every extra with that address is deleted, the member's own one included, with a `MemberExtraEmailDeletedLogEntry` (`actor=None`) on its member. The extra's member is not notified. Its category registrations cascade; its list subscriptions stay, since the address is still in use. `MemberExtraEmailAddressReleaser.release_address` holds this, called from `apply_mail_change` and from the member creation paths: Bestellwizard (`BestellWizardOrderFulfiller`), waiting list confirmation (`WaitingListEntryConfirmationApplier.create_member`) and admin creation (`save_member_and_assign_number`). The member importer and the test data generator run on instances without extras and don't call it.
+- **An address becoming a main address wins**: on a confirmed email change (`MailChangeService.apply_mail_change`) and on member creation, every extra with that address is deleted, the member's own one included, with a `MemberExtraEmailDeletedLogEntry` on its member whose actor is the user causing the change (`None` for a new member without a logged-in user). The extra's member is not notified. Its category registrations cascade; its list subscriptions stay, since the address is still in use. `MemberExtraEmailAddressReleaser.release_address` holds this, called from `apply_mail_change` and from the member creation paths: Bestellwizard (`BestellWizardOrderFulfiller`), waiting list confirmation (`WaitingListEntryConfirmationApplier.create_member`) and admin creation (`save_member_and_assign_number`). The member importer and the test data generator run on instances without extras and don't call it.
   - On an email change of a verified member, the new address's owner has proved access through the confirmation link. For a member whose address isn't verified yet, `MemberEmailApiView` applies the change directly, like a member creation.
   - On member creation, they haven't: the Bestellwizard creates the member before the Keycloak verification, and Tapir has no hook on verification. A registration with someone else's address therefore removes that address's extra right away. This is accepted: such a registration already causes bigger problems (contracts, SEPA mandate, misdirected mails) that admins handle, and the extra can be added again once the member is deleted.
 
@@ -155,21 +155,22 @@ The description of `ENABLE_EXTRA_MAIL_ADDRESSES` (`parameter_definitions_emails.
 
 `SubscriptionManagementLinkProvider` (`tapir/core/services/`) builds the link from the address. The address reaches it as follows:
 - Members, static segment recipients and `RecipientOutsideOfBaseQueryset` carry it as `.email`.
-- Extras get the link through `token_overrides` (`MemberExtraRecipientProvider._build_addressed_recipient`).
+- Extras get the link through `token_overrides` (`MemberExtraRecipientProvider._build_addressed_recipient`). Dispatch applies the overrides to the "Empfänger" and "Empfänger (extra)" tokens alike.
 
-**Signed link**: `django.core.signing.TimestampSigner` with a dedicated salt, payload the normalised address (`EmailNormaliser`), `max_age` from a new parameter `SUBSCRIPTION_MANAGEMENT_LINK_VALIDITY_HOURS` (default 72), not gated by `ENABLE_EXTRA_MAIL_ADDRESSES`. No table is needed. A link stays valid until it expires even if the address loses all its subscriptions; the page then has nothing to show.
+**Signed link** (`SubscriptionManagementTokenSigner`): `django.core.signing.dumps` with a dedicated salt, payload the stored (normalised) address, valid for 72 hours (`SubscriptionManagementTokenSigner.VALIDITY_HOURS`). No table is needed. A link stays valid until it expires even if the address loses all its subscriptions; the page then has nothing to show.
 
-**Page** `/subscriptions/manage/<token>`: a public Django template page with a new React island `subscription_management` (`add-frontend-entry` skill).
+**Page** `core/subscription_management/<token>`: a public Django template page with a new React island `subscription_management` (`add-frontend-entry` skill).
 - Invalid or expired token: "Link abgelaufen", with a button to the request page.
 - Address that is now a member's main address: redirect to the member profile.
 - Otherwise: the address, then the parts described under management API.
 
 **Sending the link**:
 - Member profile: a "Link senden" button per confirmed extra in `MemberExtraEmailsModal`. `POST api/member_extra_email_send_management_link` with `check_permission_or_self`.
-- Public page `/subscriptions/request_link`: email field. A main address gets a mail with the profile link; a confirmed extra or an `ExternalRecipient` gets a mail with the management link; any other address gets nothing. The response is always the same, so the page doesn't reveal which addresses exist.
-- The extra's confirmed page offers an "Abos verwalten" button: its permanent `secret` proves ownership, so it redirects to a fresh signed link.
-- The external recipients' permanent link `external/manage/<secret>`, contained in many old mails, redirects to a fresh signed link the same way.
-- Transactional trigger `Events.SUBSCRIPTION_MANAGEMENT_LINK` with the tokens `management_link` and `validity`, sent to `RecipientOutsideOfBaseQueryset(email=address, first_name=…)`: the extra's or the external recipient's first name. Required, with a draft in `tapir/wirgarten/email_drafts/`.
+- Public page `core/subscription_management_link_request`: email field. A confirmed extra or an `ExternalRecipient` gets a mail with the management link; any other address, main addresses included (they manage their subscriptions on the member profile), gets nothing. The response is always the same, so the page doesn't reveal which addresses exist.
+- There are no permanent management links: every access goes through a mail to the address, so a forwarded or leaked old mail grants nothing.
+  - The extra's confirmed page offers an "Abos verwalten" button leading to the request page.
+  - The external recipients' former permanent link `external/manage/<secret>`, contained in many old mails, redirects to the request page. `MAIL_CATEGORY_REGISTRATION_CONFIRMED` links to the request page too. `ExternalRecipient.secret_key` is dropped (`tapir_mail` 0055).
+- Transactional trigger `Events.SUBSCRIPTION_MANAGEMENT_LINK` with the tokens `management_link` and `validity` ("72 Stunden"), sent by `SubscriptionManagementLinkSender` to `RecipientOutsideOfBaseQueryset(email=address, first_name=…)`: the extra's or the external recipient's first name. Required when `ENABLE_EXTRA_MAIL_ADDRESSES` is on or a category has `available_for_external_recipients`, with a draft in `tapir/wirgarten/email_drafts/`.
 
 ### Management API
 
@@ -249,8 +250,8 @@ Rejoining restores nothing: the member subscribes again through self-service.
 - [x] Phase 3 — extras in `MailCategoryRecipientResolver` + extra defaults, snapshot at confirmation (categories + lists), data migration for existing extras
 - [x] Phase 4 — extra mailing list manager (`unsubscribe_from_all`), unsubscribe on deletion, recipient list display, parameter description update, explanation text default update
 - [x] Phase 5 — address ownership: refuse confirmation of addresses owned elsewhere, release extras when an address becomes a main address (email change, member creation paths), normalised address storage (explicit normalisation where addresses enter, migrations for existing data), migration for existing duplicates; `ExtraEmailMailingListManager` becomes `MailingListUnsubscriber` with the main address / `ExternalRecipient` check; recipient list without the "added first" rule
-- [ ] Phase 6 — management link: signing service + validity parameter, `NewsletterManagementLinkProvider` becomes `SubscriptionManagementLinkProvider` by address (absolute profile URL, overrides for dynamic tokens, extras' override), trigger + draft, "Link senden" endpoint + button, public request page, "Abos verwalten" on the confirmed page, redirect of the old external link, page shell (expired state, redirect of main addresses, address header)
-- [ ] Phase 7 — management page content: per-extra category state, shared category services extracted from `MemberMailCategoryDataApiView` (update-or-create, also for the member path; category selection, also for the snapshotter), address-based list services extracted from the member self-service views, API + island (extra part, external part, lists, removals), deletion of `ExternalRecipientManagementView` with its form and template, log entry, throttling (optional: decide at the beginning of the phase; if yes, it also covers the phase 6 request-link endpoint)
+- [x] Phase 6 — management link: signing service, `NewsletterManagementLinkProvider` becomes `SubscriptionManagementLinkProvider` by address (absolute profile URL, overrides for dynamic tokens, extras' override), trigger + draft, "Link senden" endpoint + button, public request page, "Abos verwalten" on the confirmed page, old external link redirecting to the request page (replacing `ExternalRecipientManagementView` with its form and template, dropping `ExternalRecipient.secret_key`), page shell (expired state, redirect of main addresses, address header)
+- [ ] Phase 7 — management page content: per-extra category state, shared category services extracted from `MemberMailCategoryDataApiView` (update-or-create, also for the member path; category selection, also for the snapshotter), address-based list services extracted from the member self-service views, API + island (extra part, external part, lists, removals), log entry, throttling (optional: decide at the beginning of the phase; if yes, it also covers the phase 6 request-link endpoint)
 - [ ] Phase 8 — mailman subscriptions follow the member's email change
 - [ ] Phase 9 — former members: `ActiveMemberProvider` (move `MemberSegmentProvider.get_queryset_active_members` with its tests, add `get_former_members`, update callers), nightly unsubscription task + log entry, blocking new subscriptions (self-service, management page, admin views, snapshot), list unsubscription in `DeleteMemberApiView`
 - [ ] Phase 10 — test data generation (extras with and without direct mails; registrations of extras with direct mails through `MemberExtraEmailRegistrationSnapshotter`)
@@ -279,3 +280,34 @@ The ownership migration (phase 5, `wirgarten` 0158) runs after the backfill and 
 - Reset extras lose their category registrations, backfilled ones included, so a later confirmation snapshots again without hitting the unique constraints. Their members are not notified.
 
 Migrations run in the web container's start command before gunicorn (infra repo). Where `celery` waits for `service_healthy`, the backfill is in place before any mail is sent with the new code. Where it only waits for `service_started`, a dispatch during the migration fails on the missing column and is retried; no mail goes to the wrong addresses.
+
+## Review order (current phase)
+
+Cleared at the start of each phase. Staged files count as reviewed (for partly staged files, only the unstaged part); generated files are left out.
+
+1. `plans/member_extra_email_subscriptions_plan.md`
+
+**Pages and endpoints**
+
+2. `tapir/core/urls.py`
+3. `tapir/core/forms.py`
+4. `core/subscription_management*.html` (4 templates)
+5. `tapir/core/tests/views/test_subscription_management_link_request_view.py`
+
+**No permanent links**
+
+6. `tapir/mail/urls.py`: old external link redirects to the request page
+7. `tapir/mail/tests/integration/test_ExternalRecipientManagerUrl.py`
+8. `tapir/mail/views/external.py`: confirmation mail links to the request page
+9. `tapir/mail/tests/integration/ConfirmRegistrationToMailCategoryView/test_ConfirmRegistrationToMailCategoryView_post.py`
+10. `tapir/mail/forms.py`: management form removed
+11. `tapir/mail/models.py`: `secret_key` dropped
+12. `tapir/core/templates/core/member_extra_email_confirmed.html`: "Abos verwalten" leads to the request page
+
+**"Link senden"**
+
+13. `tapir/core/serializers.py`
+14. `tapir/wirgarten/models.py`: `MemberExtraEmail.is_confirmed`
+15. `tapir/core/views/member_extra_emails.py`: also uses `is_confirmed`
+16. `tapir/core/tests/views/test_member_extra_email_send_management_link_api_view.py`
+17. `src_frontend/member_profile/personal_data/MemberExtraEmailsModal.tsx` (no tests)

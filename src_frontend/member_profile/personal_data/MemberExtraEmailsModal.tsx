@@ -1,10 +1,12 @@
 import "dayjs/locale/de";
 import React, { useEffect, useState } from "react";
 import { Badge, Form, ListGroup, Modal, Spinner } from "react-bootstrap";
+import { v4 as uuidv4 } from "uuid";
 import { CoreApi, MemberExtraEmail } from "../../api-client";
 import TapirButton from "../../components/TapirButton.tsx";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
+import { addToast } from "../../utils/addToast.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 
@@ -36,6 +38,7 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [sendingLinkId, setSendingLinkId] = useState<string>();
   const [selectedForEdit, setSelectedForEdit] = useState<MemberExtraEmail>();
   const [editFirstName, setEditFirstName] = useState("");
   const [editLastName, setEditLastName] = useState("");
@@ -108,6 +111,36 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
         ),
       )
       .finally(() => setDeleting(false));
+  }
+
+  function onSendManagementLink(extraEmail: MemberExtraEmail) {
+    setSendingLinkId(extraEmail.id);
+
+    api
+      .coreApiMemberExtraEmailSendManagementLinkCreate({
+        memberExtraEmailSendManagementLinkRequestRequest: {
+          extraEmailId: extraEmail.id!,
+        },
+      })
+      .then(() =>
+        addToast(
+          {
+            id: uuidv4(),
+            variant: "success",
+            title: "Link gesendet",
+            message: `${extraEmail.email} hat einen Link zur Verwaltung der Abos bekommen.`,
+          },
+          setToastDatas,
+        ),
+      )
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Senden des Links",
+          setToastDatas,
+        ),
+      )
+      .finally(() => setSendingLinkId(undefined));
   }
 
   function onUpdate(extraEmail: MemberExtraEmail) {
@@ -201,6 +234,16 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
                   : "Nicht bestätigt"}
               </small>
               <div className={"d-flex gap-2"}>
+                {extraEmail.confirmedOn && (
+                  <TapirButton
+                    variant={"outline-secondary"}
+                    icon={"send"}
+                    text={"Link senden"}
+                    size={"sm"}
+                    onClick={() => onSendManagementLink(extraEmail)}
+                    loading={sendingLinkId === extraEmail.id}
+                  />
+                )}
                 {selectedForEdit == extraEmail ? (
                   <TapirButton
                     variant={"primary"}

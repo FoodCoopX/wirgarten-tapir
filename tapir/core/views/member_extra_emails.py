@@ -30,9 +30,13 @@ from tapir.core.services.member_extra_email_confirmation_validator import (
 from tapir.core.services.member_extra_email_registration_snapshotter import (
     MemberExtraEmailRegistrationSnapshotter,
 )
+from tapir.core.services.subscription_management_link_sender import (
+    SubscriptionManagementLinkSender,
+)
 from tapir.core.serializers import (
     MemberExtraMailDataSerializer,
     MemberExtraEmailCreateRequest,
+    MemberExtraEmailSendManagementLinkRequest,
     MemberExtraEmailUpdateRequest,
 )
 from tapir.log.util import freeze_for_log
@@ -207,7 +211,7 @@ class MemberExtraEmailApiView(APIView):
             actor=request.user,
         ).save()
 
-        if member_extra_email.confirmed_on is not None:
+        if member_extra_email.is_confirmed:
             email = member_extra_email.email
             transaction.on_commit(
                 lambda: MailingListUnsubscriber.unsubscribe_from_all(
@@ -221,11 +225,39 @@ class MemberExtraEmailApiView(APIView):
         return Response(True)
 
 
+class MemberExtraEmailSendManagementLinkApiView(APIView):
+    @extend_schema(
+        responses={200: bool},
+        request=MemberExtraEmailSendManagementLinkRequest,
+    )
+    def post(self, request):
+        cache = {}
+        if not get_parameter_value(
+            key=ParameterKeys.ENABLE_EXTRA_MAIL_ADDRESSES, cache=cache
+        ):
+            raise RestValidationError(MemberExtraEmailApiView.FEATURE_DISABLED_MESSAGE)
+        serializer = MemberExtraEmailSendManagementLinkRequest(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        extra_email = get_object_or_404(
+            MemberExtraEmail, id=serializer.validated_data["extra_email_id"]
+        )
+        check_permission_or_self(pk=extra_email.member_id, request=request)
+        if not extra_email.is_confirmed:
+            raise RestValidationError("Diese Adresse ist noch nicht bestätigt")
+
+        SubscriptionManagementLinkSender.send_link(
+            address=extra_email.email, cache=cache
+        )
+
+        return Response(True)
+
+
 class ConfirmMemberExtraEmailView(View):
     def get(self, request: HttpRequest, secret: uuid.UUID) -> HttpResponse:
         cache = {}
         member_extra_email = self._get_extra_email(secret=secret, cache=cache)
-        if member_extra_email.confirmed_on is not None:
+        if member_extra_email.is_confirmed:
             return redirect("core:member_extra_email_confirmed", secret=secret)
 
         refusal_page = self._build_refusal_page_if_address_taken(
@@ -248,7 +280,7 @@ class ConfirmMemberExtraEmailView(View):
     def post(self, request: HttpRequest, secret: uuid.UUID) -> HttpResponse:
         cache = {}
         member_extra_email = self._get_extra_email(secret=secret, cache=cache)
-        if member_extra_email.confirmed_on is not None:
+        if member_extra_email.is_confirmed:
             return redirect("core:member_extra_email_confirmed", secret=secret)
 
         refusal_page = self._build_refusal_page_if_address_taken(

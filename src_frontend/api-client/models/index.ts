@@ -156,6 +156,7 @@ export * from "./MemberEmailRequestRequest";
 export * from "./MemberEmailResponse";
 export * from "./MemberExtraEmail";
 export * from "./MemberExtraEmailCreateRequestRequest";
+export * from "./MemberExtraEmailSendManagementLinkRequestRequest";
 export * from "./MemberExtraMailData";
 export * from "./MemberJokerInformation";
 export * from "./MemberMailCategoryData";

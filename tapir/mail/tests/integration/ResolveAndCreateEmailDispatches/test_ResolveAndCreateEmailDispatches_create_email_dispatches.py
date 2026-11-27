@@ -1,4 +1,9 @@
 from datetime import datetime, timezone
+from unittest.mock import MagicMock, patch
+
+from tapir.core.services.subscription_management_link_provider import (
+    SubscriptionManagementLinkProvider,
+)
 
 from tapir.mail.models import (
     EmailConfigurationDispatch,
@@ -43,8 +48,14 @@ class TestResolveAndCreateEmailDispatchesCreateEmailDispatches(TapirIntegrationT
                 config_dispatch=config_dispatch, cache={}
             )
 
+    @patch.object(
+        SubscriptionManagementLinkProvider,
+        "build_link_for_address",
+        autospec=True,
+        side_effect=lambda address, cache: f"https://link.for/{address}",
+    )
     def test_createEmailDispatches_someRecipientsHaveExtraAddresses_createsADispatchPerAddressWithOverriddenTokens(
-        self,
+        self, _: MagicMock
     ):
         self._set_parameter(key=ParameterKeys.ENABLE_EXTRA_MAIL_ADDRESSES, value=True)
         add_mail_segment_provider(
@@ -56,7 +67,7 @@ class TestResolveAndCreateEmailDispatchesCreateEmailDispatches(TapirIntegrationT
             },
         )
         config_dispatch = self._create_email_config_dispatch(scheduled_time=self.NOW)
-        self.email_config_version.content = "FirstName:{{Empfänger.Vorname}} LastName:{{Empfänger.Nachname}} Email:{{Empfänger.Email}} IBAN:{{Empfänger.IBAN}}"
+        self.email_config_version.content = "FirstName:{{Empfänger.Vorname}} LastName:{{Empfänger.Nachname}} Email:{{Empfänger.Email}} IBAN:{{Empfänger.IBAN}} Link:{{Empfänger (extra).Newsletter - Verwaltungslink}}"
         self.email_config_version.dynamic_segments_additive = ["Test: all members"]
         self.email_config_version.save()
         static_segment = StaticSegmentFactory.create()
@@ -166,6 +177,9 @@ class TestResolveAndCreateEmailDispatchesCreateEmailDispatches(TapirIntegrationT
             },
             email_dispatches["extra2"].recipient_tokens,
         )
+        self._assert_management_links_are_built_for_their_own_address(
+            email_dispatches=email_dispatches
+        )
 
     def _create_email_config_dispatch(
         self, scheduled_time: datetime, is_sent: bool = False
@@ -181,3 +195,14 @@ class TestResolveAndCreateEmailDispatchesCreateEmailDispatches(TapirIntegrationT
     ):
         for token in ["first_name", "last_name", "email", "iban"]:
             self.assertEqual(expected_tokens[token], actual_tokens[token])
+
+    def _assert_management_links_are_built_for_their_own_address(
+        self, email_dispatches: dict[str, EmailDispatch]
+    ):
+        for email_dispatch in email_dispatches.values():
+            self.assertEqual(
+                f"https://link.for/{email_dispatch.recipient}",
+                email_dispatch.recipient_tokens[
+                    SubscriptionManagementLinkProvider.TOKEN_NAME
+                ],
+            )

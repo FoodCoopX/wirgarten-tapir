@@ -150,12 +150,19 @@ class TapirCache:
 
     @classmethod
     def is_member_main_address(cls, address: str, cache: dict) -> bool:
-        main_addresses = get_from_cache_or_compute(
-            cache,
-            "member_main_addresses",
-            lambda: set(Member.objects.values_list("email", flat=True)),
+        return (
+            cls.get_member_id_with_main_address(address=address, cache=cache)
+            is not None
         )
-        return address in main_addresses
+
+    @classmethod
+    def get_member_id_with_main_address(cls, address: str, cache: dict) -> str | None:
+        member_ids_by_main_address = get_from_cache_or_compute(
+            cache,
+            "member_ids_by_main_address",
+            lambda: dict(Member.objects.values_list("email", "id")),
+        )
+        return member_ids_by_main_address.get(address)
 
     @classmethod
     def get_subscriptions_active_at_date(

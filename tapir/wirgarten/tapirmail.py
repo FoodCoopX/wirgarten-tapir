@@ -3,7 +3,7 @@ from typing import Callable
 from django.conf import settings
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
-from tapir.mail.models import StaticSegment, StaticSegmentRecipient
+from tapir.mail.models import MailCategory, StaticSegment, StaticSegmentRecipient
 from tapir.mail.services.segment import register_base_segment
 from tapir.mail.services.token import register_tokens
 from tapir.mail.services.triggers import register_trigger
@@ -13,11 +13,11 @@ from tapir.bakery.services.bread_mail_token_service import BreadMailTokenService
 from tapir.configuration.parameter import get_parameter_value
 from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.core.services.member_mail_token_service import MemberMailTokenService
-from tapir.core.services.newsletter_management_link_provider import (
-    NewsletterManagementLinkProvider,
-)
 from tapir.core.services.organisation_entry_date_annotator import (
     OrganisationEntryDateAnnotator,
+)
+from tapir.core.services.subscription_management_link_provider import (
+    SubscriptionManagementLinkProvider,
 )
 from tapir.pickup_locations.services.pickup_location_mail_token_service import (
     PickupLocationMailTokenService,
@@ -153,7 +153,7 @@ def _register_tokens():
             "Verteilstation - Photo-Link": PickupLocationMailTokenService.pickup_location_photo_link,
             "Verteilstation - Zusatzinfos": PickupLocationMailTokenService.pickup_location_info,
             "Verteilstation - Abholzeiten": PickupLocationMailTokenService.pickup_location_opening_times,
-            "Newsletter - Verwaltungslink": NewsletterManagementLinkProvider.get_newsletter_management_link,
+            SubscriptionManagementLinkProvider.TOKEN_NAME: SubscriptionManagementLinkProvider.get_link_for_recipient,
             TOKEN_FIRST_PICKUP_DATE: OrderConfirmationMailTokenBuilder.get_first_pickup_date_for_recipient,
             **bakery_tokens,
         },
@@ -364,6 +364,19 @@ def _register_triggers():
         required=lambda cache: get_parameter_value(
             ParameterKeys.ENABLE_EXTRA_MAIL_ADDRESSES, cache=cache
         ),
+    )
+
+    register_transactional_trigger(
+        name="Link zur Verwaltung der Mail-Abos",
+        key=Events.SUBSCRIPTION_MANAGEMENT_LINK,
+        tokens={
+            "Verwaltungslink": "management_link",
+            "Gültigkeit": "validity",
+        },
+        required=lambda cache: get_parameter_value(
+            ParameterKeys.ENABLE_EXTRA_MAIL_ADDRESSES, cache=cache
+        )
+        or MailCategory.objects.filter(available_for_external_recipients=True).exists(),
     )
 
     register_transactional_trigger(

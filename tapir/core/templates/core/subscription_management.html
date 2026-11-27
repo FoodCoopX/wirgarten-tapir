@@ -1,0 +1,14 @@
+{% extends "core/base.html" %}
+{% block head %}
+    <title>
+        {% block title %}Mail-Abos verwalten{% endblock %}
+    </title>
+{% endblock %}
+{% block content %}
+    <div class="card mt-4">
+        <div class="card-header">Mail-Abos verwalten</div>
+        <div class="card-body">
+            <p>Abos der Adresse {{ address }}</p>
+        </div>
+    </div>
+{% endblock content %}

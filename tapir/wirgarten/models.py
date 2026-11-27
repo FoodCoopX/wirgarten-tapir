@@ -1155,6 +1155,10 @@ class MemberExtraEmail(TapirModel):
     def __str__(self):
         return f"{self.member} - Extra-Mail:{self.email}"
 
+    @property
+    def is_confirmed(self) -> bool:
+        return self.confirmed_on is not None
+
 
 class MemberExtraEmailCreatedLogEntry(LogEntry):
     template_name = "wirgarten/log/member_extra_email_created_log_entry.html"

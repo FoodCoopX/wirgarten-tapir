@@ -1,4 +1,11 @@
+from unittest.mock import MagicMock, patch
+
+from django.core import signing
 from django.utils import timezone
+
+from tapir.core.services.subscription_management_link_provider import (
+    SubscriptionManagementLinkProvider,
+)
 
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.mail.models import (
@@ -195,8 +202,9 @@ class TestSegments(TapirIntegrationTest):
         for user in Member.objects.filter(id__in=self.COOP_MEMBER_IDS):
             self.assertIn(AddressedRecipient.at_own_address(user), result)
 
+    @patch.object(signing.time, "time", autospec=True, return_value=1_000_000)
     def test_resolveSegments_memberInDynamicSegmentHasConfirmedExtra_resultContainsMainAddressAndCopy(
-        self,
+        self, _: MagicMock
     ):
         member = self._create_confirmed_extra(member_id="1")
 
@@ -237,8 +245,9 @@ class TestSegments(TapirIntegrationTest):
 
         self.assertEqual([AddressedRecipient.at_own_address(member)], result)
 
+    @patch.object(signing.time, "time", autospec=True, return_value=1_000_000)
     def test_resolveSegments_memberInDynamicSegmentAndMailCategory_resultContainsEachAddressOnceWithCopy(
-        self,
+        self, _: MagicMock
     ):
         member = self._create_confirmed_extra(member_id="1")
         mail_category = self._create_category_with_only_member_registered(member=member)
@@ -258,8 +267,9 @@ class TestSegments(TapirIntegrationTest):
             sorted(result, key=lambda addressed: addressed.recipient.id),
         )
 
+    @patch.object(signing.time, "time", autospec=True, return_value=1_000_000)
     def test_resolveSegments_extraRegisteredToMailCategory_resultContainsExtra(
-        self,
+        self, _: MagicMock
     ):
         member = self._create_confirmed_extra(member_id="1")
         mail_category = self._create_category_with_only_member_registered(member=member)
@@ -314,8 +324,9 @@ class TestSegments(TapirIntegrationTest):
             {"mail1@test.net", "mail3@test.net"}, {r.email for r in result}
         )
 
+    @patch.object(signing.time, "time", autospec=True, return_value=1_000_000)
     def test_resolveSegments_overrideRecipientByBaseQuerysetId_resultContainsRecipientAndItsCopies(
-        self,
+        self, _: MagicMock
     ):
         member = self._create_confirmed_extra(member_id="2")
 
@@ -372,5 +383,11 @@ class TestSegments(TapirIntegrationTest):
         return AddressedRecipient(
             recipient=member,
             email="extra@test.net",
-            token_overrides={"first_name": "Extra-FN", "last_name": "Extra-LN"},
+            token_overrides={
+                "first_name": "Extra-FN",
+                "last_name": "Extra-LN",
+                SubscriptionManagementLinkProvider.TOKEN_NAME: SubscriptionManagementLinkProvider.build_link_for_address(
+                    address="extra@test.net", cache={}
+                ),
+            },
         )
