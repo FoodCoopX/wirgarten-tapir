@@ -197,3 +197,37 @@ class TestMailingListRecipientListView(TapirIntegrationTest):
             ],
             response.json(),
         )
+
+    def test_get_mailmanAddressHasDifferentCase_stillLinksToTheMember(self):
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+        member = MemberFactory.create(email="member@example.com")
+
+        MailmanTestHelper.mock_domain(
+            test=self,
+            mailing_list_datas=[
+                MockMailingListData(
+                    name="list_a", confirmed_recipients=["Member@Example.com"]
+                ),
+            ],
+        )
+
+        url = reverse("core:mailing_list_recipient_list")
+        url = f"{url}?list_name=list_a@example.com"
+        response = self.client.get(url)
+
+        self.assertStatusCode(
+            response=response, expected_status_code=status.HTTP_200_OK
+        )
+        self.assertEqual(
+            [
+                {
+                    "address": "Member@Example.com",
+                    "user_confirmed": True,
+                    "link_to_member_profile": reverse(
+                        "wirgarten:member_detail", kwargs={"pk": member.id}
+                    ),
+                    "extra_email_member": None,
+                },
+            ],
+            response.json(),
+        )

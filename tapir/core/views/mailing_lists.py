@@ -234,7 +234,9 @@ class MailingListRecipientListView(APIView):
             for request in mailing_list.requests
         ]
 
-        addresses = [recipient["address"] for recipient in recipients]
+        addresses = [
+            EmailNormaliser.normalise(recipient["address"]) for recipient in recipients
+        ]
         members_by_extra_address = {
             extra_email.email: extra_email.member
             for extra_email in MemberExtraEmail.objects.filter(
