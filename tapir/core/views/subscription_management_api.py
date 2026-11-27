@@ -215,8 +215,9 @@ class SubscriptionManagementExternalApiView(APIView):
     def post(self, request: Request) -> Response:
         serializer = SubscriptionManagementExternalRequest(data=request.data)
         serializer.is_valid(raise_exception=True)
+        cache = {}
         address = SubscriptionManagementRequestResolver.get_address(
-            token=serializer.validated_data["token"], cache={}
+            token=serializer.validated_data["token"], cache=cache
         )
         external_recipient = get_object_or_404(ExternalRecipient, email=address)
 
@@ -303,12 +304,12 @@ class SubscriptionManagementMailingListApiView(APIView):
             list_name=serializer.validated_data["list_name"], cache=cache
         )
 
-        self._apply(email=address, mailing_list=mailing_list)
+        self._apply(email=address, mailing_list=mailing_list, cache=cache)
         self._log_if_extra(address=address, mailing_list=mailing_list)
 
         return Response(True)
 
-    def _apply(self, email: str, mailing_list: MailingList):
+    def _apply(self, email: str, mailing_list: MailingList, cache: dict):
         raise NotImplementedError
 
     def _log_if_extra(self, address: str, mailing_list: MailingList):
@@ -332,14 +333,14 @@ class SubscriptionManagementMailingListSubscribeApiView(
 ):
     ACTION_LABEL = "angemeldet"
 
-    def _apply(self, email: str, mailing_list: MailingList):
+    def _apply(self, email: str, mailing_list: MailingList, cache: dict):
         if not SubscriptionManagementRequestResolver.can_subscribe_to_lists(
             address=email
         ):
             raise ValidationError(
                 "Diese Adresse kann sich nicht selbst bei einer Liste anmelden"
             )
-        MailingListJoinValidator.validate_address_can_join(address=email, cache={})
+        MailingListJoinValidator.validate_address_can_join(address=email, cache=cache)
         MailingListSelfService.subscribe(email=email, mailing_list=mailing_list)
 
 
@@ -348,7 +349,7 @@ class SubscriptionManagementMailingListUnsubscribeApiView(
 ):
     ACTION_LABEL = "abgemeldet"
 
-    def _apply(self, email: str, mailing_list: MailingList):
+    def _apply(self, email: str, mailing_list: MailingList, cache: dict):
         MailingListSelfService.unsubscribe(email=email, mailing_list=mailing_list)
 
 
@@ -357,8 +358,8 @@ class SubscriptionManagementMailingListAcceptInvitationApiView(
 ):
     ACTION_LABEL = "Einladung angenommen"
 
-    def _apply(self, email: str, mailing_list: MailingList):
-        MailingListJoinValidator.validate_address_can_join(address=email, cache={})
+    def _apply(self, email: str, mailing_list: MailingList, cache: dict):
+        MailingListJoinValidator.validate_address_can_join(address=email, cache=cache)
         MailingListSelfService.accept_invitation(email=email, mailing_list=mailing_list)
 
 
@@ -367,5 +368,5 @@ class SubscriptionManagementMailingListRejectInvitationApiView(
 ):
     ACTION_LABEL = "Einladung abgelehnt"
 
-    def _apply(self, email: str, mailing_list: MailingList):
+    def _apply(self, email: str, mailing_list: MailingList, cache: dict):
         MailingListSelfService.reject_invitation(email=email, mailing_list=mailing_list)
