@@ -1142,6 +1142,11 @@ class MemberExtraEmail(TapirModel):
                 fields=["member", "email"],
                 name="unique_extra_email",
             ),
+            UniqueConstraint(
+                fields=["email"],
+                condition=Q(confirmed_on__isnull=False),
+                name="unique_confirmed_extra_email",
+            ),
         ]
 
     member = models.ForeignKey(Member, on_delete=models.CASCADE)
