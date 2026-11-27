@@ -135,6 +135,7 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
         setWaitingListInfoModalOpen={setWaitingListInfoModalOpen}
         showCarouselArrows={showCarouselArrows}
         index={index}
+        carouselProducts={getRelevantProducts()}
         carouselRef={carouselRef}
       />
     );
