@@ -52,13 +52,3 @@ class ActiveMemberProvider:
                 member_ids_with_active_or_future_solidarity_contribution,
             )
         )
-
-    @classmethod
-    def get_former_members(
-        cls, reference_datetime: datetime.datetime, cache: dict
-    ) -> QuerySet[Member]:
-        return Member.objects.exclude(
-            id__in=cls.get_active_members(
-                reference_datetime=reference_datetime, cache=cache
-            ).values("id")
-        )
