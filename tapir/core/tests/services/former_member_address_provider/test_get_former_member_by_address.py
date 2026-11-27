@@ -18,7 +18,7 @@ class TestGetFormerMemberByAddress(TapirIntegrationTest):
         self.former_member = MemberFactory.create(email="former@example.com")
         self.active_member = MemberFactory.create(email="active@example.com")
 
-    def test_getFormerMemberByAddress_default_returnsTheMainAndAllExtraAddressesOfFormerMembers(
+    def test_getFormerMemberByAddress_default_returnsTheMainAndConfirmedExtraAddressesOfFormerMembers(
         self, mock_get_active_members: MagicMock
     ):
         self._mark_active_member_as_active(mock_get_active_members)
@@ -46,7 +46,6 @@ class TestGetFormerMemberByAddress(TapirIntegrationTest):
             {
                 "former@example.com": self.former_member,
                 "confirmed@example.com": self.former_member,
-                "unconfirmed@example.com": self.former_member,
             },
             result,
         )
@@ -58,7 +57,7 @@ class TestGetFormerMemberByAddress(TapirIntegrationTest):
         MemberExtraEmailFactory.create(
             member=self.former_member,
             email="taken.by.active@example.com",
-            confirmed_on=None,
+            confirmed_on=timezone.now(),
         )
         MemberExtraEmailFactory.create(
             member=self.active_member,
@@ -66,7 +65,9 @@ class TestGetFormerMemberByAddress(TapirIntegrationTest):
             confirmed_on=timezone.now(),
         )
         MemberExtraEmailFactory.create(
-            member=self.former_member, email="external@example.com", confirmed_on=None
+            member=self.former_member,
+            email="external@example.com",
+            confirmed_on=timezone.now(),
         )
         ExternalRecipient.objects.create(email="external@example.com", first_name="E")
 

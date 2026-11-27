@@ -55,9 +55,11 @@ class FormerMemberAddressProvider:
             member.email: member
             for member in Member.objects.exclude(id__in=active_member_ids)
         }
-        for extra_email in MemberExtraEmail.objects.exclude(
-            member_id__in=active_member_ids
-        ).select_related("member"):
+        for extra_email in (
+            MemberExtraEmail.objects.exclude(member_id__in=active_member_ids)
+            .filter(confirmed_on__isnull=False)
+            .select_related("member")
+        ):
             former_member_by_address.setdefault(extra_email.email, extra_email.member)
 
         return {
