@@ -31,7 +31,7 @@ class TapirFactoryMixin:
 
 
 @override_settings(
-    # This disables the ManifestStaticFilesStorage from the settings: with the manifest storage, collectstatic must be run before tests can work
+    # This disables the ViteManifestStaticFilesStorage from the settings: with the manifest storage, collectstatic must be run before tests can work
     STORAGES={
         **settings.STORAGES,
         "staticfiles": {
