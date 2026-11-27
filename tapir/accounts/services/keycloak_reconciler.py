@@ -68,6 +68,111 @@ ADMIN_API_SCOPE_MISSING_MESSAGE = (
     "docs/admins/keycloak.md."
 )
 
+USER_PROFILE_UNSUPPORTED_MESSAGE = (
+    "The Keycloak server does not provide the user profile API. Upgrade "
+    "Keycloak and retry; see docs/admins/keycloak.md."
+)
+
+
+def _normalize_string_list(value):
+    if isinstance(value, list):
+        return sorted(value)
+    return value
+
+
+def _normalize_user_profile(profile: dict) -> dict:
+    attributes = []
+    for attribute in profile.get("attributes") or []:
+        required = attribute.get("required") or {}
+        permissions = attribute.get("permissions") or {}
+        attributes.append(
+            {
+                "name": attribute.get("name"),
+                "displayName": attribute.get("displayName"),
+                "multivalued": bool(attribute.get("multivalued", False)),
+                "group": attribute.get("group") or None,
+                "required": {
+                    key: _normalize_string_list(value)
+                    for key, value in required.items()
+                },
+                "permissions": {
+                    key: _normalize_string_list(value)
+                    for key, value in permissions.items()
+                },
+                "validations": attribute.get("validations") or {},
+                "annotations": attribute.get("annotations") or {},
+            }
+        )
+    attributes.sort(key=lambda item: item["name"] or "")
+
+    groups = []
+    for group in profile.get("groups") or []:
+        groups.append(
+            {
+                "name": group.get("name"),
+                "displayHeader": group.get("displayHeader"),
+                "displayDescription": group.get("displayDescription"),
+                "annotations": group.get("annotations") or {},
+            }
+        )
+    groups.sort(key=lambda item: item["name"] or "")
+
+    return {
+        "attributes": attributes,
+        "groups": groups,
+        "unmanagedAttributePolicy": profile.get("unmanagedAttributePolicy")
+        or "DISABLED",
+    }
+
+
+def _user_profile_drift(current: dict, desired: dict) -> list[str]:
+    current_profile = _normalize_user_profile(current)
+    desired_profile = _normalize_user_profile(desired)
+    drift = []
+
+    current_attributes = {
+        attribute["name"]: attribute for attribute in current_profile["attributes"]
+    }
+    desired_attributes = {
+        attribute["name"]: attribute for attribute in desired_profile["attributes"]
+    }
+    for name in sorted(desired_attributes.keys() - current_attributes.keys()):
+        drift.append(f"attribute {name} is missing")
+    for name in sorted(current_attributes.keys() - desired_attributes.keys()):
+        drift.append(f"attribute {name} is not managed")
+    for name in sorted(desired_attributes.keys() & current_attributes.keys()):
+        changed_fields = [
+            key
+            for key in desired_attributes[name]
+            if current_attributes[name].get(key) != desired_attributes[name].get(key)
+        ]
+        if changed_fields:
+            drift.append(
+                f"attribute {name} differs in {', '.join(sorted(changed_fields))}"
+            )
+
+    current_groups = {group["name"]: group for group in current_profile["groups"]}
+    desired_groups = {group["name"]: group for group in desired_profile["groups"]}
+    for name in sorted(desired_groups.keys() - current_groups.keys()):
+        drift.append(f"group {name} is missing")
+    for name in sorted(current_groups.keys() - desired_groups.keys()):
+        drift.append(f"group {name} is not managed")
+    for name in sorted(desired_groups.keys() & current_groups.keys()):
+        if current_groups[name] != desired_groups[name]:
+            drift.append(f"group {name} differs")
+
+    if (
+        current_profile["unmanagedAttributePolicy"]
+        != desired_profile["unmanagedAttributePolicy"]
+    ):
+        drift.append(
+            "unmanagedAttributePolicy is "
+            f"{current_profile['unmanagedAttributePolicy']!r}, expected "
+            f"{desired_profile['unmanagedAttributePolicy']!r}"
+        )
+
+    return drift
+
 
 @dataclass(frozen=True)
 class Change:
@@ -110,6 +215,10 @@ class ReconcileResult:
     service_account_present: int = 0
     superuser_group_present: bool = False
     runtime_secret_ok: bool = False
+    user_profile_attribute_count: int = 0
+    user_profile_attribute_present: int = 0
+    user_profile_group_count: int = 0
+    user_profile_group_present: int = 0
 
     @property
     def errors(self) -> list[Change]:
@@ -138,6 +247,7 @@ class KeycloakReconciler:
         try:
             realm = self._get_realm()
             self._reconcile_realm(realm, result, dry_run)
+            self._reconcile_user_profile(result, dry_run)
             self._reconcile_roles(result, dry_run)
             self._reconcile_superuser_group(result, dry_run)
             clients = self._reconcile_clients(result, dry_run)
@@ -205,6 +315,151 @@ class KeycloakReconciler:
         self.client.update_realm(self.desired.realm_name, payload)
         for index in range(first_change, len(result.changes)):
             result.changes[index] = replace(result.changes[index], fixed=True)
+
+    def _reconcile_user_profile(self, result: ReconcileResult, dry_run: bool) -> None:
+        if self.desired.user_profile is None:
+            self._check_mapped_user_profile_attributes(result)
+            return
+
+        try:
+            current = self.client.get_realm_users_profile()
+        except KeycloakGetError as error:
+            if error.response_code != 404:
+                raise
+            result.changes.append(
+                Change(
+                    level="error",
+                    section="user-profile",
+                    message=USER_PROFILE_UNSUPPORTED_MESSAGE,
+                    fixable=False,
+                )
+            )
+            result.checks.append(
+                Check(
+                    section="user-profile",
+                    description="user profile",
+                    status="error",
+                    details="user profile API not available",
+                )
+            )
+            return
+
+        desired_profile = _normalize_user_profile(self.desired.user_profile)
+        current_profile = _normalize_user_profile(current)
+        result.user_profile_attribute_count = len(desired_profile["attributes"])
+        result.user_profile_group_count = len(desired_profile["groups"])
+        result.user_profile_attribute_present = sum(
+            1
+            for attribute in desired_profile["attributes"]
+            if attribute in current_profile["attributes"]
+        )
+        result.user_profile_group_present = sum(
+            1
+            for group in desired_profile["groups"]
+            if group in current_profile["groups"]
+        )
+
+        drift = _user_profile_drift(current, self.desired.user_profile)
+        first_change = len(result.changes)
+        for message in drift:
+            result.changes.append(
+                Change(
+                    level="error",
+                    section="user-profile",
+                    message=f"user profile: {message}",
+                    fixed=not dry_run,
+                )
+            )
+
+        result.checks.append(
+            Check(
+                section="user-profile",
+                description="user profile",
+                status="error" if drift else "ok",
+                details=(
+                    f"{result.user_profile_attribute_present}/"
+                    f"{result.user_profile_attribute_count} attributes, "
+                    f"{result.user_profile_group_present}/"
+                    f"{result.user_profile_group_count} groups"
+                ),
+            )
+        )
+
+        if not drift or dry_run:
+            return
+
+        self.client.update_realm_users_profile(self.desired.user_profile)
+        for index in range(first_change, len(result.changes)):
+            result.changes[index] = replace(result.changes[index], fixed=True)
+
+    def _check_mapped_user_profile_attributes(self, result: ReconcileResult) -> None:
+        mapped_attributes = self.desired.user_profile_attributes
+        result.user_profile_attribute_count = len(mapped_attributes)
+        if not mapped_attributes:
+            result.checks.append(
+                Check(
+                    section="user-profile",
+                    description="user profile",
+                    status="skipped",
+                    details="not managed",
+                )
+            )
+            return
+
+        try:
+            current = self.client.get_realm_users_profile()
+        except KeycloakGetError as error:
+            if error.response_code != 404:
+                raise
+            result.changes.append(
+                Change(
+                    level="error",
+                    section="user-profile",
+                    message=USER_PROFILE_UNSUPPORTED_MESSAGE,
+                    fixable=False,
+                )
+            )
+            result.checks.append(
+                Check(
+                    section="user-profile",
+                    description="user profile",
+                    status="error",
+                    details="user profile API not available",
+                )
+            )
+            return
+
+        current_names = {
+            attribute.get("name") for attribute in current.get("attributes") or []
+        }
+        missing = [name for name in mapped_attributes if name not in current_names]
+        result.user_profile_attribute_present = len(mapped_attributes) - len(missing)
+        for name in missing:
+            result.changes.append(
+                Change(
+                    level="error",
+                    section="user-profile",
+                    message=(
+                        f"user profile attribute {name} is missing; add it to "
+                        "the server profile or to KEYCLOAK_USER_PROFILE_FILE"
+                    ),
+                    fixable=False,
+                )
+            )
+
+        result.checks.append(
+            Check(
+                section="user-profile",
+                description="user profile",
+                status="error" if missing else "ok",
+                details=(
+                    "not managed; "
+                    f"{result.user_profile_attribute_present}/"
+                    f"{result.user_profile_attribute_count} mapped attributes "
+                    "present"
+                ),
+            )
+        )
 
     def _reconcile_roles(self, result: ReconcileResult, dry_run: bool) -> None:
         existing = {

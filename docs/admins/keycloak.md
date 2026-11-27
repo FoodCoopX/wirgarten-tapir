@@ -88,10 +88,38 @@ KEYCLOAK_REGISTRATION_EMAIL_AS_USERNAME=0
 KEYCLOAK_EDIT_USERNAME_ALLOWED=0
 ```
 
-The sample declarative user profile in this repository has a `username` minimum length of 3 and a
-required `customernumber` attribute. A short raw number such as `17` fails the minimum length; use
-`formatted` or lower the minimum. The username change does not populate the profile's
-`customernumber` attribute; populate it separately or remove that requirement from the profile.
+The shipped example profile allows raw short numbers (`username` minimum length 1). If you use an
+existing profile with a higher minimum, use `formatted` or lower the minimum; see
+[Declarative user profile](#declarative-user-profile).
+
+### Declarative user profile
+
+`KEYCLOAK_USER_PROFILE_MANAGED` is opt-in. When true, `keycloak sync` replaces the realm's user
+profile with the JSON document from `KEYCLOAK_USER_PROFILE_FILE`. Tapir ships no built-in profile:
+the file is the only source. `examples/keycloak-userprofile.json` is the template; copy it, adapt
+it, and point the variable at the copy. Relative paths resolve against the repository root. This is
+destructive: export the realm first and do not enable it for a server whose profile is managed
+elsewhere.
+
+The file is imported unchanged and passed to Keycloak as-is. It should declare the standard
+attributes Tapir writes when it creates users (`username`, `email`, `firstName`, `lastName`).
+
+`KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP` is a JSON list of objects that ties Keycloak profile
+attributes to Tapir user fields:
+
+```dotenv
+KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP=[{"keycloak": "customernumber", "tapir": "member_no"}]
+```
+
+The map does not create attributes. It only names the attributes the imported profile must
+declare; `check` and `sync` report a configuration error when a mapped attribute is missing from
+the file. Reserved standard attributes (`username`, `email`, `firstName`, `lastName`) must not be
+mapped, and each Keycloak attribute may appear only once.
+
+
+When `KEYCLOAK_USER_PROFILE_MANAGED=false`, `check` only verifies that the mapped attributes exist
+in the server profile and never writes. This is the recommended mode for an existing Keycloak
+server whose profile is managed elsewhere.
 
 ### Clients and role mappings
 
@@ -133,9 +161,11 @@ account roles stay unchanged; the audience check is independent of them.
 ### What the command does not manage
 
 Users, SMTP settings, themes, client scope definitions, optional protocol mappers, authentication
-flows, identity providers and the user profile are not managed. Client scopes are only assigned, and
-only the built-in `kc-admin-api` scope is assigned. Configure the rest in the Keycloak admin console.
-A missing `smtpServer` is reported as a warning, not as an error.
+flows and identity providers are not managed. The declarative user profile is only managed when
+`KEYCLOAK_USER_PROFILE_MANAGED=true`; it is imported from `KEYCLOAK_USER_PROFILE_FILE`, and
+otherwise `check` only verifies mapped attributes. Client
+scopes are only assigned, and only the built-in `kc-admin-api` scope is assigned. Configure the rest
+in the Keycloak admin console. A missing `smtpServer` is reported as a warning, not as an error.
 
 Export the realm from the Keycloak admin console, or with `kc.sh export`, before the first `sync` if
 you want a backup.
@@ -162,16 +192,25 @@ in the repository root.
 | `KEYCLOAK_SUPERUSER_GROUP_NAME`      | `superuser`              | Group that receives all Tapir realm roles and is assigned to superusers. |
 | `KEYCLOAK_USERNAME_SOURCE`           | `email`                  | Keycloak username for new users: `email` or `customernumber`. |
 | `KEYCLOAK_USERNAME_FORMAT`           | `raw`                    | Customernumber format: `raw` (`17`) or `formatted` (`BT0017`). |
+| `KEYCLOAK_USER_PROFILE_MANAGED`      | `false`                  | Opt-in: `sync` replaces the realm user profile with the JSON document from `KEYCLOAK_USER_PROFILE_FILE`. |
+| `KEYCLOAK_USER_PROFILE_FILE`         | none (required when managed) | Path to the JSON profile. Relative paths resolve against the repository root. |
+| `KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP` | `[]`                    | JSON list of `{"keycloak": ..., "tapir": ...}` objects. Every `keycloak` name must exist in the imported profile; the map does not create attributes. |
 | `SITE_URL`                           | `http://localhost:8000`  | Public URL of Tapir. Redirect URIs and web origins are derived from it. |
 | `DEBUG`                              | `false`                  | Adds localhost redirect URIs and disables the local-default warnings. |
 
-The four `KEYCLOAK_*` realm/group overrides are optional. For example:
+The realm/group overrides, the username policy and the user profile settings are optional. For
+example:
 
 ```dotenv
 KEYCLOAK_REGISTRATION_EMAIL_AS_USERNAME=0
-KEYCLOAK_EDIT_USERNAME_ALLOWED=1
+KEYCLOAK_EDIT_USERNAME_ALLOWED=0
 KEYCLOAK_VERIFY_EMAIL=0
 KEYCLOAK_SUPERUSER_GROUP_NAME=tapir-admins
+KEYCLOAK_USERNAME_SOURCE=customernumber
+KEYCLOAK_USERNAME_FORMAT=raw
+KEYCLOAK_USER_PROFILE_MANAGED=1
+KEYCLOAK_USER_PROFILE_FILE=examples/keycloak-userprofile.json
+KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP=[{"keycloak": "customernumber", "tapir": "member_no"}]
 ```
 
 `KEYCLOAK_ADMIN_SERVER_URL` is the base URL only. It may include a path prefix such as
@@ -329,4 +368,11 @@ remapped public URL.
 | `Keycloak user is not created: no member number` | Assign a member number first; `manage.py backfill_member_numbers` can help. |
 | `Invalid username` / Keycloak username policy | Use `KEYCLOAK_USERNAME_FORMAT=formatted` or lower the profile's username minimum length. |
 | `Admin cannot log in` | `create_admin` creates a non-Member account and keeps the e-mail username; check `loginWithEmailAllowed`. |
-| `User profile requires customernumber` | The username change does not write that profile attribute; populate it separately or adjust the profile. |
+| `KEYCLOAK_USER_PROFILE_FILE must be set when KEYCLOAK_USER_PROFILE_MANAGED is true` | Set the path to the JSON profile or disable managed mode. |
+| `KEYCLOAK_USER_PROFILE_FILE ... cannot be read` / `... is not valid JSON` / `... must contain an 'attributes' list` | Fix the path or the JSON document. `examples/keycloak-userprofile.json` is the template. |
+| `KEYCLOAK_USER_PROFILE_FILE ... has duplicate attributes` | Remove the duplicate attribute names from the profile file. |
+| `KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP maps attributes that are missing from KEYCLOAK_USER_PROFILE_FILE` | Add the attribute to the JSON document or remove the map entry. The map does not create attributes. |
+| `User profile requires customernumber` | The imported profile marks the attribute as required and Tapir writes it on user creation and after a later member-number assignment. For Admins without a member number, remove `required` from the profile or assign a number. |
+| `KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP is set but KEYCLOAK_USER_PROFILE_MANAGED is false` | Enable managed mode or add the attribute to the existing server profile. |
+| `user profile API not available` | Upgrade Keycloak; the server does not provide the user profile API. |
+| `user profile: attribute ... is not managed` | The managed profile removes attributes that are not in the imported profile. Export the realm first and adjust the JSON file if you need to keep them. |

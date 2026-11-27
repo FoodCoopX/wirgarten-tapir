@@ -5,6 +5,7 @@ from urllib.parse import urlparse
 
 from django.conf import settings
 
+from tapir.accounts.services.keycloak_user_profile import load_managed_user_profile
 from tapir.wirgarten.constants import Permission
 
 REALM_ROLES = tuple(sorted(Permission.all()))
@@ -113,6 +114,8 @@ class DesiredState:
     clients: tuple[ClientSpec, ...]
     service_account_roles: dict[str, dict[str, tuple[str, ...]]]
     client_role_scope_mappings: tuple[ClientRoleScopeMapping, ...]
+    user_profile: dict | None
+    user_profile_attributes: tuple[str, ...]
     warnings: tuple[str, ...]
 
 
@@ -181,6 +184,15 @@ def build_desired_state() -> DesiredState:
             "KEYCLOAK_PROVISIONER_CLIENT_SECRET_KEY is still the placeholder value"
         )
 
+    user_profile = (
+        load_managed_user_profile(
+            settings.KEYCLOAK_USER_PROFILE_FILE,
+            settings.KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP,
+        )
+        if settings.KEYCLOAK_USER_PROFILE_MANAGED
+        else None
+    )
+
     return DesiredState(
         realm_name=admin_config["REALM_NAME"],
         realm_settings={
@@ -193,6 +205,10 @@ def build_desired_state() -> DesiredState:
             "resetPasswordAllowed": True,
             "verifyEmail": settings.KEYCLOAK_VERIFY_EMAIL,
         },
+        user_profile=user_profile,
+        user_profile_attributes=tuple(
+            entry["keycloak"] for entry in settings.KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP
+        ),
         realm_roles=tuple(RoleSpec(name=name) for name in REALM_ROLES),
         superuser_group=GroupSpec(
             name=settings.KEYCLOAK_SUPERUSER_GROUP_NAME,

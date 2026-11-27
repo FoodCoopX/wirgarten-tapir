@@ -25,12 +25,22 @@ SETTINGS = dict(
     SITE_URL="https://tapir.example.org",
     KEYCLOAK_ADMIN_CONFIG=ADMIN_CONFIG,
     KEYCLOAK_PROVISIONER_CONFIG=PROVISIONER_CONFIG,
+    KEYCLOAK_USERNAME_SOURCE="email",
+    KEYCLOAK_USERNAME_FORMAT="raw",
+    KEYCLOAK_REGISTRATION_EMAIL_AS_USERNAME=True,
+    KEYCLOAK_EDIT_USERNAME_ALLOWED=False,
+    KEYCLOAK_VERIFY_EMAIL=True,
+    KEYCLOAK_USER_PROFILE_MANAGED=False,
+    KEYCLOAK_USER_PROFILE_FILE="",
+    KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP=[],
 )
 EXTERNAL_ADMIN_CONFIG = {
     **ADMIN_CONFIG,
     "SERVER_URL": "https://auth.example.org",
     "PUBLIC_URL": "https://auth.example.org",
 }
+
+EXAMPLE_PROFILE_FILE = "examples/keycloak-userprofile.json"
 
 
 @override_settings(**SETTINGS)
@@ -198,3 +208,89 @@ class TestKeycloakConfig(TapirUnitTest):
 
         self.assertEqual("customernumber", summary["username_source"])
         self.assertEqual("formatted", summary["username_format"])
+
+    @override_settings(
+        KEYCLOAK_USER_PROFILE_MANAGED=True,
+        KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP=[
+            {"keycloak": "customernumber", "tapir": "member_no"}
+        ],
+    )
+    def test_buildKeycloakConfigSummary_userProfile_containsPolicy(self):
+        summary = build_keycloak_config_summary()
+
+        self.assertTrue(summary["user_profile_managed"])
+        self.assertEqual(["customernumber"], summary["user_profile_attributes"])
+
+    @override_settings(
+        KEYCLOAK_USER_PROFILE_MANAGED=False,
+        KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP=[
+            {"keycloak": "customernumber", "tapir": "member_no"}
+        ],
+    )
+    def test_checkKeycloakConfig_mappedAttributesWithoutManaged_returnsWarning(
+        self,
+    ):
+        check = check_keycloak_config()
+        variables = {issue.variable for issue in check.warnings}
+
+        self.assertIn("KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP", variables)
+
+    @override_settings(
+        KEYCLOAK_USER_PROFILE_MANAGED=True,
+        KEYCLOAK_USER_PROFILE_FILE="",
+    )
+    def test_checkKeycloakConfig_managedWithoutFile_returnsError(self):
+        check = check_keycloak_config()
+
+        self.assertTrue(
+            any(
+                issue.variable == "KEYCLOAK_USER_PROFILE_FILE"
+                and "must be set" in issue.message
+                for issue in check.errors
+            )
+        )
+
+    @override_settings(
+        KEYCLOAK_USER_PROFILE_MANAGED=True,
+        KEYCLOAK_USER_PROFILE_FILE="/nonexistent/keycloak-userprofile.json",
+    )
+    def test_checkKeycloakConfig_managedMissingFile_returnsError(self):
+        check = check_keycloak_config()
+
+        self.assertTrue(
+            any(
+                issue.variable == "KEYCLOAK_USER_PROFILE_FILE"
+                and "cannot be read" in issue.message
+                for issue in check.errors
+            )
+        )
+
+    @override_settings(
+        KEYCLOAK_USER_PROFILE_MANAGED=True,
+        KEYCLOAK_USER_PROFILE_FILE=EXAMPLE_PROFILE_FILE,
+        KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP=[
+            {"keycloak": "unknown-attribute", "tapir": "member_no"}
+        ],
+    )
+    def test_checkKeycloakConfig_managedMissingMappedAttribute_returnsError(self):
+        check = check_keycloak_config()
+
+        self.assertTrue(
+            any(
+                issue.variable == "KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP"
+                and "unknown-attribute" in issue.message
+                for issue in check.errors
+            )
+        )
+
+    @override_settings(
+        KEYCLOAK_USER_PROFILE_MANAGED=True,
+        KEYCLOAK_USER_PROFILE_FILE=EXAMPLE_PROFILE_FILE,
+        KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP=[
+            {"keycloak": "customernumber", "tapir": "member_no"}
+        ],
+    )
+    def test_checkKeycloakConfig_managedExampleProfile_returnsNoErrors(self):
+        check = check_keycloak_config()
+
+        self.assertFalse(check.errors)

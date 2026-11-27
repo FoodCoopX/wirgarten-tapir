@@ -78,6 +78,14 @@ default is the e-mail address; `customernumber` uses `Member.member_no`, either 
 Existing Keycloak users are not migrated. The Django `TapirUser.username` always stays the e-mail address, so e-mail
 login keeps working.
 
+`KEYCLOAK_USER_PROFILE_MANAGED` is opt-in and replaces the realm user profile with the JSON
+document in `KEYCLOAK_USER_PROFILE_FILE`. Tapir ships no built-in profile: copy
+`examples/keycloak-userprofile.json`, adapt it, and point the variable at the copy.
+`KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP` is a JSON list of `{"keycloak": ..., "tapir": ...}` entries;
+every `keycloak` attribute must exist in that JSON document, because the map does not create
+attributes. `KEYCLOAK_USERNAME_SOURCE=customernumber` does not imply the member-number attribute;
+set the map explicitly. See [docs/admins/keycloak.md](docs/admins/keycloak.md).
+
 For the local Docker stack, check and repair the realm with:
 
 ```sh

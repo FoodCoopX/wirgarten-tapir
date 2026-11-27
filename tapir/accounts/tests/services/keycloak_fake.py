@@ -4,6 +4,17 @@ from copy import deepcopy
 
 from keycloak.exceptions import KeycloakConnectionError, KeycloakGetError
 
+STANDARD_USER_PROFILE = {
+    "attributes": [
+        {"name": "username", "displayName": "${username}"},
+        {"name": "email", "displayName": "${email}"},
+        {"name": "firstName", "displayName": "${firstName}"},
+        {"name": "lastName", "displayName": "${lastName}"},
+    ],
+    "groups": [],
+}
+
+
 DEFAULT_REALM = {
     "enabled": True,
     "registrationAllowed": False,
@@ -44,7 +55,9 @@ class FakeKeycloakAdmin:
         clients: list[dict] | None = None,
         service_account_roles: dict[str, dict[str, set[str]]] | None = None,
         client_scope_roles: dict[tuple[str, str], set[str]] | None = None,
+        profile: dict | None = None,
         realm_error_code: int | None = None,
+        profile_error_code: int | None = None,
         connection_error: bool = False,
     ):
         self.realm = deepcopy(DEFAULT_REALM if realm is None else realm)
@@ -57,6 +70,8 @@ class FakeKeycloakAdmin:
         self.client_scope_roles = (
             client_scope_roles if client_scope_roles is not None else {}
         )
+        self.profile = deepcopy(STANDARD_USER_PROFILE if profile is None else profile)
+        self.profile_error_code = profile_error_code
         self.realm_error_code = realm_error_code
         self.connection_error = connection_error
         self.client_scope_names = [
@@ -127,6 +142,11 @@ class FakeKeycloakAdmin:
             clients=clients,
             service_account_roles=service_account_roles,
             client_scope_roles=client_scope_roles,
+            profile=(
+                deepcopy(desired.user_profile)
+                if desired.user_profile is not None
+                else deepcopy(STANDARD_USER_PROFILE)
+            ),
         )
 
     def get_realm(self, realm_name: str) -> dict:
@@ -140,6 +160,19 @@ class FakeKeycloakAdmin:
     def update_realm(self, realm_name: str, payload: dict) -> dict:
         self.calls.append(("update_realm", realm_name, payload))
         self.realm.update(payload)
+        return {}
+
+    def get_realm_users_profile(self) -> dict:
+        self.calls.append(("get_realm_users_profile",))
+        if self.profile_error_code is not None:
+            raise KeycloakGetError(
+                "user profile error", response_code=self.profile_error_code
+            )
+        return deepcopy(self.profile)
+
+    def update_realm_users_profile(self, payload: dict) -> dict:
+        self.calls.append(("update_realm_users_profile", payload))
+        self.profile = deepcopy(payload)
         return {}
 
     def get_realm_roles(self, brief_representation: bool = True) -> list:

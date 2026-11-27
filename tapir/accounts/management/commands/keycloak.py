@@ -24,7 +24,9 @@ from tapir.accounts.services.keycloak_reconciler import (
 class Command(BaseCommand):
     help = (
         "Checks or synchronizes the Keycloak realm settings Tapir needs "
-        "(clients, realm roles, the superuser group and service accounts). "
+        "(clients, realm roles, the superuser group, service accounts, and the "
+        "declarative user profile from KEYCLOAK_USER_PROFILE_FILE when "
+        "KEYCLOAK_USER_PROFILE_MANAGED is set). "
         "The target is configured with KEYCLOAK_ADMIN_SERVER_URL, "
         "KEYCLOAK_REALM_NAME and the provisioner client settings."
     )
@@ -206,14 +208,15 @@ class Command(BaseCommand):
             f"public={config['public_url']}, site={config['site_url']}, "
             f"clients={config['client_id']}, {config['frontend_client_id']}, "
             f"{config['provisioner_client_id']}, "
-            f"username={config['username_source']}/{config['username_format']}"
+            f"username={config['username_source']}/{config['username_format']}, "
+            f"profile={'managed' if config['user_profile_managed'] else 'not managed'}"
         )
 
         self.stdout.write("Checks:")
         for check in result.checks:
             if check.status == "error":
                 style = self.style.ERROR
-            elif check.status == "warning":
+            elif check.status in {"warning", "skipped"}:
                 style = self.style.WARNING
             else:
                 style = self.style.SUCCESS

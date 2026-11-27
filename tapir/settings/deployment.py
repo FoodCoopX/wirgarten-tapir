@@ -242,6 +242,48 @@ KEYCLOAK_SUPERUSER_GROUP_NAME = env.str(
     "KEYCLOAK_SUPERUSER_GROUP_NAME", default="superuser"
 )
 
+# Declarative user profile management. This is opt-in because a sync replaces
+# the whole realm profile, including attributes managed by another system.
+KEYCLOAK_USER_PROFILE_MANAGED = env.bool("KEYCLOAK_USER_PROFILE_MANAGED", default=False)
+KEYCLOAK_USER_PROFILE_FILE = env.str("KEYCLOAK_USER_PROFILE_FILE", default="")
+KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP = env.json(
+    "KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP",
+    default=[],
+)
+if not isinstance(KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP, list):
+    raise ImproperlyConfigured(
+        "KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP must be a JSON list of "
+        '{"keycloak": ..., "tapir": ...} objects'
+    )
+_seen_user_profile_attributes = set()
+for _entry in KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP:
+    if (
+        not isinstance(_entry, dict)
+        or set(_entry) != {"keycloak", "tapir"}
+        or not isinstance(_entry["keycloak"], str)
+        or not _entry["keycloak"]
+        or not isinstance(_entry["tapir"], str)
+        or not _entry["tapir"]
+    ):
+        raise ImproperlyConfigured(
+            "KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP entries must be objects with "
+            'non-empty "keycloak" and "tapir" strings'
+        )
+    if _entry["keycloak"] in _seen_user_profile_attributes:
+        raise ImproperlyConfigured(
+            "KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP maps the Keycloak attribute "
+            f"{_entry['keycloak']!r} more than once"
+        )
+    _seen_user_profile_attributes.add(_entry["keycloak"])
+
+_reserved_user_profile_attributes = {"username", "email", "firstName", "lastName"}
+_reserved_overlap = _reserved_user_profile_attributes & _seen_user_profile_attributes
+if _reserved_overlap:
+    raise ImproperlyConfigured(
+        "KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP must not map reserved attributes: "
+        + ", ".join(sorted(_reserved_overlap))
+    )
+
 CSP_FRAME_SRC = ["'self'", KEYCLOAK_ADMIN_CONFIG["PUBLIC_URL"]]
 
 

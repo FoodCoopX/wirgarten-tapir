@@ -1,3 +1,7 @@
+import json
+from pathlib import Path
+
+from django.conf import settings
 from django.test import override_settings
 
 from tapir.accounts.services.keycloak_desired_state import (
@@ -8,6 +12,7 @@ from tapir.accounts.services.keycloak_desired_state import (
     build_redirect_uris,
     build_web_origins,
 )
+from tapir.accounts.services.keycloak_user_profile import UserProfileError
 from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 ADMIN_CONFIG = {
@@ -27,7 +32,17 @@ SETTINGS = dict(
     SITE_URL="https://tapir.example.org/",
     KEYCLOAK_ADMIN_CONFIG=ADMIN_CONFIG,
     KEYCLOAK_PROVISIONER_CONFIG=PROVISIONER_CONFIG,
+    KEYCLOAK_USERNAME_SOURCE="email",
+    KEYCLOAK_USERNAME_FORMAT="raw",
+    KEYCLOAK_REGISTRATION_EMAIL_AS_USERNAME=True,
+    KEYCLOAK_EDIT_USERNAME_ALLOWED=False,
+    KEYCLOAK_VERIFY_EMAIL=True,
+    KEYCLOAK_USER_PROFILE_MANAGED=False,
+    KEYCLOAK_USER_PROFILE_FILE="",
+    KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP=[],
 )
+
+EXAMPLE_PROFILE_FILE = "examples/keycloak-userprofile.json"
 
 
 @override_settings(**SETTINGS)
@@ -222,3 +237,42 @@ class TestKeycloakDesiredState(TapirUnitTest):
         self.assertTrue(desired.realm_settings["editUsernameAllowed"])
         self.assertFalse(desired.realm_settings["verifyEmail"])
         self.assertEqual("tapir-admins", desired.superuser_group.name)
+
+    def test_buildDesiredState_default_doesNotManageUserProfile(self):
+        desired = build_desired_state()
+
+        self.assertIsNone(desired.user_profile)
+        self.assertEqual((), desired.user_profile_attributes)
+
+    @override_settings(
+        KEYCLOAK_USER_PROFILE_MANAGED=True,
+        KEYCLOAK_USER_PROFILE_FILE=EXAMPLE_PROFILE_FILE,
+        KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP=[
+            {"keycloak": "customernumber", "tapir": "member_no"}
+        ],
+    )
+    def test_buildDesiredState_userProfileManaged_usesFileContent(self):
+        desired = build_desired_state()
+        expected = json.loads(
+            (Path(settings.BASE_DIR).parent / EXAMPLE_PROFILE_FILE).read_text(
+                encoding="utf-8"
+            )
+        )
+        names = {attribute["name"] for attribute in desired.user_profile["attributes"]}
+
+        self.assertEqual(expected, desired.user_profile)
+        self.assertIn("customernumber", names)
+        self.assertEqual(("customernumber",), desired.user_profile_attributes)
+
+    @override_settings(
+        KEYCLOAK_USER_PROFILE_MANAGED=True,
+        KEYCLOAK_USER_PROFILE_FILE=EXAMPLE_PROFILE_FILE,
+        KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP=[
+            {"keycloak": "missing-attribute", "tapir": "member_no"}
+        ],
+    )
+    def test_buildDesiredState_userProfileManagedMissingMappedAttribute_raisesUserProfileError(
+        self,
+    ):
+        with self.assertRaises(UserProfileError):
+            build_desired_state()

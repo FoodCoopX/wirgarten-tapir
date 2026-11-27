@@ -1,3 +1,5 @@
+from copy import deepcopy
+from dataclasses import replace
 from unittest.mock import patch
 
 from django.test import override_settings
@@ -16,6 +18,9 @@ from tapir.accounts.services.keycloak_reconciler import (
     KeycloakSetupError,
 )
 from tapir.accounts.tests.services.keycloak_fake import FakeKeycloakAdmin
+from tapir.accounts.tests.services.test_keycloak_user_profile import (
+    COMPLEX_USER_PROFILE_EXAMPLE,
+)
 from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 ADMIN_CONFIG = {
@@ -35,7 +40,17 @@ SETTINGS = dict(
     SITE_URL="https://tapir.example.org",
     KEYCLOAK_ADMIN_CONFIG=ADMIN_CONFIG,
     KEYCLOAK_PROVISIONER_CONFIG=PROVISIONER_CONFIG,
+    KEYCLOAK_USERNAME_SOURCE="email",
+    KEYCLOAK_USERNAME_FORMAT="raw",
+    KEYCLOAK_REGISTRATION_EMAIL_AS_USERNAME=True,
+    KEYCLOAK_EDIT_USERNAME_ALLOWED=False,
+    KEYCLOAK_VERIFY_EMAIL=True,
+    KEYCLOAK_USER_PROFILE_MANAGED=False,
+    KEYCLOAK_USER_PROFILE_FILE="",
+    KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP=[],
 )
+
+EXAMPLE_PROFILE_FILE = "examples/keycloak-userprofile.json"
 
 MUTATING_CALL_PREFIXES = ("create_", "update_", "assign_", "add_", "delete_")
 
@@ -392,12 +407,13 @@ class TestKeycloakReconciler(TapirUnitTest):
                 "service account roles",
                 "runtime client secret",
                 "SMTP server",
+                "user profile",
             },
             descriptions,
         )
         self.assertTrue(
-            all(check.status == "ok" for check in result.checks),
-            [check for check in result.checks if check.status != "ok"],
+            all(check.status in {"ok", "skipped"} for check in result.checks),
+            [check for check in result.checks if check.status not in {"ok", "skipped"}],
         )
 
     def test_reconcile_missingRoles_checkIsError(self, _can_authenticate):
@@ -516,6 +532,144 @@ class TestKeycloakReconciler(TapirUnitTest):
             )
         )
         self.assertFalse(fake.calls_of("add_client_default_client_scope"))
+
+    def test_reconcile_convergedWithManagedUserProfile_checkIsOk(
+        self, _can_authenticate
+    ):
+        with self.settings(
+            KEYCLOAK_USER_PROFILE_MANAGED=True,
+            KEYCLOAK_USER_PROFILE_FILE=EXAMPLE_PROFILE_FILE,
+            KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP=[
+                {"keycloak": "customernumber", "tapir": "member_no"}
+            ],
+        ):
+            desired = build_desired_state()
+            fake = FakeKeycloakAdmin.converged(desired)
+
+            result = KeycloakReconciler(fake, desired).reconcile(dry_run=True)
+
+        check = next(
+            check for check in result.checks if check.description == "user profile"
+        )
+        self.assertEqual("ok", check.status)
+        self.assertFalse(mutating_calls(fake))
+
+    def test_reconcile_userProfileDrift_syncReplacesProfile(self, _can_authenticate):
+        with self.settings(
+            KEYCLOAK_USER_PROFILE_MANAGED=True,
+            KEYCLOAK_USER_PROFILE_FILE=EXAMPLE_PROFILE_FILE,
+            KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP=[
+                {"keycloak": "customernumber", "tapir": "member_no"}
+            ],
+        ):
+            desired = build_desired_state()
+            fake = FakeKeycloakAdmin.converged(desired)
+            fake.profile["attributes"] = [
+                attribute
+                for attribute in fake.profile["attributes"]
+                if attribute["name"] != "customernumber"
+            ]
+            fake.profile["attributes"].append(
+                {"name": "legacy", "displayName": "legacy"}
+            )
+
+            check = KeycloakReconciler(fake, desired).reconcile(dry_run=True)
+            self.assertTrue(
+                any(
+                    change.section == "user-profile"
+                    and "customernumber is missing" in change.message
+                    for change in check.changes
+                )
+            )
+            self.assertTrue(
+                any(
+                    change.section == "user-profile"
+                    and "legacy is not managed" in change.message
+                    for change in check.changes
+                )
+            )
+            self.assertFalse(fake.calls_of("update_realm_users_profile"))
+
+            KeycloakReconciler(fake, desired).reconcile(dry_run=False)
+
+        self.assertTrue(fake.calls_of("update_realm_users_profile"))
+        self.assertEqual(desired.user_profile, fake.profile)
+
+    def test_reconcile_userProfileNotManaged_checkIsSkipped(self, _can_authenticate):
+        desired = build_desired_state()
+        fake = FakeKeycloakAdmin.converged(desired)
+
+        result = KeycloakReconciler(fake, desired).reconcile(dry_run=True)
+
+        check = next(
+            check for check in result.checks if check.description == "user profile"
+        )
+        self.assertEqual("skipped", check.status)
+        self.assertFalse(fake.calls_of("get_realm_users_profile"))
+
+    def test_reconcile_userProfileNotManagedMissingMappedAttribute_reportsNotFixable(
+        self, _can_authenticate
+    ):
+        with self.settings(
+            KEYCLOAK_USER_PROFILE_MANAGED=False,
+            KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP=[
+                {"keycloak": "customernumber", "tapir": "member_no"}
+            ],
+        ):
+            desired = build_desired_state()
+            fake = FakeKeycloakAdmin.converged(desired)
+
+            result = KeycloakReconciler(fake, desired).reconcile(dry_run=True)
+
+        check = next(
+            check for check in result.checks if check.description == "user profile"
+        )
+        self.assertEqual("error", check.status)
+        self.assertTrue(
+            any(
+                change.section == "user-profile"
+                and "customernumber" in change.message
+                and not change.fixable
+                for change in result.changes
+            )
+        )
+        self.assertFalse(fake.calls_of("update_realm_users_profile"))
+
+    def test_reconcile_userProfileApiUnavailable_reportsError(self, _can_authenticate):
+        with self.settings(
+            KEYCLOAK_USER_PROFILE_MANAGED=True,
+            KEYCLOAK_USER_PROFILE_FILE=EXAMPLE_PROFILE_FILE,
+        ):
+            desired = build_desired_state()
+            fake = FakeKeycloakAdmin.converged(desired)
+            fake.profile_error_code = 404
+
+            result = KeycloakReconciler(fake, desired).reconcile(dry_run=True)
+
+        self.assertTrue(
+            any(
+                change.section == "user-profile" and not change.fixable
+                for change in result.changes
+            )
+        )
+
+    def test_reconcile_complexUserProfile_noDrift(self, _can_authenticate):
+        desired = build_desired_state()
+        complex_desired = replace(
+            desired, user_profile=deepcopy(COMPLEX_USER_PROFILE_EXAMPLE)
+        )
+        fake = FakeKeycloakAdmin.converged(complex_desired)
+        fake.profile = deepcopy(COMPLEX_USER_PROFILE_EXAMPLE)
+
+        result = KeycloakReconciler(fake, complex_desired).reconcile(dry_run=True)
+
+        check = next(
+            check for check in result.checks if check.description == "user profile"
+        )
+        self.assertEqual("ok", check.status)
+        self.assertFalse(
+            any(change.section == "user-profile" for change in result.changes)
+        )
 
 
 @override_settings(**SETTINGS)

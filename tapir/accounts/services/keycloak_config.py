@@ -5,6 +5,12 @@ from urllib.parse import urlparse
 
 from django.conf import settings
 
+from tapir.accounts.services.keycloak_user_profile import (
+    UserProfileError,
+    load_user_profile,
+    missing_user_profile_attributes,
+)
+
 DEFAULT_SERVER_URL = "http://keycloak:8080"
 DEFAULT_PUBLIC_URL = "http://localhost:8080"
 
@@ -55,6 +61,11 @@ def build_keycloak_config_summary() -> dict:
         "frontend_client_id": admin_config["FRONTEND_CLIENT_ID"],
         "provisioner_client_id": provisioner_config["CLIENT_ID"],
         "site_url": settings.SITE_URL.rstrip("/"),
+        "user_profile_managed": bool(settings.KEYCLOAK_USER_PROFILE_MANAGED),
+        "user_profile_file": settings.KEYCLOAK_USER_PROFILE_FILE,
+        "user_profile_attributes": sorted(
+            entry["keycloak"] for entry in settings.KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP
+        ),
         "username_source": settings.KEYCLOAK_USERNAME_SOURCE,
         "username_format": settings.KEYCLOAK_USERNAME_FORMAT,
         "debug": bool(settings.DEBUG),
@@ -182,5 +193,38 @@ def check_keycloak_config() -> KeycloakConfigCheck:
                 "should be false when the Keycloak username is managed from the "
                 "customernumber",
             )
+
+    if settings.KEYCLOAK_USER_PROFILE_MANAGED:
+        if not settings.KEYCLOAK_USER_PROFILE_FILE:
+            error(
+                "KEYCLOAK_USER_PROFILE_FILE",
+                "must be set when KEYCLOAK_USER_PROFILE_MANAGED is true",
+            )
+        else:
+            try:
+                profile = load_user_profile(settings.KEYCLOAK_USER_PROFILE_FILE)
+            except UserProfileError as issue:
+                error("KEYCLOAK_USER_PROFILE_FILE", str(issue))
+            else:
+                missing = missing_user_profile_attributes(
+                    profile, settings.KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP
+                )
+                if missing:
+                    error(
+                        "KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP",
+                        "maps attributes missing from "
+                        "KEYCLOAK_USER_PROFILE_FILE: " + ", ".join(missing),
+                    )
+
+    if (
+        settings.KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP
+        and not settings.KEYCLOAK_USER_PROFILE_MANAGED
+    ):
+        warning(
+            "KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP",
+            "is set but KEYCLOAK_USER_PROFILE_MANAGED is false; the mapped "
+            "attributes must already exist in the server user profile (the "
+            "map does not create them)",
+        )
 
     return KeycloakConfigCheck(errors=tuple(errors), warnings=tuple(warnings))
