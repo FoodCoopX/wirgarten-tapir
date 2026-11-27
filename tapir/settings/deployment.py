@@ -112,6 +112,10 @@ CELERY_BEAT_SCHEDULE = {
         "task": "tapir.core.tasks.unsubscribe_former_members_from_mailing_lists",
         "schedule": celery.schedules.crontab(hour="3", minute="30"),
     },
+    "clear_expired_sessions": {
+        "task": "tapir.core.tasks.clear_expired_sessions",
+        "schedule": celery.schedules.crontab(hour="4", minute="30"),
+    },
     "trigger_association_membership_ends_today_mails": {
         "task": "tapir.associations.tasks.trigger_association_membership_ends_today_mails",
         "schedule": celery.schedules.crontab(hour="13", minute="0"),
