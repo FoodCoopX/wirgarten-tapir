@@ -2,7 +2,13 @@ import datetime
 from unittest.mock import patch, MagicMock
 
 from django.utils import timezone
-from tapir.mail.models import StaticSegment, StaticSegmentRecipient, ExternalRecipient
+from tapir.mail.models import (
+    StaticSegment,
+    StaticSegmentRecipient,
+    ExternalRecipient,
+    ExternalRecipientConfirmation,
+)
+from tapir.mail.tests.factories import MailCategoryFactory
 from tapir.mail.triggers.transactional_trigger import (
     TransactionalTrigger,
     TransactionalTriggerData,
@@ -139,6 +145,42 @@ class TestMailChangeService(TapirIntegrationTest):
         self.assertEqual("new@example.com", external_recipient_1.email)
         external_recipient_2.refresh_from_db()
         self.assertEqual("other@example.com", external_recipient_2.email)
+
+    def test_applyMailChange_newEmailIsAlreadyAnExternalRecipient_mergesTheOldExternalRecipientIntoIt(
+        self,
+    ):
+        user = MemberFactory.create(email="old@example.com", keycloak_id="1234")
+        shared_category, old_only_category = MailCategoryFactory.create_batch(2)
+        old_recipient = ExternalRecipient.objects.create(
+            email="old@example.com", first_name="Old"
+        )
+        new_recipient = ExternalRecipient.objects.create(
+            email="new@example.com", first_name="New"
+        )
+        ExternalRecipientConfirmation.objects.create(
+            external_recipient=old_recipient, mail_category=shared_category
+        )
+        kept_confirmation = ExternalRecipientConfirmation.objects.create(
+            external_recipient=new_recipient, mail_category=shared_category
+        )
+        moved_confirmation = ExternalRecipientConfirmation.objects.create(
+            external_recipient=old_recipient, mail_category=old_only_category
+        )
+
+        MailChangeService.apply_mail_change(
+            user=user, new_email="new@example.com", actor=user, cache={}
+        )
+
+        self.assertEqual([new_recipient], list(ExternalRecipient.objects.all()))
+        self.assertEqual(
+            {kept_confirmation.id, moved_confirmation.id},
+            set(
+                ExternalRecipientConfirmation.objects.filter(
+                    external_recipient=new_recipient
+                ).values_list("id", flat=True)
+            ),
+        )
+        self.assertEqual(2, ExternalRecipientConfirmation.objects.count())
 
     @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_applyMailChange_newEmailIsAnExtraEmail_extraEmailsWithThatAddressDeleted(

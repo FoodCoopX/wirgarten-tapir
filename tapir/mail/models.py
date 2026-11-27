@@ -344,6 +344,13 @@ class StaticSegmentRecipient(BaseModel):
 
 
 class ExternalRecipient(BaseModel):
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["email"], name="unique_external_recipient_email"
+            ),
+        ]
+
     email = models.EmailField()
     first_name = models.CharField(max_length=100)
 
