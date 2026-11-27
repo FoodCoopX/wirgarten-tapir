@@ -22,5 +22,5 @@ class AddressedRecipient:
         return cls(recipient=recipient, email=recipient.email)
 
     @property
-    def is_copy(self) -> bool:
+    def is_extra_address(self) -> bool:
         return self.email != self.recipient.email

@@ -112,7 +112,7 @@ class SegmentAndFilterViewSet(viewsets.ViewSet):
                         {
                             "name": (
                                 f"{r.recipient} (zusätzliche Adresse)"
-                                if r.is_copy
+                                if r.is_extra_address
                                 else f"{r.recipient}"
                             ),
                             "email": r.email,
