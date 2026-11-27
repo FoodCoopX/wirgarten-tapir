@@ -195,7 +195,7 @@ All endpoints are public (`permission_classes = []`). The token is validated in 
 
 ### Member email change
 
-`MailChangeService.apply_mail_change`: for each list the old address is subscribed to, subscribe the new address with the pre-flags and no welcome message, then unsubscribe the old one. Runs in `on_commit`. Pending invitations for the old address are discarded.
+`MailChangeService.apply_mail_change` calls `MailingListAddressMover.move_subscriptions` (`tapir/core/services/mailman/`): for each list the old address is subscribed to, subscribe the new address with the pre-flags and no welcome message, then unsubscribe the old one. Runs in `on_commit`. Pending invitations for the old address are discarded.
 
 ### Members leaving the organisation
 
@@ -254,7 +254,7 @@ Rejoining restores nothing: the member subscribes again through self-service.
 - [x] Phase 5 — address ownership: refuse confirmation of addresses owned elsewhere, release extras when an address becomes a main address (email change, member creation paths), normalised address storage (explicit normalisation where addresses enter, migrations for existing data), migration for existing duplicates; `ExtraEmailMailingListManager` becomes `MailingListUnsubscriber` with the main address / `ExternalRecipient` check; recipient list without the "added first" rule
 - [x] Phase 6 — management link: signing service, `NewsletterManagementLinkProvider` becomes `SubscriptionManagementLinkProvider` by address (absolute profile URL, overrides for dynamic tokens, extras' override), trigger + draft, "Link senden" endpoint + button, public request page, "Abos verwalten" on the confirmed page, old external link redirecting to the request page (replacing `ExternalRecipientManagementView` with its form and template, dropping `ExternalRecipient.secret_key`), page shell (expired state, redirect of main addresses, address header)
 - [x] Phase 7 — management page content: per-extra category state, shared category services extracted from `MemberMailCategoryDataApiView` (update-or-create, also for the member path; category selection, also for the snapshotter), address-based list services extracted from the member self-service views, API + island (extra part, external part, lists, removals), log entry, per-address cooldown on the request page
-- [ ] Phase 8 — mailman subscriptions follow the member's email change
+- [x] Phase 8 — mailman subscriptions follow the member's email change
 - [ ] Phase 9 — former members: `ActiveMemberProvider` (move `MemberSegmentProvider.get_queryset_active_members` with its tests, add `get_former_members`, update callers), nightly unsubscription task + log entry, blocking new subscriptions (self-service, management page, admin views, snapshot), list unsubscription in `DeleteMemberApiView`
 - [ ] Phase 10 — test data generation (extras with and without direct mails; registrations of extras with direct mails through `MemberExtraEmailRegistrationSnapshotter`)
 - [ ] Phase 11 — docs (`docs/admins`, explanation text): `ALWAYS_ON` categories are optional for extras, the snapshot runs only on the first confirmation, switching direct mails on later gives no snapshot, one owner per address, the management link token
@@ -285,71 +285,21 @@ Migrations run in the web container's start command before gunicorn (infra repo)
 
 ## Local examples (current phase)
 
-Cleared at the start of each phase. Management links are valid for 72 hours, until 2026-11-30; a fresh one is printed by
-`docker compose exec web poetry run python manage.py shell -c "from tapir.core.services.subscription_management_link_provider import SubscriptionManagementLinkProvider as P; print(P.build_link_for_address(address='<address>', cache={}))"`.
+Cleared at the start of each phase.
 
-Mail categories: "Mitgliederinfos" (always on, members only), "Rundbrief" (default on, members and externals), "Veranstaltungen" (default off, members and externals), "Presse" (default off, externals only). Mailing lists: the four local mailman lists.
+Change the main address of a member on a list and check the lists in the [admin mailing list page](http://localhost:8000/core/mailing_lists) (recipient list of each list) before and after:
 
-**Management page**
+- [Louis](http://localhost:8000/tapir/members/DLZAQp2E7P): subscribed to `unmoderiert-geschlossen`.
+- [Elia](http://localhost:8000/tapir/members/E59aAxrYW4): subscribed to `moderiert-geschlossen`, invited to `unmoderiert-geschlossen`. After the change the new address is on `moderiert-geschlossen` and the invitation is gone.
 
-| Case | Address | What the page shows |
-|---|---|---|
-| Extra with personal mails | [louis.robert.extra@example.com](http://localhost:8000/core/subscription_management/ImxvdWlzLnJvYmVydC5leHRyYUBleGFtcGxlLmNvbSI:1xWukA:5O17btxmY_0MSwusX1jU9qPqxYWjpr6MP3GrI8HD2g8) | Extra of Louis; "Mitgliederinfos" switched off although it is always on for members, "Veranstaltungen" on; subscribed to `unmoderiert-offen` |
-| Extra without personal mails | [nur.abos@example.com](http://localhost:8000/core/subscription_management/Im51ci5hYm9zQGV4YW1wbGUuY29tIg:1xWukA:29UDf_qvRwjxC6CQYPlH3yWXnz8rtO129SKgYq0dMxY) | Extra of Topias; no registrations, so the extra defaults apply (always on and default on ticked); no lists |
-| External recipient | [extern@example.com](http://localhost:8000/core/subscription_management/ImV4dGVybkBleGFtcGxlLmNvbSI:1xWukA:IbU9fAyGcPz-Gr3RzuTMrbNjOEkT4VOHSHy4ll2_nLw) | Newsletter part for Erika with "Rundbrief"; subscribed to `unmoderiert-offen`, invited to the closed `moderiert-geschlossen` |
-| Extra and external recipient | [beides@example.com](http://localhost:8000/core/subscription_management/ImJlaWRlc0BleGFtcGxlLmNvbSI:1xWukA:XrIImVhZvhTa8IvRA_mv389qE6D3-t-nEOTsf0TRtQ8) | Extra of Nicolas ("Rundbrief" switched off) and newsletter part for Bea ("Presse"); subscribed to `moderiert-offen` |
-| Only a list invitation | [eingeladen@example.com](http://localhost:8000/core/subscription_management/ImVpbmdlbGFkZW5AZXhhbXBsZS5jb20i:1xWukB:RqlNmzA9QeC655e3wBH9CvStgbCjj-YhHoK2ahco12w) | Only the lists, invited to the closed `unmoderiert-geschlossen` |
-| Unconfirmed extra | [t@t.de](http://localhost:8000/core/subscription_management/InRAdC5kZSI:1xWukB:SiofDxmU513YlsY1V6-AE55ysgFwKHPFdVpb7Zx_4Cg) | "Nichts zu verwalten": unconfirmed extras are not managed and can't join lists |
-| Unknown address | [unbekannt@example.com](http://localhost:8000/core/subscription_management/InVuYmVrYW5udEBleGFtcGxlLmNvbSI:1xWukB:FFBvpIZcQ4_2izwKuBS89i36PoNthbrmF54UWpaXWNg) | "Nichts zu verwalten" |
-| Main address | [louis.robert@example.com](http://localhost:8000/core/subscription_management/ImxvdWlzLnJvYmVydEBleGFtcGxlLmNvbSI:1xWukM:lJC3vFdUCXfmo7wMHO9bZKDxNQkV0fZ-JJrFNe9sosQ) | Redirects to Louis's profile |
-| Expired link | [extern@example.com, signed 73 hours ago](http://localhost:8000/core/subscription_management/ImV4dGVybkBleGFtcGxlLmNvbSI:1xVoNT:eQZdeRzXYUb25raMIjWGiQXj5jqQfUr9cq7HluThx_Q) | "Link abgelaufen" with a button to the request page |
-| Invalid link | [invalid](http://localhost:8000/core/subscription_management/invalid) | Same as expired |
-
-Removing the extra or the external recipient asks for confirmation in a modal. Changes of an extra's categories and lists, and its removal, appear in the log of its member.
-
-**Entry points**
-
-- [Request page](http://localhost:8000/core/subscription_management_link_request): any address gets the same confirmation; a second request for the same address within 15 minutes sends nothing. Mails land in [mailpit](http://localhost:8025).
-- "Link senden" per confirmed extra: [Louis's profile](http://localhost:8000/tapir/members/DLZAQp2E7P) → personal data → zusätzliche Mail-Adressen.
-- "Abos verwalten" on [the confirmed page of louis.robert.extra@example.com](http://localhost:8000/core/member_extra_email_confirmed/0b768084-b9f5-41e1-9dc0-6670b2924adf) leads to the request page.
-- [Old external management link](http://localhost:8000/tapirmail/external/manage/00000000-0000-0000-0000-000000000000) redirects to the request page.
-- Member profiles keep their own cards, now built from the shared components: [Louis](http://localhost:8000/tapir/members/DLZAQp2E7P), [Nicolas](http://localhost:8000/tapir/members/GNM58yRG2H), [Topias](http://localhost:8000/tapir/members/LffIwo5WbG).
+The address is changed from the profile (personal data → E-Mail ändern). For a verified address the change only applies once the link in the confirmation mail is opened in [mailpit](http://localhost:8025); an unverified address changes right away. The new address joins without a welcome mail.
 
 ## Review order (current phase)
 
 Cleared at the start of each phase. Staged files count as reviewed (for partly staged files, only the unstaged part); generated files are left out.
 
 1. `plans/member_extra_email_subscriptions_plan.md`
-
-**Unsubscriber rename** (`unsubscribe_from_all` → `unsubscribe_if_address_unused`)
-
-2. `tapir/core/services/mailman/mailing_list_unsubscriber.py`
-3. `tapir/core/tests/services/mailing_list_unsubscriber/test_unsubscribe_if_address_unused.py`
-4. `tapir/core/views/member_extra_emails.py`
-5. `tapir/core/tests/views/member_extra_email_api_view/test_delete.py`
-
-**Management API**
-
-6. `tapir/core/services/mailman/mailing_list_self_service.py` + `tapir/core/tests/services/mailing_list_self_service/test_build_list_data.py`: advertised lists optional
-7. `tapir/core/services/subscription_management_request_resolver.py`
-8. `tapir/core/tests/services/subscription_management_request_resolver/test_get_address.py`, `test_get_extra_email.py`, `test_get_external_categories.py`
-9. `tapir/core/views/subscription_management_api.py`
-10. `tapir/core/tests/views/subscription_management_api/` (9 files)
-
-**Request page cooldown and page**
-
-11. `tapir/core/views/subscription_management.py`
-12. `tapir/core/tests/views/test_subscription_management_link_request_view.py`
-13. `tapir/core/templates/core/subscription_management.html`
-
-**Public pages without navigation**
-
-14. `tapir/core/templates/core/layout.html`, `base.html`, `public_base.html`: shared layout, logged-in base with navigation, public base without
-15. The 4 `core/subscription_management*.html` and 3 `core/member_extra_email_confirm*.html` templates now extend `core/public_base.html`
-
-**Frontend** (no tests)
-
-16. `vite.config.ts`
-17. `src_frontend/member_profile/mail_category/MailCategoryCheckboxes.tsx`, `MemberMailCategoryCard.tsx`
-18. `src_frontend/member_profile/mailing_lists/MailingListsCard.tsx`, `MemberMailingListsCard.tsx`
-19. `src_frontend/subscription_management/subscription_management_entry.tsx`, `SubscriptionManagement.tsx`, `SubscriptionManagementExtraCard.tsx`, `SubscriptionManagementExternalCard.tsx`
+2. `tapir/core/services/mailman/mailing_list_address_mover.py`
+3. `tapir/core/tests/services/mailing_list_address_mover/test_move_subscriptions.py`
+4. `tapir/accounts/services/mail_change_service.py`
+5. `tapir/accounts/tests/services/test_mail_change_service.py`
