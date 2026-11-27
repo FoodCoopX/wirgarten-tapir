@@ -1,9 +1,13 @@
+import uuid
+
 from django.conf import settings
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
-from django.shortcuts import get_object_or_404
+from django.http import HttpRequest, HttpResponse
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.views.generic import TemplateView, RedirectView
+from django.views import View
+from django.views.generic import TemplateView
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.exceptions import (
     ValidationError as RestValidationError,
@@ -17,8 +21,11 @@ from tapir.mail.triggers.transactional_trigger import (
 
 from tapir.accounts.services.email_normaliser import EmailNormaliser
 from tapir.configuration.parameter import get_parameter_value
-from tapir.core.services.mailman.extra_email_mailing_list_manager import (
-    ExtraEmailMailingListManager,
+from tapir.core.services.mailman.mailing_list_unsubscriber import (
+    MailingListUnsubscriber,
+)
+from tapir.core.services.member_extra_email_confirmation_validator import (
+    MemberExtraEmailConfirmationValidator,
 )
 from tapir.core.services.member_extra_email_registration_snapshotter import (
     MemberExtraEmailRegistrationSnapshotter,
@@ -97,11 +104,11 @@ class MemberExtraEmailApiView(APIView):
         check_permission_or_self(pk=member_id, request=request)
         member = get_object_or_404(Member, id=member_id)
 
-        extra_email_address = serializer.validated_data["extra_email"]
+        extra_email_address = EmailNormaliser.normalise(
+            serializer.validated_data["extra_email"]
+        )
 
-        if EmailNormaliser.normalise(extra_email_address) == EmailNormaliser.normalise(
-            member.email
-        ):
+        if extra_email_address == member.email:
             raise RestValidationError(
                 "Diese Adresse ist bereits die Hauptadresse des Mitglieds"
             )
@@ -203,7 +210,7 @@ class MemberExtraEmailApiView(APIView):
         if member_extra_email.confirmed_on is not None:
             email = member_extra_email.email
             transaction.on_commit(
-                lambda: ExtraEmailMailingListManager.unsubscribe_from_all(
+                lambda: MailingListUnsubscriber.unsubscribe_from_all(
                     email=email, cache=self.cache
                 ),
                 robust=True,
@@ -214,25 +221,46 @@ class MemberExtraEmailApiView(APIView):
         return Response(True)
 
 
-class ConfirmMemberExtraEmailApiView(RedirectView):
-    permission_classes = []
+class ConfirmMemberExtraEmailView(View):
+    def get(self, request: HttpRequest, secret: uuid.UUID) -> HttpResponse:
+        cache = {}
+        member_extra_email = self._get_extra_email(secret=secret, cache=cache)
+        if member_extra_email.confirmed_on is not None:
+            return redirect("core:member_extra_email_confirmed", secret=secret)
+
+        refusal_page = self._build_refusal_page_if_address_taken(
+            request=request, extra_email=member_extra_email, cache=cache
+        )
+        if refusal_page is not None:
+            return refusal_page
+
+        return render(
+            request,
+            "core/member_extra_email_confirm.html",
+            {
+                "extra_mail_address": member_extra_email.email,
+                "main_mail_address": member_extra_email.member.email,
+                "cache": cache,
+            },
+        )
 
     @transaction.atomic
-    def get_redirect_url(self, *args, **kwargs):
+    def post(self, request: HttpRequest, secret: uuid.UUID) -> HttpResponse:
         cache = {}
-        if not get_parameter_value(
-            key=ParameterKeys.ENABLE_EXTRA_MAIL_ADDRESSES, cache=cache
-        ):
-            raise PermissionDenied(MemberExtraEmailApiView.FEATURE_DISABLED_MESSAGE)
+        member_extra_email = self._get_extra_email(secret=secret, cache=cache)
+        if member_extra_email.confirmed_on is not None:
+            return redirect("core:member_extra_email_confirmed", secret=secret)
 
-        secret = kwargs["secret"]
-        member_extra_email = get_object_or_404(MemberExtraEmail, secret=secret)
-        is_first_confirmation = member_extra_email.confirmed_on is None
+        refusal_page = self._build_refusal_page_if_address_taken(
+            request=request, extra_email=member_extra_email, cache=cache
+        )
+        if refusal_page is not None:
+            return refusal_page
 
         member_extra_email.confirmed_on = get_now(cache=cache)
         member_extra_email.save()
 
-        if is_first_confirmation and member_extra_email.receives_direct_mails:
+        if member_extra_email.receives_direct_mails:
             MemberExtraEmailRegistrationSnapshotter.snapshot(
                 extra_email=member_extra_email, cache=cache
             )
@@ -240,10 +268,38 @@ class ConfirmMemberExtraEmailApiView(RedirectView):
         MemberExtraEmailConfirmedLogEntry().populate_email(
             email=member_extra_email.email,
             user=member_extra_email.member,
-            actor=self.request.user if self.request.user.is_authenticated else None,
+            actor=request.user if request.user.is_authenticated else None,
         ).save()
 
-        return reverse("core:member_extra_email_confirmed", kwargs={"secret": secret})
+        return redirect("core:member_extra_email_confirmed", secret=secret)
+
+    @staticmethod
+    def _get_extra_email(secret: uuid.UUID, cache: dict) -> MemberExtraEmail:
+        if not get_parameter_value(
+            key=ParameterKeys.ENABLE_EXTRA_MAIL_ADDRESSES, cache=cache
+        ):
+            raise PermissionDenied(MemberExtraEmailApiView.FEATURE_DISABLED_MESSAGE)
+        return get_object_or_404(MemberExtraEmail, secret=secret)
+
+    @staticmethod
+    def _build_refusal_page_if_address_taken(
+        request: HttpRequest, extra_email: MemberExtraEmail, cache: dict
+    ) -> HttpResponse | None:
+        try:
+            MemberExtraEmailConfirmationValidator.validate_address_is_free(
+                extra_email=extra_email, cache=cache
+            )
+        except ValidationError as error:
+            return render(
+                request,
+                "core/member_extra_email_confirmation_refused.html",
+                {
+                    "extra_mail_address": extra_email.email,
+                    "refusal_reason": error.message,
+                    "cache": cache,
+                },
+            )
+        return None
 
 
 class MemberExtraEmailConfirmedView(TemplateView):

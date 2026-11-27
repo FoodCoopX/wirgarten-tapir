@@ -5,8 +5,8 @@ from django.utils import timezone
 from rest_framework import status
 
 from tapir.configuration.models import TapirParameter
-from tapir.core.services.mailman.extra_email_mailing_list_manager import (
-    ExtraEmailMailingListManager,
+from tapir.core.services.mailman.mailing_list_unsubscriber import (
+    MailingListUnsubscriber,
 )
 from tapir.wirgarten.models import MemberExtraEmail, MemberExtraEmailDeletedLogEntry
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -15,7 +15,7 @@ from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
-@patch.object(ExtraEmailMailingListManager, "unsubscribe_from_all", autospec=True)
+@patch.object(MailingListUnsubscriber, "unsubscribe_from_all", autospec=True)
 class TestMemberExtraEmailApiViewDelete(TapirIntegrationTest):
     maxDiff = 3000
 

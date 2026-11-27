@@ -5,7 +5,7 @@ from django.http import HttpResponse
 from django.urls import reverse
 
 from tapir.mail.config import TransactionalTriggerKeys
-from tapir.mail.models import MailCategory, StaticSegmentRecipient
+from tapir.mail.models import ExternalRecipient, MailCategory, StaticSegmentRecipient
 from tapir.mail.tests.factories import MailCategoryFactory
 from tapir.mail.triggers.transactional_trigger import TransactionalTrigger
 from tapir.wirgarten.parameters import ParameterDefinitions
@@ -36,6 +36,16 @@ class TestRegisterToMailCategoryViewPost(TapirIntegrationTest):
         )
         self.assertEqual(
             self.EMAIL, trigger_data.recipient_outside_of_base_queryset.email
+        )
+
+    def test_post_mixedCaseAddress_storesTheNormalisedAddress(self, _: MagicMock):
+        category = MailCategoryFactory.create(available_for_external_recipients=True)
+
+        self._register(category=category, email=" External@Example.com")
+
+        self.assertEqual(
+            [self.EMAIL],
+            list(ExternalRecipient.objects.values_list("email", flat=True)),
         )
 
     def test_post_sameAddressWithinCooldown_sendsNoSecondMail(

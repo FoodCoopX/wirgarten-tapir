@@ -7,6 +7,7 @@ from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.generic import FormView, TemplateView
+from tapir.accounts.services.email_normaliser import EmailNormaliser
 from tapir.mail.config import TransactionalTriggerKeys
 from tapir.mail.forms import RegisterToMailCategoryForm, ExternalRecipientManagementForm
 from tapir.mail.models import (
@@ -57,7 +58,7 @@ class RegisterToMailCategoryView(FormView):
 
     def form_valid(self, form):
         response = super().form_valid(form)
-        email_address = form.cleaned_data["email"]
+        email_address = EmailNormaliser.normalise(form.cleaned_data["email"])
         first_name = form.cleaned_data["first_name"]
 
         # Both cases end on the same page as a successful registration, so that the

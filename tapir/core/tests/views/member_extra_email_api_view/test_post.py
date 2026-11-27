@@ -216,6 +216,18 @@ class TestMemberExtraEmailApiViewPost(TapirIntegrationTest):
         self.assertFalse(MemberExtraEmailCreatedLogEntry.objects.exists())
         mock_fire_action.assert_not_called()
 
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_mixedCaseAddress_storesTheNormalisedAddress(self, _: Mock):
+        member = MemberFactory.create()
+        self.client.force_login(member)
+
+        response = self._post_extra_email(
+            member_id=member.id, extra_email=" Extra@Example.com"
+        )
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assertEqual("extra@example.com", MemberExtraEmail.objects.get().email)
+
     def _post_extra_email(self, member_id: str, extra_email: str):
         return self.client.post(
             reverse("core:member_extra_emails"),

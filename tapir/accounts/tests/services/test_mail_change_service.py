@@ -12,7 +12,8 @@ from tapir.accounts.models import EmailChangeRequest
 from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
 from tapir.accounts.services.mail_change_service import MailChangeService
 from tapir.wirgarten.mail_events import Events
-from tapir.wirgarten.tests.factories import MemberFactory
+from tapir.wirgarten.models import MemberExtraEmail, MemberExtraEmailDeletedLogEntry
+from tapir.wirgarten.tests.factories import MemberExtraEmailFactory, MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
@@ -28,7 +29,7 @@ class TestMailChangeService(TapirIntegrationTest):
         mock_get_keycloak_client.return_value = mock_client
 
         MailChangeService.apply_mail_change(
-            user=user, new_email="new@example.com", cache=cache
+            user=user, new_email="new@example.com", actor=user, cache=cache
         )
 
         user.refresh_from_db()
@@ -57,7 +58,7 @@ class TestMailChangeService(TapirIntegrationTest):
 
         with self.assertRaises(Exception):
             MailChangeService.apply_mail_change(
-                user=user, new_email="new@example.com", cache=cache
+                user=user, new_email="new@example.com", actor=user, cache=cache
             )
 
         user.refresh_from_db()
@@ -86,7 +87,7 @@ class TestMailChangeService(TapirIntegrationTest):
         )
 
         MailChangeService.apply_mail_change(
-            user=user, new_email="new@example.com", cache=cache
+            user=user, new_email="new@example.com", actor=user, cache=cache
         )
 
         user.refresh_from_db()
@@ -129,7 +130,7 @@ class TestMailChangeService(TapirIntegrationTest):
         )
 
         MailChangeService.apply_mail_change(
-            user=user, new_email="new@example.com", cache=cache
+            user=user, new_email="new@example.com", actor=user, cache=cache
         )
 
         user.refresh_from_db()
@@ -144,3 +145,28 @@ class TestMailChangeService(TapirIntegrationTest):
         self.assertEqual("new@example.com", external_recipient_1.email)
         external_recipient_2.refresh_from_db()
         self.assertEqual("other@example.com", external_recipient_2.email)
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    @patch.object(KeycloakUserManager, "get_keycloak_client")
+    def test_applyMailChange_newEmailIsAnExtraEmail_extraEmailsWithThatAddressDeleted(
+        self, _: MagicMock, __: MagicMock
+    ):
+        user = MemberFactory.create(email="old@example.com", keycloak_id="1234")
+        other_member = MemberFactory.create()
+        MemberExtraEmailFactory.create(
+            member=other_member, email="new@example.com", confirmed_on=timezone.now()
+        )
+        MemberExtraEmailFactory.create(member=user, email="new@example.com")
+        kept = MemberExtraEmailFactory.create(email="other@example.com")
+
+        MailChangeService.apply_mail_change(
+            user=user, new_email="new@example.com", actor=user, cache={}
+        )
+
+        self.assertEqual([kept], list(MemberExtraEmail.objects.all()))
+        self.assertEqual(
+            {(other_member.id, "new@example.com"), (user.id, "new@example.com")},
+            set(
+                MemberExtraEmailDeletedLogEntry.objects.values_list("user_id", "email")
+            ),
+        )

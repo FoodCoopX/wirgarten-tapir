@@ -24,7 +24,7 @@ urlpatterns = [
     ),
     path(
         "member_extra_email_confirm/<uuid:secret>",
-        member_extra_emails.ConfirmMemberExtraEmailApiView.as_view(),
+        member_extra_emails.ConfirmMemberExtraEmailView.as_view(),
         name="member_extra_email_confirm",
     ),
     path(

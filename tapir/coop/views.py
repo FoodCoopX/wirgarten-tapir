@@ -694,7 +694,7 @@ class MemberEmailApiView(APIView):
         email_before = member.email
         member_before = freeze_for_log(member)
         MailChangeService.apply_mail_change(
-            user=member, new_email=new_email, cache=self.cache
+            user=member, new_email=new_email, actor=actor, cache=self.cache
         )
         UpdateTapirUserLogEntry().populate(
             old_frozen=member_before,

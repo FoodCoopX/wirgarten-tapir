@@ -2,6 +2,7 @@ from drf_spectacular.utils import extend_schema
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from tapir.accounts.services.email_normaliser import EmailNormaliser
 from tapir.mail.models import StaticSegment, StaticSegmentRecipient, MailCategory
 from tapir.mail.permissions import HasEmailManagePermission
 from tapir.mail.registries import get_mail_segment_definitions
@@ -135,3 +136,15 @@ class StaticSegmentRecipientViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, HasEmailManagePermission]
     queryset = StaticSegmentRecipient.objects.all()
     serializer_class = StaticSegmentRecipientSerializer
+
+    def perform_create(self, serializer: StaticSegmentRecipientSerializer):
+        serializer.save(**self._normalised_email(serializer))
+
+    def perform_update(self, serializer: StaticSegmentRecipientSerializer):
+        serializer.save(**self._normalised_email(serializer))
+
+    @staticmethod
+    def _normalised_email(serializer: StaticSegmentRecipientSerializer) -> dict:
+        if "email" not in serializer.validated_data:
+            return {}
+        return {"email": EmailNormaliser.normalise(serializer.validated_data["email"])}

@@ -14,6 +14,9 @@ from tapir import settings
 from tapir.accounts.config import EMAIL_CHANGE_LINK_VALIDITY_MINUTES
 from tapir.accounts.models import TapirUser, KeycloakUser, EmailChangeRequest
 from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
+from tapir.core.services.member_extra_email_address_releaser import (
+    MemberExtraEmailAddressReleaser,
+)
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.utils import get_now
 
@@ -63,7 +66,9 @@ class MailChangeService:
 
     @classmethod
     @transaction.atomic
-    def apply_mail_change(cls, user: TapirUser, new_email: str, cache: dict):
+    def apply_mail_change(
+        cls, user: TapirUser, new_email: str, actor: TapirUser | None, cache: dict
+    ):
         old_email = user.email
         user.email = new_email
         user.username = new_email
@@ -78,6 +83,7 @@ class MailChangeService:
         ).delete()
 
         StaticSegmentRecipient.objects.filter(email=old_email).update(email=new_email)
+        MemberExtraEmailAddressReleaser.release_address(address=new_email, actor=actor)
         ExternalRecipient.objects.filter(email=old_email).update(email=new_email)
 
         TransactionalTrigger.fire_action(

@@ -22,6 +22,9 @@ from tapir.core.config import (
     LEGAL_STATUS_COMPANY,
     LEGAL_STATUS_ASSOCIATION,
 )
+from tapir.core.services.member_extra_email_address_releaser import (
+    MemberExtraEmailAddressReleaser,
+)
 from tapir.waiting_list.tests.factories import WaitingListEntryFactory
 from tapir.wirgarten.constants import WEEKLY
 from tapir.wirgarten.mail_events import Events
@@ -361,6 +364,43 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
         self.assertEqual(1, AssociationMembership.objects.count())
         membership = AssociationMembership.objects.get()
         self.assertEqual(membership_type, membership.type)
+
+    @patch.object(MemberExtraEmailAddressReleaser, "release_address", autospec=True)
+    def test_post_default_releasesTheAddressFromExtraEmails(
+        self, mock_release_address: Mock
+    ):
+        entry = WaitingListEntryFactory.create(
+            confirmation_link_key=uuid.uuid4(),
+            member=None,
+            email="john@example.com",
+        )
+        mock_timezone(test=self, now=datetime.datetime(year=1997, month=3, day=30))
+        GrowingPeriodFactory.create(start_date=datetime.date(year=1997, month=1, day=1))
+
+        response = self.client.post(
+            reverse("waiting_list:public_confirm_waiting_list_entry"),
+            data=json.dumps(
+                {
+                    "entry_id": str(entry.id),
+                    "link_key": str(entry.confirmation_link_key),
+                    "account_owner": "John Doe",
+                    "iban": "NL35ABNA7806242643",
+                    "sepa_allowed": True,
+                    "contract_accepted": True,
+                    "number_of_coop_shares": 2,
+                    "payment_rhythm": "semiannually",
+                    "solidarity_contribution": 0,
+                    "association_membership_type_id": None,
+                }
+            ),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        self.assert_order_confirmed(response.json())
+        mock_release_address.assert_called_once_with(
+            address="john@example.com", actor=None
+        )
 
     def test_post_memberNumbersAreAssignedOnRegistration_memberGetsCreatedWithNumber(
         self,

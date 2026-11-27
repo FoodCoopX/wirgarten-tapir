@@ -235,9 +235,9 @@ class MailingListRecipientListView(APIView):
         addresses = [recipient["address"] for recipient in recipients]
         members_by_extra_address = {
             extra_email.email: extra_email.member
-            for extra_email in MemberExtraEmail.objects.filter(email__in=addresses)
-            .select_related("member")
-            .order_by("-created_at")
+            for extra_email in MemberExtraEmail.objects.filter(
+                email__in=addresses, confirmed_on__isnull=False
+            ).select_related("member")
         }
         members_by_main_address = {
             member.email: member
@@ -245,11 +245,9 @@ class MailingListRecipientListView(APIView):
         }
 
         for recipient in recipients:
-            address = recipient["address"]
+            address = EmailNormaliser.normalise(recipient["address"])
             main_member = members_by_main_address.get(address)
-            extra_email_member = (
-                members_by_extra_address.get(address) if main_member is None else None
-            )
+            extra_email_member = members_by_extra_address.get(address)
             recipient["extra_email_member"] = (
                 {
                     "display_name": extra_email_member.get_display_name(),

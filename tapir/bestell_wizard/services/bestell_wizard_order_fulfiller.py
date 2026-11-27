@@ -7,6 +7,9 @@ from tapir.mail.services.external_recipient_manager import ExternalRecipientMana
 
 from tapir.accounts.models import TapirUser
 from tapir.accounts.services.email_verification_service import EmailVerificationService
+from tapir.core.services.member_extra_email_address_releaser import (
+    MemberExtraEmailAddressReleaser,
+)
 from tapir.accounts.services.keycloak_user_delete_service import (
     KeycloakUserDeleteService,
 )
@@ -227,10 +230,12 @@ class BestellWizardOrderFulfiller:
             target=member, delivery_address_input=delivery_address_input
         )
         member.save()
+        actor = request.user if request.user.is_authenticated else member
+        MemberExtraEmailAddressReleaser.release_address(
+            address=member.email, actor=actor
+        )
         MemberNumberService.assign_member_number_if_eligible(
-            member,
-            cache=cache,
-            actor=request.user if request.user.is_authenticated else member,
+            member, cache=cache, actor=actor
         )
 
         KeycloakUserManager.create_keycloak_user_if_necessary(

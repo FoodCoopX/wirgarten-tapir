@@ -72,6 +72,12 @@ class Migration(migrations.Migration):
                 to="wirgarten.memberextraemail",
             ),
         ),
+        # Nullable so that reverting the RemoveField below works on existing rows.
+        migrations.AlterField(
+            model_name="internalrecipientcategoryregistration",
+            name="internal_recipient_id",
+            field=models.CharField(max_length=10, null=True),
+        ),
         migrations.RunPython(
             code=link_registrations_to_members,
             reverse_code=copy_recipient_ids_back,

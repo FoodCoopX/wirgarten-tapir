@@ -132,6 +132,32 @@ class TapirCache:
         return extra_emails_by_member_id.get(member_id, [])
 
     @classmethod
+    def get_confirmed_member_extra_emails_with_address(
+        cls, address: str, cache: dict
+    ) -> list[MemberExtraEmail]:
+        def compute():
+            result = {}
+            for extra_email in MemberExtraEmail.objects.filter(
+                confirmed_on__isnull=False
+            ):
+                result.setdefault(extra_email.email, []).append(extra_email)
+            return result
+
+        extra_emails_by_address = get_from_cache_or_compute(
+            cache, "confirmed_member_extra_emails_by_address", compute
+        )
+        return extra_emails_by_address.get(address, [])
+
+    @classmethod
+    def is_member_main_address(cls, address: str, cache: dict) -> bool:
+        main_addresses = get_from_cache_or_compute(
+            cache,
+            "member_main_addresses",
+            lambda: set(Member.objects.values_list("email", flat=True)),
+        )
+        return address in main_addresses
+
+    @classmethod
     def get_subscriptions_active_at_date(
         cls, reference_date: datetime.date, cache: dict
     ):

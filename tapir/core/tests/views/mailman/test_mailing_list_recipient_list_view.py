@@ -1,5 +1,6 @@
 from django.test import override_settings
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 
 from tapir.core.tests.mailman_test_helper import MailmanTestHelper, MockMailingListData
@@ -146,13 +147,14 @@ class TestMailingListRecipientListView(TapirIntegrationTest):
             recipients_by_email,
         )
 
-    def test_get_recipientIsAnExtraEmail_linksToTheMemberAndMarksTheAddressUnlessItIsAlsoAMainAddress(
+    def test_get_recipientIsAConfirmedExtraEmail_linksToTheMemberAndMarksTheAddress(
         self,
     ):
         self.client.force_login(MemberFactory.create(is_superuser=True))
-        extra_email = MemberExtraEmailFactory.create(email="extra@example.com")
-        main_member = MemberFactory.create(email="main@example.com")
-        MemberExtraEmailFactory.create(email="main@example.com")
+        extra_email = MemberExtraEmailFactory.create(
+            email="extra@example.com", confirmed_on=timezone.now()
+        )
+        MemberExtraEmailFactory.create(email="unconfirmed@example.com")
 
         MailmanTestHelper.mock_domain(
             test=self,
@@ -160,7 +162,7 @@ class TestMailingListRecipientListView(TapirIntegrationTest):
                 MockMailingListData(
                     name="list_a",
                     confirmed_recipients=["extra@example.com"],
-                    unconfirmed_recipients=["main@example.com"],
+                    unconfirmed_recipients=["unconfirmed@example.com"],
                 ),
             ],
         )
@@ -187,12 +189,9 @@ class TestMailingListRecipientListView(TapirIntegrationTest):
                     },
                 },
                 {
-                    "address": "main@example.com",
+                    "address": "unconfirmed@example.com",
                     "user_confirmed": False,
-                    "link_to_member_profile": reverse(
-                        "wirgarten:member_detail",
-                        kwargs={"pk": main_member.id},
-                    ),
+                    "link_to_member_profile": None,
                     "extra_email_member": None,
                 },
             ],
