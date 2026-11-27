@@ -9,7 +9,6 @@ from tapir.mail.triggers.transactional_trigger import (
 )
 
 from tapir.accounts.models import EmailChangeRequest
-from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
 from tapir.accounts.services.mail_change_service import MailChangeService
 from tapir.core.services.mailman.mailing_list_address_mover import (
     MailingListAddressMover,
@@ -22,14 +21,11 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 class TestMailChangeService(TapirIntegrationTest):
     @patch.object(TransactionalTrigger, "fire_action", autospec=True)
-    @patch.object(KeycloakUserManager, "get_keycloak_client")
     def test_applyMailChange_default_newEmailSavedAndKeycloakUpdated(
-        self, mock_get_keycloak_client: MagicMock, mock_fire_action: MagicMock
+        self, mock_fire_action: MagicMock
     ):
         user = MemberFactory.create(email="old@example.com", keycloak_id="1234")
         cache = {}
-        mock_client = MagicMock()
-        mock_get_keycloak_client.return_value = mock_client
 
         MailChangeService.apply_mail_change(
             user=user, new_email="new@example.com", actor=user, cache=cache
@@ -38,7 +34,7 @@ class TestMailChangeService(TapirIntegrationTest):
         user.refresh_from_db()
         self.assertEqual("new@example.com", user.email)
 
-        mock_client.update_user.assert_called_once_with(
+        self.mock_keycloak_client.update_user.assert_called_once_with(
             user_id="1234", payload={"email": "new@example.com"}
         )
 
@@ -49,15 +45,10 @@ class TestMailChangeService(TapirIntegrationTest):
             ),
         )
 
-    @patch.object(KeycloakUserManager, "get_keycloak_client")
-    def test_applyMailChange_keycloakRaisesError_changesRolledBack(
-        self, mock_get_keycloak_client: MagicMock
-    ):
+    def test_applyMailChange_keycloakRaisesError_changesRolledBack(self):
         user = MemberFactory.create(email="old@example.com", keycloak_id="1234")
         cache = {}
-        mock_client = MagicMock()
-        mock_get_keycloak_client.return_value = mock_client
-        mock_client.update_user.side_effect = Exception()
+        self.mock_keycloak_client.update_user.side_effect = Exception()
 
         with self.assertRaises(Exception):
             MailChangeService.apply_mail_change(
@@ -67,7 +58,7 @@ class TestMailChangeService(TapirIntegrationTest):
         user.refresh_from_db()
         self.assertEqual("old@example.com", user.email)
 
-        mock_client.update_user.assert_called_once_with(
+        self.mock_keycloak_client.update_user.assert_called_once_with(
             user_id="1234", payload={"email": "new@example.com"}
         )
 
@@ -150,9 +141,8 @@ class TestMailChangeService(TapirIntegrationTest):
         self.assertEqual("other@example.com", external_recipient_2.email)
 
     @patch.object(TransactionalTrigger, "fire_action", autospec=True)
-    @patch.object(KeycloakUserManager, "get_keycloak_client")
     def test_applyMailChange_newEmailIsAnExtraEmail_extraEmailsWithThatAddressDeleted(
-        self, _: MagicMock, __: MagicMock
+        self, _: MagicMock
     ):
         user = MemberFactory.create(email="old@example.com", keycloak_id="1234")
         other_member = MemberFactory.create()
@@ -176,9 +166,8 @@ class TestMailChangeService(TapirIntegrationTest):
 
     @patch.object(MailingListAddressMover, "move_subscriptions", autospec=True)
     @patch.object(TransactionalTrigger, "fire_action", autospec=True)
-    @patch.object(KeycloakUserManager, "get_keycloak_client")
     def test_applyMailChange_default_movesTheListSubscriptionsAfterCommit(
-        self, _: MagicMock, __: MagicMock, mock_move_subscriptions: MagicMock
+        self, _: MagicMock, mock_move_subscriptions: MagicMock
     ):
         user = MemberFactory.create(email="old@example.com")
         cache = {}
@@ -197,12 +186,11 @@ class TestMailChangeService(TapirIntegrationTest):
         )
 
     @patch.object(MailingListAddressMover, "move_subscriptions", autospec=True)
-    @patch.object(KeycloakUserManager, "get_keycloak_client")
     def test_applyMailChange_keycloakRaisesError_listSubscriptionsAreNotMoved(
-        self, mock_get_keycloak_client: MagicMock, mock_move_subscriptions: MagicMock
+        self, mock_move_subscriptions: MagicMock
     ):
         user = MemberFactory.create(email="old@example.com")
-        mock_get_keycloak_client.return_value.update_user.side_effect = Exception()
+        self.mock_keycloak_client.update_user.side_effect = Exception()
 
         with self.captureOnCommitCallbacks(execute=True):
             with self.assertRaises(Exception):
