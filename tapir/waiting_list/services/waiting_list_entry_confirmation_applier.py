@@ -14,6 +14,9 @@ from tapir.associations.models import AssociationMembershipType
 from tapir.bestell_wizard.services.bestell_wizard_order_fulfiller import (
     BestellWizardOrderFulfiller,
 )
+from tapir.core.services.member_extra_email_address_releaser import (
+    MemberExtraEmailAddressReleaser,
+)
 from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
@@ -210,6 +213,9 @@ class WaitingListEntryConfirmationApplier:
             iban=validated_data["iban"],
             pseudonym=waiting_list_entry.pseudonym,
             **contracts_signed,
+        )
+        MemberExtraEmailAddressReleaser.release_address(
+            address=member.email, actor=actor
         )
 
         MemberNumberService.assign_member_number_if_eligible(

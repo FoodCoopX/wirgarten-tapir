@@ -419,9 +419,12 @@ class MailCategorySerializer(serializers.ModelSerializer):
     nb_recipients = serializers.SerializerMethodField()
     registration_form_link = serializers.SerializerMethodField()
 
-    @staticmethod
-    def get_nb_recipients(obj: MailCategory) -> int:
-        return len(MailCategoryRecipientResolver.resolve_recipients(obj))
+    def get_nb_recipients(self, obj: MailCategory) -> int:
+        return len(
+            MailCategoryRecipientResolver.resolve_recipients(
+                mail_category=obj, cache=self.context["cache"]
+            )
+        )
 
     @staticmethod
     def get_registration_form_link(obj: MailCategory) -> str:

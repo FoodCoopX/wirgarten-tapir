@@ -23,6 +23,12 @@ import { MailingListFromJSON, MailingListToJSON } from "./MailingList";
 export interface MemberMailingListDataResponse {
   /**
    *
+   * @type {boolean}
+   * @memberof MemberMailingListDataResponse
+   */
+  belongsToFormerMember: boolean;
+  /**
+   *
    * @type {Array<MailingList>}
    * @memberof MemberMailingListDataResponse
    */
@@ -47,6 +53,11 @@ export interface MemberMailingListDataResponse {
 export function instanceOfMemberMailingListDataResponse(
   value: object,
 ): value is MemberMailingListDataResponse {
+  if (
+    !("belongsToFormerMember" in value) ||
+    value["belongsToFormerMember"] === undefined
+  )
+    return false;
   if (!("availableLists" in value) || value["availableLists"] === undefined)
     return false;
   if (!("subscribedLists" in value) || value["subscribedLists"] === undefined)
@@ -73,6 +84,7 @@ export function MemberMailingListDataResponseFromJSONTyped(
     return json;
   }
   return {
+    belongsToFormerMember: json["belongs_to_former_member"],
     availableLists: (json["available_lists"] as Array<any>).map(
       MailingListFromJSON,
     ),
@@ -96,6 +108,7 @@ export function MemberMailingListDataResponseToJSONTyped(
   }
 
   return {
+    belongs_to_former_member: value["belongsToFormerMember"],
     available_lists: (value["availableLists"] as Array<any>).map(
       MailingListToJSON,
     ),

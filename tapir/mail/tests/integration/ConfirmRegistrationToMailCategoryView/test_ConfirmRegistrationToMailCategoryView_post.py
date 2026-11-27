@@ -2,6 +2,7 @@ import datetime
 import uuid
 from unittest.mock import MagicMock, patch
 
+from django.test import override_settings
 from django.urls import reverse
 
 from tapir.mail.config import TransactionalTriggerKeys
@@ -22,6 +23,7 @@ class TestConfirmRegistrationToMailCategoryViewPost(TapirIntegrationTest):
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
+    @override_settings(SITE_URL="http://localhost")
     def test_post_unconfirmedRegistration_confirmsRegistersAndRedirects(
         self, mock_fire_action: MagicMock
     ):
@@ -51,6 +53,10 @@ class TestConfirmRegistrationToMailCategoryViewPost(TapirIntegrationTest):
         self.assertEqual(
             TransactionalTriggerKeys.MAIL_CATEGORY_REGISTRATION_CONFIRMED,
             mock_fire_action.call_args.args[0].key,
+        )
+        self.assertEqual(
+            "http://localhost" + reverse("core:subscription_management_link_request"),
+            mock_fire_action.call_args.args[0].token_data["management_link"],
         )
 
     def test_post_alreadyConfirmedRegistration_changesNothingAndRedirects(

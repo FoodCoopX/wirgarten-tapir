@@ -1,6 +1,7 @@
 from tapir.bestell_wizard.services.bestell_wizard_order_validator import (
     BestellWizardOrderValidator,
 )
+from tapir.accounts.services.email_normaliser import EmailNormaliser
 from tapir.pickup_locations.services.member_delivery_address_getter import (
     DeliveryAddressInput,
 )
@@ -156,6 +157,7 @@ class WaitingListEntryCreator:
         ]
         for field in fields:
             setattr(waiting_list_entry, field, validated_data[field])
+        waiting_list_entry.email = EmailNormaliser.normalise(validated_data["email"])
 
     @classmethod
     def get_pickup_location_ids_that_should_go_on_waiting_list(

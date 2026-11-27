@@ -14,6 +14,9 @@ from rest_framework.exceptions import (
 )
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from tapir.core.services.mailman.mailing_list_unsubscriber import (
+    MailingListUnsubscriber,
+)
 from tapir.mail.models import EmailConfigurationDispatch, StaticSegmentRecipient
 from tapir.mail.triggers.transactional_trigger import (
     TransactionalTrigger,
@@ -341,11 +344,28 @@ class DeleteMemberApiView(APIView):
                 override_recipients__0__recipient_id_in_base_queryset=member.id,
             ).delete()
 
+            addresses = [member.email] + list(
+                member.memberextraemail_set.filter(
+                    confirmed_on__isnull=False
+                ).values_list("email", flat=True)
+            )
             member.delete()
+            transaction.on_commit(
+                lambda: self._unsubscribe_addresses(addresses=addresses),
+                robust=True,
+            )
 
             KeycloakUserDeleteService.delete_user_if_exists(user=member)
 
         return Response("deleted")
+
+    @staticmethod
+    def _unsubscribe_addresses(addresses: list[str]):
+        cache = {}
+        for address in addresses:
+            MailingListUnsubscriber.unsubscribe_if_address_unused(
+                email=address, cache=cache
+            )
 
 
 class MemberBankDataApiView(APIView):
@@ -694,7 +714,7 @@ class MemberEmailApiView(APIView):
         email_before = member.email
         member_before = freeze_for_log(member)
         MailChangeService.apply_mail_change(
-            user=member, new_email=new_email, cache=self.cache
+            user=member, new_email=new_email, actor=actor, cache=self.cache
         )
         UpdateTapirUserLogEntry().populate(
             old_frozen=member_before,

@@ -10,6 +10,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 
+from tapir.mail.addressed_recipient import AddressedRecipient
 from tapir.mail.config import BccProvider, ExternalConfig
 from tapir.mail.models import EmailConfigurationDispatch, EmailDispatch, ReleaseStatus
 from tapir.mail.services.email import build_email
@@ -60,10 +61,13 @@ class ResolveAndCreateEmailDispatches:
             if not config_dispatches:
                 return
 
+            cache = {}
             for config_dispatch in config_dispatches:
                 cache_key = f"dispatch_retry_count_{config_dispatch.id}"
                 try:
-                    cls._create_email_dispatches(config_dispatch)
+                    cls._create_email_dispatches(
+                        config_dispatch=config_dispatch, cache=cache
+                    )
                     redis_cache.delete(cache_key)
                 except Exception as e:
                     retry_count = redis_cache.get(cache_key, 0) + 1
@@ -90,10 +94,12 @@ class ResolveAndCreateEmailDispatches:
 
     @classmethod
     @transaction.atomic
-    def _create_email_dispatches(cls, config_dispatch: EmailConfigurationDispatch):
+    def _create_email_dispatches(
+        cls, config_dispatch: EmailConfigurationDispatch, cache: dict
+    ):
         recipients = (
             RecipientListProvider.get_recipient_list_from_email_configuration_dispatch(
-                config_dispatch
+                email_configuration_dispatch=config_dispatch, cache=cache
             )
         )
 
@@ -110,99 +116,48 @@ class ResolveAndCreateEmailDispatches:
             effective_content,
             token_type=TOKEN_TYPE_DYNAMIC,
         )
-        cache = {}
 
-        dispatches = []
-        for recipient in recipients:
-            dispatches.extend(
-                cls._build_email_dispatches_for_recipient(
+        EmailDispatch.objects.bulk_create(
+            [
+                cls._build_email_dispatch(
                     config_dispatch=config_dispatch,
-                    recipient=recipient,
+                    addressed_recipient=addressed_recipient,
                     recipient_tokens=recipient_tokens,
                     dynamic_tokens=dynamic_tokens,
                     cache=cache,
                 )
-            )
-
-        EmailDispatch.objects.bulk_create(dispatches)
+                for addressed_recipient in recipients
+            ]
+        )
 
         config_dispatch.is_sent = True
         config_dispatch.save()
 
-    @classmethod
-    def _build_email_dispatches_for_recipient(
-        cls,
-        config_dispatch: EmailConfigurationDispatch,
-        recipient,
-        recipient_tokens,
-        dynamic_tokens,
-        cache: dict,
-    ):
-        dispatches = [
-            cls._build_email_dispatch(
-                config_dispatch=config_dispatch,
-                recipient=recipient,
-                recipient_tokens=recipient_tokens,
-                dynamic_tokens=dynamic_tokens,
-                cache=cache,
-                email=recipient.email,
-                recipient_tokens_override={},
-            )
-        ]
-
-        get_extra_recipients = getattr(recipient, "get_extra_recipients", None)
-        extra_recipients = (
-            [] if get_extra_recipients is None else get_extra_recipients(cache)
-        )
-
-        for extra_recipient in extra_recipients:
-            dispatches.append(
-                cls._build_email_dispatch(
-                    config_dispatch=config_dispatch,
-                    recipient=recipient,
-                    recipient_tokens=recipient_tokens,
-                    dynamic_tokens=dynamic_tokens,
-                    cache=cache,
-                    email=extra_recipient.email,
-                    recipient_tokens_override={
-                        "first_name": getattr(extra_recipient, "first_name", None),
-                        "last_name": getattr(extra_recipient, "last_name", None),
-                    },
-                )
-            )
-
-        return dispatches
-
     @staticmethod
     def _build_email_dispatch(
         config_dispatch: EmailConfigurationDispatch,
-        recipient,
+        addressed_recipient: AddressedRecipient,
         recipient_tokens,
         dynamic_tokens,
         cache: dict,
-        email: str,
-        recipient_tokens_override: dict,
     ):
-        resolved_recipient_tokens = resolve_recipient_tokens(
+        recipient = addressed_recipient.recipient
+        resolved_tokens = resolve_recipient_tokens(
             tokens_to_resolve=recipient_tokens, recipient=recipient, cache=cache
+        ) | resolve_dynamic_tokens(
+            tokens_to_resolve=dynamic_tokens, recipient=recipient, cache=cache
         )
-        for token, value in recipient_tokens_override.items():
-            if value is not None and token in resolved_recipient_tokens:
-                resolved_recipient_tokens[token] = value
+        for token, value in addressed_recipient.token_overrides.items():
+            if token in resolved_tokens:
+                resolved_tokens[token] = value
 
-        result = EmailDispatch(
+        return EmailDispatch(
             email_configuration_dispatch=config_dispatch,
-            recipient=email,
-            recipient_tokens=resolved_recipient_tokens
-            | resolve_dynamic_tokens(
-                dynamic_tokens,
-                recipient,
-                cache,
-            ),
+            recipient=addressed_recipient.email,
+            recipient_tokens=resolved_tokens,
             additional_tokens=config_dispatch.additional_tokens,
             created_at=config_dispatch.scheduled_time,
         )
-        return result
 
     @staticmethod
     def _get_email_configuration_dispatches_that_should_be_sent():

@@ -42,6 +42,12 @@ export interface MemberExtraEmailCreateRequestRequest {
    * @memberof MemberExtraEmailCreateRequestRequest
    */
   lastName: string;
+  /**
+   *
+   * @type {boolean}
+   * @memberof MemberExtraEmailCreateRequestRequest
+   */
+  receivesDirectMails: boolean;
 }
 
 /**
@@ -55,6 +61,11 @@ export function instanceOfMemberExtraEmailCreateRequestRequest(
     return false;
   if (!("firstName" in value) || value["firstName"] === undefined) return false;
   if (!("lastName" in value) || value["lastName"] === undefined) return false;
+  if (
+    !("receivesDirectMails" in value) ||
+    value["receivesDirectMails"] === undefined
+  )
+    return false;
   return true;
 }
 
@@ -76,6 +87,7 @@ export function MemberExtraEmailCreateRequestRequestFromJSONTyped(
     extraEmail: json["extra_email"],
     firstName: json["first_name"],
     lastName: json["last_name"],
+    receivesDirectMails: json["receives_direct_mails"],
   };
 }
 
@@ -98,5 +110,6 @@ export function MemberExtraEmailCreateRequestRequestToJSONTyped(
     extra_email: value["extraEmail"],
     first_name: value["firstName"],
     last_name: value["lastName"],
+    receives_direct_mails: value["receivesDirectMails"],
   };
 }

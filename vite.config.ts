@@ -42,6 +42,10 @@ export default defineConfig(() => {
             "contract_updates/contract_updates_entry.tsx",
           ),
           dashboard: resolve(INPUT_DIR, "dashboard/dashboard_entry.tsx"),
+          subscription_management: resolve(
+            INPUT_DIR,
+            "subscription_management/subscription_management_entry.tsx",
+          ),
           waiting_list: resolve(
             INPUT_DIR,
             "waiting_list/waiting_list_entry.tsx",

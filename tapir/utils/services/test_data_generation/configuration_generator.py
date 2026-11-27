@@ -114,6 +114,10 @@ class ConfigurationGenerator:
             key=ParameterKeys.PAYMENT_CREDITOR_IDENTIFIER
         ).update(value="TEST-IDENTIFIER")
 
+        TapirParameter.objects.filter(
+            key=ParameterKeys.ENABLE_EXTRA_MAIL_ADDRESSES
+        ).update(value=True)
+
         if organization == Organization.VEREIN:
             AssociationMembershipType.objects.create(
                 name="Test membership type 1",

@@ -150,6 +150,7 @@ models/MailingListCreateRequest.ts
 models/MailingListHeldMessage.ts
 models/MailingListModerateHeldMessageRequestRequest.ts
 models/MailingListRecipient.ts
+models/MailingListRecipientExtraEmailMember.ts
 models/MailingListSubscribeExternalRecipientRequestRequest.ts
 models/MailingListSubscribeInternalRecipientRequestRequest.ts
 models/MandateReferencePreviewResponse.ts
@@ -172,6 +173,7 @@ models/MemberEmailRequestRequest.ts
 models/MemberEmailResponse.ts
 models/MemberExtraEmail.ts
 models/MemberExtraEmailCreateRequestRequest.ts
+models/MemberExtraEmailSendManagementLinkRequestRequest.ts
 models/MemberExtraMailData.ts
 models/MemberJokerInformation.ts
 models/MemberMailCategoryData.ts
@@ -333,6 +335,13 @@ models/SubscriptionChange.ts
 models/SubscriptionChangeLogEntry.ts
 models/SubscriptionDateChangeRequestRequest.ts
 models/SubscriptionDetails.ts
+models/SubscriptionManagementCategoriesRequestRequest.ts
+models/SubscriptionManagementCategory.ts
+models/SubscriptionManagementData.ts
+models/SubscriptionManagementExternalPart.ts
+models/SubscriptionManagementExternalRequestRequest.ts
+models/SubscriptionManagementExtraPart.ts
+models/SubscriptionManagementMailingListRequestRequest.ts
 models/SubscriptionPrerequisitesInputRequest.ts
 models/SubscriptionPriceOverrideChangeRequestRequest.ts
 models/SubscriptionTrialChangeRequestRequest.ts

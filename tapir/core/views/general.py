@@ -6,8 +6,6 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serial
 from rest_framework import status, serializers
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from tapir.mail.models import MailCategory, InternalRecipientCategoryRegistration
-from tapir.mail.registries import get_mail_segments
 from tapir.mail.serializers import MailCategorySerializer
 
 from tapir.configuration.parameter import get_parameter_value
@@ -15,6 +13,9 @@ from tapir.core.serializers import (
     MemberMailCategoryRequestSerializer,
 )
 from tapir.core.services.internal_recipient_manager import InternalRecipientManager
+from tapir.core.services.mail_category_selection_validator import (
+    MailCategorySelectionValidator,
+)
 from tapir.wirgarten.models import (
     Member,
 )
@@ -57,14 +58,9 @@ class MemberMailCategoryDataApiView(APIView):
         check_permission_or_self(pk=member_id, request=request)
 
         member = get_object_or_404(Member, id=member_id)
-        mail_categories = MailCategory.objects.select_related("static_segment")
-
-        mail_categories = [
-            category
-            for category in mail_categories
-            if category.dynamic_segment_name != ""
-            and member in get_mail_segments()[category.dynamic_segment_name]()
-        ]
+        mail_categories = InternalRecipientManager.get_categories_for_member(
+            member=member
+        )
 
         categories_registered_to = {
             category.id: InternalRecipientManager.is_member_registered_to_mail_category(
@@ -75,7 +71,9 @@ class MemberMailCategoryDataApiView(APIView):
 
         return Response(
             {
-                "categories": MailCategorySerializer(mail_categories, many=True).data,
+                "categories": MailCategorySerializer(
+                    mail_categories, many=True, context={"cache": {}}
+                ).data,
                 "categories_registered_to": categories_registered_to,
             }
         )
@@ -93,25 +91,16 @@ class MemberMailCategoryDataApiView(APIView):
         check_permission_or_self(pk=member_id, request=request)
         member = get_object_or_404(Member, id=member_id)
 
-        InternalRecipientCategoryRegistration.objects.filter(
-            internal_recipient_id=member.id,
-        ).delete()
-
-        for category_id, enabled in serializer.validated_data[
-            "categories_registered_to"
-        ].items():
-            mail_category = get_object_or_404(MailCategory, id=category_id)
-            if enabled:
-                InternalRecipientCategoryRegistration.objects.create(
-                    mail_category=mail_category,
-                    internal_recipient_id=member.id,
-                    is_registered=True,
-                )
-            else:
-                InternalRecipientCategoryRegistration.objects.create(
-                    mail_category=mail_category,
-                    internal_recipient_id=member.id,
-                    is_registered=False,
-                )
+        InternalRecipientManager.update_member_registrations(
+            member=member,
+            is_registered_by_category=MailCategorySelectionValidator.resolve_submitted_registrations(
+                available_categories=InternalRecipientManager.get_categories_for_member(
+                    member=member
+                ),
+                categories_registered_to=serializer.validated_data[
+                    "categories_registered_to"
+                ],
+            ),
+        )
 
         return Response(True)

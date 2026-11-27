@@ -12,6 +12,12 @@
  * Do not edit the class manually.
  */
 
+import type { MailingListRecipientExtraEmailMember } from "./MailingListRecipientExtraEmailMember";
+import {
+  MailingListRecipientExtraEmailMemberFromJSON,
+  MailingListRecipientExtraEmailMemberToJSON,
+} from "./MailingListRecipientExtraEmailMember";
+
 /**
  *
  * @export
@@ -36,6 +42,12 @@ export interface MailingListRecipient {
    * @memberof MailingListRecipient
    */
   linkToMemberProfile: string | null;
+  /**
+   *
+   * @type {MailingListRecipientExtraEmailMember}
+   * @memberof MailingListRecipient
+   */
+  extraEmailMember: MailingListRecipientExtraEmailMember | null;
 }
 
 /**
@@ -51,6 +63,8 @@ export function instanceOfMailingListRecipient(
     !("linkToMemberProfile" in value) ||
     value["linkToMemberProfile"] === undefined
   )
+    return false;
+  if (!("extraEmailMember" in value) || value["extraEmailMember"] === undefined)
     return false;
   return true;
 }
@@ -70,6 +84,9 @@ export function MailingListRecipientFromJSONTyped(
     address: json["address"],
     userConfirmed: json["user_confirmed"],
     linkToMemberProfile: json["link_to_member_profile"],
+    extraEmailMember: MailingListRecipientExtraEmailMemberFromJSON(
+      json["extra_email_member"],
+    ),
   };
 }
 
@@ -89,5 +106,8 @@ export function MailingListRecipientToJSONTyped(
     address: value["address"],
     user_confirmed: value["userConfirmed"],
     link_to_member_profile: value["linkToMemberProfile"],
+    extra_email_member: MailingListRecipientExtraEmailMemberToJSON(
+      value["extraEmailMember"],
+    ),
   };
 }

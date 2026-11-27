@@ -35,6 +35,9 @@ from tapir.subscriptions.config import (
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.constants import WEEKLY
 from tapir.wirgarten.mail_events import Events
+from tapir.core.services.member_extra_email_address_releaser import (
+    MemberExtraEmailAddressReleaser,
+)
 from tapir.wirgarten.models import (
     Member,
     Subscription,
@@ -150,6 +153,31 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         )
         self.assertEqual(2, mock_on_subscription_updated.call_count)
         mock_send_verification_email.assert_called_once_with(user=member, actor=member)
+
+    @patch.object(MemberExtraEmailAddressReleaser, "release_address", autospec=True)
+    @patch.object(EmailVerificationService, "send_verification_email", autospec=True)
+    @patch.object(OnboardingTrigger, "on_subscription_updated", autospec=True)
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_orderIsValid_releasesTheAddressFromExtraEmails(
+        self,
+        _: Mock,
+        __: Mock,
+        ___: Mock,
+        mock_release_address: Mock,
+    ):
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(
+                self.build_valid_post_data_for_an_order_without_waiting_list()
+            ),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        self.assert_order_confirmed(response.json())
+        mock_release_address.assert_called_once_with(
+            address="john@doe.de", actor=Member.objects.get()
+        )
 
     def test_post_requestDataIsInvalid_returns400(self):
         data = self.build_valid_post_data_for_an_order_without_waiting_list()

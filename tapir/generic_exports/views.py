@@ -12,6 +12,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from weasyprint.urls import FatalURLFetchingError
 
+from tapir.accounts.services.email_normaliser import EmailNormaliser
 from tapir.generic_exports.exceptions import TemplateAlreadyExistsException
 from tapir.generic_exports.models import CsvExport, PdfExport
 from tapir.generic_exports.permissions import HasCoopManagePermission
@@ -33,6 +34,19 @@ from tapir.generic_exports.services.pdf_export_template_manager import (
 )
 from tapir.subscriptions.serializers import OrderConfirmationResponseSerializer
 from tapir.wirgarten.constants import Permission
+
+
+def normalised_email_recipients(
+    serializer: CsvExportModelSerializer | PdfExportModelSerializer,
+) -> dict:
+    if "email_recipients" not in serializer.validated_data:
+        return {}
+    return {
+        "email_recipients": [
+            EmailNormaliser.normalise(address)
+            for address in serializer.validated_data["email_recipients"]
+        ]
+    }
 
 
 class CsvExportEditorView(PermissionRequiredMixin, TemplateView):
@@ -83,6 +97,12 @@ class CsvExportViewSet(viewsets.ModelViewSet):
     serializer_class = CsvExportModelSerializer
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
 
+    def perform_create(self, serializer: CsvExportModelSerializer):
+        serializer.save(**normalised_email_recipients(serializer))
+
+    def perform_update(self, serializer: CsvExportModelSerializer):
+        serializer.save(**normalised_email_recipients(serializer))
+
 
 class BuildCsvExportView(APIView):
     @extend_schema(
@@ -127,6 +147,12 @@ class PdfExportViewSet(viewsets.ModelViewSet):
     queryset = PdfExport.objects.all().order_by("name")
     serializer_class = PdfExportModelSerializer
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    def perform_create(self, serializer: PdfExportModelSerializer):
+        serializer.save(**normalised_email_recipients(serializer))
+
+    def perform_update(self, serializer: PdfExportModelSerializer):
+        serializer.save(**normalised_email_recipients(serializer))
 
 
 class BuildPdfExportView(APIView):

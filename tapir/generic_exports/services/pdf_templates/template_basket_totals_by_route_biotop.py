@@ -1,5 +1,6 @@
 import datetime
 
+from tapir.accounts.services.email_normaliser import EmailNormaliser
 from tapir.configuration.parameter import get_parameter_value
 from tapir.generic_exports.exceptions import TemplateAlreadyExistsException
 from tapir.generic_exports.models import PdfExport, AutomatedExportCycle
@@ -29,7 +30,9 @@ class TemplateBasketTotalsByRouteBiotop:
             )
 
         admin_email = get_parameter_value(ParameterKeys.SITE_ADMIN_EMAIL, cache={})
-        email_recipients = [admin_email] if admin_email else []
+        email_recipients = (
+            [EmailNormaliser.normalise(admin_email)] if admin_email else []
+        )
 
         with open(
             "tapir/generic_exports/services/pdf_templates/basket_totals_by_route_biotop.html",

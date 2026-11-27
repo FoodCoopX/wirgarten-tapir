@@ -1,4 +1,5 @@
-from django.urls import include, path, re_path
+from django.urls import include, path, re_path, reverse_lazy
+from django.views.generic import RedirectView
 from rest_framework import routers
 
 from tapir.mail.views.email_templates import (
@@ -30,7 +31,6 @@ from tapir.mail.views.mail_categories import MailCategoryViewSet
 from tapir.mail.views.external import (
     ConfirmRegistrationToMailCategoryView,
     ConfirmationMailSentView,
-    ExternalRecipientManagementView,
     RegisterToMailCategoryView,
 )
 from tapir.mail.views.ui import MailUiView
@@ -76,9 +76,14 @@ urlpatterns = [
         ConfirmRegistrationToMailCategoryView.as_view(),
         name="user_confirms_registration",
     ),
+    # Used to be a permanent management page reached through ExternalRecipient.secret_key.
+    # Management now only goes through temporary signed links, so links in old mails
+    # lead to the page where a new link can be requested.
     path(
         "external/manage/<uuid:recipient_secret>",
-        ExternalRecipientManagementView.as_view(),
+        RedirectView.as_view(
+            url=reverse_lazy("core:subscription_management_link_request")
+        ),
         name="external_recipient_manager",
     ),
     path("", MailUiView.as_view(), name="mail_ui"),

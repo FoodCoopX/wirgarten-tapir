@@ -22,11 +22,16 @@ import type {
   MailingListSubscribeInternalRecipientRequestRequest,
   MemberDataDisclosure,
   MemberExtraEmailCreateRequestRequest,
+  MemberExtraEmailSendManagementLinkRequestRequest,
   MemberExtraMailData,
   MemberMailCategoryData,
   MemberMailCategoryRequestRequest,
   MemberMailingListDataResponse,
   PatchedMemberExtraEmailUpdateRequestRequest,
+  SubscriptionManagementCategoriesRequestRequest,
+  SubscriptionManagementData,
+  SubscriptionManagementExternalRequestRequest,
+  SubscriptionManagementMailingListRequestRequest,
 } from "../models/index";
 import {
   MailingListAdminFromJSON,
@@ -38,11 +43,16 @@ import {
   MailingListSubscribeInternalRecipientRequestRequestToJSON,
   MemberDataDisclosureFromJSON,
   MemberExtraEmailCreateRequestRequestToJSON,
+  MemberExtraEmailSendManagementLinkRequestRequestToJSON,
   MemberExtraMailDataFromJSON,
   MemberMailCategoryDataFromJSON,
   MemberMailCategoryRequestRequestToJSON,
   MemberMailingListDataResponseFromJSON,
   PatchedMemberExtraEmailUpdateRequestRequestToJSON,
+  SubscriptionManagementCategoriesRequestRequestToJSON,
+  SubscriptionManagementDataFromJSON,
+  SubscriptionManagementExternalRequestRequestToJSON,
+  SubscriptionManagementMailingListRequestRequestToJSON,
 } from "../models/index";
 import * as runtime from "../runtime";
 
@@ -90,6 +100,10 @@ export interface CoreApiMemberDataDisclosureRetrieveRequest {
   memberId?: string;
 }
 
+export interface CoreApiMemberExtraEmailSendManagementLinkCreateRequest {
+  memberExtraEmailSendManagementLinkRequestRequest: MemberExtraEmailSendManagementLinkRequestRequest;
+}
+
 export interface CoreApiMemberExtraEmailsCreateRequest {
   memberExtraEmailCreateRequestRequest: MemberExtraEmailCreateRequestRequest;
 }
@@ -132,6 +146,42 @@ export interface CoreApiMemberSelfSubscribeCreateRequest {
 
 export interface CoreApiMemberSelfUnsubscribeCreateRequest {
   mailingListSubscribeInternalRecipientRequestRequest: MailingListSubscribeInternalRecipientRequestRequest;
+}
+
+export interface CoreApiSubscriptionManagementDataRetrieveRequest {
+  token: string;
+}
+
+export interface CoreApiSubscriptionManagementExternalCreateRequest {
+  subscriptionManagementExternalRequestRequest: SubscriptionManagementExternalRequestRequest;
+}
+
+export interface CoreApiSubscriptionManagementExternalDestroyRequest {
+  token: string;
+}
+
+export interface CoreApiSubscriptionManagementExtraCategoriesCreateRequest {
+  subscriptionManagementCategoriesRequestRequest: SubscriptionManagementCategoriesRequestRequest;
+}
+
+export interface CoreApiSubscriptionManagementExtraDestroyRequest {
+  token: string;
+}
+
+export interface CoreApiSubscriptionManagementMailingListAcceptInvitationCreateRequest {
+  subscriptionManagementMailingListRequestRequest: SubscriptionManagementMailingListRequestRequest;
+}
+
+export interface CoreApiSubscriptionManagementMailingListRejectInvitationCreateRequest {
+  subscriptionManagementMailingListRequestRequest: SubscriptionManagementMailingListRequestRequest;
+}
+
+export interface CoreApiSubscriptionManagementMailingListSubscribeCreateRequest {
+  subscriptionManagementMailingListRequestRequest: SubscriptionManagementMailingListRequestRequest;
+}
+
+export interface CoreApiSubscriptionManagementMailingListUnsubscribeCreateRequest {
+  subscriptionManagementMailingListRequestRequest: SubscriptionManagementMailingListRequestRequest;
 }
 
 /**
@@ -949,6 +999,76 @@ export class CoreApi extends runtime.BaseAPI {
 
   /**
    */
+  async coreApiMemberExtraEmailSendManagementLinkCreateRaw(
+    requestParameters: CoreApiMemberExtraEmailSendManagementLinkCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<boolean>> {
+    if (
+      requestParameters["memberExtraEmailSendManagementLinkRequestRequest"] ==
+      null
+    ) {
+      throw new runtime.RequiredError(
+        "memberExtraEmailSendManagementLinkRequestRequest",
+        'Required parameter "memberExtraEmailSendManagementLinkRequestRequest" was null or undefined when calling coreApiMemberExtraEmailSendManagementLinkCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/core/api/member_extra_email_send_management_link`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: MemberExtraEmailSendManagementLinkRequestRequestToJSON(
+          requestParameters["memberExtraEmailSendManagementLinkRequestRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    if (this.isJsonMime(response.headers.get("content-type"))) {
+      return new runtime.JSONApiResponse<boolean>(response);
+    } else {
+      return new runtime.TextApiResponse(response) as any;
+    }
+  }
+
+  /**
+   */
+  async coreApiMemberExtraEmailSendManagementLinkCreate(
+    requestParameters: CoreApiMemberExtraEmailSendManagementLinkCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<boolean> {
+    const response =
+      await this.coreApiMemberExtraEmailSendManagementLinkCreateRaw(
+        requestParameters,
+        initOverrides,
+      );
+    return await response.value();
+  }
+
+  /**
+   */
   async coreApiMemberExtraEmailsCreateRaw(
     requestParameters: CoreApiMemberExtraEmailsCreateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
@@ -1656,6 +1776,617 @@ export class CoreApi extends runtime.BaseAPI {
       requestParameters,
       initOverrides,
     );
+    return await response.value();
+  }
+
+  /**
+   */
+  async coreApiSubscriptionManagementDataRetrieveRaw(
+    requestParameters: CoreApiSubscriptionManagementDataRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<SubscriptionManagementData>> {
+    if (requestParameters["token"] == null) {
+      throw new runtime.RequiredError(
+        "token",
+        'Required parameter "token" was null or undefined when calling coreApiSubscriptionManagementDataRetrieve().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    if (requestParameters["token"] != null) {
+      queryParameters["token"] = requestParameters["token"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/core/api/subscription_management/data`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      SubscriptionManagementDataFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async coreApiSubscriptionManagementDataRetrieve(
+    requestParameters: CoreApiSubscriptionManagementDataRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<SubscriptionManagementData> {
+    const response = await this.coreApiSubscriptionManagementDataRetrieveRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async coreApiSubscriptionManagementExternalCreateRaw(
+    requestParameters: CoreApiSubscriptionManagementExternalCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<boolean>> {
+    if (
+      requestParameters["subscriptionManagementExternalRequestRequest"] == null
+    ) {
+      throw new runtime.RequiredError(
+        "subscriptionManagementExternalRequestRequest",
+        'Required parameter "subscriptionManagementExternalRequestRequest" was null or undefined when calling coreApiSubscriptionManagementExternalCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/core/api/subscription_management/external`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: SubscriptionManagementExternalRequestRequestToJSON(
+          requestParameters["subscriptionManagementExternalRequestRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    if (this.isJsonMime(response.headers.get("content-type"))) {
+      return new runtime.JSONApiResponse<boolean>(response);
+    } else {
+      return new runtime.TextApiResponse(response) as any;
+    }
+  }
+
+  /**
+   */
+  async coreApiSubscriptionManagementExternalCreate(
+    requestParameters: CoreApiSubscriptionManagementExternalCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<boolean> {
+    const response = await this.coreApiSubscriptionManagementExternalCreateRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async coreApiSubscriptionManagementExternalDestroyRaw(
+    requestParameters: CoreApiSubscriptionManagementExternalDestroyRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<boolean>> {
+    if (requestParameters["token"] == null) {
+      throw new runtime.RequiredError(
+        "token",
+        'Required parameter "token" was null or undefined when calling coreApiSubscriptionManagementExternalDestroy().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    if (requestParameters["token"] != null) {
+      queryParameters["token"] = requestParameters["token"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/core/api/subscription_management/external`,
+        method: "DELETE",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    if (this.isJsonMime(response.headers.get("content-type"))) {
+      return new runtime.JSONApiResponse<boolean>(response);
+    } else {
+      return new runtime.TextApiResponse(response) as any;
+    }
+  }
+
+  /**
+   */
+  async coreApiSubscriptionManagementExternalDestroy(
+    requestParameters: CoreApiSubscriptionManagementExternalDestroyRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<boolean> {
+    const response = await this.coreApiSubscriptionManagementExternalDestroyRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async coreApiSubscriptionManagementExtraCategoriesCreateRaw(
+    requestParameters: CoreApiSubscriptionManagementExtraCategoriesCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<boolean>> {
+    if (
+      requestParameters["subscriptionManagementCategoriesRequestRequest"] ==
+      null
+    ) {
+      throw new runtime.RequiredError(
+        "subscriptionManagementCategoriesRequestRequest",
+        'Required parameter "subscriptionManagementCategoriesRequestRequest" was null or undefined when calling coreApiSubscriptionManagementExtraCategoriesCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/core/api/subscription_management/extra_categories`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: SubscriptionManagementCategoriesRequestRequestToJSON(
+          requestParameters["subscriptionManagementCategoriesRequestRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    if (this.isJsonMime(response.headers.get("content-type"))) {
+      return new runtime.JSONApiResponse<boolean>(response);
+    } else {
+      return new runtime.TextApiResponse(response) as any;
+    }
+  }
+
+  /**
+   */
+  async coreApiSubscriptionManagementExtraCategoriesCreate(
+    requestParameters: CoreApiSubscriptionManagementExtraCategoriesCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<boolean> {
+    const response =
+      await this.coreApiSubscriptionManagementExtraCategoriesCreateRaw(
+        requestParameters,
+        initOverrides,
+      );
+    return await response.value();
+  }
+
+  /**
+   */
+  async coreApiSubscriptionManagementExtraDestroyRaw(
+    requestParameters: CoreApiSubscriptionManagementExtraDestroyRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<boolean>> {
+    if (requestParameters["token"] == null) {
+      throw new runtime.RequiredError(
+        "token",
+        'Required parameter "token" was null or undefined when calling coreApiSubscriptionManagementExtraDestroy().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    if (requestParameters["token"] != null) {
+      queryParameters["token"] = requestParameters["token"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/core/api/subscription_management/extra`,
+        method: "DELETE",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    if (this.isJsonMime(response.headers.get("content-type"))) {
+      return new runtime.JSONApiResponse<boolean>(response);
+    } else {
+      return new runtime.TextApiResponse(response) as any;
+    }
+  }
+
+  /**
+   */
+  async coreApiSubscriptionManagementExtraDestroy(
+    requestParameters: CoreApiSubscriptionManagementExtraDestroyRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<boolean> {
+    const response = await this.coreApiSubscriptionManagementExtraDestroyRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async coreApiSubscriptionManagementMailingListAcceptInvitationCreateRaw(
+    requestParameters: CoreApiSubscriptionManagementMailingListAcceptInvitationCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<boolean>> {
+    if (
+      requestParameters["subscriptionManagementMailingListRequestRequest"] ==
+      null
+    ) {
+      throw new runtime.RequiredError(
+        "subscriptionManagementMailingListRequestRequest",
+        'Required parameter "subscriptionManagementMailingListRequestRequest" was null or undefined when calling coreApiSubscriptionManagementMailingListAcceptInvitationCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/core/api/subscription_management/mailing_list_accept_invitation`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: SubscriptionManagementMailingListRequestRequestToJSON(
+          requestParameters["subscriptionManagementMailingListRequestRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    if (this.isJsonMime(response.headers.get("content-type"))) {
+      return new runtime.JSONApiResponse<boolean>(response);
+    } else {
+      return new runtime.TextApiResponse(response) as any;
+    }
+  }
+
+  /**
+   */
+  async coreApiSubscriptionManagementMailingListAcceptInvitationCreate(
+    requestParameters: CoreApiSubscriptionManagementMailingListAcceptInvitationCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<boolean> {
+    const response =
+      await this.coreApiSubscriptionManagementMailingListAcceptInvitationCreateRaw(
+        requestParameters,
+        initOverrides,
+      );
+    return await response.value();
+  }
+
+  /**
+   */
+  async coreApiSubscriptionManagementMailingListRejectInvitationCreateRaw(
+    requestParameters: CoreApiSubscriptionManagementMailingListRejectInvitationCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<boolean>> {
+    if (
+      requestParameters["subscriptionManagementMailingListRequestRequest"] ==
+      null
+    ) {
+      throw new runtime.RequiredError(
+        "subscriptionManagementMailingListRequestRequest",
+        'Required parameter "subscriptionManagementMailingListRequestRequest" was null or undefined when calling coreApiSubscriptionManagementMailingListRejectInvitationCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/core/api/subscription_management/mailing_list_reject_invitation`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: SubscriptionManagementMailingListRequestRequestToJSON(
+          requestParameters["subscriptionManagementMailingListRequestRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    if (this.isJsonMime(response.headers.get("content-type"))) {
+      return new runtime.JSONApiResponse<boolean>(response);
+    } else {
+      return new runtime.TextApiResponse(response) as any;
+    }
+  }
+
+  /**
+   */
+  async coreApiSubscriptionManagementMailingListRejectInvitationCreate(
+    requestParameters: CoreApiSubscriptionManagementMailingListRejectInvitationCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<boolean> {
+    const response =
+      await this.coreApiSubscriptionManagementMailingListRejectInvitationCreateRaw(
+        requestParameters,
+        initOverrides,
+      );
+    return await response.value();
+  }
+
+  /**
+   */
+  async coreApiSubscriptionManagementMailingListSubscribeCreateRaw(
+    requestParameters: CoreApiSubscriptionManagementMailingListSubscribeCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<boolean>> {
+    if (
+      requestParameters["subscriptionManagementMailingListRequestRequest"] ==
+      null
+    ) {
+      throw new runtime.RequiredError(
+        "subscriptionManagementMailingListRequestRequest",
+        'Required parameter "subscriptionManagementMailingListRequestRequest" was null or undefined when calling coreApiSubscriptionManagementMailingListSubscribeCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/core/api/subscription_management/mailing_list_subscribe`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: SubscriptionManagementMailingListRequestRequestToJSON(
+          requestParameters["subscriptionManagementMailingListRequestRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    if (this.isJsonMime(response.headers.get("content-type"))) {
+      return new runtime.JSONApiResponse<boolean>(response);
+    } else {
+      return new runtime.TextApiResponse(response) as any;
+    }
+  }
+
+  /**
+   */
+  async coreApiSubscriptionManagementMailingListSubscribeCreate(
+    requestParameters: CoreApiSubscriptionManagementMailingListSubscribeCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<boolean> {
+    const response =
+      await this.coreApiSubscriptionManagementMailingListSubscribeCreateRaw(
+        requestParameters,
+        initOverrides,
+      );
+    return await response.value();
+  }
+
+  /**
+   */
+  async coreApiSubscriptionManagementMailingListUnsubscribeCreateRaw(
+    requestParameters: CoreApiSubscriptionManagementMailingListUnsubscribeCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<boolean>> {
+    if (
+      requestParameters["subscriptionManagementMailingListRequestRequest"] ==
+      null
+    ) {
+      throw new runtime.RequiredError(
+        "subscriptionManagementMailingListRequestRequest",
+        'Required parameter "subscriptionManagementMailingListRequestRequest" was null or undefined when calling coreApiSubscriptionManagementMailingListUnsubscribeCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/core/api/subscription_management/mailing_list_unsubscribe`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: SubscriptionManagementMailingListRequestRequestToJSON(
+          requestParameters["subscriptionManagementMailingListRequestRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    if (this.isJsonMime(response.headers.get("content-type"))) {
+      return new runtime.JSONApiResponse<boolean>(response);
+    } else {
+      return new runtime.TextApiResponse(response) as any;
+    }
+  }
+
+  /**
+   */
+  async coreApiSubscriptionManagementMailingListUnsubscribeCreate(
+    requestParameters: CoreApiSubscriptionManagementMailingListUnsubscribeCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<boolean> {
+    const response =
+      await this.coreApiSubscriptionManagementMailingListUnsubscribeCreateRaw(
+        requestParameters,
+        initOverrides,
+      );
     return await response.value();
   }
 }

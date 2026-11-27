@@ -10,9 +10,8 @@ from tapir.accounts.services.email_verification_service import (
     EmailVerificationService,
 )
 from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
-from tapir.generic_exports.services.member_segment_provider import (
-    MemberSegmentProvider,
-)
+from tapir.core.services.active_member_provider import ActiveMemberProvider
+from tapir.wirgarten.utils import get_now
 from tapir.log.models import TextLogEntry
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.service.email import send_email
@@ -27,8 +26,8 @@ class UnverifiedMembersService:
 
     @classmethod
     def get_active_unverified_members(cls, cache: dict) -> list[Member]:
-        members = MemberSegmentProvider.get_queryset_active_members(
-            cache=cache
+        members = ActiveMemberProvider.get_active_members(
+            reference_datetime=get_now(cache=cache), cache=cache
         ).exclude(keycloak_id__in=cls._get_verified_keycloak_ids())
         return list(members.order_by("member_no", "last_name", "first_name"))
 

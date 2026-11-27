@@ -1,8 +1,4 @@
-{% extends "core/base.html" %}
-{% load django_vite %}
-{% load i18n %}
-{% load wirgarten %}
-{% load static %}
+{% extends "core/public_base.html" %}
 {% block head %}
     <title>
         {% block title %}Zusätzliche E-Mail-Adresse bestätigt{% endblock %}
@@ -12,7 +8,11 @@
     <div class="card mt-4">
         <div class="card-header">Zusätzliche E-Mail-Adresse bestätigt</div>
         <div class="card-body">
-            Die Adresse {{ extra_mail_address }} bekommt ab jetzt alle Mails, die an {{ main_mail_address }} von {{ site_name }} versendet werden.
+            <p>
+                Die Adresse {{ extra_mail_address }} bekommt ab jetzt alle Mails, die an {{ main_mail_address }} von {{ site_name }} versendet werden.
+            </p>
+            <a class="btn btn-primary"
+               href="{% url 'core:subscription_management_link_request' %}">Abos verwalten</a>
         </div>
     </div>
 {% endblock content %}

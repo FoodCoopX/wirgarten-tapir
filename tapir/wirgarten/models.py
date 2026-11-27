@@ -23,13 +23,11 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 from tapir.accounts.models import TapirUser
 from tapir.accounts.services.email_normaliser import EmailNormaliser
-from tapir.configuration.parameter import get_parameter_value
 from tapir.core.models import TapirModel
 from tapir.log.models import LogEntry, UpdateModelLogEntry
 from tapir.subscriptions.config import NOTICE_PERIOD_UNIT_OPTIONS
 from tapir.utils.models import CountryField
 from tapir.wirgarten.constants import NO_DELIVERY, DeliveryCycle, OPTIONS_WEEKDAYS
-from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import format_currency, format_date, get_today
 
 PICKUP_LOCATION_START_DATE_HELP_TEXT = (
@@ -468,14 +466,6 @@ class Member(TapirUser):
 
     def __str__(self):
         return f"[{self.member_no or '---'}] {self.first_name} {self.last_name} ({self.email})"
-
-    def get_extra_recipients(self, cache: dict):
-        if not get_parameter_value(
-            ParameterKeys.ENABLE_EXTRA_MAIL_ADDRESSES, cache=cache
-        ):
-            return []
-
-        return list(self.memberextraemail_set.filter(confirmed_on__isnull=False))
 
 
 class MemberPickupLocation(TapirModel):
@@ -1152,6 +1142,11 @@ class MemberExtraEmail(TapirModel):
                 fields=["member", "email"],
                 name="unique_extra_email",
             ),
+            UniqueConstraint(
+                fields=["email"],
+                condition=Q(confirmed_on__isnull=False),
+                name="unique_confirmed_extra_email",
+            ),
         ]
 
     member = models.ForeignKey(Member, on_delete=models.CASCADE)
@@ -1160,9 +1155,14 @@ class MemberExtraEmail(TapirModel):
     last_name = models.CharField(max_length=100)
     confirmed_on = models.DateTimeField(null=True)
     secret = models.UUIDField(default=uuid.uuid4)
+    receives_direct_mails = models.BooleanField(default=True)
 
     def __str__(self):
         return f"{self.member} - Extra-Mail:{self.email}"
+
+    @property
+    def is_confirmed(self) -> bool:
+        return self.confirmed_on is not None
 
 
 class MemberExtraEmailCreatedLogEntry(LogEntry):
@@ -1193,9 +1193,39 @@ class MemberExtraEmailDeletedLogEntry(LogEntry):
 
     email = models.EmailField(max_length=1024)
 
-    def populate_email(self, email: str, actor: TapirUser, user: Member):
+    def populate_email(self, email: str, actor: TapirUser | None, user: Member):
         self.populate(actor=actor, user=user)
         self.email = email
+
+        return self
+
+
+class MemberExtraEmailSubscriptionsChangedLogEntry(LogEntry):
+    template_name = (
+        "wirgarten/log/member_extra_email_subscriptions_changed_log_entry.html"
+    )
+
+    email = models.EmailField(max_length=1024)
+    changes = models.JSONField()
+
+    def populate_changes(self, email: str, changes: list[str], user: Member):
+        self.populate(actor=None, user=user)
+        self.email = email
+        self.changes = changes
+
+        return self
+
+
+class MemberUnsubscribedFromMailingListsLogEntry(LogEntry):
+    template_name = (
+        "wirgarten/log/member_unsubscribed_from_mailing_lists_log_entry.html"
+    )
+
+    removals = models.JSONField()
+
+    def populate_removals(self, removals: list[str], user: Member):
+        self.populate(actor=None, user=user)
+        self.removals = removals
 
         return self
 

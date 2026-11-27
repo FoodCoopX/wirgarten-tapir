@@ -1,5 +1,4 @@
 from django.conf import settings
-from django.contrib import messages
 from django.core.cache import cache
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect
@@ -7,8 +6,9 @@ from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.generic import FormView, TemplateView
+from tapir.accounts.services.email_normaliser import EmailNormaliser
 from tapir.mail.config import TransactionalTriggerKeys
-from tapir.mail.forms import RegisterToMailCategoryForm, ExternalRecipientManagementForm
+from tapir.mail.forms import RegisterToMailCategoryForm
 from tapir.mail.models import (
     MailCategory,
     ExternalRecipient,
@@ -57,7 +57,7 @@ class RegisterToMailCategoryView(FormView):
 
     def form_valid(self, form):
         response = super().form_valid(form)
-        email_address = form.cleaned_data["email"]
+        email_address = EmailNormaliser.normalise(form.cleaned_data["email"])
         first_name = form.cleaned_data["first_name"]
 
         # Both cases end on the same page as a successful registration, so that the
@@ -152,10 +152,7 @@ class ConfirmRegistrationToMailCategoryView(TemplateView):
                 token_data={
                     "category_name": external_recipient_confirmation.mail_category.name,
                     "management_link": settings.SITE_URL
-                    + reverse(
-                        "external_recipient_manager",
-                        kwargs={"recipient_secret": external_recipient.secret_key},
-                    ),
+                    + reverse("core:subscription_management_link_request"),
                 },
                 recipient_outside_of_base_queryset=TransactionalTriggerData.RecipientOutsideOfBaseQueryset(
                     email=external_recipient.email,
@@ -171,70 +168,3 @@ class ConfirmRegistrationToMailCategoryView(TemplateView):
             self.external_recipient_confirmation.mail_category.name
         )
         return context_data
-
-
-class ExternalRecipientManagementView(FormView):
-    form_class = ExternalRecipientManagementForm
-    template_name = "tapir_mail/management.html"
-
-    def __init__(self):
-        super().__init__()
-        self.external_recipient = None
-
-    def get_external_recipient(self):
-        if self.external_recipient is None:
-            self.external_recipient = ExternalRecipient.objects.get(
-                secret_key=self.kwargs.get("recipient_secret")
-            )
-
-        return self.external_recipient
-
-    def get_form_kwargs(self):
-        form_kwargs = super().get_form_kwargs()
-        form_kwargs.update({"external_recipient": self.get_external_recipient()})
-        return form_kwargs
-
-    def get_context_data(self, **kwargs):
-        context_data = super().get_context_data(**kwargs)
-        context_data["first_name"] = self.get_external_recipient().first_name
-        return context_data
-
-    def form_valid(self, form):
-        messages.success(self.request, "Änderungen gespeichert")
-
-        external_recipient = self.get_external_recipient()
-        external_recipient.first_name = form.cleaned_data["first_name"]
-        external_recipient.save()
-
-        at_least_one_enabled = False
-        for mail_category in MailCategory.objects.all():
-            enabled = form.cleaned_data.get(
-                ExternalRecipientManagementForm.build_field_key_for_category(
-                    mail_category
-                ),
-                False,
-            )
-            if enabled:
-                at_least_one_enabled = True
-                ExternalRecipientManager.register_external_recipient_to_category(
-                    mail_category=mail_category, external_recipient=external_recipient
-                )
-
-            else:
-                ExternalRecipientManager.remove_external_recipient_from_category(
-                    mail_category=mail_category, external_recipient=external_recipient
-                )
-
-        if not at_least_one_enabled:
-            external_recipient.delete()
-
-        return super().form_valid(form)
-
-    def get_success_url(self):
-        recipient_secret = self.kwargs.get("recipient_secret")
-        if ExternalRecipient.objects.filter(secret_key=recipient_secret).exists():
-            return reverse(
-                "external_recipient_manager", args=[self.kwargs.get("recipient_secret")]
-            )
-
-        return settings.SITE_URL

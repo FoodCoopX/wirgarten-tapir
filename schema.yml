@@ -3189,6 +3189,34 @@ paths:
                 type: string
                 format: binary
           description: ''
+  /core/api/member_extra_email_send_management_link:
+    post:
+      operationId: core_api_member_extra_email_send_management_link_create
+      tags:
+      - core
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberExtraEmailSendManagementLinkRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MemberExtraEmailSendManagementLinkRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MemberExtraEmailSendManagementLinkRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: boolean
+          description: ''
   /core/api/member_extra_emails:
     get:
       operationId: core_api_member_extra_emails_retrieve
@@ -3464,6 +3492,239 @@ paths:
             application/json:
               schema:
                 type: string
+          description: ''
+  /core/api/subscription_management/data:
+    get:
+      operationId: core_api_subscription_management_data_retrieve
+      parameters:
+      - in: query
+        name: token
+        schema:
+          type: string
+        required: true
+      tags:
+      - core
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionManagementData'
+          description: ''
+  /core/api/subscription_management/external:
+    post:
+      operationId: core_api_subscription_management_external_create
+      tags:
+      - core
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionManagementExternalRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SubscriptionManagementExternalRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SubscriptionManagementExternalRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: boolean
+          description: ''
+    delete:
+      operationId: core_api_subscription_management_external_destroy
+      parameters:
+      - in: query
+        name: token
+        schema:
+          type: string
+        required: true
+      tags:
+      - core
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: boolean
+          description: ''
+  /core/api/subscription_management/extra:
+    delete:
+      operationId: core_api_subscription_management_extra_destroy
+      parameters:
+      - in: query
+        name: token
+        schema:
+          type: string
+        required: true
+      tags:
+      - core
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: boolean
+          description: ''
+  /core/api/subscription_management/extra_categories:
+    post:
+      operationId: core_api_subscription_management_extra_categories_create
+      tags:
+      - core
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionManagementCategoriesRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SubscriptionManagementCategoriesRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SubscriptionManagementCategoriesRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: boolean
+          description: ''
+  /core/api/subscription_management/mailing_list_accept_invitation:
+    post:
+      operationId: core_api_subscription_management_mailing_list_accept_invitation_create
+      tags:
+      - core
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionManagementMailingListRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SubscriptionManagementMailingListRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SubscriptionManagementMailingListRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: boolean
+          description: ''
+  /core/api/subscription_management/mailing_list_reject_invitation:
+    post:
+      operationId: core_api_subscription_management_mailing_list_reject_invitation_create
+      tags:
+      - core
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionManagementMailingListRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SubscriptionManagementMailingListRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SubscriptionManagementMailingListRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: boolean
+          description: ''
+  /core/api/subscription_management/mailing_list_subscribe:
+    post:
+      operationId: core_api_subscription_management_mailing_list_subscribe_create
+      tags:
+      - core
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionManagementMailingListRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SubscriptionManagementMailingListRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SubscriptionManagementMailingListRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: boolean
+          description: ''
+  /core/api/subscription_management/mailing_list_unsubscribe:
+    post:
+      operationId: core_api_subscription_management_mailing_list_unsubscribe_create
+      tags:
+      - core
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionManagementMailingListRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SubscriptionManagementMailingListRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SubscriptionManagementMailingListRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: boolean
           description: ''
   /deliveries/api/cancel_donation:
     post:
@@ -14000,10 +14261,26 @@ components:
         link_to_member_profile:
           type: string
           nullable: true
+        extra_email_member:
+          allOf:
+          - $ref: '#/components/schemas/MailingListRecipientExtraEmailMember'
+          nullable: true
       required:
       - address
+      - extra_email_member
       - link_to_member_profile
       - user_confirmed
+    MailingListRecipientExtraEmailMember:
+      type: object
+      properties:
+        display_name:
+          type: string
+        email:
+          type: string
+          format: email
+      required:
+      - display_name
+      - email
     MailingListSubscribeExternalRecipientRequestRequest:
       type: object
       properties:
@@ -14535,6 +14812,8 @@ components:
         secret:
           type: string
           format: uuid
+        receives_direct_mails:
+          type: boolean
         member:
           type: string
       required:
@@ -14558,11 +14837,22 @@ components:
         last_name:
           type: string
           minLength: 1
+        receives_direct_mails:
+          type: boolean
       required:
       - extra_email
       - first_name
       - last_name
       - member_id
+      - receives_direct_mails
+    MemberExtraEmailSendManagementLinkRequestRequest:
+      type: object
+      properties:
+        extra_email_id:
+          type: string
+          minLength: 1
+      required:
+      - extra_email_id
     MemberExtraMailData:
       type: object
       properties:
@@ -14616,6 +14906,8 @@ components:
     MemberMailingListDataResponse:
       type: object
       properties:
+        belongs_to_former_member:
+          type: boolean
         available_lists:
           type: array
           items:
@@ -14630,6 +14922,7 @@ components:
             type: string
       required:
       - available_lists
+      - belongs_to_former_member
       - subscribed_lists
       - waiting_for_confirmation_lists
     MemberNeedingBankingData:
@@ -15634,6 +15927,8 @@ components:
         last_name:
           type: string
           minLength: 1
+        receives_direct_mails:
+          type: boolean
     PatchedMemberProfilePersonalDataRequestRequest:
       type: object
       properties:
@@ -18476,6 +18771,121 @@ components:
       - renewal_start_date
       - start_date
       - updated_at
+    SubscriptionManagementCategoriesRequestRequest:
+      type: object
+      properties:
+        token:
+          type: string
+          minLength: 1
+        categories_registered_to:
+          type: object
+          additionalProperties:
+            type: boolean
+      required:
+      - categories_registered_to
+      - token
+    SubscriptionManagementCategory:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        name:
+          type: string
+          maxLength: 255
+        mode:
+          $ref: '#/components/schemas/ModeEnum'
+      required:
+      - mode
+      - name
+    SubscriptionManagementData:
+      type: object
+      properties:
+        address:
+          type: string
+        extra:
+          allOf:
+          - $ref: '#/components/schemas/SubscriptionManagementExtraPart'
+          nullable: true
+        external:
+          allOf:
+          - $ref: '#/components/schemas/SubscriptionManagementExternalPart'
+          nullable: true
+        mailing_lists:
+          allOf:
+          - $ref: '#/components/schemas/MemberMailingListDataResponse'
+          nullable: true
+      required:
+      - address
+      - external
+      - extra
+      - mailing_lists
+    SubscriptionManagementExternalPart:
+      type: object
+      properties:
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubscriptionManagementCategory'
+        categories_registered_to:
+          type: object
+          additionalProperties:
+            type: boolean
+        first_name:
+          type: string
+      required:
+      - categories
+      - categories_registered_to
+      - first_name
+    SubscriptionManagementExternalRequestRequest:
+      type: object
+      properties:
+        token:
+          type: string
+          minLength: 1
+        categories_registered_to:
+          type: object
+          additionalProperties:
+            type: boolean
+        first_name:
+          type: string
+          minLength: 1
+      required:
+      - categories_registered_to
+      - first_name
+      - token
+    SubscriptionManagementExtraPart:
+      type: object
+      properties:
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubscriptionManagementCategory'
+        categories_registered_to:
+          type: object
+          additionalProperties:
+            type: boolean
+        member_first_name:
+          type: string
+        receives_direct_mails:
+          type: boolean
+      required:
+      - categories
+      - categories_registered_to
+      - member_first_name
+      - receives_direct_mails
+    SubscriptionManagementMailingListRequestRequest:
+      type: object
+      properties:
+        token:
+          type: string
+          minLength: 1
+        list_name:
+          type: string
+          minLength: 1
+      required:
+      - list_name
+      - token
     SubscriptionPrerequisitesInputRequest:
       type: object
       properties:

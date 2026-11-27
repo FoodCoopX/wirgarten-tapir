@@ -3,6 +3,10 @@ import traceback
 
 from django.db.models import QuerySet
 
+from tapir.core.services.member_extra_recipient_provider import (
+    MemberExtraRecipientProvider,
+)
+from tapir.mail.addressed_recipient import AddressedRecipient
 from tapir.mail.models import StaticSegment, MailCategory
 from tapir.mail.registries import get_mail_segments, SegmentQuerysetRegistry
 from tapir.mail.services.mail_category_recipients_resolver import (
@@ -50,13 +54,14 @@ def _apply_top_operator(operator_stack, operand_stack):
 
 
 def resolve_segments(
+    cache: dict,
     dynamic_segment_names_additive=None,
     static_segment_ids_additive=None,
     static_segment_ids_subtractive=None,
     dynamic_segment_names_subtractive=None,
     mail_category_ids_additive=None,
     override_recipients: list = None,
-) -> list:
+) -> list[AddressedRecipient]:
     if dynamic_segment_names_subtractive is None:
         dynamic_segment_names_subtractive = []
     if static_segment_ids_additive is None:
@@ -84,6 +89,7 @@ def resolve_segments(
             static_segment_ids_subtractive=static_segment_ids_subtractive,
             mail_category_ids_additive=mail_category_ids_additive,
             override_recipients=override_recipients,
+            cache=cache,
         )
     except Exception as e:
         LOG.error(
@@ -99,8 +105,9 @@ def __resolve_segments_internal(
     static_segment_ids_additive: list[str],
     static_segment_ids_subtractive: list[str],
     mail_category_ids_additive: list[str],
-    override_recipients: list = None,
-):
+    override_recipients: list | None,
+    cache: dict,
+) -> list[AddressedRecipient]:
     combined = BASE_QUERYSET.none()
 
     segment_registry = get_mail_segments()
@@ -119,10 +126,19 @@ def __resolve_segments_internal(
     ids = combined.values_list("id", flat=True)
     combined = BASE_QUERYSET.filter(id__in=ids).distinct()
 
-    result = list(combined)
+    result = []
+    for member in combined:
+        result.append(AddressedRecipient.at_own_address(member))
+        result.extend(
+            MemberExtraRecipientProvider.get_direct_mail_recipients(
+                member=member, cache=cache
+            )
+        )
 
     add_mail_categories(
-        recipient_list=result, mail_category_ids=mail_category_ids_additive
+        recipient_list=result,
+        mail_category_ids=mail_category_ids_additive,
+        cache=cache,
     )
     add_static_segments(recipient_list=result, segment_ids=static_segment_ids_additive)
 
@@ -133,10 +149,21 @@ def __resolve_segments_internal(
     if override_recipients:
         result = apply_recipient_override(result, override_recipients)
 
-    return result
+    return deduplicate_by_email(result)
 
 
-def remove_static_segments(recipient_list: list, segment_ids: list[str]):
+def deduplicate_by_email(
+    recipient_list: list[AddressedRecipient],
+) -> list[AddressedRecipient]:
+    recipients_by_email = {}
+    for addressed_recipient in recipient_list:
+        recipients_by_email.setdefault(addressed_recipient.email, addressed_recipient)
+    return list(recipients_by_email.values())
+
+
+def remove_static_segments(
+    recipient_list: list[AddressedRecipient], segment_ids: list[str]
+) -> list[AddressedRecipient]:
     email_addresses_to_remove = set()
     for static_segment_subtractive in StaticSegment.objects.filter(id__in=segment_ids):
         email_addresses_to_remove.update(
@@ -144,23 +171,34 @@ def remove_static_segments(recipient_list: list, segment_ids: list[str]):
         )
 
     return [
-        recipient
-        for recipient in recipient_list
-        if recipient.email not in email_addresses_to_remove
+        addressed_recipient
+        for addressed_recipient in recipient_list
+        if addressed_recipient.email not in email_addresses_to_remove
     ]
 
 
-def add_static_segments(recipient_list: list, segment_ids: list[str]):
+def add_static_segments(
+    recipient_list: list[AddressedRecipient], segment_ids: list[str]
+):
     for segment in StaticSegment.objects.filter(id__in=segment_ids):
         LOG.info(f"Adding static segment {segment.name}")
-        recipient_list.extend(segment.recipients.all())
+        recipient_list.extend(
+            AddressedRecipient.at_own_address(recipient)
+            for recipient in segment.recipients.all()
+        )
 
 
-def add_mail_categories(recipient_list: list, mail_category_ids: list[str]):
+def add_mail_categories(
+    recipient_list: list[AddressedRecipient],
+    mail_category_ids: list[str],
+    cache: dict,
+):
     for mail_category_id in mail_category_ids:
         mail_category = MailCategory.objects.get(id=mail_category_id)
         recipient_list.extend(
-            MailCategoryRecipientResolver.resolve_recipients(mail_category)
+            MailCategoryRecipientResolver.resolve_recipients(
+                mail_category=mail_category, cache=cache
+            )
         )
 
 
@@ -186,7 +224,9 @@ def remove_dynamic_segments(
     return queryset
 
 
-def apply_recipient_override(recipients: list, overrides: list[dict]) -> list:
+def apply_recipient_override(
+    recipients: list[AddressedRecipient], overrides: list[dict]
+) -> list[AddressedRecipient]:
     updated_recipients = []
     for override in overrides:
         recipient_outside_of_base_queryset = override.get(
@@ -194,24 +234,21 @@ def apply_recipient_override(recipients: list, overrides: list[dict]) -> list:
         )
         if recipient_outside_of_base_queryset is not None:
             return [
-                TransactionalTriggerData.RecipientOutsideOfBaseQueryset(
-                    **override.get("recipient_outside_of_base_queryset")
+                AddressedRecipient.at_own_address(
+                    TransactionalTriggerData.RecipientOutsideOfBaseQueryset(
+                        **recipient_outside_of_base_queryset
+                    )
                 )
             ]
 
         recipient_id_in_base_queryset = override.get(
             "recipient_id_in_base_queryset", None
         )
-
-        found_recipient = next(
-            (
-                recipient
-                for recipient in recipients
-                if getattr(recipient, "id", None) == recipient_id_in_base_queryset
-            ),
-            None,
+        updated_recipients.extend(
+            addressed_recipient
+            for addressed_recipient in recipients
+            if getattr(addressed_recipient.recipient, "id", None)
+            == recipient_id_in_base_queryset
         )
-        if found_recipient is not None:
-            updated_recipients.append(found_recipient)
 
     return updated_recipients

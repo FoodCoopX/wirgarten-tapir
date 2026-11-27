@@ -1,10 +1,13 @@
-from unittest.mock import Mock
+from unittest.mock import MagicMock, Mock, patch
 
 from django.test import override_settings
 from django.urls import reverse
 from rest_framework import status
 
 from tapir.core.services.mailman.mailing_list_provider import MailingListProvider
+from tapir.core.services.former_member_address_provider import (
+    FormerMemberAddressProvider,
+)
 from tapir.core.tests.mailman_test_helper import MailmanTestHelper, MockMailingListData
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import MemberFactory
@@ -125,3 +128,35 @@ class TestMailingListSubscribeExternalRecipientView(TapirIntegrationTest):
             list_name="list_a@example.com", cache={}
         )
         mailing_list_a.subscribe.assert_not_called()
+
+    @patch.object(
+        FormerMemberAddressProvider,
+        "is_former_member_address",
+        autospec=True,
+        return_value=True,
+    )
+    def test_post_addressBelongsToAFormerMember_returns400(
+        self, mock_is_former_member_address: MagicMock
+    ):
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+        mailing_list = MailmanTestHelper.mock_domain(
+            test=self, mailing_list_datas=[MockMailingListData(name="list")]
+        ).lists[0]
+
+        response = self.client.post(
+            reverse("core:mailing_list_subscribe_external"),
+            data={"list_name": "list@example.com", "address": " Former@Example.com "},
+        )
+
+        self.assertStatusCode(response, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            [
+                "Diese Adresse gehört zu einem ehemaligen Mitglied und kann keiner Mailing-Liste beitreten"
+            ],
+            response.json(),
+        )
+        mailing_list.subscribe.assert_not_called()
+        self.assertEqual(
+            "former@example.com",
+            mock_is_former_member_address.call_args.kwargs["address"],
+        )
