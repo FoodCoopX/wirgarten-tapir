@@ -122,9 +122,10 @@ class PersonalDataForm(FormWithRequestMixin, ModelForm):
 
     def _validate_duplicate_email_keycloak(self):
         try:
-            kc = KeycloakUserManager.get_keycloak_client()
-            keycloak_id = kc.get_user_id(self.cleaned_data["email"])
-            if keycloak_id is not None:
+            keycloak_user = KeycloakUserManager.find_keycloak_user_by_email(
+                self.cleaned_data["email"]
+            )
+            if keycloak_user is not None:
                 raise ValidationError(
                     {
                         "email": _(

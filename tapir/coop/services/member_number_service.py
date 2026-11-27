@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import datetime
+import logging
 
+from django.conf import settings
 from django.db import transaction
 from django.db.models import Max
 
@@ -19,6 +21,8 @@ from tapir.wirgarten.utils import (
     legal_status_is_cooperative,
     legal_status_is_association,
 )
+
+LOG = logging.getLogger(__name__)
 
 
 class MemberNumberService:
@@ -106,4 +110,23 @@ class MemberNumberService:
             member.save()
             log_entry.save()
 
+        if member.keycloak_id and any(
+            entry["tapir"] == "member_no"
+            for entry in settings.KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP
+        ):
+            transaction.on_commit(lambda: _sync_keycloak_member_number(member))
+
         return True
+
+
+def _sync_keycloak_member_number(member: Member) -> None:
+    from keycloak.exceptions import KeycloakError
+
+    from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
+
+    try:
+        KeycloakUserManager.update_keycloak_user_attributes(member)
+    except KeycloakError as error:
+        LOG.warning(
+            "Could not update the Keycloak attributes for %s: %s", member, error
+        )

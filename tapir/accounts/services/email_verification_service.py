@@ -4,6 +4,9 @@ from django.conf import settings
 
 from tapir.accounts.models import KeycloakUser, TapirUser
 from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
+from tapir.accounts.services.keycloak_username_service import (
+    KeycloakUsernameUnavailable,
+)
 from tapir.log.models import TextLogEntry
 
 LOG = logging.getLogger(__name__)
@@ -24,6 +27,12 @@ class EmailVerificationService:
         if settings.KEYCLOAK_SKIP_VERIFICATION_EMAIL:
             print(f"Skipping email verification for {user.email}")
         else:
+            if not user.keycloak_id:
+                raise KeycloakUsernameUnavailable(
+                    "This account has no Keycloak user yet. Assign a member number "
+                    "first; the Keycloak user is created on the next verification/resend "
+                    "attempt."
+                )
             # Deliberately not kc.send_verify_email(): up to Keycloak 23 that endpoint was a
             # shortcut for the execute-actions email with VERIFY_EMAIL, rendered with
             # executeActions.ftl, which our instance themes customize ("Bitte aktiviere dein

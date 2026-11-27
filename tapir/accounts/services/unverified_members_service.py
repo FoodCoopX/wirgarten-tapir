@@ -10,6 +10,9 @@ from tapir.accounts.services.email_verification_service import (
     EmailVerificationService,
 )
 from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
+from tapir.accounts.services.keycloak_username_service import (
+    KeycloakUsernameUnavailable,
+)
 from tapir.generic_exports.services.member_segment_provider import (
     MemberSegmentProvider,
 )
@@ -87,6 +90,9 @@ class UnverifiedMembersService:
                 EmailVerificationService.send_verification_email(
                     user=member, actor=actor
                 )
+            except KeycloakUsernameUnavailable as error:
+                LOG.info(f"Skipping member {member}: {error}")
+                failures.append((member, str(error)))
             except Exception as error:
                 LOG.exception(f"Failed to send verification email to {member}")
                 failures.append((member, str(error)))

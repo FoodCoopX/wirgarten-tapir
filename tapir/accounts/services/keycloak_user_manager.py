@@ -5,7 +5,12 @@ from typing import TYPE_CHECKING
 
 from allauth.socialaccount.models import SocialAccount
 from django.conf import settings
-from keycloak import KeycloakOpenIDConnection, KeycloakAdmin
+from keycloak import KeycloakAdmin
+
+from tapir.accounts.services.keycloak_client_factory import get_runtime_client
+from tapir.accounts.services.keycloak_username_service import (
+    KeycloakUsernameService,
+)
 
 if TYPE_CHECKING:
     from tapir.accounts.models import KeycloakUser
@@ -19,10 +24,12 @@ class KeycloakUserManager:
         initial_password: str | None,
     ):
         if user.keycloak_id:
+            cls.update_keycloak_user_attributes(user)
             return
 
+        username = KeycloakUsernameService.build_username(user)
         data: dict = {
-            "username": user.email,
+            "username": username,
             "email": user.email,
             "firstName": user.first_name,
             "lastName": user.last_name,
@@ -36,9 +43,13 @@ class KeycloakUserManager:
             data["requiredActions"] = ["VERIFY_EMAIL", "UPDATE_PASSWORD"]
 
         if user.is_superuser:
-            data["groups"] = ["superuser"]
+            data["groups"] = [settings.KEYCLOAK_SUPERUSER_GROUP_NAME]
         else:
             data["groups"] = []
+
+        attributes = cls._user_profile_attributes(user)
+        if attributes:
+            data["attributes"] = attributes
 
         keycloak_client = KeycloakUserManager.get_keycloak_client()
         user.keycloak_id = keycloak_client.create_user(data)
@@ -56,17 +67,62 @@ class KeycloakUserManager:
         keycloak_client.update_user(user_id=user.keycloak_id, payload=data)
 
     @classmethod
+    def update_keycloak_user_attributes(cls, user: KeycloakUser):
+        mapping = settings.KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP
+        if not user.keycloak_id or not mapping:
+            return
+
+        attributes = cls._user_profile_attributes(user)
+        keycloak_client = cls.get_keycloak_client()
+        current = keycloak_client.get_user(user.keycloak_id) or {}
+        current_attributes = dict(current.get("attributes") or {})
+        merged = dict(current_attributes)
+        for entry in mapping:
+            attribute_name = entry["keycloak"]
+            if attribute_name in attributes:
+                merged[attribute_name] = attributes[attribute_name]
+            else:
+                merged.pop(attribute_name, None)
+
+        if merged == current_attributes:
+            return
+
+        payload = {
+            key: current[key]
+            for key in (
+                "username",
+                "email",
+                "firstName",
+                "lastName",
+                "enabled",
+                "emailVerified",
+                "requiredActions",
+            )
+            if key in current
+        }
+        payload["attributes"] = merged
+        keycloak_client.update_user(user_id=user.keycloak_id, payload=payload)
+
+    @classmethod
+    def _user_profile_attributes(cls, user: KeycloakUser) -> dict[str, list[str]]:
+        attributes: dict[str, list[str]] = {}
+        for entry in settings.KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP:
+            value = getattr(user, entry["tapir"], None)
+            if value is None or value == "":
+                continue
+            attributes[entry["keycloak"]] = [str(value)]
+        return attributes
+
+    @classmethod
+    def find_keycloak_user_by_email(cls, email: str) -> dict | None:
+        keycloak_client = cls.get_keycloak_client()
+        users = keycloak_client.get_users(query={"email": email, "exact": True})
+        return users[0] if users else None
+
+    @classmethod
     @functools.cache
     def get_keycloak_client(cls) -> KeycloakAdmin:
-        config = settings.KEYCLOAK_ADMIN_CONFIG
-        connection = KeycloakOpenIDConnection(
-            server_url=config["SERVER_URL"],
-            realm_name=config["REALM_NAME"],
-            client_id=config["CLIENT_ID"],
-            client_secret_key=config["CLIENT_SECRET_KEY"],
-            verify=True,
-        )
-        return KeycloakAdmin(connection=connection)
+        return get_runtime_client()
 
     @classmethod
     def get_user_roles(cls, keycloak_id):
@@ -76,8 +132,15 @@ class KeycloakUserManager:
             keycloak_id,
         )
 
+        realm_name = settings.KEYCLOAK_ADMIN_CONFIG["REALM_NAME"]
+        non_tapir_roles = {
+            *settings.KEYCLOAK_NON_TAPIR_ROLES,
+            "offline_access",
+            "uma_authorization",
+            f"default-roles-{realm_name}",
+        }
         return [
             raw_role["name"]
             for raw_role in raw_roles
-            if raw_role["name"] not in settings.KEYCLOAK_NON_TAPIR_ROLES
+            if raw_role["name"] not in non_tapir_roles
         ]

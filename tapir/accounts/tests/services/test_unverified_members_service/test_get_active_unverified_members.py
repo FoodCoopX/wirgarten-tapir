@@ -23,10 +23,18 @@ class TestGetActiveUnverifiedMembers(TapirIntegrationTest):
         mock_get_queryset_active_members.return_value = Member.objects.exclude(
             id=inactive.id
         )
-        self.mock_keycloak_client.get_users.return_value = [
-            {"id": "verified", "emailVerified": True},
-            {"id": "unverified", "emailVerified": False},
-        ]
+        self.mock_keycloak_users["verified"] = {
+            "id": "verified",
+            "username": "verified@example.com",
+            "email": "verified@example.com",
+            "emailVerified": True,
+        }
+        self.mock_keycloak_users["unverified"] = {
+            "id": "unverified",
+            "username": "unverified@example.com",
+            "email": "unverified@example.com",
+            "emailVerified": False,
+        }
 
         cache = {}
 

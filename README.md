@@ -33,8 +33,8 @@ Use docker to quickly get a development server running on your machine. Run the 
 
 ```sh
 make up
-# Create tables, define the configuration parameters, generate test data
-make migrate parameters populate
+# Create tables, define the configuration parameters, create the Keycloak setup and generate test data
+make migrate parameters keycloak-sync populate
 ```
 
 Alternatively, run the reset script: `./scripts/reset_all_containers.sh` (or `make reset`).
@@ -44,10 +44,11 @@ Every repetitive task has a `make` target — run `make help` to see them. They 
 If you prefer typing the commands yourself, look at the [Makefile](Makefile): it is short and
 deliberately readable.
 
-You should now have a local instance accessible at http://localhost:8000/. You can log in as admin with username
-`roberto.cortes@example.com` and password `roberto.cortes`.
+You should now have a local instance accessible at http://localhost:8000/. You can log in as admin with the e-mail
+address `roberto.cortes@example.com` and password `roberto.cortes`.
 
-You can log in as any user using the same pattern: `[name]@example.come` as username and `[name]` as password
+You can log in as any user with their e-mail address and the local password pattern. If
+`KEYCLOAK_USERNAME_SOURCE=customernumber` is enabled, the member number also works as the Keycloak username.
 
 ### Django outside of Docker
 
@@ -63,6 +64,43 @@ to run tests from your IDE. To do that:
 
 If you want a fresh setup, for example after switching branches, the equivalent of `./scripts/reset_all_containers.sh`
 is `./scripts/reset_and_start_local_server.sh`
+
+## Keycloak setup
+
+Tapir delegates login to Keycloak. Keycloak 26.8.2 or newer is required, because the Admin REST API only accepts
+tokens that carry the `kc-admin-api` scope. The repository ships a minimal bootstrap realm
+(`docker/keycloak/import/tapir-realm.json`) with the `tapir-provisioner` client and that default client scope.
+`keycloak-sync` creates the runtime clients, the nine Tapir roles, the `superuser` group and the service-account
+mappings, and assigns the `kc-admin-api` scope to the clients that call the admin API.
+
+`KEYCLOAK_USERNAME_SOURCE` and `KEYCLOAK_USERNAME_FORMAT` control the Keycloak username of newly created users. The
+default is the e-mail address; `customernumber` uses `Member.member_no`, either raw (`17`) or formatted (`BT0017`).
+Existing Keycloak users are not migrated. The Django `TapirUser.username` always stays the e-mail address, so e-mail
+login keeps working.
+
+`KEYCLOAK_USER_PROFILE_MANAGED` is opt-in and replaces the realm user profile with the JSON
+document in `KEYCLOAK_USER_PROFILE_FILE`. Tapir ships no built-in profile: copy
+`examples/keycloak-userprofile.json`, adapt it, and point the variable at the copy.
+`KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP` is a JSON list of `{"keycloak": ..., "tapir": ...}` entries;
+every `keycloak` attribute must exist in that JSON document, because the map does not create
+attributes. `KEYCLOAK_USERNAME_SOURCE=customernumber` does not imply the member-number attribute;
+set the map explicitly. The member number is written on user creation and after a later
+member-number assignment when it is mapped. See
+[docs/admins/keycloak.md](docs/admins/keycloak.md).
+
+For the local Docker stack, check and repair the realm with:
+
+```sh
+make keycloak-check   # read-only, exits 1 on drift
+make keycloak-sync    # creates missing settings
+```
+
+`make keycloak-sync` is idempotent and never deletes roles, groups or clients. The import is read only when Keycloak
+starts with an empty database; after changing it, recreate the container and its volume with
+`docker compose down -v` and `docker compose up -d --wait`.
+
+For connecting Tapir to an existing or external Keycloak server, the environment variables, the required provisioner
+bootstrap and the troubleshooting steps are documented in [docs/admins/keycloak.md](docs/admins/keycloak.md).
 
 ## Contributing & GitHub issues
 

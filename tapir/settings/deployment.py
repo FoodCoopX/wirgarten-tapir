@@ -179,8 +179,17 @@ SERVER_EMAIL = env("SERVER_EMAIL", default="tapir@foodcoopx.de")
 SITE_URL = env("SITE_URL", default="http://localhost:8000")
 
 KEYCLOAK_ADMIN_CONFIG = {
-    "SERVER_URL": env.str("KEYCLOAK_ADMIN_SERVER_URL", default="http://keycloak:8080"),
-    "PUBLIC_URL": env.str("KEYCLOAK_PUBLIC_URL", default="http://localhost:8080"),
+    # Base URL of the Keycloak server as reachable from Tapir (scheme, host and
+    # an optional path prefix such as /auth, but no /realms/<realm>).
+    "SERVER_URL": env.str(
+        "KEYCLOAK_ADMIN_SERVER_URL", default="http://keycloak:8080"
+    ).rstrip("/"),
+    # Browser-facing base URL, used for the password-change redirect and as the
+    # CSP frame-src. This is often the same as SERVER_URL, but may differ behind
+    # a reverse proxy or split DNS.
+    "PUBLIC_URL": env.str(
+        "KEYCLOAK_PUBLIC_URL", default="http://localhost:8080"
+    ).rstrip("/"),
     "CLIENT_ID": env.str("KEYCLOAK_CLIENT_ID", default="tapir-backend"),
     "FRONTEND_CLIENT_ID": env.str(
         "KEYCLOAK_FRONTEND_CLIENT_ID", default="tapir-frontend"
@@ -190,9 +199,90 @@ KEYCLOAK_ADMIN_CONFIG = {
         "KEYCLOAK_ADMIN_CLIENT_SECRET_KEY", default="**********"
     ),
 }
+# The provisioner client is the only Keycloak dependency that must exist before
+# `manage.py keycloak sync` can run. It needs realm-management/realm-admin.
+KEYCLOAK_PROVISIONER_CONFIG = {
+    "CLIENT_ID": env.str("KEYCLOAK_PROVISIONER_CLIENT_ID", default="tapir-provisioner"),
+    "CLIENT_SECRET_KEY": env.str(
+        "KEYCLOAK_PROVISIONER_CLIENT_SECRET_KEY", default="**********"
+    ),
+}
 KEYCLOAK_SKIP_VERIFICATION_EMAIL = env.bool(
     "KEYCLOAK_SKIP_VERIFICATION_EMAIL", default=False
 )
+
+# Keycloak username policy for newly created users. The customernumber is
+# Member.member_no; raw uses "17", formatted uses the Tapir prefix/zero-padding
+# ("BT0017"). Django's TapirUser.username always stays the e-mail address.
+KEYCLOAK_USERNAME_SOURCE = env.str("KEYCLOAK_USERNAME_SOURCE", default="email")
+if KEYCLOAK_USERNAME_SOURCE not in ("email", "customernumber"):
+    raise ImproperlyConfigured(
+        f"Unknown KEYCLOAK_USERNAME_SOURCE '{KEYCLOAK_USERNAME_SOURCE}', "
+        "expected 'email' or 'customernumber'"
+    )
+
+KEYCLOAK_USERNAME_FORMAT = env.str("KEYCLOAK_USERNAME_FORMAT", default="raw")
+if KEYCLOAK_USERNAME_FORMAT not in ("raw", "formatted"):
+    raise ImproperlyConfigured(
+        f"Unknown KEYCLOAK_USERNAME_FORMAT '{KEYCLOAK_USERNAME_FORMAT}', "
+        "expected 'raw' or 'formatted'"
+    )
+
+# Optional overrides for the managed realm settings and the superuser group.
+# With KEYCLOAK_USERNAME_SOURCE=customernumber, both username flags should
+# normally be false.
+KEYCLOAK_REGISTRATION_EMAIL_AS_USERNAME = env.bool(
+    "KEYCLOAK_REGISTRATION_EMAIL_AS_USERNAME", default=True
+)
+KEYCLOAK_EDIT_USERNAME_ALLOWED = env.bool(
+    "KEYCLOAK_EDIT_USERNAME_ALLOWED", default=False
+)
+KEYCLOAK_VERIFY_EMAIL = env.bool("KEYCLOAK_VERIFY_EMAIL", default=True)
+KEYCLOAK_SUPERUSER_GROUP_NAME = env.str(
+    "KEYCLOAK_SUPERUSER_GROUP_NAME", default="superuser"
+)
+
+# Declarative user profile management. This is opt-in because a sync replaces
+# the whole realm profile, including attributes managed by another system.
+KEYCLOAK_USER_PROFILE_MANAGED = env.bool("KEYCLOAK_USER_PROFILE_MANAGED", default=False)
+KEYCLOAK_USER_PROFILE_FILE = env.str("KEYCLOAK_USER_PROFILE_FILE", default="")
+KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP = env.json(
+    "KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP",
+    default=[],
+)
+if not isinstance(KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP, list):
+    raise ImproperlyConfigured(
+        "KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP must be a JSON list of "
+        '{"keycloak": ..., "tapir": ...} objects'
+    )
+_seen_user_profile_attributes = set()
+for _entry in KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP:
+    if (
+        not isinstance(_entry, dict)
+        or set(_entry) != {"keycloak", "tapir"}
+        or not isinstance(_entry["keycloak"], str)
+        or not _entry["keycloak"]
+        or not isinstance(_entry["tapir"], str)
+        or not _entry["tapir"]
+    ):
+        raise ImproperlyConfigured(
+            "KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP entries must be objects with "
+            'non-empty "keycloak" and "tapir" strings'
+        )
+    if _entry["keycloak"] in _seen_user_profile_attributes:
+        raise ImproperlyConfigured(
+            "KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP maps the Keycloak attribute "
+            f"{_entry['keycloak']!r} more than once"
+        )
+    _seen_user_profile_attributes.add(_entry["keycloak"])
+
+_reserved_user_profile_attributes = {"username", "email", "firstName", "lastName"}
+_reserved_overlap = _reserved_user_profile_attributes & _seen_user_profile_attributes
+if _reserved_overlap:
+    raise ImproperlyConfigured(
+        "KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP must not map reserved attributes: "
+        + ", ".join(sorted(_reserved_overlap))
+    )
 
 CSP_FRAME_SRC = ["'self'", KEYCLOAK_ADMIN_CONFIG["PUBLIC_URL"]]
 
@@ -257,7 +347,11 @@ SOCIALACCOUNT_PROVIDERS = {
                 "client_id": KEYCLOAK_ADMIN_CONFIG["CLIENT_ID"],
                 "secret": KEYCLOAK_ADMIN_CONFIG["CLIENT_SECRET_KEY"],
                 "settings": {
-                    "server_url": f"{KEYCLOAK_ADMIN_CONFIG["SERVER_URL"]}/realms/{KEYCLOAK_ADMIN_CONFIG["REALM_NAME"]}/.well-known/openid-configuration",
+                    "server_url": (
+                        f"{KEYCLOAK_ADMIN_CONFIG['SERVER_URL'].rstrip('/')}"
+                        f"/realms/{KEYCLOAK_ADMIN_CONFIG['REALM_NAME']}"
+                        "/.well-known/openid-configuration"
+                    ),
                 },
             }
         ]

@@ -1,6 +1,7 @@
 import datetime
 from unittest.mock import patch, MagicMock
 
+from django.test import override_settings
 from django.utils import timezone
 from tapir.mail.models import StaticSegment, StaticSegmentRecipient, ExternalRecipient
 from tapir.mail.triggers.transactional_trigger import (
@@ -16,6 +17,7 @@ from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
+@override_settings(KEYCLOAK_USERNAME_SOURCE="email")
 class TestMailChangeService(TapirIntegrationTest):
     @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     @patch.object(KeycloakUserManager, "get_keycloak_client")
@@ -35,7 +37,11 @@ class TestMailChangeService(TapirIntegrationTest):
         self.assertEqual("new@example.com", user.email)
 
         mock_client.update_user.assert_called_once_with(
-            user_id="1234", payload={"email": "new@example.com"}
+            user_id="1234",
+            payload={
+                "email": "new@example.com",
+                "username": "new@example.com",
+            },
         )
 
         mock_fire_action.assert_called_once_with(
@@ -64,7 +70,11 @@ class TestMailChangeService(TapirIntegrationTest):
         self.assertEqual("old@example.com", user.email)
 
         mock_client.update_user.assert_called_once_with(
-            user_id="1234", payload={"email": "new@example.com"}
+            user_id="1234",
+            payload={
+                "email": "new@example.com",
+                "username": "new@example.com",
+            },
         )
 
     def test_applyMailChange_default_oldEmailRequestsDeleted(self):

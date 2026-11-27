@@ -27,6 +27,9 @@ from tapir.accounts.services.keycloak_user_delete_service import (
     KeycloakUserDeleteService,
 )
 from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
+from tapir.accounts.services.keycloak_username_service import (
+    KeycloakUsernameService,
+)
 from tapir.accounts.services.mail_change_service import MailChangeService
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.serializers import (
@@ -668,6 +671,20 @@ class MemberEmailApiView(APIView):
                 ).data
             )
 
+        if not KeycloakUsernameService.can_create_keycloak_user(member):
+            return Response(
+                OrderConfirmationResponseSerializer(
+                    {
+                        "order_confirmed": False,
+                        "error": (
+                            "Für dieses Mitglied ist noch keine Mitgliedsnummer "
+                            "vorhanden. Der Keycloak-Benutzer wird erst nach der "
+                            "Nummernvergabe angelegt."
+                        ),
+                    }
+                ).data
+            )
+
         with transaction.atomic():
             KeycloakUserManager.create_keycloak_user_if_necessary(
                 user=member, initial_password=None
@@ -707,10 +724,11 @@ class MemberEmailApiView(APIView):
             EmailVerificationService.send_verification_email(user=member, actor=actor)
         except KeycloakPutError:
             kc = KeycloakUserManager.get_keycloak_client()
+            payload = {"email": email_before}
+            if KeycloakUsernameService.uses_email_username(member):
+                payload["username"] = email_before
             kc.update_user(
                 user_id=member.keycloak_id,
-                payload={
-                    "email": email_before,
-                },
+                payload=payload,
             )
             raise

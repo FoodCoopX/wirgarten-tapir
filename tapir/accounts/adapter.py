@@ -15,9 +15,12 @@ class MySocialAccountAdapter(DefaultSocialAccountAdapter):
             return
 
         if tapir_user.keycloak_id is None:
-            keycloak_client = KeycloakUserManager.get_keycloak_client()
-            keycloak_id = keycloak_client.get_user_id(tapir_user.email)
-            tapir_user.keycloak_id = keycloak_id
+            keycloak_user = KeycloakUserManager.find_keycloak_user_by_email(
+                tapir_user.email
+            )
+            tapir_user.keycloak_id = (
+                keycloak_user["id"] if keycloak_user is not None else None
+            )
             tapir_user.save()
 
         if SocialAccount.objects.filter(user=tapir_user).exists():

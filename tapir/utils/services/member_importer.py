@@ -6,6 +6,9 @@ from django.utils import timezone
 from tapir.accounts.models import TapirUser
 from tapir.accounts.services.email_normaliser import EmailNormaliser
 from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
+from tapir.accounts.services.keycloak_username_service import (
+    KeycloakUsernameService,
+)
 from tapir.associations.models import (
     AssociationMembership,
     AssociationMembershipType,
@@ -257,8 +260,11 @@ class MemberImporter:
         if email_before != member.email and member.keycloak_id:
             Member.objects.filter(id=member.id).update(email=member.email)
             if not dry_run:
+                payload = {"email": member.email}
+                if KeycloakUsernameService.uses_email_username(member):
+                    payload["username"] = member.email
                 KeycloakUserManager.get_keycloak_client().update_user(
-                    user_id=member.keycloak_id, payload={"email": member.email}
+                    user_id=member.keycloak_id, payload=payload
                 )
 
         if member_updated:

@@ -1,5 +1,6 @@
 from unittest.mock import patch, Mock, ANY
 
+from django.test import override_settings
 from django.urls import reverse
 from keycloak import KeycloakPutError
 from rest_framework import status
@@ -17,6 +18,7 @@ from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
+@override_settings(KEYCLOAK_USERNAME_SOURCE="email")
 class TestMemberEmailApiView(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
@@ -241,7 +243,7 @@ class TestMemberEmailApiView(TapirIntegrationTest):
     ):
         mock_is_user_email_verified.return_value = False
         mock_send_verification_email.side_effect = KeycloakPutError()
-        self.mock_keycloak_client.get_user_id.return_value = None
+        self.mock_keycloak_client.get_users.return_value = []
 
         user_before_changes = MemberFactory.create(email="old_address@example.com")
         self.client.force_login(user_before_changes)
@@ -260,8 +262,8 @@ class TestMemberEmailApiView(TapirIntegrationTest):
         user_after_changes = Member.objects.get(id=user_before_changes.id)
         self.assertEqual("old_address@example.com", user_after_changes.email)
 
-        self.mock_keycloak_client.get_user_id.assert_called_once_with(
-            "new_address@example.com"
+        self.mock_keycloak_client.get_users.assert_called_once_with(
+            query={"email": "new_address@example.com", "exact": True}
         )
 
         mock_send_verification_email.assert_called_once_with(
@@ -274,7 +276,10 @@ class TestMemberEmailApiView(TapirIntegrationTest):
                 "user_id": mock_send_verification_email.call_args.kwargs[
                     "user"
                 ].keycloak_id,
-                "payload": {"email": "new_address@example.com"},
+                "payload": {
+                    "email": "new_address@example.com",
+                    "username": "new_address@example.com",
+                },
             },
             main_call.kwargs,
         )
@@ -284,7 +289,40 @@ class TestMemberEmailApiView(TapirIntegrationTest):
                 "user_id": mock_send_verification_email.call_args.kwargs[
                     "user"
                 ].keycloak_id,
-                "payload": {"email": "old_address@example.com"},
+                "payload": {
+                    "email": "old_address@example.com",
+                    "username": "old_address@example.com",
+                },
             },
             rollback_call.kwargs,
         )
+
+    @override_settings(KEYCLOAK_USERNAME_SOURCE="customernumber")
+    def test_post_memberWithoutMemberNumber_returnsError(self):
+        member = Member.objects.create(
+            first_name="Jane",
+            last_name="Doe",
+            email="jane@example.com",
+            username="jane@example.com",
+            member_no=None,
+        )
+        self.client.force_login(member)
+
+        url = reverse("coop:member_email")
+        response = self.client.post(
+            url,
+            data={
+                "member_id": member.id,
+                "email": "new_address@example.com",
+            },
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        response_content = response.json()
+        self.assertFalse(response_content["order_confirmed"])
+        self.assertIn("Mitgliedsnummer", response_content["error"])
+
+        member.refresh_from_db()
+        self.assertEqual("jane@example.com", member.email)
+        self.mock_keycloak_client.create_user.assert_not_called()

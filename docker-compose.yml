@@ -13,6 +13,13 @@ x-tapir-environment: &tapir_environment
   EMAIL_HOST_USER: test
   EMAIL_HOST_PASSWORD: test
   EMAIL_BOUNCE_ADDRESS: tapir@example.com
+  ## To enable tests of member_no as username and extended userprofile (also mount examples folder)
+  # KEYCLOAK_USERNAME_SOURCE: customernumber
+  # KEYCLOAK_USERNAME_FORMAT: raw
+  # KEYCLOAK_REGISTRATION_EMAIL_AS_USERNAME: False
+  # KEYCLOAK_USER_PROFILE_MANAGED: True
+  # KEYCLOAK_USER_PROFILE_FILE: /examples/keycloak-userprofile.json
+  # KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP: '[{"keycloak": "customernumber", "tapir": "member_no"}]'
 
 services:
   keycloak:
@@ -61,6 +68,7 @@ services:
       - media-volume:/app/media
       # - web-static:/app/static
       # - web-uploads:/app/tapir/filepond_stored_uploads
+      # - ./examples:/examples
     environment: *tapir_environment
     depends_on:
       db:

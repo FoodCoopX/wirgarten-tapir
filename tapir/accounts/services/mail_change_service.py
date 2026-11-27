@@ -14,6 +14,9 @@ from tapir import settings
 from tapir.accounts.config import EMAIL_CHANGE_LINK_VALIDITY_MINUTES
 from tapir.accounts.models import TapirUser, KeycloakUser, EmailChangeRequest
 from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
+from tapir.accounts.services.keycloak_username_service import (
+    KeycloakUsernameService,
+)
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.utils import get_now
 
@@ -88,9 +91,10 @@ class MailChangeService:
         )
 
         kc = KeycloakUserManager.get_keycloak_client()
+        payload = {"email": new_email}
+        if KeycloakUsernameService.uses_email_username(user):
+            payload["username"] = new_email
         kc.update_user(
             user_id=user.keycloak_id,
-            payload={
-                "email": new_email,
-            },
+            payload=payload,
         )

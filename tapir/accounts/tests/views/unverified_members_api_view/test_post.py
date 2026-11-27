@@ -39,10 +39,18 @@ class TestUnverifiedMembersApiViewPost(TapirIntegrationTest):
         MemberFactory.create(keycloak_id=None, member_no=14)
         for member in [verified, with_account, without_account]:
             AssociationMembershipFactory.create(member=member)
-        self.mock_keycloak_client.get_users.return_value = [
-            {"id": "verified", "emailVerified": True},
-            {"id": "unverified", "emailVerified": False},
-        ]
+        self.mock_keycloak_users["verified"] = {
+            "id": "verified",
+            "username": "verified@example.com",
+            "email": "verified@example.com",
+            "emailVerified": True,
+        }
+        self.mock_keycloak_users["unverified"] = {
+            "id": "unverified",
+            "username": "unverified@example.com",
+            "email": "unverified@example.com",
+            "emailVerified": False,
+        }
 
         response = self.client.post(reverse("accounts:unverified_members"))
 
