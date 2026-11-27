@@ -1,3 +1,5 @@
+from abc import ABC, abstractmethod
+
 from django.conf import settings
 from django.db import transaction
 from django.shortcuts import get_object_or_404
@@ -281,10 +283,10 @@ class SubscriptionManagementExternalApiView(APIView):
         return Response(True)
 
 
-class SubscriptionManagementMailingListApiView(APIView):
+class SubscriptionManagementMailingListApiView(APIView, ABC):
     permission_classes = []
 
-    ACTION_LABEL = ""
+    ACTION_LABEL: str
 
     @extend_schema(
         responses={200: bool}, request=SubscriptionManagementMailingListRequest
@@ -306,8 +308,8 @@ class SubscriptionManagementMailingListApiView(APIView):
 
         return Response(True)
 
-    def _apply(self, email: str, mailing_list: MailingList, cache: dict):
-        raise NotImplementedError
+    @abstractmethod
+    def _apply(self, email: str, mailing_list: MailingList, cache: dict): ...
 
     def _log_if_extra(self, address: str, mailing_list: MailingList):
         extra_email = (
