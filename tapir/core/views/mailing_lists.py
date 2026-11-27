@@ -29,6 +29,9 @@ from tapir.core.serializers import (
 from tapir.core.services.mailman.held_message_serializer_data_builder import (
     HeldMessageSerializerDataBuilder,
 )
+from tapir.core.services.mailman.mailing_list_join_validator import (
+    MailingListJoinValidator,
+)
 from tapir.core.services.mailman.mailing_list_provider import MailingListProvider
 from tapir.core.services.mailman.mailing_list_self_request_preparer import (
     MailingListSelfRequestPreparer,
@@ -286,10 +289,9 @@ class MailingListSubscribeExternalRecipientView(APIView):
         mailing_list = MailingListProvider.get_list_by_name_or_404(
             list_name=serializer.validated_data["list_name"], cache=cache
         )
-        mailing_list.subscribe(
-            address=serializer.validated_data["address"],
-            invitation=True,
-        )
+        address = EmailNormaliser.normalise(serializer.validated_data["address"])
+        MailingListJoinValidator.validate_address_can_join(address=address, cache=cache)
+        mailing_list.subscribe(address=address, invitation=True)
 
         return Response("OK")
 
@@ -315,10 +317,10 @@ class MailingListSubscribeInternalRecipientView(APIView):
         mailing_list = MailingListProvider.get_list_by_name_or_404(
             list_name=serializer.validated_data["list_name"], cache=cache
         )
-        mailing_list.subscribe(
-            address=member.email,
-            invitation=True,
+        MailingListJoinValidator.validate_address_can_join(
+            address=member.email, cache=cache
         )
+        mailing_list.subscribe(address=member.email, invitation=True)
 
         return Response("OK")
 
@@ -456,6 +458,9 @@ class MailingListMemberSelfSubscribeView(APIView):
     )
     def post(self, request):
         mailing_list, member = MailingListSelfRequestPreparer.prepare(request)
+        MailingListJoinValidator.validate_address_can_join(
+            address=member.email, cache={}
+        )
         MailingListSelfService.subscribe(email=member.email, mailing_list=mailing_list)
         return Response("OK")
 
@@ -480,6 +485,9 @@ class MailingListMemberSelfConfirmView(APIView):
     )
     def post(self, request):
         mailing_list, member = MailingListSelfRequestPreparer.prepare(request)
+        MailingListJoinValidator.validate_address_can_join(
+            address=member.email, cache={}
+        )
         MailingListSelfService.accept_invitation(
             email=member.email, mailing_list=mailing_list
         )

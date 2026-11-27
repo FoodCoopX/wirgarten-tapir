@@ -4,7 +4,7 @@ from decimal import Decimal
 from django.utils import timezone
 
 from tapir.associations.tests.factories import AssociationMembershipFactory
-from tapir.generic_exports.services.member_segment_provider import MemberSegmentProvider
+from tapir.core.services.active_member_provider import ActiveMemberProvider
 from tapir.solidarity_contribution.tests.factories import SolidarityContributionFactory
 from tapir.wirgarten.models import CoopShareTransaction
 from tapir.wirgarten.tests.factories import (
@@ -15,17 +15,17 @@ from tapir.wirgarten.tests.factories import (
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
-class TestGetQuerysetActiveMembers(TapirIntegrationTest):
-    def test_getQuerysetActiveMembers_memberNotActive_notIncluded(self):
+class TestGetActiveMembers(TapirIntegrationTest):
+    def test_getActiveMembers_memberNotActive_notIncluded(self):
         MemberFactory.create()
 
-        result = MemberSegmentProvider.get_queryset_active_members(
-            reference_datetime=timezone.now()
+        result = ActiveMemberProvider.get_active_members(
+            reference_datetime=timezone.now(), cache={}
         )
 
         self.assertQuerySetEqual(result, [])
 
-    def test_getQuerysetActiveMembers_memberHasPastCoopShare_notIncluded(self):
+    def test_getActiveMembers_memberHasPastCoopShare_notIncluded(self):
         member = MemberFactory.create()
         CoopShareTransactionFactory.create(
             member=member,
@@ -40,15 +40,16 @@ class TestGetQuerysetActiveMembers(TapirIntegrationTest):
             quantity=-1,
         )
 
-        result = MemberSegmentProvider.get_queryset_active_members(
+        result = ActiveMemberProvider.get_active_members(
             reference_datetime=datetime.datetime(
                 year=2026, month=7, day=1, tzinfo=datetime.timezone.utc
-            )
+            ),
+            cache={},
         )
 
         self.assertQuerySetEqual(result, [])
 
-    def test_getQuerysetActiveMembers_memberHasCurrentCoopShare_included(self):
+    def test_getActiveMembers_memberHasCurrentCoopShare_included(self):
         member = MemberFactory.create()
         CoopShareTransactionFactory.create(
             member=member,
@@ -63,15 +64,16 @@ class TestGetQuerysetActiveMembers(TapirIntegrationTest):
             quantity=-1,
         )
 
-        result = MemberSegmentProvider.get_queryset_active_members(
+        result = ActiveMemberProvider.get_active_members(
             reference_datetime=datetime.datetime(
                 year=2026, month=4, day=1, tzinfo=datetime.timezone.utc
-            )
+            ),
+            cache={},
         )
 
         self.assertQuerySetEqual(result, [member])
 
-    def test_getQuerysetActiveMembers_memberHasFutureCoopShare_included(self):
+    def test_getActiveMembers_memberHasFutureCoopShare_included(self):
         member = MemberFactory.create()
         CoopShareTransactionFactory.create(
             member=member,
@@ -80,57 +82,61 @@ class TestGetQuerysetActiveMembers(TapirIntegrationTest):
             quantity=1,
         )
 
-        result = MemberSegmentProvider.get_queryset_active_members(
+        result = ActiveMemberProvider.get_active_members(
             reference_datetime=datetime.datetime(
                 year=2025, month=4, day=1, tzinfo=datetime.timezone.utc
-            )
+            ),
+            cache={},
         )
 
         self.assertQuerySetEqual(result, [member])
 
-    def test_getQuerysetActiveMembers_memberHasPastSubscription_notIncluded(self):
+    def test_getActiveMembers_memberHasPastSubscription_notIncluded(self):
         member = MemberFactory.create()
         SubscriptionFactory.create(
             member=member, period__start_date=datetime.date(year=2025, month=1, day=1)
         )
 
-        result = MemberSegmentProvider.get_queryset_active_members(
+        result = ActiveMemberProvider.get_active_members(
             reference_datetime=datetime.datetime(
                 year=2026, month=1, day=1, tzinfo=datetime.timezone.utc
-            )
+            ),
+            cache={},
         )
 
         self.assertQuerySetEqual(result, [])
 
-    def test_getQuerysetActiveMembers_memberHasCurrentSubscription_included(self):
+    def test_getActiveMembers_memberHasCurrentSubscription_included(self):
         member = MemberFactory.create()
         SubscriptionFactory.create(
             member=member, period__start_date=datetime.date(year=2026, month=1, day=1)
         )
 
-        result = MemberSegmentProvider.get_queryset_active_members(
+        result = ActiveMemberProvider.get_active_members(
             reference_datetime=datetime.datetime(
                 year=2026, month=4, day=1, tzinfo=datetime.timezone.utc
-            )
+            ),
+            cache={},
         )
 
         self.assertQuerySetEqual(result, [member])
 
-    def test_getQuerysetActiveMembers_memberHasFutureSubscription_included(self):
+    def test_getActiveMembers_memberHasFutureSubscription_included(self):
         member = MemberFactory.create()
         SubscriptionFactory.create(
             member=member, period__start_date=datetime.date(year=2027, month=1, day=1)
         )
 
-        result = MemberSegmentProvider.get_queryset_active_members(
+        result = ActiveMemberProvider.get_active_members(
             reference_datetime=datetime.datetime(
                 year=2026, month=4, day=1, tzinfo=datetime.timezone.utc
-            )
+            ),
+            cache={},
         )
 
         self.assertQuerySetEqual(result, [member])
 
-    def test_getQuerysetActiveMembers_memberHasPastAssociationMembership_notIncluded(
+    def test_getActiveMembers_memberHasPastAssociationMembership_notIncluded(
         self,
     ):
         member = MemberFactory.create()
@@ -140,15 +146,16 @@ class TestGetQuerysetActiveMembers(TapirIntegrationTest):
             end_date=datetime.date(year=2026, month=3, day=15),
         )
 
-        result = MemberSegmentProvider.get_queryset_active_members(
+        result = ActiveMemberProvider.get_active_members(
             reference_datetime=datetime.datetime(
                 year=2026, month=4, day=1, tzinfo=datetime.timezone.utc
-            )
+            ),
+            cache={},
         )
 
         self.assertQuerySetEqual(result, [])
 
-    def test_getQuerysetActiveMembers_memberHasCurrentAssociationMembership_included(
+    def test_getActiveMembers_memberHasCurrentAssociationMembership_included(
         self,
     ):
         member = MemberFactory.create()
@@ -157,15 +164,16 @@ class TestGetQuerysetActiveMembers(TapirIntegrationTest):
             start_date=datetime.date(year=2026, month=1, day=1),
         )
 
-        result = MemberSegmentProvider.get_queryset_active_members(
+        result = ActiveMemberProvider.get_active_members(
             reference_datetime=datetime.datetime(
                 year=2026, month=4, day=1, tzinfo=datetime.timezone.utc
-            )
+            ),
+            cache={},
         )
 
         self.assertQuerySetEqual(result, [member])
 
-    def test_getQuerysetActiveMembers_memberHasFutureAssociationMembership_included(
+    def test_getActiveMembers_memberHasFutureAssociationMembership_included(
         self,
     ):
         member = MemberFactory.create()
@@ -174,15 +182,16 @@ class TestGetQuerysetActiveMembers(TapirIntegrationTest):
             start_date=datetime.date(year=2027, month=1, day=1),
         )
 
-        result = MemberSegmentProvider.get_queryset_active_members(
+        result = ActiveMemberProvider.get_active_members(
             reference_datetime=datetime.datetime(
                 year=2026, month=4, day=1, tzinfo=datetime.timezone.utc
-            )
+            ),
+            cache={},
         )
 
         self.assertQuerySetEqual(result, [member])
 
-    def test_getQuerysetActiveMembers_memberHasPastSolidarityContribution_notIncluded(
+    def test_getActiveMembers_memberHasPastSolidarityContribution_notIncluded(
         self,
     ):
         member = MemberFactory.create()
@@ -193,15 +202,16 @@ class TestGetQuerysetActiveMembers(TapirIntegrationTest):
             end_date=datetime.date(year=2026, month=3, day=15),
         )
 
-        result = MemberSegmentProvider.get_queryset_active_members(
+        result = ActiveMemberProvider.get_active_members(
             reference_datetime=datetime.datetime(
                 year=2026, month=4, day=1, tzinfo=datetime.timezone.utc
-            )
+            ),
+            cache={},
         )
 
         self.assertQuerySetEqual(result, [])
 
-    def test_getQuerysetActiveMembers_memberHasCurrentSolidarityContribution_included(
+    def test_getActiveMembers_memberHasCurrentSolidarityContribution_included(
         self,
     ):
         member = MemberFactory.create()
@@ -211,15 +221,16 @@ class TestGetQuerysetActiveMembers(TapirIntegrationTest):
             start_date=datetime.date(year=2026, month=1, day=1),
         )
 
-        result = MemberSegmentProvider.get_queryset_active_members(
+        result = ActiveMemberProvider.get_active_members(
             reference_datetime=datetime.datetime(
                 year=2026, month=4, day=1, tzinfo=datetime.timezone.utc
-            )
+            ),
+            cache={},
         )
 
         self.assertQuerySetEqual(result, [member])
 
-    def test_getQuerysetActiveMembers_memberHasFutureSolidarityContribution_included(
+    def test_getActiveMembers_memberHasFutureSolidarityContribution_included(
         self,
     ):
         member = MemberFactory.create()
@@ -229,15 +240,16 @@ class TestGetQuerysetActiveMembers(TapirIntegrationTest):
             start_date=datetime.date(year=2027, month=1, day=1),
         )
 
-        result = MemberSegmentProvider.get_queryset_active_members(
+        result = ActiveMemberProvider.get_active_members(
             reference_datetime=datetime.datetime(
                 year=2026, month=4, day=1, tzinfo=datetime.timezone.utc
-            )
+            ),
+            cache={},
         )
 
         self.assertQuerySetEqual(result, [member])
 
-    def test_getQuerysetActiveMembers_memberHasNegativeSolidarityContribution_notIncluded(
+    def test_getActiveMembers_memberHasNegativeSolidarityContribution_notIncluded(
         self,
     ):
         member = MemberFactory.create()
@@ -247,15 +259,16 @@ class TestGetQuerysetActiveMembers(TapirIntegrationTest):
             start_date=datetime.date(year=2026, month=1, day=1),
         )
 
-        result = MemberSegmentProvider.get_queryset_active_members(
+        result = ActiveMemberProvider.get_active_members(
             reference_datetime=datetime.datetime(
                 year=2026, month=4, day=1, tzinfo=datetime.timezone.utc
-            )
+            ),
+            cache={},
         )
 
         self.assertQuerySetEqual(result, [])
 
-    def test_getQuerysetActiveMembers_memberHasZeroSolidarityContribution_notIncluded(
+    def test_getActiveMembers_memberHasZeroSolidarityContribution_notIncluded(
         self,
     ):
         member = MemberFactory.create()
@@ -265,10 +278,11 @@ class TestGetQuerysetActiveMembers(TapirIntegrationTest):
             start_date=datetime.date(year=2026, month=1, day=1),
         )
 
-        result = MemberSegmentProvider.get_queryset_active_members(
+        result = ActiveMemberProvider.get_active_members(
             reference_datetime=datetime.datetime(
                 year=2026, month=4, day=1, tzinfo=datetime.timezone.utc
-            )
+            ),
+            cache={},
         )
 
         self.assertQuerySetEqual(result, [])

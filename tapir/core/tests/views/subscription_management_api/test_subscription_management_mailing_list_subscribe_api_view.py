@@ -5,6 +5,9 @@ from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 
+from tapir.core.services.former_member_address_provider import (
+    FormerMemberAddressProvider,
+)
 from tapir.core.services.subscription_management_token_signer import (
     SubscriptionManagementTokenSigner,
 )
@@ -16,6 +19,12 @@ from tapir.wirgarten.tests.factories import MemberExtraEmailFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
+@patch.object(
+    FormerMemberAddressProvider,
+    "is_former_member_address",
+    autospec=True,
+    return_value=False,
+)
 @override_settings(MAILING_LISTS_ENABLED=True, MAILING_LIST_DOMAIN="example.com")
 @patch.object(
     SubscriptionManagementTokenSigner,
@@ -35,13 +44,15 @@ class TestSubscriptionManagementMailingListSubscribeApiView(TapirIntegrationTest
         ).lists[0]
 
     @override_settings(MAILING_LISTS_ENABLED=False)
-    def test_post_mailingListsDisabled_returns403(self, _: MagicMock):
+    def test_post_mailingListsDisabled_returns403(self, _: MagicMock, __: MagicMock):
         response = self._post()
 
         self.assertStatusCode(response, status.HTTP_403_FORBIDDEN)
         self.mailing_list.subscribe.assert_not_called()
 
-    def test_post_tokenIsInvalid_returns403(self, mock_get_address: MagicMock):
+    def test_post_tokenIsInvalid_returns403(
+        self, mock_get_address: MagicMock, _: MagicMock
+    ):
         mock_get_address.return_value = None
 
         response = self._post()
@@ -50,7 +61,7 @@ class TestSubscriptionManagementMailingListSubscribeApiView(TapirIntegrationTest
         self.mailing_list.subscribe.assert_not_called()
 
     def test_post_addressIsAConfirmedExtra_subscribesAndLogsOnTheMember(
-        self, _: MagicMock
+        self, _: MagicMock, __: MagicMock
     ):
         extra_email = MemberExtraEmailFactory.create(
             email="address@example.com", confirmed_on=timezone.now()
@@ -69,7 +80,9 @@ class TestSubscriptionManagementMailingListSubscribeApiView(TapirIntegrationTest
         self.assertEqual(["Liste list@example.com: angemeldet"], log_entry.changes)
         self.assertEqual(extra_email.member_id, log_entry.user_id)
 
-    def test_post_addressIsAnExternalRecipient_subscribesWithoutLog(self, _: MagicMock):
+    def test_post_addressIsAnExternalRecipient_subscribesWithoutLog(
+        self, _: MagicMock, __: MagicMock
+    ):
         ExternalRecipient.objects.create(email="address@example.com", first_name="E")
 
         response = self._post()
@@ -79,7 +92,7 @@ class TestSubscriptionManagementMailingListSubscribeApiView(TapirIntegrationTest
         self.assertFalse(MemberExtraEmailSubscriptionsChangedLogEntry.objects.exists())
 
     def test_post_addressIsNeitherAConfirmedExtraNorAnExternalRecipient_returns400(
-        self, _: MagicMock
+        self, _: MagicMock, __: MagicMock
     ):
         MemberExtraEmailFactory.create(email="address@example.com", confirmed_on=None)
 
@@ -97,3 +110,22 @@ class TestSubscriptionManagementMailingListSubscribeApiView(TapirIntegrationTest
             reverse("core:subscription_management_mailing_list_subscribe"),
             data={"token": "the_token", "list_name": "list@example.com"},
         )
+
+    def test_post_addressBelongsToAFormerMember_returns400(
+        self, _: MagicMock, mock_is_former_member_address: MagicMock
+    ):
+        mock_is_former_member_address.return_value = True
+        MemberExtraEmailFactory.create(
+            email="address@example.com", confirmed_on=timezone.now()
+        )
+
+        response = self._post()
+
+        self.assertStatusCode(response, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            [
+                "Diese Adresse gehört zu einem ehemaligen Mitglied und kann keiner Mailing-Liste beitreten"
+            ],
+            response.json(),
+        )
+        self.mailing_list.subscribe.assert_not_called()

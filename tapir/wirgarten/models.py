@@ -1211,6 +1211,20 @@ class MemberExtraEmailSubscriptionsChangedLogEntry(LogEntry):
         return self
 
 
+class MemberUnsubscribedFromMailingListsLogEntry(LogEntry):
+    template_name = (
+        "wirgarten/log/member_unsubscribed_from_mailing_lists_log_entry.html"
+    )
+
+    removals = models.JSONField()
+
+    def populate_removals(self, removals: list[str], user: Member):
+        self.populate(actor=None, user=user)
+        self.removals = removals
+
+        return self
+
+
 class MemberExtraEmailConfirmedLogEntry(LogEntry):
     template_name = "wirgarten/log/member_extra_email_confirmed_log_entry.html"
 

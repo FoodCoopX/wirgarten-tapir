@@ -1,6 +1,6 @@
 import datetime
 
-from django.db.models import QuerySet, Q
+from django.db.models import QuerySet
 
 from tapir.deliveries.models import Joker
 from tapir.deliveries.services.members_with_delivery_in_week_getter import (
@@ -11,7 +11,6 @@ from tapir.generic_exports.services.member_column_provider import MemberColumnPr
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
-from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.shortcuts import get_monday
 from tapir.wirgarten.models import Subscription
@@ -20,7 +19,6 @@ from tapir.wirgarten.service.member import (
     annotate_member_queryset_with_monthly_payment,
 )
 from tapir.wirgarten.service.get_next_delivery_date import get_next_delivery_date
-from tapir.wirgarten.service.products import get_active_and_future_subscriptions
 from tapir.wirgarten.utils import (
     get_now,
     get_today,
@@ -241,56 +239,3 @@ class MemberSegmentProvider:
         return TapirCache.get_pickup_location_by_id(
             cache=cache, pickup_location_id=pickup_location_id
         ).is_home_delivery
-
-    @classmethod
-    def get_queryset_active_members(
-        cls,
-        reference_datetime: datetime.datetime | None = None,
-        cache: dict | None = None,
-    ):
-        from tapir.wirgarten.models import CoopShareTransaction, Member
-        from tapir.associations.models import AssociationMembership
-
-        if cache is None:
-            cache = {}
-        if reference_datetime is None:
-            reference_datetime = get_now(cache=cache)
-
-        member_ids_with_active_shares = set(
-            Member.objects.with_shares(
-                reference_date=reference_datetime.date()
-            ).values_list("id", flat=True)
-        )
-        member_ids_with_shares_in_the_future = set(
-            CoopShareTransaction.objects.filter(
-                transaction_type__in=[
-                    CoopShareTransaction.CoopShareTransactionType.TRANSFER_IN,
-                    CoopShareTransaction.CoopShareTransactionType.PURCHASE,
-                ],
-                valid_at__gte=reference_datetime.date(),
-            ).values_list("member_id", flat=True)
-        )
-        member_ids_with_active_or_future_subscriptions = set(
-            get_active_and_future_subscriptions(
-                reference_date=reference_datetime.date(), cache=cache
-            ).values_list("member_id", flat=True)
-        )
-        member_ids_with_active_or_future_association_membership = (
-            AssociationMembership.objects.filter(
-                Q(end_date=None) | Q(end_date__gte=reference_datetime.date())
-            ).values_list("member_id", flat=True)
-        )
-
-        member_ids_with_active_or_future_solidarity_contribution = (
-            SolidarityContribution.objects.filter(
-                amount__gt=0, end_date__gte=reference_datetime.date()
-            ).values_list("member_id", flat=True)
-        )
-
-        relevant_member_ids = member_ids_with_active_shares.union(
-            member_ids_with_shares_in_the_future,
-            member_ids_with_active_or_future_subscriptions,
-            member_ids_with_active_or_future_association_membership,
-            member_ids_with_active_or_future_solidarity_contribution,
-        )
-        return Member.objects.filter(id__in=relevant_member_ids)

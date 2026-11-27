@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import transaction
 
+from tapir.core.services.active_member_provider import ActiveMemberProvider
 from tapir.core.services.internal_recipient_manager import InternalRecipientManager
 from tapir.core.services.mailman.mailing_list_subscription_checker import (
     MailingListSubscriptionChecker,
@@ -8,6 +9,7 @@ from tapir.core.services.mailman.mailing_list_subscription_checker import (
 from tapir.core.services.mailman.tapir_mailman_client import TapirMailmanClient
 from tapir.mail.models import InternalRecipientCategoryRegistration
 from tapir.wirgarten.models import MemberExtraEmail
+from tapir.wirgarten.utils import get_now
 
 
 class MemberExtraEmailRegistrationSnapshotter:
@@ -15,7 +17,14 @@ class MemberExtraEmailRegistrationSnapshotter:
     def snapshot(cls, extra_email: MemberExtraEmail, cache: dict):
         cls._snapshot_mail_categories(extra_email=extra_email)
 
-        if settings.MAILING_LISTS_ENABLED:
+        if (
+            settings.MAILING_LISTS_ENABLED
+            and ActiveMemberProvider.get_active_members(
+                reference_datetime=get_now(cache=cache), cache=cache
+            )
+            .filter(id=extra_email.member_id)
+            .exists()
+        ):
             transaction.on_commit(
                 lambda: cls._snapshot_mailing_lists(
                     extra_email_address=extra_email.email,

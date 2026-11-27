@@ -2,6 +2,9 @@ from django.http import Http404
 from mailmanclient import MailingList
 from rest_framework.exceptions import ValidationError
 
+from tapir.core.services.former_member_address_provider import (
+    FormerMemberAddressProvider,
+)
 from tapir.core.services.mailman.mailing_list_serializer_data_builder import (
     MailingListSerializerDataBuilder,
 )
@@ -9,6 +12,7 @@ from tapir.core.services.mailman.mailing_list_subscription_checker import (
     MailingListSubscriptionChecker,
 )
 from tapir.core.services.mailman.tapir_mailman_client import TapirMailmanClient
+from tapir.wirgarten.utils import get_now
 
 
 class MailingListSelfService:
@@ -16,6 +20,12 @@ class MailingListSelfService:
     def build_list_data(
         cls, email: str, include_advertised_lists: bool, cache: dict
     ) -> dict:
+        belongs_to_former_member = FormerMemberAddressProvider.is_former_member_address(
+            address=email, reference_datetime=get_now(cache=cache), cache=cache
+        )
+        include_advertised_lists = (
+            include_advertised_lists and not belongs_to_former_member
+        )
         relevant_lists = [
             mailing_list
             for mailing_list in TapirMailmanClient.get_domain(cache=cache).lists
@@ -27,6 +37,7 @@ class MailingListSelfService:
         ]
 
         return {
+            "belongs_to_former_member": belongs_to_former_member,
             "available_lists": [
                 MailingListSerializerDataBuilder.build_serializer_data(mailing_list)
                 for mailing_list in relevant_lists

@@ -14906,6 +14906,8 @@ components:
     MemberMailingListDataResponse:
       type: object
       properties:
+        belongs_to_former_member:
+          type: boolean
         available_lists:
           type: array
           items:
@@ -14920,6 +14922,7 @@ components:
             type: string
       required:
       - available_lists
+      - belongs_to_former_member
       - subscribed_lists
       - waiting_for_confirmation_lists
     MemberNeedingBankingData:

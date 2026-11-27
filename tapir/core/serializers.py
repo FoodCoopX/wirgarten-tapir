@@ -93,6 +93,7 @@ class MailingListSubscribeInternalRecipientRequestSerializer(serializers.Seriali
 
 
 class MemberMailingListDataResponseSerializer(serializers.Serializer):
+    belongs_to_former_member = serializers.BooleanField()
     available_lists = MailingListSerializer(many=True)
     subscribed_lists = serializers.ListField(child=serializers.CharField())
     waiting_for_confirmation_lists = serializers.ListField(

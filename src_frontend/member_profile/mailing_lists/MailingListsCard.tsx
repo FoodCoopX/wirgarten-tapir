@@ -32,6 +32,7 @@ const MailingListsCard: React.FC<MailingListsCardProps> = ({
   const [subscribedLists, setSubscribedLists] = useState<string[]>([]);
   const [waitingForConfirmationLists, setWaitingForConfirmationLists] =
     useState<string[]>([]);
+  const [belongsToFormerMember, setBelongsToFormerMember] = useState(false);
   const [dataLoading, setDataLoading] = useState(true);
   const [listLoading, setListLoading] = useState<MailingList>();
 
@@ -44,6 +45,7 @@ const MailingListsCard: React.FC<MailingListsCardProps> = ({
     loadListData()
       .then((data) => {
         setAllMailingLists(data.availableLists);
+        setBelongsToFormerMember(data.belongsToFormerMember);
         setSubscribedLists(data.subscribedLists);
         setWaitingForConfirmationLists(data.waitingForConfirmationLists);
       })
@@ -261,13 +263,15 @@ const MailingListsCard: React.FC<MailingListsCardProps> = ({
     if (waitingForConfirmationLists.includes(list.name)) {
       return (
         <span className={"d-flex flex-wrap gap-2"}>
-          <TapirButton
-            size={"sm"}
-            variant={"primary"}
-            icon={"mark_email_read"}
-            text={"Einladung annehmen"}
-            onClick={() => onConfirm(list)}
-          />
+          {!belongsToFormerMember && (
+            <TapirButton
+              size={"sm"}
+              variant={"primary"}
+              icon={"mark_email_read"}
+              text={"Einladung annehmen"}
+              onClick={() => onConfirm(list)}
+            />
+          )}
           <TapirButton
             size={"sm"}
             variant={"primary"}
@@ -277,6 +281,10 @@ const MailingListsCard: React.FC<MailingListsCardProps> = ({
           />
         </span>
       );
+    }
+
+    if (belongsToFormerMember) {
+      return null;
     }
 
     return (
@@ -309,6 +317,12 @@ const MailingListsCard: React.FC<MailingListsCardProps> = ({
         </Card.Body>
       ) : (
         <ListGroup variant={"flush"}>
+          {belongsToFormerMember && (
+            <ListGroup.Item variant={"warning"}>
+              Diese Adresse gehört zu einem ehemaligen Mitglied. Sie kann sich
+              von Listen abmelden, aber keiner Liste mehr beitreten.
+            </ListGroup.Item>
+          )}
           {allMailingLists.map((list) => (
             <ListGroup.Item key={list.name}>
               <div className={"fw-bold text-break"}>{list.name}</div>

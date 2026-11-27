@@ -13,14 +13,18 @@ class CoopConfig(AppConfig):
     def provide_coop_mail_segments():
         from tapir.wirgarten.models import Member
         from tapir.wirgarten.tapirmail import Segments, SegmentGroups
-        from tapir.generic_exports.services.member_segment_provider import (
-            MemberSegmentProvider,
-        )
-        from tapir.wirgarten.utils import legal_status_is_cooperative
+        from tapir.core.services.active_member_provider import ActiveMemberProvider
+        from tapir.wirgarten.utils import get_now, legal_status_is_cooperative
+
+        def get_active_members():
+            cache = {}
+            return ActiveMemberProvider.get_active_members(
+                reference_datetime=get_now(cache=cache), cache=cache
+            )
 
         segment_registry = {
             Segments.ALL_USERS: MailSegment(
-                get_queryset=MemberSegmentProvider.get_queryset_active_members,
+                get_queryset=get_active_members,
                 label=Segments.ALL_USERS,
                 group=SegmentGroups.GENERAL,
                 description="Alle aktiven Mitglieder: mit mindenstens ein aus Geno-Anteilen, Vereinsmitgliedschaft, Solidarbeitrag oder laufendem bzw. zukünftigem Vertrag.",

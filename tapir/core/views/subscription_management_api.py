@@ -19,6 +19,9 @@ from tapir.core.services.internal_recipient_manager import InternalRecipientMana
 from tapir.core.services.mail_category_selection_validator import (
     MailCategorySelectionValidator,
 )
+from tapir.core.services.mailman.mailing_list_join_validator import (
+    MailingListJoinValidator,
+)
 from tapir.core.services.mailman.mailing_list_provider import MailingListProvider
 from tapir.core.services.mailman.mailing_list_self_service import (
     MailingListSelfService,
@@ -336,6 +339,7 @@ class SubscriptionManagementMailingListSubscribeApiView(
             raise ValidationError(
                 "Diese Adresse kann sich nicht selbst bei einer Liste anmelden"
             )
+        MailingListJoinValidator.validate_address_can_join(address=email, cache={})
         MailingListSelfService.subscribe(email=email, mailing_list=mailing_list)
 
 
@@ -354,6 +358,7 @@ class SubscriptionManagementMailingListAcceptInvitationApiView(
     ACTION_LABEL = "Einladung angenommen"
 
     def _apply(self, email: str, mailing_list: MailingList):
+        MailingListJoinValidator.validate_address_can_join(address=email, cache={})
         MailingListSelfService.accept_invitation(email=email, mailing_list=mailing_list)
 
 

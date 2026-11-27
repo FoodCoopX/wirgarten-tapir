@@ -1,5 +1,10 @@
+from unittest.mock import MagicMock, patch
+
 from django.test import override_settings
 
+from tapir.core.services.former_member_address_provider import (
+    FormerMemberAddressProvider,
+)
 from tapir.core.services.mailman.mailing_list_self_service import (
     MailingListSelfService,
 )
@@ -7,6 +12,12 @@ from tapir.core.tests.mailman_test_helper import MailmanTestHelper, MockMailingL
 from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
+@patch.object(
+    FormerMemberAddressProvider,
+    "is_former_member_address",
+    autospec=True,
+    return_value=False,
+)
 @override_settings(MAILING_LIST_DOMAIN="example.com")
 class TestBuildListData(TapirUnitTest):
     ADDRESS = "address@example.com"
@@ -27,7 +38,7 @@ class TestBuildListData(TapirUnitTest):
         )
 
     def test_buildListData_includeAdvertisedLists_showsAdvertisedSubscribedAndInvitedLists(
-        self,
+        self, _: MagicMock
     ):
         result = MailingListSelfService.build_list_data(
             email=self.ADDRESS, include_advertised_lists=True, cache={}
@@ -47,12 +58,27 @@ class TestBuildListData(TapirUnitTest):
         )
 
     def test_buildListData_excludeAdvertisedLists_showsOnlySubscribedAndInvitedLists(
-        self,
+        self, _: MagicMock
     ):
         result = MailingListSelfService.build_list_data(
             email=self.ADDRESS, include_advertised_lists=False, cache={}
         )
 
+        self.assertEqual(
+            ["subscribed@example.com", "invited@example.com"],
+            [mailing_list["name"] for mailing_list in result["available_lists"]],
+        )
+
+    def test_buildListData_addressBelongsToAFormerMember_hidesAdvertisedListsAndFlagsIt(
+        self, mock_is_former_member_address: MagicMock
+    ):
+        mock_is_former_member_address.return_value = True
+
+        result = MailingListSelfService.build_list_data(
+            email=self.ADDRESS, include_advertised_lists=True, cache={}
+        )
+
+        self.assertTrue(result["belongs_to_former_member"])
         self.assertEqual(
             ["subscribed@example.com", "invited@example.com"],
             [mailing_list["name"] for mailing_list in result["available_lists"]],

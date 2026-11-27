@@ -1,6 +1,9 @@
+from unittest.mock import MagicMock, patch
+
 from django.test import override_settings
 from django.utils import timezone
 
+from tapir.core.services.active_member_provider import ActiveMemberProvider
 from tapir.core.services.member_extra_email_registration_snapshotter import (
     MemberExtraEmailRegistrationSnapshotter,
 )
@@ -18,6 +21,12 @@ from tapir.wirgarten.tests.factories import MemberExtraEmailFactory, MemberFacto
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
+@patch.object(
+    ActiveMemberProvider,
+    "get_active_members",
+    autospec=True,
+    side_effect=lambda reference_datetime, cache: Member.objects.all(),
+)
 @override_settings(MAILING_LISTS_ENABLED=True, MAILING_LIST_DOMAIN="example.com")
 class TestSnapshot(TapirIntegrationTest):
     SEGMENT_WITH_MEMBER = "segment_with_member"
@@ -47,7 +56,7 @@ class TestSnapshot(TapirIntegrationTest):
         )
 
     def test_snapshot_default_createsOneRegistrationPerCategoryContainingTheMemberWithTheMemberState(
-        self,
+        self, _: MagicMock
     ):
         MailmanTestHelper.mock_domain(test=self, mailing_list_datas=[])
         always_on = self._create_category(mode=MailCategoryMode.ALWAYS_ON)
@@ -91,7 +100,9 @@ class TestSnapshot(TapirIntegrationTest):
             ),
         )
 
-    def test_snapshot_default_subscribesExtraToTheListsOfTheMainAddress(self):
+    def test_snapshot_default_subscribesExtraToTheListsOfTheMainAddress(
+        self, _: MagicMock
+    ):
         domain = MailmanTestHelper.mock_domain(
             test=self,
             mailing_list_datas=[
@@ -126,8 +137,35 @@ class TestSnapshot(TapirIntegrationTest):
         for mailing_list in domain.lists[1:]:
             mailing_list.subscribe.assert_not_called()
 
+    def test_snapshot_memberHasLeft_doesNotSubscribeButStillSnapshotsTheCategories(
+        self, mock_get_active_members: MagicMock
+    ):
+        mock_get_active_members.side_effect = (
+            lambda reference_datetime, cache: Member.objects.none()
+        )
+        mail_category = MailCategoryFactory.create(
+            dynamic_segment_name=self.SEGMENT_WITH_MEMBER
+        )
+        domain = MailmanTestHelper.mock_domain(
+            test=self,
+            mailing_list_datas=[
+                MockMailingListData(
+                    name="member_subscribed", confirmed_recipients=[self.member.email]
+                )
+            ],
+        )
+
+        self._snapshot()
+
+        domain.lists[0].subscribe.assert_not_called()
+        self.assertTrue(
+            InternalRecipientCategoryRegistration.objects.filter(
+                member_extra_email=self.extra_email, mail_category=mail_category
+            ).exists()
+        )
+
     @override_settings(MAILING_LISTS_ENABLED=False)
-    def test_snapshot_mailingListsDisabled_doesNotSubscribe(self):
+    def test_snapshot_mailingListsDisabled_doesNotSubscribe(self, _: MagicMock):
         domain = MailmanTestHelper.mock_domain(
             test=self,
             mailing_list_datas=[
@@ -141,7 +179,7 @@ class TestSnapshot(TapirIntegrationTest):
 
         domain.lists[0].subscribe.assert_not_called()
 
-    def test_snapshot_default_subscribesOnlyAfterCommit(self):
+    def test_snapshot_default_subscribesOnlyAfterCommit(self, _: MagicMock):
         domain = MailmanTestHelper.mock_domain(
             test=self,
             mailing_list_datas=[
