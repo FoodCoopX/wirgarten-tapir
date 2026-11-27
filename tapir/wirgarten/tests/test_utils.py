@@ -142,6 +142,7 @@ def mock_keycloak(test: TapirIntegrationTest):
     test.mock_get_keycloak_client.return_value = test.mock_keycloak_client
 
     keycloak_users: dict[str, dict] = {}
+    test.mock_keycloak_users = keycloak_users
 
     def get_user_id(value: str):
         for user in keycloak_users.values():
