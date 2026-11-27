@@ -1,5 +1,6 @@
 from django.utils import timezone
 
+from tapir.mail.addressed_recipient import AddressedRecipient
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.mail.models import MailCategoryMode, InternalRecipientCategoryRegistration
 from tapir.mail.services.mail_category_recipients_resolver import (
@@ -35,7 +36,7 @@ class TestMailCategoryRecipientResolver(TapirIntegrationTest):
         )
 
         self.assertEqual(
-            [external_recipient], [addressed.recipient for addressed in result]
+            [AddressedRecipient.at_own_address(external_recipient)], result
         )
 
     def test_resolveRecipients_hasDynamicSegment_returnsStaticAndDynamicRecipients(
@@ -61,9 +62,12 @@ class TestMailCategoryRecipientResolver(TapirIntegrationTest):
             mail_category=mail_category, cache={}
         )
 
-        self.assertEqual(
-            {internal_recipient, external_recipient},
-            {addressed.recipient for addressed in result},
+        self.assertCountEqual(
+            [
+                AddressedRecipient.at_own_address(internal_recipient),
+                AddressedRecipient.at_own_address(external_recipient),
+            ],
+            result,
         )
 
     def test_resolveRecipients_modeIsAlwaysOn_userIsAlwaysIncluded(
@@ -86,7 +90,7 @@ class TestMailCategoryRecipientResolver(TapirIntegrationTest):
             mail_category=mail_category, cache={}
         )
         self.assertEqual(
-            [internal_recipient], [addressed.recipient for addressed in result]
+            [AddressedRecipient.at_own_address(internal_recipient)], result
         )
 
         InternalRecipientCategoryRegistration.objects.create(
@@ -98,7 +102,7 @@ class TestMailCategoryRecipientResolver(TapirIntegrationTest):
             mail_category=mail_category, cache={}
         )
         self.assertEqual(
-            [internal_recipient], [addressed.recipient for addressed in result]
+            [AddressedRecipient.at_own_address(internal_recipient)], result
         )
 
         InternalRecipientCategoryRegistration.objects.update(is_registered=False)
@@ -106,7 +110,7 @@ class TestMailCategoryRecipientResolver(TapirIntegrationTest):
             mail_category=mail_category, cache={}
         )
         self.assertEqual(
-            [internal_recipient], [addressed.recipient for addressed in result]
+            [AddressedRecipient.at_own_address(internal_recipient)], result
         )
 
     def test_resolveRecipients_modeIsDefaultOn_userOnlyExcludedIfExplicitlyUnregistered(
@@ -130,7 +134,7 @@ class TestMailCategoryRecipientResolver(TapirIntegrationTest):
             mail_category=mail_category, cache={}
         )
         self.assertEqual(
-            [internal_recipient], [addressed.recipient for addressed in result]
+            [AddressedRecipient.at_own_address(internal_recipient)], result
         )
 
         InternalRecipientCategoryRegistration.objects.create(
@@ -142,14 +146,14 @@ class TestMailCategoryRecipientResolver(TapirIntegrationTest):
             mail_category=mail_category, cache={}
         )
         self.assertEqual(
-            [internal_recipient], [addressed.recipient for addressed in result]
+            [AddressedRecipient.at_own_address(internal_recipient)], result
         )
 
         InternalRecipientCategoryRegistration.objects.update(is_registered=False)
         result = MailCategoryRecipientResolver.resolve_recipients(
             mail_category=mail_category, cache={}
         )
-        self.assertEqual([], [addressed.recipient for addressed in result])
+        self.assertEqual([], result)
 
     def test_resolveRecipients_modeIsDefaultOff_userOnlyIncludedIfExplicitlyRegistered(
         self,
@@ -171,7 +175,7 @@ class TestMailCategoryRecipientResolver(TapirIntegrationTest):
         result = MailCategoryRecipientResolver.resolve_recipients(
             mail_category=mail_category, cache={}
         )
-        self.assertEqual([], [addressed.recipient for addressed in result])
+        self.assertEqual([], result)
 
         InternalRecipientCategoryRegistration.objects.create(
             member=internal_recipient,
@@ -182,14 +186,14 @@ class TestMailCategoryRecipientResolver(TapirIntegrationTest):
             mail_category=mail_category, cache={}
         )
         self.assertEqual(
-            [internal_recipient], [addressed.recipient for addressed in result]
+            [AddressedRecipient.at_own_address(internal_recipient)], result
         )
 
         InternalRecipientCategoryRegistration.objects.update(is_registered=False)
         result = MailCategoryRecipientResolver.resolve_recipients(
             mail_category=mail_category, cache={}
         )
-        self.assertEqual([], [addressed.recipient for addressed in result])
+        self.assertEqual([], result)
 
     def test_resolveRecipients_memberHasConfirmedExtra_resultContainsMemberThenExtra(
         self,

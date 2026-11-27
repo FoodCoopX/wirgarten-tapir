@@ -1,6 +1,7 @@
 import datetime
 
 from dateutil.relativedelta import relativedelta
+from tapir.mail.addressed_recipient import AddressedRecipient
 from tapir.mail.registries import get_mail_segment_definitions
 from tapir.mail.services.segment import resolve_segments
 
@@ -83,17 +84,17 @@ class SegmentTest(TapirIntegrationTest):
         self.assertSetEqual(self.ids(segment_members), set(expected_member_ids))
 
     def test_resolveSegment_withoutActiveSubscription_correctResult(self):
-        expected_members = {
-            self.member_without_shares,
-            self.member_with_shares,
-        }
         segment_members = resolve_segments(
             cache={},
             dynamic_segment_names_additive=[Segments.WITHOUT_ACTIVE_SUBSCRIPTION],
         )
 
-        self.assertEqual(
-            expected_members, {addressed.recipient for addressed in segment_members}
+        self.assertCountEqual(
+            [
+                AddressedRecipient.at_own_address(self.member_without_shares),
+                AddressedRecipient.at_own_address(self.member_with_shares),
+            ],
+            segment_members,
         )
 
     def test_resolveSegment_withActiveSubscriptionStartsInFuture_memberIsNotIncluded(

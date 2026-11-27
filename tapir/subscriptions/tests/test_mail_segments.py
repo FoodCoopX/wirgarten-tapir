@@ -1,5 +1,6 @@
 import datetime
 
+from tapir.mail.addressed_recipient import AddressedRecipient
 from tapir.mail.services.segment import resolve_segments
 
 from tapir.deliveries.tests.factories import JokerFactory
@@ -105,7 +106,7 @@ class TestMailSegments(TapirIntegrationTest):
             ],
         )
 
-        self.assertEqual([member], [addressed.recipient for addressed in result])
+        self.assertEqual([AddressedRecipient.at_own_address(member)], result)
 
     def test_subscriptionMailSegment_memberHasFutureSubscription_memberIncluded(self):
         product_type = ProductTypeFactory.create()
@@ -128,7 +129,7 @@ class TestMailSegments(TapirIntegrationTest):
             ],
         )
 
-        self.assertEqual([member], [addressed.recipient for addressed in result])
+        self.assertEqual([AddressedRecipient.at_own_address(member)], result)
 
     def test_deliveryThisWeekMailSegment_memberHasJokerThisWeek_onlyOtherMemberIncluded(
         self,
@@ -154,7 +155,7 @@ class TestMailSegments(TapirIntegrationTest):
         )
 
         self.assertEqual(
-            [member_with_delivery], [addressed.recipient for addressed in result]
+            [AddressedRecipient.at_own_address(member_with_delivery)], result
         )
 
     def test_deliveryNextWeekMailSegment_memberHasJokerThisWeek_memberIncluded(self):
@@ -176,7 +177,7 @@ class TestMailSegments(TapirIntegrationTest):
             ],
         )
 
-        self.assertEqual([member], [addressed.recipient for addressed in result])
+        self.assertEqual([AddressedRecipient.at_own_address(member)], result)
 
     def test_deliveryThisWeekForAllProductsMailSegment_membersWithSubscriptionsOfDifferentTypes_bothIncluded(
         self,
