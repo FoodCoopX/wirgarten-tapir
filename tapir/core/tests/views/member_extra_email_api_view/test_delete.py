@@ -15,7 +15,7 @@ from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
-@patch.object(MailingListUnsubscriber, "unsubscribe_from_all", autospec=True)
+@patch.object(MailingListUnsubscriber, "unsubscribe_if_address_unused", autospec=True)
 class TestMemberExtraEmailApiViewDelete(TapirIntegrationTest):
     maxDiff = 3000
 
@@ -103,7 +103,7 @@ class TestMemberExtraEmailApiViewDelete(TapirIntegrationTest):
         self.assertFalse(MemberExtraEmailDeletedLogEntry.objects.exists())
 
     def test_delete_confirmedExtraEmail_unsubscribesFromAllListsAfterCommit(
-        self, mock_unsubscribe_from_all: MagicMock
+        self, mock_unsubscribe_if_address_unused: MagicMock
     ):
         member = MemberFactory.create()
         self.client.force_login(member)
@@ -117,12 +117,12 @@ class TestMemberExtraEmailApiViewDelete(TapirIntegrationTest):
             response = self.client.delete(url)
 
         self.assertStatusCode(response, status.HTTP_200_OK)
-        mock_unsubscribe_from_all.assert_called_once_with(
+        mock_unsubscribe_if_address_unused.assert_called_once_with(
             email="test@example.com", cache=ANY
         )
 
     def test_delete_unconfirmedExtraEmail_doesNotUnsubscribe(
-        self, mock_unsubscribe_from_all: MagicMock
+        self, mock_unsubscribe_if_address_unused: MagicMock
     ):
         member = MemberFactory.create()
         self.client.force_login(member)
@@ -136,4 +136,4 @@ class TestMemberExtraEmailApiViewDelete(TapirIntegrationTest):
             response = self.client.delete(url)
 
         self.assertStatusCode(response, status.HTTP_200_OK)
-        mock_unsubscribe_from_all.assert_not_called()
+        mock_unsubscribe_if_address_unused.assert_not_called()

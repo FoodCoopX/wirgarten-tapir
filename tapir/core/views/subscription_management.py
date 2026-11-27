@@ -1,3 +1,4 @@
+from django.core.cache import cache as django_cache
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
@@ -35,19 +36,26 @@ class SubscriptionManagementView(View):
         return render(
             request,
             "core/subscription_management.html",
-            {"address": address, "cache": cache},
+            {"address": address, "token": token, "cache": cache},
         )
 
 
 class SubscriptionManagementLinkRequestView(FormView):
+    # Limits how often the public form can make Tapir send a link to the same address.
+    LINK_MAIL_COOLDOWN_SECONDS = 15 * 60
+
     form_class = SubscriptionManagementLinkRequestForm
     template_name = "core/subscription_management_link_request.html"
     success_url = reverse_lazy("core:subscription_management_link_requested")
 
     def form_valid(self, form: SubscriptionManagementLinkRequestForm) -> HttpResponse:
-        SubscriptionManagementLinkSender.send_link(
-            address=EmailNormaliser.normalise(form.cleaned_data["email"]), cache={}
-        )
+        address = EmailNormaliser.normalise(form.cleaned_data["email"])
+        if django_cache.add(
+            f"subscription_management_link_request:{address}",
+            True,
+            timeout=self.LINK_MAIL_COOLDOWN_SECONDS,
+        ):
+            SubscriptionManagementLinkSender.send_link(address=address, cache={})
         return super().form_valid(form)
 
 

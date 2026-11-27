@@ -5,12 +5,12 @@ from tapir.core.services.mailman.mailing_list_subscription_checker import (
 )
 from tapir.core.services.mailman.tapir_mailman_client import TapirMailmanClient
 from tapir.mail.models import ExternalRecipient
-from tapir.wirgarten.models import Member
+from tapir.wirgarten.models import Member, MemberExtraEmail
 
 
 class MailingListUnsubscriber:
     @classmethod
-    def unsubscribe_from_all(cls, email: str, cache: dict):
+    def unsubscribe_if_address_unused(cls, email: str, cache: dict):
         if not settings.MAILING_LISTS_ENABLED:
             return
         if cls._is_address_still_in_use(email=email):
@@ -31,5 +31,8 @@ class MailingListUnsubscriber:
     def _is_address_still_in_use(email: str) -> bool:
         return (
             Member.objects.filter(email=email).exists()
+            or MemberExtraEmail.objects.filter(
+                email=email, confirmed_on__isnull=False
+            ).exists()
             or ExternalRecipient.objects.filter(email=email).exists()
         )

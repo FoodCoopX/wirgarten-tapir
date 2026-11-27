@@ -40,6 +40,36 @@ class TestSubscriptionManagementLinkRequestView(TapirIntegrationTest):
         )
         mock_send_link.assert_called_once_with(address="extra@example.com", cache=ANY)
 
+    def test_post_addressRequestedWithinTheCooldown_sendsOnlyOnceButRedirectsBothTimes(
+        self, mock_send_link: MagicMock
+    ):
+        for _ in range(2):
+            response = self.client.post(
+                reverse("core:subscription_management_link_request"),
+                data={"email": "extra@example.com"},
+            )
+
+            self.assertRedirects(
+                response,
+                reverse("core:subscription_management_link_requested"),
+                fetch_redirect_response=False,
+            )
+        mock_send_link.assert_called_once_with(address="extra@example.com", cache=ANY)
+
+    def test_post_otherAddressWithinTheCooldown_sendsToBoth(
+        self, mock_send_link: MagicMock
+    ):
+        for address in ["first@example.com", "second@example.com"]:
+            self.client.post(
+                reverse("core:subscription_management_link_request"),
+                data={"email": address},
+            )
+
+        self.assertEqual(
+            ["first@example.com", "second@example.com"],
+            [call.kwargs["address"] for call in mock_send_link.call_args_list],
+        )
+
     def test_post_invalidAddress_showsTheFormAgainWithoutSending(
         self, mock_send_link: MagicMock
     ):

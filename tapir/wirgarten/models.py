@@ -1195,6 +1195,22 @@ class MemberExtraEmailDeletedLogEntry(LogEntry):
         return self
 
 
+class MemberExtraEmailSubscriptionsChangedLogEntry(LogEntry):
+    template_name = (
+        "wirgarten/log/member_extra_email_subscriptions_changed_log_entry.html"
+    )
+
+    email = models.EmailField(max_length=1024)
+    changes = models.JSONField()
+
+    def populate_changes(self, email: str, changes: list[str], user: Member):
+        self.populate(actor=None, user=user)
+        self.email = email
+        self.changes = changes
+
+        return self
+
+
 class MemberExtraEmailConfirmedLogEntry(LogEntry):
     template_name = "wirgarten/log/member_extra_email_confirmed_log_entry.html"
 

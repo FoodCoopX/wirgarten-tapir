@@ -73,6 +73,18 @@ class MemberExtraRecipientProvider:
         ]
 
     @staticmethod
+    def is_extra_registered_to_mail_category(
+        extra_email: MemberExtraEmail, mail_category: MailCategory
+    ) -> bool:
+        registration = InternalRecipientCategoryRegistration.objects.filter(
+            mail_category=mail_category, member_extra_email=extra_email
+        ).first()
+        if registration is not None:
+            return registration.is_registered
+
+        return mail_category.mode != MailCategoryMode.OPTIONAL_DEFAULT_OFF
+
+    @staticmethod
     def _build_addressed_recipient(
         extra_email: MemberExtraEmail, member: Member, cache: dict
     ) -> AddressedRecipient:

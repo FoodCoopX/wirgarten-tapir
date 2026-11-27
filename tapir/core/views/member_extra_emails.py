@@ -214,7 +214,7 @@ class MemberExtraEmailApiView(APIView):
         if member_extra_email.is_confirmed:
             email = member_extra_email.email
             transaction.on_commit(
-                lambda: MailingListUnsubscriber.unsubscribe_from_all(
+                lambda: MailingListUnsubscriber.unsubscribe_if_address_unused(
                     email=email, cache=self.cache
                 ),
                 robust=True,

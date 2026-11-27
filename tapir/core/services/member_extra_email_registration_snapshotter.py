@@ -6,8 +6,7 @@ from tapir.core.services.mailman.mailing_list_subscription_checker import (
     MailingListSubscriptionChecker,
 )
 from tapir.core.services.mailman.tapir_mailman_client import TapirMailmanClient
-from tapir.mail.models import InternalRecipientCategoryRegistration, MailCategory
-from tapir.mail.registries import get_mail_segments
+from tapir.mail.models import InternalRecipientCategoryRegistration
 from tapir.wirgarten.models import MemberExtraEmail
 
 
@@ -28,7 +27,6 @@ class MemberExtraEmailRegistrationSnapshotter:
 
     @staticmethod
     def _snapshot_mail_categories(extra_email: MemberExtraEmail):
-        segment_registry = get_mail_segments()
         InternalRecipientCategoryRegistration.objects.bulk_create(
             [
                 InternalRecipientCategoryRegistration(
@@ -38,12 +36,9 @@ class MemberExtraEmailRegistrationSnapshotter:
                         member=extra_email.member, mail_category=mail_category
                     ),
                 )
-                for mail_category in MailCategory.objects.exclude(
-                    dynamic_segment_name=""
-                ).order_by("name")
-                if segment_registry[mail_category.dynamic_segment_name]()
-                .filter(id=extra_email.member_id)
-                .exists()
+                for mail_category in InternalRecipientManager.get_categories_for_member(
+                    member=extra_email.member
+                )
             ]
         )
 
