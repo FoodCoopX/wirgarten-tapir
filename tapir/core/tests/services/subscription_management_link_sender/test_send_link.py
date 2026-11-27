@@ -13,7 +13,9 @@ from tapir.mail.triggers.transactional_trigger import (
     TransactionalTrigger,
     TransactionalTriggerData,
 )
+from tapir.utils.tests_utils import mock_parameter_value
 from tapir.wirgarten.mail_events import Events
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.tests.factories import MemberExtraEmailFactory, MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
@@ -32,7 +34,10 @@ class TestSendLink(TapirIntegrationTest):
         MemberFactory.create(email="main@example.com")
         ExternalRecipient.objects.create(email="main@example.com", first_name="Main")
 
-        SubscriptionManagementLinkSender.send_link(address="main@example.com", cache={})
+        SubscriptionManagementLinkSender.send_link(
+            address="main@example.com",
+            cache=self._build_cache(extra_mail_addresses_enabled=True),
+        )
 
         mock_fire_action.assert_not_called()
         mock_build_link_for_address.assert_not_called()
@@ -48,7 +53,8 @@ class TestSendLink(TapirIntegrationTest):
         )
 
         SubscriptionManagementLinkSender.send_link(
-            address="extra@example.com", cache={}
+            address="extra@example.com",
+            cache=self._build_cache(extra_mail_addresses_enabled=True),
         )
 
         self._assert_link_sent(
@@ -67,7 +73,8 @@ class TestSendLink(TapirIntegrationTest):
         )
 
         SubscriptionManagementLinkSender.send_link(
-            address="external@example.com", cache={}
+            address="external@example.com",
+            cache=self._build_cache(extra_mail_addresses_enabled=True),
         )
 
         self._assert_link_sent(
@@ -83,11 +90,37 @@ class TestSendLink(TapirIntegrationTest):
         MemberExtraEmailFactory.create(email="unknown@example.com", confirmed_on=None)
 
         SubscriptionManagementLinkSender.send_link(
-            address="unknown@example.com", cache={}
+            address="unknown@example.com",
+            cache=self._build_cache(extra_mail_addresses_enabled=True),
         )
 
         mock_fire_action.assert_not_called()
         mock_build_link_for_address.assert_not_called()
+
+    def test_sendLink_confirmedExtraButExtraMailAddressesDisabled_sendsNothing(
+        self, mock_fire_action: MagicMock, mock_build_link_for_address: MagicMock
+    ):
+        MemberExtraEmailFactory.create(
+            email="extra@example.com", confirmed_on=timezone.now()
+        )
+
+        SubscriptionManagementLinkSender.send_link(
+            address="extra@example.com",
+            cache=self._build_cache(extra_mail_addresses_enabled=False),
+        )
+
+        mock_fire_action.assert_not_called()
+        mock_build_link_for_address.assert_not_called()
+
+    @staticmethod
+    def _build_cache(extra_mail_addresses_enabled: bool) -> dict:
+        cache = {}
+        mock_parameter_value(
+            cache=cache,
+            key=ParameterKeys.ENABLE_EXTRA_MAIL_ADDRESSES,
+            value=extra_mail_addresses_enabled,
+        )
+        return cache
 
     @staticmethod
     def _assert_link_sent(

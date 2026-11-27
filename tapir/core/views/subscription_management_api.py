@@ -70,7 +70,7 @@ class SubscriptionManagementDataApiView(APIView):
                         MailingListSelfService.build_list_data(
                             email=address,
                             include_advertised_lists=SubscriptionManagementRequestResolver.can_subscribe_to_lists(
-                                address=address
+                                address=address, cache=cache
                             ),
                             cache=cache,
                         )
@@ -334,7 +334,7 @@ class SubscriptionManagementMailingListSubscribeApiView(
 
     def _apply(self, email: str, mailing_list: MailingList, cache: dict):
         if not SubscriptionManagementRequestResolver.can_subscribe_to_lists(
-            address=email
+            address=email, cache=cache
         ):
             raise ValidationError(
                 "Diese Adresse kann sich nicht selbst bei einer Liste anmelden"

@@ -37,12 +37,17 @@ class SubscriptionManagementRequestResolver:
         )
 
     @staticmethod
-    def can_subscribe_to_lists(address: str) -> bool:
+    def can_subscribe_to_lists(address: str, cache: dict) -> bool:
+        if ExternalRecipient.objects.filter(email=address).exists():
+            return True
+
         return (
-            MemberExtraEmail.objects.filter(
+            get_parameter_value(
+                key=ParameterKeys.ENABLE_EXTRA_MAIL_ADDRESSES, cache=cache
+            )
+            and MemberExtraEmail.objects.filter(
                 email=address, confirmed_on__isnull=False
             ).exists()
-            or ExternalRecipient.objects.filter(email=address).exists()
         )
 
     @staticmethod

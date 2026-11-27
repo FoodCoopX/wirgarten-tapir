@@ -4,6 +4,8 @@ from tapir.core.services.subscription_management_request_resolver import (
     SubscriptionManagementRequestResolver,
 )
 from tapir.mail.models import ExternalRecipient
+from tapir.utils.tests_utils import mock_parameter_value
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.tests.factories import MemberExtraEmailFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
@@ -16,7 +18,8 @@ class TestCanSubscribeToLists(TapirIntegrationTest):
 
         self.assertTrue(
             SubscriptionManagementRequestResolver.can_subscribe_to_lists(
-                address=self.ADDRESS
+                address=self.ADDRESS,
+                cache=self._build_cache(extra_mail_addresses_enabled=True),
             )
         )
 
@@ -25,7 +28,8 @@ class TestCanSubscribeToLists(TapirIntegrationTest):
 
         self.assertTrue(
             SubscriptionManagementRequestResolver.can_subscribe_to_lists(
-                address=self.ADDRESS
+                address=self.ADDRESS,
+                cache=self._build_cache(extra_mail_addresses_enabled=True),
             )
         )
 
@@ -34,13 +38,37 @@ class TestCanSubscribeToLists(TapirIntegrationTest):
 
         self.assertFalse(
             SubscriptionManagementRequestResolver.can_subscribe_to_lists(
-                address=self.ADDRESS
+                address=self.ADDRESS,
+                cache=self._build_cache(extra_mail_addresses_enabled=True),
             )
         )
 
     def test_canSubscribeToLists_unknownAddress_returnsFalse(self):
         self.assertFalse(
             SubscriptionManagementRequestResolver.can_subscribe_to_lists(
-                address=self.ADDRESS
+                address=self.ADDRESS,
+                cache=self._build_cache(extra_mail_addresses_enabled=True),
             )
         )
+
+    def test_canSubscribeToLists_confirmedExtraButExtraMailAddressesDisabled_returnsFalse(
+        self,
+    ):
+        MemberExtraEmailFactory.create(email=self.ADDRESS, confirmed_on=timezone.now())
+
+        self.assertFalse(
+            SubscriptionManagementRequestResolver.can_subscribe_to_lists(
+                address=self.ADDRESS,
+                cache=self._build_cache(extra_mail_addresses_enabled=False),
+            )
+        )
+
+    @staticmethod
+    def _build_cache(extra_mail_addresses_enabled: bool) -> dict:
+        cache = {}
+        mock_parameter_value(
+            cache=cache,
+            key=ParameterKeys.ENABLE_EXTRA_MAIL_ADDRESSES,
+            value=extra_mail_addresses_enabled,
+        )
+        return cache

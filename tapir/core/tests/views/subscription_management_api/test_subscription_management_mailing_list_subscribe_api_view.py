@@ -14,6 +14,7 @@ from tapir.core.services.subscription_management_token_signer import (
 from tapir.core.tests.mailman_test_helper import MailmanTestHelper, MockMailingListData
 from tapir.mail.models import ExternalRecipient
 from tapir.wirgarten.models import MemberExtraEmailSubscriptionsChangedLogEntry
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import MemberExtraEmailFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
@@ -38,6 +39,7 @@ class TestSubscriptionManagementMailingListSubscribeApiView(TapirIntegrationTest
         ParameterDefinitions().import_definitions(bulk_create=True)
 
     def setUp(self):
+        self._set_parameter(key=ParameterKeys.ENABLE_EXTRA_MAIL_ADDRESSES, value=True)
         self.mailing_list = MailmanTestHelper.mock_domain(
             test=self,
             mailing_list_datas=[MockMailingListData(name="list", advertised=True)],
