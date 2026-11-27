@@ -47,10 +47,16 @@ class MailingListCreateSerializer(serializers.Serializer):
     description = serializers.CharField()
 
 
+class MailingListRecipientExtraEmailMemberSerializer(serializers.Serializer):
+    display_name = serializers.CharField()
+    email = serializers.EmailField()
+
+
 class MailingListRecipientSerializer(serializers.Serializer):
     address = serializers.EmailField()
     user_confirmed = serializers.BooleanField()
     link_to_member_profile = serializers.CharField(allow_null=True)
+    extra_email_member = MailingListRecipientExtraEmailMemberSerializer(allow_null=True)
 
 
 class MailingListHeldMessageSerializer(serializers.Serializer):

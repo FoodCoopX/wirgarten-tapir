@@ -150,6 +150,7 @@ models/MailingListCreateRequest.ts
 models/MailingListHeldMessage.ts
 models/MailingListModerateHeldMessageRequestRequest.ts
 models/MailingListRecipient.ts
+models/MailingListRecipientExtraEmailMember.ts
 models/MailingListSubscribeExternalRecipientRequestRequest.ts
 models/MailingListSubscribeInternalRecipientRequestRequest.ts
 models/MandateReferencePreviewResponse.ts

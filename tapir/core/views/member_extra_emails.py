@@ -1,9 +1,5 @@
 from django.conf import settings
-from django.core.exceptions import (
-    ValidationError as DjangoValidationError,
-    PermissionDenied,
-)
-from django.core.validators import validate_email
+from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
@@ -19,7 +15,11 @@ from tapir.mail.triggers.transactional_trigger import (
     TransactionalTriggerData,
 )
 
+from tapir.accounts.services.email_normaliser import EmailNormaliser
 from tapir.configuration.parameter import get_parameter_value
+from tapir.core.services.mailman.extra_email_mailing_list_manager import (
+    ExtraEmailMailingListManager,
+)
 from tapir.core.services.member_extra_email_registration_snapshotter import (
     MemberExtraEmailRegistrationSnapshotter,
 )
@@ -97,11 +97,14 @@ class MemberExtraEmailApiView(APIView):
         check_permission_or_self(pk=member_id, request=request)
         member = get_object_or_404(Member, id=member_id)
 
-        extra_email_address = serializer.validated_data["extra_email"].strip()
-        try:
-            validate_email(extra_email_address)
-        except DjangoValidationError:
-            raise RestValidationError("Ungültige Adresse")
+        extra_email_address = serializer.validated_data["extra_email"]
+
+        if EmailNormaliser.normalise(extra_email_address) == EmailNormaliser.normalise(
+            member.email
+        ):
+            raise RestValidationError(
+                "Diese Adresse ist bereits die Hauptadresse des Mitglieds"
+            )
 
         if MemberExtraEmail.objects.filter(
             member=member, email=extra_email_address
@@ -196,6 +199,15 @@ class MemberExtraEmailApiView(APIView):
             user=member_extra_email.member,
             actor=request.user,
         ).save()
+
+        if member_extra_email.confirmed_on is not None:
+            email = member_extra_email.email
+            transaction.on_commit(
+                lambda: ExtraEmailMailingListManager.unsubscribe_from_all(
+                    email=email, cache=self.cache
+                ),
+                robust=True,
+            )
 
         member_extra_email.delete()
 

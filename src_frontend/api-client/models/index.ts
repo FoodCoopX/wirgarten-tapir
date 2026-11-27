@@ -133,6 +133,7 @@ export * from "./MailingListCreateRequest";
 export * from "./MailingListHeldMessage";
 export * from "./MailingListModerateHeldMessageRequestRequest";
 export * from "./MailingListRecipient";
+export * from "./MailingListRecipientExtraEmailMember";
 export * from "./MailingListSubscribeExternalRecipientRequestRequest";
 export * from "./MailingListSubscribeInternalRecipientRequestRequest";
 export * from "./MandateReferencePreviewResponse";

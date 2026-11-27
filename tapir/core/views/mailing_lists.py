@@ -51,6 +51,7 @@ from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
     Member,
+    MemberExtraEmail,
 )
 from tapir.wirgarten.utils import check_permission_or_self
 
@@ -231,12 +232,33 @@ class MailingListRecipientListView(APIView):
             for request in mailing_list.requests
         ]
 
-        members_by_email_address = {
-            member.email: member for member in Member.objects.all()
+        addresses = [recipient["address"] for recipient in recipients]
+        members_by_extra_address = {
+            extra_email.email: extra_email.member
+            for extra_email in MemberExtraEmail.objects.filter(email__in=addresses)
+            .select_related("member")
+            .order_by("-created_at")
+        }
+        members_by_main_address = {
+            member.email: member
+            for member in Member.objects.filter(email__in=addresses)
         }
 
         for recipient in recipients:
-            member = members_by_email_address.get(recipient["address"], None)
+            address = recipient["address"]
+            main_member = members_by_main_address.get(address)
+            extra_email_member = (
+                members_by_extra_address.get(address) if main_member is None else None
+            )
+            recipient["extra_email_member"] = (
+                {
+                    "display_name": extra_email_member.get_display_name(),
+                    "email": extra_email_member.email,
+                }
+                if extra_email_member is not None
+                else None
+            )
+            member = main_member or extra_email_member
             recipient["link_to_member_profile"] = (
                 reverse("wirgarten:member_detail", kwargs={"pk": member.id})
                 if member is not None

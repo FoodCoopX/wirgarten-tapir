@@ -104,13 +104,16 @@ Extra recipients of a category:
 
 ### Mailman for extras
 
-New service `tapir/core/services/mailman/extra_email_mailing_list_manager.py`:
-- `subscribe(extra_email, mailing_list)` / `unsubscribe(...)`: self-service rules, the same as for members.
-- `unsubscribe_from_all(email, cache)`: called on extra deletion (by the member, an admin or self-removal). It skips the call if the same address is still a confirmed extra elsewhere or a main address.
+`ExtraEmailMailingListManager.unsubscribe_from_all(email, cache)` (`tapir/core/services/mailman/extra_email_mailing_list_manager.py`):
+- Unsubscribes the address from every list and discards its pending requests.
+- Called in `on_commit` on deletion of a confirmed extra (by the member, an admin or self-removal).
+- Skips addresses that are still a confirmed extra elsewhere or a main address.
+
+Subscribe / unsubscribe for extras use the address-based self-service service extracted in phase 6, with the same rules as for members.
 
 Admin recipient list (`MailingListRecipientListView`):
 - Links extra addresses to their member's profile.
-- Marks extra addresses as such.
+- Marks extra addresses as such, with the name and main address of their member.
 
 ### Disabling the feature
 
@@ -154,7 +157,7 @@ All endpoints are public (`permission_classes = []`). The token is validated in 
 - Extract the shared logic from `MemberMailCategoryDataApiView` and the member self-service views into services, so the member and extra paths share it:
   - Category registrations: take a `Member` or a `MemberExtraEmail`. `MemberMailCategoryDataApiView.post` switches to the same update-or-create semantics.
   - Category selection (categories whose dynamic segment contains the member): currently duplicated in `MemberMailCategoryDataApiView.get` and `MemberExtraEmailRegistrationSnapshotter._snapshot_mail_categories`; both use the extracted service.
-  - Mailing lists: take an address.
+  - Mailing lists: subscribe / unsubscribe take an address, used by the member views and the access link endpoints.
 - Throttling (optional, decided at the beginning of phase 6): DRF `ScopedRateThrottle` on the request-link endpoint and the token endpoints. Nothing in the repo uses throttling yet; it needs `REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]`.
 
 ### Member email change
@@ -212,7 +215,7 @@ Rejoining restores nothing: the member subscribes again through self-service.
 - [x] Phase 1 — mail module (`tapir/mail`): `AddressedRecipient`, resolution returns only `AddressedRecipient`s (segment members expanded through `MemberExtraRecipientProvider`, replacing `Member.get_extra_recipients` and the `getattr` lookup; step order, override matching, onboarding trigger, preview, dead branch), category and static recipients without copies, dedup by email; tests
 - [x] Phase 2 — `receives_direct_mails` field + migration, `MemberExtraRecipientProvider` filters on it, API/serializer/modal checkbox
 - [x] Phase 3 — extras in `MailCategoryRecipientResolver` + extra defaults, snapshot at confirmation (categories + lists), data migration for existing extras
-- [ ] Phase 4 — extra mailing list manager, unsubscribe on deletion, recipient list display, parameter description update, explanation text default update
+- [x] Phase 4 — extra mailing list manager (`unsubscribe_from_all`), unsubscribe on deletion, recipient list display, parameter description update, explanation text default update
 - [ ] Phase 5 — access token service, send-link endpoint + trigger, public request page, "Abos verwalten Link" token
 - [ ] Phase 6 — per-extra category state, shared category services (update-or-create, also for the member path; category selection, also for the snapshotter), management API + island (categories, lists, self-removal), log entry, throttling (optional: decide at the beginning of the phase whether it's necessary; if yes, it also covers the phase 5 request-link endpoint)
 - [ ] Phase 7 — mailman subscriptions follow the member's email change

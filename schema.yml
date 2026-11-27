@@ -14000,10 +14000,26 @@ components:
         link_to_member_profile:
           type: string
           nullable: true
+        extra_email_member:
+          allOf:
+          - $ref: '#/components/schemas/MailingListRecipientExtraEmailMember'
+          nullable: true
       required:
       - address
+      - extra_email_member
       - link_to_member_profile
       - user_confirmed
+    MailingListRecipientExtraEmailMember:
+      type: object
+      properties:
+        display_name:
+          type: string
+        email:
+          type: string
+          format: email
+      required:
+      - display_name
+      - email
     MailingListSubscribeExternalRecipientRequestRequest:
       type: object
       properties:
