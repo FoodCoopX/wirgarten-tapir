@@ -78,6 +78,33 @@ class TestUnsubscribeFormerMembers(TapirIntegrationTest):
         mailing_list.unsubscribe.assert_not_called()
         self.assertFalse(MemberUnsubscribedFromMailingListsLogEntry.objects.exists())
 
+    def test_unsubscribeFormerMembers_laterListFails_logsEarlierRemovalsAndRaises(
+        self, mock_get_former_member_by_address: MagicMock
+    ):
+        former_member = MemberFactory.create()
+        mock_get_former_member_by_address.return_value = {
+            "former@example.com": former_member
+        }
+        failing_list = self._mock_lists(
+            MockMailingListData(
+                name="first", confirmed_recipients=["former@example.com"]
+            ),
+            MockMailingListData(
+                name="second", confirmed_recipients=["former@example.com"]
+            ),
+        )[1]
+        failing_list.unsubscribe.side_effect = RuntimeError("Mailman unreachable")
+
+        with self.assertRaisesMessage(RuntimeError, "Mailman unreachable"):
+            FormerMemberListUnsubscriber.unsubscribe_former_members(cache={})
+
+        log_entry = MemberUnsubscribedFromMailingListsLogEntry.objects.get()
+        self.assertEqual(former_member.id, log_entry.user_id)
+        self.assertEqual(
+            ["former@example.com: von first@example.com abgemeldet"],
+            log_entry.removals,
+        )
+
     @override_settings(MAILING_LISTS_ENABLED=False)
     def test_unsubscribeFormerMembers_mailingListsDisabled_doesNothing(
         self, mock_get_former_member_by_address: MagicMock

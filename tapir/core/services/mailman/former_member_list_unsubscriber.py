@@ -20,29 +20,30 @@ class FormerMemberListUnsubscriber:
             )
         )
         removals_by_member: dict[Member, list[str]] = {}
-        for mailing_list in TapirMailmanClient.get_domain(cache=cache).lists:
-            for subscriber in mailing_list.members:
-                address = str(subscriber.address)
-                if address not in former_member_by_address:
-                    continue
-                mailing_list.unsubscribe(
-                    email=address, pre_confirmed=True, pre_approved=True
-                )
-                removals_by_member.setdefault(
-                    former_member_by_address[address], []
-                ).append(f"{address}: von {mailing_list.fqdn_listname} abgemeldet")
-            for request in mailing_list.requests:
-                address = request["email"]
-                if address not in former_member_by_address:
-                    continue
-                mailing_list.discard_request(request_id=request["token"])
-                removals_by_member.setdefault(
-                    former_member_by_address[address], []
-                ).append(
-                    f"{address}: Anfrage für {mailing_list.fqdn_listname} verworfen"
-                )
-
-        for member, removals in removals_by_member.items():
-            MemberUnsubscribedFromMailingListsLogEntry().populate_removals(
-                removals=removals, user=member
-            ).save()
+        try:
+            for mailing_list in TapirMailmanClient.get_domain(cache=cache).lists:
+                for subscriber in mailing_list.members:
+                    address = str(subscriber.address)
+                    if address not in former_member_by_address:
+                        continue
+                    mailing_list.unsubscribe(
+                        email=address, pre_confirmed=True, pre_approved=True
+                    )
+                    removals_by_member.setdefault(
+                        former_member_by_address[address], []
+                    ).append(f"{address}: von {mailing_list.fqdn_listname} abgemeldet")
+                for request in mailing_list.requests:
+                    address = request["email"]
+                    if address not in former_member_by_address:
+                        continue
+                    mailing_list.discard_request(request_id=request["token"])
+                    removals_by_member.setdefault(
+                        former_member_by_address[address], []
+                    ).append(
+                        f"{address}: Anfrage für {mailing_list.fqdn_listname} verworfen"
+                    )
+        finally:
+            for member, removals in removals_by_member.items():
+                MemberUnsubscribedFromMailingListsLogEntry().populate_removals(
+                    removals=removals, user=member
+                ).save()
