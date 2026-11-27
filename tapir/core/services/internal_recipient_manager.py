@@ -37,16 +37,36 @@ class InternalRecipientManager:
         return mail_category.mode == MailCategoryMode.OPTIONAL_DEFAULT_ON
 
     @staticmethod
-    def update_registrations(
-        recipient: Member | MemberExtraEmail,
-        is_registered_by_category: dict[MailCategory, bool],
+    def is_extra_email_registered_to_mail_category(
+        extra_email: MemberExtraEmail, mail_category: MailCategory
+    ) -> bool:
+        registration = InternalRecipientCategoryRegistration.objects.filter(
+            mail_category=mail_category, member_extra_email=extra_email
+        ).first()
+        if registration is not None:
+            return registration.is_registered
+
+        return mail_category.mode != MailCategoryMode.OPTIONAL_DEFAULT_OFF
+
+    @staticmethod
+    def update_member_registrations(
+        member: Member, is_registered_by_category: dict[MailCategory, bool]
     ):
-        recipient_field = (
-            "member" if isinstance(recipient, Member) else "member_extra_email"
-        )
         for mail_category, is_registered in is_registered_by_category.items():
             InternalRecipientCategoryRegistration.objects.update_or_create(
                 mail_category=mail_category,
-                **{recipient_field: recipient},
+                member=member,
+                defaults={"is_registered": is_registered},
+            )
+
+    @staticmethod
+    def update_extra_email_registrations(
+        extra_email: MemberExtraEmail,
+        is_registered_by_category: dict[MailCategory, bool],
+    ):
+        for mail_category, is_registered in is_registered_by_category.items():
+            InternalRecipientCategoryRegistration.objects.update_or_create(
+                mail_category=mail_category,
+                member_extra_email=extra_email,
                 defaults={"is_registered": is_registered},
             )

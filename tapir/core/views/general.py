@@ -91,8 +91,8 @@ class MemberMailCategoryDataApiView(APIView):
         check_permission_or_self(pk=member_id, request=request)
         member = get_object_or_404(Member, id=member_id)
 
-        InternalRecipientManager.update_registrations(
-            recipient=member,
+        InternalRecipientManager.update_member_registrations(
+            member=member,
             is_registered_by_category=MailCategorySelectionValidator.resolve_submitted_registrations(
                 available_categories=InternalRecipientManager.get_categories_for_member(
                     member=member

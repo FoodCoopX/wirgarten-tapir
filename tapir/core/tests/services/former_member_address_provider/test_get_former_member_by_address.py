@@ -56,12 +56,7 @@ class TestGetFormerMemberByAddress(TapirIntegrationTest):
         self._mark_active_member_as_active(mock_get_active_members)
         MemberExtraEmailFactory.create(
             member=self.former_member,
-            email="taken.by.active@example.com",
-            confirmed_on=timezone.now(),
-        )
-        MemberExtraEmailFactory.create(
-            member=self.active_member,
-            email="taken.by.active@example.com",
+            email="active@example.com",
             confirmed_on=timezone.now(),
         )
         MemberExtraEmailFactory.create(

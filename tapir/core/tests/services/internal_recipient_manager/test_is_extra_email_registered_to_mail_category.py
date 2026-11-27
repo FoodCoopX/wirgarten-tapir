@@ -1,16 +1,14 @@
 from django.utils import timezone
 
-from tapir.core.services.member_extra_recipient_provider import (
-    MemberExtraRecipientProvider,
-)
+from tapir.core.services.internal_recipient_manager import InternalRecipientManager
 from tapir.mail.models import InternalRecipientCategoryRegistration, MailCategoryMode
 from tapir.mail.tests.factories import MailCategoryFactory
 from tapir.wirgarten.tests.factories import MemberExtraEmailFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
-class TestIsExtraRegisteredToMailCategory(TapirIntegrationTest):
-    def test_isExtraRegisteredToMailCategory_noRegistration_followsTheExtraDefaults(
+class TestIsExtraEmailRegisteredToMailCategory(TapirIntegrationTest):
+    def test_isExtraEmailRegisteredToMailCategory_noRegistration_followsTheExtraDefaults(
         self,
     ):
         extra_email = MemberExtraEmailFactory.create(confirmed_on=timezone.now())
@@ -23,14 +21,14 @@ class TestIsExtraRegisteredToMailCategory(TapirIntegrationTest):
                 mail_category = MailCategoryFactory.create(mode=mode)
 
                 result = (
-                    MemberExtraRecipientProvider.is_extra_registered_to_mail_category(
+                    InternalRecipientManager.is_extra_email_registered_to_mail_category(
                         extra_email=extra_email, mail_category=mail_category
                     )
                 )
 
                 self.assertEqual(expected, result)
 
-    def test_isExtraRegisteredToMailCategory_extraHasRegistration_followsTheRegistrationEvenForAlwaysOn(
+    def test_isExtraEmailRegisteredToMailCategory_extraHasRegistration_followsTheRegistrationEvenForAlwaysOn(
         self,
     ):
         extra_email = MemberExtraEmailFactory.create(confirmed_on=timezone.now())
@@ -41,7 +39,7 @@ class TestIsExtraRegisteredToMailCategory(TapirIntegrationTest):
             is_registered=False,
         )
 
-        result = MemberExtraRecipientProvider.is_extra_registered_to_mail_category(
+        result = InternalRecipientManager.is_extra_email_registered_to_mail_category(
             extra_email=extra_email, mail_category=mail_category
         )
 

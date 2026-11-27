@@ -32,9 +32,6 @@ from tapir.core.services.mailman.mailing_list_unsubscriber import (
 from tapir.core.services.mailman.mailing_lists_enabled_checker import (
     MailingListsEnabledChecker,
 )
-from tapir.core.services.member_extra_recipient_provider import (
-    MemberExtraRecipientProvider,
-)
 from tapir.core.services.subscription_management_request_resolver import (
     SubscriptionManagementRequestResolver,
 )
@@ -105,7 +102,7 @@ class SubscriptionManagementDataApiView(APIView):
             "receives_direct_mails": extra_email.receives_direct_mails,
             "categories": categories,
             "categories_registered_to": {
-                category.id: MemberExtraRecipientProvider.is_extra_registered_to_mail_category(
+                category.id: InternalRecipientManager.is_extra_email_registered_to_mail_category(
                     extra_email=extra_email, mail_category=category
                 )
                 for category in categories
@@ -161,12 +158,12 @@ class SubscriptionManagementExtraCategoriesApiView(APIView):
             f"Kategorie {category.name}: {'angemeldet' if is_registered else 'abgemeldet'}"
             for category, is_registered in registrations.items()
             if is_registered
-            != MemberExtraRecipientProvider.is_extra_registered_to_mail_category(
+            != InternalRecipientManager.is_extra_email_registered_to_mail_category(
                 extra_email=extra_email, mail_category=category
             )
         ]
-        InternalRecipientManager.update_registrations(
-            recipient=extra_email, is_registered_by_category=registrations
+        InternalRecipientManager.update_extra_email_registrations(
+            extra_email=extra_email, is_registered_by_category=registrations
         )
         if changes:
             MemberExtraEmailSubscriptionsChangedLogEntry().populate_changes(
