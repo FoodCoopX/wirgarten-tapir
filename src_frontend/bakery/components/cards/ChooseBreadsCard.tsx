@@ -64,7 +64,6 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
   useEffect(() => {
     selectionRef.current = `${memberId}/${selectedYear}/${selectedWeek}`;
     loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [memberId, selectedWeek, selectedYear]);
 
   const firstDelivery = deliveries[0];

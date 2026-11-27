@@ -1,4 +1,3 @@
-/* eslint-disable react/jsx-wrap-multilines */
 import React, { FC, useEffect } from "react";
 
 import {
