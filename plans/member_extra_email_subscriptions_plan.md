@@ -256,7 +256,7 @@ Rejoining restores nothing: the member subscribes again through self-service.
 - [x] Phase 7 — management page content: per-extra category state, shared category services extracted from `MemberMailCategoryDataApiView` (update-or-create, also for the member path; category selection, also for the snapshotter), address-based list services extracted from the member self-service views, API + island (extra part, external part, lists, removals), log entry, per-address cooldown on the request page
 - [x] Phase 8 — mailman subscriptions follow the member's email change
 - [x] Phase 9 — former members: `ActiveMemberProvider` (move `MemberSegmentProvider.get_queryset_active_members` with its tests, add `get_former_members`, update callers), nightly unsubscription task + log entry, blocking new subscriptions (self-service, management page, admin views, snapshot), list unsubscription in `DeleteMemberApiView`
-- [ ] Phase 10 — test data generation (extras with and without direct mails; registrations of extras with direct mails through `MemberExtraEmailRegistrationSnapshotter`)
+- [x] Phase 10 — test data generation (extras with and without direct mails; registrations of extras with direct mails through `MemberExtraEmailRegistrationSnapshotter`)
 - [ ] Phase 11 — docs (`docs/admins`, explanation text): `ALWAYS_ON` categories are optional for extras, the snapshot runs only on the first confirmation, switching direct mails on later gives no snapshot, one owner per address, the management link token
 - [ ] Phase 12 — delete this plan file (`plans/member_extra_email_subscriptions_plan.md`)
 
@@ -285,60 +285,18 @@ Migrations run in the web container's start command before gunicorn (infra repo)
 
 ## Local examples (current phase)
 
-Cleared at the start of each phase. 51 local members count as former members (no shares, contract, association membership or solidarity contribution).
+Cleared at the start of each phase. The local database already has hand-made extras that would collide with generated addresses, so the examples need a fresh `populate`:
 
-**Before the nightly run**
+`docker compose exec -e MAILING_LISTS_ENABLED=True web poetry run python manage.py populate --reset_all`
 
-- [Elia](http://localhost:8000/tapir/members/E59aAxrYW4) (former): the "Mailing-Listen" card shows the former-member hint, no "Anmelden" buttons, and only "Einladung ablehnen" for the invitation to `unmoderiert-geschlossen`. Subscribed to `moderiert-geschlossen`.
-- [Felipe](http://localhost:8000/tapir/members/QOCF_orJdb) (former): subscribed to `unmoderiert-offen`, like his confirmed extra felipe.extra@example.com, whose [management page](http://localhost:8000/core/subscription_management/ImZlbGlwZS5leHRyYUBleGFtcGxlLmNvbSI:1xWvMp:POg4SkhpNEbVdbZZ9SOp5Qx67Ya0cv2v2xD_oRh_ksc) shows the same hint (link valid until 2026-11-30).
-- [Louis](http://localhost:8000/tapir/members/DLZAQp2E7P) (active): unchanged card, can still join lists.
-- On the [admin mailing list page](http://localhost:8000/core/mailing_lists), inviting Elia (internal) or `fredy.fabre@example.com` (external) is refused with the former-member message.
-
-**Running the nightly task by hand**
-
-`docker compose exec -e MAILING_LISTS_ENABLED=True web poetry run python manage.py shell -c "from tapir.core.tasks import unsubscribe_former_members_from_mailing_lists as task; task()"`
-
-Afterwards Elia, Fredy, Felipe and felipe.extra@example.com are off their lists, the invitations of Elia and Fatima are discarded, and each of their profiles has a "Als ehemaliges Mitglied von Mailing-Listen entfernt" log entry. A second run changes nothing.
-
-**Deleting a member**: "Mitglied löschen" on a former member's profile removes the main and extra addresses from all lists after the deletion.
+Afterwards about 15% of the members have an extra `<main local part>.extra@example.com`: mostly confirmed with direct mails, some confirmed without, some unconfirmed. Confirmed extras with direct mails have the main address's category registrations and, for active members, its list subscriptions. `Zusätzlich E-Mail-Adressen erlauben` is on.
 
 ## Review order (current phase)
 
 Cleared at the start of each phase. Staged files count as reviewed (for partly staged files, only the unstaged part); generated files are left out.
 
 1. `plans/member_extra_email_subscriptions_plan.md`
-
-**Active members**
-
-2. `tapir/core/services/active_member_provider.py` (moved from `MemberSegmentProvider.get_queryset_active_members`, now with required parameters, plus `get_former_members`)
-3. `tapir/core/tests/services/active_member_provider/test_get_active_members.py` (moved), `test_get_former_members.py`
-4. `tapir/generic_exports/services/member_segment_provider.py`: method removed
-5. `tapir/coop/apps.py`, `tapir/accounts/services/unverified_members_service.py`, `tapir/accounts/management/commands/send_verify_emails.py`: callers
-6. `tapir/accounts/tests/services/test_unverified_members_service/test_get_active_unverified_members.py`
-
-**Former member addresses and the nightly task**
-
-7. `tapir/core/services/former_member_address_provider.py`
-8. `tapir/core/tests/services/former_member_address_provider/test_get_former_member_by_address.py`, `test_is_former_member_address.py`
-9. `tapir/wirgarten/models.py`: `MemberUnsubscribedFromMailingListsLogEntry` (migration 0160 generated) + `wirgarten/log/member_unsubscribed_from_mailing_lists_log_entry.html`
-10. `tapir/core/services/mailman/former_member_list_unsubscriber.py`
-11. `tapir/core/tests/services/former_member_list_unsubscriber/test_unsubscribe_former_members.py`
-12. `tapir/core/tasks.py` + `tapir/core/tests/tasks/test_unsubscribe_former_members_from_mailing_lists.py`
-13. `tapir/settings/deployment.py`: beat schedule
-
-**Blocking new subscriptions**
-
-14. `tapir/core/services/mailman/mailing_list_join_validator.py` + `tapir/core/tests/services/mailing_list_join_validator/test_validate_address_can_join.py`
-15. `tapir/core/views/mailing_lists.py`: member subscribe and confirm, admin internal and external invitations (the external address is now normalised)
-16. `tapir/core/tests/views/mailman/`: `test_mailing_list_member_self_subscribe_view.py`, `test_mailing_list_member_self_confirm_view.py`, `test_mailing_list_subscribe_internal_recipient_view.py`, `test_mailing_list_subscribe_external_recipient_view.py`, `test_member_mailing_list_data_view.py`
-17. `tapir/core/views/subscription_management_api.py`: subscribe and accept invitation
-18. `tapir/core/tests/views/subscription_management_api/test_subscription_management_mailing_list_subscribe_api_view.py`, `test_subscription_management_mailing_list_accept_invitation_api_view.py`
-19. `tapir/core/services/mailman/mailing_list_self_service.py` + `tapir/core/serializers.py`: `belongs_to_former_member`
-20. `tapir/core/tests/services/mailing_list_self_service/test_build_list_data.py`
-21. `tapir/core/services/member_extra_email_registration_snapshotter.py` + `tapir/core/tests/services/member_extra_email_registration_snapshotter/test_snapshot.py`
-22. `src_frontend/member_profile/mailing_lists/MailingListsCard.tsx`: hint, hidden join buttons (no tests)
-
-**Member deletion**
-
-23. `tapir/coop/views.py`: `DeleteMemberApiView`
-24. `tapir/coop/tests/views/test_delete_member_api_view.py`
+2. `tapir/utils/services/test_data_generation/member_extra_email_generator.py`
+3. `tapir/utils/tests/services/test_data_generation/test_member_extra_email_generator.py`
+4. `tapir/utils/services/test_data_generation/data_generator.py`: runs after the mailing lists, so snapshots can copy list subscriptions
+5. `tapir/utils/services/test_data_generation/configuration_generator.py`: enables extra addresses
