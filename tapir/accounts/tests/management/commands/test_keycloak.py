@@ -26,6 +26,14 @@ SETTINGS = dict(
     SITE_URL="https://tapir.example.org",
     KEYCLOAK_ADMIN_CONFIG=ADMIN_CONFIG,
     KEYCLOAK_PROVISIONER_CONFIG=PROVISIONER_CONFIG,
+    KEYCLOAK_USERNAME_SOURCE="email",
+    KEYCLOAK_USERNAME_FORMAT="raw",
+    KEYCLOAK_REGISTRATION_EMAIL_AS_USERNAME=True,
+    KEYCLOAK_EDIT_USERNAME_ALLOWED=False,
+    KEYCLOAK_VERIFY_EMAIL=True,
+    KEYCLOAK_USER_PROFILE_MANAGED=False,
+    KEYCLOAK_USER_PROFILE_FILE="",
+    KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP=[],
 )
 
 MUTATING_CALL_PREFIXES = ("create_", "update_", "assign_", "delete_")
@@ -172,6 +180,7 @@ class TestKeycloakCommand(TapirUnitTest):
         self.assertEqual("ok", checks["service account roles"]["status"])
         self.assertEqual("ok", checks["runtime client secret"]["status"])
         self.assertEqual("ok", checks["SMTP server"]["status"])
+        self.assertEqual("skipped", checks["user profile"]["status"])
         self.assertNotIn("backend-secret", output)
         self.assertNotIn("provisioner-secret", output)
 

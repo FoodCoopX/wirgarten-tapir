@@ -1,6 +1,7 @@
 import datetime
 from unittest.mock import patch, MagicMock
 
+from django.test import override_settings
 from django.utils import timezone
 from tapir.mail.models import StaticSegment, StaticSegmentRecipient, ExternalRecipient
 from tapir.mail.triggers.transactional_trigger import (
@@ -16,6 +17,7 @@ from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
+@override_settings(KEYCLOAK_USERNAME_SOURCE="email")
 class TestMailChangeService(TapirIntegrationTest):
     @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     @patch.object(KeycloakUserManager, "get_keycloak_client")

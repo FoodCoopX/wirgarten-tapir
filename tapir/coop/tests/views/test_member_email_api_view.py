@@ -18,6 +18,7 @@ from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
+@override_settings(KEYCLOAK_USERNAME_SOURCE="email")
 class TestMemberEmailApiView(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
