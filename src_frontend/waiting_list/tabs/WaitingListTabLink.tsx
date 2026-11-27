@@ -1,17 +1,16 @@
 import React, { useState } from "react";
 import { Col, Row } from "react-bootstrap";
+import { v4 as uuidv4 } from "uuid";
 import { WaitingListApi, WaitingListEntryDetails } from "../../api-client";
-import { formatDateText } from "../../utils/formatDateText.ts";
 import TapirButton from "../../components/TapirButton.tsx";
 import { useApi } from "../../hooks/useApi.ts";
-import { handleRequestError } from "../../utils/handleRequestError.ts";
 import { ToastData } from "../../types/ToastData.ts";
-import { v4 as uuidv4 } from "uuid";
 import { addToast } from "../../utils/addToast.ts";
+import { formatDateText } from "../../utils/formatDateText.ts";
+import { handleRequestError } from "../../utils/handleRequestError.ts";
 
 interface WaitingListTabLinkProps {
   entryDetails: WaitingListEntryDetails;
-  csrfToken: string;
   reloadEntries: () => void;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
   entryReloading: boolean;
@@ -19,12 +18,11 @@ interface WaitingListTabLinkProps {
 
 const WaitingListTabLink: React.FC<WaitingListTabLinkProps> = ({
   entryDetails,
-  csrfToken,
   reloadEntries,
   setToastDatas,
   entryReloading,
 }) => {
-  const api = useApi(WaitingListApi, csrfToken);
+  const api = useApi(WaitingListApi);
   const [loading, setLoading] = useState(false);
 
   function onSendLink() {

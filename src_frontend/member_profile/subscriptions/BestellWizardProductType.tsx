@@ -52,7 +52,6 @@ import { handleRequestError } from "../../utils/handleRequestError.ts";
 import { isSubscriptionActive } from "../../utils/isSubscriptionActive.ts";
 
 interface BestellWizardProductTypeProps {
-  csrfToken: string;
   memberId: string;
   firstName: string;
   lastName: string;
@@ -61,19 +60,18 @@ interface BestellWizardProductTypeProps {
 }
 
 const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
-  csrfToken,
   memberId,
   firstName,
   lastName,
   needsBankingData,
   productTypeId,
 }) => {
-  const bestellWizardApi = useApi(BestellWizardApi, csrfToken);
-  const pickupLocationApi = useApi(PickupLocationsApi, csrfToken);
-  const waitingListApi = useApi(WaitingListApi, csrfToken);
-  const subscriptionsApi = useApi(SubscriptionsApi, csrfToken);
-  const paymentsApi = useApi(PaymentsApi, csrfToken);
-  const coopApi = useApi(CoopApi, csrfToken);
+  const bestellWizardApi = useApi(BestellWizardApi);
+  const pickupLocationApi = useApi(PickupLocationsApi);
+  const waitingListApi = useApi(WaitingListApi);
+  const subscriptionsApi = useApi(SubscriptionsApi);
+  const paymentsApi = useApi(PaymentsApi);
+  const coopApi = useApi(CoopApi);
 
   const [baseSettings, setBaseSettings] =
     useState<BestellWizardSettings>(buildEmptySettings());

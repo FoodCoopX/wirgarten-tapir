@@ -11,7 +11,6 @@ import { isPhoneNumberValid } from "../../bestell_wizard/utils/isPhoneNumberVali
 import TapirHelpButton from "../../components/TapirHelpButton.tsx";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
-import { getCsrfToken } from "../../utils/getCsrfToken.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
 import PersonalDataFormControl from "../components/PersonalDataFormControl.tsx";
@@ -83,7 +82,7 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
   const [isOver18, setIsOver18] = useState(false);
   const [showValidation, setShowValidation] = useState(false);
   const [controller, setController] = useState<AbortController>();
-  const bestellWizardApi = useApi(BestellWizardApi, getCsrfToken());
+  const bestellWizardApi = useApi(BestellWizardApi);
 
   useEffect(() => {
     if (!stepActive) {

@@ -7,7 +7,6 @@ import PlaceholderTableRows from "../components/PlaceholderTableRows.tsx";
 import TapirButton from "../components/TapirButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
-import { getCsrfToken } from "../utils/getCsrfToken.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 
 interface MailingListManageRecipientsModalProps {
@@ -21,8 +20,8 @@ interface MailingListManageRecipientsModalProps {
 const MailingListManageRecipientsModal: React.FC<
   MailingListManageRecipientsModalProps
 > = ({ show, onHide, loadData, setToastDatas, listName }) => {
-  const coreApi = useApi(CoreApi, getCsrfToken());
-  const coopApi = useApi(CoopApi, getCsrfToken());
+  const coreApi = useApi(CoreApi);
+  const coopApi = useApi(CoopApi);
   const [recipients, setRecipients] = useState<MailingListRecipient[]>([]);
   const [loadingRecipients, setLoadingRecipients] = useState(false);
   const [unsubscribeLoading, setUnsubscribeLoading] = useState(false);

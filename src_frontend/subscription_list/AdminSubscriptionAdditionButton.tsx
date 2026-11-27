@@ -4,13 +4,7 @@ import TapirToastContainer from "../components/TapirToastContainer.tsx";
 import { ToastData } from "../types/ToastData.ts";
 import AdminSubscriptionAdditionModal from "./AdminSubscriptionAdditionModal.tsx";
 
-interface AdminSubscriptionAdditionButtonProps {
-  csrfToken: string;
-}
-
-const AdminSubscriptionAdditionButton: React.FC<
-  AdminSubscriptionAdditionButtonProps
-> = ({ csrfToken }) => {
+const AdminSubscriptionAdditionButton: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
 
@@ -26,7 +20,6 @@ const AdminSubscriptionAdditionButton: React.FC<
       {showModal && (
         <AdminSubscriptionAdditionModal
           onHide={() => setShowModal(false)}
-          csrfToken={csrfToken}
           setToastDatas={setToastDatas}
         />
       )}

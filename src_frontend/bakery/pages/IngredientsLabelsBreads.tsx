@@ -6,13 +6,7 @@ import {
   LabelsCard,
 } from "../components/cards";
 
-interface IngredientsLabelsBreadsProps {
-  csrfToken: string;
-}
-
-export const IngredientsLabelsBreads: React.FC<
-  IngredientsLabelsBreadsProps
-> = ({ csrfToken }) => {
+export const IngredientsLabelsBreads: React.FC = () => {
   // Each card shows what the other edits: the groups list names their breads,
   // the breads list names their group.
   const [breadsVersion, setBreadsVersion] = useState(0);
@@ -24,13 +18,12 @@ export const IngredientsLabelsBreads: React.FC<
 
       <div className="row">
         <div className="col-lg-3 mb-4">
-          <IngredientsCard csrfToken={csrfToken} />
+          <IngredientsCard />
         </div>
 
         <div className="col-lg-2 mb-4 d-flex flex-column gap-4">
-          <LabelsCard csrfToken={csrfToken} />
+          <LabelsCard />
           <GroupsCard
-            csrfToken={csrfToken}
             breadsVersion={breadsVersion}
             onGroupsChanged={() => setGroupsVersion((v) => v + 1)}
           />
@@ -38,7 +31,6 @@ export const IngredientsLabelsBreads: React.FC<
 
         <div className="col-lg-7 mb-4">
           <BreadsCard
-            csrfToken={csrfToken}
             groupsVersion={groupsVersion}
             onBreadsChanged={() => setBreadsVersion((v) => v + 1)}
           />

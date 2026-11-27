@@ -36,7 +36,6 @@ import { handleRequestError } from "../../utils/handleRequestError.ts";
 interface PickupLocationChangeModalProps {
   show: boolean;
   onHide: () => void;
-  csrfToken: string;
   memberId: string;
   reloadDeliveries: () => void;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
@@ -47,16 +46,15 @@ interface PickupLocationChangeModalProps {
 const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
   show,
   onHide,
-  csrfToken,
   memberId,
   reloadDeliveries,
   setToastDatas,
   membersCanChangePickupLocationThemselves,
   pickupLocationLabel = "Abholort",
 }) => {
-  const pickupLocationsApi = useApi(PickupLocationsApi, csrfToken);
-  const subscriptionsApi = useApi(SubscriptionsApi, csrfToken);
-  const waitingListApi = useApi(WaitingListApi, csrfToken);
+  const pickupLocationsApi = useApi(PickupLocationsApi);
+  const subscriptionsApi = useApi(SubscriptionsApi);
+  const waitingListApi = useApi(WaitingListApi);
 
   const [pickupLocations, setPickupLocations] = useState<
     PublicPickupLocation[]

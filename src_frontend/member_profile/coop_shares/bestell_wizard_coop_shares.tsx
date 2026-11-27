@@ -1,5 +1,4 @@
 import { createRoot } from "react-dom/client";
-import { getCsrfToken } from "../../utils/getCsrfToken.ts";
 import BestellWizardCoopShares from "./BestellWizardCoopShares.tsx";
 
 const domNode = document.getElementById("bestell_wizard_coop_shares");
@@ -12,7 +11,6 @@ if (domNode) {
       firstName={domNode.dataset.firstName!}
       lastName={domNode.dataset.lastName!}
       needsBankingData={domNode.dataset.needsBankingData === "True"}
-      csrfToken={getCsrfToken()}
     />,
   );
 } else {

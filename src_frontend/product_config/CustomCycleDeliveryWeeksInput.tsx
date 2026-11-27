@@ -7,7 +7,6 @@ import { useApi } from "../hooks/useApi.ts";
 import { CustomCycleDeliveryWeeks } from "../types/CustomCycleDeliveryWeeks.ts";
 import { fromApiDate, toApiDate } from "../utils/apiDate.ts";
 import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
-import { getCsrfToken } from "../utils/getCsrfToken.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import { getParameterFromUrl } from "./get_parameter_from_url.ts";
 
@@ -40,7 +39,7 @@ function getDefaultSelectedGrowingPeriod(allGrowingPeriods: GrowingPeriod[]) {
 const CustomCycleDeliveryWeeksInput: React.FC<
   CustomCycleDeliveryWeeksInputProps
 > = ({ deliveryWeeks, setDeliveryWeeks, allGrowingPeriods }) => {
-  const deliveriesApi = useApi(DeliveriesApi, getCsrfToken());
+  const deliveriesApi = useApi(DeliveriesApi);
   const [selectedGrowingPeriod, setSelectedGrowingPeriod] =
     useState<GrowingPeriod>();
   const [abortController, setAbortController] = useState<AbortController>();

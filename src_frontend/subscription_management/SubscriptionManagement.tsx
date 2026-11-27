@@ -14,14 +14,12 @@ type Removal = "extra" | "external";
 
 interface SubscriptionManagementProps {
   token: string;
-  csrfToken: string;
 }
 
 const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({
   token,
-  csrfToken,
 }) => {
-  const api = useApi(CoreApi, csrfToken);
+  const api = useApi(CoreApi);
   const [data, setData] = useState<SubscriptionManagementData>();
   const [saving, setSaving] = useState(false);
   const [pendingRemoval, setPendingRemoval] = useState<Removal>();

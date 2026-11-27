@@ -11,7 +11,6 @@ import { useApi } from "../../hooks/useApi.ts";
 import { toApiDate } from "../../utils/apiDate.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
-import { getCsrfToken } from "../../utils/getCsrfToken.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 
 interface MemberProfileSolidarityContributionCardProps {
@@ -29,7 +28,7 @@ const MemberProfileSolidarityContributionCard: React.FC<
   adminVersion,
   membersCanChangeContribution,
 }) => {
-  const api = useApi(SolidarityContributionApi, getCsrfToken());
+  const api = useApi(SolidarityContributionApi);
   const [loading, setLoading] = useState(true);
   const [solidarityContributions, setSolidarityContributions] = useState<
     SolidarityContribution[]

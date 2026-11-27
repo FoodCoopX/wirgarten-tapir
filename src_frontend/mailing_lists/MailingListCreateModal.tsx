@@ -4,7 +4,6 @@ import { CoreApi } from "../api-client";
 import TapirButton from "../components/TapirButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
-import { getCsrfToken } from "../utils/getCsrfToken.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import { MODERATED_CHECKBOX_LABEL } from "./MODERATED_CHECKBOX_LABEL.tsx";
 
@@ -21,7 +20,7 @@ const MailingListCreateModal: React.FC<MailingListCreateModalProps> = ({
   loadData,
   setToastDatas,
 }) => {
-  const api = useApi(CoreApi, getCsrfToken());
+  const api = useApi(CoreApi);
   const [listName, setListName] = useState("");
   const [saving, setSaving] = useState(false);
   const [advertised, setAdvertised] = useState(false);

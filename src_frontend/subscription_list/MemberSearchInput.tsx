@@ -21,7 +21,6 @@ const HELP_TEXT = (
 );
 
 interface MemberSearchInputProps {
-  csrfToken: string;
   memberId: string | undefined;
   memberSummary: AdminSubscriptionChangeMemberSummary | undefined;
   setMemberId: (memberId: string | undefined) => void;
@@ -36,13 +35,12 @@ function formatMemberSummary(member: AdminSubscriptionChangeMemberSummary) {
 }
 
 const MemberSearchInput: React.FC<MemberSearchInputProps> = ({
-  csrfToken,
   memberId,
   memberSummary,
   setMemberId,
   setToastDatas,
 }) => {
-  const api = useApi(SubscriptionsApi, csrfToken);
+  const api = useApi(SubscriptionsApi);
   const [search, setSearch] = useState("");
   const [results, setResults] = useState<
     AdminSubscriptionChangeMemberSummary[]

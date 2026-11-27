@@ -6,7 +6,6 @@ import TapirButton from "../components/TapirButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
 import { toApiDate } from "../utils/apiDate.ts";
-import { getCsrfToken } from "../utils/getCsrfToken.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import MembersNeedingBankingDataDetails from "./MembersNeedingBankingDataDetails.tsx";
 import MembersNeedingBankingDataRebuildWarningModal from "./MembersNeedingBankingDataRebuildWarningModal.tsx";
@@ -30,7 +29,7 @@ function getMonthDisplay(index: number) {
 const RebuildSubscriptionPaymentsModal: React.FC<
   RebuildSubscriptionPaymentsModalProps
 > = ({ show, onHide, setToastDatas, afterRebuild }) => {
-  const api = useApi(PaymentsApi, getCsrfToken());
+  const api = useApi(PaymentsApi);
   const [loading, setLoading] = useState(false);
   const [checkingBankingData, setCheckingBankingData] = useState(false);
   const [month, setMonth] = useState(new Date().getMonth());

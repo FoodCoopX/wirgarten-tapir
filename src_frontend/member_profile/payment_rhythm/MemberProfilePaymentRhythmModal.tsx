@@ -11,7 +11,6 @@ import { handleRequestError } from "../../utils/handleRequestError.ts";
 
 interface MemberProfilePaymentRhythmModalProps {
   memberId: string;
-  csrfToken: string;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
   show: boolean;
   onHide: () => void;
@@ -22,8 +21,8 @@ interface MemberProfilePaymentRhythmModalProps {
 
 const MemberProfilePaymentRhythmModal: React.FC<
   MemberProfilePaymentRhythmModalProps
-> = ({ memberId, csrfToken, setToastDatas, show, onHide, allowedRhythms }) => {
-  const api = useApi(PaymentsApi, csrfToken);
+> = ({ memberId, setToastDatas, show, onHide, allowedRhythms }) => {
+  const api = useApi(PaymentsApi);
   const [dateOfNextChange, setDateOfNextChange] = useState<string>();
   const [loading, setLoading] = useState(true);
   const [currentRhythm, setCurrentRhythm] = useState("monthly");

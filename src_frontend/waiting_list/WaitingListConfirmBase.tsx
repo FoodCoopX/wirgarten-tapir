@@ -6,19 +6,17 @@ import { useApi } from "../hooks/useApi.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 
 interface WaitingListConfirmBaseProps {
-  csrfToken: string;
   waitingListEntryId: string;
   waitingListLinkKey: string;
   adminEmail: string;
 }
 
 const WaitingListConfirmBase: React.FC<WaitingListConfirmBaseProps> = ({
-  csrfToken,
   waitingListEntryId,
   waitingListLinkKey,
   adminEmail,
 }) => {
-  const api = useApi(WaitingListApi, csrfToken);
+  const api = useApi(WaitingListApi);
   const [loading, setLoading] = useState(true);
   const [waitingListEntryDetails, setWaitingListEntryDetails] =
     useState<PublicWaitingListEntryDetails>();
@@ -43,10 +41,7 @@ const WaitingListConfirmBase: React.FC<WaitingListConfirmBaseProps> = ({
 
   if (waitingListEntryDetails) {
     return (
-      <BestellWizardMobile
-        csrfToken={csrfToken}
-        waitingListEntryDetails={waitingListEntryDetails}
-      />
+      <BestellWizardMobile waitingListEntryDetails={waitingListEntryDetails} />
     );
   }
 

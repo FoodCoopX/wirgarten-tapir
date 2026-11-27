@@ -41,7 +41,6 @@ interface ManageJokersAndDonationsModalProps {
   deliveries: Delivery[];
   loadDeliveries: () => void;
   deliveriesLoading: boolean;
-  csrfToken: string;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
   areJokersEnabled: boolean;
   areDonationsEnabled: boolean;
@@ -74,12 +73,11 @@ const ManageJokersAndDonationsModal: React.FC<
   deliveries,
   loadDeliveries,
   deliveriesLoading,
-  csrfToken,
   setToastDatas,
   areJokersEnabled,
   areDonationsEnabled,
 }) => {
-  const api = useApi(DeliveriesApi, csrfToken);
+  const api = useApi(DeliveriesApi);
   const [jokers, setJokers] = useState<JokerWithCancellationLimit[]>([]);
   const [donations, setDonations] = useState<
     DeliveryDonationWithCancellationLimit[]

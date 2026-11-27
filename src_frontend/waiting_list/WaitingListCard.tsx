@@ -34,14 +34,10 @@ import WaitingListEntryCreateModal from "./WaitingListEntryCreateModal.tsx";
 import WaitingListEntryEditModal from "./WaitingListEntryEditModal.tsx";
 import WaitingListTable from "./WaitingListTable.tsx";
 
-interface WaitingListCardProps {
-  csrfToken: string;
-}
-
-const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
-  const waitingListApi = useApi(WaitingListApi, csrfToken);
-  const pickupLocationApi = useApi(PickupLocationsApi, csrfToken);
-  const subscriptionsApi = useApi(SubscriptionsApi, csrfToken);
+const WaitingListCard: React.FC = () => {
+  const waitingListApi = useApi(WaitingListApi);
+  const pickupLocationApi = useApi(PickupLocationsApi);
+  const subscriptionsApi = useApi(SubscriptionsApi);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(0);
   const [waitingListEntries, setWaitingListEntries] = useState<
@@ -416,7 +412,6 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
         <WaitingListEntryEditModal
           show={true}
           entryDetails={selectedEntryForEdition}
-          csrfToken={csrfToken}
           onClose={() => setSelectedEntryForEdition(undefined)}
           reloadEntries={loadPage}
           pickupLocations={pickupLocations}
@@ -428,7 +423,6 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
       )}
       <WaitingListEntryCreateModal
         show={showCreateModal}
-        csrfToken={csrfToken}
         onClose={() => setShowCreateModal(false)}
         reloadEntries={loadPage}
         setToastDatas={setToastDatas}

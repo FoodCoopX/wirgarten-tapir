@@ -15,7 +15,6 @@ import PaymentExportExclusionExplanation from "./PaymentExportExclusionExplanati
 
 interface PaymentExportExclusionPeriodModalProps {
   memberId: string;
-  csrfToken: string;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
   show: boolean;
   onHide: () => void;
@@ -50,8 +49,8 @@ function formatPeriod(period: PaymentExportExclusionPeriod): string {
 
 const PaymentExportExclusionPeriodModal: React.FC<
   PaymentExportExclusionPeriodModalProps
-> = ({ memberId, csrfToken, setToastDatas, show, onHide }) => {
-  const api = useApi(PaymentsApi, csrfToken);
+> = ({ memberId, setToastDatas, show, onHide }) => {
+  const api = useApi(PaymentsApi);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [periods, setPeriods] = useState<PaymentExportExclusionPeriod[]>([]);

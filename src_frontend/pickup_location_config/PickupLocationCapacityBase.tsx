@@ -8,12 +8,10 @@ import PickupLocationCapacityModal from "./PickupLocationCapacityModal.tsx";
 import PickupLocationDeliveryChargeModal from "./PickupLocationDeliveryChargeModal.tsx";
 
 interface ProductBaseProps {
-  csrfToken: string;
   enableDeliveryCharge: boolean;
 }
 
 const PickupLocationCapacityBase: React.FC<ProductBaseProps> = ({
-  csrfToken,
   enableDeliveryCharge,
 }) => {
   const [showCapacityModal, setShowCapacityModal] = useState(false);
@@ -69,7 +67,6 @@ const PickupLocationCapacityBase: React.FC<ProductBaseProps> = ({
       {selectedLocationId && (
         <>
           <PickupLocationCapacityModal
-            csrfToken={csrfToken}
             show={showCapacityModal}
             onHide={() => setShowCapacityModal(false)}
             setToastDatas={setToastDatas}
@@ -77,7 +74,6 @@ const PickupLocationCapacityBase: React.FC<ProductBaseProps> = ({
           />
           {enableDeliveryCharge && (
             <PickupLocationDeliveryChargeModal
-              csrfToken={csrfToken}
               show={showDeliveryChargeModal}
               onHide={() => setShowDeliveryChargeModal(false)}
               setToastDatas={setToastDatas}

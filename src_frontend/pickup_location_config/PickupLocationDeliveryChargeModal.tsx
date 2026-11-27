@@ -16,7 +16,6 @@ import { handleRequestError } from "../utils/handleRequestError.ts";
 interface PickupLocationDeliveryChargeModalProps {
   show: boolean;
   onHide: () => void;
-  csrfToken: string;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
   pickupLocationId: string;
 }
@@ -31,8 +30,8 @@ function formatAmount(amountAsString: string): string {
 
 const PickupLocationDeliveryChargeModal: React.FC<
   PickupLocationDeliveryChargeModalProps
-> = ({ show, onHide, csrfToken, setToastDatas, pickupLocationId }) => {
-  const api = useApi(PickupLocationsApi, csrfToken);
+> = ({ show, onHide, setToastDatas, pickupLocationId }) => {
+  const api = useApi(PickupLocationsApi);
 
   const [dataLoading, setDataLoading] = useState(true);
   const [saving, setSaving] = useState(false);

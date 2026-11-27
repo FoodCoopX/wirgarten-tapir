@@ -13,7 +13,7 @@ interface MembersNeedingBankingDataButtonProps {
 const MembersNeedingBankingDataButton: React.FC<
   MembersNeedingBankingDataButtonProps
 > = ({ setToastDatas }) => {
-  const api = useApi(PaymentsApi, "unused");
+  const api = useApi(PaymentsApi);
   const [members, setMembers] = useState<
     MemberNeedingBankingData[] | undefined
   >(undefined);

@@ -12,7 +12,6 @@ import { handleRequestError } from "../utils/handleRequestError.ts";
 interface ProductModalProps {
   show: boolean;
   onHide: () => void;
-  csrfToken: string;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
   pickupLocationId: string;
 }
@@ -28,11 +27,10 @@ function parseIntOrUndefined(valueAstring: string): number | undefined {
 const PickupLocationCapacityModal: React.FC<ProductModalProps> = ({
   show,
   onHide,
-  csrfToken,
   setToastDatas,
   pickupLocationId,
 }) => {
-  const api = useApi(PickupLocationsApi, csrfToken);
+  const api = useApi(PickupLocationsApi);
 
   const [dataLoading, setDataLoading] = useState(true);
   const [saving, setSaving] = useState(false);

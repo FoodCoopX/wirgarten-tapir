@@ -15,16 +15,14 @@ import CoopSharesAdminModal from "./CoopSharesAdminModal.tsx";
 
 interface CoopSharesCardProps {
   memberId: string;
-  csrfToken: string;
   adminVersion: boolean;
 }
 
 const CoopSharesCard: React.FC<CoopSharesCardProps> = ({
   memberId,
-  csrfToken,
   adminVersion,
 }) => {
-  const coopApi = useApi(CoopApi, csrfToken);
+  const coopApi = useApi(CoopApi);
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState<CoopShareTransaction[]>([]);
   const [bestellWizardUrl, setBestellWizardUrl] = useState("");
@@ -174,7 +172,6 @@ const CoopSharesCard: React.FC<CoopSharesCardProps> = ({
       {adminVersion && (
         <CoopSharesAdminModal
           memberId={memberId}
-          csrfToken={csrfToken}
           show={showAdminModal}
           onHide={() => setShowAdminModal(false)}
           bestellWizardUrl={bestellWizardUrl}

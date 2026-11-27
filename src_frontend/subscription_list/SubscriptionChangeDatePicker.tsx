@@ -23,7 +23,6 @@ interface SubscriptionChangeDatePickerProps {
   subscription: SubscriptionDetails;
   boundary: Boundary;
   onChange: (date: Date | undefined) => void;
-  csrfToken: string;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
 
@@ -35,15 +34,8 @@ function isWeekValid(week: number | undefined): week is number {
 
 const SubscriptionChangeDatePicker: React.FC<
   SubscriptionChangeDatePickerProps
-> = ({
-  subscriptionId,
-  subscription,
-  boundary,
-  onChange,
-  csrfToken,
-  setToastDatas,
-}) => {
-  const subscriptionsApi = useApi(SubscriptionsApi, csrfToken);
+> = ({ subscriptionId, subscription, boundary, onChange, setToastDatas }) => {
+  const subscriptionsApi = useApi(SubscriptionsApi);
   const isStart = boundary === Boundary.Start;
   const currentDate = isStart ? subscription.startDate : subscription.endDate;
   const periodBoundaryDate = isStart

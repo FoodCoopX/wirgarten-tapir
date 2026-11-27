@@ -17,16 +17,10 @@ import { handleRequestError } from "../utils/handleRequestError.ts";
 import { DEFAULT_PAGE_SIZE } from "../utils/pagination.ts";
 import ConfirmRevokeModal from "./ConfirmRevokeModal.tsx";
 
-interface ContractUpdatesCardProps {
-  csrfToken: string;
-}
-
 type ContractFilter = "all" | "includes_creations" | "includes_cancellations";
 
-const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
-  csrfToken,
-}) => {
-  const subscriptionsApi = useApi(SubscriptionsApi, csrfToken);
+const ContractUpdatesCard: React.FC = () => {
+  const subscriptionsApi = useApi(SubscriptionsApi);
   const [loading, setLoading] = useState(true);
   const [changesToConfirm, setChangesToConfirm] = useState<
     MemberDataToConfirm[]

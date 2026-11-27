@@ -16,15 +16,13 @@ import PaymentTransactionTable from "./PaymentTransactionTable.tsx";
 import RebuildSubscriptionPaymentsModal from "./RebuildSubscriptionPaymentsModal.tsx";
 
 interface PaymentTransactionsBaseProps {
-  csrfToken: string;
   paymentExportExclusionEnabled: boolean;
 }
 
 const PaymentTransactionsBase: React.FC<PaymentTransactionsBaseProps> = ({
-  csrfToken,
   paymentExportExclusionEnabled,
 }) => {
-  const api = useApi(PaymentsApi, csrfToken);
+  const api = useApi(PaymentsApi);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [totalNumberOfTransactions, setTotalNumberOfTransactions] = useState(0);

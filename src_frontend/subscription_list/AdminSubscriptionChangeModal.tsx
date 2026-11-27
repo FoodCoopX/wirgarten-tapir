@@ -53,15 +53,14 @@ const HELP_TEXT = (
 
 interface AdminSubscriptionChangeModalProps {
   onHide: () => void;
-  csrfToken: string;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
 
 const AdminSubscriptionChangeModal: React.FC<
   AdminSubscriptionChangeModalProps
-> = ({ onHide, csrfToken, setToastDatas }) => {
-  const subscriptionsApi = useApi(SubscriptionsApi, csrfToken);
-  const pickupLocationsApi = useApi(PickupLocationsApi, csrfToken);
+> = ({ onHide, setToastDatas }) => {
+  const subscriptionsApi = useApi(SubscriptionsApi);
+  const pickupLocationsApi = useApi(PickupLocationsApi);
 
   const [step, setStep] = useState<Step>("member");
   const [products, setProducts] = useState<Product[]>([]);
@@ -222,7 +221,6 @@ const AdminSubscriptionChangeModal: React.FC<
     return (
       <div className={"d-flex flex-column gap-3"}>
         <MemberSearchInput
-          csrfToken={csrfToken}
           memberId={memberId}
           memberSummary={memberData?.member}
           setMemberId={setMemberId}

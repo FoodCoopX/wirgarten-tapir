@@ -7,14 +7,12 @@ import MailingListsCard from "./MailingListsCard.tsx";
 
 interface MemberMailingListsCardProps {
   memberId: string;
-  csrfToken: string;
 }
 
 const MemberMailingListsCard: React.FC<MemberMailingListsCardProps> = ({
   memberId,
-  csrfToken,
 }) => {
-  const api = useApi(CoreApi, csrfToken);
+  const api = useApi(CoreApi);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
 
   function buildRequest(listName: string) {

@@ -27,17 +27,15 @@ import {
 interface ProductModalProps {
   show: boolean;
   onHide: () => void;
-  csrfToken: string;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
 
 const ProductModal: React.FC<ProductModalProps> = ({
   show,
   onHide,
-  csrfToken,
   setToastDatas,
 }) => {
-  const api = useApi(SubscriptionsApi, csrfToken);
+  const api = useApi(SubscriptionsApi);
   const [productName, setProductName] = useState<string>("");
   const [isBaseProduct, setIsBaseProduct] = useState(false);
   const [deleted, setDeleted] = useState(false);

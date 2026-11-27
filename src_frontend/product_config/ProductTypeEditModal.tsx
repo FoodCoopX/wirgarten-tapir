@@ -25,18 +25,16 @@ import ProductTypeForm from "./ProductTypeForm.tsx";
 interface ProductTypeEditModalProps {
   show: boolean;
   onHide: () => void;
-  csrfToken: string;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
 
 const ProductTypeEditModal: React.FC<ProductTypeEditModalProps> = ({
   show,
   onHide,
-  csrfToken,
   setToastDatas,
 }) => {
-  const productsApi = useApi(ProductsApi, csrfToken);
-  const deliveriesApi = useApi(DeliveriesApi, csrfToken);
+  const productsApi = useApi(ProductsApi);
+  const deliveriesApi = useApi(DeliveriesApi);
   const [dataLoading, setDataLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showJokers, setShowJokers] = useState(false);

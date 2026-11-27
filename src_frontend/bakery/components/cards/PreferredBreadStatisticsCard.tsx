@@ -8,13 +8,12 @@ interface PreferredBreadStatisticsCardProps {
   year: number;
   week: number;
   deliveryDay: number;
-  csrfToken: string;
 }
 
 export const PreferredBreadStatisticsCard: React.FC<
   PreferredBreadStatisticsCardProps
-> = ({ year, week, deliveryDay, csrfToken }) => {
-  const bakeryApi = useApi(BakeryApi, csrfToken);
+> = ({ year, week, deliveryDay }) => {
+  const bakeryApi = useApi(BakeryApi);
   const [stats, setStats] = useState<PreferredBreadStatistics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

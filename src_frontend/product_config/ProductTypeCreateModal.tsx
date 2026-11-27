@@ -24,19 +24,17 @@ import ProductTypeForm from "./ProductTypeForm.tsx";
 interface ProductTypeCreateModalProps {
   show: boolean;
   onHide: () => void;
-  csrfToken: string;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
 
 const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
   show,
   onHide,
-  csrfToken,
   setToastDatas,
 }) => {
   const [loading, setLoading] = useState(true);
-  const productsApi = useApi(ProductsApi, csrfToken);
-  const deliveriesApi = useApi(DeliveriesApi, csrfToken);
+  const productsApi = useApi(ProductsApi);
+  const deliveriesApi = useApi(DeliveriesApi);
   const [productTypesWithoutCapacity, setProductTypesWithoutCapacity] =
     useState<ProductType[]>([]);
   const [mode, setMode] = useState<"select" | "create">("select");

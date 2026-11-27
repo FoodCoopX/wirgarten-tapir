@@ -15,7 +15,6 @@ const RECEIVES_DIRECT_MAILS_LABEL =
 
 interface MemberExtraEmailsModalProps {
   memberId: string;
-  csrfToken: string;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
   show: boolean;
   onHide: () => void;
@@ -23,12 +22,11 @@ interface MemberExtraEmailsModalProps {
 
 const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
   memberId,
-  csrfToken,
   setToastDatas,
   show,
   onHide,
 }) => {
-  const api = useApi(CoreApi, csrfToken);
+  const api = useApi(CoreApi);
   const [extraEmails, setExtraEmails] = useState<MemberExtraEmail[]>([]);
   const [explanationText, setExplanationText] = useState("");
   const [newAddress, setNewAddress] = useState("");

@@ -1,5 +1,4 @@
 import { createRoot } from "react-dom/client";
-import { getCsrfToken } from "../utils/getCsrfToken.ts";
 import AdminDashboardAssociationDataBase from "./AdminDashboardAssociationDataBase.tsx";
 import DashboardPickupLocationCapacityBase from "./DashboardPickupLocationCapacityBase.tsx";
 import DashboardPreferredBreadStats from "./DashboardPreferredBreadStats.tsx";
@@ -26,5 +25,5 @@ const domNodeAssociations = document.getElementById(
 );
 if (domNodeAssociations) {
   const root = createRoot(domNodeAssociations);
-  root.render(<AdminDashboardAssociationDataBase csrfToken={getCsrfToken()} />);
+  root.render(<AdminDashboardAssociationDataBase />);
 }

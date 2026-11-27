@@ -6,13 +6,7 @@ import { getParameterFromUrl } from "../product_config/get_parameter_from_url.ts
 import { ToastData } from "../types/ToastData.ts";
 import SubscriptionChangeDatesModal from "./SubscriptionChangeDatesModal.tsx";
 
-interface SubscriptionChangeDatesButtonProps {
-  csrfToken: string;
-}
-
-const SubscriptionChangeDatesButton: React.FC<
-  SubscriptionChangeDatesButtonProps
-> = ({ csrfToken }) => {
+const SubscriptionChangeDatesButton: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [subscriptionId, setSubscriptionId] = useState();
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
@@ -36,7 +30,6 @@ const SubscriptionChangeDatesButton: React.FC<
       />
       {subscriptionId && (
         <SubscriptionChangeDatesModal
-          csrfToken={csrfToken}
           show={showModal}
           subscriptionId={subscriptionId}
           onHide={() => setShowModal(false)}

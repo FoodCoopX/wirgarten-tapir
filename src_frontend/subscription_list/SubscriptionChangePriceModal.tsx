@@ -19,7 +19,6 @@ interface SubscriptionChangePriceModalProps {
   onHide: () => void;
   show: boolean;
   subscriptionId: string;
-  csrfToken: string;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
 
@@ -60,9 +59,9 @@ function getMode(override: string | null | undefined): PriceMode {
 
 const SubscriptionChangePriceModal: React.FC<
   SubscriptionChangePriceModalProps
-> = ({ onHide, show, subscriptionId, csrfToken, setToastDatas }) => {
-  const subscriptionsApi = useApi(SubscriptionsApi, csrfToken);
-  const coopApi = useApi(CoopApi, csrfToken);
+> = ({ onHide, show, subscriptionId, setToastDatas }) => {
+  const subscriptionsApi = useApi(SubscriptionsApi);
+  const coopApi = useApi(CoopApi);
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState<SubscriptionDetails>();
   const [memberId, setMemberId] = useState<string>();

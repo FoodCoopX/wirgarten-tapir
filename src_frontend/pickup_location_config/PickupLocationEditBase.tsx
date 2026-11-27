@@ -12,10 +12,6 @@ import { handleRequestError } from "../utils/handleRequestError.ts";
 import { URL_PARAMETER_PICKUP_LOCATION_ID } from "./constants.ts";
 import PickupLocationEditModal from "./PickupLocationEditModal.tsx";
 
-interface PickupLocationEditBaseProps {
-  csrfToken: string;
-}
-
 function reloadWithSelectedLocation(pickupLocationId: string | null) {
   const url = new URL(window.location.href);
   if (pickupLocationId === null) {
@@ -26,10 +22,8 @@ function reloadWithSelectedLocation(pickupLocationId: string | null) {
   window.location.assign(url.toString());
 }
 
-const PickupLocationEditBase: React.FC<PickupLocationEditBaseProps> = ({
-  csrfToken,
-}) => {
-  const api = useApi(PickupLocationsApi, csrfToken);
+const PickupLocationEditBase: React.FC = () => {
+  const api = useApi(PickupLocationsApi);
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [editedLocationId, setEditedLocationId] = useState<string | null>(null);
@@ -120,7 +114,6 @@ const PickupLocationEditBase: React.FC<PickupLocationEditBaseProps> = ({
       <PickupLocationEditModal
         show={showEditModal}
         onHide={() => setShowEditModal(false)}
-        csrfToken={csrfToken}
         setToastDatas={setToastDatas}
         pickupLocationId={editedLocationId}
         onSaved={(pickupLocation) =>

@@ -12,14 +12,12 @@ import MailCategoryCheckboxes from "./MailCategoryCheckboxes.tsx";
 
 interface MemberMailCategoryModalProps {
   memberId: string;
-  csrfToken: string;
 }
 
 const MemberMailCategoryCard: React.FC<MemberMailCategoryModalProps> = ({
   memberId,
-  csrfToken,
 }) => {
-  const api = useApi(CoreApi, csrfToken);
+  const api = useApi(CoreApi);
   const [categories, setCategories] = useState<MailCategory[]>([]);
   const [categoriesRegisteredTo, setCategoriesRegisteredTo] = useState<{
     [key: string]: boolean;
@@ -113,7 +111,6 @@ const MemberMailCategoryCard: React.FC<MemberMailCategoryModalProps> = ({
       <MemberExtraEmailsModal
         memberId={memberId}
         onHide={() => setShowModal(false)}
-        csrfToken={csrfToken}
         show={showModal}
         setToastDatas={setToastDatas}
       />

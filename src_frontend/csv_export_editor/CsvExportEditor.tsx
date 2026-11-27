@@ -17,12 +17,8 @@ import CsvExportBuildModal from "./CsvExportBuildModal.tsx";
 import CsvExportModal from "./CsvExportModal.tsx";
 import CsvExportTable from "./CsvExportTable.tsx";
 
-interface CsvExportEditorProps {
-  csrfToken: string;
-}
-
-const CsvExportEditor: React.FC<CsvExportEditorProps> = ({ csrfToken }) => {
-  const api = useApi(GenericExportsApi, csrfToken);
+const CsvExportEditor: React.FC = () => {
+  const api = useApi(GenericExportsApi);
   const [segments, setSegments] = useState<ExportSegment[]>([]);
   const [segmentsLoading, setSegmentsLoading] = useState(false);
   const [exports, setExports] = useState<CsvExportModel[]>([]);
@@ -190,7 +186,6 @@ const CsvExportEditor: React.FC<CsvExportEditorProps> = ({ csrfToken }) => {
         onHide={() => setShowCsvExportModal(false)}
         segments={segments}
         loadExports={loadExports}
-        csrfToken={csrfToken}
         exportToEdit={exportSelectedForEdition}
         setToastDatas={setToastDatas}
       />
@@ -208,7 +203,6 @@ const CsvExportEditor: React.FC<CsvExportEditorProps> = ({ csrfToken }) => {
         <CsvExportBuildModal
           exportToBuild={exportSelectedForBuild}
           show={true}
-          csrfToken={csrfToken}
           onHide={() => setExportSelectedForBuild(undefined)}
           setToastDatas={setToastDatas}
         />

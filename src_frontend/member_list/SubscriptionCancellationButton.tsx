@@ -6,13 +6,7 @@ import SubscriptionCancellationModal from "../member_profile/subscription_cancel
 import { getParameterFromUrl } from "../product_config/get_parameter_from_url.ts";
 import { ToastData } from "../types/ToastData.ts";
 
-interface SubscriptionCancellationButtonProps {
-  csrfToken: string;
-}
-
-const SubscriptionCancellationButton: React.FC<
-  SubscriptionCancellationButtonProps
-> = ({ csrfToken }) => {
+const SubscriptionCancellationButton: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [memberId, setMemberId] = useState();
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
@@ -36,7 +30,6 @@ const SubscriptionCancellationButton: React.FC<
       />
       {memberId && (
         <SubscriptionCancellationModal
-          csrfToken={csrfToken}
           show={showModal}
           memberId={memberId}
           onHide={() => setShowModal(false)}

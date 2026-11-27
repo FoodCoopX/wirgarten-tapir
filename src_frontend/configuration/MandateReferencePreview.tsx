@@ -10,7 +10,7 @@ interface MandateReferencePreviewProps {
 const MandateReferencePreview: React.FC<MandateReferencePreviewProps> = ({
   inputField,
 }) => {
-  const api = useApi(PaymentsApi, "unused");
+  const api = useApi(PaymentsApi);
   const [previews, setPreviews] = useState<Record<string, string>>();
   const [error, setError] = useState("");
   const abortControllerRef = useRef<AbortController>(undefined);

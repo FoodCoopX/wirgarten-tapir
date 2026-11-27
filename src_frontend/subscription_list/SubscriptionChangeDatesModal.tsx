@@ -30,7 +30,6 @@ interface SubscriptionChangeDatesModalProps {
   onHide: () => void;
   show: boolean;
   subscriptionId: string;
-  csrfToken: string;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
 
@@ -84,13 +83,10 @@ const OTHER_CONTRACTS_HELP_TEXT = (
 
 const SubscriptionChangeDatesModal: React.FC<
   SubscriptionChangeDatesModalProps
-> = ({ onHide, show, subscriptionId, csrfToken, setToastDatas }) => {
-  const subscriptionsApi = useApi(SubscriptionsApi, csrfToken);
-  const solidarityContributionApi = useApi(
-    SolidarityContributionApi,
-    csrfToken,
-  );
-  const coopApi = useApi(CoopApi, csrfToken);
+> = ({ onHide, show, subscriptionId, setToastDatas }) => {
+  const subscriptionsApi = useApi(SubscriptionsApi);
+  const solidarityContributionApi = useApi(SolidarityContributionApi);
+  const coopApi = useApi(CoopApi);
   const [mainDataLoading, setMainDataLoading] = useState(true);
   const [extraDataLoading, setExtraDataLoading] = useState(true);
   const [subscription, setSubscription] = useState<SubscriptionDetails>();
@@ -313,7 +309,6 @@ const SubscriptionChangeDatesModal: React.FC<
           subscription={subscription}
           boundary={boundary}
           onChange={(date) => setChoice({ action: action, date: date })}
-          csrfToken={csrfToken}
           setToastDatas={setToastDatas}
         />
       </div>

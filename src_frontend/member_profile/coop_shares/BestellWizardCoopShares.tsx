@@ -21,7 +21,6 @@ import { addToast } from "../../utils/addToast.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 
 interface BestellWizardCoopSharesProps {
-  csrfToken: string;
   memberId: string;
   firstName: string;
   lastName: string;
@@ -29,14 +28,13 @@ interface BestellWizardCoopSharesProps {
 }
 
 const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
-  csrfToken,
   memberId,
   firstName,
   lastName,
   needsBankingData,
 }) => {
-  const bestellWizardApi = useApi(BestellWizardApi, csrfToken);
-  const coopApi = useApi(CoopApi, csrfToken);
+  const bestellWizardApi = useApi(BestellWizardApi);
+  const coopApi = useApi(CoopApi);
 
   const [settings, setSettings] =
     useState<BestellWizardSettings>(buildEmptySettings());

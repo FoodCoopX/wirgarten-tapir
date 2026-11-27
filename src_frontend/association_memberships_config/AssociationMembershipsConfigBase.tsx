@@ -9,14 +9,8 @@ import { handleRequestError } from "../utils/handleRequestError.ts";
 import AssociationMembershipTypeCreateModal from "./AssociationMembershipTypeCreateModal.tsx";
 import AssociationMembershipTypeTable from "./AssociationMembershipTypeTable.tsx";
 
-interface AssociationMembershipsConfigProps {
-  csrfToken: string;
-}
-
-const AssociationMembershipsConfigBase: React.FC<
-  AssociationMembershipsConfigProps
-> = ({ csrfToken }) => {
-  const api = useApi(AssociationsApi, csrfToken);
+const AssociationMembershipsConfigBase: React.FC = () => {
+  const api = useApi(AssociationsApi);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
   const [membershipTypes, setMembershipTypes] = useState<
     AssociationMembershipType[]
@@ -68,7 +62,6 @@ const AssociationMembershipsConfigBase: React.FC<
       <AssociationMembershipTypeTable
         membershipTypes={membershipTypes}
         setToastDatas={setToastDatas}
-        csrfToken={csrfToken}
         loadData={loadMembershipTypes}
       />
     );
@@ -97,7 +90,6 @@ const AssociationMembershipsConfigBase: React.FC<
         </Col>
       </Row>
       <AssociationMembershipTypeCreateModal
-        csrfToken={csrfToken}
         show={showCreateModal}
         onHide={() => setShowCreateModal(false)}
         onCreated={() => {

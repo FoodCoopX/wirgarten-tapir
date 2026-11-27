@@ -1,21 +1,20 @@
-import React, { useEffect, useState } from "react";
 import "dayjs/locale/de";
+import React, { useEffect, useState } from "react";
+import { Spinner } from "react-bootstrap";
 import {
   PublicProductType,
   PublicSubscription,
   SubscriptionsApi,
 } from "../../api-client";
+import { sortProductTypes } from "../../bestell_wizard/utils/sortProductTypes.ts";
+import TapirToastContainer from "../../components/TapirToastContainer.tsx";
 import { useApi } from "../../hooks/useApi.ts";
+import { ToastData } from "../../types/ToastData.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 import SubscriptionCard from "./SubscriptionCard.tsx";
-import { Spinner } from "react-bootstrap";
-import TapirToastContainer from "../../components/TapirToastContainer.tsx";
-import { ToastData } from "../../types/ToastData.ts";
-import { sortProductTypes } from "../../bestell_wizard/utils/sortProductTypes.ts";
 
 interface SubscriptionCardsProps {
   memberId: string;
-  csrfToken: string;
   showContractEdit: boolean;
   contactEmail: string;
   adminVersion: boolean;
@@ -23,12 +22,11 @@ interface SubscriptionCardsProps {
 
 const SubscriptionCards: React.FC<SubscriptionCardsProps> = ({
   memberId,
-  csrfToken,
   showContractEdit,
   contactEmail,
   adminVersion,
 }) => {
-  const api = useApi(SubscriptionsApi, csrfToken);
+  const api = useApi(SubscriptionsApi);
   const [subscriptions, setSubscriptions] = useState<PublicSubscription[]>([]);
   const [productTypes, setProductTypes] = useState<PublicProductType[]>([]);
   const [loading, setLoading] = useState(true);

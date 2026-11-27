@@ -51,15 +51,14 @@ const HELP_TEXT = (
 
 interface AdminSubscriptionAdditionModalProps {
   onHide: () => void;
-  csrfToken: string;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
 
 const AdminSubscriptionAdditionModal: React.FC<
   AdminSubscriptionAdditionModalProps
-> = ({ onHide, csrfToken, setToastDatas }) => {
-  const subscriptionsApi = useApi(SubscriptionsApi, csrfToken);
-  const pickupLocationsApi = useApi(PickupLocationsApi, csrfToken);
+> = ({ onHide, setToastDatas }) => {
+  const subscriptionsApi = useApi(SubscriptionsApi);
+  const pickupLocationsApi = useApi(PickupLocationsApi);
 
   const [step, setStep] = useState<Step>("member");
   const [products, setProducts] = useState<Product[]>([]);
@@ -433,7 +432,6 @@ const AdminSubscriptionAdditionModal: React.FC<
       <Modal.Body>
         {step === "member" && (
           <MemberSearchInput
-            csrfToken={csrfToken}
             memberId={memberId}
             memberSummary={memberData?.member}
             setMemberId={setMemberId}

@@ -4,11 +4,7 @@ import TapirToastContainer from "../components/TapirToastContainer.tsx";
 import { ToastData } from "../types/ToastData.ts";
 import LocationRouteModal from "./LocationRouteModal.tsx";
 
-interface LocationRouteProps {
-  csrfToken: string;
-}
-
-const LocationRouteBase: React.FC<LocationRouteProps> = ({ csrfToken }) => {
+const LocationRouteBase: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
 
@@ -21,7 +17,6 @@ const LocationRouteBase: React.FC<LocationRouteProps> = ({ csrfToken }) => {
         text={"Ausfahrrunden verwalten"}
       />
       <LocationRouteModal
-        csrfToken={csrfToken}
         show={showModal}
         onHide={() => setShowModal(false)}
         setToastDatas={setToastDatas}

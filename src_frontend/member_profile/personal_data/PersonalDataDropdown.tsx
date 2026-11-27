@@ -10,14 +10,12 @@ import MemberPersonalDataModal from "./MemberPersonalDataModal.tsx";
 
 interface PersonalDataDropdownProps {
   memberId: string;
-  csrfToken: string;
   extraEmailAddressesEnabled: boolean;
   hasHomeDelivery: boolean;
 }
 
 const PersonalDataDropdown: React.FC<PersonalDataDropdownProps> = ({
   memberId,
-  csrfToken,
   extraEmailAddressesEnabled,
   hasHomeDelivery,
 }) => {
@@ -55,21 +53,18 @@ const PersonalDataDropdown: React.FC<PersonalDataDropdownProps> = ({
       </Dropdown>
       <MemberPersonalDataModal
         memberId={memberId}
-        csrfToken={csrfToken}
         setToastDatas={setToastDatas}
         show={showPersonalDataModal}
         onHide={() => setShowPersonalDataModal(false)}
       />
       <MemberEmailModal
         memberId={memberId}
-        csrfToken={csrfToken}
         setToastDatas={setToastDatas}
         show={showMailEmailModal}
         onHide={() => setShowMailEmailModal(false)}
       />
       <MemberExtraEmailsModal
         memberId={memberId}
-        csrfToken={csrfToken}
         setToastDatas={setToastDatas}
         show={showExtraEmailsModal}
         onHide={() => setShowExtraEmailsModal(false)}
@@ -77,7 +72,6 @@ const PersonalDataDropdown: React.FC<PersonalDataDropdownProps> = ({
       {hasHomeDelivery && (
         <DeliveryAddressModal
           memberId={memberId}
-          csrfToken={csrfToken}
           setToastDatas={setToastDatas}
           show={showDeliveryAddressModal}
           onHide={() => setShowDeliveryAddressModal(false)}

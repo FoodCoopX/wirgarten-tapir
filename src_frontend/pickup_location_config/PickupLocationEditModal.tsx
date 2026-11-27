@@ -89,7 +89,6 @@ const Section: React.FC<{
 interface PickupLocationEditModalProps {
   show: boolean;
   onHide: () => void;
-  csrfToken: string;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
   pickupLocationId: string | null;
   onSaved: (pickupLocation: PickupLocation) => void;
@@ -98,12 +97,11 @@ interface PickupLocationEditModalProps {
 const PickupLocationEditModal: React.FC<PickupLocationEditModalProps> = ({
   show,
   onHide,
-  csrfToken,
   setToastDatas,
   pickupLocationId,
   onSaved,
 }) => {
-  const api = useApi(PickupLocationsApi, csrfToken);
+  const api = useApi(PickupLocationsApi);
 
   const [dataLoading, setDataLoading] = useState(true);
   const [saveLoading, setSaveLoading] = useState(false);

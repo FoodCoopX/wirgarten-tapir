@@ -1,5 +1,4 @@
 import { createRoot } from "react-dom/client";
-import { getCsrfToken } from "../utils/getCsrfToken.ts";
 import AdminSubscriptionAdditionButton from "./AdminSubscriptionAdditionButton.tsx";
 import AdminSubscriptionChangeButton from "./AdminSubscriptionChangeButton.tsx";
 import SubscriptionChangeDatesButton from "./SubscriptionChangeDatesButton.tsx";
@@ -14,7 +13,7 @@ if (!domNodeSubscriptionChangeDatesButton) {
   console.error("Subscription change dates button not found");
 } else {
   const root = createRoot(domNodeSubscriptionChangeDatesButton);
-  root.render(<SubscriptionChangeDatesButton csrfToken={getCsrfToken()} />);
+  root.render(<SubscriptionChangeDatesButton />);
 }
 
 const domNodeSubscriptionChangePriceButton = document.getElementById(
@@ -25,7 +24,7 @@ if (!domNodeSubscriptionChangePriceButton) {
   console.error("Subscription change price button not found");
 } else {
   const root = createRoot(domNodeSubscriptionChangePriceButton);
-  root.render(<SubscriptionChangePriceButton csrfToken={getCsrfToken()} />);
+  root.render(<SubscriptionChangePriceButton />);
 }
 
 const domNodeSubscriptionTrialPeriodButton = document.getElementById(
@@ -34,7 +33,7 @@ const domNodeSubscriptionTrialPeriodButton = document.getElementById(
 
 if (domNodeSubscriptionTrialPeriodButton) {
   const root = createRoot(domNodeSubscriptionTrialPeriodButton);
-  root.render(<SubscriptionTrialPeriodButton csrfToken={getCsrfToken()} />);
+  root.render(<SubscriptionTrialPeriodButton />);
 }
 
 const domNodeAdminSubscriptionChangeButton = document.getElementById(
@@ -43,7 +42,7 @@ const domNodeAdminSubscriptionChangeButton = document.getElementById(
 
 if (domNodeAdminSubscriptionChangeButton) {
   const root = createRoot(domNodeAdminSubscriptionChangeButton);
-  root.render(<AdminSubscriptionChangeButton csrfToken={getCsrfToken()} />);
+  root.render(<AdminSubscriptionChangeButton />);
 }
 
 const domNodeAdminSubscriptionAdditionButton = document.getElementById(
@@ -52,5 +51,5 @@ const domNodeAdminSubscriptionAdditionButton = document.getElementById(
 
 if (domNodeAdminSubscriptionAdditionButton) {
   const root = createRoot(domNodeAdminSubscriptionAdditionButton);
-  root.render(<AdminSubscriptionAdditionButton csrfToken={getCsrfToken()} />);
+  root.render(<AdminSubscriptionAdditionButton />);
 }

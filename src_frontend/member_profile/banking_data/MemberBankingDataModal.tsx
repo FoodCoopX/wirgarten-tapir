@@ -1,16 +1,15 @@
-import React, { useEffect, useState } from "react";
 import "dayjs/locale/de";
+import React, { useEffect, useState } from "react";
+import { Form, Modal, Spinner } from "react-bootstrap";
 import { CoopApi } from "../../api-client";
+import { isIbanValid } from "../../bestell_wizard/utils/isIbanValid.ts";
+import TapirButton from "../../components/TapirButton.tsx";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
-import { Form, Modal, Spinner } from "react-bootstrap";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
-import TapirButton from "../../components/TapirButton.tsx";
-import { isIbanValid } from "../../bestell_wizard/utils/isIbanValid.ts";
 
 interface MemberBankingDataModalProps {
   memberId: string;
-  csrfToken: string;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
   show: boolean;
   onHide: () => void;
@@ -18,12 +17,11 @@ interface MemberBankingDataModalProps {
 
 const MemberBankingDataModal: React.FC<MemberBankingDataModalProps> = ({
   memberId,
-  csrfToken,
   setToastDatas,
   show,
   onHide,
 }) => {
-  const api = useApi(CoopApi, csrfToken);
+  const api = useApi(CoopApi);
   const [iban, setIban] = useState("");
   const [accountOwner, setAccountOwner] = useState("");
   const [sepaConsent, setSepaConsent] = useState(false);

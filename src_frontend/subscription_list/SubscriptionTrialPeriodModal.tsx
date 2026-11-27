@@ -17,14 +17,13 @@ interface SubscriptionTrialPeriodModalProps {
   onHide: () => void;
   show: boolean;
   subscriptionId: string;
-  csrfToken: string;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
 
 const SubscriptionTrialPeriodModal: React.FC<
   SubscriptionTrialPeriodModalProps
-> = ({ onHide, show, subscriptionId, csrfToken, setToastDatas }) => {
-  const subscriptionsApi = useApi(SubscriptionsApi, csrfToken);
+> = ({ onHide, show, subscriptionId, setToastDatas }) => {
+  const subscriptionsApi = useApi(SubscriptionsApi);
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState<SubscriptionDetails>();
   const [trialDisabled, setTrialDisabled] = useState(false);

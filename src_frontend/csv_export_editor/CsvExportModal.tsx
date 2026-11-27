@@ -8,11 +8,11 @@ import {
   LocaleEnum,
 } from "../api-client";
 import EmailInput from "../components/EmailInput";
-import ColumnInput from "./ColumnInput.tsx";
 import TapirButton from "../components/TapirButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
-import { handleRequestError } from "../utils/handleRequestError.ts";
 import { ToastData } from "../types/ToastData.ts";
+import { handleRequestError } from "../utils/handleRequestError.ts";
+import ColumnInput from "./ColumnInput.tsx";
 import { CYCLE_HIDES_DAY_FIELD, CYCLE_OPTIONS } from "./CYCLE_OPTIONS.ts";
 
 interface CsvExportModalProps {
@@ -20,7 +20,6 @@ interface CsvExportModalProps {
   onHide: () => void;
   segments: ExportSegment[];
   loadExports: () => void;
-  csrfToken: string;
   exportToEdit?: CsvExportModel;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
@@ -30,11 +29,10 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
   onHide,
   segments,
   loadExports,
-  csrfToken,
   exportToEdit,
   setToastDatas,
 }) => {
-  const api = useApi(GenericExportsApi, csrfToken);
+  const api = useApi(GenericExportsApi);
 
   const [exportName, setExportName] = useState("");
   const [exportSegment, setExportSegment] = useState<ExportSegment>();

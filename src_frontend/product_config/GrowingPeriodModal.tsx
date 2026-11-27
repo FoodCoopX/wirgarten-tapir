@@ -12,17 +12,15 @@ import { getPeriodIdFromUrl } from "./get_parameter_from_url.ts";
 interface GrowingPeriodModalProps {
   show: boolean;
   onHide: () => void;
-  csrfToken: string;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
 
 const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
   show,
   onHide,
-  csrfToken,
   setToastDatas,
 }) => {
-  const api = useApi(DeliveriesApi, csrfToken);
+  const api = useApi(DeliveriesApi);
   const [startDate, setStartDate] = useState<Date>(new Date());
   const [endDate, setEndDate] = useState<Date>(new Date());
   const [weeksWithoutDelivery, setWeeksWithoutDelivery] = useState<number[]>(
