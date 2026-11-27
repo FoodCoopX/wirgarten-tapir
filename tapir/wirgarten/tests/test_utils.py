@@ -1,5 +1,6 @@
 import datetime
 import unittest
+from copy import deepcopy
 from unittest.mock import patch, Mock
 
 import factory.random
@@ -174,8 +175,17 @@ def mock_keycloak(test: TapirIntegrationTest):
             "id": keycloak_id,
             "username": data.get("username", data["email"]),
             "email": data["email"],
+            "attributes": data.get("attributes", {}),
         }
         return keycloak_id
+
+    def get_user(keycloak_id: str):
+        user = keycloak_users.get(keycloak_id)
+        return deepcopy(user) if user is not None else None
+
+    def update_user(user_id: str, payload: dict):
+        if user_id in keycloak_users:
+            keycloak_users[user_id].update(payload)
 
     def delete_user(keycloak_id: str):
         if keycloak_id not in keycloak_users:
@@ -186,5 +196,7 @@ def mock_keycloak(test: TapirIntegrationTest):
 
     test.mock_keycloak_client.get_user_id.side_effect = get_user_id
     test.mock_keycloak_client.get_users.side_effect = get_users
+    test.mock_keycloak_client.get_user.side_effect = get_user
+    test.mock_keycloak_client.update_user.side_effect = update_user
     test.mock_keycloak_client.create_user.side_effect = create_user
     test.mock_keycloak_client.delete_user.side_effect = delete_user

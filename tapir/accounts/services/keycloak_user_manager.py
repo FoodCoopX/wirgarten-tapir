@@ -24,6 +24,7 @@ class KeycloakUserManager:
         initial_password: str | None,
     ):
         if user.keycloak_id:
+            cls.update_keycloak_user_attributes(user)
             return
 
         username = KeycloakUsernameService.build_username(user)
@@ -46,6 +47,10 @@ class KeycloakUserManager:
         else:
             data["groups"] = []
 
+        attributes = cls._user_profile_attributes(user)
+        if attributes:
+            data["attributes"] = attributes
+
         keycloak_client = KeycloakUserManager.get_keycloak_client()
         user.keycloak_id = keycloak_client.create_user(data)
 
@@ -62,11 +67,59 @@ class KeycloakUserManager:
         keycloak_client.update_user(user_id=user.keycloak_id, payload=data)
 
     @classmethod
+    def update_keycloak_user_attributes(cls, user: KeycloakUser):
+        mapping = settings.KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP
+        if not user.keycloak_id or not mapping:
+            return
+
+        attributes = cls._user_profile_attributes(user)
+        keycloak_client = cls.get_keycloak_client()
+        current = keycloak_client.get_user(user.keycloak_id) or {}
+        current_attributes = dict(current.get("attributes") or {})
+        merged = dict(current_attributes)
+        for entry in mapping:
+            attribute_name = entry["keycloak"]
+            if attribute_name in attributes:
+                merged[attribute_name] = attributes[attribute_name]
+            else:
+                merged.pop(attribute_name, None)
+
+        if merged == current_attributes:
+            return
+
+        payload = {
+            key: current[key]
+            for key in (
+                "username",
+                "email",
+                "firstName",
+                "lastName",
+                "enabled",
+                "emailVerified",
+                "requiredActions",
+            )
+            if key in current
+        }
+        payload["attributes"] = merged
+        keycloak_client.update_user(user_id=user.keycloak_id, payload=payload)
+
+    @classmethod
+    def _user_profile_attributes(cls, user: KeycloakUser) -> dict[str, list[str]]:
+        attributes: dict[str, list[str]] = {}
+        for entry in settings.KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP:
+            value = getattr(user, entry["tapir"], None)
+            if value is None or value == "":
+                continue
+            attributes[entry["keycloak"]] = [str(value)]
+        return attributes
+
+    @classmethod
     def find_keycloak_user_by_email(cls, email: str) -> dict | None:
         keycloak_client = cls.get_keycloak_client()
         users = keycloak_client.get_users(query={"email": email, "exact": True})
         return users[0] if users else None
 
+    @classmethod
     @functools.cache
     def get_keycloak_client(cls) -> KeycloakAdmin:
         return get_runtime_client()

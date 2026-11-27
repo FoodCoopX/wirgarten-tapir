@@ -116,6 +116,9 @@ declare; `check` and `sync` report a configuration error when a mapped attribute
 the file. Reserved standard attributes (`username`, `email`, `firstName`, `lastName`) must not be
 mapped, and each Keycloak attribute may appear only once.
 
+The member number is written to the Keycloak user when the user is created and, if a number is
+assigned later, after the database transaction commits. A failed Keycloak update is logged and does
+not roll back the member number assignment.
 
 When `KEYCLOAK_USER_PROFILE_MANAGED=false`, `check` only verifies that the mapped attributes exist
 in the server profile and never writes. This is the recommended mode for an existing Keycloak

@@ -84,7 +84,9 @@ document in `KEYCLOAK_USER_PROFILE_FILE`. Tapir ships no built-in profile: copy
 `KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP` is a JSON list of `{"keycloak": ..., "tapir": ...}` entries;
 every `keycloak` attribute must exist in that JSON document, because the map does not create
 attributes. `KEYCLOAK_USERNAME_SOURCE=customernumber` does not imply the member-number attribute;
-set the map explicitly. See [docs/admins/keycloak.md](docs/admins/keycloak.md).
+set the map explicitly. The member number is written on user creation and after a later
+member-number assignment when it is mapped. See
+[docs/admins/keycloak.md](docs/admins/keycloak.md).
 
 For the local Docker stack, check and repair the realm with:
 

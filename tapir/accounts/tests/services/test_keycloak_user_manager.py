@@ -13,6 +13,11 @@ from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
+@override_settings(
+    KEYCLOAK_USERNAME_SOURCE="email",
+    KEYCLOAK_USERNAME_FORMAT="raw",
+    KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP=[],
+)
 class TestKeycloakUserManager(TapirIntegrationTest):
     @override_settings(KEYCLOAK_USERNAME_SOURCE="email")
     def test_createKeycloakUser_emailSource_usesEmail(self):
@@ -125,3 +130,96 @@ class TestKeycloakUserManager(TapirIntegrationTest):
 
         self.mock_keycloak_client.create_user.assert_not_called()
         self.assertEqual("existing-id", member.keycloak_id)
+
+    @override_settings(
+        KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP=[
+            {"keycloak": "customernumber", "tapir": "member_no"}
+        ]
+    )
+    def test_createKeycloakUser_attributeMap_includesAttribute(self):
+        member = MemberFactory.create(
+            first_name="Jane",
+            last_name="Doe",
+            email="user@example.com",
+            member_no=17,
+        )
+
+        KeycloakUserManager.create_keycloak_user_if_necessary(
+            user=member, initial_password=None
+        )
+
+        data = self.mock_keycloak_client.create_user.call_args.args[0]
+        self.assertEqual({"customernumber": ["17"]}, data["attributes"])
+
+    @override_settings(
+        KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP=[
+            {"keycloak": "customernumber", "tapir": "member_no"}
+        ]
+    )
+    def test_createKeycloakUser_attributeMapWithoutMemberNumber_hasNoAttribute(
+        self,
+    ):
+        member = Member.objects.create(
+            first_name="Jane",
+            last_name="Doe",
+            email="user@example.com",
+            username="user@example.com",
+            member_no=None,
+        )
+
+        KeycloakUserManager.create_keycloak_user_if_necessary(
+            user=member, initial_password=None
+        )
+
+        data = self.mock_keycloak_client.create_user.call_args.args[0]
+        self.assertNotIn("attributes", data)
+
+    def test_updateKeycloakUserAttributes_default_mergesAndRemoves(self):
+        with self.settings(KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP=[]):
+            member = MemberFactory.create(member_no=17)
+            KeycloakUserManager.create_keycloak_user_if_necessary(
+                user=member, initial_password=None
+            )
+
+        with self.settings(
+            KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP=[
+                {"keycloak": "customernumber", "tapir": "member_no"}
+            ]
+        ):
+            KeycloakUserManager.update_keycloak_user_attributes(member)
+        call = self.mock_keycloak_client.update_user.call_args
+        self.assertEqual(member.keycloak_id, call.kwargs["user_id"])
+        self.assertEqual(
+            {"customernumber": ["17"]}, call.kwargs["payload"]["attributes"]
+        )
+        self.assertEqual(member.email, call.kwargs["payload"]["email"])
+
+        member.member_no = None
+        member.save()
+        with self.settings(
+            KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP=[
+                {"keycloak": "customernumber", "tapir": "member_no"}
+            ]
+        ):
+            KeycloakUserManager.update_keycloak_user_attributes(member)
+        call = self.mock_keycloak_client.update_user.call_args
+        self.assertEqual(member.keycloak_id, call.kwargs["user_id"])
+        self.assertEqual({}, call.kwargs["payload"]["attributes"])
+        self.assertEqual(member.email, call.kwargs["payload"]["email"])
+
+    @override_settings(
+        KEYCLOAK_USER_PROFILE_ATTRIBUTE_MAP=[
+            {"keycloak": "customernumber", "tapir": "member_no"}
+        ]
+    )
+    @patch.object(KeycloakUserManager, "update_keycloak_user_attributes", autospec=True)
+    def test_createKeycloakUser_existingKeycloakId_updatesAttributes(
+        self, mock_update_keycloak_user_attributes
+    ):
+        member = MemberFactory.create(keycloak_id="existing-id", member_no=17)
+
+        KeycloakUserManager.create_keycloak_user_if_necessary(
+            user=member, initial_password=None
+        )
+
+        mock_update_keycloak_user_attributes.assert_called_once_with(member)
