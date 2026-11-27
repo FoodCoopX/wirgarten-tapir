@@ -257,7 +257,7 @@ Rejoining restores nothing: the member subscribes again through self-service.
 - [x] Phase 8 — mailman subscriptions follow the member's email change
 - [x] Phase 9 — former members: `ActiveMemberProvider` (move `MemberSegmentProvider.get_queryset_active_members` with its tests, add `get_former_members`, update callers), nightly unsubscription task + log entry, blocking new subscriptions (self-service, management page, admin views, snapshot), list unsubscription in `DeleteMemberApiView`
 - [x] Phase 10 — test data generation (extras with and without direct mails; registrations of extras with direct mails through `MemberExtraEmailRegistrationSnapshotter`)
-- [ ] Phase 11 — docs (`docs/admins`, explanation text): `ALWAYS_ON` categories are optional for extras, the snapshot runs only on the first confirmation, switching direct mails on later gives no snapshot, one owner per address, the management link token
+- [x] Phase 11 — docs (`docs/admins`, explanation text): `ALWAYS_ON` categories are optional for extras, the snapshot runs only on the first confirmation, switching direct mails on later gives no snapshot, one owner per address, the management link token
 - [ ] Phase 12 — delete this plan file (`plans/member_extra_email_subscriptions_plan.md`)
 
 ## Deployment and migration
@@ -285,18 +285,15 @@ Migrations run in the web container's start command before gunicorn (infra repo)
 
 ## Local examples (current phase)
 
-Cleared at the start of each phase. The local database already has hand-made extras that would collide with generated addresses, so the examples need a fresh `populate`:
+Cleared at the start of each phase. The local explanation text was updated to the new default.
 
-`docker compose exec -e MAILING_LISTS_ENABLED=True web poetry run python manage.py populate --reset_all`
-
-Afterwards about 15% of the members have an extra `<main local part>.extra@example.com`: mostly confirmed with direct mails, some confirmed without, some unconfirmed. Confirmed extras with direct mails have the main address's category registrations and, for active members, its list subscriptions. `Zusätzlich E-Mail-Adressen erlauben` is on.
+- [Louis](http://localhost:8000/tapir/members/DLZAQp2E7P): "Zusätzliche Mail-Adressen verwalten" shows the new third paragraph of the explanation text.
 
 ## Review order (current phase)
 
 Cleared at the start of each phase. Staged files count as reviewed (for partly staged files, only the unstaged part); generated files are left out.
 
 1. `plans/member_extra_email_subscriptions_plan.md`
-2. `tapir/utils/services/test_data_generation/member_extra_email_generator.py`
-3. `tapir/utils/tests/services/test_data_generation/test_member_extra_email_generator.py`
-4. `tapir/utils/services/test_data_generation/data_generator.py`: runs after the mailing lists, so snapshots can copy list subscriptions
-5. `tapir/utils/services/test_data_generation/configuration_generator.py`: enables extra addresses
+2. `docs/admins/mails/extra_email_addresses.md`
+3. `tapir/wirgarten/parameter_definitions/parameter_definitions_emails.py`: explanation text default
+4. `tapir/wirgarten/migrations/0156_update_extra_mail_addresses_explanation_text.py`: same text as the new default

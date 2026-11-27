@@ -13,6 +13,9 @@ NEW_DEFAULT = """<p>
 </p>
 <p>
         Wenn die Adresse auch persönliche Mails erhält, bekommt sie nach der Bestätigung eine Kopie aller Mails an deine Hauptadresse (Verträge, Abholung, Rundmails an alle Mitglieder) und übernimmt deine Anmeldungen zu Mail-Kategorien und Mailinglisten. Sonst erhält sie nur die Mails der Kategorien und Mailinglisten, für die sie selbst angemeldet ist.
+</p>
+<p>
+        Die Anmeldungen werden nur bei der ersten Bestätigung übernommen. Danach verwaltet die Adresse ihre Abos selbst, über einen Link, den du ihr mit "Link senden" schicken kannst. Wenn du persönliche Mails erst später einschaltest, werden keine Anmeldungen übernommen.
 </p>"""
 
 
