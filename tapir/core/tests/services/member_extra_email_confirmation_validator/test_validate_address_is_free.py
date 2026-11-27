@@ -12,9 +12,9 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 @patch.object(
     TapirCache,
-    "get_confirmed_member_extra_emails_with_address",
+    "get_confirmed_member_extra_email_with_address",
     autospec=True,
-    return_value=[],
+    return_value=None,
 )
 @patch.object(TapirCache, "is_member_main_address", autospec=True, return_value=False)
 class TestValidateAddressIsFree(TapirUnitTest):
@@ -46,12 +46,12 @@ class TestValidateAddressIsFree(TapirUnitTest):
         )
 
     def test_validateAddressIsFree_addressIsConfirmedForAnotherExtra_raises(
-        self, _: MagicMock, mock_get_confirmed_extras: MagicMock
+        self, _: MagicMock, mock_get_confirmed_extra: MagicMock
     ):
         extra_email = MemberExtraEmailFactory.build(email="extra@example.com")
-        mock_get_confirmed_extras.return_value = [
-            MemberExtraEmailFactory.build(email="extra@example.com")
-        ]
+        mock_get_confirmed_extra.return_value = MemberExtraEmailFactory.build(
+            email="extra@example.com"
+        )
 
         with self.assertRaisesMessage(
             ValidationError,
@@ -62,10 +62,10 @@ class TestValidateAddressIsFree(TapirUnitTest):
             )
 
     def test_validateAddressIsFree_onlyConfirmedExtraIsItself_doesNotRaise(
-        self, _: MagicMock, mock_get_confirmed_extras: MagicMock
+        self, _: MagicMock, mock_get_confirmed_extra: MagicMock
     ):
         extra_email = MemberExtraEmailFactory.build(email="extra@example.com")
-        mock_get_confirmed_extras.return_value = [extra_email]
+        mock_get_confirmed_extra.return_value = extra_email
 
         MemberExtraEmailConfirmationValidator.validate_address_is_free(
             extra_email=extra_email, cache={}

@@ -13,10 +13,8 @@ class MemberExtraEmailConfirmationValidator:
         if TapirCache.is_member_main_address(address=extra_email.email, cache=cache):
             raise ValidationError(cls.MAIN_ADDRESS_MESSAGE)
 
-        if any(
-            other.id != extra_email.id
-            for other in TapirCache.get_confirmed_member_extra_emails_with_address(
-                address=extra_email.email, cache=cache
-            )
-        ):
+        owner = TapirCache.get_confirmed_member_extra_email_with_address(
+            address=extra_email.email, cache=cache
+        )
+        if owner is not None and owner.id != extra_email.id:
             raise ValidationError(cls.OTHER_MEMBER_EXTRA_MESSAGE)
