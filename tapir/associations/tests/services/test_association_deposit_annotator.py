@@ -31,7 +31,7 @@ class TestAssociationDepositAnnotator(TapirIntegrationTest):
             valid_at=datetime.date(2026, 11, 5),
         )
         PaymentFactory.create(association_deposit_transaction=paid, amount=200)
-        other = AssociationDepositTransaction.objects.create(
+        AssociationDepositTransaction.objects.create(
             member=MemberFactory.create(),
             transaction_type=AssociationDepositTransaction.Type.IMPORT,
             amount=500,
