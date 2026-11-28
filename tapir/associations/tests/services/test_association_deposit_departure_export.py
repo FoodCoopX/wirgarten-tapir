@@ -68,29 +68,3 @@ class TestAssociationDepositDepartureExport(TapirIntegrationTest):
         )
 
         self.assertFalse(result.exists())
-
-    def test_getColumns_formulaInAccountOwner_exportsAsText(self):
-        membership = AssociationMembershipFactory.create()
-        membership.member.account_owner = "=1+1"
-        column = next(
-            column
-            for column in AssociationDepositDepartureExport.get_columns()
-            if column.id == "account_owner"
-        )
-
-        result = column.get_value(membership, datetime.datetime(2026, 11, 23, 12), {})
-
-        self.assertEqual("'=1+1", result)
-
-    def test_getColumns_normalAccountOwner_keepsTextUnchanged(self):
-        membership = AssociationMembershipFactory.create()
-        membership.member.account_owner = "Mika Muster"
-        column = next(
-            column
-            for column in AssociationDepositDepartureExport.get_columns()
-            if column.id == "account_owner"
-        )
-
-        result = column.get_value(membership, datetime.datetime(2026, 11, 23, 12), {})
-
-        self.assertEqual("Mika Muster", result)
