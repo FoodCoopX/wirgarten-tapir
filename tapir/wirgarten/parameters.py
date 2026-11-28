@@ -9,6 +9,9 @@ from tapir.configuration.models import (
     TapirParameter,
 )
 from tapir.configuration.parameter import ParameterMeta, parameter_definition
+from tapir.wirgarten.parameter_definitions.parameter_definitions_association_deposit import (
+    ParameterDefinitionsAssociationDeposit,
+)
 from tapir.wirgarten.parameter_definitions.parameter_definitions_bakery import (
     ParameterDefinitionsBakery,
 )
@@ -71,6 +74,9 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             TapirParameter.objects.bulk_create(self.parameters_to_create)
 
     def define_all_parameters(self):
+        ParameterDefinitionsAssociationDeposit.define_all_parameters_association_deposit(
+            importer=self
+        )
         ParameterDefinitionsBestellwizard.define_all_member_bestellwizard(importer=self)
         ParameterDefinitionsBusiness.define_all_member_business(importer=self)
         ParameterDefinitionsDelivery.define_all_parameters_delivery(importer=self)
