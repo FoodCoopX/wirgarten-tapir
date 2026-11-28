@@ -51,20 +51,29 @@ class TestAssociationDepositImporter(TapirIntegrationTest):
         }
 
     def test_importDeposit_receivedAndOutstanding_importsWithoutPayment(self):
-        AssociationDepositImporter.import_deposit(self.row, {})
+        AssociationDepositImporter.import_deposit(row=self.row, cache={})
         self.assertEqual(
             MEMBER_IMPORT_STATUS_SKIPPED,
-            AssociationDepositImporter.import_deposit(self.row, {}),
+            AssociationDepositImporter.import_deposit(row=self.row, cache={}),
         )
         totals = AssociationDepositAnnotator.annotate_members(
             Member.objects.filter(pk=self.membership.member_id)
         ).get()
         self.assertEqual(200, totals.deposit_agreed)
         self.assertEqual(150, totals.deposit_exported)
+        self.assertCountEqual(
+            [
+                (AssociationDepositTransaction.Type.IMPORT, Decimal("150")),
+                (AssociationDepositTransaction.Type.IMPORT_OUTSTANDING, Decimal("50")),
+            ],
+            AssociationDepositTransaction.objects.values_list(
+                "transaction_type", "amount"
+            ),
+        )
         self.assertFalse(Payment.objects.exists())
 
     def test_importDeposit_replayAfterIncrease_preservesHistoricalBalance(self):
-        AssociationDepositImporter.import_deposit(self.row, {})
+        AssociationDepositImporter.import_deposit(row=self.row, cache={})
         AssociationDepositPaymentCreator.create_deposit_and_payment(
             member=self.membership.member,
             amount=Decimal("50"),
@@ -74,25 +83,25 @@ class TestAssociationDepositImporter(TapirIntegrationTest):
         )
         self.assertEqual(
             MEMBER_IMPORT_STATUS_SKIPPED,
-            AssociationDepositImporter.import_deposit(self.row, {}),
+            AssociationDepositImporter.import_deposit(row=self.row, cache={}),
         )
         self.assertEqual(3, AssociationDepositTransaction.objects.count())
         self.assertEqual(1, Payment.objects.count())
 
     def test_importDeposit_changedReplay_rejectsWithoutChangingBalances(self):
-        AssociationDepositImporter.import_deposit(self.row, {})
+        AssociationDepositImporter.import_deposit(row=self.row, cache={})
         with self.assertRaisesMessage(ValidationError, "abweichende Einlagenbuchungen"):
             AssociationDepositImporter.import_deposit(
-                {**self.row, "Einlage Offen": "60"}, {}
+                row={**self.row, "Einlage Offen": "60"}, cache={}
             )
         self.assertEqual(2, AssociationDepositTransaction.objects.count())
 
     def test_importDeposit_individualAgreement_createsRequestWithoutTransaction(self):
         row = {"Nr": self.row["Nr"], "Einlage Status": "offen"}
-        AssociationDepositImporter.import_deposit(row, {})
+        AssociationDepositImporter.import_deposit(row=row, cache={})
         self.assertEqual(
             MEMBER_IMPORT_STATUS_SKIPPED,
-            AssociationDepositImporter.import_deposit(row, {}),
+            AssociationDepositImporter.import_deposit(row=row, cache={}),
         )
         self.membership.refresh_from_db()
         self.assertIsNotNone(self.membership.deposit_agreement_requested_at)
@@ -102,7 +111,7 @@ class TestAssociationDepositImporter(TapirIntegrationTest):
     def test_importDeposit_prefixedMemberNumber_usesExistingParser(self):
         self._set_parameter(ParameterKeys.MEMBER_NUMBER_PREFIX, "GKK")
         AssociationDepositImporter.import_deposit(
-            {**self.row, "Nr": f"GKK{self.row['Nr']}"}, {}
+            row={**self.row, "Nr": f"GKK{self.row['Nr']}"}, cache={}
         )
         self.assertEqual(
             2,
@@ -114,13 +123,13 @@ class TestAssociationDepositImporter(TapirIntegrationTest):
     def test_importDeposit_unknownColumns_listsNames(self):
         with self.assertRaisesMessage(ValidationError, "Andere Spalte, Unbekannt"):
             AssociationDepositImporter.import_deposit(
-                {**self.row, "Unbekannt": "x", "Andere Spalte": "y"}, {}
+                row={**self.row, "Unbekannt": "x", "Andere Spalte": "y"}, cache={}
             )
 
     def test_importDeposit_emptyRow_isIgnored(self):
         self.assertIsNone(
             AssociationDepositImporter.import_deposit(
-                {"Nr": "", "Einlage Erhalten": " "}, {}
+                row={"Nr": "", "Einlage Erhalten": " "}, cache={}
             )
         )
 

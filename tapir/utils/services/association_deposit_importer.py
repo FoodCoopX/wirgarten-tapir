@@ -3,7 +3,6 @@ from decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.core.validators import DecimalValidator
 from django.db import transaction
-from django.db.models import Q
 
 from tapir.associations.models import (
     AssociationDepositTransaction,
@@ -47,11 +46,13 @@ class AssociationDepositImporter:
             raise ValidationError(
                 f"Unbekannte Spalten im Einlagenimport: {', '.join(sorted(unknown_columns))}."
             )
-        member_number = DataImportUtils.parse_member_number(row.get("Nr"), cache=cache)
+        member_number = DataImportUtils.parse_member_number(
+            value=row.get("Nr"), cache=cache
+        )
         if member_number is None:
             raise ValidationError("Eine Mitgliedsnummer ist erforderlich.")
         status = DataImportUtils.normalize_cell(row.get("Einlage Status"))
-        received, outstanding = cls._parse_amounts(row, status)
+        received, outstanding = cls._parse_amounts(row=row, status=status)
         member = Member.objects.get(member_no=member_number)
         membership = (
             AssociationMembership.objects.filter(
@@ -79,18 +80,17 @@ class AssociationDepositImporter:
 
         transactions = AssociationDepositTransaction.objects.filter(member=member)
         historical = transactions.filter(
-            Q(transaction_type=AssociationDepositTransaction.Type.IMPORT)
-            | Q(
-                transaction_type=AssociationDepositTransaction.Type.SUBSCRIPTION,
-                payments__isnull=True,
-            )
+            transaction_type__in=[
+                AssociationDepositTransaction.Type.IMPORT,
+                AssociationDepositTransaction.Type.IMPORT_OUTSTANDING,
+            ]
         )
         expected = []
         if received:
             expected.append((AssociationDepositTransaction.Type.IMPORT, received))
         if outstanding:
             expected.append(
-                (AssociationDepositTransaction.Type.SUBSCRIPTION, outstanding)
+                (AssociationDepositTransaction.Type.IMPORT_OUTSTANDING, outstanding)
             )
         if transactions.exists():
             if sorted(historical.values_list("transaction_type", "amount")) == sorted(
@@ -118,8 +118,8 @@ class AssociationDepositImporter:
     def _parse_amounts(row: dict[str, str], status: str) -> tuple[Decimal, Decimal]:
         if status not in ("", "vereinbart", "offen"):
             raise ValidationError("Einlage Status muss vereinbart oder offen sein.")
-        received = DataImportUtils.parse_amount(row, "Einlage Erhalten")
-        outstanding = DataImportUtils.parse_amount(row, "Einlage Offen")
+        received = DataImportUtils.parse_amount(row=row, column="Einlage Erhalten")
+        outstanding = DataImportUtils.parse_amount(row=row, column="Einlage Offen")
         if status == "offen" and (received or outstanding):
             raise ValidationError(
                 "Eine offene Vereinbarung darf keinen Einlagenbetrag enthalten."
