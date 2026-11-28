@@ -5,11 +5,13 @@ from tapir.associations.services.association_deposit_settings import (
 )
 from tapir.utils.services.tapir_cache import TapirCache
 
-from django.db.models import Exists, OuterRef, Q, QuerySet
+from django.db.models import QuerySet
 
-from tapir.associations.models import AssociationMembership
 from tapir.associations.services.association_deposit_annotator import (
     AssociationDepositAnnotator,
+)
+from tapir.associations.services.association_entry_date_annotater import (
+    AssociationEntryDateAnnotater,
 )
 from tapir.generic_exports.exceptions import TemplateAlreadyExistsException
 from tapir.generic_exports.models import AutomatedExportCycle, CsvExport, LocaleChoices
@@ -21,6 +23,7 @@ from tapir.wirgarten.utils import (
     format_currency,
     get_today,
 )
+from tapir.wirgarten.models import Member
 
 
 class AssociationDepositDepartureExport:
@@ -37,18 +40,18 @@ class AssociationDepositDepartureExport:
             id=cls.ID,
             display_name=cls.NAME,
             description=cls.DESCRIPTION,
-            get_queryset=cls.get_memberships,
+            get_queryset=cls.get_members,
             get_available_columns=cls.get_columns,
             is_available=association_deposits_enabled,
         )
 
     @staticmethod
-    def get_memberships(
+    def get_members(
         reference_datetime: datetime.datetime,
-    ) -> QuerySet[AssociationMembership]:
+    ) -> QuerySet[Member]:
         cache = {}
         if not association_deposits_enabled(cache=cache):
-            return AssociationMembership.objects.none()
+            return Member.objects.none()
         growing_period = next(
             (
                 period
@@ -60,63 +63,56 @@ class AssociationDepositDepartureExport:
             None,
         )
         if growing_period is None:
-            return AssociationMembership.objects.none()
-        memberships = (
-            AssociationMembership.objects.filter(
-                end_date__gte=growing_period.start_date,
-                end_date__lte=growing_period.end_date,
-                end_date__lt=get_today(cache=cache),
+            return Member.objects.none()
+        members = (
+            AssociationEntryDateAnnotater.annotate_queryset_with_association_exit_date(
+                queryset=Member.objects.all()
+            ).filter(
+                association_exit_date__gte=growing_period.start_date,
+                association_exit_date__lte=growing_period.end_date,
+                association_exit_date__lt=get_today(cache=cache),
             )
-            .filter(
-                ~Exists(
-                    AssociationMembership.objects.filter(
-                        member_id=OuterRef("member_id")
-                    ).filter(
-                        Q(start_date__gt=OuterRef("start_date"))
-                        | Q(start_date=OuterRef("start_date"), pk__gt=OuterRef("pk"))
-                    )
-                )
-            )
-            .select_related("member")
         )
         return (
-            AssociationDepositAnnotator.annotate_memberships(memberships)
+            AssociationDepositAnnotator.annotate_members(members=members)
             .filter(deposit_exported__gt=0)
-            .order_by("member__member_no", "end_date", "pk")
+            .order_by("member_no", "association_exit_date", "pk")
         )
 
     @classmethod
     def get_columns(cls) -> list[ExportSegmentColumn]:
         return [
             ExportSegmentColumn(
-                "member",
-                "Mitglied",
-                "",
-                lambda membership, _, __: membership.member.get_display_name(),
+                id="member",
+                display_name="Mitglied",
+                description="",
+                get_value=lambda member, _, __: member.get_display_name(),
             ),
             ExportSegmentColumn(
-                "departure",
-                "Austritt",
-                "",
-                lambda membership, _, __: membership.end_date.isoformat(),
+                id="departure",
+                display_name="Austritt",
+                description="",
+                get_value=lambda member, _, __: member.association_exit_date.isoformat(),
             ),
             ExportSegmentColumn(
-                "account_owner",
-                "Kontoinhaber",
-                "",
-                lambda membership, _, __: membership.member.account_owner,
+                id="account_owner",
+                display_name="Kontoinhaber",
+                description="",
+                get_value=lambda member, _, __: member.account_owner,
             ),
             ExportSegmentColumn(
-                "iban",
-                "IBAN",
-                "",
-                lambda membership, _, __: membership.member.iban,
+                id="iban",
+                display_name="IBAN",
+                description="",
+                get_value=lambda member, _, __: member.iban,
             ),
             ExportSegmentColumn(
-                "amount",
-                "Einlage (€)",
-                "",
-                lambda membership, _, __: format_currency(membership.deposit_exported),
+                id="amount",
+                display_name="Einlage (€)",
+                description="",
+                get_value=lambda member, _, __: format_currency(
+                    member.deposit_exported
+                ),
             ),
         ]
 

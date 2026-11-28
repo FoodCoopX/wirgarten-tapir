@@ -61,7 +61,7 @@ class TestPaymentExportBuilderAssociationDeposits(TapirIntegrationTest):
 
     def export(self):
         return PaymentExportBuilder.export_all_unexported_payments(
-            self.today, False, {}
+            reference_date=self.today, send_mail=False, cache={}
         )
 
     def test_exportAllUnexportedPayments_default_exportsDepositTransaction(
