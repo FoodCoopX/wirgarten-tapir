@@ -17,7 +17,8 @@ from tapir.utils.config import (
     MEMBER_IMPORT_STATUS_SKIPPED,
 )
 from tapir.utils.services.data_import_utils import DataImportUtils
-from tapir.wirgarten.models import Member
+from tapir.payments.config import PAYMENT_TYPE_ASSOCIATION_DEPOSIT
+from tapir.wirgarten.models import Member, Payment, PaymentTransaction
 from tapir.wirgarten.utils import (
     format_currency,
     get_now,
@@ -129,3 +130,29 @@ class AssociationDepositImporter:
             )
         DecimalValidator(8, 2)(received + outstanding)
         return received, outstanding
+
+    @staticmethod
+    @transaction.atomic
+    def delete_all() -> None:
+        transactions = AssociationDepositTransaction.objects.all()
+        requests = AssociationMembership.objects.filter(
+            deposit_agreement_requested_at__isnull=False
+        )
+        payments = Payment.objects.filter(type=PAYMENT_TYPE_ASSOCIATION_DEPOSIT)
+        member_ids = (
+            set(transactions.values_list("member_id", flat=True))
+            | set(requests.values_list("member_id", flat=True))
+            | set(payments.values_list("mandate_ref__member_id", flat=True))
+        )
+        payments.delete()
+        PaymentTransaction.objects.filter(
+            type=PAYMENT_TYPE_ASSOCIATION_DEPOSIT
+        ).delete()
+        transactions.delete()
+        requests.update(deposit_agreement_requested_at=None)
+        for member in Member.objects.filter(pk__in=member_ids):
+            TextLogEntry().populate(
+                user=member,
+                actor=None,
+                text="Vereinseinlagen beim Import zurückgesetzt.",
+            ).save()

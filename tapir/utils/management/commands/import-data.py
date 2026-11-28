@@ -6,7 +6,7 @@ import unicodedata
 from csv import DictReader
 from typing import Literal
 
-from django.core.management import BaseCommand, CommandError
+from django.core.management import BaseCommand
 from django.db import transaction
 from icecream import ic
 
@@ -177,11 +177,11 @@ class Command(BaseCommand):
                 self.verify_csv(cleaned_headers, raw_headers, reader)
                 return
 
-            if import_type == "deposits" and delete_all:
-                raise CommandError("Der Einlagenimport unterstützt kein --delete-all.")
-
             with transaction.atomic():
                 if delete_all:
+                    if import_type == "deposits":
+                        AssociationDepositImporter.delete_all()
+
                     if import_type == "members":
                         SolidarityContribution.objects.all().delete()
                         SubscriptionChangeLogEntry.objects.all().delete()
