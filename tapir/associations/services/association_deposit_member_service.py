@@ -74,7 +74,7 @@ class AssociationDepositMemberService:
             amount=total_amount, cache=cache
         )
         increase = total_amount - current_amount
-        AssociationDepositPaymentCreator.validate_debit(
+        AssociationDepositPaymentCreator.validate_payment(
             member=member, amount=increase, cache=cache
         )
         return increase

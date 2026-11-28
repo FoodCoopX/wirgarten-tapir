@@ -433,7 +433,11 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
       );
     }
 
-    if (associationDepositAmount != null) {
+    if (
+      associationDepositAmount != null &&
+      associationDepositPaymentOption !==
+        AssociationDepositPaymentOptionEnum.IndividualAgreement
+    ) {
       segments.push(
         <PaymentRow
           key="deposit"
