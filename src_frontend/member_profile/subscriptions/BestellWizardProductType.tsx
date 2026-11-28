@@ -45,6 +45,7 @@ import { getPickupLocationsForDeliveryMode } from "../../bestell_wizard_mobile/u
 import { getProductTypeFromStep } from "../../bestell_wizard_mobile/utils/getProductTypeFromStep.ts";
 import { shouldIncludeStepGrowingPeriodChoice } from "../../bestell_wizard_mobile/utils/shouldIncludeStepGrowingPeriodChoice.ts";
 import { updateWaitingList } from "../../bestell_wizard_mobile/utils/updateWaitingList.ts";
+import ConfirmModal from "../../components/ConfirmModal.tsx";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
 import { fromApiDate } from "../../utils/apiDate.ts";
@@ -53,6 +54,7 @@ import { isSubscriptionActive } from "../../utils/isSubscriptionActive.ts";
 
 interface BestellWizardProductTypeProps {
   memberId: string;
+  memberUrl: string;
   firstName: string;
   lastName: string;
   needsBankingData: boolean;
@@ -61,6 +63,7 @@ interface BestellWizardProductTypeProps {
 
 const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
   memberId,
+  memberUrl,
   firstName,
   lastName,
   needsBankingData,
@@ -80,6 +83,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
   const [steps, setSteps] = useState<Step[]>(["loading"]);
   const [currentStep, setCurrentStep] = useState<Step>("loading");
   const [orderLoading, setOrderLoading] = useState(false);
+  const [waitingListError, setWaitingListError] = useState<string>();
   const [orderEvaluationLoading, setOrderEvaluationLoading] = useState(false);
   const [productIdsOverCapacity, setProductIdsOverCapacity] = useState<
     string[]
@@ -453,7 +457,10 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
             globalThis.location.assign(response.redirectUrl);
           }
         } else {
-          alert(response.error);
+          setWaitingListError(
+            response.error ??
+              "Der Wartelisteneintrag konnte nicht erstellt werden.",
+          );
           setOrderLoading(false);
         }
       })
@@ -700,30 +707,42 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
   }
 
   return (
-    <BestellWizardMobileBase
-      settings={settings}
-      steps={steps}
-      currentStep={currentStep}
-      setCurrentStep={setCurrentStep}
-      shoppingCart={shoppingCart}
-      phases={[]}
-      selectedPickupLocations={selectedPickupLocations}
-      solidarityContribution={0}
-      productTypesInWaitingList={productTypesInWaitingList}
-      personalData={personalData}
-      getStepComponent={getStepComponent}
-      setTestData={() => {}}
-      toastDatas={toastDatas}
-      setToastDatas={setToastDatas}
-      showProgress={steps.length > 2}
-      hideFooterButtonsOnLastStep={false}
-      selectedNumberOfCoopShares={0}
-      goToProductTypeStep={() => {
-        setCurrentStep(`${productTypeId}_order`);
-      }}
-      contractStartDate={contractStartDate}
-      selectedGrowingPeriod={selectedGrowingPeriod}
-    />
+    <>
+      <BestellWizardMobileBase
+        settings={settings}
+        steps={steps}
+        currentStep={currentStep}
+        setCurrentStep={setCurrentStep}
+        shoppingCart={shoppingCart}
+        phases={[]}
+        selectedPickupLocations={selectedPickupLocations}
+        solidarityContribution={0}
+        productTypesInWaitingList={productTypesInWaitingList}
+        personalData={personalData}
+        getStepComponent={getStepComponent}
+        setTestData={() => {}}
+        toastDatas={toastDatas}
+        setToastDatas={setToastDatas}
+        showProgress={steps.length > 2}
+        hideFooterButtonsOnLastStep={false}
+        selectedNumberOfCoopShares={0}
+        goToProductTypeStep={() => {
+          setCurrentStep(`${productTypeId}_order`);
+        }}
+        contractStartDate={contractStartDate}
+        selectedGrowingPeriod={selectedGrowingPeriod}
+      />
+      <ConfirmModal
+        open={waitingListError !== undefined}
+        title="Wartelisteneintrag nicht erstellt"
+        message={waitingListError}
+        confirmButtonText="Zum Mitgliederbereich"
+        confirmButtonVariant="outline-secondary"
+        confirmButtonIcon="arrow_back"
+        onConfirm={() => globalThis.location.assign(memberUrl)}
+        onCancel={() => setWaitingListError(undefined)}
+      />
+    </>
   );
 };
 
