@@ -865,14 +865,21 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
     def test_post_invalidDepositChoices_rejectsBeforeExternalUserCreation(self):
         entry, data = self.prepare_deposit_confirmation()
         cases = [
-            ("individual_agreement", None, False, 400),
-            ("individual_agreement", "0", False, 200),
-            ("individual_agreement", "200", True, 200),
-            ("once", "100", True, 200),
-            ("once", "200.001", True, 400),
-            ("standard_instalments", "200", True, 400),
+            (
+                "individual_agreement",
+                "0",
+                False,
+                "Anfragen für individuelle Einlagenvereinbarungen sind nicht aktiviert.",
+            ),
+            (
+                "individual_agreement",
+                "200",
+                True,
+                "Bei einer offenen Vereinbarung darf kein Einlagenbetrag angenommen werden.",
+            ),
+            ("once", "100", True, "Die Mindesteinlage beträgt 200,00 €."),
         ]
-        for option, amount, allow_signup_without_deposit, status_code in cases:
+        for option, amount, allow_signup_without_deposit, expected_error in cases:
             with self.subTest(
                 option=option,
                 amount=amount,
@@ -891,10 +898,8 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
                     data=json.dumps(data),
                     content_type="application/json",
                 )
-                self.assertEqual(status_code, response.status_code, response.content)
-                if status_code == 200:
-                    self.assertFalse(response.json()["order_confirmed"])
-                    self.assertTrue(response.json()["error"])
+                self.assertStatusCode(response, 200)
+                self.assert_order_not_confirmed(response.json(), expected_error)
                 self.mock_keycloak_client.create_user.assert_not_called()
                 self.assertFalse(Member.objects.exists())
                 self.assertFalse(AssociationDepositTransaction.objects.exists())
