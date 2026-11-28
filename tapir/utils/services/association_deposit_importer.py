@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.core.exceptions import ValidationError
 from django.core.validators import DecimalValidator
 from django.db import transaction
@@ -48,19 +50,7 @@ class AssociationDepositImporter:
         if member_number is None:
             raise ValidationError("Eine Mitgliedsnummer ist erforderlich.")
         status = DataImportUtils.normalize_cell(row.get("Einlage Status"))
-        if status not in ("", "vereinbart", "offen"):
-            raise ValidationError("Einlage Status muss vereinbart oder offen sein.")
-        received = DataImportUtils.parse_amount(row, "Einlage Erhalten")
-        outstanding = DataImportUtils.parse_amount(row, "Einlage Offen")
-        if status == "offen" and (received or outstanding):
-            raise ValidationError(
-                "Eine offene Vereinbarung darf keinen Einlagenbetrag enthalten."
-            )
-        if status != "offen" and received + outstanding <= 0:
-            raise ValidationError(
-                "Ein erhaltener oder offener Betrag ist erforderlich."
-            )
-        DecimalValidator(8, 2)(received + outstanding)
+        received, outstanding = cls._parse_amounts(row, status)
         member = Member.objects.get(member_no=member_number)
         membership = (
             AssociationMembership.objects.filter(
@@ -122,3 +112,20 @@ class AssociationDepositImporter:
             text=f"Vereinseinlage importiert: erhalten {format_currency(received)} €, offen {format_currency(outstanding)} €.",
         ).save()
         return MEMBER_IMPORT_STATUS_CREATED
+
+    @staticmethod
+    def _parse_amounts(row: dict[str, str], status: str) -> tuple[Decimal, Decimal]:
+        if status not in ("", "vereinbart", "offen"):
+            raise ValidationError("Einlage Status muss vereinbart oder offen sein.")
+        received = DataImportUtils.parse_amount(row, "Einlage Erhalten")
+        outstanding = DataImportUtils.parse_amount(row, "Einlage Offen")
+        if status == "offen" and (received or outstanding):
+            raise ValidationError(
+                "Eine offene Vereinbarung darf keinen Einlagenbetrag enthalten."
+            )
+        if status != "offen" and received + outstanding <= 0:
+            raise ValidationError(
+                "Ein erhaltener oder offener Betrag ist erforderlich."
+            )
+        DecimalValidator(8, 2)(received + outstanding)
+        return received, outstanding
