@@ -45,8 +45,8 @@ class TestAssociationDepositPaymentCreator(TapirIntegrationTest):
             datetime.date(2027, 1, 6), payment.association_deposit_transaction.valid_at
         )
         log = AssociationDepositAgreedLogEntry.objects.get()
-        self.assertEqual(self.member, log.actor)
-        self.assertEqual(self.member, log.user)
+        self.assertEqual(self.member.pk, log.actor_id)
+        self.assertEqual(self.member.pk, log.user_id)
         self.assertEqual(payment.type, PAYMENT_TYPE_ASSOCIATION_DEPOSIT)
         self.assertEqual(payment.due_date, datetime.date(2027, 2, 5))
 
