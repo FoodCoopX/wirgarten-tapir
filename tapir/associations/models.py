@@ -68,6 +68,7 @@ class AssociationDepositTransaction(TapirModel):
     class Type(models.TextChoices):
         SUBSCRIPTION = "subscription", "Zeichnung"
         IMPORT = "import", "Import"
+        IMPORT_OUTSTANDING = "import_outstanding", "Importierte offene Einlage"
         REPAYMENT = "repayment", "Rückzahlung"
         CORRECTION = "correction", "Korrektur"
 
