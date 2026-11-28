@@ -9,6 +9,9 @@ from tapir.mail.triggers.transactional_trigger import (
 )
 
 from tapir.associations.models import AssociationMembership
+from tapir.associations.services.association_deposit_mail_token_provider import (
+    AssociationDepositMailTokenProvider,
+)
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.coop_membership_cancellation_manager import (
     CoopMembershipCancellationManager,
@@ -206,7 +209,7 @@ def _fire_coop_membership_entry_trigger(member: Member, cache: dict):
     )
 
 
-def _fire_association_membership_entry_trigger(member: Member):
+def _fire_association_membership_entry_trigger(member: Member, cache: dict):
     membership = (
         AssociationMembership.objects.filter(member=member)
         .order_by("start_date")
@@ -219,7 +222,10 @@ def _fire_association_membership_entry_trigger(member: Member):
             token_data={
                 "membership_type_name": membership.type.name,
                 "membership_start_date": membership.start_date,
-            },
+            }
+            | AssociationDepositMailTokenProvider.build_tokens(
+                member=member, cache=cache
+            ),
         ),
     )
 
@@ -253,7 +259,7 @@ def send_membership_entry_mails():
                 .exists()
             ):
                 should_send_mail = True
-                _fire_association_membership_entry_trigger(member=member)
+                _fire_association_membership_entry_trigger(member=member, cache=cache)
 
             if should_send_mail:
                 member.has_received_membership_started_mail = True

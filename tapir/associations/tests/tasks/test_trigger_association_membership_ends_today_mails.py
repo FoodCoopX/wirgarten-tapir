@@ -8,6 +8,9 @@ from tapir.mail.triggers.transactional_trigger import (
 )
 
 from tapir.associations.apps import AssociationsConfig
+from tapir.associations.models import AssociationDepositTransaction
+from tapir.core.config import LEGAL_STATUS_ASSOCIATION
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.associations.tasks import trigger_association_membership_ends_today_mails
 from tapir.associations.tests.factories import AssociationMembershipFactory
 from tapir.wirgarten.parameters import ParameterDefinitions
@@ -37,6 +40,26 @@ class TestTriggerAssociationMembershipEndsTodayMails(TapirIntegrationTest):
         )
 
     @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_triggerAssociationMembershipEndsTodayMails_importedDeposit_includesImportedAmount(
+        self, mock_fire_action
+    ):
+        self._set_parameter(
+            ParameterKeys.ORGANISATION_LEGAL_STATUS, LEGAL_STATUS_ASSOCIATION
+        )
+        membership = self.create_membership_that_should_trigger_a_mail()
+        AssociationDepositTransaction.objects.create(
+            member=membership.member,
+            transaction_type=AssociationDepositTransaction.Type.IMPORT,
+            amount=200,
+            valid_at=membership.start_date,
+        )
+
+        trigger_association_membership_ends_today_mails()
+
+        token_data = mock_fire_action.call_args.kwargs["trigger_data"].token_data
+        self.assertEqual("200,00", token_data["association_deposit_amount"])
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_triggerAssociationMembershipEndsTodayMails_membershipEndsAndNoFutureMembership_mailTriggered(
         self, mock_fire_action: Mock
     ):
@@ -51,6 +74,7 @@ class TestTriggerAssociationMembershipEndsTodayMails(TapirIntegrationTest):
                 token_data={
                     "membership_type_name": membership.type.name,
                     "end_date_set_on": "13.10.2020",
+                    "association_deposit_amount": "",
                 },
             )
         )
