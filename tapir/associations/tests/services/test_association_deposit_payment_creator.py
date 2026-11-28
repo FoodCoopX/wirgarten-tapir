@@ -50,9 +50,9 @@ class TestAssociationDepositPaymentCreator(TapirIntegrationTest):
         self.assertEqual(payment.type, PAYMENT_TYPE_ASSOCIATION_DEPOSIT)
         self.assertEqual(payment.due_date, datetime.date(2027, 2, 5))
 
-    def test_validateDebit_missingConsent_raisesError(self):
+    def test_validatePayment_missingConsent_raisesError(self):
         self.member.sepa_consent = None
         with self.assertRaisesMessage(ValidationError, "gültige SEPA-Zustimmung"):
-            AssociationDepositPaymentCreator.validate_debit(
+            AssociationDepositPaymentCreator.validate_payment(
                 member=self.member, amount=Decimal("200"), cache={}
             )

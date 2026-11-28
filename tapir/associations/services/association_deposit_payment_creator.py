@@ -21,7 +21,7 @@ from tapir.wirgarten.utils import get_now
 
 class AssociationDepositPaymentCreator:
     @staticmethod
-    def validate_debit(member: Member, amount: Decimal, cache: dict) -> None:
+    def validate_payment(member: Member, amount: Decimal, cache: dict) -> None:
         AssociationDepositAmountValidator.validate_positive_amount(amount)
         if member.sepa_consent is None or member.sepa_consent > get_now(cache=cache):
             raise ValidationError(
