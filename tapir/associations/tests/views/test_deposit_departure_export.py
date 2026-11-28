@@ -3,7 +3,7 @@ from decimal import Decimal
 
 from django.urls import reverse
 
-from tapir.associations.models import AssociationDeposit
+from tapir.associations.models import AssociationDepositTransaction
 from tapir.associations.services.association_deposit_annotator import (
     AssociationDepositAnnotator,
 )
@@ -21,7 +21,6 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
-    PaymentFactory,
     GrowingPeriodFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
@@ -58,8 +57,12 @@ class TestDepositDepartureExport(TapirIntegrationTest):
             start_date=datetime.date(2026, 3, 1),
             end_date=datetime.date(2026, 12, 31),
         )
-        deposit = AssociationDeposit.objects.create(member=member)
-        PaymentFactory.create(amount=200, association_deposit=deposit)
+        AssociationDepositTransaction.objects.create(
+            member=member,
+            transaction_type=AssociationDepositTransaction.Type.IMPORT,
+            amount=200,
+            valid_at=datetime.date(2025, 1, 1),
+        )
         AssociationMembershipFactory.create(
             member=member, start_date=datetime.date(2027, 3, 1)
         )
@@ -96,8 +99,12 @@ class TestDepositDepartureExport(TapirIntegrationTest):
                 start_date=datetime.date(year, 1, 1),
                 end_date=datetime.date(year, 12, 31),
             )
-            deposit = AssociationDeposit.objects.create(member=membership.member)
-            PaymentFactory.create(amount=amount, association_deposit=deposit)
+            AssociationDepositTransaction.objects.create(
+                member=membership.member,
+                transaction_type=AssociationDepositTransaction.Type.IMPORT,
+                amount=amount,
+                valid_at=membership.start_date,
+            )
         CsvExportTemplateManager.create_exports_from_template(
             "association_deposit_departures", {}
         )

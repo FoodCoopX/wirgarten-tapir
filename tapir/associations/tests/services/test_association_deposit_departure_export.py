@@ -1,6 +1,6 @@
 import datetime
 
-from tapir.associations.models import AssociationDeposit
+from tapir.associations.models import AssociationDepositTransaction
 from tapir.associations.services.association_deposit_departure_export import (
     AssociationDepositDepartureExport,
 )
@@ -8,7 +8,7 @@ from tapir.associations.tests.factories import AssociationMembershipFactory
 from tapir.core.config import LEGAL_STATUS_ASSOCIATION
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
-from tapir.wirgarten.tests.factories import GrowingPeriodFactory, PaymentFactory
+from tapir.wirgarten.tests.factories import GrowingPeriodFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
 
@@ -42,8 +42,12 @@ class TestAssociationDepositDepartureExport(TapirIntegrationTest):
             membership = AssociationMembershipFactory.create(
                 start_date=datetime.date(2024, 1, 1), end_date=end_date
             )
-            deposit = AssociationDeposit.objects.create(member=membership.member)
-            PaymentFactory.create(amount=200, association_deposit=deposit)
+            AssociationDepositTransaction.objects.create(
+                member=membership.member,
+                transaction_type=AssociationDepositTransaction.Type.IMPORT,
+                amount=200,
+                valid_at=membership.start_date,
+            )
             memberships.append(membership)
 
         result = AssociationDepositDepartureExport.get_memberships(
