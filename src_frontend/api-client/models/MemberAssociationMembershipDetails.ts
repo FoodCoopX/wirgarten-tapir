@@ -42,6 +42,12 @@ export interface MemberAssociationMembershipDetails {
    * @memberof MemberAssociationMembershipDetails
    */
   contactEmail: string;
+  /**
+   *
+   * @type {boolean}
+   * @memberof MemberAssociationMembershipDetails
+   */
+  depositsEnabled: boolean;
 }
 
 /**
@@ -55,6 +61,8 @@ export function instanceOfMemberAssociationMembershipDetails(
   if (!("orderWizardUrl" in value) || value["orderWizardUrl"] === undefined)
     return false;
   if (!("contactEmail" in value) || value["contactEmail"] === undefined)
+    return false;
+  if (!("depositsEnabled" in value) || value["depositsEnabled"] === undefined)
     return false;
   return true;
 }
@@ -78,6 +86,7 @@ export function MemberAssociationMembershipDetailsFromJSONTyped(
     ),
     orderWizardUrl: json["order_wizard_url"],
     contactEmail: json["contact_email"],
+    depositsEnabled: json["deposits_enabled"],
   };
 }
 
@@ -101,5 +110,6 @@ export function MemberAssociationMembershipDetailsToJSONTyped(
     ),
     order_wizard_url: value["orderWizardUrl"],
     contact_email: value["contactEmail"],
+    deposits_enabled: value["depositsEnabled"],
   };
 }

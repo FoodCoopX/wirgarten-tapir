@@ -1,3 +1,6 @@
+from tapir.associations.services.association_deposit_settings import (
+    association_deposits_enabled,
+)
 import datetime
 
 from django.contrib.auth.mixins import PermissionRequiredMixin
@@ -170,6 +173,7 @@ class MemberAssociationMembershipDetails(APIView):
                 {
                     "memberships": memberships,
                     "order_wizard_url": order_wizard_url,
+                    "deposits_enabled": association_deposits_enabled(cache),
                     "contact_email": get_parameter_value(
                         ParameterKeys.SITE_EMAIL, cache=cache
                     ),
