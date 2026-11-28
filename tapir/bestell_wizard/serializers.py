@@ -1,7 +1,14 @@
+from decimal import Decimal
+
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from tapir.associations.serializers import AssociationMembershipTypeSerializer
+from tapir.associations.models import AssociationDepositPaymentOption
+
+from tapir.associations.serializers import (
+    AssociationMembershipTypeSerializer,
+    AssociationDepositSettingsSerializer,
+)
 from tapir.core.config import LEGAL_STATUS_OPTIONS
 from tapir.bestell_wizard.services.growing_period_choice_builder import (
     GrowingPeriodChoice,
@@ -39,6 +46,17 @@ class BestellWizardConfirmOrderRequestSerializer(serializers.Serializer):
     sepa_allowed = serializers.BooleanField()
     contract_accepted = serializers.BooleanField()
     statute_accepted = serializers.BooleanField()
+    association_deposit_amount = serializers.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        required=False,
+        default=Decimal("0"),
+        coerce_to_string=False,
+    )
+    association_deposit_payment_option = serializers.ChoiceField(
+        choices=AssociationDepositPaymentOption.choices,
+        default=AssociationDepositPaymentOption.ONCE,
+    )
     number_of_coop_shares = serializers.IntegerField()
     pay_coop_shares_in_instalments = serializers.BooleanField(default=False)
     pickup_location_ids = serializers.ListField(child=serializers.CharField())
@@ -179,6 +197,7 @@ class BestellWizardGrowingPeriodChoiceSerializer(serializers.Serializer):
 
 
 class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
+    association_deposit = AssociationDepositSettingsSerializer()
     price_of_a_share = serializers.FloatField()
     coop_min_shares = serializers.IntegerField()
     coop_share_instalments_enabled = serializers.BooleanField()

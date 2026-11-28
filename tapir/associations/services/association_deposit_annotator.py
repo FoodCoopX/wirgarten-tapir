@@ -38,6 +38,11 @@ class AssociationDepositAnnotator:
             .annotate(total=Sum("amount"))
         )
         return queryset.annotate(
+            deposit_agreement_requested=Exists(
+                AssociationMembership.objects.filter(
+                    member_id=member_id, deposit_agreement_requested_at__isnull=False
+                )
+            ),
             deposit_agreed=Coalesce(Subquery(agreed.values("total")), Decimal("0")),
             deposit_exported=Coalesce(Subquery(received.values("total")), Decimal("0")),
         )

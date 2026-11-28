@@ -18,6 +18,7 @@ class ParameterKeys:
     ASSOCIATION_DEPOSIT_ALLOW_MEMBER_INCREASE = (
         "tapir.associations.deposit.allow_member_increase"
     )
+    ASSOCIATION_DEPOSIT_SIGNUP_TEXT = "tapir.associations.deposit.signup_text"
     ASSOCIATION_DEPOSIT_NAME = "tapir.associations.deposit.name"
     ASSOCIATION_DEPOSIT_MINIMUM = "tapir.associations.deposit.minimum"
     ASSOCIATION_DEPOSIT_INCREMENT = "tapir.associations.deposit.increment"
