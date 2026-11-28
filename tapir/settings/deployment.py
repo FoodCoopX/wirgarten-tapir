@@ -65,15 +65,15 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": celery.schedules.crontab(minute="0", hour="10"),
     },
     "resolve_segment_and_create_email_dispatches_task": {
-        "task": "tapir_mail.tasks.resolve_segment_and_create_email_dispatches_task",
+        "task": "tapir.mail.tasks.resolve_segment_and_create_email_dispatches_task",
         "schedule": datetime.timedelta(minutes=1),
     },
     "send_email_dispatch_batch_task": {
-        "task": "tapir_mail.tasks.send_email_dispatch_batch_task",
+        "task": "tapir.mail.tasks.send_email_dispatch_batch_task",
         "schedule": datetime.timedelta(minutes=1),
     },
     "check_email_bounces": {
-        "task": "tapir_mail.tasks.check_email_bounces",
+        "task": "tapir.mail.tasks.check_email_bounces",
         "schedule": datetime.timedelta(minutes=5),
     },
     "do_automated_exports": {
@@ -107,6 +107,14 @@ CELERY_BEAT_SCHEDULE = {
     "clean_members_without_subscription_task": {
         "task": "tapir.pickup_locations.tasks.clean_members_without_subscription_task",
         "schedule": celery.schedules.crontab(hour="3", minute="0"),
+    },
+    "unsubscribe_former_members_from_mailing_lists": {
+        "task": "tapir.core.tasks.unsubscribe_former_members_from_mailing_lists",
+        "schedule": celery.schedules.crontab(hour="3", minute="30"),
+    },
+    "clear_expired_sessions": {
+        "task": "tapir.core.tasks.clear_expired_sessions",
+        "schedule": celery.schedules.crontab(hour="4", minute="30"),
     },
     "trigger_association_membership_ends_today_mails": {
         "task": "tapir.associations.tasks.trigger_association_membership_ends_today_mails",
@@ -146,7 +154,7 @@ if EMAIL_ENV == "dev":
 else:
     MAILERS = {
         "default": {
-            "BACKEND": "tapir_mail.service.smtp_backend_with_dsn.SmtpBackendWithDsn",
+            "BACKEND": "tapir.mail.services.smtp_backend_with_dsn.SmtpBackendWithDsn",
             "OPTIONS": {
                 "host": _smtp_host,
                 "port": env.int("EMAIL_PORT", default=587),
@@ -169,7 +177,7 @@ EMAIL_BOUNCE_ADDRESS = email_setting("EMAIL_BOUNCE_ADDRESS", "bounce@example.com
 EMAIL_AUTO_BCC = env.str("EMAIL_AUTO_BCC", default=None)
 EMAIL_BOUNCE_USER = env.str("EMAIL_BOUNCE_USER", default=None)
 EMAIL_BOUNCE_PASSWORD = env.str("EMAIL_BOUNCE_PASSWORD", default=None)
-# IMAP host of the bounce mailbox. Always set: tapir_mail's fallback to settings.EMAIL_HOST fails with MAILERS.
+# IMAP host of the bounce mailbox.
 EMAIL_BOUNCE_HOST = env.str("EMAIL_BOUNCE_HOST", default=None) or _smtp_host
 EMAIL_REPLY_TO = env.str("EMAIL_REPLY_TO", default=None)
 
@@ -200,6 +208,21 @@ CSP_FRAME_SRC = ["'self'", KEYCLOAK_ADMIN_CONFIG["PUBLIC_URL"]]
 # Tapir Mail
 DJANGO_DRF_FILEPOND_UPLOAD_TMP = os.path.join(BASE_DIR, "filepond_temp_uploads")
 DJANGO_DRF_FILEPOND_FILE_STORE_PATH = os.path.join(BASE_DIR, "filepond_stored_uploads")
+# Without an entry, django_drf_filepond allows anonymous access to the endpoint.
+DJANGO_DRF_FILEPOND_PERMISSION_CLASSES = {
+    endpoint: [
+        "rest_framework.permissions.IsAuthenticated",
+        "tapir.mail.permissions.HasEmailManagePermission",
+    ]
+    for endpoint in [
+        "GET_FETCH",
+        "GET_LOAD",
+        "POST_PROCESS",
+        "GET_RESTORE",
+        "DELETE_REVERT",
+        "PATCH_PATCH",
+    ]
+}
 
 MJML_BACKEND_MODE = "cmd"
 MJML_EXEC_CMD = [
@@ -228,9 +251,6 @@ CACHES = {
     }
 }
 
-TAPIR_MAIL_PATH = "/tapirmail"
-TAPIRMAIL_REACT_APP_API_ROOT = SITE_URL + TAPIR_MAIL_PATH
-TAPIRMAIL_REACT_APP_BASENAME = TAPIR_MAIL_PATH
 
 if DEBUG:
     CSRF_TRUSTED_ORIGINS = ["http://localhost:8000", SITE_URL]

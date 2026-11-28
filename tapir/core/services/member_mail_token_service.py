@@ -1,6 +1,6 @@
 from collections import Counter
 
-from tapir_mail.models import StaticSegmentRecipient
+from tapir.mail.models import StaticSegmentRecipient
 
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.user_utils import UserUtils
@@ -55,6 +55,4 @@ class MemberMailTokenService:
 
     @staticmethod
     def _format_product_quantity(product: Product, quantity: int) -> str:
-        if quantity == 1:
-            return f"einen {product.name}-{product.type.name[:-1]}"
-        return f"{quantity} {product.name}-{product.type.name}"
+        return f"{quantity} × {product.name}"

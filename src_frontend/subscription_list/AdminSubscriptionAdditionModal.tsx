@@ -42,23 +42,23 @@ const HELP_TEXT = (
       Mitglieds hinzu. Bestehende Verträge werden nicht verändert.
     </p>
     <p className={"mb-0"}>
-      Der neue Vertrag wird direkt bestätigt und das Mitglied erhält eine
-      Bestätigungsmail.
+      Der neue Vertrag wird direkt bestätigt und das Mitglied erhält die Mail,
+      die für den Trigger „Vertragsänderungen im Mitgliederbereich“ hinterlegt
+      ist.
     </p>
   </>
 );
 
 interface AdminSubscriptionAdditionModalProps {
   onHide: () => void;
-  csrfToken: string;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
 
 const AdminSubscriptionAdditionModal: React.FC<
   AdminSubscriptionAdditionModalProps
-> = ({ onHide, csrfToken, setToastDatas }) => {
-  const subscriptionsApi = useApi(SubscriptionsApi, csrfToken);
-  const pickupLocationsApi = useApi(PickupLocationsApi, csrfToken);
+> = ({ onHide, setToastDatas }) => {
+  const subscriptionsApi = useApi(SubscriptionsApi);
+  const pickupLocationsApi = useApi(PickupLocationsApi);
 
   const [step, setStep] = useState<Step>("member");
   const [products, setProducts] = useState<Product[]>([]);
@@ -432,7 +432,6 @@ const AdminSubscriptionAdditionModal: React.FC<
       <Modal.Body>
         {step === "member" && (
           <MemberSearchInput
-            csrfToken={csrfToken}
             memberId={memberId}
             memberSummary={memberData?.member}
             setMemberId={setMemberId}

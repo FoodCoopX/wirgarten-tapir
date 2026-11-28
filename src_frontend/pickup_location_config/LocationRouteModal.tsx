@@ -10,17 +10,15 @@ import { handleRequestError } from "../utils/handleRequestError.ts";
 interface LocationRouteModalProps {
   show: boolean;
   onHide: () => void;
-  csrfToken: string;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
 
 const LocationRouteModal: React.FC<LocationRouteModalProps> = ({
   show,
   onHide,
-  csrfToken,
   setToastDatas,
 }) => {
-  const api = useApi(PickupLocationsApi, csrfToken);
+  const api = useApi(PickupLocationsApi);
 
   const [dataLoading, setDataLoading] = useState(true);
   const [routes, setRoutes] = useState<LocationRoute[]>([]);

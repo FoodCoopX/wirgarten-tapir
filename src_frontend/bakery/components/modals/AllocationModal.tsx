@@ -21,7 +21,6 @@ interface AllocationModalProps {
   day: number;
   dayLabel: string;
   activeBreads: BreadList[];
-  csrfToken: string;
 }
 
 export const AllocationModal: React.FC<AllocationModalProps> = ({
@@ -32,9 +31,8 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
   day,
   dayLabel,
   activeBreads,
-  csrfToken,
 }) => {
-  const bakeryApi = useApi(BakeryApi, csrfToken);
+  const bakeryApi = useApi(BakeryApi);
 
   const [pickupLocations, setPickupLocations] = useState<
     PickupLocationDeliveryDay[]

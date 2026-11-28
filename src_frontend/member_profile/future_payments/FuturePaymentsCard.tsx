@@ -15,16 +15,14 @@ import { groupTransactionsByDueDate } from "./groupTransactionsByDueDate.ts";
 
 interface FuturePaymentsCardProps {
   memberId: string;
-  csrfToken: string;
   deliveryChargeEnabled: boolean;
 }
 
 const FuturePaymentsCard: React.FC<FuturePaymentsCardProps> = ({
   memberId,
-  csrfToken,
   deliveryChargeEnabled,
 }) => {
-  const api = useApi(PaymentsApi, csrfToken);
+  const api = useApi(PaymentsApi);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
   const [transactionsByDueDate, setTransactionsByDueDate] =
     useState<TransactionsByDueDate>({});
@@ -137,7 +135,6 @@ const FuturePaymentsCard: React.FC<FuturePaymentsCardProps> = ({
         show={showModal}
         onHide={() => setShowModal(false)}
         loading={loading}
-        csrfToken={csrfToken}
         memberId={memberId}
         setToastDatas={setToastDatas}
         trialPeriodEnabled={trialPeriodEnabled}

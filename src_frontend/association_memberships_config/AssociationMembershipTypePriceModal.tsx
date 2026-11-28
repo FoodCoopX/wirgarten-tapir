@@ -16,7 +16,6 @@ import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 
 interface AssociationMembershipTypePriceModalProps {
-  csrfToken: string;
   show: boolean;
   onHide: () => void;
   onEdited: () => void;
@@ -26,8 +25,8 @@ interface AssociationMembershipTypePriceModalProps {
 
 const AssociationMembershipTypePriceModal: React.FC<
   AssociationMembershipTypePriceModalProps
-> = ({ csrfToken, onEdited, onHide, show, setToastDatas, membershipType }) => {
-  const api = useApi(AssociationsApi, csrfToken);
+> = ({ onEdited, onHide, show, setToastDatas, membershipType }) => {
+  const api = useApi(AssociationsApi);
   const [saving, setSaving] = useState(false);
   const [addPriceDate, setAddPriceDate] = useState("");
   const [addPriceAmount, setAddPriceAmount] = useState("");

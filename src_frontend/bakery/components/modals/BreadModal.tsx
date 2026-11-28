@@ -15,18 +15,16 @@ import "../../styles/bakery_styles.css";
 
 interface BreadModalProps {
   bread: BreadList | null;
-  csrfToken: string;
   onSave: (bread: BreadListRequest) => void;
   onClose: () => void;
 }
 
 export const BreadModal: React.FC<BreadModalProps> = ({
   bread,
-  csrfToken,
   onSave,
   onClose,
 }) => {
-  const bakeryApi = useApi(BakeryApi, csrfToken);
+  const bakeryApi = useApi(BakeryApi);
 
   const [formData, setFormData] = useState<BreadListRequest>({
     name: "",

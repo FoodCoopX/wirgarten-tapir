@@ -32,7 +32,9 @@ class SubscriptionImporter:
     def import_subscription(cls, row: dict[str, str], update_existing: bool):
         # VertragNr,Zeitstempel,E-Mail-Adresse,Tapir-ID,Mitgliedernummer,Probevertrag,Vertragsbeginn,[S-Ernteanteil],[M-Ernteanteil],[L-Ernteanteil],[XL-Ernteanteil],product,Quantity,"Gesamtzahlung",Vertragsgrundsätze,Abholort,Email-Adressen,Ernteanteilsreduzierung/erhöhung,consent_widerruf,consent_vertragsgrundsätze,cancellation.ts
 
-        member_no = DataImportUtils.safe_int(row.get("Mitgliedernummer"), default=-1)
+        member_no = DataImportUtils.parse_member_number(
+            value=row.get("Mitgliedernummer"), cache={}
+        )
         email = DataImportUtils.normalize_cell(row.get("Email"))
         email = EmailNormaliser.normalise(email)
         member = cls.get_member_by_number_or_email(member_no=member_no, email=email)
@@ -207,8 +209,8 @@ class SubscriptionImporter:
         return MEMBER_IMPORT_STATUS_UPDATED
 
     @staticmethod
-    def get_member_by_number_or_email(member_no: int, email: str):
-        if member_no != -1:
+    def get_member_by_number_or_email(member_no: int | None, email: str):
+        if member_no is not None:
             member = Member.objects.filter(member_no=member_no).first()
             if member:
                 return member

@@ -9,7 +9,6 @@ import { handleRequestError } from "../utils/handleRequestError.ts";
 import "./waiting_list_card.css";
 
 interface WaitingListEntryCreateModalProps {
-  csrfToken: string;
   show: boolean;
   onClose: () => void;
   reloadEntries: () => void;
@@ -20,16 +19,9 @@ interface WaitingListEntryCreateModalProps {
 
 const WaitingListEntryCreateModal: React.FC<
   WaitingListEntryCreateModalProps
-> = ({
-  csrfToken,
-  show,
-  onClose,
-  reloadEntries,
-  setToastDatas,
-  entryReloading,
-}) => {
-  const waitingListApi = useApi(WaitingListApi, csrfToken);
-  const coopApi = useApi(CoopApi, csrfToken);
+> = ({ show, onClose, reloadEntries, setToastDatas, entryReloading }) => {
+  const waitingListApi = useApi(WaitingListApi);
+  const coopApi = useApi(CoopApi);
   const [loading, setLoading] = useState(false);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");

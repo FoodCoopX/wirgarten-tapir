@@ -4,7 +4,7 @@ import logging
 from celery import shared_task
 from django.db import transaction
 from django.db.models import Q
-from tapir_mail.triggers.transactional_trigger import (
+from tapir.mail.triggers.transactional_trigger import (
     TransactionalTrigger,
     TransactionalTriggerData,
 )

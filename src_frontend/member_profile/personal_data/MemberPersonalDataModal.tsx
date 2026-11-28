@@ -14,7 +14,6 @@ import { handleRequestError } from "../../utils/handleRequestError.ts";
 
 interface MemberPersonalDataModalProps {
   memberId: string;
-  csrfToken: string;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
   show: boolean;
   onHide: () => void;
@@ -24,12 +23,11 @@ const COUNTRY_OPTIONS = ["DE", "AT"];
 
 const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
   memberId,
-  csrfToken,
   setToastDatas,
   show,
   onHide,
 }) => {
-  const api = useApi(CoopApi, csrfToken);
+  const api = useApi(CoopApi);
   const [showValidation, setShowValidation] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);

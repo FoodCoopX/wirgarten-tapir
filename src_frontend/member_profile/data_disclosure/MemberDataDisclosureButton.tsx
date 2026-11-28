@@ -11,14 +11,12 @@ import { handleRequestError } from "../../utils/handleRequestError.ts";
 
 interface MemberDataDisclosureButtonProps {
   memberId: string;
-  csrfToken: string;
 }
 
 const MemberDataDisclosureButton: React.FC<MemberDataDisclosureButtonProps> = ({
   memberId,
-  csrfToken,
 }) => {
-  const api = useApi(CoreApi, csrfToken);
+  const api = useApi(CoreApi);
   const [data, setData] = useState<MemberDataDisclosure | null>(null);
   const [loading, setLoading] = useState(false);
   const [show, setShow] = useState(false);

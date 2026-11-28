@@ -7,17 +7,15 @@ import { handleRequestError } from "../../../utils/handleRequestError";
 import "../../styles/bakery_styles.css";
 
 interface GroupsCardProps {
-  csrfToken: string;
   breadsVersion: number;
   onGroupsChanged: () => void;
 }
 
 export const GroupsCard: React.FC<GroupsCardProps> = ({
-  csrfToken,
   breadsVersion,
   onGroupsChanged,
 }) => {
-  const bakeryApi = useApi(BakeryApi, csrfToken);
+  const bakeryApi = useApi(BakeryApi);
   const [groups, setGroups] = useState<BreadGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [newGroupName, setNewGroupName] = useState("");

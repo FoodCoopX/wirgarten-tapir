@@ -25,6 +25,7 @@ interface NextButtonProps {
   setWaitingListInfoModalOpen: (open: boolean) => void;
   showCarouselArrows: boolean;
   index: number;
+  carouselProducts: PublicProduct[];
   carouselRef: RefObject<CarouselRef | null>;
 }
 
@@ -41,70 +42,73 @@ const Step4BProductOrder: React.FC<NextButtonProps> = ({
   setWaitingListInfoModalOpen,
   showCarouselArrows,
   index,
+  carouselProducts,
   carouselRef,
 }) => {
-  function buildImageAtIndex(index: number, isBeforeButton: boolean) {
-    if (index < 0 || index >= productType.products.length) return;
-
-    const product = productType.products[index];
+  function buildPreviewColumn(index: number, isBeforeButton: boolean) {
+    const showPreview =
+      showCarouselArrows && index >= 0 && index < carouselProducts.length;
 
     return (
       <div
         style={{
-          position: "absolute",
-          left: isBeforeButton ? "2dvw" : undefined,
-          right: isBeforeButton ? undefined : "2dvw",
-          top: "47%",
-          transform: "translate(0, -50%)",
-          cursor: "pointer",
+          justifySelf: isBeforeButton ? "start" : "end",
+          marginLeft: isBeforeButton ? "2dvw" : undefined,
+          marginRight: isBeforeButton ? undefined : "2dvw",
         }}
-        className={"d-flex flex-column align-items-center"}
       >
-        <Button
-          variant={BUTTON_VARIANT}
-          style={{ padding: 0 }}
-          onClick={() =>
-            isBeforeButton
-              ? carouselRef.current?.prev()
-              : carouselRef.current?.next()
-          }
-        >
-          <div className={"d-flex flex-column align-items-center"}>
-            <span className={"material-icons"}>
-              {isBeforeButton ? "chevron_left" : "chevron_right"}
-            </span>
-            {product.urlOfImageInBestellwizard && (
-              <img
-                src={product.urlOfImageInBestellwizard}
-                style={{
-                  maxWidth: "8dvh",
-                  objectFit: "contain",
-                  filter: showCapacityWarning(
-                    product,
-                    productType,
-                    settings,
-                    productTypeIdsOverCapacity,
-                    productIdsOverCapacity,
-                    shoppingCart,
-                  )
-                    ? "grayscale(1)"
-                    : "",
-                }}
-                alt={"Photo von " + productType.name + " " + product.name}
-              />
-            )}
-          </div>
-        </Button>
+        {showPreview && buildPreview(carouselProducts[index], isBeforeButton)}
       </div>
+    );
+  }
+
+  function buildPreview(product: PublicProduct, isBeforeButton: boolean) {
+    return (
+      <Button
+        variant={BUTTON_VARIANT}
+        style={{ padding: 0 }}
+        onClick={() =>
+          isBeforeButton
+            ? carouselRef.current?.prev()
+            : carouselRef.current?.next()
+        }
+      >
+        <div className={"d-flex flex-column align-items-center"}>
+          <span className={"material-icons"}>
+            {isBeforeButton ? "chevron_left" : "chevron_right"}
+          </span>
+          {product.urlOfImageInBestellwizard && (
+            <img
+              src={product.urlOfImageInBestellwizard}
+              style={{
+                maxWidth: "8dvh",
+                objectFit: "contain",
+                filter: showCapacityWarning(
+                  product,
+                  productType,
+                  settings,
+                  productTypeIdsOverCapacity,
+                  productIdsOverCapacity,
+                  shoppingCart,
+                )
+                  ? "grayscale(1)"
+                  : "",
+              }}
+              alt={"Photo von " + productType.name + " " + product.name}
+            />
+          )}
+        </div>
+      </Button>
     );
   }
 
   return (
     <>
       <div
-        className={"d-flex flex-row align-items-center justify-content-center"}
+        className={"align-items-center"}
+        style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr" }}
       >
-        {showCarouselArrows && buildImageAtIndex(index - 1, true)}
+        {buildPreviewColumn(index - 1, true)}
         {product.urlOfImageInBestellwizard ? (
           <img
             src={product.urlOfImageInBestellwizard}
@@ -128,7 +132,7 @@ const Step4BProductOrder: React.FC<NextButtonProps> = ({
         ) : (
           <div style={{ height: "10dvh" }}></div>
         )}
-        {showCarouselArrows && buildImageAtIndex(index + 1, false)}
+        {buildPreviewColumn(index + 1, false)}
       </div>
       <div className={"d-flex flex-row gap-2 justify-content-center"}>
         <strong>{product.name}</strong>
@@ -196,7 +200,7 @@ const Step4BProductOrder: React.FC<NextButtonProps> = ({
           {formatCurrency(product.price)} pro{" "}
           {productType.pricePerDelivery ? "Lieferung" : "Monat"}
           {productType.taxRate > 0 &&
-            " inkl. MwSt " + formatPercentage(productType.taxRate)}
+            " inkl. " + formatPercentage(productType.taxRate) + " MwSt"}
           .
           {product.descriptionInBestellwizard && (
             <>

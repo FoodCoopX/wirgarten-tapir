@@ -43,13 +43,9 @@ interface StoveSessionGrouped {
   layers: { layer: number; breadName: string | null; quantity: number }[];
 }
 
-interface ReportsProps {
-  csrfToken: string;
-}
-
-export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
-  const bakeryApi = useApi(BakeryApi, csrfToken);
-  const pickupLocationsApi = useApi(PickupLocationsApi, csrfToken);
+export const Reports: React.FC = () => {
+  const bakeryApi = useApi(BakeryApi);
+  const pickupLocationsApi = useApi(PickupLocationsApi);
 
   const [year, setYear] = useState(currentYear);
   const [week, setWeek] = useState(currentWeek);
@@ -506,7 +502,6 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
                       year={year}
                       deliveryWeek={week}
                       deliveryDay={day}
-                      csrfToken={csrfToken}
                       hasSavedPlan={
                         d.daySessions.length > 0 || d.dayCounts.length > 0
                       }
@@ -591,7 +586,6 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
                             year={year}
                             week={week}
                             deliveryDay={day}
-                            csrfToken={csrfToken}
                           />
                         ) : (
                           <p className="text-muted small text-center py-2">

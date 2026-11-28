@@ -71,9 +71,7 @@ const SubscriptionUnitList: React.FC<SubscriptionUnitListProps> = ({
             onClick={() => setSelectedUnit(unit)}
           >
             <div className={"d-flex flex-row gap-2 align-items-center"}>
-              <strong>
-                {unit.productTypeName} · {unit.productName}
-              </strong>
+              <strong>{unit.productName}</strong>
               <Badge bg={editable ? "primary" : "secondary"}>
                 {STATUS_LABELS[unit.status]}
               </Badge>

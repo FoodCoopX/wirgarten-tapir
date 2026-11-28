@@ -1,20 +1,31 @@
+from unittest.mock import MagicMock, patch
+
 from django.test import override_settings
 from django.urls import reverse
 from rest_framework import status
 
+from tapir.core.services.former_member_address_provider import (
+    FormerMemberAddressProvider,
+)
 from tapir.core.tests.mailman_test_helper import MailmanTestHelper, MockMailingListData
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
+@patch.object(
+    FormerMemberAddressProvider,
+    "is_former_member_address",
+    autospec=True,
+    return_value=False,
+)
 @override_settings(MAILING_LISTS_ENABLED=True, MAILING_LIST_DOMAIN="example.com")
 class TestMemberMailingListDataView(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls) -> None:
         ParameterDefinitions().import_definitions(bulk_create=True)
 
-    def test_get_memberGetsOwnData_returns200(self):
+    def test_get_memberGetsOwnData_returns200(self, _: MagicMock):
         member = MemberFactory.create(is_superuser=False)
         self.client.force_login(member)
 
@@ -26,7 +37,7 @@ class TestMemberMailingListDataView(TapirIntegrationTest):
 
         self.assertStatusCode(response, status.HTTP_200_OK)
 
-    def test_get_memberGetsOtherMemberData_returns403(self):
+    def test_get_memberGetsOtherMemberData_returns403(self, _: MagicMock):
         logged_in_user = MemberFactory.create(is_superuser=False)
         target_member = MemberFactory.create(is_superuser=False)
         self.client.force_login(logged_in_user)
@@ -40,7 +51,7 @@ class TestMemberMailingListDataView(TapirIntegrationTest):
         self.assertStatusCode(response, status.HTTP_403_FORBIDDEN)
 
     @override_settings(MAILING_LISTS_ENABLED=False)
-    def test_get_mailingListsAreDisabled_returns403(self):
+    def test_get_mailingListsAreDisabled_returns403(self, _: MagicMock):
         member = MemberFactory.create(is_superuser=False)
         self.client.force_login(member)
 
@@ -52,7 +63,7 @@ class TestMemberMailingListDataView(TapirIntegrationTest):
 
         self.assertStatusCode(response, status.HTTP_403_FORBIDDEN)
 
-    def test_get_adminGetsOtherMemberData_returns200(self):
+    def test_get_adminGetsOtherMemberData_returns200(self, _: MagicMock):
         logged_in_user = MemberFactory.create(is_superuser=True)
         target_member = MemberFactory.create(is_superuser=False)
         self.client.force_login(logged_in_user)
@@ -65,7 +76,7 @@ class TestMemberMailingListDataView(TapirIntegrationTest):
 
         self.assertStatusCode(response, status.HTTP_200_OK)
 
-    def test_get_listIsAdvertised_resultContainsList(self):
+    def test_get_listIsAdvertised_resultContainsList(self, _: MagicMock):
         member = MemberFactory.create(is_superuser=False)
         self.client.force_login(member)
 
@@ -82,6 +93,7 @@ class TestMemberMailingListDataView(TapirIntegrationTest):
         response_content = response.json()
         self.assertEqual(
             {
+                "belongs_to_former_member": False,
                 "available_lists": [
                     {
                         "advertised": True,
@@ -97,7 +109,7 @@ class TestMemberMailingListDataView(TapirIntegrationTest):
             response_content,
         )
 
-    def test_get_listIsNotAdvertised_resultDoesntContainsList(self):
+    def test_get_listIsNotAdvertised_resultDoesntContainsList(self, _: MagicMock):
         member = MemberFactory.create(is_superuser=False)
         self.client.force_login(member)
 
@@ -116,6 +128,7 @@ class TestMemberMailingListDataView(TapirIntegrationTest):
         response_content = response.json()
         self.assertEqual(
             {
+                "belongs_to_former_member": False,
                 "available_lists": [],
                 "subscribed_lists": [],
                 "waiting_for_confirmation_lists": [],
@@ -123,7 +136,7 @@ class TestMemberMailingListDataView(TapirIntegrationTest):
             response_content,
         )
 
-    def test_get_memberIsSubscribedToList_subscriptionsContainsList(self):
+    def test_get_memberIsSubscribedToList_subscriptionsContainsList(self, _: MagicMock):
         member = MemberFactory.create(is_superuser=False)
         self.client.force_login(member)
 
@@ -146,6 +159,7 @@ class TestMemberMailingListDataView(TapirIntegrationTest):
         response_content = response.json()
         self.assertEqual(
             {
+                "belongs_to_former_member": False,
                 "available_lists": [
                     {
                         "advertised": True,
@@ -161,7 +175,7 @@ class TestMemberMailingListDataView(TapirIntegrationTest):
             response_content,
         )
 
-    def test_get_memberIsInvitedToList_invitationsContainsList(self):
+    def test_get_memberIsInvitedToList_invitationsContainsList(self, _: MagicMock):
         member = MemberFactory.create(is_superuser=False)
         self.client.force_login(member)
 
@@ -184,6 +198,7 @@ class TestMemberMailingListDataView(TapirIntegrationTest):
         response_content = response.json()
         self.assertEqual(
             {
+                "belongs_to_former_member": False,
                 "available_lists": [
                     {
                         "advertised": True,
@@ -199,7 +214,9 @@ class TestMemberMailingListDataView(TapirIntegrationTest):
             response_content,
         )
 
-    def test_get_listIsNotAdvertisedButMemberIsSubscribed_resultContainsList(self):
+    def test_get_listIsNotAdvertisedButMemberIsSubscribed_resultContainsList(
+        self, _: MagicMock
+    ):
         member = MemberFactory.create(is_superuser=False)
         self.client.force_login(member)
 
@@ -222,6 +239,7 @@ class TestMemberMailingListDataView(TapirIntegrationTest):
         response_content = response.json()
         self.assertEqual(
             {
+                "belongs_to_former_member": False,
                 "available_lists": [
                     {
                         "advertised": False,
@@ -237,7 +255,9 @@ class TestMemberMailingListDataView(TapirIntegrationTest):
             response_content,
         )
 
-    def test_get_listIsNotAdvertisedButMemberIsInvited_resultContainsList(self):
+    def test_get_listIsNotAdvertisedButMemberIsInvited_resultContainsList(
+        self, _: MagicMock
+    ):
         member = MemberFactory.create(is_superuser=False)
         self.client.force_login(member)
 
@@ -260,6 +280,7 @@ class TestMemberMailingListDataView(TapirIntegrationTest):
         response_content = response.json()
         self.assertEqual(
             {
+                "belongs_to_former_member": False,
                 "available_lists": [
                     {
                         "advertised": False,

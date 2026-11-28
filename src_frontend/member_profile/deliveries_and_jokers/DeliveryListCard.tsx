@@ -29,7 +29,6 @@ interface DeliveryListCardProps {
   membersCanChangePickupLocationThemselves: boolean;
   contactEmail: string;
   pickupLocationLabel: string;
-  csrfToken: string;
 }
 
 const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
@@ -40,9 +39,8 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
   membersCanChangePickupLocationThemselves,
   contactEmail,
   pickupLocationLabel,
-  csrfToken,
 }) => {
-  const api = useApi(DeliveriesApi, csrfToken);
+  const api = useApi(DeliveriesApi);
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
   const [deliveriesLoading, setDeliveriesLoading] = useState(false);
   const [selectedPickupLocation, setSelectedPickupLocation] =
@@ -178,7 +176,6 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
           deliveries={deliveries}
           loadDeliveries={loadDeliveries}
           deliveriesLoading={deliveriesLoading}
-          csrfToken={csrfToken}
           setToastDatas={setToastDatas}
           areDonationsEnabled={areDonationsEnabled}
           areJokersEnabled={areJokersEnabled}
@@ -187,7 +184,6 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
       <PickupLocationChangeModal
         onHide={() => setShowPickupLocationChangeModal(false)}
         show={showPickupLocationChangeModal}
-        csrfToken={csrfToken}
         memberId={memberId}
         reloadDeliveries={loadDeliveries}
         setToastDatas={setToastDatas}

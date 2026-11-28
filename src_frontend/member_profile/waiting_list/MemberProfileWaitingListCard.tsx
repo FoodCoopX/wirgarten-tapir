@@ -16,7 +16,7 @@ const MemberProfileWaitingListCard: React.FC<
   const [waitingListEntry, setWaitingListEntry] =
     useState<WaitingListEntryDetails>();
   const [loading, setLoading] = useState(true);
-  const api = useApi(WaitingListApi, "unused");
+  const api = useApi(WaitingListApi);
 
   useEffect(() => {
     setLoading(true);

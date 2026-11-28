@@ -2,7 +2,7 @@ import typing
 from functools import partial
 
 from django.apps import AppConfig
-from tapir_mail.registries import mail_segment_providers, MailSegment
+from tapir.mail.registries import mail_segment_providers, MailSegment
 
 if typing.TYPE_CHECKING:
     from tapir.wirgarten.models import PickupLocation

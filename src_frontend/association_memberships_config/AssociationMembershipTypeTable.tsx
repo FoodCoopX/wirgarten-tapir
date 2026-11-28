@@ -15,7 +15,6 @@ import AssociationMembershipTypePriceModal from "./AssociationMembershipTypePric
 import { getAssociationMembershipTypeCurrentPrice } from "./getAssociationMembershipTypeCurrentPrice.ts";
 
 interface AssociationMembershipTypeTableProps {
-  csrfToken: string;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
   membershipTypes: AssociationMembershipType[];
   loadData: () => void;
@@ -23,8 +22,8 @@ interface AssociationMembershipTypeTableProps {
 
 const AssociationMembershipTypeTable: React.FC<
   AssociationMembershipTypeTableProps
-> = ({ csrfToken, setToastDatas, membershipTypes, loadData }) => {
-  const api = useApi(AssociationsApi, csrfToken);
+> = ({ setToastDatas, membershipTypes, loadData }) => {
+  const api = useApi(AssociationsApi);
   const [typeSelectedForEdit, setTypeSelectedForEdit] =
     useState<AssociationMembershipType>();
   const [typeSelectedForPrice, setTypeSelectedForPrice] =
@@ -184,7 +183,6 @@ const AssociationMembershipTypeTable: React.FC<
       </Table>
       {typeSelectedForEdit && (
         <AssociationMembershipTypeEditModal
-          csrfToken={csrfToken}
           show={true}
           onHide={() => setTypeSelectedForEdit(undefined)}
           onEdited={() => {
@@ -197,7 +195,6 @@ const AssociationMembershipTypeTable: React.FC<
       )}
       {typeSelectedForPrice && (
         <AssociationMembershipTypePriceModal
-          csrfToken={csrfToken}
           show={true}
           onHide={() => setTypeSelectedForPrice(undefined)}
           onEdited={() => {

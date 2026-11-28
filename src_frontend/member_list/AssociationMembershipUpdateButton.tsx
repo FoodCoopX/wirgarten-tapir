@@ -6,13 +6,7 @@ import { getParameterFromUrl } from "../product_config/get_parameter_from_url.ts
 import { ToastData } from "../types/ToastData.ts";
 import AssociationMembershipUpdateModal from "./AssociationMembershipUpdateModal.tsx";
 
-interface AssociationMembershipUpdateButtonProps {
-  csrfToken: string;
-}
-
-const AssociationMembershipUpdateButton: React.FC<
-  AssociationMembershipUpdateButtonProps
-> = ({ csrfToken }) => {
+const AssociationMembershipUpdateButton: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [memberId, setMemberId] = useState();
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
@@ -37,7 +31,6 @@ const AssociationMembershipUpdateButton: React.FC<
       {memberId && (
         <AssociationMembershipUpdateModal
           memberId={memberId}
-          csrfToken={csrfToken}
           show={showModal}
           onHide={() => setShowModal(false)}
           reloadData={() => location.reload()}

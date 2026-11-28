@@ -112,7 +112,7 @@ class TestBuildCalculationPartForSubscriptionWithinMonth(TapirUnitTest):
 
         self.assertEqual(Decimal("64.53"), part.value)
         self.assertEqual(
-            "Oktober 2026, Ernteanteil Kiste: 3 Lieferungen à 21,51 € = 64,53 €",
+            "Oktober 2026, Kiste: 3 Lieferungen à 21,51 € = 64,53 €",
             part.explanation,
         )
         mock_is_proportional_mode_active.assert_not_called()
@@ -132,7 +132,7 @@ class TestBuildCalculationPartForSubscriptionWithinMonth(TapirUnitTest):
 
         self.assertEqual(self.MONTHLY_PRICE, part.value)
         self.assertEqual(
-            "Oktober 2026, Ernteanteil Kiste: 95,00 € monatlich (voller Monat)",
+            "Oktober 2026, Kiste: 95,00 € monatlich (voller Monat)",
             part.explanation,
         )
         mock_count_delivery_dates_in_month.assert_not_called()
@@ -156,7 +156,7 @@ class TestBuildCalculationPartForSubscriptionWithinMonth(TapirUnitTest):
 
         self.assertEqual(Decimal("76"), part.value)
         self.assertEqual(
-            "Oktober 2026, Ernteanteil Kiste: 95,00 € × 4 ÷ 5 Liefertermine = 76,00 €",
+            "Oktober 2026, Kiste: 95,00 € × 4 ÷ 5 Liefertermine = 76,00 €",
             part.explanation,
         )
         mock_is_proportional_mode_active.assert_called_once_with(
@@ -199,7 +199,7 @@ class TestBuildCalculationPartForSubscriptionWithinMonth(TapirUnitTest):
 
         self.assertEqual(self.MONTHLY_PRICE / 3, part.value)
         self.assertEqual(
-            "Oktober 2026, Ernteanteil Kiste: 95,00 € × 1 ÷ 3 Liefertermine = 31,67 €",
+            "Oktober 2026, Kiste: 95,00 € × 1 ÷ 3 Liefertermine = 31,67 €",
             part.explanation,
         )
 
@@ -221,7 +221,7 @@ class TestBuildCalculationPartForSubscriptionWithinMonth(TapirUnitTest):
 
         self.assertEqual(self.MONTHLY_PRICE, part.value)
         self.assertEqual(
-            "Oktober 2026, Ernteanteil Kiste: 95,00 € × 1 ÷ 1 Liefertermin = 95,00 €",
+            "Oktober 2026, Kiste: 95,00 € × 1 ÷ 1 Liefertermin = 95,00 €",
             part.explanation,
         )
 
@@ -243,7 +243,7 @@ class TestBuildCalculationPartForSubscriptionWithinMonth(TapirUnitTest):
 
         self.assertEqual(Decimal(0), part.value)
         self.assertEqual(
-            "Oktober 2026, Ernteanteil Kiste: keine Liefertermine im Monat = 0,00 €",
+            "Oktober 2026, Kiste: keine Liefertermine im Monat = 0,00 €",
             part.explanation,
         )
 
@@ -262,7 +262,7 @@ class TestBuildCalculationPartForSubscriptionWithinMonth(TapirUnitTest):
 
         self.assertEqual(self.MONTHLY_PRICE * 12 / 31, part.value)
         self.assertEqual(
-            "Oktober 2026, Ernteanteil Kiste: 95,00 € × 12 von 31 Tagen = 36,77 €",
+            "Oktober 2026, Kiste: 95,00 € × 12 von 31 Tagen = 36,77 €",
             part.explanation,
         )
         mock_count_delivery_dates_in_month.assert_not_called()
@@ -307,7 +307,7 @@ class TestBuildCalculationPartForSubscriptionWithinMonth(TapirUnitTest):
 
         self.assertEqual(self.MONTHLY_PRICE, part.value)
         self.assertEqual(
-            "Oktober 2026, Ernteanteil Kiste: 95,00 € monatlich (4 Lieferungen, voller Monatspreis ab 4)",
+            "Oktober 2026, Kiste: 95,00 € monatlich (4 Lieferungen, voller Monatspreis ab 4)",
             part.explanation,
         )
 
@@ -331,7 +331,7 @@ class TestBuildCalculationPartForSubscriptionWithinMonth(TapirUnitTest):
 
         self.assertEqual(Decimal("43.02"), part.value)
         self.assertEqual(
-            "Oktober 2026, Ernteanteil Kiste: 2 Lieferungen à 21,51 € = 43,02 €",
+            "Oktober 2026, Kiste: 2 Lieferungen à 21,51 € = 43,02 €",
             part.explanation,
         )
 
@@ -350,6 +350,6 @@ class TestBuildCalculationPartForSubscriptionWithinMonth(TapirUnitTest):
         part = self._get_part(subscription=subscription, first_of_month=self.OCTOBER)
 
         self.assertEqual(
-            "Oktober 2026, Ernteanteil Kiste (2 Anteile): 95,00 € monatlich (voller Monat)",
+            "Oktober 2026, Kiste (2 Anteile): 95,00 € monatlich (voller Monat)",
             part.explanation,
         )

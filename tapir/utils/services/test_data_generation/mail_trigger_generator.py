@@ -1,11 +1,11 @@
-from tapir_mail.models import (
+from tapir.mail.models import (
     EmailConfiguration,
     EmailConfigurationVersion,
     EmailTemplate,
     EmailTemplateType,
     ReleaseStatus,
 )
-from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
+from tapir.mail.triggers.transactional_trigger import TransactionalTrigger
 
 EMPTY_MJML = "<mjml><mj-head></mj-head><mj-body></mj-body></mjml>"
 

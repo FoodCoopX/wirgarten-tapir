@@ -51,7 +51,9 @@ def change_email(request, **kwargs):
         matching_change_request[0].created_at + link_validity
     ):
         user = TapirUser.objects.get(id=user_id)
-        MailChangeService.apply_mail_change(user=user, new_email=new_email, cache=cache)
+        MailChangeService.apply_mail_change(
+            user=user, new_email=new_email, actor=user, cache=cache
+        )
         return HttpResponseRedirect(
             reverse_lazy("wirgarten:member_detail", kwargs={"pk": user.id})
             + "?email_changed=true"
@@ -72,7 +74,10 @@ class AdminApplyMailChangeView(LoginRequiredMixin, PermissionRequiredMixin, Form
         self.user = get_object_or_404(TapirUser, id=form.cleaned_data["user_id"])
         new_email = form.cleaned_data["new_email"]
         MailChangeService.apply_mail_change(
-            user=self.user, new_email=new_email, cache=self.cache
+            user=self.user,
+            new_email=new_email,
+            actor=self.request.user,
+            cache=self.cache,
         )
 
         return super().form_valid(form)

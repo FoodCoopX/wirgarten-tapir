@@ -14,12 +14,8 @@ import { useApi } from "../../../hooks/useApi";
 import { handleRequestError } from "../../../utils/handleRequestError";
 import "../../styles/bakery_styles.css";
 
-interface LabelsCardProps {
-  csrfToken: string;
-}
-
-export const LabelsCard: React.FC<LabelsCardProps> = ({ csrfToken }) => {
-  const bakeryApi = useApi(BakeryApi, csrfToken);
+export const LabelsCard: React.FC = () => {
+  const bakeryApi = useApi(BakeryApi);
   const [labels, setLabels] = useState<BreadLabel[]>([]);
   const [loading, setLoading] = useState(true);
   const [newLabelName, setNewLabelName] = useState("");

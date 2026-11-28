@@ -4,6 +4,8 @@ from tapir.core.views import general
 from tapir.core.views import mailing_lists
 from tapir.core.views import member_data
 from tapir.core.views import member_extra_emails
+from tapir.core.views import subscription_management
+from tapir.core.views import subscription_management_api
 
 app_name = "core"
 urlpatterns = [
@@ -24,13 +26,73 @@ urlpatterns = [
     ),
     path(
         "member_extra_email_confirm/<uuid:secret>",
-        member_extra_emails.ConfirmMemberExtraEmailApiView.as_view(),
+        member_extra_emails.ConfirmMemberExtraEmailView.as_view(),
         name="member_extra_email_confirm",
     ),
     path(
         "member_extra_email_confirmed/<uuid:secret>",
         member_extra_emails.MemberExtraEmailConfirmedView.as_view(),
         name="member_extra_email_confirmed",
+    ),
+    path(
+        "api/member_extra_email_send_management_link",
+        member_extra_emails.MemberExtraEmailSendManagementLinkApiView.as_view(),
+        name="member_extra_email_send_management_link",
+    ),
+    path(
+        "subscription_management/<str:token>",
+        subscription_management.SubscriptionManagementView.as_view(),
+        name="subscription_management",
+    ),
+    path(
+        "api/subscription_management/data",
+        subscription_management_api.SubscriptionManagementDataApiView.as_view(),
+        name="subscription_management_data",
+    ),
+    path(
+        "api/subscription_management/extra_categories",
+        subscription_management_api.SubscriptionManagementExtraCategoriesApiView.as_view(),
+        name="subscription_management_extra_categories",
+    ),
+    path(
+        "api/subscription_management/extra",
+        subscription_management_api.SubscriptionManagementExtraApiView.as_view(),
+        name="subscription_management_extra",
+    ),
+    path(
+        "api/subscription_management/external",
+        subscription_management_api.SubscriptionManagementExternalApiView.as_view(),
+        name="subscription_management_external",
+    ),
+    path(
+        "api/subscription_management/mailing_list_subscribe",
+        subscription_management_api.SubscriptionManagementMailingListSubscribeApiView.as_view(),
+        name="subscription_management_mailing_list_subscribe",
+    ),
+    path(
+        "api/subscription_management/mailing_list_unsubscribe",
+        subscription_management_api.SubscriptionManagementMailingListUnsubscribeApiView.as_view(),
+        name="subscription_management_mailing_list_unsubscribe",
+    ),
+    path(
+        "api/subscription_management/mailing_list_accept_invitation",
+        subscription_management_api.SubscriptionManagementMailingListAcceptInvitationApiView.as_view(),
+        name="subscription_management_mailing_list_accept_invitation",
+    ),
+    path(
+        "api/subscription_management/mailing_list_reject_invitation",
+        subscription_management_api.SubscriptionManagementMailingListRejectInvitationApiView.as_view(),
+        name="subscription_management_mailing_list_reject_invitation",
+    ),
+    path(
+        "subscription_management_link_request",
+        subscription_management.SubscriptionManagementLinkRequestView.as_view(),
+        name="subscription_management_link_request",
+    ),
+    path(
+        "subscription_management_link_requested",
+        subscription_management.SubscriptionManagementLinkRequestedView.as_view(),
+        name="subscription_management_link_requested",
     ),
     path(
         "mailing_lists",

@@ -19,14 +19,8 @@ import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 
-interface AdminDashboardNumberOfAssociationCancellationsProps {
-  csrfToken: string;
-}
-
-const AdminDashboardNumberOfAssociationCancellations: React.FC<
-  AdminDashboardNumberOfAssociationCancellationsProps
-> = ({ csrfToken }) => {
-  const api = useApi(AssociationsApi, csrfToken);
+const AdminDashboardNumberOfAssociationCancellations: React.FC = () => {
+  const api = useApi(AssociationsApi);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
   const [loading, setLoading] = useState(true);
   const [startDateAsString, setStartDateAsString] = useState("");

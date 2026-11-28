@@ -1,5 +1,4 @@
 from django.conf import settings
-from django.core.exceptions import BadRequest
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
 from django.db.models import Sum, F
@@ -8,15 +7,18 @@ from django.urls import reverse
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from keycloak import KeycloakPutError
 from localflavor.generic.validators import IBANValidator
-from rest_framework import status, viewsets, permissions
+from rest_framework import viewsets, permissions
 from rest_framework.exceptions import (
     ValidationError as DrfValidationError,
     PermissionDenied,
 )
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from tapir_mail.models import EmailConfigurationDispatch, StaticSegmentRecipient
-from tapir_mail.triggers.transactional_trigger import (
+from tapir.core.services.mailman.mailing_list_unsubscriber import (
+    MailingListUnsubscriber,
+)
+from tapir.mail.models import EmailConfigurationDispatch, StaticSegmentRecipient
+from tapir.mail.triggers.transactional_trigger import (
     TransactionalTrigger,
     TransactionalTriggerData,
 )
@@ -31,7 +33,6 @@ from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
 from tapir.accounts.services.mail_change_service import MailChangeService
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.serializers import (
-    MinimumNumberOfSharesResponseSerializer,
     GetCoopShareTransactionsResponseSerializer,
     ExistingMemberPurchasesSharesRequestSerializer,
     UpdateMemberBankDataRequestSerializer,
@@ -89,46 +90,6 @@ from tapir.wirgarten.utils import (
     format_currency,
     format_date,
 )
-
-
-class MinimumNumberOfSharesApiView(APIView):
-    permission_classes = []
-
-    @extend_schema(
-        responses={200: MinimumNumberOfSharesResponseSerializer},
-        parameters=[
-            OpenApiParameter(name="product_ids", type=str, many=True),
-            OpenApiParameter(name="quantities", type=int, many=True),
-        ],
-    )
-    def get(self, request):
-        product_ids = request.query_params.getlist("product_ids")
-        quantities = request.query_params.getlist("quantities")
-        cache = {}
-
-        if len(product_ids) != len(quantities):
-            raise BadRequest("Different number of product ids and quantities")
-
-        ordered_products_id_to_quantity_map = {
-            product_id: int(quantities[index] or 0)
-            for index, product_id in enumerate(product_ids)
-            if product_id != ""
-        }
-
-        minimum_number_of_shares = (
-            MinimumNumberOfSharesValidator.get_minimum_number_of_shares_for_order(
-                ordered_products_id_to_quantity_map, cache=cache
-            )
-        )
-
-        return Response(
-            MinimumNumberOfSharesResponseSerializer(
-                {
-                    "minimum_number_of_shares": minimum_number_of_shares,
-                }
-            ).data,
-            status=status.HTTP_200_OK,
-        )
 
 
 class ExistingMemberPurchasesSharesApiView(APIView):
@@ -383,11 +344,28 @@ class DeleteMemberApiView(APIView):
                 override_recipients__0__recipient_id_in_base_queryset=member.id,
             ).delete()
 
+            addresses = [member.email] + list(
+                member.memberextraemail_set.filter(
+                    confirmed_on__isnull=False
+                ).values_list("email", flat=True)
+            )
             member.delete()
+            transaction.on_commit(
+                lambda: self._unsubscribe_addresses(addresses=addresses),
+                robust=True,
+            )
 
             KeycloakUserDeleteService.delete_user_if_exists(user=member)
 
         return Response("deleted")
+
+    @staticmethod
+    def _unsubscribe_addresses(addresses: list[str]):
+        cache = {}
+        for address in addresses:
+            MailingListUnsubscriber.unsubscribe_if_address_unused(
+                email=address, cache=cache
+            )
 
 
 class MemberBankDataApiView(APIView):
@@ -736,7 +714,7 @@ class MemberEmailApiView(APIView):
         email_before = member.email
         member_before = freeze_for_log(member)
         MailChangeService.apply_mail_change(
-            user=member, new_email=new_email, cache=self.cache
+            user=member, new_email=new_email, actor=actor, cache=self.cache
         )
         UpdateTapirUserLogEntry().populate(
             old_frozen=member_before,

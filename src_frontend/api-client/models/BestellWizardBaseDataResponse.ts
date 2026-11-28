@@ -17,6 +17,11 @@ import {
   AssociationMembershipTypeFromJSON,
   AssociationMembershipTypeToJSON,
 } from "./AssociationMembershipType";
+import type { BestellWizardGrowingPeriodChoice } from "./BestellWizardGrowingPeriodChoice";
+import {
+  BestellWizardGrowingPeriodChoiceFromJSON,
+  BestellWizardGrowingPeriodChoiceToJSON,
+} from "./BestellWizardGrowingPeriodChoice";
 import type { BestellWizardImages } from "./BestellWizardImages";
 import {
   BestellWizardImagesFromJSON,
@@ -32,21 +37,6 @@ import {
   LegalStatusEnumFromJSON,
   LegalStatusEnumToJSON,
 } from "./LegalStatusEnum";
-import type { PublicGrowingPeriod } from "./PublicGrowingPeriod";
-import {
-  PublicGrowingPeriodFromJSON,
-  PublicGrowingPeriodToJSON,
-} from "./PublicGrowingPeriod";
-import type { PublicPickupLocation } from "./PublicPickupLocation";
-import {
-  PublicPickupLocationFromJSON,
-  PublicPickupLocationToJSON,
-} from "./PublicPickupLocation";
-import type { PublicProductType } from "./PublicProductType";
-import {
-  PublicProductTypeFromJSON,
-  PublicProductTypeToJSON,
-} from "./PublicProductType";
 import type { SolidarityStepPositionEnum } from "./SolidarityStepPositionEnum";
 import {
   SolidarityStepPositionEnumFromJSON,
@@ -65,6 +55,12 @@ export interface BestellWizardBaseDataResponse {
    * @memberof BestellWizardBaseDataResponse
    */
   priceOfAShare: number;
+  /**
+   *
+   * @type {number}
+   * @memberof BestellWizardBaseDataResponse
+   */
+  coopMinShares: number;
   /**
    *
    * @type {boolean}
@@ -91,22 +87,10 @@ export interface BestellWizardBaseDataResponse {
   allowInvestingMembership: boolean;
   /**
    *
-   * @type {Array<PublicProductType>}
-   * @memberof BestellWizardBaseDataResponse
-   */
-  productTypes: Array<PublicProductType>;
-  /**
-   *
    * @type {Array<AssociationMembershipType>}
    * @memberof BestellWizardBaseDataResponse
    */
   associationMembershipTypes: Array<AssociationMembershipType>;
-  /**
-   *
-   * @type {Array<PublicPickupLocation>}
-   * @memberof BestellWizardBaseDataResponse
-   */
-  pickupLocations: Array<PublicPickupLocation>;
   /**
    *
    * @type {boolean}
@@ -175,18 +159,6 @@ export interface BestellWizardBaseDataResponse {
   defaultPaymentRhythm: string;
   /**
    *
-   * @type {Array<string>}
-   * @memberof BestellWizardBaseDataResponse
-   */
-  productTypeIdsThatAreAlreadyAtCapacity: Array<string>;
-  /**
-   *
-   * @type {Array<string>}
-   * @memberof BestellWizardBaseDataResponse
-   */
-  productIdsThatAreAlreadyAtCapacity: Array<string>;
-  /**
-   *
    * @type {string}
    * @memberof BestellWizardBaseDataResponse
    */
@@ -232,12 +204,6 @@ export interface BestellWizardBaseDataResponse {
    * @type {number}
    * @memberof BestellWizardBaseDataResponse
    */
-  solidarityContributionMinimum: number | null;
-  /**
-   *
-   * @type {number}
-   * @memberof BestellWizardBaseDataResponse
-   */
   solidarityContributionDefault: number;
   /**
    *
@@ -247,10 +213,10 @@ export interface BestellWizardBaseDataResponse {
   feedbackStepEnabled: boolean;
   /**
    *
-   * @type {Array<PublicGrowingPeriod>}
+   * @type {Array<BestellWizardGrowingPeriodChoice>}
    * @memberof BestellWizardBaseDataResponse
    */
-  growingPeriodChoices: Array<PublicGrowingPeriod>;
+  growingPeriodChoices: Array<BestellWizardGrowingPeriodChoice>;
   /**
    *
    * @type {SolidarityStepPositionEnum}
@@ -297,6 +263,8 @@ export function instanceOfBestellWizardBaseDataResponse(
 ): value is BestellWizardBaseDataResponse {
   if (!("priceOfAShare" in value) || value["priceOfAShare"] === undefined)
     return false;
+  if (!("coopMinShares" in value) || value["coopMinShares"] === undefined)
+    return false;
   if (
     !("coopShareInstalmentsEnabled" in value) ||
     value["coopShareInstalmentsEnabled"] === undefined
@@ -313,14 +281,10 @@ export function instanceOfBestellWizardBaseDataResponse(
     value["allowInvestingMembership"] === undefined
   )
     return false;
-  if (!("productTypes" in value) || value["productTypes"] === undefined)
-    return false;
   if (
     !("associationMembershipTypes" in value) ||
     value["associationMembershipTypes"] === undefined
   )
-    return false;
-  if (!("pickupLocations" in value) || value["pickupLocations"] === undefined)
     return false;
   if (!("forceWaitingList" in value) || value["forceWaitingList"] === undefined)
     return false;
@@ -365,16 +329,6 @@ export function instanceOfBestellWizardBaseDataResponse(
     value["defaultPaymentRhythm"] === undefined
   )
     return false;
-  if (
-    !("productTypeIdsThatAreAlreadyAtCapacity" in value) ||
-    value["productTypeIdsThatAreAlreadyAtCapacity"] === undefined
-  )
-    return false;
-  if (
-    !("productIdsThatAreAlreadyAtCapacity" in value) ||
-    value["productIdsThatAreAlreadyAtCapacity"] === undefined
-  )
-    return false;
   if (!("coopStatuteLink" in value) || value["coopStatuteLink"] === undefined)
     return false;
   if (!("organizationName" in value) || value["organizationName"] === undefined)
@@ -395,11 +349,6 @@ export function instanceOfBestellWizardBaseDataResponse(
   if (
     !("solidarityContributionChoices" in value) ||
     value["solidarityContributionChoices"] === undefined
-  )
-    return false;
-  if (
-    !("solidarityContributionMinimum" in value) ||
-    value["solidarityContributionMinimum"] === undefined
   )
     return false;
   if (
@@ -450,19 +399,14 @@ export function BestellWizardBaseDataResponseFromJSONTyped(
   }
   return {
     priceOfAShare: json["price_of_a_share"],
+    coopMinShares: json["coop_min_shares"],
     coopShareInstalmentsEnabled: json["coop_share_instalments_enabled"],
     coopShareInstalmentAmount: json["coop_share_instalment_amount"],
     theme: json["theme"],
     allowInvestingMembership: json["allow_investing_membership"],
-    productTypes: (json["product_types"] as Array<any>).map(
-      PublicProductTypeFromJSON,
-    ),
     associationMembershipTypes: (
       json["association_membership_types"] as Array<any>
     ).map(AssociationMembershipTypeFromJSON),
-    pickupLocations: (json["pickup_locations"] as Array<any>).map(
-      PublicPickupLocationFromJSON,
-    ),
     forceWaitingList: json["force_waiting_list"],
     introEnabled: json["intro_enabled"],
     studentStatusAllowed: json["student_status_allowed"],
@@ -474,10 +418,6 @@ export function BestellWizardBaseDataResponseFromJSONTyped(
     trialPeriodLengthInWeeks: json["trial_period_length_in_weeks"],
     paymentRhythmChoices: json["payment_rhythm_choices"],
     defaultPaymentRhythm: json["default_payment_rhythm"],
-    productTypeIdsThatAreAlreadyAtCapacity:
-      json["product_type_ids_that_are_already_at_capacity"],
-    productIdsThatAreAlreadyAtCapacity:
-      json["product_ids_that_are_already_at_capacity"],
     coopStatuteLink: json["coop_statute_link"],
     organizationName: json["organization_name"],
     logoUrl: json["logo_url"],
@@ -485,11 +425,10 @@ export function BestellWizardBaseDataResponseFromJSONTyped(
     websiteUrl: json["website_url"],
     distributionChannels: json["distribution_channels"],
     solidarityContributionChoices: json["solidarity_contribution_choices"],
-    solidarityContributionMinimum: json["solidarity_contribution_minimum"],
     solidarityContributionDefault: json["solidarity_contribution_default"],
     feedbackStepEnabled: json["feedback_step_enabled"],
     growingPeriodChoices: (json["growing_period_choices"] as Array<any>).map(
-      PublicGrowingPeriodFromJSON,
+      BestellWizardGrowingPeriodChoiceFromJSON,
     ),
     solidarityStepPosition: SolidarityStepPositionEnumFromJSON(
       json["solidarity_step_position"],
@@ -519,19 +458,14 @@ export function BestellWizardBaseDataResponseToJSONTyped(
 
   return {
     price_of_a_share: value["priceOfAShare"],
+    coop_min_shares: value["coopMinShares"],
     coop_share_instalments_enabled: value["coopShareInstalmentsEnabled"],
     coop_share_instalment_amount: value["coopShareInstalmentAmount"],
     theme: value["theme"],
     allow_investing_membership: value["allowInvestingMembership"],
-    product_types: (value["productTypes"] as Array<any>).map(
-      PublicProductTypeToJSON,
-    ),
     association_membership_types: (
       value["associationMembershipTypes"] as Array<any>
     ).map(AssociationMembershipTypeToJSON),
-    pickup_locations: (value["pickupLocations"] as Array<any>).map(
-      PublicPickupLocationToJSON,
-    ),
     force_waiting_list: value["forceWaitingList"],
     intro_enabled: value["introEnabled"],
     student_status_allowed: value["studentStatusAllowed"],
@@ -543,10 +477,6 @@ export function BestellWizardBaseDataResponseToJSONTyped(
     trial_period_length_in_weeks: value["trialPeriodLengthInWeeks"],
     payment_rhythm_choices: value["paymentRhythmChoices"],
     default_payment_rhythm: value["defaultPaymentRhythm"],
-    product_type_ids_that_are_already_at_capacity:
-      value["productTypeIdsThatAreAlreadyAtCapacity"],
-    product_ids_that_are_already_at_capacity:
-      value["productIdsThatAreAlreadyAtCapacity"],
     coop_statute_link: value["coopStatuteLink"],
     organization_name: value["organizationName"],
     logo_url: value["logoUrl"],
@@ -554,11 +484,10 @@ export function BestellWizardBaseDataResponseToJSONTyped(
     website_url: value["websiteUrl"],
     distribution_channels: value["distributionChannels"],
     solidarity_contribution_choices: value["solidarityContributionChoices"],
-    solidarity_contribution_minimum: value["solidarityContributionMinimum"],
     solidarity_contribution_default: value["solidarityContributionDefault"],
     feedback_step_enabled: value["feedbackStepEnabled"],
     growing_period_choices: (value["growingPeriodChoices"] as Array<any>).map(
-      PublicGrowingPeriodToJSON,
+      BestellWizardGrowingPeriodChoiceToJSON,
     ),
     solidarity_step_position: SolidarityStepPositionEnumToJSON(
       value["solidarityStepPosition"],

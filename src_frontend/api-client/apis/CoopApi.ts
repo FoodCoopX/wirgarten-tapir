@@ -20,7 +20,6 @@ import type {
   MemberEmailRequestRequest,
   MemberEmailResponse,
   MemberProfilePersonalDataResponse,
-  MinimumNumberOfSharesResponse,
   OrderConfirmationResponse,
   PatchedMemberProfilePersonalDataRequestRequest,
   PatchedUpdateMemberBankDataRequestRequest,
@@ -33,7 +32,6 @@ import {
   MemberEmailResponseFromJSON,
   MemberFromJSON,
   MemberProfilePersonalDataResponseFromJSON,
-  MinimumNumberOfSharesResponseFromJSON,
   OrderConfirmationResponseFromJSON,
   PatchedMemberProfilePersonalDataRequestRequestToJSON,
   PatchedUpdateMemberBankDataRequestRequestToJSON,
@@ -74,11 +72,6 @@ export interface CoopApiMemberPersonalDataPartialUpdateRequest {
 
 export interface CoopApiMemberPersonalDataRetrieveRequest {
   memberId?: string;
-}
-
-export interface CoopApiMinimumNumberOfSharesRetrieveRequest {
-  productIds?: Array<string>;
-  quantities?: Array<number>;
 }
 
 export interface CoopMembersRetrieveRequest {
@@ -618,66 +611,6 @@ export class CoopApi extends runtime.BaseAPI {
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<MemberProfilePersonalDataResponse> {
     const response = await this.coopApiMemberPersonalDataRetrieveRaw(
-      requestParameters,
-      initOverrides,
-    );
-    return await response.value();
-  }
-
-  /**
-   */
-  async coopApiMinimumNumberOfSharesRetrieveRaw(
-    requestParameters: CoopApiMinimumNumberOfSharesRetrieveRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<MinimumNumberOfSharesResponse>> {
-    const queryParameters: any = {};
-
-    if (requestParameters["productIds"] != null) {
-      queryParameters["product_ids"] = requestParameters["productIds"];
-    }
-
-    if (requestParameters["quantities"] != null) {
-      queryParameters["quantities"] = requestParameters["quantities"];
-    }
-
-    const headerParameters: runtime.HTTPHeaders = {};
-
-    if (this.configuration && this.configuration.apiKey) {
-      headerParameters["Authorization"] =
-        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
-    }
-
-    if (
-      this.configuration &&
-      (this.configuration.username !== undefined ||
-        this.configuration.password !== undefined)
-    ) {
-      headerParameters["Authorization"] =
-        "Basic " +
-        btoa(this.configuration.username + ":" + this.configuration.password);
-    }
-    const response = await this.request(
-      {
-        path: `/coop/api/minimum_number_of_shares`,
-        method: "GET",
-        headers: headerParameters,
-        query: queryParameters,
-      },
-      initOverrides,
-    );
-
-    return new runtime.JSONApiResponse(response, (jsonValue) =>
-      MinimumNumberOfSharesResponseFromJSON(jsonValue),
-    );
-  }
-
-  /**
-   */
-  async coopApiMinimumNumberOfSharesRetrieve(
-    requestParameters: CoopApiMinimumNumberOfSharesRetrieveRequest = {},
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<MinimumNumberOfSharesResponse> {
-    const response = await this.coopApiMinimumNumberOfSharesRetrieveRaw(
       requestParameters,
       initOverrides,
     );

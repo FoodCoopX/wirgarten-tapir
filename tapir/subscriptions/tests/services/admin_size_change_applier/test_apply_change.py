@@ -1,7 +1,7 @@
 import datetime
 from unittest.mock import patch, MagicMock, ANY
 
-from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
+from tapir.mail.triggers.transactional_trigger import TransactionalTrigger
 
 from tapir.payments.models import MemberPaymentRhythm
 from tapir.subscriptions.services.admin_size_change_applier import (

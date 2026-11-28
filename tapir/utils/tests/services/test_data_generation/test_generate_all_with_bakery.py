@@ -26,7 +26,7 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
 @pytest.mark.slow
-@override_settings(BAKERY_ENABLED=True)
+@override_settings(BAKERY_ENABLED=True, MAILING_LISTS_ENABLED=False)
 @patch.object(UserGenerator, "get_user_count", return_value=25, autospec=True)
 class TestGenerateAllWithBakery(TapirIntegrationTest):
     @classmethod

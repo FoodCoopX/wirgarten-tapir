@@ -19,143 +19,140 @@ import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 
-interface AdminDashboardNumberOfAssociationCancellationsRelativeToCancellationDateProps {
-  csrfToken: string;
-}
+const AdminDashboardNumberOfAssociationCancellationsRelativeToCancellationDate: React.FC =
+  () => {
+    const api = useApi(AssociationsApi);
+    const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [startDateAsString, setStartDateAsString] = useState("");
+    const [endDateAsString, setEndDateAsString] = useState("");
+    const [inputError, setInputError] = useState("");
+    const [labels, setLabels] = useState<string[]>([]);
+    const [datasets, setDatasets] = useState<GraphDataset[]>([]);
 
-const AdminDashboardNumberOfAssociationCancellationsRelativeToCancellationDate: React.FC<
-  AdminDashboardNumberOfAssociationCancellationsRelativeToCancellationDateProps
-> = ({ csrfToken }) => {
-  const api = useApi(AssociationsApi, csrfToken);
-  const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [startDateAsString, setStartDateAsString] = useState("");
-  const [endDateAsString, setEndDateAsString] = useState("");
-  const [inputError, setInputError] = useState("");
-  const [labels, setLabels] = useState<string[]>([]);
-  const [datasets, setDatasets] = useState<GraphDataset[]>([]);
+    useEffect(() => {
+      let startDate = dayjs();
+      startDate = startDate.date(1);
+      startDate = startDate.subtract(8, "month");
+      setStartDateAsString(startDate.format("YYYY-MM-DD"));
 
-  useEffect(() => {
-    let startDate = dayjs();
-    startDate = startDate.date(1);
-    startDate = startDate.subtract(8, "month");
-    setStartDateAsString(startDate.format("YYYY-MM-DD"));
+      let endDate = dayjs();
+      endDate = endDate.date(31);
+      endDate = endDate.add(8, "month");
+      setEndDateAsString(endDate.format("YYYY-MM-DD"));
+    }, []);
 
-    let endDate = dayjs();
-    endDate = endDate.date(31);
-    endDate = endDate.add(8, "month");
-    setEndDateAsString(endDate.format("YYYY-MM-DD"));
-  }, []);
+    useEffect(() => {
+      setLoading(true);
+      setInputError("");
 
-  useEffect(() => {
-    setLoading(true);
-    setInputError("");
+      if (!dayjs(startDateAsString).isValid()) {
+        setInputError("Ungültiges Start-Datum: " + startDateAsString);
+        return;
+      }
 
-    if (!dayjs(startDateAsString).isValid()) {
-      setInputError("Ungültiges Start-Datum: " + startDateAsString);
-      return;
+      if (!dayjs(endDateAsString).isValid()) {
+        setInputError("Ungültiges End-Datum: " + endDateAsString);
+        return;
+      }
+
+      api
+        .associationsApiNumberOfAssociationMembershipCancellationsPerMonthRelativeToCancellationRetrieve(
+          {
+            startDate: startDateAsString,
+            endDate: endDateAsString,
+          },
+        )
+        .then((data) => {
+          setLabels(data.labels);
+          setDatasets(data.datasets);
+        })
+        .catch((error) =>
+          handleRequestError(
+            error,
+            "Fehler beim Laden der Anzahl an Mitglieder",
+            setToastDatas,
+          ),
+        )
+        .finally(() => setLoading(false));
+    }, [startDateAsString, endDateAsString]);
+
+    ChartJS.register(
+      CategoryScale,
+      LinearScale,
+      PointElement,
+      BarElement,
+      Title,
+      Tooltip,
+      Legend,
+    );
+
+    const POINT_STYLES = ["circle", "cross", "crossRot", "dash"];
+
+    function buildDataNumberOfMembers(): ChartData<"bar"> {
+      Object.entries(datasets);
+      return {
+        labels,
+        datasets: datasets.map((dataset, index) => {
+          return {
+            label: dataset.name,
+            data: dataset.values,
+            borderColor: dataset.color,
+            backgroundColor: dataset.color,
+            pointStyle: POINT_STYLES[index % POINT_STYLES.length],
+          };
+        }),
+      };
     }
 
-    if (!dayjs(endDateAsString).isValid()) {
-      setInputError("Ungültiges End-Datum: " + endDateAsString);
-      return;
-    }
-
-    api
-      .associationsApiNumberOfAssociationMembershipCancellationsPerMonthRelativeToCancellationRetrieve(
-        {
-          startDate: startDateAsString,
-          endDate: endDateAsString,
-        },
-      )
-      .then((data) => {
-        setLabels(data.labels);
-        setDatasets(data.datasets);
-      })
-      .catch((error) =>
-        handleRequestError(
-          error,
-          "Fehler beim Laden der Anzahl an Mitglieder",
-          setToastDatas,
-        ),
-      )
-      .finally(() => setLoading(false));
-  }, [startDateAsString, endDateAsString]);
-
-  ChartJS.register(
-    CategoryScale,
-    LinearScale,
-    PointElement,
-    BarElement,
-    Title,
-    Tooltip,
-    Legend,
-  );
-
-  const POINT_STYLES = ["circle", "cross", "crossRot", "dash"];
-
-  function buildDataNumberOfMembers(): ChartData<"bar"> {
-    Object.entries(datasets);
-    return {
-      labels,
-      datasets: datasets.map((dataset, index) => {
-        return {
-          label: dataset.name,
-          data: dataset.values,
-          borderColor: dataset.color,
-          backgroundColor: dataset.color,
-          pointStyle: POINT_STYLES[index % POINT_STYLES.length],
-        };
-      }),
-    };
-  }
-
-  return (
-    <>
-      <Card>
-        <Card.Header>
-          <div className={"d-flex justify-content-between align-items-center"}>
-            <Card.Title className={"mb-0"}>
-              Anzahl an Mitgliedschaft-Enden (relative zu wann die Kündigung
-              registriert worden ist)
-            </Card.Title>
-            <div className={"d-flex gap-2"}>
-              <Form.Control
-                type={"date"}
-                value={startDateAsString}
-                onChange={(event) => setStartDateAsString(event.target.value)}
-              />
-              <Form.Control
-                type={"date"}
-                value={endDateAsString}
-                onChange={(event) => setEndDateAsString(event.target.value)}
-              />
+    return (
+      <>
+        <Card>
+          <Card.Header>
+            <div
+              className={"d-flex justify-content-between align-items-center"}
+            >
+              <Card.Title className={"mb-0"}>
+                Anzahl an Mitgliedschaft-Enden (relative zu wann die Kündigung
+                registriert worden ist)
+              </Card.Title>
+              <div className={"d-flex gap-2"}>
+                <Form.Control
+                  type={"date"}
+                  value={startDateAsString}
+                  onChange={(event) => setStartDateAsString(event.target.value)}
+                />
+                <Form.Control
+                  type={"date"}
+                  value={endDateAsString}
+                  onChange={(event) => setEndDateAsString(event.target.value)}
+                />
+              </div>
             </div>
-          </div>
-        </Card.Header>
-        <Card.Body>
-          {inputError && <Alert variant={"warning"}>{inputError}</Alert>}
-          {loading ? (
-            <Spinner />
-          ) : (
-            <div style={{ width: "833px" }}>
-              <Bar
-                data={buildDataNumberOfMembers()}
-                options={{
-                  responsive: true,
-                  scales: { y: { suggestedMin: 0 } },
-                }}
-              />
-            </div>
-          )}
-        </Card.Body>
-      </Card>
-      <TapirToastContainer
-        toastDatas={toastDatas}
-        setToastDatas={setToastDatas}
-      />
-    </>
-  );
-};
+          </Card.Header>
+          <Card.Body>
+            {inputError && <Alert variant={"warning"}>{inputError}</Alert>}
+            {loading ? (
+              <Spinner />
+            ) : (
+              <div style={{ width: "833px" }}>
+                <Bar
+                  data={buildDataNumberOfMembers()}
+                  options={{
+                    responsive: true,
+                    scales: { y: { suggestedMin: 0 } },
+                  }}
+                />
+              </div>
+            )}
+          </Card.Body>
+        </Card>
+        <TapirToastContainer
+          toastDatas={toastDatas}
+          setToastDatas={setToastDatas}
+        />
+      </>
+    );
+  };
 
 export default AdminDashboardNumberOfAssociationCancellationsRelativeToCancellationDate;

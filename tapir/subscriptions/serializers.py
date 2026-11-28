@@ -1,3 +1,5 @@
+import datetime
+
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
@@ -15,6 +17,15 @@ from tapir.products.serializers import (
     ProductSerializer,
 )
 from tapir.subscriptions.config import NOTICE_PERIOD_UNIT_OPTIONS
+from tapir.subscriptions.services.renewal_cancellation_status_provider import (
+    RenewalCancellationStatusProvider,
+)
+from tapir.subscriptions.services.subscription_change_week_to_date_converter import (
+    SubscriptionChangeWeekToDateConverter,
+)
+from tapir.subscriptions.services.subscription_date_change_applier import (
+    SubscriptionDateChangeApplier,
+)
 from tapir.subscriptions.services.subscription_price_calculator import (
     SubscriptionPriceCalculator,
 )
@@ -199,17 +210,23 @@ class MemberSubscriptionDataSerializer(serializers.Serializer):
 
 
 class SubscriptionDateChangeRequestSerializer(serializers.Serializer):
-    start_date_is_on_period_start = serializers.BooleanField()
-    end_date_is_on_period_end = serializers.BooleanField()
-    start_week = serializers.IntegerField()
-    end_week = serializers.IntegerField()
     subscription_id = serializers.CharField()
-    update_end_date_of_other_contracts = serializers.BooleanField()
+    action = serializers.ChoiceField(choices=SubscriptionDateChangeApplier.ACTIONS)
+    date = serializers.DateField(required=False, allow_null=True)
+    update_other_contracts = serializers.BooleanField()
 
 
-class ConvertWeekToDateForSubscriptionChangesResponseSerializer(serializers.Serializer):
-    start_date = serializers.DateField()
-    end_date = serializers.DateField()
+class ConvertWeekToDateForSubscriptionChangeRequestSerializer(serializers.Serializer):
+    subscription_id = serializers.CharField()
+    week = serializers.IntegerField()
+    boundary = serializers.ChoiceField(
+        choices=SubscriptionChangeWeekToDateConverter.BOUNDARIES
+    )
+
+
+class ConvertWeekToDateForSubscriptionChangeResponseSerializer(serializers.Serializer):
+    date = serializers.DateField(allow_null=True)
+    error = serializers.CharField(allow_null=True)
 
 
 class ConfirmSubscriptionChangesRequestSerializer(serializers.Serializer):
@@ -224,10 +241,18 @@ class SubscriptionPriceOverrideChangeRequestSerializer(serializers.Serializer):
     price_override = serializers.FloatField(allow_null=True)
 
 
-class SubscriptionTrialFieldsSerializer(SubscriptionSerializer):
+class SubscriptionDetailsSerializer(SubscriptionSerializer):
     is_in_trial = serializers.SerializerMethodField()
     default_trial_end_date = serializers.SerializerMethodField()
     effective_trial_end_date = serializers.SerializerMethodField()
+    renewal_cancellation_status = serializers.SerializerMethodField()
+    renewal_start_date = serializers.SerializerMethodField()
+    growing_period_start_date = serializers.DateField(
+        source="period.start_date", read_only=True
+    )
+    growing_period_end_date = serializers.DateField(
+        source="period.end_date", read_only=True
+    )
 
     def get_is_in_trial(self, subscription) -> bool:
         cache = self.context["cache"]
@@ -244,6 +269,23 @@ class SubscriptionTrialFieldsSerializer(SubscriptionSerializer):
         return TrialPeriodManager.get_last_day_of_trial_period(
             subscription, cache=cache
         )
+
+    @extend_schema_field(
+        serializers.ChoiceField(choices=RenewalCancellationStatusProvider.STATUSES)
+    )
+    def get_renewal_cancellation_status(self, subscription: Subscription) -> str:
+        return RenewalCancellationStatusProvider.get_status(
+            subscription=subscription, cache=self.context["cache"]
+        )
+
+    @extend_schema_field(serializers.DateField(allow_null=True))
+    def get_renewal_start_date(
+        self, subscription: Subscription
+    ) -> datetime.date | None:
+        renewal = RenewalCancellationStatusProvider.get_renewal(
+            subscription=subscription, cache=self.context["cache"]
+        )
+        return None if renewal is None else renewal.start_date
 
 
 class SubscriptionTrialChangeRequestSerializer(serializers.Serializer):

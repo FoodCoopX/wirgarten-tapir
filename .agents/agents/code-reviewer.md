@@ -19,6 +19,13 @@ context.
 
 ## What to check
 
+**Final state**
+
+- Judge the diff by its final state, not by how the code got there: flags, parameters, branches or
+  names that only exist to bridge an earlier version of the change (or of the code before it) are
+  findings. Ask whether someone writing this from scratch would arrive at the same API and
+  structure.
+
 **Architecture**
 
 - Business logic belongs in a service class under `tapir/<app>/services/`, not in views, models or

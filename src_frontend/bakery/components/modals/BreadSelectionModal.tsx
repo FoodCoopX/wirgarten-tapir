@@ -20,7 +20,6 @@ interface BreadSelectionModalProps {
   currentBreadId?: string | null;
   onSelect: (breadId: string) => void;
   onClose: () => void;
-  csrfToken: string;
 }
 
 export const BreadSelectionModal: React.FC<BreadSelectionModalProps> = ({
@@ -32,9 +31,8 @@ export const BreadSelectionModal: React.FC<BreadSelectionModalProps> = ({
   currentBreadId,
   onSelect,
   onClose,
-  csrfToken,
 }) => {
-  const bakeryApi = useApi(BakeryApi, csrfToken);
+  const bakeryApi = useApi(BakeryApi);
   const [availableBreads, setAvailableBreads] = useState<BreadList[]>([]);
   const [labelsMap, setLabelsMap] = useState<{ [labelId: string]: BreadLabel }>(
     {},

@@ -5,11 +5,9 @@ from tapir.accounts.exceptions import VerificationEmailsAlreadySendingException
 from tapir.accounts.services.unverified_members_service import (
     UnverifiedMembersService,
 )
-from tapir.generic_exports.services.member_segment_provider import (
-    MemberSegmentProvider,
-)
+from tapir.core.services.active_member_provider import ActiveMemberProvider
 from tapir.wirgarten.models import Member
-from tapir.wirgarten.utils import get_today
+from tapir.wirgarten.utils import get_now, get_today
 
 
 class Command(BaseCommand):
@@ -105,9 +103,9 @@ class Command(BaseCommand):
 
     @classmethod
     def get_active_members_without_keycloak_account(cls, cache: dict):
-        members = MemberSegmentProvider.get_queryset_active_members(cache=cache).filter(
-            keycloak_id=None
-        )
+        members = ActiveMemberProvider.get_active_members(
+            reference_datetime=get_now(cache=cache), cache=cache
+        ).filter(keycloak_id=None)
         return cls.annotate_member_queryset_with_number_of_current_and_future_subscriptions(
             queryset=members, cache=cache
         )

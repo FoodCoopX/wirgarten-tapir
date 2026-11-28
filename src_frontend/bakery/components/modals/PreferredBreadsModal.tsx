@@ -17,7 +17,6 @@ interface PreferredBreadsModalProps {
   isOpen: boolean;
   onClose: () => void;
   memberId: string;
-  csrfToken: string;
 }
 
 // Mirrors MAX_PREFERRED_BREADS in tapir/bakery/utils.py; the API answers 400
@@ -28,9 +27,8 @@ export const PreferredBreadsModal: React.FC<PreferredBreadsModalProps> = ({
   isOpen,
   onClose,
   memberId,
-  csrfToken,
 }) => {
-  const bakeryApi = useApi(BakeryApi, csrfToken);
+  const bakeryApi = useApi(BakeryApi);
 
   const [breads, setBreads] = useState<BreadList[]>([]);
   const [labelsMap, setLabelsMap] = useState<{ [labelId: string]: BreadLabel }>(

@@ -1,6 +1,6 @@
 from unittest.mock import patch, Mock
 
-from tapir_mail.triggers.transactional_trigger import TransactionalTriggerData
+from tapir.mail.triggers.transactional_trigger import TransactionalTriggerData
 
 from tapir.bestell_wizard.services.bestell_wizard_order_validator import (
     BestellWizardOrderValidator,

@@ -21,8 +21,12 @@ class ParameterDefinitionsEmails:
             label="Zusätzlich E-Mail-Adressen erlauben",
             datatype=TapirParameterDatatype.BOOLEAN,
             initial_value=False,
-            description="Ob Mitglieder im Mitgliederbereich zusätzliche Mail-Adressen eintragen können. "
-            "Diese Adressen bekommen Kopie von alle Mails die an der Mitgliedshauptadresse versendet werden.",
+            description="Ob Mitglieder zusätzliche E-Mail-Adressen eintragen können. "
+            "Mit persönlichen Mails erhält eine Adresse eine Kopie aller Mails an die Hauptadresse "
+            "und übernimmt bei der Bestätigung die Kategorie- und Listenanmeldungen des Mitglieds. "
+            "Ohne erhält sie nur Mails der Kategorien und Listen, für die sie angemeldet ist. "
+            "Ausschalten stoppt nur die Mails von Tapir an diese Adressen und deren Verwaltung. "
+            "Adressen, Anmeldungen und Listen-Abos bleiben erhalten, bis ein Admin sie entfernt.",
             category=ParameterCategory.MAIL,
             order_priority=order_priority,
         )
@@ -33,7 +37,13 @@ class ParameterDefinitionsEmails:
             label="Erklärungstext zu zusätzliche Adressen",
             datatype=TapirParameterDatatype.STRING,
             initial_value="""<p>
-        Du kannst hier zusätzliche E-Mail-Adressen hinzufügen. Alle Mailings werden dann nach der Bestätigung der neuen E-Mail-Adresse auch an diese versendet. An die neue E-Mail-Adresse wird ein Bestätigungslink versendet.
+        Du kannst hier zusätzliche E-Mail-Adressen hinzufügen. An die neue E-Mail-Adresse wird ein Bestätigungslink versendet.
+</p>
+<p>
+        Wenn die Adresse auch persönliche Mails erhält, bekommt sie nach der Bestätigung eine Kopie aller Mails an deine Hauptadresse (Verträge, Abholung, Rundmails an alle Mitglieder) und übernimmt deine Anmeldungen zu Mail-Kategorien und Mailinglisten. Sonst erhält sie nur die Mails der Kategorien und Mailinglisten, für die sie selbst angemeldet ist.
+</p>
+<p>
+        Die Anmeldungen werden nur bei der ersten Bestätigung übernommen. Danach verwaltet die Adresse ihre Abos selbst, über einen Link, den du ihr mit "Link senden" schicken kannst. Wenn du persönliche Mails erst später einschaltest, werden keine Anmeldungen übernommen.
 </p>""",
             description="Erklärungstext im Modal zu Zusätzliche Adressen im Mitgleiderbereich. "
             + HTML_ALLOWED_TEXT,

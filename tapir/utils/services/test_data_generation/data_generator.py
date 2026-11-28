@@ -2,7 +2,7 @@ import datetime
 
 import factory.random
 from django.core.management import call_command
-from tapir_mail.models import EmailConfiguration, EmailConfigurationVersion
+from tapir.mail.models import EmailConfiguration, EmailConfigurationVersion
 
 from tapir.accounts.models import EmailChangeRequest
 from tapir.accounts.services.keycloak_user_delete_service import (
@@ -36,6 +36,9 @@ from tapir.utils.services.test_data_generation.mail_trigger_generator import (
 )
 from tapir.utils.services.test_data_generation.mailing_list_generator import (
     MailingListGenerator,
+)
+from tapir.utils.services.test_data_generation.member_extra_email_generator import (
+    MemberExtraEmailGenerator,
 )
 from tapir.utils.services.test_data_generation.member_credit_generator import (
     MemberCreditGenerator,
@@ -165,6 +168,8 @@ class DataGenerator:
         MailTriggerGenerator.generate_required_triggers()
         print("Creating mailing lists...")
         MailingListGenerator.generate_mailing_lists()
+        print("Creating extra email addresses...")
+        MemberExtraEmailGenerator.generate_member_extra_emails()
         print("Test data generation done")
 
     @classmethod

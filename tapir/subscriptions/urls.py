@@ -60,9 +60,9 @@ urlpatterns = [
         name="dates_change",
     ),
     path(
-        "api/convert_weeks_to_date_for_subscription_change",
-        other.ConvertWeeksToDateForSubscriptionChangesApiView.as_view(),
-        name="convert_weeks_to_date_for_subscription_change",
+        "api/convert_week_to_date_for_subscription_change",
+        other.ConvertWeekToDateForSubscriptionChangeApiView.as_view(),
+        name="convert_week_to_date_for_subscription_change",
     ),
     path(
         "api/subscription_price_override",

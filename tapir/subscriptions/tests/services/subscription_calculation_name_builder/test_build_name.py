@@ -20,19 +20,19 @@ class TestBuildName(TapirUnitTest):
             price_override=price_override,
         )
 
-    def test_buildName_singleShare_returnsTypeAndProductName(self):
+    def test_buildName_singleShare_returnsProductName(self):
         result = SubscriptionCalculationNameBuilder.build_name(
             subscription=self._build_subscription(quantity=1, price_override=None)
         )
 
-        self.assertEqual("Ernteanteil Kiste", result)
+        self.assertEqual("Kiste", result)
 
     def test_buildName_severalShares_addsQuantity(self):
         result = SubscriptionCalculationNameBuilder.build_name(
             subscription=self._build_subscription(quantity=2, price_override=None)
         )
 
-        self.assertEqual("Ernteanteil Kiste (2 Anteile)", result)
+        self.assertEqual("Kiste (2 Anteile)", result)
 
     def test_buildName_priceOverride_addsSonderpreisInsteadOfQuantity(self):
         result = SubscriptionCalculationNameBuilder.build_name(
@@ -41,4 +41,4 @@ class TestBuildName(TapirUnitTest):
             )
         )
 
-        self.assertEqual("Ernteanteil Kiste (Sonderpreis)", result)
+        self.assertEqual("Kiste (Sonderpreis)", result)

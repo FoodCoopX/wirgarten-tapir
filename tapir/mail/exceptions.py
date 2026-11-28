@@ -1,0 +1,2 @@
+class TapirMailException(Exception):
+    pass

@@ -26,7 +26,6 @@ dayjs.extend(isoWeek);
 
 interface ChooseBreadsCardProps {
   memberId: string;
-  csrfToken: string;
   chooseStationPerBread: boolean;
   membersCanChooseBreadSorts: boolean;
 }
@@ -38,9 +37,8 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
   chooseStationPerBread,
   membersCanChooseBreadSorts,
   memberId,
-  csrfToken,
 }) => {
-  const bakeryApi = useApi(BakeryApi, csrfToken);
+  const bakeryApi = useApi(BakeryApi);
 
   const [breads, setBreads] = useState<BreadList[]>([]);
   const [contentsMap, setContentsMap] = useState<{
@@ -64,7 +62,6 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
   useEffect(() => {
     selectionRef.current = `${memberId}/${selectedYear}/${selectedWeek}`;
     loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [memberId, selectedWeek, selectedYear]);
 
   const firstDelivery = deliveries[0];
@@ -374,7 +371,6 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
                         handleBreadSelected(delivery.id!, breadId)
                       }
                       onClose={() => setModalOpen(null)}
-                      csrfToken={csrfToken}
                     />
                   )}
               </div>
@@ -386,7 +382,6 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
       <PickupLocationChangeModal
         show={editingLocation !== null && canChangePickupLocation}
         onHide={() => setEditingLocation(null)}
-        csrfToken={csrfToken}
         memberId={memberId}
         reloadDeliveries={handlePickupLocationChanged}
         setToastDatas={setToastDatas}

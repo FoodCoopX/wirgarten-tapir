@@ -22,7 +22,6 @@ import WaitingListTabWishes from "./tabs/WaitingListTabWishes.tsx";
 import "./waiting_list_card.css";
 
 interface WaitingListEntryEditModalProps {
-  csrfToken: string;
   entryDetails: WaitingListEntryDetails;
   show: boolean;
   onClose: () => void;
@@ -35,7 +34,6 @@ interface WaitingListEntryEditModalProps {
 }
 
 const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
-  csrfToken,
   entryDetails,
   show,
   onClose,
@@ -46,7 +44,7 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
   setToastDatas,
   entryReloading,
 }) => {
-  const api = useApi(WaitingListApi, csrfToken);
+  const api = useApi(WaitingListApi);
   const [showConfirmDeleteModal, setShowConfirmDeleteModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [firstName, setFirstName] = useState("");
@@ -226,7 +224,6 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
               <WaitingListTabLink
                 entryDetails={entryDetails}
                 reloadEntries={reloadEntries}
-                csrfToken={csrfToken}
                 setToastDatas={setToastDatas}
                 entryReloading={entryReloading}
               />

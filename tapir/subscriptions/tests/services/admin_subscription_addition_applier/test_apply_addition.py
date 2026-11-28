@@ -1,7 +1,7 @@
 import datetime
 from unittest.mock import patch, MagicMock
 
-from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
+from tapir.mail.triggers.transactional_trigger import TransactionalTrigger
 
 from tapir.subscriptions.services.admin_subscription_addition_applier import (
     AdminSubscriptionAdditionApplier,

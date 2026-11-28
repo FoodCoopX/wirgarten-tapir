@@ -33,7 +33,7 @@ function buildStatusBadge(period: PaymentExportExclusionPeriodOverview) {
 const PaymentExportExclusionOverviewModal: React.FC<
   PaymentExportExclusionOverviewModalProps
 > = ({ show, onHide, setToastDatas }) => {
-  const api = useApi(PaymentsApi, "unused");
+  const api = useApi(PaymentsApi);
   const [loading, setLoading] = useState(true);
   const [includeExpired, setIncludeExpired] = useState(false);
   const [periods, setPeriods] = useState<

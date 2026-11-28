@@ -11,16 +11,10 @@ import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 
-interface SendVerificationEmailsButtonProps {
-  csrfToken: string;
-}
-
 type Step = "list" | "confirm" | "sent";
 
-const SendVerificationEmailsButton: React.FC<
-  SendVerificationEmailsButtonProps
-> = ({ csrfToken }) => {
-  const accountsApi = useApi(AccountsApi, csrfToken);
+const SendVerificationEmailsButton: React.FC = () => {
+  const accountsApi = useApi(AccountsApi);
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<Step>("list");

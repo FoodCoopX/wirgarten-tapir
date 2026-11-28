@@ -8,18 +8,16 @@ import { handleRequestError } from "../../../utils/handleRequestError";
 
 interface BreadLabelsModalProps {
   bread: BreadList;
-  csrfToken: string;
   onClose: () => void;
   onUpdate?: () => void;
 }
 
 export const LabelsModal: React.FC<BreadLabelsModalProps> = ({
   bread,
-  csrfToken,
   onClose,
   onUpdate,
 }) => {
-  const bakeryApi = useApi(BakeryApi, csrfToken);
+  const bakeryApi = useApi(BakeryApi);
   const [availableLabels, setAvailableLabels] = useState<BreadLabel[]>([]);
   const [assignedLabelIds, setAssignedLabelIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);

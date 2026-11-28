@@ -3,7 +3,11 @@ from django.urls import reverse_lazy
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
 
+from tapir.accounts.services.email_normaliser import EmailNormaliser
 from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
+from tapir.core.services.member_extra_email_address_releaser import (
+    MemberExtraEmailAddressReleaser,
+)
 from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.forms.member import (
@@ -68,8 +72,12 @@ def get_member_personal_data_create_form(request, **kwargs):
 
 
 def save_member_and_assign_number(form: PersonalDataForm):
+    form.instance.email = EmailNormaliser.normalise(form.instance.email)
     form.instance.username = form.instance.email
     form.save()
+    MemberExtraEmailAddressReleaser.release_address(
+        address=form.instance.email, actor=form.request.user
+    )
     cache = {}
     MemberNumberService.assign_member_number_if_eligible(
         form.instance, cache=cache, actor=form.request.user

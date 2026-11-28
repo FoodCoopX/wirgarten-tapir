@@ -3,7 +3,7 @@ import json
 from unittest.mock import patch, Mock
 
 from django.urls import reverse
-from tapir_mail.triggers.transactional_trigger import TransactionalTriggerData
+from tapir.mail.triggers.transactional_trigger import TransactionalTriggerData
 
 from tapir.waiting_list.tests.factories import WaitingListEntryFactory
 from tapir.wirgarten.mail_events import Events
@@ -79,7 +79,7 @@ class TestWaitingListCreateEntryExistingMemberView(TapirIntegrationTest):
         self.assertEqual(0, WaitingListEntry.objects.count())
 
     @patch(
-        "tapir_mail.triggers.transactional_trigger.TransactionalTrigger.fire_action",
+        "tapir.mail.triggers.transactional_trigger.TransactionalTrigger.fire_action",
         autospec=True,
     )
     def test_post_memberAlreadyHasWaitingListEntry_returnsOrderNotConfirmed(
@@ -102,7 +102,7 @@ class TestWaitingListCreateEntryExistingMemberView(TapirIntegrationTest):
         mock_fire_action.assert_not_called()
 
     @patch(
-        "tapir_mail.triggers.transactional_trigger.TransactionalTrigger.fire_action",
+        "tapir.mail.triggers.transactional_trigger.TransactionalTrigger.fire_action",
         autospec=True,
     )
     def test_post_loggedInAsSelf_createsEntryAndSendsConfirmationMail(
@@ -157,7 +157,7 @@ class TestWaitingListCreateEntryExistingMemberView(TapirIntegrationTest):
         )
 
     @patch(
-        "tapir_mail.triggers.transactional_trigger.TransactionalTrigger.fire_action",
+        "tapir.mail.triggers.transactional_trigger.TransactionalTrigger.fire_action",
         autospec=True,
     )
     def test_post_memberAlreadyHasAPickupLocation_createsEntryAndSendsConfirmationMailWithCorrectPickupLocationToken(
@@ -193,7 +193,7 @@ class TestWaitingListCreateEntryExistingMemberView(TapirIntegrationTest):
         )
 
     @patch(
-        "tapir_mail.triggers.transactional_trigger.TransactionalTrigger.fire_action",
+        "tapir.mail.triggers.transactional_trigger.TransactionalTrigger.fire_action",
         autospec=True,
     )
     def test_post_noGrowingPeriodCoveringToday_stillCreatesEntry(
@@ -217,7 +217,7 @@ class TestWaitingListCreateEntryExistingMemberView(TapirIntegrationTest):
         mock_fire_action.assert_called_once()
 
     @patch(
-        "tapir_mail.triggers.transactional_trigger.TransactionalTrigger.fire_action",
+        "tapir.mail.triggers.transactional_trigger.TransactionalTrigger.fire_action",
         autospec=True,
     )
     def test_post_loggedInAsAdminForAnotherMember_createsEntry(

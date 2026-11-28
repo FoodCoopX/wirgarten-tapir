@@ -1,0 +1,14 @@
+{% extends "core/public_base.html" %}
+{% block head %}
+    <title>
+        {% block title %}Zusätzliche E-Mail-Adresse nicht bestätigt{% endblock %}
+    </title>
+{% endblock %}
+{% block content %}
+    <div class="card mt-4">
+        <div class="card-header">Zusätzliche E-Mail-Adresse nicht bestätigt</div>
+        <div class="card-body">
+            Die Adresse {{ extra_mail_address }} kann nicht bestätigt werden. {{ refusal_reason }}.
+        </div>
+    </div>
+{% endblock content %}

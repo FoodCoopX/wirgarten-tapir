@@ -30,7 +30,7 @@ const AdminSubscriptionAdditionSummary: React.FC<
         <dd className={"col-8"}>{memberData.member.displayName}</dd>
         <dt className={"col-4"}>Neuer Vertrag</dt>
         <dd className={"col-8"}>
-          {quantity} × {product.type.name} · {product.name}
+          {quantity} × {product.name}
         </dd>
         <dt className={"col-4"}>Vertragsbeginn</dt>
         <dd className={"col-8"}>{formatDateNumeric(startDate)}</dd>
@@ -46,7 +46,8 @@ const AdminSubscriptionAdditionSummary: React.FC<
         </dd>
       </dl>
       <Alert variant={"info"} className={"mb-0"}>
-        Das Mitglied erhält eine Bestätigungsmail.
+        Das Mitglied erhält die Mail, die für den Trigger „Vertragsänderungen im
+        Mitgliederbereich“ hinterlegt ist.
       </Alert>
     </div>
   );

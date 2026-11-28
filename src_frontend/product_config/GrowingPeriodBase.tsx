@@ -5,11 +5,7 @@ import { ToastData } from "../types/ToastData.ts";
 import GrowingPeriodModal from "./GrowingPeriodModal.tsx";
 import { getPeriodIdFromUrl } from "./get_parameter_from_url.ts";
 
-interface GrowingPeriodBaseProps {
-  csrfToken: string;
-}
-
-const GrowingPeriodBase: React.FC<GrowingPeriodBaseProps> = ({ csrfToken }) => {
+const GrowingPeriodBase: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
 
@@ -30,7 +26,6 @@ const GrowingPeriodBase: React.FC<GrowingPeriodBaseProps> = ({ csrfToken }) => {
         onClick={onClick}
       />
       <GrowingPeriodModal
-        csrfToken={csrfToken}
         show={showModal}
         onHide={() => setShowModal(false)}
         setToastDatas={setToastDatas}

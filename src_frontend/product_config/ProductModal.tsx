@@ -27,17 +27,15 @@ import {
 interface ProductModalProps {
   show: boolean;
   onHide: () => void;
-  csrfToken: string;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
 
 const ProductModal: React.FC<ProductModalProps> = ({
   show,
   onHide,
-  csrfToken,
   setToastDatas,
 }) => {
-  const api = useApi(SubscriptionsApi, csrfToken);
+  const api = useApi(SubscriptionsApi);
   const [productName, setProductName] = useState<string>("");
   const [isBaseProduct, setIsBaseProduct] = useState(false);
   const [deleted, setDeleted] = useState(false);
@@ -167,6 +165,11 @@ const ProductModal: React.FC<ProductModalProps> = ({
                     onChange={(e) => setProductName(e.target.value)}
                     placeholder={"Name der Anteilsgröße"}
                   />
+                  <Form.Text>
+                    Wird ohne den Produktanteil angezeigt (z.B. in Mails), daher
+                    eindeutig und selbsterklärend benennen, z.B.
+                    "S-Gemüseanteil" statt "S".
+                  </Form.Text>
                 </Form.Group>
               </Col>
               <Col>

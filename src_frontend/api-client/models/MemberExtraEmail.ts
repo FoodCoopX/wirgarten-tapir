@@ -56,6 +56,12 @@ export interface MemberExtraEmail {
   secret?: string;
   /**
    *
+   * @type {boolean}
+   * @memberof MemberExtraEmail
+   */
+  receivesDirectMails?: boolean;
+  /**
+   *
    * @type {string}
    * @memberof MemberExtraEmail
    */
@@ -94,6 +100,10 @@ export function MemberExtraEmailFromJSONTyped(
     confirmedOn:
       json["confirmed_on"] == null ? undefined : new Date(json["confirmed_on"]),
     secret: json["secret"] == null ? undefined : json["secret"],
+    receivesDirectMails:
+      json["receives_direct_mails"] == null
+        ? undefined
+        : json["receives_direct_mails"],
     member: json["member"],
   };
 }
@@ -120,6 +130,7 @@ export function MemberExtraEmailToJSONTyped(
         ? undefined
         : (value["confirmedOn"] as any).toISOString(),
     secret: value["secret"],
+    receives_direct_mails: value["receivesDirectMails"],
     member: value["member"],
   };
 }

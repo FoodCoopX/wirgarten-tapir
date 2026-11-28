@@ -80,16 +80,11 @@ const WaitingListTable: React.FC<WaitingListTableProps> = ({
           <td>{formatDateNumeric(entry.dateOfEntryInCooperative)}</td>
         )}
         <td>
-          {entry.currentProducts
-            ?.map((product) => product.type.name + " " + product.name)
-            .join(", ")}
+          {entry.currentProducts?.map((product) => product.name).join(", ")}
         </td>
         <td>
           {entry.productWishes
-            ?.map(
-              (productWish) =>
-                productWish.product.type.name + " " + productWish.product.name,
-            )
+            ?.map((productWish) => productWish.product.name)
             .join(", ")}
         </td>
         <td>{entry.currentPickupLocation?.name}</td>

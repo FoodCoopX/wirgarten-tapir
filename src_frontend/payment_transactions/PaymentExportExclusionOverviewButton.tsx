@@ -13,7 +13,7 @@ interface PaymentExportExclusionOverviewButtonProps {
 const PaymentExportExclusionOverviewButton: React.FC<
   PaymentExportExclusionOverviewButtonProps
 > = ({ setToastDatas }) => {
-  const api = useApi(PaymentsApi, "unused");
+  const api = useApi(PaymentsApi);
   const [numberOfPeriods, setNumberOfPeriods] = useState<number | undefined>(
     undefined,
   );

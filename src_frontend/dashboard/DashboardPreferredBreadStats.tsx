@@ -10,7 +10,7 @@ import {
 import { useApi } from "../hooks/useApi";
 
 const DashboardPreferredBreadStats: React.FC = () => {
-  const bakeryApi = useApi(BakeryApi, "no_token");
+  const bakeryApi = useApi(BakeryApi);
   const [deliveryDays, setDeliveryDays] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -64,7 +64,6 @@ const DashboardPreferredBreadStats: React.FC = () => {
               year={year}
               week={week}
               deliveryDay={day}
-              csrfToken="no_token"
             />
           </div>
         ))}

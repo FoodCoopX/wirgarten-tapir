@@ -25,7 +25,6 @@ interface RunSolverCardProps {
   year: number;
   deliveryWeek: number;
   deliveryDay: number;
-  csrfToken: string;
   hasSavedPlan?: boolean;
   onPreviewDetail?: (detail: SolverPreviewDetailResponse) => void;
   onApplied?: () => void;
@@ -84,12 +83,11 @@ export const RunSolverCard: React.FC<RunSolverCardProps> = ({
   year,
   deliveryWeek,
   deliveryDay,
-  csrfToken,
   hasSavedPlan = false,
   onPreviewDetail,
   onApplied,
 }) => {
-  const bakeryApi = useApi(BakeryApi, csrfToken);
+  const bakeryApi = useApi(BakeryApi);
 
   const [running, setRunning] = useState(false);
   const [applying, setApplying] = useState(false);

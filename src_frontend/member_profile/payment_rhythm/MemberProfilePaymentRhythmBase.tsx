@@ -1,22 +1,21 @@
-import React, { useEffect, useState } from "react";
 import "dayjs/locale/de";
+import React, { useEffect, useState } from "react";
 import { PaymentsApi } from "../../api-client";
-import { useApi } from "../../hooks/useApi.ts";
-import TapirToastContainer from "../../components/TapirToastContainer.tsx";
-import { ToastData } from "../../types/ToastData.ts";
 import TapirButton from "../../components/TapirButton.tsx";
-import MemberProfilePaymentRhythmModal from "./MemberProfilePaymentRhythmModal.tsx";
+import TapirToastContainer from "../../components/TapirToastContainer.tsx";
+import { useApi } from "../../hooks/useApi.ts";
+import { ToastData } from "../../types/ToastData.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
+import MemberProfilePaymentRhythmModal from "./MemberProfilePaymentRhythmModal.tsx";
 
 interface MemberProfilePaymentRhythmBaseProps {
   memberId: string;
-  csrfToken: string;
 }
 
 const MemberProfilePaymentRhythmBase: React.FC<
   MemberProfilePaymentRhythmBaseProps
-> = ({ memberId, csrfToken }) => {
-  const api = useApi(PaymentsApi, csrfToken);
+> = ({ memberId }) => {
+  const api = useApi(PaymentsApi);
   const [showModal, setShowModal] = useState(false);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
   const [allowedRhythms, setAllowedRhythms] = useState<{
@@ -49,7 +48,6 @@ const MemberProfilePaymentRhythmBase: React.FC<
         />
         <MemberProfilePaymentRhythmModal
           memberId={memberId}
-          csrfToken={csrfToken}
           setToastDatas={setToastDatas}
           show={showModal}
           onHide={() => setShowModal(false)}

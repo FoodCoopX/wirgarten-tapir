@@ -20,7 +20,6 @@ interface SubscriptionCancellationModalProps {
   onHide: () => void;
   show: boolean;
   memberId: string;
-  csrfToken: string;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
 
@@ -28,8 +27,8 @@ type CancellationStep = "subscriptions" | "reasons" | "confirmation";
 
 const SubscriptionCancellationModal: React.FC<
   SubscriptionCancellationModalProps
-> = ({ onHide, show, memberId, csrfToken, setToastDatas }) => {
-  const api = useApi(SubscriptionsApi, csrfToken);
+> = ({ onHide, show, memberId, setToastDatas }) => {
+  const api = useApi(SubscriptionsApi);
   const [subscribedProducts, setSubscribedProducts] = useState<
     ProductForCancellation[]
   >([]);

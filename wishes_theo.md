@@ -62,3 +62,5 @@ through the matrix channel or by tagging me in issues or PRs.
   medias.
 - In the mail module, I added a custom picker for the mail segments, so that we avoid a very long dropdown, and so that
   we can show a description for each segment. We need the same thing for mail triggers.
+- We have logs (as in LogEntry objects) for almost all actions that concern a member, but none for actions that are
+  admin-only, like a configuration change. Having those would help understand bug reports.

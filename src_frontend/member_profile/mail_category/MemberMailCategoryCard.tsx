@@ -1,24 +1,23 @@
 import "dayjs/locale/de";
 import React, { useEffect, useState } from "react";
-import { Card, Form, Spinner } from "react-bootstrap";
-import { CoreApi, type MailCategory, ModeEnum } from "../../api-client";
+import { Card, Spinner } from "react-bootstrap";
+import { CoreApi, type MailCategory } from "../../api-client";
 import TapirButton from "../../components/TapirButton.tsx";
 import TapirToastContainer from "../../components/TapirToastContainer.tsx";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 import MemberExtraEmailsModal from "../personal_data/MemberExtraEmailsModal.tsx";
+import MailCategoryCheckboxes from "./MailCategoryCheckboxes.tsx";
 
 interface MemberMailCategoryModalProps {
   memberId: string;
-  csrfToken: string;
 }
 
 const MemberMailCategoryCard: React.FC<MemberMailCategoryModalProps> = ({
   memberId,
-  csrfToken,
 }) => {
-  const api = useApi(CoreApi, csrfToken);
+  const api = useApi(CoreApi);
   const [categories, setCategories] = useState<MailCategory[]>([]);
   const [categoriesRegisteredTo, setCategoriesRegisteredTo] = useState<{
     [key: string]: boolean;
@@ -89,22 +88,12 @@ const MemberMailCategoryCard: React.FC<MemberMailCategoryModalProps> = ({
           {dataLoading ? (
             <Spinner />
           ) : (
-            <Form>
-              {categories.map((category) => (
-                <Form.Group key={category.id} controlId={category.id}>
-                  <Form.Check
-                    label={category.name}
-                    checked={categoriesRegisteredTo[category.id!]}
-                    onChange={(event) => {
-                      categoriesRegisteredTo[category.id!] =
-                        event.target.checked;
-                      setCategoriesRegisteredTo({ ...categoriesRegisteredTo });
-                    }}
-                    disabled={category.mode === ModeEnum.AlwaysOn}
-                  />
-                </Form.Group>
-              ))}
-            </Form>
+            <MailCategoryCheckboxes
+              categories={categories}
+              categoriesRegisteredTo={categoriesRegisteredTo}
+              setCategoriesRegisteredTo={setCategoriesRegisteredTo}
+              alwaysOnIsLocked={true}
+            />
           )}
         </Card.Body>
         <Card.Footer>
@@ -122,7 +111,6 @@ const MemberMailCategoryCard: React.FC<MemberMailCategoryModalProps> = ({
       <MemberExtraEmailsModal
         memberId={memberId}
         onHide={() => setShowModal(false)}
-        csrfToken={csrfToken}
         show={showModal}
         setToastDatas={setToastDatas}
       />

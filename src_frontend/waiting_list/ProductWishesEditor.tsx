@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Product, WaitingListProductWish } from "../api-client";
-import "./waiting_list_card.css";
 import { ButtonGroup, Col, Form, Row, Table } from "react-bootstrap";
+import { Product, WaitingListProductWish } from "../api-client";
 import TapirButton from "../components/TapirButton.tsx";
+import "./waiting_list_card.css";
 
 interface ProductWishesEditorProps {
   products: Product[];
@@ -108,9 +108,7 @@ const ProductWishesEditor: React.FC<ProductWishesEditorProps> = ({
               {wishes.map((wish) => {
                 return (
                   <tr key={wish.id}>
-                    <td>
-                      {wish.product.type.name} {wish.product.name}
-                    </td>
+                    <td>{wish.product.name}</td>
                     <td>
                       <Form.Control
                         size={"sm"}

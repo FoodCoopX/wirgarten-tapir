@@ -8,14 +8,8 @@ import { handleRequestError } from "../../../utils/handleRequestError";
 import "../../styles/bakery_styles.css";
 import { IngredientModal } from "../modals/IngredientModal";
 
-interface IngredientsCardProps {
-  csrfToken: string;
-}
-
-export const IngredientsCard: React.FC<IngredientsCardProps> = ({
-  csrfToken,
-}) => {
-  const bakeryApi = useApi(BakeryApi, csrfToken);
+export const IngredientsCard: React.FC = () => {
+  const bakeryApi = useApi(BakeryApi);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);

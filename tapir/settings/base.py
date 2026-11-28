@@ -45,7 +45,7 @@ INSTALLED_APPS = [
     "django.contrib.postgres",
     "django_bootstrap5",
     "django_drf_filepond",
-    "tapir_mail",
+    "tapir.mail",
     "tapir.bakery",
     "tapir.core",
     "tapir.log",
@@ -95,7 +95,6 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "tapir.wirgarten.middleware.error.GlobalServerErrorHandlerMiddleware",
-    "tapir.wirgarten.middleware.mailing.TapirMailPermissionMiddleware",
 ]
 
 X_FRAME_OPTIONS = "ALLOWALL"
@@ -109,14 +108,8 @@ ROOT_URLCONF = "tapir.urls"
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 
-def get_tapir_mail_template_dir():
-    with resources.path("tapir_mail", "__ui__") as path:
-        return str(path)
-
-
 DIRS = [
     os.path.join(BASE_DIR, "tapir/templates"),
-    get_tapir_mail_template_dir(),
 ]
 
 TEMPLATES = [
@@ -152,14 +145,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 
-def get_tapir_mail_static_dir():
-    with resources.path("tapir_mail", "__static__") as path:
-        return str(path)
-
-
 STATIC_URL = "/static/"
 STATIC_ROOT = "static"
-STATICFILES_DIRS = [get_tapir_mail_static_dir(), "dist"]
+STATICFILES_DIRS = ["dist"]
 
 
 SELECT2_JS = "core/select2/4.0.13/js/select2.min.js"
@@ -201,17 +189,14 @@ DJANGO_VITE = {
     "default": {
         "dev_mode": env.bool("DJANGO_VITE_DEBUG", default=False),
         "manifest_path": "./dist/manifest.json",
-    }
+    },
+    "mail": {
+        "dev_mode": env.bool("DJANGO_VITE_DEBUG", default=False),
+        "dev_server_port": 5174,
+        "static_url_prefix": "mail",
+        "manifest_path": "./dist/mail/manifest.json",
+    },
 }
-
-# CORS
-CORS_ALLOW_ALL_ORIGINS = False
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
-    "http://localhost:5173",
-]
-CORS_ALLOW_CREDENTIALS = True
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
@@ -223,7 +208,7 @@ STORAGES = {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
     "staticfiles": {
-        "BACKEND": "django.contrib.staticfiles.storage.ManifestStaticFilesStorage",
+        "BACKEND": "tapir.core.vite_manifest_static_files_storage.ViteManifestStaticFilesStorage",
     },
 }
 

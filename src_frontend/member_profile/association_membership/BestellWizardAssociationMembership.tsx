@@ -26,7 +26,6 @@ import { fromApiDate } from "../../utils/apiDate.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 
 interface BestellWizardAssociationMembershipProps {
-  csrfToken: string;
   memberId: string;
   firstName: string;
   lastName: string;
@@ -35,9 +34,9 @@ interface BestellWizardAssociationMembershipProps {
 
 const BestellWizardAssociationMembership: React.FC<
   BestellWizardAssociationMembershipProps
-> = ({ csrfToken, memberId, firstName, lastName, needsBankingData }) => {
-  const bestellWizardApi = useApi(BestellWizardApi, csrfToken);
-  const associationApi = useApi(AssociationsApi, csrfToken);
+> = ({ memberId, firstName, lastName, needsBankingData }) => {
+  const bestellWizardApi = useApi(BestellWizardApi);
+  const associationApi = useApi(AssociationsApi);
 
   const [settings, setSettings] =
     useState<BestellWizardSettings>(buildEmptySettings());

@@ -8,8 +8,8 @@ The current code and frontend may not match these recommendations. Update files 
 |-------------------------------------|-----------------------|--------------------------------------------------------------------------------------------------------------------|
 | contract                            | Doesn't show up       | Anything with regular payments: subscription, solidarity contribution, association membership                      |
 | subscription (`Subscription`)       | Vertrag               | A contract tied to a product, with a quantity                                                                      |
-| product type (`ProductType`)        | Produktanteil         | A category of products, e.g. Ernteanteile                                                                          |
-| product (`Product`)                 | Anteilsgröße          | A size within a product type, e.g. S, M, L                                                                         |
+| product type (`ProductType`)        | Produktanteil         | A category of products, e.g. Gemüseanteil                                                                          |
+| product (`Product`)                 | Anteilsgröße          | A size within a product type, e.g. S-Gemüseanteil                                                                  |
 | growing period (`GrowingPeriod`)    | Vertragsperiode       | The period subscriptions start and end in                                                                          |
 | coop share (`CoopShareTransaction`) | Genossenschaftsanteil | A share of the cooperative; always `coop_share` in code, never just `share` to avoid confusion with product shares |
 | pickup location (`PickupLocation`)  | Abholort              | Where the member picks up deliveries                                                                               |

@@ -7,7 +7,6 @@ import { ToastData } from "../types/ToastData.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 
 interface AssociationMembershipTypeEditModalProps {
-  csrfToken: string;
   show: boolean;
   onHide: () => void;
   onEdited: () => void;
@@ -17,8 +16,8 @@ interface AssociationMembershipTypeEditModalProps {
 
 const AssociationMembershipTypeEditModal: React.FC<
   AssociationMembershipTypeEditModalProps
-> = ({ csrfToken, onEdited, onHide, show, setToastDatas, membershipType }) => {
-  const api = useApi(AssociationsApi, csrfToken);
+> = ({ onEdited, onHide, show, setToastDatas, membershipType }) => {
+  const api = useApi(AssociationsApi);
   const [saving, setSaving] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");

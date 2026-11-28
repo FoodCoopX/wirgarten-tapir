@@ -30,7 +30,7 @@ function formatPaymentType(type: string) {
 const PaymentTransactionsDetailsModal: React.FC<
   PaymentTransactionsDetailsModalProps
 > = ({ transaction, onHide, setToastDatas }) => {
-  const api = useApi(PaymentsApi, "unused");
+  const api = useApi(PaymentsApi);
   const [loading, setLoading] = useState(true);
   const [membersByMandateRef, setMembersByMandateRef] = useState<
     Record<string, Member>

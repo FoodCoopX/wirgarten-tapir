@@ -41,13 +41,9 @@ const AdminSizeChangeSummary: React.FC<AdminSizeChangeSummaryProps> = ({
         <dt className={"col-4"}>Mitglied</dt>
         <dd className={"col-8"}>{memberData.member.displayName}</dd>
         <dt className={"col-4"}>Bisher</dt>
-        <dd className={"col-8"}>
-          {unit.productTypeName} · {unit.productName}
-        </dd>
+        <dd className={"col-8"}>{unit.productName}</dd>
         <dt className={"col-4"}>Neu</dt>
-        <dd className={"col-8"}>
-          {unit.productTypeName} · {newProduct.name}
-        </dd>
+        <dd className={"col-8"}>{newProduct.name}</dd>
         <dt className={"col-4"}>Wirksam ab</dt>
         <dd className={"col-8"}>{formatDateNumeric(changeDate)}</dd>
         <dt className={"col-4"}>Abholort</dt>
@@ -75,7 +71,8 @@ const AdminSizeChangeSummary: React.FC<AdminSizeChangeSummaryProps> = ({
         </Alert>
       )}
       <Alert variant={"info"} className={"mb-0"}>
-        Das Mitglied erhält eine Bestätigungsmail.
+        Das Mitglied erhält die Mail, die für den Trigger „Vertragsänderungen im
+        Mitgliederbereich“ hinterlegt ist.
       </Alert>
     </div>
   );

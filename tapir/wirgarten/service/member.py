@@ -14,7 +14,8 @@ from django.db.models import (
 )
 from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404
-from tapir_mail.triggers.transactional_trigger import (
+from tapir.accounts.services.email_normaliser import EmailNormaliser
+from tapir.mail.triggers.transactional_trigger import (
     TransactionalTrigger,
     TransactionalTriggerData,
 )
@@ -183,7 +184,7 @@ def create_wait_list_entry(
         member=member,
         first_name=first_name,
         last_name=last_name,
-        email=email,
+        email=EmailNormaliser.normalise(email),
         privacy_consent=get_now(),
         phone_number=phone_number,
         street=street,

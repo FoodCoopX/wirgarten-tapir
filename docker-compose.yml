@@ -74,6 +74,7 @@ services:
 
   db:
     image: postgres:18
+    command: ["postgres", "-c", "max_locks_per_transaction=256"]
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready --dbname tapir --username tapir" ]
       interval: 10s
@@ -136,9 +137,11 @@ services:
     init: true
     ports:
       - '5173:5173'
+      - '5174:5174'
     volumes:
       - .:/app
       - vite_node_modules:/app/node_modules
+      - vite_mail_node_modules:/app/src_frontend_mail/node_modules
 
   # Local test mail server: captures all outgoing mail from Mailman
   # instead of delivering it, so nothing escapes to real inboxes.
@@ -165,4 +168,5 @@ volumes:
   # web-static:
   # web-uploads:
   vite_node_modules:
+  vite_mail_node_modules:
   # mailpit-db:

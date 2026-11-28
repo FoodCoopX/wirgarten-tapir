@@ -5,7 +5,6 @@ import ConfirmDeleteModal from "../components/ConfirmDeleteModal.tsx";
 import TapirButton from "../components/TapirButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
-import { getCsrfToken } from "../utils/getCsrfToken.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import MailingListEditModal from "./MailingListEditModal.tsx";
 import MailingListHeldMessagesModal from "./MailingListHeldMessagesModal.tsx";
@@ -24,7 +23,7 @@ const MailingListTable: React.FC<MailingListsTableProps> = ({
   setMailingLists,
   loadData,
 }) => {
-  const api = useApi(CoreApi, getCsrfToken());
+  const api = useApi(CoreApi);
   const [listSelectedForDeletion, setListSelectedForDeletion] =
     useState<MailingListAdmin>();
   const [listSelectedForManagement, setListSelectedForManagement] =

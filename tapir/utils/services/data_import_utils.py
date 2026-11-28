@@ -3,6 +3,10 @@ import datetime
 from django.utils import timezone
 from django.utils.dateparse import parse_date, parse_datetime
 
+from tapir.configuration.parameter import get_parameter_value
+from tapir.utils.exceptions import TapirDataImportException
+from tapir.wirgarten.parameter_keys import ParameterKeys
+
 
 class DataImportUtils:
     @staticmethod
@@ -20,6 +24,18 @@ class DataImportUtils:
             return int(v)
         except (TypeError, ValueError):
             return default
+
+    @classmethod
+    def parse_member_number(cls, value: str | None, cache: dict) -> int | None:
+        value = cls.normalize_cell(value)
+        if value == "":
+            return None
+
+        prefix = get_parameter_value(ParameterKeys.MEMBER_NUMBER_PREFIX, cache=cache)
+        try:
+            return int(value.removeprefix(prefix))
+        except ValueError:
+            raise TapirDataImportException(f"Invalid member number: '{value}'")
 
     @classmethod
     def safe_float(cls, v, default=0.0):

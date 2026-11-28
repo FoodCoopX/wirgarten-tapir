@@ -8,14 +8,12 @@ import "../styles/bakery_styles.css";
 
 interface ChooseBreadsProps {
   memberId: string;
-  csrfToken: string;
   chooseStationPerBread: boolean;
   membersCanChooseBreadSorts: boolean;
 }
 
 export const ChooseBreads: React.FC<ChooseBreadsProps> = ({
   memberId,
-  csrfToken,
   chooseStationPerBread,
   membersCanChooseBreadSorts,
 }) => {
@@ -53,7 +51,6 @@ export const ChooseBreads: React.FC<ChooseBreadsProps> = ({
             <ChooseBreadsCard
               chooseStationPerBread={chooseStationPerBread}
               membersCanChooseBreadSorts={membersCanChooseBreadSorts}
-              csrfToken={csrfToken}
               memberId={memberId}
             />
           </div>
@@ -104,10 +101,7 @@ export const ChooseBreads: React.FC<ChooseBreadsProps> = ({
           </p>
         </div>
         <div className="col-md-12 mb-4">
-          <ChoosePreferredBreadsCard
-            memberId={memberId}
-            csrfToken={csrfToken}
-          />
+          <ChoosePreferredBreadsCard memberId={memberId} />
         </div>
       </div>
     </div>

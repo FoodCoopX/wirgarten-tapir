@@ -5,6 +5,7 @@ from django.utils.translation import gettext_lazy as _
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.models import CustomCycleScheduledDeliveryWeek
+from tapir.products.services.product_name_validator import ProductNameValidator
 from tapir.utils.forms import DateInput
 from tapir.utils.shortcuts import get_first_of_next_month
 from tapir.wirgarten.models import (
@@ -55,7 +56,13 @@ class ProductForm(forms.Form):
             initial=initial_id, widget=forms.HiddenInput()
         )
         self.fields["name"] = forms.CharField(
-            initial=initial_name, required=True, label=_("Name der Anteilsgröße")
+            initial=initial_name,
+            required=True,
+            label=_("Name der Anteilsgröße"),
+            help_text=_(
+                "Wird ohne den Produktanteil angezeigt (z.B. in Mails), daher eindeutig und "
+                'selbsterklärend benennen, z.B. "S-Gemüseanteil" statt "S".'
+            ),
         )
         self.fields["price"] = forms.FloatField(
             initial=initial_price, required=True, label=_("Preis")
@@ -80,6 +87,17 @@ class ProductForm(forms.Form):
                         _("Bitte lege zuerst eine Basis-Anteilsgröße an.")
                     ),
                 )
+
+        if "name" in self.cleaned_data:
+            product_id = self.cleaned_data["id"]
+            try:
+                ProductNameValidator.validate_name_is_unique(
+                    product_name=self.cleaned_data["name"],
+                    product_id=None if product_id == "-" else product_id,
+                    cache={},
+                )
+            except ValidationError as error:
+                self.add_error(field="name", error=error)
 
         return not self.errors
 

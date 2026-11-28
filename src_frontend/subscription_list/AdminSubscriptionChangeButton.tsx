@@ -4,13 +4,7 @@ import TapirToastContainer from "../components/TapirToastContainer.tsx";
 import { ToastData } from "../types/ToastData.ts";
 import AdminSubscriptionChangeModal from "./AdminSubscriptionChangeModal.tsx";
 
-interface AdminSubscriptionChangeButtonProps {
-  csrfToken: string;
-}
-
-const AdminSubscriptionChangeButton: React.FC<
-  AdminSubscriptionChangeButtonProps
-> = ({ csrfToken }) => {
+const AdminSubscriptionChangeButton: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
 
@@ -26,7 +20,6 @@ const AdminSubscriptionChangeButton: React.FC<
       {showModal && (
         <AdminSubscriptionChangeModal
           onHide={() => setShowModal(false)}
-          csrfToken={csrfToken}
           setToastDatas={setToastDatas}
         />
       )}

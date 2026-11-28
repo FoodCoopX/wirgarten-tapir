@@ -6,12 +6,11 @@ import PaymentExportExclusionPeriodModal from "./PaymentExportExclusionPeriodMod
 
 interface PaymentExportExclusionPeriodBaseProps {
   memberId: string;
-  csrfToken: string;
 }
 
 const PaymentExportExclusionPeriodBase: React.FC<
   PaymentExportExclusionPeriodBaseProps
-> = ({ memberId, csrfToken }) => {
+> = ({ memberId }) => {
   const [showModal, setShowModal] = useState(false);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
 
@@ -25,7 +24,6 @@ const PaymentExportExclusionPeriodBase: React.FC<
       />
       <PaymentExportExclusionPeriodModal
         memberId={memberId}
-        csrfToken={csrfToken}
         setToastDatas={setToastDatas}
         show={showModal}
         onHide={() => setShowModal(false)}

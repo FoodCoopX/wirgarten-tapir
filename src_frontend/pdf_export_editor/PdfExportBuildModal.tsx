@@ -11,7 +11,6 @@ import { handleRequestError } from "../utils/handleRequestError.ts";
 interface PdfExportBuildModalProps {
   show: boolean;
   onHide: () => void;
-  csrfToken: string;
   exportToBuild: PdfExportModel;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
@@ -27,11 +26,10 @@ function downloadExportFile(url: string) {
 const PdfExportBuildModal: React.FC<PdfExportBuildModalProps> = ({
   show,
   onHide,
-  csrfToken,
   exportToBuild,
   setToastDatas,
 }) => {
-  const api = useApi(GenericExportsApi, csrfToken);
+  const api = useApi(GenericExportsApi);
 
   const [datetime, setDatetime] = useState(new Date());
   const [loading, setLoading] = useState(false);

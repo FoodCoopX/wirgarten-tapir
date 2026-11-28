@@ -11,7 +11,6 @@ import { handleRequestError } from "../utils/handleRequestError.ts";
 interface CreateMemberCreditModalProps {
   show: boolean;
   onHide: () => void;
-  csrfToken: string;
   onCreditCreated: () => void;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
@@ -19,7 +18,6 @@ interface CreateMemberCreditModalProps {
 const CreateMemberCreditModal: React.FC<CreateMemberCreditModalProps> = ({
   show,
   onHide,
-  csrfToken,
   onCreditCreated,
   setToastDatas,
 }) => {
@@ -30,8 +28,8 @@ const CreateMemberCreditModal: React.FC<CreateMemberCreditModalProps> = ({
   const [amount, setAmount] = useState(0.01);
   const [purpose, setPurpose] = useState<string>();
   const [comment, setComment] = useState<string>();
-  const coopApi = useApi(CoopApi, csrfToken);
-  const paymentsApi = useApi(PaymentsApi, csrfToken);
+  const coopApi = useApi(CoopApi);
+  const paymentsApi = useApi(PaymentsApi);
 
   useEffect(() => {
     if (!show) {

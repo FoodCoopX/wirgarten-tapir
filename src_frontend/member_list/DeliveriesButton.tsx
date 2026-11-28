@@ -4,11 +4,7 @@ import TapirButton from "../components/TapirButton.tsx";
 import { getParameterFromUrl } from "../product_config/get_parameter_from_url.ts";
 import DeliveryListModal from "./DeliveryListModal.tsx";
 
-interface DeliveriesButtonProps {
-  csrfToken: string;
-}
-
-const DeliveriesButton: React.FC<DeliveriesButtonProps> = ({ csrfToken }) => {
+const DeliveriesButton: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [memberId, setMemberId] = useState();
 
@@ -32,7 +28,6 @@ const DeliveriesButton: React.FC<DeliveriesButtonProps> = ({ csrfToken }) => {
       {memberId && (
         <DeliveryListModal
           memberId={memberId}
-          csrfToken={csrfToken}
           show={showModal}
           onHide={() => setShowModal(false)}
         />

@@ -20,7 +20,6 @@ import { handleRequestError } from "../utils/handleRequestError.ts";
 
 interface AssociationMembershipCancelModalProps {
   memberId: string;
-  csrfToken: string;
   show: boolean;
   onHide: () => void;
   reloadData: () => void;
@@ -29,9 +28,9 @@ interface AssociationMembershipCancelModalProps {
 
 const AssociationMembershipCancelModal: React.FC<
   AssociationMembershipCancelModalProps
-> = ({ memberId, csrfToken, show, onHide, reloadData, setToastDatas }) => {
-  const associationApi = useApi(AssociationsApi, csrfToken);
-  const coopApi = useApi(CoopApi, csrfToken);
+> = ({ memberId, show, onHide, reloadData, setToastDatas }) => {
+  const associationApi = useApi(AssociationsApi);
+  const coopApi = useApi(CoopApi);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [endDateAsString, setEndDateAsString] = useState("");

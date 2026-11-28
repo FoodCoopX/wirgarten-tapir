@@ -1,5 +1,6 @@
 from django.core.management import BaseCommand
 
+from tapir.accounts.services.email_normaliser import EmailNormaliser
 from tapir.accounts.models import TapirUser
 from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
 
@@ -8,11 +9,12 @@ class Command(BaseCommand):
     help = "Create the initial admin account"
 
     def handle(self, *args, **options):
+        email = EmailNormaliser.normalise(options["email"])
         admin = TapirUser.objects.create(
             first_name=options["first_name"],
             last_name=options["last_name"],
-            email=options["email"],
-            username=options["email"],
+            email=email,
+            username=email,
             is_staff=True,
             is_superuser=True,
         )

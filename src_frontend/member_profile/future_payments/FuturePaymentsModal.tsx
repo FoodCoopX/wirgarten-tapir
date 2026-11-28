@@ -24,7 +24,6 @@ interface FuturePaymentsModalProps {
   show: boolean;
   onHide: () => void;
   loading: boolean;
-  csrfToken: string;
   memberId: string;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
   trialPeriodEnabled: boolean;
@@ -89,14 +88,13 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
   show,
   transactionsByDueDate,
   loading,
-  csrfToken,
   memberId,
   setToastDatas,
   trialPeriodEnabled,
   deliveryChargeEnabled,
 }) => {
   dayjs.extend(RelativeTime);
-  const api = useApi(PaymentsApi, csrfToken);
+  const api = useApi(PaymentsApi);
 
   const [showPastPayments, setShowPastPayments] = useState(false);
   const [pastTransactionsByDueDate, setPastTransactionsByDueDate] =

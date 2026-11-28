@@ -10,9 +10,8 @@ from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.generic import TemplateView
 from drf_spectacular.utils import extend_schema, OpenApiParameter
-from mailmanclient import MailmanConnectionError, MailingList
+from mailmanclient import MailmanConnectionError
 from rest_framework import permissions, status
-from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -30,18 +29,21 @@ from tapir.core.serializers import (
 from tapir.core.services.mailman.held_message_serializer_data_builder import (
     HeldMessageSerializerDataBuilder,
 )
+from tapir.core.services.mailman.mailing_list_join_validator import (
+    MailingListJoinValidator,
+)
 from tapir.core.services.mailman.mailing_list_provider import MailingListProvider
 from tapir.core.services.mailman.mailing_list_self_request_preparer import (
     MailingListSelfRequestPreparer,
+)
+from tapir.core.services.mailman.mailing_list_self_service import (
+    MailingListSelfService,
 )
 from tapir.core.services.mailman.mailing_list_serializer_data_builder import (
     MailingListSerializerDataBuilder,
 )
 from tapir.core.services.mailman.mailing_list_settings_updater import (
     MailingListSettingsUpdater,
-)
-from tapir.core.services.mailman.mailing_list_subscription_checker import (
-    MailingListSubscriptionChecker,
 )
 from tapir.core.services.mailman.mailing_lists_enabled_checker import (
     MailingListsEnabledChecker,
@@ -51,6 +53,7 @@ from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
     Member,
+    MemberExtraEmail,
 )
 from tapir.wirgarten.utils import check_permission_or_self
 
@@ -231,12 +234,33 @@ class MailingListRecipientListView(APIView):
             for request in mailing_list.requests
         ]
 
-        members_by_email_address = {
-            member.email: member for member in Member.objects.all()
+        addresses = [
+            EmailNormaliser.normalise(recipient["address"]) for recipient in recipients
+        ]
+        members_by_extra_address = {
+            extra_email.email: extra_email.member
+            for extra_email in MemberExtraEmail.objects.filter(
+                email__in=addresses, confirmed_on__isnull=False
+            ).select_related("member")
+        }
+        members_by_main_address = {
+            member.email: member
+            for member in Member.objects.filter(email__in=addresses)
         }
 
         for recipient in recipients:
-            member = members_by_email_address.get(recipient["address"], None)
+            address = EmailNormaliser.normalise(recipient["address"])
+            main_member = members_by_main_address.get(address)
+            extra_email_member = members_by_extra_address.get(address)
+            recipient["extra_email_member"] = (
+                {
+                    "display_name": extra_email_member.get_display_name(),
+                    "email": extra_email_member.email,
+                }
+                if extra_email_member is not None
+                else None
+            )
+            member = main_member or extra_email_member
             recipient["link_to_member_profile"] = (
                 reverse("wirgarten:member_detail", kwargs={"pk": member.id})
                 if member is not None
@@ -267,10 +291,9 @@ class MailingListSubscribeExternalRecipientView(APIView):
         mailing_list = MailingListProvider.get_list_by_name_or_404(
             list_name=serializer.validated_data["list_name"], cache=cache
         )
-        mailing_list.subscribe(
-            address=serializer.validated_data["address"],
-            invitation=True,
-        )
+        address = EmailNormaliser.normalise(serializer.validated_data["address"])
+        MailingListJoinValidator.validate_address_can_join(address=address, cache=cache)
+        mailing_list.subscribe(address=address, invitation=True)
 
         return Response("OK")
 
@@ -296,10 +319,10 @@ class MailingListSubscribeInternalRecipientView(APIView):
         mailing_list = MailingListProvider.get_list_by_name_or_404(
             list_name=serializer.validated_data["list_name"], cache=cache
         )
-        mailing_list.subscribe(
-            address=member.email,
-            invitation=True,
+        MailingListJoinValidator.validate_address_can_join(
+            address=member.email, cache=cache
         )
+        mailing_list.subscribe(address=member.email, invitation=True)
 
         return Response("OK")
 
@@ -420,55 +443,13 @@ class MemberMailingListDataView(APIView):
         member_id = request.query_params.get("member_id")
         check_permission_or_self(pk=member_id, request=request)
         member = get_object_or_404(Member, id=member_id)
-        cache = {}
-
-        domain = TapirMailmanClient.get_domain(cache=cache)
-        relevant_lists = [
-            mailing_list
-            for mailing_list in domain.lists
-            if self.should_show_list(email=member.email, mailing_list=mailing_list)
-        ]
-
-        subscribed_lists = [
-            mailing_list.fqdn_listname
-            for mailing_list in relevant_lists
-            if MailingListSubscriptionChecker.is_member_subscribed_to_list(
-                email=member.email, mailing_list=mailing_list
-            )
-        ]
-        waiting_for_confirmation_lists = [
-            mailing_list.fqdn_listname
-            for mailing_list in relevant_lists
-            if MailingListSubscriptionChecker.is_member_waiting_for_confirmation(
-                email=member.email, mailing_list=mailing_list
-            )
-        ]
 
         return Response(
             MemberMailingListDataResponseSerializer(
-                {
-                    "available_lists": [
-                        MailingListSerializerDataBuilder.build_serializer_data(
-                            mailing_list
-                        )
-                        for mailing_list in relevant_lists
-                    ],
-                    "subscribed_lists": subscribed_lists,
-                    "waiting_for_confirmation_lists": waiting_for_confirmation_lists,
-                }
+                MailingListSelfService.build_list_data(
+                    email=member.email, include_advertised_lists=True, cache={}
+                )
             ).data
-        )
-
-    @classmethod
-    def should_show_list(cls, email: str, mailing_list: MailingList):
-        return (
-            mailing_list.settings["advertised"]
-            or MailingListSubscriptionChecker.is_member_subscribed_to_list(
-                email, mailing_list
-            )
-            or MailingListSubscriptionChecker.is_member_waiting_for_confirmation(
-                email, mailing_list
-            )
         )
 
 
@@ -479,24 +460,10 @@ class MailingListMemberSelfSubscribeView(APIView):
     )
     def post(self, request):
         mailing_list, member = MailingListSelfRequestPreparer.prepare(request)
-
-        if not mailing_list.settings["advertised"]:
-            raise Http404(f"Keine Liste mit Name {mailing_list.listname} gefunden")
-
-        if MailingListSubscriptionChecker.is_member_subscribed_to_list(
-            email=member.email, mailing_list=mailing_list
-        ):
-            raise ValidationError(
-                f"Mitglied {member.email} ist schon zu Liste {mailing_list.fqdn_listname} angemeldet"
-            )
-
-        mailing_list.subscribe(
-            address=member.email,
-            invitation=False,
-            pre_confirmed=True,
-            pre_verified=True,
+        MailingListJoinValidator.validate_address_can_join(
+            address=member.email, cache={}
         )
-
+        MailingListSelfService.subscribe(email=member.email, mailing_list=mailing_list)
         return Response("OK")
 
 
@@ -507,18 +474,9 @@ class MailingListMemberSelfUnsubscribeView(APIView):
     )
     def post(self, request):
         mailing_list, member = MailingListSelfRequestPreparer.prepare(request)
-
-        if not MailingListSubscriptionChecker.is_member_subscribed_to_list(
+        MailingListSelfService.unsubscribe(
             email=member.email, mailing_list=mailing_list
-        ):
-            raise ValidationError(
-                f"Mitglied {member.email} ist nicht zu {mailing_list.fqdn_listname} angemeldet"
-            )
-
-        mailing_list.unsubscribe(
-            email=member.email, pre_confirmed=True, pre_approved=True
         )
-
         return Response("Unsubscribed")
 
 
@@ -529,20 +487,13 @@ class MailingListMemberSelfConfirmView(APIView):
     )
     def post(self, request):
         mailing_list, member = MailingListSelfRequestPreparer.prepare(request)
-
-        if not MailingListSubscriptionChecker.is_member_waiting_for_confirmation(
+        MailingListJoinValidator.validate_address_can_join(
+            address=member.email, cache={}
+        )
+        MailingListSelfService.accept_invitation(
             email=member.email, mailing_list=mailing_list
-        ):
-            raise ValidationError(
-                f"Mitglied {member.email} ist nicht zu {mailing_list.fqdn_listname} eingeladen"
-            )
-
-        for request in mailing_list.requests:
-            if request["email"] == member.email:
-                mailing_list.accept_request(request_id=request["token"])
-                return Response("Confirmed")
-
-        raise Http404("Einladung nicht gefunden")
+        )
+        return Response("Confirmed")
 
 
 class MailingListMemberSelfRejectView(APIView):
@@ -552,17 +503,7 @@ class MailingListMemberSelfRejectView(APIView):
     )
     def post(self, request):
         mailing_list, member = MailingListSelfRequestPreparer.prepare(request)
-
-        if not MailingListSubscriptionChecker.is_member_waiting_for_confirmation(
+        MailingListSelfService.reject_invitation(
             email=member.email, mailing_list=mailing_list
-        ):
-            raise ValidationError(
-                f"Mitglied {member.email} ist nicht zu {mailing_list.fqdn_listname} eingeladen"
-            )
-
-        for request in mailing_list.requests:
-            if request["email"] == member.email:
-                mailing_list.reject_request(request_id=request["token"])
-                return Response("Invite rejected")
-
-        raise Http404("Einladung nicht gefunden")
+        )
+        return Response("Invite rejected")
