@@ -15,16 +15,14 @@ import "../../styles/bakery_styles.css";
 
 interface BreadContentsModalProps {
   bread: BreadList;
-  csrfToken: string;
   onClose: () => void;
 }
 
 export const BreadContentsModal: React.FC<BreadContentsModalProps> = ({
   bread,
-  csrfToken,
   onClose,
 }) => {
-  const bakeryApi = useApi(BakeryApi, csrfToken);
+  const bakeryApi = useApi(BakeryApi);
   const [contents, setContents] = useState<BreadContent[]>([]);
   const [availableIngredients, setAvailableIngredients] = useState<
     Ingredient[]

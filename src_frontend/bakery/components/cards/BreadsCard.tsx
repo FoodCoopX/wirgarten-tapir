@@ -19,17 +19,15 @@ import { BreadModal } from "../modals/BreadModal";
 import { LabelsModal } from "../modals/LabelsModal";
 
 interface BreadsCardProps {
-  csrfToken: string;
   groupsVersion: number;
   onBreadsChanged: () => void;
 }
 
 export const BreadsCard: React.FC<BreadsCardProps> = ({
-  csrfToken,
   groupsVersion,
   onBreadsChanged,
 }) => {
-  const bakeryApi = useApi(BakeryApi, csrfToken);
+  const bakeryApi = useApi(BakeryApi);
   const [breads, setBreads] = useState<BreadList[]>([]);
   const [loading, setLoading] = useState(true);
   const [showBreadModal, setShowBreadModal] = useState(false);
@@ -101,12 +99,8 @@ export const BreadsCard: React.FC<BreadsCardProps> = ({
           id: breadId,
           patchedBreadListRequest: {} as any,
         },
-        {
-          body: formData,
-          headers: {
-            "X-CSRFToken": csrfToken,
-          },
-        } as any,
+        // Drops the generated JSON Content-Type so the browser sets the multipart boundary.
+        { body: formData, headers: {} },
       )
       .then(() => {
         loadBreads();
@@ -379,7 +373,6 @@ export const BreadsCard: React.FC<BreadsCardProps> = ({
       {showBreadModal && (
         <BreadModal
           bread={editingBread}
-          csrfToken={csrfToken}
           onSave={handleSaveBread}
           onClose={() => {
             setShowBreadModal(false);
@@ -391,7 +384,6 @@ export const BreadsCard: React.FC<BreadsCardProps> = ({
       {showContentsModal && editingBread && (
         <BreadContentsModal
           bread={editingBread}
-          csrfToken={csrfToken}
           onClose={() => {
             setShowContentsModal(false);
             setEditingBread(null);
@@ -402,7 +394,6 @@ export const BreadsCard: React.FC<BreadsCardProps> = ({
       {showLabelsModal && editingBread && (
         <LabelsModal
           bread={editingBread}
-          csrfToken={csrfToken}
           onClose={() => {
             setShowLabelsModal(false);
             setEditingBread(null);

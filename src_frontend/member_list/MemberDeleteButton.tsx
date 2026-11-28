@@ -7,14 +7,8 @@ import { useApi } from "../hooks/useApi.ts";
 import { getParameterFromUrl } from "../product_config/get_parameter_from_url.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 
-interface MemberDeleteButtonProps {
-  csrfToken: string;
-}
-
-const MemberDeleteButton: React.FC<MemberDeleteButtonProps> = ({
-  csrfToken,
-}) => {
-  const coopApi = useApi(CoopApi, csrfToken);
+const MemberDeleteButton: React.FC = () => {
+  const coopApi = useApi(CoopApi);
   const [showModal, setShowModal] = useState(false);
   const [memberId, setMemberId] = useState();
   const [loading, setLoading] = useState(false);

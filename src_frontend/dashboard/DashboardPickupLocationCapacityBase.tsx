@@ -1,3 +1,6 @@
+import dayjs from "dayjs";
+import "dayjs/locale/de";
+import WeekOfYear from "dayjs/plugin/weekOfYear";
 import React, { useEffect, useState } from "react";
 import { Card, Form, Spinner, Table } from "react-bootstrap";
 import {
@@ -5,18 +8,15 @@ import {
   type PickupLocationCapacityChangePoint,
   PickupLocationsApi,
 } from "../api-client";
+import TapirToastContainer from "../components/TapirToastContainer.tsx";
 import { useApi } from "../hooks/useApi.ts";
+import { ToastData } from "../types/ToastData.ts";
 import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
-import dayjs from "dayjs";
-import "dayjs/locale/de";
-import WeekOfYear from "dayjs/plugin/weekOfYear";
 import { formatDateText } from "../utils/formatDateText.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
-import TapirToastContainer from "../components/TapirToastContainer.tsx";
-import { ToastData } from "../types/ToastData.ts";
 
 const DashboardPickupLocationCapacityBase: React.FC = () => {
-  const api = useApi(PickupLocationsApi, "no_token");
+  const api = useApi(PickupLocationsApi);
   const [pickupLocations, setPickupLocations] = useState<PickupLocation[]>([]);
   const [baseLoading, setBaseLoading] = useState(true);
   const [selectedPickupLocation, setSelectedPickupLocation] =

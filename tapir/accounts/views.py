@@ -13,11 +13,25 @@ from django.urls import reverse_lazy, reverse
 from django.utils import timezone
 from django.views import View
 from django.views.generic import FormView
+from drf_spectacular.utils import extend_schema
+from rest_framework import permissions, status
+from rest_framework.request import Request
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from tapir.accounts.config import EMAIL_CHANGE_LINK_VALIDITY_MINUTES
 from tapir.accounts.forms import AdminMailChangeForm
 from tapir.accounts.models import EmailChangeRequest, TapirUser
+from tapir.accounts.permissions import HasAccountsManagePermission
+from tapir.accounts.serializers import (
+    SendVerificationEmailsResponseSerializer,
+    UnverifiedMembersResponseSerializer,
+)
 from tapir.accounts.services.mail_change_service import MailChangeService
+from tapir.accounts.services.unverified_members_service import (
+    UnverifiedMembersService,
+)
+from tapir.accounts.tasks import send_verification_emails
 from tapir.wirgarten.constants import Permission
 
 
@@ -37,7 +51,9 @@ def change_email(request, **kwargs):
         matching_change_request[0].created_at + link_validity
     ):
         user = TapirUser.objects.get(id=user_id)
-        MailChangeService.apply_mail_change(user=user, new_email=new_email, cache=cache)
+        MailChangeService.apply_mail_change(
+            user=user, new_email=new_email, actor=user, cache=cache
+        )
         return HttpResponseRedirect(
             reverse_lazy("wirgarten:member_detail", kwargs={"pk": user.id})
             + "?email_changed=true"
@@ -58,7 +74,10 @@ class AdminApplyMailChangeView(LoginRequiredMixin, PermissionRequiredMixin, Form
         self.user = get_object_or_404(TapirUser, id=form.cleaned_data["user_id"])
         new_email = form.cleaned_data["new_email"]
         MailChangeService.apply_mail_change(
-            user=self.user, new_email=new_email, cache=self.cache
+            user=self.user,
+            new_email=new_email,
+            actor=self.request.user,
+            cache=self.cache,
         )
 
         return super().form_valid(form)
@@ -94,4 +113,53 @@ class PasswordChangeRedirectView(View):
         realm = config["REALM_NAME"]
         return HttpResponseRedirect(
             f"{public_url}/realms/{realm}/protocol/openid-connect/auth?{urlencode(params)}"
+        )
+
+
+class UnverifiedMembersApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasAccountsManagePermission]
+
+    def __init__(self):
+        super().__init__()
+        self.cache = {}
+
+    @extend_schema(responses={200: UnverifiedMembersResponseSerializer})
+    def get(self, request: Request):
+        members = UnverifiedMembersService.get_active_unverified_members(
+            cache=self.cache
+        )
+        return Response(
+            UnverifiedMembersResponseSerializer(
+                {
+                    "members": members,
+                    "estimated_duration_seconds": UnverifiedMembersService.estimate_sending_duration_seconds(
+                        member_count=len(members)
+                    ),
+                    "sending_in_progress": UnverifiedMembersService.is_sending_in_progress(),
+                }
+            ).data
+        )
+
+    @extend_schema(responses={200: SendVerificationEmailsResponseSerializer, 409: str})
+    def post(self, request: Request):
+        if UnverifiedMembersService.is_sending_in_progress():
+            return Response(
+                "Es läuft bereits ein Versand der Verifizierungs-Emails.",
+                status=status.HTTP_409_CONFLICT,
+            )
+        members = UnverifiedMembersService.get_active_unverified_members(
+            cache=self.cache
+        )
+        send_verification_emails.delay(
+            member_ids=[member.id for member in members], actor_id=request.user.id
+        )
+        return Response(
+            SendVerificationEmailsResponseSerializer(
+                {
+                    "member_count": len(members),
+                    "estimated_duration_seconds": UnverifiedMembersService.estimate_sending_duration_seconds(
+                        member_count=len(members)
+                    ),
+                }
+            ).data
         )

@@ -44,16 +44,16 @@ export interface SolidarityContribution {
   amount: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof SolidarityContribution
    */
-  startDate: Date;
+  startDate: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof SolidarityContribution
    */
-  endDate: Date;
+  endDate: string;
   /**
    *
    * @type {boolean}
@@ -62,16 +62,16 @@ export interface SolidarityContribution {
   trialDisabled?: boolean;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof SolidarityContribution
    */
-  trialEndDateOverride?: Date | null;
+  trialEndDateOverride?: string | null;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof SolidarityContribution
    */
-  cancellationTs?: Date | null;
+  cancellationTs?: string | null;
   /**
    *
    * @type {string}
@@ -113,18 +113,16 @@ export function SolidarityContributionFromJSONTyped(
     createdAt: new Date(json["created_at"]),
     updatedAt: new Date(json["updated_at"]),
     amount: json["amount"],
-    startDate: new Date(json["start_date"]),
-    endDate: new Date(json["end_date"]),
+    startDate: json["start_date"],
+    endDate: json["end_date"],
     trialDisabled:
       json["trial_disabled"] == null ? undefined : json["trial_disabled"],
     trialEndDateOverride:
       json["trial_end_date_override"] == null
         ? undefined
-        : new Date(json["trial_end_date_override"]),
+        : json["trial_end_date_override"],
     cancellationTs:
-      json["cancellation_ts"] == null
-        ? undefined
-        : new Date(json["cancellation_ts"]),
+      json["cancellation_ts"] == null ? undefined : json["cancellation_ts"],
     member: json["member"],
   };
 }
@@ -146,17 +144,11 @@ export function SolidarityContributionToJSONTyped(
   return {
     id: value["id"],
     amount: value["amount"],
-    start_date: value["startDate"].toISOString().substring(0, 10),
-    end_date: value["endDate"].toISOString().substring(0, 10),
+    start_date: value["startDate"],
+    end_date: value["endDate"],
     trial_disabled: value["trialDisabled"],
-    trial_end_date_override:
-      value["trialEndDateOverride"] == null
-        ? undefined
-        : (value["trialEndDateOverride"] as any).toISOString().substring(0, 10),
-    cancellation_ts:
-      value["cancellationTs"] == null
-        ? undefined
-        : (value["cancellationTs"] as any).toISOString().substring(0, 10),
+    trial_end_date_override: value["trialEndDateOverride"],
+    cancellation_ts: value["cancellationTs"],
     member: value["member"],
   };
 }

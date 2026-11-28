@@ -36,6 +36,12 @@ export interface PatchedMemberExtraEmailUpdateRequestRequest {
    * @memberof PatchedMemberExtraEmailUpdateRequestRequest
    */
   lastName?: string;
+  /**
+   *
+   * @type {boolean}
+   * @memberof PatchedMemberExtraEmailUpdateRequestRequest
+   */
+  receivesDirectMails?: boolean;
 }
 
 /**
@@ -65,6 +71,10 @@ export function PatchedMemberExtraEmailUpdateRequestRequestFromJSONTyped(
       json["extra_email_id"] == null ? undefined : json["extra_email_id"],
     firstName: json["first_name"] == null ? undefined : json["first_name"],
     lastName: json["last_name"] == null ? undefined : json["last_name"],
+    receivesDirectMails:
+      json["receives_direct_mails"] == null
+        ? undefined
+        : json["receives_direct_mails"],
   };
 }
 
@@ -86,5 +96,6 @@ export function PatchedMemberExtraEmailUpdateRequestRequestToJSONTyped(
     extra_email_id: value["extraEmailId"],
     first_name: value["firstName"],
     last_name: value["lastName"],
+    receives_direct_mails: value["receivesDirectMails"],
   };
 }

@@ -5,13 +5,7 @@ import AdminDashboardNumberOfAssociationCancellations from "./AdminDashboardNumb
 import AdminDashboardNumberOfAssociationCancellationsRelativeToCancellationDate from "./AdminDashboardNumberOfAssociationCancellationsRelativeToCancellationDate.tsx";
 import AdminDashboardNumberOfAssociationMembers from "./AdminDashboardNumberOfAssociationMembers.tsx";
 
-interface AdminDashboardAssociationDataBaseProps {
-  csrfToken: string;
-}
-
-const AdminDashboardAssociationDataBase: React.FC<
-  AdminDashboardAssociationDataBaseProps
-> = ({ csrfToken }) => {
+const AdminDashboardAssociationDataBase: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
 
   return (
@@ -28,13 +22,9 @@ const AdminDashboardAssociationDataBase: React.FC<
         <Modal show={showModal} onHide={() => setShowModal(false)} size={"xl"}>
           <Modal.Body>
             <div className={"d-flex gap-2 flex-column"}>
-              <AdminDashboardNumberOfAssociationMembers csrfToken={csrfToken} />
-              <AdminDashboardNumberOfAssociationCancellations
-                csrfToken={csrfToken}
-              />
-              <AdminDashboardNumberOfAssociationCancellationsRelativeToCancellationDate
-                csrfToken={csrfToken}
-              />
+              <AdminDashboardNumberOfAssociationMembers />
+              <AdminDashboardNumberOfAssociationCancellations />
+              <AdminDashboardNumberOfAssociationCancellationsRelativeToCancellationDate />
             </div>
           </Modal.Body>
         </Modal>

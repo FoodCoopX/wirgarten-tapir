@@ -1,0 +1,5 @@
+@font-face {
+  font-family: "DinNextLight";
+  font-display: swap;
+  src: url(/static/fonts/din-next-light.woff2) format("woff2");
+}

@@ -218,7 +218,7 @@ class BestellWizardOrderValidator:
         )
 
         if not RequiredProductTypesValidator.does_order_contain_all_required_product_types(
-            order=order
+            order=order, cache=cache
         ):
             raise ValidationError("Manche Pflichtprodukte fehlen in der Bestellung")
 

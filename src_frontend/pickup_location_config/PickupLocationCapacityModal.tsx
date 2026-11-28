@@ -4,15 +4,14 @@ import {
   PickupLocationCapacityByShare,
   PickupLocationsApi,
 } from "../api-client";
-import { useApi } from "../hooks/useApi.ts";
 import TapirButton from "../components/TapirButton.tsx";
-import { handleRequestError } from "../utils/handleRequestError.ts";
+import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
+import { handleRequestError } from "../utils/handleRequestError.ts";
 
 interface ProductModalProps {
   show: boolean;
   onHide: () => void;
-  csrfToken: string;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
   pickupLocationId: string;
 }
@@ -28,11 +27,10 @@ function parseIntOrUndefined(valueAstring: string): number | undefined {
 const PickupLocationCapacityModal: React.FC<ProductModalProps> = ({
   show,
   onHide,
-  csrfToken,
   setToastDatas,
   pickupLocationId,
 }) => {
-  const api = useApi(PickupLocationsApi, csrfToken);
+  const api = useApi(PickupLocationsApi);
 
   const [dataLoading, setDataLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -109,7 +107,7 @@ const PickupLocationCapacityModal: React.FC<ProductModalProps> = ({
     return (
       <>
         <Form.Text>
-          Angaben in Anteilsgröße (M-Anteil-Equivalent). <br />
+          Angaben als Größe im Verhältnis zur Basis-Anteilsgröße. <br />
           0: Kistengröße kann nicht in der Verteilstation geliefert werden.
           <br />
           Feld leer: unbegrenzt.
@@ -118,7 +116,7 @@ const PickupLocationCapacityModal: React.FC<ProductModalProps> = ({
           return (
             <Form.Group key={capacity.productTypeName}>
               <Form.Label>
-                Maximum Anzahl an {capacity.productTypeName}
+                Maximale Anzahl ({capacity.productTypeName})
               </Form.Label>
               <Form.Control
                 type={"number"}

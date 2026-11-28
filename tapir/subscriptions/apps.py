@@ -3,7 +3,7 @@ import typing
 from functools import partial
 
 from django.apps import AppConfig
-from tapir_mail.registries import mail_segment_providers, MailSegment
+from tapir.mail.registries import mail_segment_providers, MailSegment
 
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
@@ -147,7 +147,7 @@ class SubscriptionsConfig(AppConfig):
                 ),
                 label=f"Diese Woche: {product_type.name}",
                 group=SegmentGroups.DELIVERIES,
-                description=f"Mitglieder, die diese Woche {product_type.name} geliefert bekommen. Joker, Spenden und Wochen ohne Lieferung sind berücksichtigt.",
+                description=f"Mitglieder, die diese Woche eine Lieferung für {product_type.name} bekommen. Joker, Spenden und Wochen ohne Lieferung sind berücksichtigt.",
             )
             segment_registry[
                 cls._build_segment_name_delivery_next_week_with_product_type(
@@ -162,7 +162,7 @@ class SubscriptionsConfig(AppConfig):
                 ),
                 label=f"Nächste Woche: {product_type.name}",
                 group=SegmentGroups.DELIVERIES,
-                description=f"Mitglieder, die nächste Woche {product_type.name} geliefert bekommen. Joker, Spenden und Wochen ohne Lieferung sind berücksichtigt.",
+                description=f"Mitglieder, die nächste Woche eine Lieferung für {product_type.name} bekommen. Joker, Spenden und Wochen ohne Lieferung sind berücksichtigt.",
             )
 
         return segment_registry

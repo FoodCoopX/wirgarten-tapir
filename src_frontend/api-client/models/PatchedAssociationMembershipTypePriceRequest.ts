@@ -26,10 +26,10 @@ export interface PatchedAssociationMembershipTypePriceRequest {
   id?: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof PatchedAssociationMembershipTypePriceRequest
    */
-  validFrom?: Date;
+  validFrom?: string;
   /**
    *
    * @type {string}
@@ -68,8 +68,7 @@ export function PatchedAssociationMembershipTypePriceRequestFromJSONTyped(
   }
   return {
     id: json["id"] == null ? undefined : json["id"],
-    validFrom:
-      json["valid_from"] == null ? undefined : new Date(json["valid_from"]),
+    validFrom: json["valid_from"] == null ? undefined : json["valid_from"],
     price: json["price"] == null ? undefined : json["price"],
     type: json["type"] == null ? undefined : json["type"],
   };
@@ -91,10 +90,7 @@ export function PatchedAssociationMembershipTypePriceRequestToJSONTyped(
 
   return {
     id: value["id"],
-    valid_from:
-      value["validFrom"] == null
-        ? undefined
-        : value["validFrom"].toISOString().substring(0, 10),
+    valid_from: value["validFrom"],
     price: value["price"],
     type: value["type"],
   };

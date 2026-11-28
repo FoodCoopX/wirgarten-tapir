@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Alert, Col, Form, Modal, Row, Spinner } from "react-bootstrap";
 import {
   Subscription,
+  SubscriptionDetails,
   SubscriptionsApi,
-  SubscriptionTrialFields,
 } from "../api-client";
 import TapirButton from "../components/TapirButton.tsx";
 import TapirHelpButton from "../components/TapirHelpButton.tsx";
@@ -17,26 +17,15 @@ interface SubscriptionTrialPeriodModalProps {
   onHide: () => void;
   show: boolean;
   subscriptionId: string;
-  csrfToken: string;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
-}
-
-function formatDateForInput(date: Date | null | undefined): string {
-  if (!date) {
-    return "";
-  }
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
 }
 
 const SubscriptionTrialPeriodModal: React.FC<
   SubscriptionTrialPeriodModalProps
-> = ({ onHide, show, subscriptionId, csrfToken, setToastDatas }) => {
-  const subscriptionsApi = useApi(SubscriptionsApi, csrfToken);
+> = ({ onHide, show, subscriptionId, setToastDatas }) => {
+  const subscriptionsApi = useApi(SubscriptionsApi);
   const [loading, setLoading] = useState(true);
-  const [subscription, setSubscription] = useState<SubscriptionTrialFields>();
+  const [subscription, setSubscription] = useState<SubscriptionDetails>();
   const [trialDisabled, setTrialDisabled] = useState(false);
   const [useCustomEndDate, setUseCustomEndDate] = useState(false);
   const [customEndDate, setCustomEndDate] = useState("");
@@ -56,9 +45,7 @@ const SubscriptionTrialPeriodModal: React.FC<
         setSubscription(subscriptionData);
         setTrialDisabled(subscriptionData.trialDisabled ?? false);
         setUseCustomEndDate(subscriptionData.trialEndDateOverride != null);
-        setCustomEndDate(
-          formatDateForInput(subscriptionData.trialEndDateOverride),
-        );
+        setCustomEndDate(subscriptionData.trialEndDateOverride ?? "");
       })
       .catch((requestError) =>
         handleRequestError(
@@ -70,15 +57,15 @@ const SubscriptionTrialPeriodModal: React.FC<
       .finally(() => setLoading(false));
   }, [show, subscriptionId]);
 
-  function getDisplayedTrialEndDate(): Date | null {
+  function getDisplayedTrialEndDate(): string | null {
     if (trialDisabled || !subscription) {
       return null;
     }
     if (useCustomEndDate && customEndDate) {
-      return new Date(customEndDate);
+      return customEndDate;
     }
     if (subscription.defaultTrialEndDate) {
-      return new Date(subscription.defaultTrialEndDate);
+      return subscription.defaultTrialEndDate;
     }
     return null;
   }
@@ -88,13 +75,13 @@ const SubscriptionTrialPeriodModal: React.FC<
       return;
     }
 
-    let trialEndDateOverride: Date | null = null;
+    let trialEndDateOverride: string | null = null;
     if (!trialDisabled && useCustomEndDate) {
       if (!customEndDate) {
         setError("Bitte ein Probezeit-Enddatum angeben.");
         return;
       }
-      trialEndDateOverride = new Date(customEndDate);
+      trialEndDateOverride = customEndDate;
     }
 
     setLoading(true);
@@ -221,9 +208,7 @@ const SubscriptionTrialPeriodModal: React.FC<
                   setError(undefined);
                   if (checked) {
                     if (!customEndDate && subscription.trialEndDateOverride) {
-                      setCustomEndDate(
-                        formatDateForInput(subscription.trialEndDateOverride),
-                      );
+                      setCustomEndDate(subscription.trialEndDateOverride);
                     }
                   } else {
                     setCustomEndDate("");

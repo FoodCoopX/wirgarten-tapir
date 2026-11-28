@@ -38,10 +38,10 @@ export interface SolidarityContributionCancellationData {
   isNegative: boolean;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof SolidarityContributionCancellationData
    */
-  cancellationDate: Date;
+  cancellationDate: string;
 }
 
 /**
@@ -76,7 +76,7 @@ export function SolidarityContributionCancellationDataFromJSONTyped(
     _exists: json["exists"],
     isInTrial: json["is_in_trial"],
     isNegative: json["is_negative"],
-    cancellationDate: new Date(json["cancellation_date"]),
+    cancellationDate: json["cancellation_date"],
   };
 }
 
@@ -98,6 +98,6 @@ export function SolidarityContributionCancellationDataToJSONTyped(
     exists: value["_exists"],
     is_in_trial: value["isInTrial"],
     is_negative: value["isNegative"],
-    cancellation_date: value["cancellationDate"].toISOString().substring(0, 10),
+    cancellation_date: value["cancellationDate"],
   };
 }

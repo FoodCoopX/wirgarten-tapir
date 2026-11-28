@@ -47,16 +47,16 @@ export interface PublicSubscription {
   quantity: number;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof PublicSubscription
    */
-  startDate: Date;
+  startDate: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof PublicSubscription
    */
-  endDate: Date;
+  endDate: string;
   /**
    *
    * @type {number}
@@ -106,8 +106,8 @@ export function PublicSubscriptionFromJSONTyped(
     productId: json["product_id"],
     productType: PublicProductTypeFromJSON(json["product_type"]),
     quantity: json["quantity"],
-    startDate: new Date(json["start_date"]),
-    endDate: new Date(json["end_date"]),
+    startDate: json["start_date"],
+    endDate: json["end_date"],
     monthlyPrice: json["monthly_price"],
     id: json["id"] == null ? undefined : json["id"],
   };
@@ -130,8 +130,8 @@ export function PublicSubscriptionToJSONTyped(
 
   return {
     quantity: value["quantity"],
-    start_date: value["startDate"].toISOString().substring(0, 10),
-    end_date: value["endDate"].toISOString().substring(0, 10),
+    start_date: value["startDate"],
+    end_date: value["endDate"],
     id: value["id"],
   };
 }

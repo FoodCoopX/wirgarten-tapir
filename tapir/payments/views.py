@@ -23,13 +23,19 @@ from tapir.associations.models import AssociationMembership
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.models import Joker
 from tapir.generic_exports.permissions import HasCoopManagePermission
+from tapir.log.util import freeze_for_log
 from tapir.payments import config as payments_config
 from tapir.payments.config import IntendedUseTokens
+from tapir.payments.permissions import IsPaymentExportExclusionEnabled
 from tapir.payments.models import (
     MemberPaymentRhythm,
     MemberCredit,
     MemberCreditCreatedLogEntry,
     MemberCreditSettledLogEntry,
+    PaymentExportExclusionPeriod,
+    PaymentExportExclusionPeriodCreatedLogEntry,
+    PaymentExportExclusionPeriodUpdatedLogEntry,
+    PaymentExportExclusionPeriodDeletedLogEntry,
 )
 from tapir.payments.serializers import (
     MemberPaymentRhythmDataSerializer,
@@ -43,6 +49,16 @@ from tapir.payments.serializers import (
     PaymentTransactionDetailsSerializer,
     JokerCreditIntendedUsePreviewResponseSerializer,
     MemberNeedingBankingDataSerializer,
+    PaymentExportExclusionPeriodSerializer,
+    PaymentExportExclusionPeriodOverviewSerializer,
+    PaymentExportExclusionPeriodCreateRequestSerializer,
+    PaymentExportExclusionPeriodUpdateRequestSerializer,
+)
+from tapir.payments.services.payment_export_exclusion_period_service import (
+    PaymentExportExclusionPeriodService,
+)
+from tapir.payments.services.payment_export_exclusion_period_validator import (
+    PaymentExportExclusionPeriodValidator,
 )
 from tapir.payments.services.intended_use_pattern_expander import (
     IntendedUsePatternExpander,
@@ -166,7 +182,7 @@ class GetFutureMemberPaymentsApiView(APIView):
                 )
                 | Q(status=Payment.PaymentStatus.DUE)
             )
-            .select_related("coop_share_transaction")
+            .select_related("mandate_ref", "coop_share_transaction")
             .prefetch_related("coop_share_transaction__payments")
         )
         current_month = get_today(cache=self.cache)
@@ -286,6 +302,9 @@ class GetFutureMemberPaymentsApiView(APIView):
                     ),
                     "delivery_dates": delivery_dates,
                     "number_of_instalments": number_of_instalments,
+                    "excluded_from_export": PaymentExportExclusionPeriodService.is_payment_excluded(
+                        payment=payment, cache=cache
+                    ),
                 }
             )
         return extended_payments
@@ -1203,6 +1222,13 @@ class PaymentTransactionsListView(PermissionRequiredMixin, TemplateView):
     permission_required = Permission.Coop.MANAGE
     template_name = "payments/payment_transactions_list_view.html"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["payment_export_exclusion_enabled"] = get_parameter_value(
+            key=ParameterKeys.PAYMENT_EXPORT_EXCLUSION_ENABLED, cache={}
+        )
+        return context
+
 
 class PaymentTransactionViewSet(ReadOnlyModelViewSet):
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
@@ -1249,12 +1275,17 @@ class PaymentTransactionDetailsView(APIView):
                     )
                 )
             else:
+                exported_payments = [
+                    payment for payment in payments if not payment.excluded_from_export
+                ]
                 combined = (
                     PaymentExportBuilder.combine_contract_payments_by_mandate_ref(
-                        payments=payments
+                        payments=exported_payments
                     )
                 )
                 if mandate_ref not in combined:
+                    if len(exported_payments) < len(payments):
+                        continue
                     # this happens if the sum of payments is negative
                     del payments_by_mandate_ref[mandate_ref]
                     del members_by_mandate_ref[mandate_ref]
@@ -1366,3 +1397,175 @@ class MembersNeedingBankingDataForRebuildApiView(APIView):
             .order_by("member_no", "last_name")
         )
         return Response(MemberNeedingBankingDataSerializer(members, many=True).data)
+
+
+class PaymentExportExclusionPeriodApiView(APIView):
+    permission_classes = [
+        permissions.IsAuthenticated,
+        HasCoopManagePermission,
+        IsPaymentExportExclusionEnabled,
+    ]
+
+    def __init__(self):
+        super().__init__()
+        self.cache = {}
+
+    @extend_schema(
+        responses={200: PaymentExportExclusionPeriodSerializer(many=True)},
+        parameters=[OpenApiParameter(name="member_id", type=str)],
+    )
+    def get(self, request):
+        member = get_object_or_404(Member, id=request.query_params.get("member_id"))
+        periods = PaymentExportExclusionPeriod.objects.filter(member=member).order_by(
+            "start_date"
+        )
+        return Response(PaymentExportExclusionPeriodSerializer(periods, many=True).data)
+
+    @extend_schema(
+        responses={200: OrderConfirmationResponseSerializer},
+        request=PaymentExportExclusionPeriodCreateRequestSerializer,
+    )
+    def post(self, request):
+        serializer = PaymentExportExclusionPeriodCreateRequestSerializer(
+            data=request.data
+        )
+        serializer.is_valid(raise_exception=True)
+        member = get_object_or_404(Member, id=serializer.validated_data["member_id"])
+        start_date = serializer.validated_data["start_date"]
+        end_date = serializer.validated_data["end_date"]
+
+        try:
+            PaymentExportExclusionPeriodValidator.validate(
+                member_id=member.id,
+                start_date=start_date,
+                end_date=end_date,
+                period_id_being_edited=None,
+                cache=self.cache,
+            )
+        except ValidationError as error:
+            return Response(
+                OrderConfirmationResponseSerializer(
+                    {"order_confirmed": False, "error": error.message}
+                ).data
+            )
+
+        with transaction.atomic():
+            period = PaymentExportExclusionPeriod.objects.create(
+                member=member,
+                start_date=start_date,
+                end_date=end_date,
+                comment=serializer.validated_data["comment"],
+            )
+            PaymentExportExclusionPeriodCreatedLogEntry().populate(
+                model=period, user=member, actor=request.user
+            ).save()
+
+        return Response(
+            OrderConfirmationResponseSerializer(
+                {"order_confirmed": True, "error": None}
+            ).data
+        )
+
+    @extend_schema(
+        responses={200: OrderConfirmationResponseSerializer},
+        request=PaymentExportExclusionPeriodUpdateRequestSerializer,
+    )
+    def put(self, request):
+        serializer = PaymentExportExclusionPeriodUpdateRequestSerializer(
+            data=request.data
+        )
+        serializer.is_valid(raise_exception=True)
+        period = get_object_or_404(
+            PaymentExportExclusionPeriod, id=serializer.validated_data["period_id"]
+        )
+
+        start_date = serializer.validated_data["start_date"]
+        end_date = serializer.validated_data["end_date"]
+
+        try:
+            PaymentExportExclusionPeriodValidator.validate(
+                member_id=period.member_id,
+                start_date=start_date,
+                end_date=end_date,
+                period_id_being_edited=period.id,
+                cache=self.cache,
+            )
+        except ValidationError as error:
+            return Response(
+                OrderConfirmationResponseSerializer(
+                    {"order_confirmed": False, "error": error.message}
+                ).data
+            )
+
+        with transaction.atomic():
+            period_before = freeze_for_log(period)
+            period.start_date = start_date
+            period.end_date = end_date
+            period.comment = serializer.validated_data["comment"]
+            period.save()
+            PaymentExportExclusionPeriodUpdatedLogEntry().populate(
+                old_frozen=period_before,
+                new_model=period,
+                user=period.member,
+                actor=request.user,
+            ).save()
+
+        return Response(
+            OrderConfirmationResponseSerializer(
+                {"order_confirmed": True, "error": None}
+            ).data
+        )
+
+    @extend_schema(
+        responses={200: str},
+        parameters=[OpenApiParameter(name="period_id", type=str)],
+    )
+    def delete(self, request):
+        period = get_object_or_404(
+            PaymentExportExclusionPeriod, id=request.query_params.get("period_id")
+        )
+
+        with transaction.atomic():
+            PaymentExportExclusionPeriodDeletedLogEntry().populate(
+                model=period, user=period.member, actor=request.user
+            ).save()
+            period.delete()
+
+        return Response("OK")
+
+
+class PaymentExportExclusionPeriodOverviewApiView(APIView):
+    permission_classes = [
+        permissions.IsAuthenticated,
+        HasCoopManagePermission,
+        IsPaymentExportExclusionEnabled,
+    ]
+    pagination_class = LimitOffsetPagination
+
+    def __init__(self):
+        super().__init__()
+        self.cache = {}
+
+    @extend_schema(
+        responses={200: PaymentExportExclusionPeriodOverviewSerializer(many=True)},
+        parameters=[
+            OpenApiParameter(name="limit", type=int, required=True),
+            OpenApiParameter(name="offset", type=int, required=True),
+            OpenApiParameter(name="include_expired", type=bool, required=False),
+        ],
+    )
+    def get(self, request):
+        today = get_today(cache=self.cache)
+        periods = PaymentExportExclusionPeriod.objects.select_related(
+            "member"
+        ).order_by("start_date", "member__last_name", "member__first_name", "id")
+        if request.query_params.get("include_expired") != "true":
+            periods = periods.filter(Q(end_date__isnull=True) | Q(end_date__gte=today))
+
+        pagination = self.pagination_class()
+        page = pagination.paginate_queryset(periods, request)
+        return pagination.get_paginated_response(
+            PaymentExportExclusionPeriodOverviewSerializer(
+                page, many=True, context={"today": today}
+            ).data
+        )

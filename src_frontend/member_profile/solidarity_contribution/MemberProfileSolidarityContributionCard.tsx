@@ -8,9 +8,9 @@ import {
 import TapirButton from "../../components/TapirButton.tsx";
 import TapirHelpButton from "../../components/TapirHelpButton.tsx";
 import { useApi } from "../../hooks/useApi.ts";
+import { toApiDate } from "../../utils/apiDate.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
-import { getCsrfToken } from "../../utils/getCsrfToken.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 
 interface MemberProfileSolidarityContributionCardProps {
@@ -28,7 +28,7 @@ const MemberProfileSolidarityContributionCard: React.FC<
   adminVersion,
   membersCanChangeContribution,
 }) => {
-  const api = useApi(SolidarityContributionApi, getCsrfToken());
+  const api = useApi(SolidarityContributionApi);
   const [loading, setLoading] = useState(true);
   const [solidarityContributions, setSolidarityContributions] = useState<
     SolidarityContribution[]
@@ -36,9 +36,10 @@ const MemberProfileSolidarityContributionCard: React.FC<
   const [modalOpen, setModalOpen] = useState(false);
   const [newContributionAsString, setNewContributionAsString] = useState("0");
   const [showValidation, setShowValidation] = useState(false);
-  const [changeValidFrom, setChangeValidFrom] = useState(new Date());
-  const [alternativeChangeValidFrom, setAlternativeChangeValidFrom] =
-    useState<Date | null>(null);
+  const [changeValidFrom, setChangeValidFrom] = useState(toApiDate(new Date()));
+  const [alternativeChangeValidFrom, setAlternativeChangeValidFrom] = useState<
+    string | null
+  >(null);
   const [userCanSetLowerValue, setUserCanSetLowerValue] = useState(false);
   const [userCanUpdateContribution, setUserCanUpdateContribution] =
     useState(false);
@@ -132,7 +133,7 @@ const MemberProfileSolidarityContributionCard: React.FC<
 
   function getCurrentContribution() {
     for (const contribution of solidarityContributions) {
-      const today = new Date();
+      const today = toApiDate(new Date());
       if (contribution.startDate <= today && today <= contribution.endDate) {
         return contribution;
       }
@@ -149,7 +150,7 @@ const MemberProfileSolidarityContributionCard: React.FC<
   }
 
   function buildFutureContributions() {
-    const today = new Date();
+    const today = toApiDate(new Date());
     const futureContributions = solidarityContributions.filter(
       (contribution) => contribution.startDate > today,
     );

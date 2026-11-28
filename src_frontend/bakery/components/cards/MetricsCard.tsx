@@ -9,14 +9,12 @@ interface MetricsCardProps {
   year: number;
   week: number;
   deliveryDay: number;
-  csrfToken: string;
 }
 
 export const MetricsCard: React.FC<MetricsCardProps> = ({
   year,
   week,
   deliveryDay,
-  csrfToken,
 }) => {
   const [data, setData] = useState<PreferenceSatisfactionResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -24,7 +22,7 @@ export const MetricsCard: React.FC<MetricsCardProps> = ({
   const [expandedLocations, setExpandedLocations] = useState<Set<string>>(
     new Set(),
   );
-  const bakeryApi = useApi(BakeryApi, csrfToken);
+  const bakeryApi = useApi(BakeryApi);
 
   const selectionRef = useRef(`${year}/${week}/${deliveryDay}`);
 

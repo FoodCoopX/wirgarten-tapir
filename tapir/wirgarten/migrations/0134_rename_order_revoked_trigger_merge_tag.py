@@ -1,5 +1,5 @@
 from django.db import migrations
-from tapir_mail.models import ReleaseStatus
+from tapir.mail.models import ReleaseStatus
 
 OLD_TRIGGER_NAME = "Bestellung widerruft"
 NEW_TRIGGER_NAME = "Bestellung widerrufen"

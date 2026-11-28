@@ -1,4 +1,3 @@
-import dayjs from "dayjs";
 import "dayjs/locale/de";
 import React, { useEffect, useState } from "react";
 import { Card, Spinner } from "react-bootstrap";
@@ -16,16 +15,14 @@ import { groupTransactionsByDueDate } from "./groupTransactionsByDueDate.ts";
 
 interface FuturePaymentsCardProps {
   memberId: string;
-  csrfToken: string;
   deliveryChargeEnabled: boolean;
 }
 
 const FuturePaymentsCard: React.FC<FuturePaymentsCardProps> = ({
   memberId,
-  csrfToken,
   deliveryChargeEnabled,
 }) => {
-  const api = useApi(PaymentsApi, csrfToken);
+  const api = useApi(PaymentsApi);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
   const [transactionsByDueDate, setTransactionsByDueDate] =
     useState<TransactionsByDueDate>({});
@@ -44,8 +41,8 @@ const FuturePaymentsCard: React.FC<FuturePaymentsCardProps> = ({
       .then((response) => {
         setTrialPeriodEnabled(response.trialPeriodEnabled);
 
-        const extendedPayments = response.payments.toSorted(
-          (a, b) => a.payment.dueDate.getTime() - b.payment.dueDate.getTime(),
+        const extendedPayments = response.payments.toSorted((a, b) =>
+          a.payment.dueDate.localeCompare(b.payment.dueDate),
         );
         setExtendedPayments(extendedPayments);
         setTransactionsByDueDate(
@@ -63,11 +60,11 @@ const FuturePaymentsCard: React.FC<FuturePaymentsCardProps> = ({
   }, []);
 
   function getEarliestDueDateAsString() {
-    const dueDates = extendedPayments.map((payment) =>
-      payment.payment.dueDate.getTime(),
+    return (
+      extendedPayments
+        .map((payment) => payment.payment.dueDate)
+        .toSorted()[0] ?? ""
     );
-    const earliestDate = new Date(Math.min(...dueDates));
-    return dayjs(earliestDate).format("YYYY-MM-DD");
   }
 
   function getSumOfNextPayments() {
@@ -124,7 +121,7 @@ const FuturePaymentsCard: React.FC<FuturePaymentsCardProps> = ({
               </div>
               {extendedPayments.length > 0 && (
                 <small>
-                  am {formatDateText(new Date(getEarliestDueDateAsString()))}
+                  am {formatDateText(getEarliestDueDateAsString())}
                   <br />
                   {getMandateRefForNextPayments()}
                 </small>
@@ -138,7 +135,6 @@ const FuturePaymentsCard: React.FC<FuturePaymentsCardProps> = ({
         show={showModal}
         onHide={() => setShowModal(false)}
         loading={loading}
-        csrfToken={csrfToken}
         memberId={memberId}
         setToastDatas={setToastDatas}
         trialPeriodEnabled={trialPeriodEnabled}

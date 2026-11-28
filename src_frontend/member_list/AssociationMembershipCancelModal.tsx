@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import "dayjs/locale/de";
 import React, { useEffect, useState } from "react";
 import { Col, Form, Modal, Row, Spinner } from "react-bootstrap";
@@ -19,7 +20,6 @@ import { handleRequestError } from "../utils/handleRequestError.ts";
 
 interface AssociationMembershipCancelModalProps {
   memberId: string;
-  csrfToken: string;
   show: boolean;
   onHide: () => void;
   reloadData: () => void;
@@ -28,9 +28,9 @@ interface AssociationMembershipCancelModalProps {
 
 const AssociationMembershipCancelModal: React.FC<
   AssociationMembershipCancelModalProps
-> = ({ memberId, csrfToken, show, onHide, reloadData, setToastDatas }) => {
-  const associationApi = useApi(AssociationsApi, csrfToken);
-  const coopApi = useApi(CoopApi, csrfToken);
+> = ({ memberId, show, onHide, reloadData, setToastDatas }) => {
+  const associationApi = useApi(AssociationsApi);
+  const coopApi = useApi(CoopApi);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [endDateAsString, setEndDateAsString] = useState("");
@@ -70,7 +70,7 @@ const AssociationMembershipCancelModal: React.FC<
     if (!selectedMembership) return;
 
     if (selectedMembership.endDate) {
-      setEndDateAsString(selectedMembership.endDate.toISOString().slice(0, 10));
+      setEndDateAsString(selectedMembership.endDate);
     } else {
       setEndDateAsString("");
     }
@@ -82,8 +82,7 @@ const AssociationMembershipCancelModal: React.FC<
       return;
     }
 
-    const endDate = new Date(endDateAsString);
-    if (Number.isNaN(endDate.valueOf())) {
+    if (!dayjs(endDateAsString).isValid()) {
       alert("Ungültiges Datum");
       return;
     }
@@ -92,7 +91,7 @@ const AssociationMembershipCancelModal: React.FC<
     associationApi
       .associationsApiSetMembershipEndDateCreate({
         setAssociationMembershipEndDateRequestRequest: {
-          endDate: endDate,
+          endDate: endDateAsString,
           membershipId: selectedMembership.id!,
         },
       })

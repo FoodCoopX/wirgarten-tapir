@@ -8,12 +8,11 @@ import SubscriptionCancellationModal from "./SubscriptionCancellationModal.tsx";
 
 interface SubscriptionCancellationCardProps {
   memberId: string;
-  csrfToken: string;
 }
 
 const SubscriptionCancellationCard: React.FC<
   SubscriptionCancellationCardProps
-> = ({ memberId, csrfToken }) => {
+> = ({ memberId }) => {
   const [showModal, setShowModal] = useState(false);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
 
@@ -38,7 +37,6 @@ const SubscriptionCancellationCard: React.FC<
         </Card.Footer>
       </Card>
       <SubscriptionCancellationModal
-        csrfToken={csrfToken}
         show={showModal}
         memberId={memberId}
         onHide={() => setShowModal(false)}

@@ -19,14 +19,8 @@ import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 
-interface AdminDashboardNumberOfAssociationCancellationsProps {
-  csrfToken: string;
-}
-
-const AdminDashboardNumberOfAssociationCancellations: React.FC<
-  AdminDashboardNumberOfAssociationCancellationsProps
-> = ({ csrfToken }) => {
-  const api = useApi(AssociationsApi, csrfToken);
+const AdminDashboardNumberOfAssociationCancellations: React.FC = () => {
+  const api = useApi(AssociationsApi);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
   const [loading, setLoading] = useState(true);
   const [startDateAsString, setStartDateAsString] = useState("");
@@ -39,26 +33,24 @@ const AdminDashboardNumberOfAssociationCancellations: React.FC<
     let startDate = dayjs();
     startDate = startDate.date(1);
     startDate = startDate.subtract(8, "month");
-    setStartDateAsString(startDate.toISOString().slice(0, 10));
+    setStartDateAsString(startDate.format("YYYY-MM-DD"));
 
     let endDate = dayjs();
     endDate = endDate.date(31);
     endDate = endDate.add(8, "month");
-    setEndDateAsString(endDate.toISOString().slice(0, 10));
+    setEndDateAsString(endDate.format("YYYY-MM-DD"));
   }, []);
 
   useEffect(() => {
     setLoading(true);
     setInputError("");
 
-    const startDate = new Date(startDateAsString);
-    if (Number.isNaN(startDate.valueOf())) {
+    if (!dayjs(startDateAsString).isValid()) {
       setInputError("Ungültiges Start-Datum: " + startDateAsString);
       return;
     }
 
-    const endDate = new Date(endDateAsString);
-    if (Number.isNaN(endDate.valueOf())) {
+    if (!dayjs(endDateAsString).isValid()) {
       setInputError("Ungültiges End-Datum: " + endDateAsString);
       return;
     }
@@ -66,8 +58,8 @@ const AdminDashboardNumberOfAssociationCancellations: React.FC<
     api
       .associationsApiNumberOfAssociationMembershipCancellationsPerMonthRetrieve(
         {
-          startDate: startDate,
-          endDate: endDate,
+          startDate: startDateAsString,
+          endDate: endDateAsString,
         },
       )
       .then((data) => {

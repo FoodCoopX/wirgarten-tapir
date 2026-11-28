@@ -15,18 +15,16 @@ import { handleRequestError } from "../utils/handleRequestError.ts";
 
 interface DeliveryListModalProps {
   memberId: string;
-  csrfToken: string;
   show: boolean;
   onHide: () => void;
 }
 
 const DeliveryListModal: React.FC<DeliveryListModalProps> = ({
   memberId,
-  csrfToken,
   show,
   onHide,
 }) => {
-  const api = useApi(DeliveriesApi, csrfToken);
+  const api = useApi(DeliveriesApi);
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
   const [deliveriesLoading, setDeliveriesLoading] = useState(false);
   const [selectedPickupLocation, setSelectedPickupLocation] =

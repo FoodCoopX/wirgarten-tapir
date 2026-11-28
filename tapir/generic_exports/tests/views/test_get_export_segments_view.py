@@ -71,6 +71,29 @@ class TestGetExportSegmentsView(TapirIntegrationTest):
 
         self.assertEqual(expected, result)
 
+    @patch.object(ExportSegmentManager, "registered_export_segments", {})
+    def test_getExportSegmentsView_segmentHasGetDescription_returnsComputedDescription(
+        self,
+    ):
+        ExportSegmentManager.register_segment(
+            ExportSegment(
+                id="test_segment",
+                display_name="Test name",
+                get_queryset=lambda _: Member.objects.all(),
+                get_available_columns=lambda: [],
+                get_description=lambda _: "Computed description",
+            )
+        )
+        user = MemberFactory.create(is_superuser=True)
+        self.client.force_login(user)
+
+        response = self.client.get(reverse("generic_exports:export_segments"))
+
+        self.assertStatusCode(response, 200)
+        self.assertEqual(
+            "Computed description", json.loads(response.content)[0]["description"]
+        )
+
     def test_getExportSegmentsView_loggedInAsNormalUser_returns403(self):
         user = MemberFactory.create()
         self.client.force_login(user)

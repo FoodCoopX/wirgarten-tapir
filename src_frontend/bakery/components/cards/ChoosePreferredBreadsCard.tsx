@@ -15,13 +15,12 @@ import { CompactBreadCard } from "./CompactBreadCard";
 
 interface ChoosePreferredBreadsCardProps {
   memberId: string;
-  csrfToken: string;
 }
 
 export const ChoosePreferredBreadsCard: React.FC<
   ChoosePreferredBreadsCardProps
-> = ({ memberId, csrfToken }) => {
-  const bakeryApi = useApi(BakeryApi, csrfToken);
+> = ({ memberId }) => {
+  const bakeryApi = useApi(BakeryApi);
 
   const [allBreads, setAllBreads] = useState<BreadList[]>([]);
   const [preferredBreadIds, setPreferredBreadIds] = useState<Set<string>>(
@@ -38,7 +37,6 @@ export const ChoosePreferredBreadsCard: React.FC<
 
   useEffect(() => {
     loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [memberId]);
 
   const loadData = () => {
@@ -179,7 +177,6 @@ export const ChoosePreferredBreadsCard: React.FC<
         isOpen={isModalOpen}
         onClose={handleModalClose}
         memberId={memberId}
-        csrfToken={csrfToken}
       />
     </>
   );

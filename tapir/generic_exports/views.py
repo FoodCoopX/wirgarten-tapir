@@ -12,6 +12,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from weasyprint.urls import FatalURLFetchingError
 
+from tapir.accounts.services.email_normaliser import EmailNormaliser
 from tapir.generic_exports.exceptions import TemplateAlreadyExistsException
 from tapir.generic_exports.models import CsvExport, PdfExport
 from tapir.generic_exports.permissions import HasCoopManagePermission
@@ -35,6 +36,19 @@ from tapir.subscriptions.serializers import OrderConfirmationResponseSerializer
 from tapir.wirgarten.constants import Permission
 
 
+def normalised_email_recipients(
+    serializer: CsvExportModelSerializer | PdfExportModelSerializer,
+) -> dict:
+    if "email_recipients" not in serializer.validated_data:
+        return {}
+    return {
+        "email_recipients": [
+            EmailNormaliser.normalise(address)
+            for address in serializer.validated_data["email_recipients"]
+        ]
+    }
+
+
 class CsvExportEditorView(PermissionRequiredMixin, TemplateView):
     permission_required = Permission.Coop.MANAGE
     template_name = "generic_exports/csv_export_editor.html"
@@ -48,13 +62,18 @@ class GetExportSegmentsView(APIView):
         if not request.user.has_perm(Permission.Coop.MANAGE):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
+        cache = {}
         segment_datas = []
         for segment in ExportSegmentManager.registered_export_segments.values():
             segment_datas.append(
                 {
                     "id": segment.id,
                     "display_name": segment.display_name,
-                    "description": segment.description,
+                    "description": (
+                        segment.get_description(cache)
+                        if segment.get_description is not None
+                        else segment.description
+                    ),
                     "columns": [
                         {
                             "id": column.id,
@@ -77,6 +96,12 @@ class CsvExportViewSet(viewsets.ModelViewSet):
     queryset = CsvExport.objects.all().order_by("name")
     serializer_class = CsvExportModelSerializer
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    def perform_create(self, serializer: CsvExportModelSerializer):
+        serializer.save(**normalised_email_recipients(serializer))
+
+    def perform_update(self, serializer: CsvExportModelSerializer):
+        serializer.save(**normalised_email_recipients(serializer))
 
 
 class BuildCsvExportView(APIView):
@@ -122,6 +147,12 @@ class PdfExportViewSet(viewsets.ModelViewSet):
     queryset = PdfExport.objects.all().order_by("name")
     serializer_class = PdfExportModelSerializer
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    def perform_create(self, serializer: PdfExportModelSerializer):
+        serializer.save(**normalised_email_recipients(serializer))
+
+    def perform_update(self, serializer: PdfExportModelSerializer):
+        serializer.save(**normalised_email_recipients(serializer))
 
 
 class BuildPdfExportView(APIView):

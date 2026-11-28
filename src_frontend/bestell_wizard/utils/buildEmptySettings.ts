@@ -7,6 +7,7 @@ export function buildEmptySettings(): BestellWizardSettings {
     productTypes: [],
     associationMembershipTypes: [],
     priceOfAShare: 0,
+    coopMinShares: 0,
     coopShareInstalmentsEnabled: false,
     coopShareInstalmentAmount: 0,
     allowInvestingMembership: false,

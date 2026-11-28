@@ -12,12 +12,8 @@ import { handleRequestError } from "../utils/handleRequestError.ts";
 import CreateMemberCreditModal from "./CreateMemberCreditModal.tsx";
 import CreditListTable from "./CreditListTable.tsx";
 
-interface CreditListProps {
-  csrfToken: string;
-}
-
-const CreditList: React.FC<CreditListProps> = ({ csrfToken }) => {
-  const api = useApi(PaymentsApi, csrfToken);
+const CreditList: React.FC = () => {
+  const api = useApi(PaymentsApi);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
   const [loading, setLoading] = useState(true);
   const [extendedMemberCredits, setExtendedMemberCredits] = useState<
@@ -196,7 +192,6 @@ const CreditList: React.FC<CreditListProps> = ({ csrfToken }) => {
       />
       {showCreateModal && (
         <CreateMemberCreditModal
-          csrfToken={csrfToken}
           setToastDatas={setToastDatas}
           onHide={() => setShowCreateModal(false)}
           show={showCreateModal}

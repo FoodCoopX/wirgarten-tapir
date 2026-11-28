@@ -1,12 +1,13 @@
 import { createRoot } from "react-dom/client";
-import { getCsrfToken } from "../utils/getCsrfToken.ts";
 import AssociationMembershipCard from "./association_membership/AssociationMembershipCard.tsx";
 import MemberBankingDataBase from "./banking_data/MemberBankingDataBase.tsx";
 import CoopSharesCard from "./coop_shares/CoopSharesCard.tsx";
+import MemberDataDisclosureButton from "./data_disclosure/MemberDataDisclosureButton.tsx";
 import DeliveryListCard from "./deliveries_and_jokers/DeliveryListCard.tsx";
 import FuturePaymentsCard from "./future_payments/FuturePaymentsCard.tsx";
 import MemberMailCategoryCard from "./mail_category/MemberMailCategoryCard.tsx";
 import MemberMailingListsCard from "./mailing_lists/MemberMailingListsCard.tsx";
+import PaymentExportExclusionPeriodBase from "./payment_export_exclusion/PaymentExportExclusionPeriodBase.tsx";
 import MemberProfilePaymentRhythmBase from "./payment_rhythm/MemberProfilePaymentRhythmBase.tsx";
 import PersonalDataDropdown from "./personal_data/PersonalDataDropdown.tsx";
 import MemberProfileSolidarityContributionCard from "./solidarity_contribution/MemberProfileSolidarityContributionCard.tsx";
@@ -36,7 +37,6 @@ if (domNodeDeliveryListCard) {
       }
       contactEmail={domNodeDeliveryListCard.dataset.contactEmail!}
       pickupLocationLabel={domNodeDeliveryListCard.dataset.pickupLocationLabel!}
-      csrfToken={getCsrfToken()}
     />,
   );
 } else {
@@ -52,7 +52,6 @@ if (contractTilesElement) {
     <>
       <SubscriptionCards
         memberId={contractTilesElement.dataset.memberId!}
-        csrfToken={getCsrfToken()}
         showContractEdit={
           contractTilesElement.dataset.showContractEdit === "True"
         }
@@ -62,7 +61,6 @@ if (contractTilesElement) {
       {showCancellationCard && (
         <SubscriptionCancellationCard
           memberId={contractTilesElement.dataset.memberId!}
-          csrfToken={getCsrfToken()}
         />
       )}
     </>,
@@ -116,7 +114,6 @@ if (domNodeFuturePaymentsCard) {
   root.render(
     <FuturePaymentsCard
       memberId={domNodeFuturePaymentsCard.dataset.memberId!}
-      csrfToken={getCsrfToken()}
       deliveryChargeEnabled={deliveryChargeEnabled}
     />,
   );
@@ -131,11 +128,23 @@ if (domNodePaymentRhythmButton) {
   root.render(
     <MemberProfilePaymentRhythmBase
       memberId={domNodePaymentRhythmButton.dataset.memberId!}
-      csrfToken={getCsrfToken()}
     />,
   );
 } else {
   console.error("Failed to render payment rhythm button from React");
+}
+
+const domNodePaymentExportExclusionButton = document.getElementById(
+  "payment_export_exclusion_period_button",
+);
+if (domNodePaymentExportExclusionButton) {
+  const root = createRoot(domNodePaymentExportExclusionButton);
+
+  root.render(
+    <PaymentExportExclusionPeriodBase
+      memberId={domNodePaymentExportExclusionButton.dataset.memberId!}
+    />,
+  );
 }
 
 const domNodeCoopSharesCard = document.getElementById("coop_shares_card");
@@ -145,7 +154,6 @@ if (domNodeCoopSharesCard) {
   root.render(
     <CoopSharesCard
       memberId={domNodeCoopSharesCard.dataset.memberId!}
-      csrfToken={getCsrfToken()}
       adminVersion={domNodeCoopSharesCard.dataset.userIsAdmin === "True"}
     />,
   );
@@ -160,7 +168,19 @@ if (domNodeMemberMailCategory) {
   root.render(
     <MemberMailCategoryCard
       memberId={domNodeMemberMailCategory.dataset.memberId!}
-      csrfToken={getCsrfToken()}
+    />,
+  );
+}
+
+const domNodeMemberDataDisclosure = document.getElementById(
+  "member_data_disclosure",
+);
+if (domNodeMemberDataDisclosure) {
+  const root = createRoot(domNodeMemberDataDisclosure);
+
+  root.render(
+    <MemberDataDisclosureButton
+      memberId={domNodeMemberDataDisclosure.dataset.memberId!}
     />,
   );
 }
@@ -174,7 +194,6 @@ if (domNodePersonalDataDropdown) {
   root.render(
     <PersonalDataDropdown
       memberId={domNodePersonalDataDropdown.dataset.memberId!}
-      csrfToken={getCsrfToken()}
       extraEmailAddressesEnabled={
         domNodePersonalDataDropdown.dataset.extraEmailAddressesEnabled == "True"
       }
@@ -190,10 +209,7 @@ if (domNodeBankData) {
   const root = createRoot(domNodeBankData);
 
   root.render(
-    <MemberBankingDataBase
-      memberId={domNodeBankData.dataset.memberId!}
-      csrfToken={getCsrfToken()}
-    />,
+    <MemberBankingDataBase memberId={domNodeBankData.dataset.memberId!} />,
   );
 }
 
@@ -206,7 +222,6 @@ if (domNodeAssociationMembershipCard) {
   root.render(
     <AssociationMembershipCard
       memberId={domNodeAssociationMembershipCard.dataset.memberId!}
-      csrfToken={getCsrfToken()}
     />,
   );
 }
@@ -216,9 +231,6 @@ if (domNodeMailingLists) {
   const root = createRoot(domNodeMailingLists);
 
   root.render(
-    <MemberMailingListsCard
-      memberId={domNodeMailingLists.dataset.memberId!}
-      csrfToken={getCsrfToken()}
-    />,
+    <MemberMailingListsCard memberId={domNodeMailingLists.dataset.memberId!} />,
   );
 }

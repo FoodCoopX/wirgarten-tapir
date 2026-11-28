@@ -1,5 +1,5 @@
 from django.db.models import QuerySet, F, Value, DateField
-from tapir_mail.models import StaticSegmentRecipient
+from tapir.mail.models import StaticSegmentRecipient
 
 from tapir.associations.services.association_entry_date_annotater import (
     AssociationEntryDateAnnotater,

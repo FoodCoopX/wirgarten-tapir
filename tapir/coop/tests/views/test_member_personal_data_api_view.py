@@ -3,8 +3,8 @@ from unittest.mock import patch, Mock
 from django.test import override_settings
 from django.urls import reverse
 from rest_framework import status
-from tapir_mail.models import StaticSegment, StaticSegmentRecipient
-from tapir_mail.triggers.transactional_trigger import (
+from tapir.mail.models import StaticSegment, StaticSegmentRecipient
+from tapir.mail.triggers.transactional_trigger import (
     TransactionalTrigger,
     TransactionalTriggerData,
 )

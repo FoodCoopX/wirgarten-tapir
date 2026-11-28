@@ -27,7 +27,10 @@ class PdfExportBuilder:
         cache = {}
         contexts = cls.build_contexts(pdf_export, reference_datetime, cache=cache)
 
-        base_context = {"today": get_today(cache=cache)}
+        base_context = {
+            "today": get_today(cache=cache),
+            "reference_date": reference_datetime.date(),
+        }
         if pdf_export.generate_one_file_for_every_segment_entry:
             return [
                 cls.create_single_file(

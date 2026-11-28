@@ -3,8 +3,8 @@ import React from "react";
 import { Accordion, AccordionBody } from "react-bootstrap";
 import {
   AssociationMembershipType,
+  BestellWizardGrowingPeriodChoice,
   DeliveryAddressRequest,
-  PublicGrowingPeriod,
   PublicPickupLocation,
   PublicProductType,
   PublicWaitingListEntryDetails,
@@ -17,6 +17,7 @@ import { doesProductBelongsToProductType } from "../../bestell_wizard/utils/does
 import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
 import { isProductTypeOrdered } from "../../bestell_wizard/utils/isProductTypeOrdered.ts";
 import TapirButton from "../../components/TapirButton.tsx";
+import { toApiDate } from "../../utils/apiDate.ts";
 import formatAddress from "../../utils/formatAddress.ts";
 import { formatCoopShareLabel } from "../../utils/formatCoopShareLabel.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
@@ -47,9 +48,9 @@ interface Step10OrderSummaryProps {
   payCoopSharesInInstalments?: boolean;
   studentStatusEnabled: boolean;
   goToNextStep: () => void;
-  contractStartDate: Date;
+  contractStartDate: Date | undefined;
   firstDeliveryDatesByPickupLocationAndProductType: {
-    [key: string]: { [key: string]: Date };
+    [key: string]: { [key: string]: string };
   };
   goToProductTypeStep: (pt: PublicProductType) => void;
   selectedPickupLocations: PublicPickupLocation[];
@@ -64,7 +65,7 @@ interface Step10OrderSummaryProps {
   waitingListEntryDetails: PublicWaitingListEntryDetails | undefined;
   singleProductType?: PublicProductType;
   associationMembershipType?: AssociationMembershipType;
-  selectedGrowingPeriod: PublicGrowingPeriod | undefined;
+  selectedGrowingPeriod: BestellWizardGrowingPeriodChoice | undefined;
   hideTrialPeriod: boolean;
   stepActive: boolean;
   setCurrentStep: (step: Step) => void;
@@ -300,12 +301,16 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
   }
 
   function getEndOfTrialPeriod(productTypeId: string) {
-    const firstDelivery = dayjs(getDateOfFirstDelivery(productTypeId));
+    const dateOfFirstDelivery = getDateOfFirstDelivery(productTypeId);
+    if (!dateOfFirstDelivery) {
+      return undefined;
+    }
+    const firstDelivery = dayjs(dateOfFirstDelivery);
     return firstDelivery
       .subtract(firstDelivery.get("day") - 1, "days")
       .add(settings.trialPeriodLengthInWeeks, "week")
       .subtract(1, "day")
-      .toDate();
+      .format("YYYY-MM-DD");
   }
 
   function getProductTypeList() {
@@ -496,7 +501,8 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                         <>
                           <li>
                             Vertragsstart:{" "}
-                            {formatDateNumeric(contractStartDate)}
+                            {contractStartDate &&
+                              formatDateNumeric(toApiDate(contractStartDate))}
                           </li>
                           {!productType.noDelivery && (
                             <>
@@ -667,7 +673,11 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                     <li>
                       Betrag: {formatCurrency(solidarityContribution)} / Monat
                     </li>
-                    <li>Gültig ab: {formatDateNumeric(contractStartDate)}</li>
+                    <li>
+                      Gültig ab:{" "}
+                      {contractStartDate &&
+                        formatDateNumeric(toApiDate(contractStartDate))}
+                    </li>
                   </ul>
                   {(waitingListEntryDetails === undefined ||
                     waitingListEntryDetails.shouldShowSolidarityStep) && (

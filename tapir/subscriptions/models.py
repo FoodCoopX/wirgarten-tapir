@@ -78,3 +78,31 @@ class SubscriptionPriceChangedLogEntry(UpdateModelLogEntry):
         )
         context_data["price_after"] = price_after
         return context_data
+
+
+class SubscriptionTrialChangedLogEntry(LogEntry):
+    template_name = "subscriptions/log/subscription_trial_changed_log_entry.html"
+
+    subscription = models.ForeignKey(Subscription, on_delete=models.SET_NULL, null=True)
+    subscription_formatted = models.CharField(max_length=200)
+    trial_disabled_before = models.BooleanField()
+    trial_disabled_after = models.BooleanField()
+    trial_end_date_override_before = models.DateField(null=True, blank=True)
+    trial_end_date_override_after = models.DateField(null=True, blank=True)
+
+    def populate_trial_change(
+        self,
+        subscription: Subscription,
+        trial_disabled_before: bool,
+        trial_end_date_override_before: "datetime.date | None",
+        actor: TapirUser,
+        user: Member,
+    ):
+        self.subscription = subscription
+        self.subscription_formatted = subscription.long_str()
+        self.trial_disabled_before = trial_disabled_before
+        self.trial_disabled_after = subscription.trial_disabled
+        self.trial_end_date_override_before = trial_end_date_override_before
+        self.trial_end_date_override_after = subscription.trial_end_date_override
+        super().populate(actor=actor, user=user)
+        return self

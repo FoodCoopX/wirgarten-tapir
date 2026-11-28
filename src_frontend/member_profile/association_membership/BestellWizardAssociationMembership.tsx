@@ -22,10 +22,10 @@ import { Step } from "../../bestell_wizard_mobile/types/Step.ts";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
 import { addToast } from "../../utils/addToast.ts";
+import { fromApiDate } from "../../utils/apiDate.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 
 interface BestellWizardAssociationMembershipProps {
-  csrfToken: string;
   memberId: string;
   firstName: string;
   lastName: string;
@@ -34,9 +34,9 @@ interface BestellWizardAssociationMembershipProps {
 
 const BestellWizardAssociationMembership: React.FC<
   BestellWizardAssociationMembershipProps
-> = ({ csrfToken, memberId, firstName, lastName, needsBankingData }) => {
-  const bestellWizardApi = useApi(BestellWizardApi, csrfToken);
-  const associationApi = useApi(AssociationsApi, csrfToken);
+> = ({ memberId, firstName, lastName, needsBankingData }) => {
+  const bestellWizardApi = useApi(BestellWizardApi);
+  const associationApi = useApi(AssociationsApi);
 
   const [settings, setSettings] =
     useState<BestellWizardSettings>(buildEmptySettings());
@@ -165,7 +165,9 @@ const BestellWizardAssociationMembership: React.FC<
             }
             contractStartDate={
               settings.growingPeriodChoices.length > 0
-                ? settings.growingPeriodChoices[0].contractStartDate
+                ? fromApiDate(
+                    settings.growingPeriodChoices[0].contractStartDate,
+                  )
                 : new Date()
             }
             stepActive={currentStep === step}
@@ -242,7 +244,7 @@ const BestellWizardAssociationMembership: React.FC<
       goToProductTypeStep={() => {}}
       contractStartDate={
         settings.growingPeriodChoices.length > 0
-          ? settings.growingPeriodChoices[0].contractStartDate
+          ? fromApiDate(settings.growingPeriodChoices[0].contractStartDate)
           : new Date()
       }
       selectedGrowingPeriod={undefined}

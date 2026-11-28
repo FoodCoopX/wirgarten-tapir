@@ -10,6 +10,9 @@ from django.db import transaction
 from tapir.configuration.parameter import get_parameter_value
 from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES
 from tapir.payments.services.pain_008_xml_file_creator import Pain008XmlFileCreator
+from tapir.payments.services.payment_export_exclusion_period_service import (
+    PaymentExportExclusionPeriodService,
+)
 from tapir.payments.services.payment_export_intended_use_builder import (
     PaymentExportIntendedUseBuilder,
 )
@@ -47,8 +50,18 @@ class PaymentExportBuilder:
             cls.split_payments_by_contract_or_coop_shares(payments)
         )
 
+        for payment in contract_payments:
+            payment.excluded_from_export = (
+                PaymentExportExclusionPeriodService.is_payment_excluded(
+                    payment=payment, cache=cache
+                )
+            )
+        exported_contract_payments = [
+            payment for payment in contract_payments if not payment.excluded_from_export
+        ]
+
         combined_contract_payments = cls.combine_contract_payments_by_mandate_ref(
-            contract_payments
+            exported_contract_payments
         ).values()
 
         errors_failed_payments_contracts = cls.export_payments_if_necessary(
@@ -146,7 +159,9 @@ class PaymentExportBuilder:
         for payment in payments:
             payment.transaction = payment_transaction
             payment.status = Payment.PaymentStatus.PAID
-        Payment.objects.bulk_update(payments, ["transaction", "status"])
+        Payment.objects.bulk_update(
+            payments, ["transaction", "status", "excluded_from_export"]
+        )
 
     @classmethod
     def combine_contract_payments_by_mandate_ref(cls, payments: list[Payment]):

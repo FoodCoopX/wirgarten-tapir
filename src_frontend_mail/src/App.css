@@ -1,0 +1,17 @@
+.App {
+  text-align: center;
+  margin: 0em;
+}
+
+.preview-modal {
+  min-width: 50em;
+}
+
+.trash-icon {
+  color: gray;
+  cursor: pointer;
+}
+
+.trash-icon:hover {
+  color: red;
+}

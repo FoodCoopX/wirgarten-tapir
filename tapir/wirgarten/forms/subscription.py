@@ -62,7 +62,6 @@ from tapir.wirgarten.service.payment import (
 )
 from tapir.wirgarten.service.products import (
     get_product_price,
-    get_next_growing_period,
     get_active_and_future_subscriptions,
 )
 from tapir.wirgarten.utils import format_date, get_now, get_today
@@ -113,7 +112,9 @@ class BaseProductForm(forms.Form):
         self.outro_templates = initial.pop("outro_templates", None)
 
         if initial and not self.choose_growing_period:
-            next_growing_period = get_next_growing_period(cache=self.cache)
+            next_growing_period = TapirCache.get_first_growing_period_starting_after(
+                reference_date=get_today(cache=self.cache), cache=self.cache
+            )
             self.choose_growing_period = (
                 next_growing_period
                 and (next_growing_period.start_date - get_today(cache=self.cache)).days
@@ -441,7 +442,7 @@ class BaseProductForm(forms.Form):
             raise ValidationError(
                 {
                     "consent_harvest_shares": _(
-                        f"Du musst den Vertragsgrundsätzen zustimmen, um {self.product_type.name} zu zeichnen."
+                        f"Du musst den Vertragsgrundsätzen zustimmen, um Verträge für {self.product_type.name} abzuschließen."
                     )
                 }
             )
@@ -875,7 +876,7 @@ class AdditionalProductForm(forms.Form):
         ):
             raise ValidationError(
                 {
-                    self.consent_field_key: f"Du musst den Vertragsgrundsätzen zustimmen, um {self.product_type.name} zu zeichnen."
+                    self.consent_field_key: f"Du musst den Vertragsgrundsätzen zustimmen, um Verträge für {self.product_type.name} abzuschließen."
                 }
             )
 

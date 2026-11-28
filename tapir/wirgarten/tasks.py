@@ -3,7 +3,7 @@ import logging
 from celery import shared_task
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
-from tapir_mail.triggers.transactional_trigger import (
+from tapir.mail.triggers.transactional_trigger import (
     TransactionalTrigger,
     TransactionalTriggerData,
 )

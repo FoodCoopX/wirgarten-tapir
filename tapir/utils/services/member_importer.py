@@ -60,7 +60,9 @@ class MemberImporter:
         if DataImportUtils.is_row_empty(row):
             return None
 
-        member_no = int(DataImportUtils.normalize_cell(row.get("Nr")))
+        member_no = DataImportUtils.parse_member_number(value=row.get("Nr"), cache={})
+        if member_no is None:
+            raise TapirDataImportException("Missing member number in column 'Nr'")
         member = Member.objects.filter(member_no=member_no).first()
 
         if member:
@@ -288,12 +290,18 @@ class MemberImporter:
     def build_mail(cls, row: dict[str, str], member_no: int):
         target_mail = DataImportUtils.normalize_cell(row.get("Mailadresse"))
         if target_mail == "":
-            return f"team+missing_mail_katringer_{member_no}@foodcoopx.de"
+            return cls.build_missing_mail(member_no=member_no, cache={})
 
         with_suffix = cls.build_mail_with_suffix(
             original_mail=target_mail, member_no=member_no
         )
         return EmailNormaliser.normalise(with_suffix)
+
+    @staticmethod
+    def build_missing_mail(member_no: int, cache: dict):
+        contact_mail = get_parameter_value(key=ParameterKeys.SITE_EMAIL, cache=cache)
+        prefix, domain = contact_mail.split("@", maxsplit=1)
+        return EmailNormaliser.normalise(f"{prefix}+missing_mail_{member_no}@{domain}")
 
     @classmethod
     def build_mail_with_suffix(cls, original_mail: str, member_no: int):

@@ -154,7 +154,7 @@ class TestExpandPatternContracts(TapirIntegrationTest):
     ):
         result = self._expand_token(IntendedUseTokens.CONTRACT_LIST)
 
-        self.assertEqual("1×p1,pt1, 3×p2,pt2", result)
+        self.assertEqual("1×p1, 3×p2", result)
 
     def test_expandPatternContracts_paymentRhythm_tokenCorrectlyReplaced(
         self,

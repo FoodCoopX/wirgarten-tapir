@@ -34,7 +34,9 @@ class TestBestellWizardBaseDataPickupLocations(TapirIntegrationTest):
 
         names = [
             pickup_location["name"]
-            for pickup_location in response.json()["pickup_locations"]
+            for pickup_location in response.json()["growing_period_choices"][0][
+                "pickup_locations"
+            ]
         ]
         self.assertIn(active.name, names)
         self.assertNotIn(future.name, names)

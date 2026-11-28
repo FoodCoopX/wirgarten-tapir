@@ -96,8 +96,8 @@ class PickupLocationGenerator:
 
     @classmethod
     def generate_pickup_locations_for_wirgarten(cls):
-        ernteanteile = ProductType.objects.get(name="Ernteanteile")
-        huehneranteile = ProductType.objects.get(name="Hühneranteile")
+        ernteanteile = ProductType.objects.get(name="Ernteanteil")
+        huehneranteile = ProductType.objects.get(name="Hühneranteil")
 
         wirgarten = PickupLocationFactory.create(
             name="WirGarten Lüneburg",
@@ -677,7 +677,7 @@ class PickupLocationGenerator:
 
     @classmethod
     def generate_pickup_locations_for_l2g(cls):
-        ernteanteile = ProductType.objects.get(name="Ernteanteile")
+        ernteanteile = ProductType.objects.get(name="Ernteanteil")
 
         hof = PickupLocationFactory.create(
             name="Biohof Dickendorf",
@@ -699,7 +699,7 @@ class PickupLocationGenerator:
 
     @classmethod
     def generate_pickup_locations_for_mm(cls):
-        ernteanteile = ProductType.objects.get(name="Ernteanteile")
+        ernteanteile = ProductType.objects.get(name="Ernteanteil")
 
         wirgarten = PickupLocationFactory.create(
             name="WirGarten Lüneburg",

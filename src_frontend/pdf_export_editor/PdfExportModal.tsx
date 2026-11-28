@@ -9,20 +9,19 @@ import {
 } from "../api-client";
 import EmailInput from "../components/EmailInput";
 import TapirButton from "../components/TapirButton.tsx";
-import { useApi } from "../hooks/useApi.ts";
-import { handleRequestError } from "../utils/handleRequestError.ts";
-import { ToastData } from "../types/ToastData.ts";
 import {
   CYCLE_HIDES_DAY_FIELD,
   CYCLE_OPTIONS,
 } from "../csv_export_editor/CYCLE_OPTIONS.ts";
+import { useApi } from "../hooks/useApi.ts";
+import { ToastData } from "../types/ToastData.ts";
+import { handleRequestError } from "../utils/handleRequestError.ts";
 
 interface PdfExportModalProps {
   show: boolean;
   onHide: () => void;
   segments: ExportSegment[];
   loadExports: () => void;
-  csrfToken: string;
   exportToEdit?: PdfExportModel;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
@@ -32,11 +31,10 @@ const PdfExportModal: React.FC<PdfExportModalProps> = ({
   onHide,
   segments,
   loadExports,
-  csrfToken,
   exportToEdit,
   setToastDatas,
 }) => {
-  const api = useApi(GenericExportsApi, csrfToken);
+  const api = useApi(GenericExportsApi);
 
   const [exportName, setExportName] = useState("");
   const [exportSegment, setExportSegment] = useState<ExportSegment>();

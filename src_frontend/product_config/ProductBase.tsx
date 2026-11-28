@@ -5,17 +5,15 @@ import { ToastData } from "../types/ToastData.ts";
 import { getProductIdFromUrl } from "./get_parameter_from_url.ts";
 import ProductModal from "./ProductModal.tsx";
 
-interface ProductBaseProps {
-  csrfToken: string;
-}
-
-const ProductBase: React.FC<ProductBaseProps> = ({ csrfToken }) => {
+const ProductBase: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
 
   function onClick() {
     if (!getProductIdFromUrl()) {
-      alert("Du musst erst das Produkt, das du editieren möchtest, auswählen.");
+      alert(
+        "Du musst erst die Anteilsgröße, die du editieren möchtest, auswählen.",
+      );
       return;
     }
     setShowModal(true);
@@ -28,7 +26,6 @@ const ProductBase: React.FC<ProductBaseProps> = ({ csrfToken }) => {
         onClick={onClick}
       />
       <ProductModal
-        csrfToken={csrfToken}
         show={showModal}
         onHide={() => setShowModal(false)}
         setToastDatas={setToastDatas}

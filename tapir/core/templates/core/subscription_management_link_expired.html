@@ -1,0 +1,16 @@
+{% extends "core/public_base.html" %}
+{% block head %}
+    <title>
+        {% block title %}Link abgelaufen{% endblock %}
+    </title>
+{% endblock %}
+{% block content %}
+    <div class="card mt-4">
+        <div class="card-header">Link abgelaufen</div>
+        <div class="card-body">
+            <p>Dieser Link zur Verwaltung der Mail-Abos ist abgelaufen oder ungültig.</p>
+            <a class="btn btn-primary"
+               href="{% url 'core:subscription_management_link_request' %}">Neuen Link anfordern</a>
+        </div>
+    </div>
+{% endblock content %}

@@ -4,7 +4,14 @@ from rest_framework import serializers
 
 from tapir.associations.serializers import AssociationMembershipSerializer
 from tapir.deliveries.serializers import SubscriptionSerializer
-from tapir.payments.models import MemberPaymentRhythm, MemberCredit
+from tapir.payments.models import (
+    MemberPaymentRhythm,
+    MemberCredit,
+    PaymentExportExclusionPeriod,
+)
+from tapir.payments.services.payment_export_exclusion_period_service import (
+    PaymentExportExclusionPeriodService,
+)
 from tapir.pickup_locations.serializers import PublicPickupLocationSerializer
 from tapir.solidarity_contribution.serializers import SolidarityContributionSerializer
 from tapir.subscriptions.serializers import (
@@ -31,6 +38,7 @@ class ExtendedPaymentSerializer(serializers.Serializer):
     delivery_dates = serializers.ListField(child=serializers.DateField())
     association_memberships = AssociationMembershipSerializer(many=True)
     number_of_instalments = serializers.IntegerField(allow_null=True)
+    excluded_from_export = serializers.BooleanField()
 
 
 class MemberCreditSerializer(serializers.ModelSerializer):
@@ -120,17 +128,34 @@ class PaymentTransactionSerializer(serializers.ModelSerializer):
 
     payments_count = serializers.SerializerMethodField()
     payments_sum = serializers.SerializerMethodField()
+    excluded_payments_count = serializers.SerializerMethodField()
+    excluded_payments_sum = serializers.SerializerMethodField()
     csv_download_url = serializers.SerializerMethodField()
     xml_download_url = serializers.SerializerMethodField()
 
     @staticmethod
     def get_payments_count(transaction: PaymentTransaction) -> int:
-        return transaction.payment_set.count()
+        return transaction.payment_set.filter(excluded_from_export=False).count()
 
     @staticmethod
     def get_payments_sum(transaction: PaymentTransaction) -> float:
         return (
-            transaction.payment_set.aggregate(amount_sum=Sum(F("amount")))["amount_sum"]
+            transaction.payment_set.filter(excluded_from_export=False).aggregate(
+                amount_sum=Sum(F("amount"))
+            )["amount_sum"]
+            or 0
+        )
+
+    @staticmethod
+    def get_excluded_payments_count(transaction: PaymentTransaction) -> int:
+        return transaction.payment_set.filter(excluded_from_export=True).count()
+
+    @staticmethod
+    def get_excluded_payments_sum(transaction: PaymentTransaction) -> float:
+        return (
+            transaction.payment_set.filter(excluded_from_export=True).aggregate(
+                amount_sum=Sum(F("amount"))
+            )["amount_sum"]
             or 0
         )
 
@@ -179,3 +204,54 @@ class MemberNeedingBankingDataSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_member_url(member: Member) -> str:
         return member.get_absolute_url()
+
+
+class PaymentExportExclusionPeriodSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PaymentExportExclusionPeriod
+        fields = ["id", "start_date", "end_date", "comment"]
+
+
+class PaymentExportExclusionPeriodCreateRequestSerializer(serializers.Serializer):
+    member_id = serializers.CharField()
+    start_date = serializers.DateField()
+    end_date = serializers.DateField(allow_null=True)
+    comment = serializers.CharField(allow_blank=True)
+
+
+class PaymentExportExclusionPeriodUpdateRequestSerializer(serializers.Serializer):
+    period_id = serializers.CharField()
+    start_date = serializers.DateField()
+    end_date = serializers.DateField(allow_null=True)
+    comment = serializers.CharField(allow_blank=True)
+
+
+class PaymentExportExclusionPeriodOverviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PaymentExportExclusionPeriod
+        fields = [
+            "id",
+            "start_date",
+            "end_date",
+            "comment",
+            "member_no",
+            "first_name",
+            "last_name",
+            "member_url",
+            "is_active",
+        ]
+
+    member_no = serializers.IntegerField(source="member.member_no", allow_null=True)
+    first_name = serializers.CharField(source="member.first_name")
+    last_name = serializers.CharField(source="member.last_name")
+    member_url = serializers.SerializerMethodField()
+    is_active = serializers.SerializerMethodField()
+
+    @staticmethod
+    def get_member_url(period: PaymentExportExclusionPeriod) -> str:
+        return period.member.get_absolute_url()
+
+    def get_is_active(self, period: PaymentExportExclusionPeriod) -> bool:
+        return PaymentExportExclusionPeriodService.is_date_within_period(
+            period=period, reference_date=self.context["today"]
+        )

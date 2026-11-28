@@ -9,11 +9,7 @@ import {
 import ProductTypeCreateModal from "./ProductTypeCreateModal.tsx";
 import ProductTypeEditModal from "./ProductTypeEditModal.tsx";
 
-interface ProductTypeBaseProps {
-  csrfToken: string;
-}
-
-const ProductTypeBase: React.FC<ProductTypeBaseProps> = ({ csrfToken }) => {
+const ProductTypeBase: React.FC = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
@@ -21,7 +17,7 @@ const ProductTypeBase: React.FC<ProductTypeBaseProps> = ({ csrfToken }) => {
   function onEditClick() {
     if (!getProductTypeIdFromUrl()) {
       alert(
-        "Du musst erst den Produkt-Typ, den du editieren möchtest, auswählen.",
+        "Du musst erst den Produktanteil, den du editieren möchtest, auswählen.",
       );
       return;
     }
@@ -51,13 +47,11 @@ const ProductTypeBase: React.FC<ProductTypeBaseProps> = ({ csrfToken }) => {
         />
       </span>
       <ProductTypeCreateModal
-        csrfToken={csrfToken}
         show={showCreateModal}
         onHide={() => setShowCreateModal(false)}
         setToastDatas={setToastDatas}
       />
       <ProductTypeEditModal
-        csrfToken={csrfToken}
         show={showEditModal}
         onHide={() => setShowEditModal(false)}
         setToastDatas={setToastDatas}

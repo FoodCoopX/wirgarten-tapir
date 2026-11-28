@@ -106,10 +106,10 @@ export interface WaitingListEntryRequest {
   numberOfCoopShares: number;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof WaitingListEntryRequest
    */
-  desiredStartDate?: Date | null;
+  desiredStartDate?: string | null;
   /**
    *
    * @type {string}
@@ -230,7 +230,7 @@ export function WaitingListEntryRequestFromJSONTyped(
     desiredStartDate:
       json["desired_start_date"] == null
         ? undefined
-        : new Date(json["desired_start_date"]),
+        : json["desired_start_date"],
     comment: json["comment"] == null ? undefined : json["comment"],
     category: json["category"] == null ? undefined : json["category"],
     confirmationLinkKey:
@@ -289,10 +289,7 @@ export function WaitingListEntryRequestToJSONTyped(
     pseudonym: value["pseudonym"],
     privacy_consent: value["privacyConsent"].toISOString(),
     number_of_coop_shares: value["numberOfCoopShares"],
-    desired_start_date:
-      value["desiredStartDate"] == null
-        ? undefined
-        : (value["desiredStartDate"] as any).toISOString().substring(0, 10),
+    desired_start_date: value["desiredStartDate"],
     comment: value["comment"],
     category: value["category"],
     confirmation_link_key: value["confirmationLinkKey"],

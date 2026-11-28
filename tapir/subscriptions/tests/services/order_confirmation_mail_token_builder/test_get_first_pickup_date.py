@@ -1,7 +1,7 @@
 import datetime
 from unittest.mock import Mock, patch
 
-from tapir_mail.models import StaticSegmentRecipient
+from tapir.mail.models import StaticSegmentRecipient
 
 from tapir.subscriptions.services.order_confirmation_mail_token_builder import (
     OrderConfirmationMailTokenBuilder,

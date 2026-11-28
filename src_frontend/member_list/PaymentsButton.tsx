@@ -11,15 +11,13 @@ import { TransactionsByDueDate } from "../types/TransactionsByDueDate.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 
 interface PaymentsButtonProps {
-  csrfToken: string;
   deliveryChargeEnabled: boolean;
 }
 
 const PaymentsButton: React.FC<PaymentsButtonProps> = ({
-  csrfToken,
   deliveryChargeEnabled,
 }) => {
-  const paymentsApi = useApi(PaymentsApi, csrfToken);
+  const paymentsApi = useApi(PaymentsApi);
   const [showModal, setShowModal] = useState(false);
   const [memberId, setMemberId] = useState();
   const [loading, setLoading] = useState(false);
@@ -44,8 +42,8 @@ const PaymentsButton: React.FC<PaymentsButtonProps> = ({
       .then((response) => {
         setTrialPeriodEnabled(response.trialPeriodEnabled);
 
-        const extendedPayments = response.payments.toSorted(
-          (a, b) => a.payment.dueDate.getTime() - b.payment.dueDate.getTime(),
+        const extendedPayments = response.payments.toSorted((a, b) =>
+          a.payment.dueDate.localeCompare(b.payment.dueDate),
         );
         setTransactionsByDueDate(
           groupTransactionsByDueDate(extendedPayments, response.credits),
@@ -84,7 +82,6 @@ const PaymentsButton: React.FC<PaymentsButtonProps> = ({
           show={showModal}
           onHide={() => setShowModal(false)}
           loading={loading}
-          csrfToken={csrfToken}
           memberId={memberId}
           setToastDatas={setToastDatas}
           trialPeriodEnabled={trialPeriodEnabled}

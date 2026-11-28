@@ -266,7 +266,7 @@ class SubscriptionChangeValidator:
 
         if nb_checked > 1:
             raise ValidationError(
-                _(f"{product_type.name} dürfen nur einmal ausgewählt werden.")
+                _(f"Für {product_type.name} ist nur eine Auswahl möglich.")
             )
 
     @classmethod

@@ -12,6 +12,7 @@ import { DeliveryMode } from "../types/DeliveryMode.ts";
 import { Step } from "../types/Step.ts";
 import { getPickupLocationsForDeliveryMode } from "./getPickupLocationsForDeliveryMode.ts";
 import { isOrderWaitingListOnly } from "./isOrderWaitingListOnly.ts";
+import { isSolidarityContributionSkipped } from "./isSolidarityContributionSkipped.ts";
 import { shouldConfirmMemberNow } from "./shouldConfirmMemberNow.ts";
 import { shouldIncludeStepGrowingPeriodChoice } from "./shouldIncludeStepGrowingPeriodChoice.ts";
 import { willBecomeMemberNow } from "./willBecomeMemberNow.ts";
@@ -57,6 +58,8 @@ export function buildSteps(
       settings,
       waitingListEntryDetails,
       shoppingCart,
+      productTypesInWaitingList,
+      becomeMemberNow,
     )
   ) {
     newSteps.push("7_solidarity_contribution");
@@ -122,6 +125,8 @@ export function buildSteps(
       settings,
       waitingListEntryDetails,
       shoppingCart,
+      productTypesInWaitingList,
+      becomeMemberNow,
     )
   ) {
     newSteps.push("7_solidarity_contribution");
@@ -214,21 +219,41 @@ function shouldIncludeStepsPickupLocations(
 }
 
 function shouldShowStepSolidarityContribution(
+  settings: BestellWizardSettings,
   waitingListEntryDetails: PublicWaitingListEntryDetails | undefined,
+  shoppingCart: ShoppingCart,
+  productTypesInWaitingList: Set<PublicProductType>,
+  becomeMemberNow: boolean | null,
 ) {
-  if (waitingListEntryDetails === undefined) {
-    return true;
+  if (waitingListEntryDetails !== undefined) {
+    return waitingListEntryDetails.shouldShowSolidarityStep;
   }
 
-  return waitingListEntryDetails.shouldShowSolidarityStep;
+  return !isSolidarityContributionSkipped(
+    settings,
+    shoppingCart,
+    productTypesInWaitingList,
+    becomeMemberNow,
+    waitingListEntryDetails,
+  );
 }
 
 function shouldShowStepSolidarityContributionBeforeStepPickupLocation(
   settings: BestellWizardSettings,
   waitingListEntryDetails: PublicWaitingListEntryDetails | undefined,
   shoppingCart: ShoppingCart,
+  productTypesInWaitingList: Set<PublicProductType>,
+  becomeMemberNow: boolean | null,
 ) {
-  if (!shouldShowStepSolidarityContribution(waitingListEntryDetails)) {
+  if (
+    !shouldShowStepSolidarityContribution(
+      settings,
+      waitingListEntryDetails,
+      shoppingCart,
+      productTypesInWaitingList,
+      becomeMemberNow,
+    )
+  ) {
     return false;
   }
 
@@ -243,8 +268,18 @@ function shouldShowStepSolidarityContributionBeforeStepPersonalData(
   settings: BestellWizardSettings,
   waitingListEntryDetails: PublicWaitingListEntryDetails | undefined,
   shoppingCart: ShoppingCart,
+  productTypesInWaitingList: Set<PublicProductType>,
+  becomeMemberNow: boolean | null,
 ) {
-  if (!shouldShowStepSolidarityContribution(waitingListEntryDetails)) {
+  if (
+    !shouldShowStepSolidarityContribution(
+      settings,
+      waitingListEntryDetails,
+      shoppingCart,
+      productTypesInWaitingList,
+      becomeMemberNow,
+    )
+  ) {
     return false;
   }
 
@@ -254,6 +289,8 @@ function shouldShowStepSolidarityContributionBeforeStepPersonalData(
       settings,
       waitingListEntryDetails,
       shoppingCart,
+      productTypesInWaitingList,
+      becomeMemberNow,
     )
   );
 }

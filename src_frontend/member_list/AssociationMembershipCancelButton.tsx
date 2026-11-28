@@ -6,13 +6,7 @@ import { getParameterFromUrl } from "../product_config/get_parameter_from_url.ts
 import { ToastData } from "../types/ToastData.ts";
 import AssociationMembershipCancelModal from "./AssociationMembershipCancelModal.tsx";
 
-interface AssociationMembershipCancelButtonProps {
-  csrfToken: string;
-}
-
-const AssociationMembershipCancelButton: React.FC<
-  AssociationMembershipCancelButtonProps
-> = ({ csrfToken }) => {
+const AssociationMembershipCancelButton: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [memberId, setMemberId] = useState();
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
@@ -37,7 +31,6 @@ const AssociationMembershipCancelButton: React.FC<
       {memberId && (
         <AssociationMembershipCancelModal
           memberId={memberId}
-          csrfToken={csrfToken}
           show={showModal}
           onHide={() => setShowModal(false)}
           reloadData={() => location.reload()}

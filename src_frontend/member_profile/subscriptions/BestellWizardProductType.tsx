@@ -1,15 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Spinner } from "react-bootstrap";
 
 import "../../../tapir/core/static/core/bootstrap/5.3.8/css/bootstrap.min.css";
 import "../../../tapir/core/static/core/css/base.css";
 import {
   BestellWizardApi,
+  BestellWizardGrowingPeriodChoice,
   CoopApi,
   DeliveryAddressRequest,
   PaymentsApi,
   PickupLocationsApi,
-  PublicGrowingPeriod,
   PublicPickupLocation,
   PublicProductType,
   SubscriptionsApi,
@@ -18,15 +18,14 @@ import {
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { PersonalData } from "../../bestell_wizard/types/PersonalData.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
+import { applyGrowingPeriod } from "../../bestell_wizard/utils/applyGrowingPeriod.ts";
 import { buildEmptySettings } from "../../bestell_wizard/utils/buildEmptySettings.ts";
 import { buildEmptyShoppingCart } from "../../bestell_wizard/utils/buildEmptyShoppingCart.ts";
 import { buildSettings } from "../../bestell_wizard/utils/buildSettings.ts";
-import { checkPickupLocationCapacities } from "../../bestell_wizard/utils/checkPickupLocationCapacities.ts";
-import { fetchFirstDeliveryDates } from "../../bestell_wizard/utils/fetchFirstDeliveryDates.ts";
+import { evaluateOrder } from "../../bestell_wizard/utils/evaluateOrder.ts";
 import { formatShoppingCart } from "../../bestell_wizard/utils/formatShoppingCart.ts";
 import { getEmptyPersonalData } from "../../bestell_wizard/utils/getEmptyPersonalData.ts";
-import { isShoppingCartEmpty } from "../../bestell_wizard/utils/isShoppingCartEmpty.ts";
-import { updateProductsAndProductTypesOverCapacity } from "../../bestell_wizard/utils/updateProductsAndProductTypesOverCapacity.ts";
+import { onGrowingPeriodSelected } from "../../bestell_wizard/utils/onGrowingPeriodSelected.ts";
 import BestellWizardMobileBase from "../../bestell_wizard_mobile/components/BestellWizardMobileBase.tsx";
 import Step10OrderSummary from "../../bestell_wizard_mobile/steps/Step10OrderSummary.tsx";
 import Step11Legal from "../../bestell_wizard_mobile/steps/Step11Legal.tsx";
@@ -49,11 +48,11 @@ import { updateWaitingList } from "../../bestell_wizard_mobile/utils/updateWaiti
 import ConfirmModal from "../../components/ConfirmModal.tsx";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
+import { fromApiDate } from "../../utils/apiDate.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 import { isSubscriptionActive } from "../../utils/isSubscriptionActive.ts";
 
 interface BestellWizardProductTypeProps {
-  csrfToken: string;
   memberId: string;
   memberUrl: string;
   firstName: string;
@@ -63,7 +62,6 @@ interface BestellWizardProductTypeProps {
 }
 
 const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
-  csrfToken,
   memberId,
   memberUrl,
   firstName,
@@ -71,14 +69,14 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
   needsBankingData,
   productTypeId,
 }) => {
-  const bestellWizardApi = useApi(BestellWizardApi, csrfToken);
-  const pickupLocationApi = useApi(PickupLocationsApi, csrfToken);
-  const waitingListApi = useApi(WaitingListApi, csrfToken);
-  const subscriptionsApi = useApi(SubscriptionsApi, csrfToken);
-  const paymentsApi = useApi(PaymentsApi, csrfToken);
-  const coopApi = useApi(CoopApi, csrfToken);
+  const bestellWizardApi = useApi(BestellWizardApi);
+  const pickupLocationApi = useApi(PickupLocationsApi);
+  const waitingListApi = useApi(WaitingListApi);
+  const subscriptionsApi = useApi(SubscriptionsApi);
+  const paymentsApi = useApi(PaymentsApi);
+  const coopApi = useApi(CoopApi);
 
-  const [settings, setSettings] =
+  const [baseSettings, setBaseSettings] =
     useState<BestellWizardSettings>(buildEmptySettings());
   const [settingsLoaded, setSettingsLoaded] = useState(false);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
@@ -86,29 +84,22 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
   const [currentStep, setCurrentStep] = useState<Step>("loading");
   const [orderLoading, setOrderLoading] = useState(false);
   const [waitingListError, setWaitingListError] = useState<string>();
-  const [productType, setProductType] = useState<PublicProductType>();
-  const [checkingCapacities, setCheckingCapacities] = useState(false);
+  const [orderEvaluationLoading, setOrderEvaluationLoading] = useState(false);
   const [productIdsOverCapacity, setProductIdsOverCapacity] = useState<
     string[]
   >([]);
   const [productTypeIdsOverCapacity, setProductTypeIdsOverCapacity] = useState<
     string[]
   >([]);
-  const [checkingCapacitiesController, setCheckingCapacitiesController] =
-    useState<AbortController>();
   const [productTypesInWaitingList, setProductTypesInWaitingList] = useState<
     Set<PublicProductType>
   >(new Set<PublicProductType>());
   const [pickupLocationsWithCapacityFull, setPickupLocationsWithCapacityFull] =
     useState<Set<PublicPickupLocation>>(new Set<PublicPickupLocation>());
   const [
-    pickupLocationsCapacityCheckLoading,
-    setPickupLocationsCapacityCheckLoading,
-  ] = useState(false);
-  const [
     firstDeliveryDatesByPickupLocationAndProductType,
     setFirstDeliveryDatesByPickupLocationAndProductType,
-  ] = useState<{ [key: string]: { [key: string]: Date } }>({});
+  ] = useState<{ [key: string]: { [key: string]: string } }>({});
   const [currentPickupLocationTab, setCurrentPickupLocationTab] =
     useState<PickupLocationTab>("map");
   const [mustAddPickupLocation, setMustAddPickupLocation] = useState(false);
@@ -129,11 +120,21 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
     PublicPickupLocation[]
   >([]);
   const [selectedGrowingPeriod, setSelectedGrowingPeriod] =
-    useState<PublicGrowingPeriod>();
+    useState<BestellWizardGrowingPeriodChoice>();
+  const settings = useMemo(
+    () => applyGrowingPeriod(baseSettings, selectedGrowingPeriod),
+    [baseSettings, selectedGrowingPeriod],
+  );
+  const productType = settings.productTypes.find(
+    (productType) => productType.id === productTypeId,
+  );
   const [shoppingCart, setShoppingCart] = useState<ShoppingCart>({});
   const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>("pickup");
   const [deliveryAddress, setDeliveryAddress] =
     useState<DeliveryAddressRequest>({ sameAsBillingAddress: true });
+  const contractStartDate = selectedGrowingPeriod
+    ? fromApiDate(selectedGrowingPeriod.contractStartDate)
+    : undefined;
 
   useEffect(() => {
     setPersonalData({
@@ -163,11 +164,21 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
           bankingData,
           memberDeliveryAddress,
         ]) => {
-          const newSettings = buildSettings(baseData);
-          for (const productType of newSettings.productTypes) {
-            productType.mustBeSubscribedTo = true;
+          const newSettings = buildSettings({
+            ...baseData,
+            growingPeriodChoices: baseData.growingPeriodChoices.filter(
+              (growingPeriod) =>
+                growingPeriod.productTypes.some(
+                  (productType) => productType.id === productTypeId,
+                ),
+            ),
+          });
+          for (const growingPeriod of newSettings.growingPeriodChoices) {
+            for (const productType of growingPeriod.productTypes) {
+              productType.mustBeSubscribedTo = true;
+            }
           }
-          setSettings(newSettings);
+          setBaseSettings(newSettings);
           setSettingsLoaded(true);
 
           if (newSettings.growingPeriodChoices.length > 0) {
@@ -175,12 +186,6 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
           }
 
           setShoppingCart(buildEmptyShoppingCart(newSettings.productTypes));
-
-          setProductType(
-            newSettings.productTypes.find(
-              (productType) => productType.id === productTypeId,
-            ),
-          );
 
           setDeliveryAddress({
             sameAsBillingAddress: memberDeliveryAddress.sameAsBillingAddress,
@@ -324,17 +329,29 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
   }
 
   useEffect(() => {
-    updateProductsAndProductTypesOverCapacity(
+    if (!selectedGrowingPeriod) {
+      return;
+    }
+
+    let ignore = false;
+    evaluateOrder(
       bestellWizardApi,
       shoppingCart,
+      selectedGrowingPeriod,
+      settings.pickupLocations,
+      false,
+      setOrderEvaluationLoading,
       setProductIdsOverCapacity,
       setProductTypeIdsOverCapacity,
-      setCheckingCapacities,
+      setPickupLocationsWithCapacityFull,
+      setFirstDeliveryDatesByPickupLocationAndProductType,
       setToastDatas,
-      checkingCapacitiesController,
-      setCheckingCapacitiesController,
-      selectedGrowingPeriod,
+      () => ignore,
     );
+
+    return () => {
+      ignore = true;
+    };
   }, [shoppingCart, selectedGrowingPeriod]);
 
   useEffect(() => {
@@ -348,46 +365,13 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
       setProductTypesInWaitingList,
     );
   }, [
+    settings,
     productTypeIdsOverCapacity,
     productIdsOverCapacity,
     pickupLocationsWithCapacityFull,
     selectedPickupLocations,
     shoppingCart,
   ]);
-
-  useEffect(() => {
-    if (
-      settings.pickupLocations.length === 0 ||
-      isShoppingCartEmpty(shoppingCart)
-    ) {
-      return;
-    }
-
-    checkPickupLocationCapacities(
-      pickupLocationApi,
-      settings.pickupLocations,
-      shoppingCart,
-      setPickupLocationsCapacityCheckLoading,
-      setPickupLocationsWithCapacityFull,
-      setToastDatas,
-      selectedGrowingPeriod,
-    );
-  }, [settings, shoppingCart, selectedGrowingPeriod]);
-
-  useEffect(() => {
-    if (!selectedGrowingPeriod) {
-      return;
-    }
-
-    fetchFirstDeliveryDates(
-      bestellWizardApi,
-      shoppingCart,
-      selectedGrowingPeriod,
-      setFirstDeliveryDatesByPickupLocationAndProductType,
-      setToastDatas,
-      undefined,
-    );
-  }, [shoppingCart, selectedGrowingPeriod]);
 
   useEffect(() => {
     setSepaAllowed(!needsBankingData);
@@ -502,7 +486,15 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
             goToNextStep={goToNextStep}
             settings={settings}
             selectedGrowingPeriod={selectedGrowingPeriod}
-            setSelectedGrowingPeriod={setSelectedGrowingPeriod}
+            onGrowingPeriodSelected={(growingPeriod) =>
+              onGrowingPeriodSelected(
+                growingPeriod,
+                shoppingCart,
+                setSelectedGrowingPeriod,
+                setSelectedPickupLocations,
+                setShoppingCart,
+              )
+            }
             stepActive={step === currentStep}
           />
         );
@@ -529,9 +521,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
             settings={settings}
             selectedPickupLocations={selectedPickupLocations}
             setSelectedPickupLocations={setSelectedPickupLocations}
-            pickupLocationsCapacityCheckLoading={
-              pickupLocationsCapacityCheckLoading
-            }
+            pickupLocationsCapacityCheckLoading={orderEvaluationLoading}
             pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
             goToNextStep={goToNextStep}
             firstDeliveryDatesByPickupLocationAndProductType={
@@ -561,9 +551,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
             settings={settings}
             selectedPickupLocations={selectedPickupLocations}
             setSelectedPickupLocations={setSelectedPickupLocations}
-            pickupLocationsCapacityCheckLoading={
-              pickupLocationsCapacityCheckLoading
-            }
+            pickupLocationsCapacityCheckLoading={orderEvaluationLoading}
             pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
             goToNextStep={goToNextStep}
             stepIsActive={step === "5c_pickup_location_choice"}
@@ -633,7 +621,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
             pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
             studentStatusEnabled={false}
             waitingListEntryDetails={undefined}
-            contractStartDate={selectedGrowingPeriod?.contractStartDate!}
+            contractStartDate={contractStartDate}
             singleProductType={productType}
             selectedGrowingPeriod={selectedGrowingPeriod}
             hideTrialPeriod={memberAlreadyHasASubscriptionForThisProductType}
@@ -700,7 +688,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
                 shoppingCart={shoppingCart}
                 setShoppingCart={setShoppingCart}
                 stepActive={step === currentStep}
-                checkingCapacities={checkingCapacities}
+                checkingCapacities={orderEvaluationLoading}
                 productTypeIdsOverCapacity={productTypeIdsOverCapacity}
                 productIdsOverCapacity={productIdsOverCapacity}
                 waitingListLinkConfirmationModeEnabled={false}
@@ -741,7 +729,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
         goToProductTypeStep={() => {
           setCurrentStep(`${productTypeId}_order`);
         }}
-        contractStartDate={selectedGrowingPeriod?.contractStartDate!}
+        contractStartDate={contractStartDate}
         selectedGrowingPeriod={selectedGrowingPeriod}
       />
       <ConfirmModal
@@ -749,7 +737,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
         title="Wartelisteneintrag nicht erstellt"
         message={waitingListError}
         confirmButtonText="Zum Mitgliederbereich"
-        confirmButtonVariant="primary"
+        confirmButtonVariant="outline-secondary"
         confirmButtonIcon="arrow_back"
         onConfirm={() => globalThis.location.assign(memberUrl)}
         onCancel={() => setWaitingListError(undefined)}

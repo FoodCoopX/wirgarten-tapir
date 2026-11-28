@@ -30,10 +30,10 @@ import { SubscriptionFromJSON, SubscriptionToJSON } from "./Subscription";
 export interface Delivery {
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof Delivery
    */
-  deliveryDate: Date;
+  deliveryDate: string;
   /**
    *
    * @type {PickupLocation}
@@ -140,7 +140,7 @@ export function DeliveryFromJSONTyped(
     return json;
   }
   return {
-    deliveryDate: new Date(json["delivery_date"]),
+    deliveryDate: json["delivery_date"],
     pickupLocation: PickupLocationFromJSON(json["pickup_location"]),
     subscriptions: (json["subscriptions"] as Array<any>).map(
       SubscriptionFromJSON,
@@ -171,7 +171,7 @@ export function DeliveryToJSONTyped(
   }
 
   return {
-    delivery_date: value["deliveryDate"].toISOString().substring(0, 10),
+    delivery_date: value["deliveryDate"],
     pickup_location: PickupLocationToJSON(value["pickupLocation"]),
     subscriptions: (value["subscriptions"] as Array<any>).map(
       SubscriptionToJSON,

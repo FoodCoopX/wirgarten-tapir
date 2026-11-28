@@ -14,6 +14,7 @@ import ConfirmDeleteModal from "../components/ConfirmDeleteModal.tsx";
 import TapirButton from "../components/TapirButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
+import { fromApiDate, toApiDate } from "../utils/apiDate.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import WaitingListTabLink from "./tabs/WaitingListTabLink.tsx";
 import WaitingListTabPersonalData from "./tabs/WaitingListTabPersonalData.tsx";
@@ -21,7 +22,6 @@ import WaitingListTabWishes from "./tabs/WaitingListTabWishes.tsx";
 import "./waiting_list_card.css";
 
 interface WaitingListEntryEditModalProps {
-  csrfToken: string;
   entryDetails: WaitingListEntryDetails;
   show: boolean;
   onClose: () => void;
@@ -34,7 +34,6 @@ interface WaitingListEntryEditModalProps {
 }
 
 const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
-  csrfToken,
   entryDetails,
   show,
   onClose,
@@ -45,7 +44,7 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
   setToastDatas,
   entryReloading,
 }) => {
-  const api = useApi(WaitingListApi, csrfToken);
+  const api = useApi(WaitingListApi);
   const [showConfirmDeleteModal, setShowConfirmDeleteModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [firstName, setFirstName] = useState("");
@@ -81,7 +80,11 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
     setStreet2(entryDetails.street2);
     setPostcode(entryDetails.postcode);
     setCity(entryDetails.city);
-    setDesiredStartDate(entryDetails.desiredStartDate);
+    setDesiredStartDate(
+      entryDetails.desiredStartDate
+        ? fromApiDate(entryDetails.desiredStartDate)
+        : undefined,
+    );
     setPickupLocationWishes(entryDetails.pickupLocationWishes ?? []);
     setProductWishes(entryDetails.productWishes ?? []);
     setComment(entryDetails.comment);
@@ -129,7 +132,9 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
           street2: street2,
           postcode: postcode,
           city: city,
-          desiredStartDate: desiredStartDate,
+          desiredStartDate: desiredStartDate
+            ? toApiDate(desiredStartDate)
+            : undefined,
           category: category,
           comment: comment,
           id: entryDetails.id,
@@ -219,7 +224,6 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
               <WaitingListTabLink
                 entryDetails={entryDetails}
                 reloadEntries={reloadEntries}
-                csrfToken={csrfToken}
                 setToastDatas={setToastDatas}
                 entryReloading={entryReloading}
               />

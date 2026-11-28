@@ -6,13 +6,12 @@ import TapirHelpButton from "../components/TapirHelpButton.tsx";
 import TapirToastContainer from "../components/TapirToastContainer.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
-import { getCsrfToken } from "../utils/getCsrfToken.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import MailingListCreateModal from "./MailingListCreateModal.tsx";
 import MailingListTable from "./MailingListTable.tsx";
 
 const MailingListCard: React.FC = () => {
-  const api = useApi(CoreApi, getCsrfToken());
+  const api = useApi(CoreApi);
   const [mailingListsLoading, setMailingListsLoading] = useState(true);
   const [mailingLists, setMailingLists] = useState<MailingListAdmin[]>([]);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);

@@ -3,7 +3,7 @@ import "../../../tapir/core/static/core/bootstrap/5.3.8/css/bootstrap.min.css";
 import "../../../tapir/core/static/core/css/base.css";
 import {
   AssociationMembershipType,
-  PublicGrowingPeriod,
+  BestellWizardGrowingPeriodChoice,
   PublicPickupLocation,
   PublicProductType,
 } from "../../api-client";
@@ -33,8 +33,8 @@ interface BestellWizardMobileHeaderProps {
   selectedNumberOfCoopShares: number;
   goToProductTypeStep: (productType: PublicProductType) => void;
   associationMembershipType?: AssociationMembershipType;
-  contractStartDate: Date;
-  selectedGrowingPeriod: PublicGrowingPeriod | undefined;
+  contractStartDate: Date | undefined;
+  selectedGrowingPeriod: BestellWizardGrowingPeriodChoice | undefined;
   setCurrentStep: (step: Step) => void;
 }
 

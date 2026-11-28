@@ -34,7 +34,10 @@ class ShareImporter:
         number_of_shares = DataImportUtils.safe_int(row.get("Anzahl Anteile"))
         transfer_member = None
         transaction_valid_at = DataImportUtils.to_date(row.get("Datum"))
-        member_no = DataImportUtils.normalize_cell(row.get("Mitgliedsnummer"))
+        cache = {}
+        member_no = DataImportUtils.parse_member_number(
+            value=row.get("Mitgliedsnummer"), cache=cache
+        )
 
         try:
             member = Member.objects.get(member_no=member_no)
@@ -46,8 +49,8 @@ class ShareImporter:
         if DataImportUtils.normalize_cell(row.get("Übertragungspartner")) != "":
             try:
                 transfer_member = Member.objects.get(
-                    member_no=DataImportUtils.normalize_cell(
-                        row.get("Übertragungspartner")
+                    member_no=DataImportUtils.parse_member_number(
+                        value=row.get("Übertragungspartner"), cache=cache
                     )
                 )
             except ObjectDoesNotExist:

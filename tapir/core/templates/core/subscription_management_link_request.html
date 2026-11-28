@@ -1,0 +1,20 @@
+{% extends "core/public_base.html" %}
+{% load django_bootstrap5 %}
+{% block head %}
+    <title>
+        {% block title %}Link zur Abo-Verwaltung anfordern{% endblock %}
+    </title>
+{% endblock %}
+{% block content %}
+    <div class="card mt-4">
+        <div class="card-header">Link zur Abo-Verwaltung anfordern</div>
+        <div class="card-body">
+            <p>Gib die Adresse ein, deren Mail-Abos du verwalten möchtest. Du bekommst einen Link an diese Adresse.</p>
+            <form method="post">
+                {% csrf_token %}
+                {% bootstrap_form form %}
+                <button type="submit" class="btn btn-primary">Link anfordern</button>
+            </form>
+        </div>
+    </div>
+{% endblock content %}

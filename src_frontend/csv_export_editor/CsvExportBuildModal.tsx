@@ -15,7 +15,6 @@ import { handleRequestError } from "../utils/handleRequestError.ts";
 interface CsvExportBuildModalProps {
   show: boolean;
   onHide: () => void;
-  csrfToken: string;
   exportToBuild: CsvExportModel;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
@@ -36,11 +35,10 @@ function downloadExportFile(response: BuildCsvExportResponse) {
 const CsvExportBuildModal: React.FC<CsvExportBuildModalProps> = ({
   show,
   onHide,
-  csrfToken,
   exportToBuild,
   setToastDatas,
 }) => {
-  const api = useApi(GenericExportsApi, csrfToken);
+  const api = useApi(GenericExportsApi);
 
   const [datetime, setDatetime] = useState(new Date());
   const [loading, setLoading] = useState(false);

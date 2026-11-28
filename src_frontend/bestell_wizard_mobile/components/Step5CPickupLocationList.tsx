@@ -18,7 +18,7 @@ interface Step5CPickupLocationListProps {
   waitingListLinkConfirmationModeEnabled: boolean;
   tabIsActive: boolean;
   firstDeliveryDatesByPickupLocationAndProductType: {
-    [key: string]: { [key: string]: Date };
+    [key: string]: { [key: string]: string };
   };
   productTypesInWaitingList: Set<PublicProductType>;
   shoppingCart: ShoppingCart;

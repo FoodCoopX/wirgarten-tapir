@@ -1,0 +1,13 @@
+{% extends "core/public_base.html" %}
+{% load django_vite %}
+{% block head %}
+    <title>
+        {% block title %}Mail-Abos verwalten{% endblock %}
+    </title>
+    {% vite_asset 'subscription_management/subscription_management_entry.tsx' %}
+{% endblock %}
+{% block content %}
+    {% csrf_token %}
+    <h4 class="mt-4">Mail-Abos von {{ address }}</h4>
+    <span id="subscription_management" data-token="{{ token }}"></span>
+{% endblock content %}

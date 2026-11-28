@@ -9,7 +9,6 @@ import ConfirmModal from "../components/ConfirmModal.tsx";
 import TapirHelpButton from "../components/TapirHelpButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
-import { getCsrfToken } from "../utils/getCsrfToken.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import MailingListHeldMessageItem from "./MailingListHeldMessageItem.tsx";
 
@@ -53,7 +52,7 @@ interface MailingListHeldMessagesModalProps {
 const MailingListHeldMessagesModal: React.FC<
   MailingListHeldMessagesModalProps
 > = ({ show, onHide, loadData, setToastDatas, listName }) => {
-  const api = useApi(CoreApi, getCsrfToken());
+  const api = useApi(CoreApi);
   const [heldMessages, setHeldMessages] = useState<MailingListHeldMessage[]>(
     [],
   );

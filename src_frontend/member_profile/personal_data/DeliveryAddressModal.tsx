@@ -11,7 +11,6 @@ import { handleRequestError } from "../../utils/handleRequestError.ts";
 
 interface DeliveryAddressModalProps {
   memberId: string;
-  csrfToken: string;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
   show: boolean;
   onHide: () => void;
@@ -19,12 +18,11 @@ interface DeliveryAddressModalProps {
 
 const DeliveryAddressModal: React.FC<DeliveryAddressModalProps> = ({
   memberId,
-  csrfToken,
   setToastDatas,
   show,
   onHide,
 }) => {
-  const api = useApi(PickupLocationsApi, csrfToken);
+  const api = useApi(PickupLocationsApi);
   const [form, setForm] = useState<DeliveryAddressRequest>({
     sameAsBillingAddress: true,
   });

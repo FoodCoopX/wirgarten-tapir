@@ -11,6 +11,7 @@ from django.db.models import (
     Index,
     JSONField,
     OuterRef,
+    Q,
     Subquery,
     Sum,
     UniqueConstraint,
@@ -22,13 +23,11 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 from tapir.accounts.models import TapirUser
 from tapir.accounts.services.email_normaliser import EmailNormaliser
-from tapir.configuration.parameter import get_parameter_value
 from tapir.core.models import TapirModel
 from tapir.log.models import LogEntry, UpdateModelLogEntry
 from tapir.subscriptions.config import NOTICE_PERIOD_UNIT_OPTIONS
 from tapir.utils.models import CountryField
 from tapir.wirgarten.constants import NO_DELIVERY, DeliveryCycle, OPTIONS_WEEKDAYS
-from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import format_currency, format_date, get_today
 
 PICKUP_LOCATION_START_DATE_HELP_TEXT = (
@@ -465,75 +464,8 @@ class Member(TapirUser):
             )["total_value"]
         )
 
-    @property
-    def base_subscriptions_text(self):
-        """
-        Returns a human-readable string stating which base products the member has subscribed,
-        sorted by their price in ascending order.
-
-        Examples:
-        - “einen M-Ernteanteil”
-        - “2 M-Ernteanteile”
-        - “einen S-Ernteanteil + 2 M-Ernteanteile”
-        - “einen S-Ernteanteil + M-Ernteanteil + L-Ernteanteil”
-        """
-
-        from collections import Counter
-        from tapir.wirgarten.service.products import (
-            get_product_price,
-            get_active_subscriptions,
-        )
-
-        cache = {}
-
-        subscriptions = get_active_subscriptions(cache={}).filter(
-            member_id=self.id, product__type__must_be_subscribed_to=True
-        )
-
-        if not subscriptions:
-            return ""
-
-        # Count the quantity of each base product subscribed
-        product_counts = Counter()
-        for sub in subscriptions:
-            product_counts[sub.product] += sub.quantity
-
-        # Create a list of tuples (product, quantity, price) and sort by price
-        product_info = []
-        today = get_today(cache=cache)
-        for product, quantity in product_counts.items():
-            price = get_product_price(product, today).price
-            product_info.append(
-                (
-                    f"{product.name}-{product.type.name[:-1] if quantity == 1 else product.type.name}",
-                    quantity,
-                    price,
-                )
-            )
-
-        # Sort products by price (ascending)
-        product_info.sort(key=lambda x: x[2])
-
-        # Create the human-readable text
-        base_subscription_texts = []
-        for product_name, quantity, _ in product_info:
-            if quantity == 1:
-                base_subscription_texts.append(f"einen {product_name}")
-            else:
-                base_subscription_texts.append(f"{quantity} {product_name}")
-
-        return " + ".join(base_subscription_texts)
-
     def __str__(self):
         return f"[{self.member_no or '---'}] {self.first_name} {self.last_name} ({self.email})"
-
-    def get_extra_recipients(self, cache: dict):
-        if not get_parameter_value(
-            ParameterKeys.ENABLE_EXTRA_MAIL_ADDRESSES, cache=cache
-        ):
-            return []
-
-        return list(self.memberextraemail_set.filter(confirmed_on__isnull=False))
 
 
 class MemberPickupLocation(TapirModel):
@@ -588,9 +520,16 @@ class Product(TapirModel):
 
     class Meta:
         indexes = [Index(fields=["type"], name="idx_product_type")]
+        constraints = [
+            UniqueConstraint(
+                fields=["name"],
+                condition=Q(deleted=False),
+                name="unique_non_deleted_product_name",
+            )
+        ]
 
     def __str__(self):
-        return f"{self.name} ({self.type.name})"
+        return self.name
 
 
 class ProductPrice(TapirModel):
@@ -722,17 +661,17 @@ class Subscription(TapirModel, AdminConfirmableMixin):
 
     def __str__(self):
         return (
-            f"{self.quantity} × {self.product.name} {self.product.type.name}; "
+            f"{self.quantity} × {self.product.name}; "
             f"from {self.start_date} to {self.end_date}"
         )
 
     def short_str(self):
-        return f"{self.quantity}×{self.product.name},{self.product.type.name}"
+        return f"{self.quantity}×{self.product.name}"
 
     def long_str(self):
         return (
-            f"{self.quantity} × {self.product.name} {self.product.type.name} "
-            + f" ({format_date(self.start_date)} - {format_date(self.end_date)})"
+            f"{self.quantity} × {self.product.name} "
+            f"({format_date(self.start_date)} - {format_date(self.end_date)})"
         )
 
 
@@ -791,10 +730,10 @@ class Payment(TapirModel):
         choices=PaymentStatus.choices,
         default=PaymentStatus.DUE,
     )
-    edited = models.BooleanField(default=False)
     transaction = models.ForeignKey(
         PaymentTransaction, on_delete=models.DO_NOTHING, null=True
     )
+    excluded_from_export = models.BooleanField(default=False)
     type = models.CharField(max_length=64)
     subscription_payment_range_start = models.DateField(null=True)
     subscription_payment_range_end = models.DateField(null=True)
@@ -813,6 +752,7 @@ class Payment(TapirModel):
     )
     # Only set if the coop shares are paid in instalments
     instalment_number = models.PositiveSmallIntegerField(null=True)
+    calculation_explanation = models.TextField(blank=True, default="")
 
     class Meta:
         indexes = [
@@ -1202,6 +1142,11 @@ class MemberExtraEmail(TapirModel):
                 fields=["member", "email"],
                 name="unique_extra_email",
             ),
+            UniqueConstraint(
+                fields=["email"],
+                condition=Q(confirmed_on__isnull=False),
+                name="unique_confirmed_extra_email",
+            ),
         ]
 
     member = models.ForeignKey(Member, on_delete=models.CASCADE)
@@ -1210,9 +1155,14 @@ class MemberExtraEmail(TapirModel):
     last_name = models.CharField(max_length=100)
     confirmed_on = models.DateTimeField(null=True)
     secret = models.UUIDField(default=uuid.uuid4)
+    receives_direct_mails = models.BooleanField(default=True)
 
     def __str__(self):
         return f"{self.member} - Extra-Mail:{self.email}"
+
+    @property
+    def is_confirmed(self) -> bool:
+        return self.confirmed_on is not None
 
 
 class MemberExtraEmailCreatedLogEntry(LogEntry):
@@ -1243,9 +1193,39 @@ class MemberExtraEmailDeletedLogEntry(LogEntry):
 
     email = models.EmailField(max_length=1024)
 
-    def populate_email(self, email: str, actor: TapirUser, user: Member):
+    def populate_email(self, email: str, actor: TapirUser | None, user: Member):
         self.populate(actor=actor, user=user)
         self.email = email
+
+        return self
+
+
+class MemberExtraEmailSubscriptionsChangedLogEntry(LogEntry):
+    template_name = (
+        "wirgarten/log/member_extra_email_subscriptions_changed_log_entry.html"
+    )
+
+    email = models.EmailField(max_length=1024)
+    changes = models.JSONField()
+
+    def populate_changes(self, email: str, changes: list[str], user: Member):
+        self.populate(actor=None, user=user)
+        self.email = email
+        self.changes = changes
+
+        return self
+
+
+class MemberUnsubscribedFromMailingListsLogEntry(LogEntry):
+    template_name = (
+        "wirgarten/log/member_unsubscribed_from_mailing_lists_log_entry.html"
+    )
+
+    removals = models.JSONField()
+
+    def populate_removals(self, removals: list[str], user: Member):
+        self.populate(actor=None, user=user)
+        self.removals = removals
 
         return self
 

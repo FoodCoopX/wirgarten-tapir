@@ -14,14 +14,12 @@ import { getPastMemberships } from "./getPastMemberships.tsx";
 
 interface AssociationMembershipCardProps {
   memberId: string;
-  csrfToken: string;
 }
 
 const AssociationMembershipCard: React.FC<AssociationMembershipCardProps> = ({
   memberId,
-  csrfToken,
 }) => {
-  const api = useApi(AssociationsApi, csrfToken);
+  const api = useApi(AssociationsApi);
   const [loading, setLoading] = useState(true);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
   const [memberships, setMemberships] = useState<AssociationMembership[]>([]);

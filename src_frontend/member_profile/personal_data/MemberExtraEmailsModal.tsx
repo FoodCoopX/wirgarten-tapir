@@ -1,16 +1,20 @@
 import "dayjs/locale/de";
 import React, { useEffect, useState } from "react";
-import { Form, ListGroup, Modal, Spinner } from "react-bootstrap";
+import { Badge, Form, ListGroup, Modal, Spinner } from "react-bootstrap";
+import { v4 as uuidv4 } from "uuid";
 import { CoreApi, MemberExtraEmail } from "../../api-client";
 import TapirButton from "../../components/TapirButton.tsx";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
+import { addToast } from "../../utils/addToast.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 
+const RECEIVES_DIRECT_MAILS_LABEL =
+  "Erhält auch persönliche Mails (Verträge, Abholung, Rundmails an alle Mitglieder)";
+
 interface MemberExtraEmailsModalProps {
   memberId: string;
-  csrfToken: string;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
   show: boolean;
   onHide: () => void;
@@ -18,23 +22,25 @@ interface MemberExtraEmailsModalProps {
 
 const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
   memberId,
-  csrfToken,
   setToastDatas,
   show,
   onHide,
 }) => {
-  const api = useApi(CoreApi, csrfToken);
+  const api = useApi(CoreApi);
   const [extraEmails, setExtraEmails] = useState<MemberExtraEmail[]>([]);
   const [explanationText, setExplanationText] = useState("");
   const [newAddress, setNewAddress] = useState("");
   const [newFirstName, setNewFirstName] = useState("");
   const [newLastName, setNewLastName] = useState("");
+  const [newReceivesDirectMails, setNewReceivesDirectMails] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [sendingLinkId, setSendingLinkId] = useState<string>();
   const [selectedForEdit, setSelectedForEdit] = useState<MemberExtraEmail>();
   const [editFirstName, setEditFirstName] = useState("");
   const [editLastName, setEditLastName] = useState("");
+  const [editReceivesDirectMails, setEditReceivesDirectMails] = useState(true);
 
   useEffect(() => {
     if (!show) return;
@@ -72,6 +78,7 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
           extraEmail: newAddress,
           firstName: newFirstName,
           lastName: newLastName,
+          receivesDirectMails: newReceivesDirectMails,
         },
       })
       .then(() => setNewAddress(""))
@@ -104,6 +111,36 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
       .finally(() => setDeleting(false));
   }
 
+  function onSendManagementLink(extraEmail: MemberExtraEmail) {
+    setSendingLinkId(extraEmail.id);
+
+    api
+      .coreApiMemberExtraEmailSendManagementLinkCreate({
+        memberExtraEmailSendManagementLinkRequestRequest: {
+          extraEmailId: extraEmail.id!,
+        },
+      })
+      .then(() =>
+        addToast(
+          {
+            id: uuidv4(),
+            variant: "success",
+            title: "Link gesendet",
+            message: `${extraEmail.email} hat einen Link zur Verwaltung der Abos bekommen.`,
+          },
+          setToastDatas,
+        ),
+      )
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Senden des Links",
+          setToastDatas,
+        ),
+      )
+      .finally(() => setSendingLinkId(undefined));
+  }
+
   function onUpdate(extraEmail: MemberExtraEmail) {
     setSaving(true);
 
@@ -113,6 +150,7 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
           extraEmailId: extraEmail.id,
           firstName: editFirstName,
           lastName: editLastName,
+          receivesDirectMails: editReceivesDirectMails,
         },
       })
       .then(loadData)
@@ -139,7 +177,18 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
       <ListGroup variant={"flush"}>
         {extraEmails.map((extraEmail) => (
           <ListGroup.Item key={extraEmail.id} className={"px-0"}>
-            <div className={"fw-bold text-break"}>{extraEmail.email}</div>
+            <div className={"d-flex justify-content-between gap-2"}>
+              <div className={"fw-bold text-break"}>{extraEmail.email}</div>
+              <div>
+                <Badge
+                  bg={extraEmail.receivesDirectMails ? "primary" : "secondary"}
+                >
+                  {extraEmail.receivesDirectMails
+                    ? "Persönliche Mails"
+                    : "Nur Abos"}
+                </Badge>
+              </div>
+            </div>
             {selectedForEdit == extraEmail ? (
               <div className={"d-flex flex-column gap-2 my-2"}>
                 <Form.Control
@@ -158,6 +207,14 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
                     setEditLastName(event.target.value);
                   }}
                 />
+                <Form.Check
+                  id={`edit_extra_receives_direct_mails_${extraEmail.id}`}
+                  label={RECEIVES_DIRECT_MAILS_LABEL}
+                  checked={editReceivesDirectMails}
+                  onChange={(event) =>
+                    setEditReceivesDirectMails(event.target.checked)
+                  }
+                />
               </div>
             ) : (
               <div>
@@ -175,6 +232,16 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
                   : "Nicht bestätigt"}
               </small>
               <div className={"d-flex gap-2"}>
+                {extraEmail.confirmedOn && (
+                  <TapirButton
+                    variant={"outline-secondary"}
+                    icon={"send"}
+                    text={"Link senden"}
+                    size={"sm"}
+                    onClick={() => onSendManagementLink(extraEmail)}
+                    loading={sendingLinkId === extraEmail.id}
+                  />
+                )}
                 {selectedForEdit == extraEmail ? (
                   <TapirButton
                     variant={"primary"}
@@ -191,6 +258,9 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
                     onClick={() => {
                       setEditFirstName(extraEmail.firstName);
                       setEditLastName(extraEmail.lastName);
+                      setEditReceivesDirectMails(
+                        extraEmail.receivesDirectMails ?? true,
+                      );
                       setSelectedForEdit(extraEmail);
                     }}
                     loading={saving}
@@ -251,6 +321,14 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
                     onChange={(event) => setNewLastName(event.target.value)}
                   />
                 </Form.Group>
+                <Form.Check
+                  id={"new_extra_receives_direct_mails"}
+                  label={RECEIVES_DIRECT_MAILS_LABEL}
+                  checked={newReceivesDirectMails}
+                  onChange={(event) =>
+                    setNewReceivesDirectMails(event.target.checked)
+                  }
+                />
                 <TapirButton
                   variant={"primary"}
                   icon={"add_circle"}

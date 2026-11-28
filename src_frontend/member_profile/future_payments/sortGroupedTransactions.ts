@@ -27,12 +27,11 @@ function compareTransactions(
   if (
     a.payment.subscriptionPaymentRangeStart &&
     b.payment.subscriptionPaymentRangeStart &&
-    a.payment.subscriptionPaymentRangeStart.getTime() !==
-      b.payment.subscriptionPaymentRangeStart.getTime()
+    a.payment.subscriptionPaymentRangeStart !==
+      b.payment.subscriptionPaymentRangeStart
   ) {
-    return (
-      a.payment.subscriptionPaymentRangeStart.getTime() -
-      b.payment.subscriptionPaymentRangeStart.getTime()
+    return a.payment.subscriptionPaymentRangeStart.localeCompare(
+      b.payment.subscriptionPaymentRangeStart,
     );
   }
 

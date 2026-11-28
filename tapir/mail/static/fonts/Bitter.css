@@ -1,0 +1,144 @@
+@font-face {
+  font-family: "Bitter";
+  font-style: italic;
+  font-weight: 100;
+  font-display: swap;
+  src: url(/static/fonts/raxjHiqOu8IVPmn7epZnDMyKBvHf5D6c4P3OWA.ttf)
+    format("truetype");
+}
+@font-face {
+  font-family: "Bitter";
+  font-style: italic;
+  font-weight: 200;
+  font-display: swap;
+  src: url(/static/fonts/raxjHiqOu8IVPmn7epZnDMyKBvHf5D6cYPzOWA.ttf)
+    format("truetype");
+}
+@font-face {
+  font-family: "Bitter";
+  font-style: italic;
+  font-weight: 300;
+  font-display: swap;
+  src: url(/static/fonts/raxjHiqOu8IVPmn7epZnDMyKBvHf5D6cvvzOWA.ttf)
+    format("truetype");
+}
+@font-face {
+  font-family: "Bitter";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url(/static/fonts/raxjHiqOu8IVPmn7epZnDMyKBvHf5D6c4PzOWA.ttf)
+    format("truetype");
+}
+@font-face {
+  font-family: "Bitter";
+  font-style: italic;
+  font-weight: 500;
+  font-display: swap;
+  src: url(/static/fonts/raxjHiqOu8IVPmn7epZnDMyKBvHf5D6c0vzOWA.ttf)
+    format("truetype");
+}
+@font-face {
+  font-family: "Bitter";
+  font-style: italic;
+  font-weight: 600;
+  font-display: swap;
+  src: url(/static/fonts/raxjHiqOu8IVPmn7epZnDMyKBvHf5D6cPvvOWA.ttf)
+    format("truetype");
+}
+@font-face {
+  font-family: "Bitter";
+  font-style: italic;
+  font-weight: 700;
+  font-display: swap;
+  src: url(/static/fonts/raxjHiqOu8IVPmn7epZnDMyKBvHf5D6cB_vOWA.ttf)
+    format("truetype");
+}
+@font-face {
+  font-family: "Bitter";
+  font-style: italic;
+  font-weight: 800;
+  font-display: swap;
+  src: url(/static/fonts/raxjHiqOu8IVPmn7epZnDMyKBvHf5D6cYPvOWA.ttf)
+    format("truetype");
+}
+@font-face {
+  font-family: "Bitter";
+  font-style: italic;
+  font-weight: 900;
+  font-display: swap;
+  src: url(/static/fonts/raxjHiqOu8IVPmn7epZnDMyKBvHf5D6cSfvOWA.ttf)
+    format("truetype");
+}
+@font-face {
+  font-family: "Bitter";
+  font-style: normal;
+  font-weight: 100;
+  font-display: swap;
+  src: url(/static/fonts/raxhHiqOu8IVPmnRc6SY1KXhnF_Y8fbeCL8.ttf)
+    format("truetype");
+}
+@font-face {
+  font-family: "Bitter";
+  font-style: normal;
+  font-weight: 200;
+  font-display: swap;
+  src: url(/static/fonts/raxhHiqOu8IVPmnRc6SY1KXhnF_Y8XbfCL8.ttf)
+    format("truetype");
+}
+@font-face {
+  font-family: "Bitter";
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url(/static/fonts/raxhHiqOu8IVPmnRc6SY1KXhnF_Y8ajfCL8.ttf)
+    format("truetype");
+}
+@font-face {
+  font-family: "Bitter";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(/static/fonts/raxhHiqOu8IVPmnRc6SY1KXhnF_Y8fbfCL8.ttf)
+    format("truetype");
+}
+@font-face {
+  font-family: "Bitter";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(/static/fonts/raxhHiqOu8IVPmnRc6SY1KXhnF_Y8cTfCL8.ttf)
+    format("truetype");
+}
+@font-face {
+  font-family: "Bitter";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(/static/fonts/raxhHiqOu8IVPmnRc6SY1KXhnF_Y8SjYCL8.ttf)
+    format("truetype");
+}
+@font-face {
+  font-family: "Bitter";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(/static/fonts/raxhHiqOu8IVPmnRc6SY1KXhnF_Y8RHYCL8.ttf)
+    format("truetype");
+}
+@font-face {
+  font-family: "Bitter";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(/static/fonts/raxhHiqOu8IVPmnRc6SY1KXhnF_Y8XbYCL8.ttf)
+    format("truetype");
+}
+@font-face {
+  font-family: "Bitter";
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url(/static/fonts/raxhHiqOu8IVPmnRc6SY1KXhnF_Y8V_YCL8.ttf)
+    format("truetype");
+}

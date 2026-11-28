@@ -45,6 +45,7 @@ class TestMemberExtraEmailApiViewPatch(TapirIntegrationTest):
                 "extra_email_id": extra_email.id,
                 "first_name": "after_first",
                 "last_name": "after_last",
+                "receives_direct_mails": False,
             },
             content_type="application/json",
         )
@@ -54,6 +55,7 @@ class TestMemberExtraEmailApiViewPatch(TapirIntegrationTest):
         extra_email.refresh_from_db()
         self.assertEqual("after_first", extra_email.first_name)
         self.assertEqual("after_last", extra_email.last_name)
+        self.assertFalse(extra_email.receives_direct_mails)
 
         self.assertEqual(1, MemberExtraEmailUpdatedLogEntry.objects.count())
         log_entry = MemberExtraEmailUpdatedLogEntry.objects.get()
@@ -76,6 +78,7 @@ class TestMemberExtraEmailApiViewPatch(TapirIntegrationTest):
                 "extra_email_id": extra_email.id,
                 "first_name": "after_first",
                 "last_name": "after_last",
+                "receives_direct_mails": False,
             },
             content_type="application/json",
         )
@@ -85,6 +88,7 @@ class TestMemberExtraEmailApiViewPatch(TapirIntegrationTest):
         extra_email.refresh_from_db()
         self.assertEqual("after_first", extra_email.first_name)
         self.assertEqual("after_last", extra_email.last_name)
+        self.assertFalse(extra_email.receives_direct_mails)
 
         self.assertEqual(1, MemberExtraEmailUpdatedLogEntry.objects.count())
         log_entry = MemberExtraEmailUpdatedLogEntry.objects.get()
@@ -105,6 +109,7 @@ class TestMemberExtraEmailApiViewPatch(TapirIntegrationTest):
                 "extra_email_id": extra_email.id,
                 "first_name": "after_first",
                 "last_name": "after_last",
+                "receives_direct_mails": False,
             },
             content_type="application/json",
         )
@@ -113,4 +118,5 @@ class TestMemberExtraEmailApiViewPatch(TapirIntegrationTest):
         extra_email.refresh_from_db()
         self.assertEqual("before_first", extra_email.first_name)
         self.assertEqual("before_last", extra_email.last_name)
+        self.assertTrue(extra_email.receives_direct_mails)
         self.assertFalse(MemberExtraEmailUpdatedLogEntry.objects.exists())

@@ -31,11 +31,18 @@ def sidebar_links(context):
 
     for group in groups:
         for link in group.links:
-            link["is_active"] = link["url"] == context["request"].path
+            link["is_active"] = is_path_in_section(
+                path=context["request"].path, section_url=link["url"]
+            )
 
     context["sidebar_link_groups"] = groups
 
     return context
+
+
+def is_path_in_section(path: str, section_url: str) -> bool:
+    section_url = str(section_url)
+    return path == section_url or path.startswith(section_url.rstrip("/") + "/")
 
 
 def get_sidebar_link_groups(request, cache: dict):
@@ -103,7 +110,7 @@ def add_admin_links(groups, request, cache: dict):
         )
     if request.user.has_perm(Permission.Products.VIEW):
         admin_group.add_link(
-            display_name=_("Vertragsperiode & Produkte"),
+            display_name=_("Vertragsperiode & Produktanteile"),
             material_icon="agriculture",
             url=reverse_lazy("wirgarten:product"),
         )
@@ -118,7 +125,7 @@ def add_admin_links(groups, request, cache: dict):
         admin_group.add_link(
             display_name=_("E-Mail"),
             material_icon="email",
-            url=reverse_lazy("tapir_mail"),
+            url=reverse_lazy("mail_ui"),
         )
     if settings.MAILING_LISTS_ENABLED:
         admin_group.add_link(
@@ -219,8 +226,6 @@ def javascript_environment_variables(context):
     return {
         "env_vars": {
             "REACT_APP_API_ROOT": api_root,
-            "TAPIRMAIL_REACT_APP_BASENAME": settings.TAPIRMAIL_REACT_APP_BASENAME,
-            "TAPIRMAIL_REACT_APP_API_ROOT": settings.TAPIRMAIL_REACT_APP_API_ROOT,
         },
     }
 

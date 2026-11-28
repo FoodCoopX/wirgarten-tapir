@@ -12,3 +12,9 @@ class MonthlySalesData:
 class MonthlyActualIncome:
     source_name: str
     income: Decimal
+
+
+@dataclass
+class CreditCalculation:
+    amount: Decimal
+    explanation: str

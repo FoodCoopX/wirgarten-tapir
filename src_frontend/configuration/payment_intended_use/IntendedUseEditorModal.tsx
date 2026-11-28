@@ -43,7 +43,7 @@ const IntendedUseEditorModal: React.FC<IntendedUseEditorModalProps> = ({
   outerPattern,
   setOuterPattern,
 }) => {
-  const paymentsApi = useApi(PaymentsApi, "unused");
+  const paymentsApi = useApi(PaymentsApi);
   const [loading, setLoading] = useState(false);
   const [innerPreviews, setInnerPreviews] = useState<string[]>([]);
   const [outerPreviews, setOuterPreviews] = useState<string[]>([]);

@@ -12,6 +12,9 @@
  * Do not edit the class manually.
  */
 
+import type { ActionEnum } from "./ActionEnum";
+import { ActionEnumFromJSON, ActionEnumToJSON } from "./ActionEnum";
+
 /**
  *
  * @export
@@ -20,40 +23,28 @@
 export interface SubscriptionDateChangeRequestRequest {
   /**
    *
-   * @type {boolean}
-   * @memberof SubscriptionDateChangeRequestRequest
-   */
-  startDateIsOnPeriodStart: boolean;
-  /**
-   *
-   * @type {boolean}
-   * @memberof SubscriptionDateChangeRequestRequest
-   */
-  endDateIsOnPeriodEnd: boolean;
-  /**
-   *
-   * @type {number}
-   * @memberof SubscriptionDateChangeRequestRequest
-   */
-  startWeek: number;
-  /**
-   *
-   * @type {number}
-   * @memberof SubscriptionDateChangeRequestRequest
-   */
-  endWeek: number;
-  /**
-   *
    * @type {string}
    * @memberof SubscriptionDateChangeRequestRequest
    */
   subscriptionId: string;
   /**
    *
+   * @type {ActionEnum}
+   * @memberof SubscriptionDateChangeRequestRequest
+   */
+  action: ActionEnum;
+  /**
+   *
+   * @type {string}
+   * @memberof SubscriptionDateChangeRequestRequest
+   */
+  date?: string | null;
+  /**
+   *
    * @type {boolean}
    * @memberof SubscriptionDateChangeRequestRequest
    */
-  updateEndDateOfOtherContracts: boolean;
+  updateOtherContracts: boolean;
 }
 
 /**
@@ -62,23 +53,12 @@ export interface SubscriptionDateChangeRequestRequest {
 export function instanceOfSubscriptionDateChangeRequestRequest(
   value: object,
 ): value is SubscriptionDateChangeRequestRequest {
-  if (
-    !("startDateIsOnPeriodStart" in value) ||
-    value["startDateIsOnPeriodStart"] === undefined
-  )
-    return false;
-  if (
-    !("endDateIsOnPeriodEnd" in value) ||
-    value["endDateIsOnPeriodEnd"] === undefined
-  )
-    return false;
-  if (!("startWeek" in value) || value["startWeek"] === undefined) return false;
-  if (!("endWeek" in value) || value["endWeek"] === undefined) return false;
   if (!("subscriptionId" in value) || value["subscriptionId"] === undefined)
     return false;
+  if (!("action" in value) || value["action"] === undefined) return false;
   if (
-    !("updateEndDateOfOtherContracts" in value) ||
-    value["updateEndDateOfOtherContracts"] === undefined
+    !("updateOtherContracts" in value) ||
+    value["updateOtherContracts"] === undefined
   )
     return false;
   return true;
@@ -98,12 +78,10 @@ export function SubscriptionDateChangeRequestRequestFromJSONTyped(
     return json;
   }
   return {
-    startDateIsOnPeriodStart: json["start_date_is_on_period_start"],
-    endDateIsOnPeriodEnd: json["end_date_is_on_period_end"],
-    startWeek: json["start_week"],
-    endWeek: json["end_week"],
     subscriptionId: json["subscription_id"],
-    updateEndDateOfOtherContracts: json["update_end_date_of_other_contracts"],
+    action: ActionEnumFromJSON(json["action"]),
+    date: json["date"] == null ? undefined : json["date"],
+    updateOtherContracts: json["update_other_contracts"],
   };
 }
 
@@ -122,11 +100,9 @@ export function SubscriptionDateChangeRequestRequestToJSONTyped(
   }
 
   return {
-    start_date_is_on_period_start: value["startDateIsOnPeriodStart"],
-    end_date_is_on_period_end: value["endDateIsOnPeriodEnd"],
-    start_week: value["startWeek"],
-    end_week: value["endWeek"],
     subscription_id: value["subscriptionId"],
-    update_end_date_of_other_contracts: value["updateEndDateOfOtherContracts"],
+    action: ActionEnumToJSON(value["action"]),
+    date: value["date"],
+    update_other_contracts: value["updateOtherContracts"],
   };
 }

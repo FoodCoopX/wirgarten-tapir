@@ -92,10 +92,10 @@ export interface WaitingListEntryUpdateRequest {
   shoppingCart: { [key: string]: number };
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof WaitingListEntryUpdateRequest
    */
-  desiredStartDate?: Date;
+  desiredStartDate?: string;
   /**
    *
    * @type {string}
@@ -171,7 +171,7 @@ export function WaitingListEntryUpdateRequestFromJSONTyped(
     desiredStartDate:
       json["desired_start_date"] == null
         ? undefined
-        : new Date(json["desired_start_date"]),
+        : json["desired_start_date"],
     comment: json["comment"],
     category: json["category"] == null ? undefined : json["category"],
     deliveryAddress:
@@ -207,10 +207,7 @@ export function WaitingListEntryUpdateRequestToJSONTyped(
     city: value["city"],
     pickup_location_ids: value["pickupLocationIds"],
     shopping_cart: value["shoppingCart"],
-    desired_start_date:
-      value["desiredStartDate"] == null
-        ? undefined
-        : value["desiredStartDate"].toISOString().substring(0, 10),
+    desired_start_date: value["desiredStartDate"],
     comment: value["comment"],
     category: value["category"],
     delivery_address: DeliveryAddressRequestToJSON(value["deliveryAddress"]),

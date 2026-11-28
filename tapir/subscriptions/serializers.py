@@ -1,3 +1,5 @@
+import datetime
+
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
@@ -15,6 +17,15 @@ from tapir.products.serializers import (
     ProductSerializer,
 )
 from tapir.subscriptions.config import NOTICE_PERIOD_UNIT_OPTIONS
+from tapir.subscriptions.services.renewal_cancellation_status_provider import (
+    RenewalCancellationStatusProvider,
+)
+from tapir.subscriptions.services.subscription_change_week_to_date_converter import (
+    SubscriptionChangeWeekToDateConverter,
+)
+from tapir.subscriptions.services.subscription_date_change_applier import (
+    SubscriptionDateChangeApplier,
+)
 from tapir.subscriptions.services.subscription_price_calculator import (
     SubscriptionPriceCalculator,
 )
@@ -26,17 +37,20 @@ from tapir.wirgarten.models import (
     SubscriptionChangeLogEntry,
 )
 from tapir.wirgarten.utils import get_today
+from tapir.subscriptions.services.admin_subscription_change_member_data_builder import (
+    AdminSubscriptionChangeMemberDataBuilder,
+)
 
 
 class ProductForCancellationSerializer(serializers.Serializer):
     product = ProductSerializer(read_only=True)
     is_in_trial = serializers.BooleanField()
     cancellation_date = serializers.DateField()
-    last_day_of_notice_period = serializers.DateField()
+    last_day_to_give_notice = serializers.DateField()
     date_limit_for_trial_cancellation = serializers.DateField(required=False)
     notice_period_duration = serializers.IntegerField()
     notice_period_unit = serializers.ChoiceField(choices=NOTICE_PERIOD_UNIT_OPTIONS)
-    subscription_end_date = serializers.DateField()
+    post_trial_subscription_end_date = serializers.DateField()
 
 
 class SolidarityContributionCancellationDataSerializer(serializers.Serializer):
@@ -196,17 +210,23 @@ class MemberSubscriptionDataSerializer(serializers.Serializer):
 
 
 class SubscriptionDateChangeRequestSerializer(serializers.Serializer):
-    start_date_is_on_period_start = serializers.BooleanField()
-    end_date_is_on_period_end = serializers.BooleanField()
-    start_week = serializers.IntegerField()
-    end_week = serializers.IntegerField()
     subscription_id = serializers.CharField()
-    update_end_date_of_other_contracts = serializers.BooleanField()
+    action = serializers.ChoiceField(choices=SubscriptionDateChangeApplier.ACTIONS)
+    date = serializers.DateField(required=False, allow_null=True)
+    update_other_contracts = serializers.BooleanField()
 
 
-class ConvertWeekToDateForSubscriptionChangesResponseSerializer(serializers.Serializer):
-    start_date = serializers.DateField()
-    end_date = serializers.DateField()
+class ConvertWeekToDateForSubscriptionChangeRequestSerializer(serializers.Serializer):
+    subscription_id = serializers.CharField()
+    week = serializers.IntegerField()
+    boundary = serializers.ChoiceField(
+        choices=SubscriptionChangeWeekToDateConverter.BOUNDARIES
+    )
+
+
+class ConvertWeekToDateForSubscriptionChangeResponseSerializer(serializers.Serializer):
+    date = serializers.DateField(allow_null=True)
+    error = serializers.CharField(allow_null=True)
 
 
 class ConfirmSubscriptionChangesRequestSerializer(serializers.Serializer):
@@ -221,10 +241,18 @@ class SubscriptionPriceOverrideChangeRequestSerializer(serializers.Serializer):
     price_override = serializers.FloatField(allow_null=True)
 
 
-class SubscriptionTrialFieldsSerializer(SubscriptionSerializer):
+class SubscriptionDetailsSerializer(SubscriptionSerializer):
     is_in_trial = serializers.SerializerMethodField()
     default_trial_end_date = serializers.SerializerMethodField()
     effective_trial_end_date = serializers.SerializerMethodField()
+    renewal_cancellation_status = serializers.SerializerMethodField()
+    renewal_start_date = serializers.SerializerMethodField()
+    growing_period_start_date = serializers.DateField(
+        source="period.start_date", read_only=True
+    )
+    growing_period_end_date = serializers.DateField(
+        source="period.end_date", read_only=True
+    )
 
     def get_is_in_trial(self, subscription) -> bool:
         cache = self.context["cache"]
@@ -242,8 +270,100 @@ class SubscriptionTrialFieldsSerializer(SubscriptionSerializer):
             subscription, cache=cache
         )
 
+    @extend_schema_field(
+        serializers.ChoiceField(choices=RenewalCancellationStatusProvider.STATUSES)
+    )
+    def get_renewal_cancellation_status(self, subscription: Subscription) -> str:
+        return RenewalCancellationStatusProvider.get_status(
+            subscription=subscription, cache=self.context["cache"]
+        )
+
+    @extend_schema_field(serializers.DateField(allow_null=True))
+    def get_renewal_start_date(
+        self, subscription: Subscription
+    ) -> datetime.date | None:
+        renewal = RenewalCancellationStatusProvider.get_renewal(
+            subscription=subscription, cache=self.context["cache"]
+        )
+        return None if renewal is None else renewal.start_date
+
 
 class SubscriptionTrialChangeRequestSerializer(serializers.Serializer):
     subscription_id = serializers.CharField()
     trial_disabled = serializers.BooleanField()
     trial_end_date_override = serializers.DateField(allow_null=True, required=False)
+
+
+class AdminSubscriptionChangeMemberSummarySerializer(serializers.Serializer):
+    id = serializers.CharField()
+    display_name = serializers.CharField()
+    member_number = serializers.CharField(allow_null=True)
+
+
+class AdminSubscriptionChangeSubscriptionUnitSerializer(serializers.Serializer):
+    subscription_id = serializers.CharField()
+    unit_number = serializers.IntegerField()
+    product_type_id = serializers.CharField()
+    product_type_name = serializers.CharField()
+    product_id = serializers.CharField()
+    product_name = serializers.CharField()
+    start_date = serializers.DateField()
+    end_date = serializers.DateField()
+    status = serializers.ChoiceField(
+        choices=AdminSubscriptionChangeMemberDataBuilder.STATUSES
+    )
+    price_category = serializers.ChoiceField(
+        choices=AdminSubscriptionChangeMemberDataBuilder.PRICE_CATEGORIES
+    )
+
+
+class AdminSubscriptionChangePrerequisitesStatusSerializer(serializers.Serializer):
+    pickup_location_name = serializers.CharField(allow_null=True)
+    has_banking_data = serializers.BooleanField()
+
+
+class AdminSubscriptionChangeMemberDataSerializer(serializers.Serializer):
+    member = AdminSubscriptionChangeMemberSummarySerializer()
+    subscription_units = AdminSubscriptionChangeSubscriptionUnitSerializer(many=True)
+    prerequisites = AdminSubscriptionChangePrerequisitesStatusSerializer()
+    payment_rhythm_label = serializers.CharField()
+
+
+class AdminStartDateOptionSerializer(serializers.Serializer):
+    date = serializers.DateField(allow_null=True)
+    enabled = serializers.BooleanField()
+
+
+class AdminStartDateWeekOptionSerializer(serializers.Serializer):
+    date = serializers.DateField()
+    is_before_next_possible_start = serializers.BooleanField()
+    has_no_delivery = serializers.BooleanField()
+
+
+class AdminStartDateOptionsSerializer(serializers.Serializer):
+    next_possible_start = AdminStartDateOptionSerializer()
+    weeks = AdminStartDateWeekOptionSerializer(many=True)
+    next_period_start = AdminStartDateOptionSerializer()
+
+
+class SubscriptionPrerequisitesInputSerializer(serializers.Serializer):
+    pickup_location_id = serializers.CharField(required=False, allow_null=True)
+    account_owner = serializers.CharField(allow_blank=True)
+    iban = serializers.CharField(allow_blank=True)
+    sepa_mandate_confirmed = serializers.BooleanField()
+
+
+class AdminSizeChangeSerializer(serializers.Serializer):
+    member_id = serializers.CharField()
+    subscription_id = serializers.CharField()
+    new_product_id = serializers.CharField()
+    change_date = serializers.DateField()
+    prerequisites = SubscriptionPrerequisitesInputSerializer()
+
+
+class AdminSubscriptionAdditionSerializer(serializers.Serializer):
+    member_id = serializers.CharField()
+    product_id = serializers.CharField()
+    quantity = serializers.IntegerField()
+    start_date = serializers.DateField()
+    prerequisites = SubscriptionPrerequisitesInputSerializer()

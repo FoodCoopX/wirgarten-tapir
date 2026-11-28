@@ -17,12 +17,8 @@ import PdfExportBuildModal from "./PdfExportBuildModal.tsx";
 import PdfExportModal from "./PdfExportModal.tsx";
 import PdfExportTable from "./PdfExportTable.tsx";
 
-interface PdfExportEditorProps {
-  csrfToken: string;
-}
-
-const PdfExportEditor: React.FC<PdfExportEditorProps> = ({ csrfToken }) => {
-  const api = useApi(GenericExportsApi, csrfToken);
+const PdfExportEditor: React.FC = () => {
+  const api = useApi(GenericExportsApi);
   const [segments, setSegments] = useState<ExportSegment[]>([]);
   const [segmentsLoading, setSegmentsLoading] = useState(false);
   const [exports, setExports] = useState<PdfExportModel[]>([]);
@@ -194,7 +190,6 @@ const PdfExportEditor: React.FC<PdfExportEditorProps> = ({ csrfToken }) => {
         }}
         segments={segments}
         loadExports={loadExports}
-        csrfToken={csrfToken}
         exportToEdit={exportSelectedForEdition}
         setToastDatas={setToastDatas}
       />
@@ -212,7 +207,6 @@ const PdfExportEditor: React.FC<PdfExportEditorProps> = ({ csrfToken }) => {
         <PdfExportBuildModal
           exportToBuild={exportSelectedForBuild}
           show={true}
-          csrfToken={csrfToken}
           onHide={() => setExportSelectedForBuild(undefined)}
           setToastDatas={setToastDatas}
         />

@@ -1,11 +1,11 @@
 import { createRoot } from "react-dom/client";
-import { getCsrfToken } from "../utils/getCsrfToken.ts";
 import AssociationMembershipCancelButton from "./AssociationMembershipCancelButton.tsx";
 import AssociationMembershipUpdateButton from "./AssociationMembershipUpdateButton.tsx";
 import DeliveriesButton from "./DeliveriesButton.tsx";
 import MemberDeleteButton from "./MemberDeleteButton.tsx";
 import MemberSearchHelpButton from "./MemberSearchHelpButton.tsx";
 import PaymentsButton from "./PaymentsButton.tsx";
+import SendVerificationEmailsButton from "./SendVerificationEmailsButton.tsx";
 import SubscriptionCancellationButton from "./SubscriptionCancellationButton.tsx";
 
 const domNodeSubscriptionCancellationButton = document.getElementById(
@@ -13,7 +13,7 @@ const domNodeSubscriptionCancellationButton = document.getElementById(
 );
 if (domNodeSubscriptionCancellationButton) {
   const root = createRoot(domNodeSubscriptionCancellationButton);
-  root.render(<SubscriptionCancellationButton csrfToken={getCsrfToken()} />);
+  root.render(<SubscriptionCancellationButton />);
 } else {
   console.error("Cancellation button not found");
 }
@@ -23,7 +23,7 @@ const domNodeMemberDeleteButton = document.getElementById(
 );
 if (domNodeMemberDeleteButton) {
   const root = createRoot(domNodeMemberDeleteButton);
-  root.render(<MemberDeleteButton csrfToken={getCsrfToken()} />);
+  root.render(<MemberDeleteButton />);
 } else {
   console.error("Member delete button not found");
 }
@@ -33,12 +33,7 @@ if (domNodePaymentButton) {
   const deliveryChargeEnabled =
     domNodePaymentButton.dataset.deliveryChargeEnabled === "True";
   const root = createRoot(domNodePaymentButton);
-  root.render(
-    <PaymentsButton
-      csrfToken={getCsrfToken()}
-      deliveryChargeEnabled={deliveryChargeEnabled}
-    />,
-  );
+  root.render(<PaymentsButton deliveryChargeEnabled={deliveryChargeEnabled} />);
 } else {
   console.error("Member payments button not found");
 }
@@ -46,7 +41,7 @@ if (domNodePaymentButton) {
 const domNodeDeliveriesButton = document.getElementById("deliveries_button");
 if (domNodeDeliveriesButton) {
   const root = createRoot(domNodeDeliveriesButton);
-  root.render(<DeliveriesButton csrfToken={getCsrfToken()} />);
+  root.render(<DeliveriesButton />);
 } else {
   console.error("Member deliveries button not found");
 }
@@ -56,7 +51,7 @@ const domNodeUpdateAssociationMembership = document.getElementById(
 );
 if (domNodeUpdateAssociationMembership) {
   const root = createRoot(domNodeUpdateAssociationMembership);
-  root.render(<AssociationMembershipUpdateButton csrfToken={getCsrfToken()} />);
+  root.render(<AssociationMembershipUpdateButton />);
 }
 
 const domNodeCancelAssociationMembership = document.getElementById(
@@ -64,7 +59,7 @@ const domNodeCancelAssociationMembership = document.getElementById(
 );
 if (domNodeCancelAssociationMembership) {
   const root = createRoot(domNodeCancelAssociationMembership);
-  root.render(<AssociationMembershipCancelButton csrfToken={getCsrfToken()} />);
+  root.render(<AssociationMembershipCancelButton />);
 }
 
 const domNodeMemberSearchHelpButton = document.getElementById(
@@ -73,4 +68,12 @@ const domNodeMemberSearchHelpButton = document.getElementById(
 if (domNodeMemberSearchHelpButton) {
   const root = createRoot(domNodeMemberSearchHelpButton);
   root.render(<MemberSearchHelpButton />);
+}
+
+const domNodeSendVerificationEmailsButton = document.getElementById(
+  "send_verification_emails_button",
+);
+if (domNodeSendVerificationEmailsButton) {
+  const root = createRoot(domNodeSendVerificationEmailsButton);
+  root.render(<SendVerificationEmailsButton />);
 }

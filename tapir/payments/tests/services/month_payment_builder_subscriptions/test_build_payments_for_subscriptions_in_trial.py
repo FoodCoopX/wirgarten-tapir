@@ -14,6 +14,9 @@ from tapir.payments.tasks import create_payments_for_this_month
 from tapir.subscriptions.services.contract_start_date_calculator import (
     ContractStartDateCalculator,
 )
+from tapir.subscriptions.services.subscription_date_change_applier import (
+    SubscriptionDateChangeApplier,
+)
 from tapir.wirgarten.constants import WEEKLY
 from tapir.wirgarten.models import Payment, Subscription
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -123,7 +126,7 @@ class TestBuildPaymentsForSubscriptionsInTrial(TapirIntegrationTest):
                     cache=cache,
                     generated_payments=generated_payments,
                     in_trial=True,
-                    total_to_pay_function=MonthPaymentBuilderSubscriptions.get_total_to_pay,
+                    calculation_parts_function=MonthPaymentBuilderSubscriptions.get_calculation_parts,
                     allow_negative_amounts=False,
                 ),
                 call(
@@ -135,7 +138,7 @@ class TestBuildPaymentsForSubscriptionsInTrial(TapirIntegrationTest):
                     cache=cache,
                     generated_payments=generated_payments,
                     in_trial=True,
-                    total_to_pay_function=MonthPaymentBuilderSubscriptions.get_total_to_pay,
+                    calculation_parts_function=MonthPaymentBuilderSubscriptions.get_calculation_parts,
                     allow_negative_amounts=False,
                 ),
                 call(
@@ -147,7 +150,7 @@ class TestBuildPaymentsForSubscriptionsInTrial(TapirIntegrationTest):
                     cache=cache,
                     generated_payments=generated_payments,
                     in_trial=True,
-                    total_to_pay_function=MonthPaymentBuilderSubscriptions.get_total_to_pay,
+                    calculation_parts_function=MonthPaymentBuilderSubscriptions.get_calculation_parts,
                     allow_negative_amounts=False,
                 ),
             ],
@@ -317,12 +320,10 @@ class TestBuildPaymentsForSubscriptionsInTrial(TapirIntegrationTest):
                 "subscriptions:dates_change",
             ),
             data={
-                "start_date_is_on_period_start": True,
-                "end_date_is_on_period_end": False,
-                "start_week": -1,
-                "end_week": 22,
                 "subscription_id": old_subscription.id,
-                "update_end_date_of_other_contracts": False,
+                "action": SubscriptionDateChangeApplier.ACTION_CHANGE_END,
+                "date": "2020-05-31",
+                "update_other_contracts": False,
             },
             content_type="application/json",
         )

@@ -1,0 +1,9 @@
+{% load wirgarten %}
+Probezeit manuell geändert:
+<ul>
+    <li>{{ entry.subscription_formatted }}</li>
+    <li>Probezeit deaktiviert: {{ entry.trial_disabled_before|yesno:"Ja,Nein" }} -> {{ entry.trial_disabled_after|yesno:"Ja,Nein" }}</li>
+    {% if entry.trial_end_date_override_before or entry.trial_end_date_override_after %}
+        <li>Probezeit-Enddatum: {{ entry.trial_end_date_override_before|format_date|default:"-" }} -> {{ entry.trial_end_date_override_after|format_date|default:"-" }}</li>
+    {% endif %}
+</ul>

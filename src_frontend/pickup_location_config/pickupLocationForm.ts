@@ -3,6 +3,7 @@ import {
   PickupLocation,
   PickupLocationSaveRequestRequest,
 } from "../api-client";
+import { fromApiDate } from "../utils/apiDate.ts";
 
 export const WEEKDAYS = [
   "Montag",
@@ -84,8 +85,8 @@ export const EMPTY_FORM: FormState = {
   endDate: "",
 };
 
-function dateToInputValue(date: Date | null | undefined) {
-  return date ? date.toISOString().substring(0, 10) : "";
+function dateToInputValue(date: string | null | undefined) {
+  return date ?? "";
 }
 
 export function buildFormState(pickupLocation: PickupLocation): FormState {
@@ -123,8 +124,8 @@ export function buildRequest(
     accessCode: form.isHomeDelivery ? "" : form.accessCode,
     messengerGroupLink: form.isHomeDelivery ? "" : form.messengerGroupLink,
     locationRouteId: form.locationRouteId || null,
-    startDate: form.startDate ? new Date(form.startDate) : null,
-    endDate: form.endDate ? new Date(form.endDate) : null,
+    startDate: form.startDate || null,
+    endDate: form.endDate || null,
     openingTimes: sortOpeningTimes(openingTimes),
   };
 }
@@ -136,7 +137,7 @@ export function sortOpeningTimes(openingTimes: OpeningTimeRow[]) {
 }
 
 export function getWeekdayIndex(date: string) {
-  return (new Date(date).getUTCDay() + 6) % 7;
+  return (fromApiDate(date).getDay() + 6) % 7;
 }
 
 export function getDateErrors(form: FormState): Record<string, string> {

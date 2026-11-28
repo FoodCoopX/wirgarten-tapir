@@ -4,7 +4,7 @@ from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.db.models import F, Sum
 from django.views import generic
-from tapir_mail.models import MailCategory
+from tapir.mail.models import MailCategory
 
 from tapir.accounts.models import EmailChangeRequest
 from tapir.configuration.parameter import get_parameter_value
@@ -22,6 +22,9 @@ from tapir.pickup_locations.services.member_delivery_address_getter import (
 )
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
+)
+from tapir.payments.services.payment_export_exclusion_period_service import (
+    PaymentExportExclusionPeriodService,
 )
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
@@ -48,7 +51,6 @@ from tapir.wirgarten.service.products import (
     get_active_subscriptions,
     get_available_product_types,
     get_active_and_future_subscriptions,
-    get_next_growing_period,
 )
 from tapir.wirgarten.utils import (
     format_date,
@@ -56,6 +58,7 @@ from tapir.wirgarten.utils import (
     legal_status_is_association,
     legal_status_is_cooperative,
 )
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.user_utils import UserUtils
 from tapir.wirgarten.views.mixin import PermissionOrSelfRequiredMixin
 
@@ -80,7 +83,9 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             self.object, today, include_future_subscriptions=True, cache=cache
         )
         context["bakery_enabled"] = settings.BAKERY_ENABLED
-        next_growing_period = get_next_growing_period()
+        next_growing_period = TapirCache.get_first_growing_period_starting_after(
+            reference_date=get_today(cache=cache), cache=cache
+        )
         for subscriptions in context["subscriptions"].values():
             for subscription in subscriptions:
                 price_at_renewal_date = 0
@@ -216,6 +221,10 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
                 f"Aktuell: {context["payment_rhythm"]}. Ab dem {format_date(future_rhythm.valid_from)}: {MemberPaymentRhythmService.get_rhythm_display_name(future_rhythm.rhythm)}"
             )
 
+        self.add_payment_export_exclusion_context(
+            context=context, today=today, cache=cache
+        )
+
         context["show_mail_category_content"] = MailCategory.objects.exists()
         context["extra_email_addresses_enabled"] = get_parameter_value(
             key=ParameterKeys.ENABLE_EXTRA_MAIL_ADDRESSES, cache=cache
@@ -244,6 +253,21 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         context["cache"] = cache
 
         return context
+
+    def add_payment_export_exclusion_context(
+        self, context: dict, today: datetime.date, cache: dict
+    ):
+        context["payment_export_exclusion_enabled"] = get_parameter_value(
+            key=ParameterKeys.PAYMENT_EXPORT_EXCLUSION_ENABLED, cache=cache
+        )
+        if not context["payment_export_exclusion_enabled"]:
+            return
+
+        context["payment_export_exclusion_period"] = (
+            PaymentExportExclusionPeriodService.get_current_or_next_period(
+                member_id=self.object.id, reference_date=today, cache=cache
+            )
+        )
 
     def add_delivery_address_context(
         self, context: dict, today: datetime.date, cache: dict
@@ -282,7 +306,9 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         if not get_active_subscriptions().filter(member_id=self.object.id).exists():
             return
 
-        next_growing_period = get_next_growing_period(today, cache=cache)
+        next_growing_period = TapirCache.get_first_growing_period_starting_after(
+            reference_date=today, cache=cache
+        )
         if not (
             next_growing_period
             and (today + relativedelta(months=3)) >= next_growing_period.start_date

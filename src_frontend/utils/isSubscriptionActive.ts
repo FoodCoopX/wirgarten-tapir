@@ -1,9 +1,10 @@
 import { PublicSubscription } from "../api-client";
+import { toApiDate } from "./apiDate.ts";
 
 export function isSubscriptionActive(subscription: PublicSubscription) {
-  const now = new Date();
+  const today = toApiDate(new Date());
   return (
-    now >= subscription.startDate &&
-    (!subscription.endDate || now <= subscription.endDate)
+    today >= subscription.startDate &&
+    (!subscription.endDate || today <= subscription.endDate)
   );
 }

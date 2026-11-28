@@ -1,9 +1,9 @@
 import {
   AssociationMembershipType,
+  BestellWizardGrowingPeriodChoice,
   BestellWizardImages,
   BestellWizardStrings,
   LegalStatusEnum,
-  PublicGrowingPeriod,
   PublicPickupLocation,
   PublicProductType,
   type SolidarityStepPositionEnum,
@@ -16,6 +16,7 @@ export type BestellWizardSettings = {
   productTypes: PublicProductType[];
   associationMembershipTypes: AssociationMembershipType[];
   priceOfAShare: number;
+  coopMinShares: number;
   coopShareInstalmentsEnabled: boolean;
   coopShareInstalmentAmount: number;
   allowInvestingMembership: boolean;
@@ -42,7 +43,7 @@ export type BestellWizardSettings = {
   solidarityContributionMinimum: number | null;
   solidarityContributionDefault: number;
   feedbackStepEnabled: boolean;
-  growingPeriodChoices: PublicGrowingPeriod[];
+  growingPeriodChoices: BestellWizardGrowingPeriodChoice[];
   solidarityStepPosition: SolidarityStepPositionEnum;
   legalStatus: LegalStatusEnum;
   strings: BestellWizardStrings;

@@ -50,10 +50,10 @@ export interface MemberCredit {
   comment: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof MemberCredit
    */
-  dueDate: Date;
+  dueDate: string;
   /**
    *
    * @type {Date}
@@ -91,7 +91,7 @@ export function MemberCreditFromJSONTyped(
     amount: json["amount"],
     purpose: json["purpose"],
     comment: json["comment"],
-    dueDate: new Date(json["due_date"]),
+    dueDate: json["due_date"],
     settledOn:
       json["settled_on"] == null ? undefined : new Date(json["settled_on"]),
   };
@@ -115,7 +115,7 @@ export function MemberCreditToJSONTyped(
     amount: value["amount"],
     purpose: value["purpose"],
     comment: value["comment"],
-    due_date: value["dueDate"].toISOString().substring(0, 10),
+    due_date: value["dueDate"],
     settled_on:
       value["settledOn"] == null
         ? undefined

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Form, ListGroup, Modal, Table } from "react-bootstrap";
+import { Badge, Form, ListGroup, Modal, Table } from "react-bootstrap";
 import Select from "react-select";
 import { CoopApi, CoreApi, MailingListRecipient, Member } from "../api-client";
 import ConfirmDeleteModal from "../components/ConfirmDeleteModal.tsx";
@@ -7,7 +7,6 @@ import PlaceholderTableRows from "../components/PlaceholderTableRows.tsx";
 import TapirButton from "../components/TapirButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
-import { getCsrfToken } from "../utils/getCsrfToken.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 
 interface MailingListManageRecipientsModalProps {
@@ -21,8 +20,8 @@ interface MailingListManageRecipientsModalProps {
 const MailingListManageRecipientsModal: React.FC<
   MailingListManageRecipientsModalProps
 > = ({ show, onHide, loadData, setToastDatas, listName }) => {
-  const coreApi = useApi(CoreApi, getCsrfToken());
-  const coopApi = useApi(CoopApi, getCsrfToken());
+  const coreApi = useApi(CoreApi);
+  const coopApi = useApi(CoopApi);
   const [recipients, setRecipients] = useState<MailingListRecipient[]>([]);
   const [loadingRecipients, setLoadingRecipients] = useState(false);
   const [unsubscribeLoading, setUnsubscribeLoading] = useState(false);
@@ -213,6 +212,17 @@ const MailingListManageRecipientsModal: React.FC<
                   </a>
                 ) : (
                   recipient.address
+                )}
+                {recipient.extraEmailMember && (
+                  <>
+                    <Badge bg={"secondary"} className={"ms-2"}>
+                      Zusätzliche Adresse
+                    </Badge>
+                    <small className={"d-block text-muted"}>
+                      von {recipient.extraEmailMember.displayName} (
+                      {recipient.extraEmailMember.email})
+                    </small>
+                  </>
                 )}
               </td>
               <td>{recipient.userConfirmed ? "Ja" : "Nein"}</td>

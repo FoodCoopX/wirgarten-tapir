@@ -17,7 +17,6 @@ interface DailySettingsModalProps {
   day: number;
   dayLabel: string;
   activeBreads: BreadList[];
-  csrfToken: string;
 }
 
 interface SpecificsData {
@@ -58,9 +57,8 @@ export const DailySettingsModal: React.FC<DailySettingsModalProps> = ({
   day,
   dayLabel,
   activeBreads,
-  csrfToken,
 }) => {
-  const bakeryApi = useApi(BakeryApi, csrfToken);
+  const bakeryApi = useApi(BakeryApi);
 
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(true);

@@ -44,10 +44,8 @@ const CancellationStepConfirmation: React.FC<
             (productForCancellation: ProductForCancellation) => {
               return (
                 <li key={productForCancellation.product.id}>
-                  {productForCancellation.product.type.name +
-                    " (" +
-                    productForCancellation.product.name +
-                    ") zum " +
+                  {productForCancellation.product.name +
+                    " zum " +
                     formatDateText(productForCancellation.cancellationDate)}
                 </li>
               );

@@ -5,7 +5,6 @@ const container = document.getElementById("choose-breads-root");
 
 if (container) {
   const memberId = container.dataset.memberId || "";
-  const csrfToken = container.dataset.csrfToken || "";
   const chooseStationPerBread =
     container.dataset.chooseStationPerBread === "True";
   const membersCanChooseBreadSorts =
@@ -17,7 +16,6 @@ if (container) {
       chooseStationPerBread={chooseStationPerBread}
       membersCanChooseBreadSorts={membersCanChooseBreadSorts}
       memberId={memberId}
-      csrfToken={csrfToken}
     />,
   );
 }

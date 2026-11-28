@@ -13,8 +13,9 @@ COPY \
     "./pnpm-lock.yaml" \
     "./pnpm-workspace.yaml" \
     ./
+COPY "./src_frontend_mail/package.json" ./src_frontend_mail/
 RUN pnpm install --frozen-lockfile
 
-CMD ["pnpm", "run", "dev"]
+CMD ["pnpm", "--parallel", "--recursive", "--include-workspace-root", "run", "dev"]
 
 # Note: vite.config.js and src code will be mounted via volumes

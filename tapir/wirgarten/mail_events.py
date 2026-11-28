@@ -24,6 +24,8 @@ class Events:
     # Mitglied tritt der Genossenschaft bei (nach Ablauf der Probezeit)
     MEMBERSHIP_ENTRY = "membership_entry"
 
+    ASSOCIATION_MEMBERSHIP_ENTRY = "associations.membership_entry"
+
     # Letzte Abholung (es gibt keine weiteren Verträge mehr)
     FINAL_PICKUP = "final_pickup"
 
@@ -54,6 +56,7 @@ class Events:
     ORDER_REVOKED = "order_revoked"
 
     EXTRA_MAIL_CONFIRMATION = "extra_mail_confirmation"
+    SUBSCRIPTION_MANAGEMENT_LINK = "subscription_management_link"
 
     CANCELLATION_OF_COOP_SHARES = "cancellation_of_coop_shares"
 

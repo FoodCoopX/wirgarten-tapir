@@ -98,10 +98,10 @@ export interface BreadDelivery {
   readonly deliveryDay: number | null;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof BreadDelivery
    */
-  readonly choosingDeadline: Date | null;
+  readonly choosingDeadline: string | null;
   /**
    *
    * @type {boolean}
@@ -176,10 +176,7 @@ export function BreadDeliveryFromJSONTyped(
     pickupLocationStreet: json["pickup_location_street"],
     pickupLocationCity: json["pickup_location_city"],
     deliveryDay: json["delivery_day"],
-    choosingDeadline:
-      json["choosing_deadline"] == null
-        ? null
-        : new Date(json["choosing_deadline"]),
+    choosingDeadline: json["choosing_deadline"],
     canStillChoose: json["can_still_choose"],
   };
 }

@@ -26,14 +26,8 @@ interface DayConfig {
 const currentWeek = currentIsoWeek();
 const currentYear = currentIsoYear();
 
-interface WeeklyPlanBreadsProps {
-  csrfToken: string;
-}
-
-export const WeeklyPlanBreads: React.FC<WeeklyPlanBreadsProps> = ({
-  csrfToken,
-}) => {
-  const bakeryApi = useApi(BakeryApi, csrfToken);
+export const WeeklyPlanBreads: React.FC = () => {
+  const bakeryApi = useApi(BakeryApi);
   const [year, setYear] = useState(currentYear);
   const [week, setWeek] = useState(currentWeek);
   const [allBreads, setAllBreads] = useState<BreadList[]>([]);
@@ -347,7 +341,6 @@ export const WeeklyPlanBreads: React.FC<WeeklyPlanBreadsProps> = ({
                     activeBreads={allBreads.filter(
                       (bread) => dayConfig.breads[bread.id!] === true,
                     )}
-                    csrfToken={csrfToken}
                   />
                 </div>
               </div>
@@ -365,7 +358,6 @@ export const WeeklyPlanBreads: React.FC<WeeklyPlanBreadsProps> = ({
           day={selectedDay.day}
           dayLabel={selectedDay.label}
           activeBreads={selectedDay.activeBreads}
-          csrfToken={csrfToken}
         />
       )}
     </div>

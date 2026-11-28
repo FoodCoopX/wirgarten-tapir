@@ -1,4 +1,4 @@
-from tapir_mail.models import StaticSegmentRecipient
+from tapir.mail.models import StaticSegmentRecipient
 
 from tapir.pickup_locations.services.member_delivery_address_getter import (
     MemberDeliveryAddressGetter,
@@ -46,6 +46,16 @@ class PickupLocationMailTokenService:
         pickup_location = cls.get_pickup_location_if_available(recipient, cache)
         if pickup_location is None:
             return cls.NOT_APPLICABLE
+
+        return pickup_location.name
+
+    @classmethod
+    def pickup_location_name_or_empty(
+        cls, recipient: Member | StaticSegmentRecipient, cache: dict
+    ):
+        pickup_location = cls.get_pickup_location_if_available(recipient, cache)
+        if pickup_location is None:
+            return ""
 
         return pickup_location.name
 

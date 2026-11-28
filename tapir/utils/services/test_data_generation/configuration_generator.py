@@ -53,6 +53,10 @@ class ConfigurationGenerator:
             key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         ).update(value=organization in [Organization.BIOTOP, Organization.MM])
 
+        TapirParameter.objects.filter(
+            key=ParameterKeys.SUPPLIER_LIST_PRODUCT_TYPES
+        ).update(value="Hühneranteil")
+
         delivery_day = {
             Organization.BIOTOP: 4,
             Organization.WIRGARTEN: 2,
@@ -109,6 +113,10 @@ class ConfigurationGenerator:
         TapirParameter.objects.filter(
             key=ParameterKeys.PAYMENT_CREDITOR_IDENTIFIER
         ).update(value="TEST-IDENTIFIER")
+
+        TapirParameter.objects.filter(
+            key=ParameterKeys.ENABLE_EXTRA_MAIL_ADDRESSES
+        ).update(value=True)
 
         if organization == Organization.VEREIN:
             AssociationMembershipType.objects.create(

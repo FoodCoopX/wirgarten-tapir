@@ -1,24 +1,22 @@
 import datetime
-from unittest.mock import patch, Mock
+from unittest.mock import patch, MagicMock
 
 from django.urls import reverse
 from rest_framework import status
 
-from tapir.pickup_locations.services.pickup_location_capacity_general_checker import (
-    PickupLocationCapacityGeneralChecker,
-)
-from tapir.subscriptions.services.contract_start_date_calculator import (
-    ContractStartDateCalculator,
+from tapir.pickup_locations.services.pickup_locations_with_enough_capacity_provider import (
+    PickupLocationsWithEnoughCapacityProvider,
 )
 from tapir.wirgarten.parameters import ParameterDefinitions
-from tapir.wirgarten.tests.factories import PickupLocationFactory
-from tapir.wirgarten.tests.test_utils import (
-    TapirIntegrationTest,
-    monday_after,
-    sunday_before,
+from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
+
+
+@patch.object(
+    PickupLocationsWithEnoughCapacityProvider,
+    "get_pickup_location_ids",
+    autospec=True,
+    return_value=["id_1", "id_2"],
 )
-
-
 class TestPickupLocationCapacityCheckApiView(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls) -> None:
@@ -26,43 +24,24 @@ class TestPickupLocationCapacityCheckApiView(TapirIntegrationTest):
 
     def setUp(self):
         super().setUp()
-        self.pickup_location_1 = PickupLocationFactory.create(
-            name="pickup_location_name_1"
-        )
-        self.pickup_location_2 = PickupLocationFactory.create(
-            name="pickup_location_name_2"
-        )
-        self.pickup_location_3 = PickupLocationFactory.create(
-            name="pickup_location_name_3"
-        )
-        self._login_as_admin()
-        self.reference_date = ContractStartDateCalculator.get_next_contract_start_date(
-            reference_date=datetime.date.today(),
-            apply_buffer_time=False,
-            cache={},
-        )
+        mock_timezone(self, now=datetime.datetime(year=2026, month=6, day=1))
 
-    @patch.object(
-        PickupLocationCapacityGeneralChecker,
-        "does_pickup_location_have_enough_capacity_to_add_subscriptions",
-        return_value=True,
-    )
-    def test_capacityCheck_futureStartDatePickupLocationNotCandidate_excludesItFromCandidates(
-        self, mock_does_pickup_location_have_enough_capacity_to_add_subscriptions: Mock
+    def test_post_default_usesNextContractStartDate(
+        self, mock_get_pickup_location_ids: MagicMock
     ):
-        self.pickup_location_1.end_date = sunday_before(self.reference_date)
-        self.pickup_location_3.start_date = monday_after(self.reference_date)
-        self.pickup_location_1.save()
-        self.pickup_location_3.save()
-
         response = self.client.post(
             reverse("pickup_locations:pickup_location_capacity_check"),
-            data={"shopping_cart": {}, "growing_period_id": None},
+            data={"shopping_cart": {}},
             content_type="application/json",
         )
 
         self.assertStatusCode(response, status.HTTP_200_OK)
-        ids = response.json()["pickup_location_ids_with_enough_capacity_for_order"]
-        self.assertIn(self.pickup_location_2.id, ids)
-        self.assertNotIn(self.pickup_location_3.id, ids)
-        self.assertNotIn(self.pickup_location_1.id, ids)
+        self.assertEqual(
+            ["id_1", "id_2"],
+            response.json()["pickup_location_ids_with_enough_capacity_for_order"],
+        )
+        mock_get_pickup_location_ids.assert_called_once()
+        self.assertEqual(
+            datetime.date(year=2026, month=6, day=8),
+            mock_get_pickup_location_ids.call_args.kwargs["subscription_start"],
+        )

@@ -11,7 +11,7 @@ from django.utils import translation
 from django.utils.translation import gettext_lazy as _
 from nanoid import generate
 from phonenumber_field.modelfields import PhoneNumberField
-from tapir_mail.models import StaticSegmentRecipient
+from tapir.mail.models import StaticSegmentRecipient
 
 from tapir import utils
 from tapir.accounts.services.keycloak_user_manager import (

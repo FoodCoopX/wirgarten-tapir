@@ -6,6 +6,7 @@ import TapirButton from "../components/TapirButton.tsx";
 import TapirHelpButton from "../components/TapirHelpButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
+import { toApiDate } from "../utils/apiDate.ts";
 import { formatCurrency } from "../utils/formatCurrency.ts";
 import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
@@ -14,7 +15,6 @@ import AssociationMembershipTypePriceModal from "./AssociationMembershipTypePric
 import { getAssociationMembershipTypeCurrentPrice } from "./getAssociationMembershipTypeCurrentPrice.ts";
 
 interface AssociationMembershipTypeTableProps {
-  csrfToken: string;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
   membershipTypes: AssociationMembershipType[];
   loadData: () => void;
@@ -22,8 +22,8 @@ interface AssociationMembershipTypeTableProps {
 
 const AssociationMembershipTypeTable: React.FC<
   AssociationMembershipTypeTableProps
-> = ({ csrfToken, setToastDatas, membershipTypes, loadData }) => {
-  const api = useApi(AssociationsApi, csrfToken);
+> = ({ setToastDatas, membershipTypes, loadData }) => {
+  const api = useApi(AssociationsApi);
   const [typeSelectedForEdit, setTypeSelectedForEdit] =
     useState<AssociationMembershipType>();
   const [typeSelectedForPrice, setTypeSelectedForPrice] =
@@ -33,8 +33,8 @@ const AssociationMembershipTypeTable: React.FC<
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   function getNextPrice(type: AssociationMembershipType) {
-    const now = new Date();
-    return type.prices.find((price) => price.validFrom > now);
+    const today = toApiDate(new Date());
+    return type.prices.find((price) => price.validFrom > today);
   }
 
   function buildPrice(type: AssociationMembershipType) {
@@ -183,7 +183,6 @@ const AssociationMembershipTypeTable: React.FC<
       </Table>
       {typeSelectedForEdit && (
         <AssociationMembershipTypeEditModal
-          csrfToken={csrfToken}
           show={true}
           onHide={() => setTypeSelectedForEdit(undefined)}
           onEdited={() => {
@@ -196,7 +195,6 @@ const AssociationMembershipTypeTable: React.FC<
       )}
       {typeSelectedForPrice && (
         <AssociationMembershipTypePriceModal
-          csrfToken={csrfToken}
           show={true}
           onHide={() => setTypeSelectedForPrice(undefined)}
           onEdited={() => {

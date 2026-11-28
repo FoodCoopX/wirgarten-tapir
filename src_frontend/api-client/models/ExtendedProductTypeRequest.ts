@@ -102,10 +102,10 @@ export interface ExtendedProductTypeRequest {
   taxRate: number;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof ExtendedProductTypeRequest
    */
-  taxRateChangeDate: Date;
+  taxRateChangeDate: string;
   /**
    *
    * @type {boolean}
@@ -266,7 +266,7 @@ export function ExtendedProductTypeRequestFromJSONTyped(
         ? undefined
         : NoticePeriodUnitEnumFromJSON(json["notice_period_unit"]),
     taxRate: json["tax_rate"],
-    taxRateChangeDate: new Date(json["tax_rate_change_date"]),
+    taxRateChangeDate: json["tax_rate_change_date"],
     singleSubscriptionOnly: json["single_subscription_only"],
     isAffectedByJokers: json["is_affected_by_jokers"],
     mustBeSubscribedTo: json["must_be_subscribed_to"],
@@ -307,9 +307,7 @@ export function ExtendedProductTypeRequestToJSONTyped(
     notice_period_duration: value["noticePeriodDuration"],
     notice_period_unit: NoticePeriodUnitEnumToJSON(value["noticePeriodUnit"]),
     tax_rate: value["taxRate"],
-    tax_rate_change_date: value["taxRateChangeDate"]
-      .toISOString()
-      .substring(0, 10),
+    tax_rate_change_date: value["taxRateChangeDate"],
     single_subscription_only: value["singleSubscriptionOnly"],
     is_affected_by_jokers: value["isAffectedByJokers"],
     must_be_subscribed_to: value["mustBeSubscribedTo"],

@@ -10,22 +10,17 @@ import TapirButton from "../components/TapirButton.tsx";
 import TapirToastContainer from "../components/TapirToastContainer.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
+import { toApiDate } from "../utils/apiDate.ts";
 import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
 import { getMinimumDate } from "../utils/getMinimumDate.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import { DEFAULT_PAGE_SIZE } from "../utils/pagination.ts";
 import ConfirmRevokeModal from "./ConfirmRevokeModal.tsx";
 
-interface ContractUpdatesCardProps {
-  csrfToken: string;
-}
-
 type ContractFilter = "all" | "includes_creations" | "includes_cancellations";
 
-const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
-  csrfToken,
-}) => {
-  const subscriptionsApi = useApi(SubscriptionsApi, csrfToken);
+const ContractUpdatesCard: React.FC = () => {
+  const subscriptionsApi = useApi(SubscriptionsApi);
   const [loading, setLoading] = useState(true);
   const [changesToConfirm, setChangesToConfirm] = useState<
     MemberDataToConfirm[]
@@ -54,9 +49,8 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
     subscriptionsApi
       .subscriptionsApiMemberDataToConfirmList()
       .then((changes) => {
-        changes.sort(
-          (a, b) =>
-            getEarliestChange(a).getTime() - getEarliestChange(b).getTime(),
+        changes.sort((a, b) =>
+          getEarliestChange(a).localeCompare(getEarliestChange(b)),
         );
         setChangesToConfirm(changes);
       })
@@ -85,7 +79,7 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
               >
                 Zeichnung: {creation.quantity}
                 {" × "}
-                {creation.product.name} {creation.product.type.name} am{" "}
+                {creation.product.name} am{" "}
                 {formatDateNumeric(creation.startDate)}
                 {creation.autoConfirmed
                   ? " (automatische Bestätigung schon versendet)"
@@ -98,7 +92,7 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
               <li key={cancellation.id}>
                 Kündigung: {cancellation.quantity}
                 {" × "}
-                {cancellation.product.name} {cancellation.product.type.name} zum{" "}
+                {cancellation.product.name} zum{" "}
                 {formatDateNumeric(cancellation.endDate)}
               </li>
             );
@@ -162,8 +156,10 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
     );
   }
 
-  function getEarliestChange(data: MemberDataToConfirm | SubscriptionChange) {
-    let dates = [
+  function getEarliestChange(
+    data: MemberDataToConfirm | SubscriptionChange,
+  ): string {
+    let dates: string[] = [
       ...data.subscriptionCreations.map((creation) => creation.startDate!),
       ...data.subscriptionCancellations.map(
         (cancellation) => cancellation.endDate!,
@@ -184,12 +180,14 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
     if ("subscriptionsDeleted" in data) {
       dates = [
         ...dates,
-        ...data.subscriptionsDeleted.map((deleted) => deleted.createdDate),
+        ...data.subscriptionsDeleted.map((deleted) =>
+          toApiDate(deleted.createdDate),
+        ),
       ];
     }
 
     if (dates.length === 0) {
-      return new Date();
+      return toApiDate(new Date());
     }
 
     return getMinimumDate(dates);
@@ -349,7 +347,7 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
 
   function doesSelectionContainChangesThatAreAlreadyValid(): boolean {
     for (const memberChanges of selectedChanges) {
-      if (getEarliestChange(memberChanges) <= new Date()) {
+      if (getEarliestChange(memberChanges) <= toApiDate(new Date())) {
         return true;
       }
     }

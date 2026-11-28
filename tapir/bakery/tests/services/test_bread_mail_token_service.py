@@ -1,6 +1,6 @@
 import datetime
 
-from tapir_mail.models import StaticSegmentRecipient
+from tapir.mail.models import StaticSegmentRecipient
 
 from tapir.bakery.services.bread_mail_token_service import BreadMailTokenService
 from tapir.bakery.tests.factories import (

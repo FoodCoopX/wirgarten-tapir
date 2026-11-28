@@ -7,8 +7,7 @@ from django.conf import settings
 from django.core.cache import cache
 from django.test import TestCase, Client, SimpleTestCase, override_settings
 from django.utils import timezone
-from rest_framework.test import APIClient
-from tapir_mail.triggers.transactional_trigger import (
+from tapir.mail.triggers.transactional_trigger import (
     TransactionalTrigger,
     TransactionalTriggerData,
 )
@@ -32,7 +31,7 @@ class TapirFactoryMixin:
 
 
 @override_settings(
-    # This disables the ManifestStaticFilesStorage from the settings: with the manifest storage, collectstatic must be run before tests can work
+    # This disables the ViteManifestStaticFilesStorage from the settings: with the manifest storage, collectstatic must be run before tests can work
     STORAGES={
         **settings.STORAGES,
         "staticfiles": {
@@ -47,7 +46,6 @@ class TapirIntegrationTest(TapirFactoryMixin, TestCase):
         super().setUp()
         self.factory_setup()
         self.client = Client()
-        self.apiClient = APIClient()
         cache.clear()
         configure_mail_module()
         self.mock_get_keycloak_client = None
@@ -73,6 +71,12 @@ class TapirIntegrationTest(TapirFactoryMixin, TestCase):
             f"Order should be confirmed, error: {response_content["error"]}",
         )
         self.assertIsNone(response_content["error"])
+
+    def assert_order_not_confirmed(self, response_content: dict, expected_error: str):
+        self.assertFalse(
+            response_content["order_confirmed"], "Order should not be confirmed"
+        )
+        self.assertEqual(expected_error, response_content["error"])
 
     def _login_as_admin(self):
         admin = MemberFactory.create(is_superuser=True)
