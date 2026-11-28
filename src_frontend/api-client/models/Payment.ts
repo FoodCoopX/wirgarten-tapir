@@ -38,6 +38,12 @@ export interface Payment {
   amount: number;
   /**
    *
+   * @type {string}
+   * @memberof Payment
+   */
+  readonly typeLabel: string;
+  /**
+   *
    * @type {Date}
    * @memberof Payment
    */
@@ -127,6 +133,7 @@ export interface Payment {
  */
 export function instanceOfPayment(value: object): value is Payment {
   if (!("amount" in value) || value["amount"] === undefined) return false;
+  if (!("typeLabel" in value) || value["typeLabel"] === undefined) return false;
   if (!("createdAt" in value) || value["createdAt"] === undefined) return false;
   if (!("updatedAt" in value) || value["updatedAt"] === undefined) return false;
   if (!("dueDate" in value) || value["dueDate"] === undefined) return false;
@@ -150,6 +157,7 @@ export function PaymentFromJSONTyped(
   return {
     id: json["id"] == null ? undefined : json["id"],
     amount: json["amount"],
+    typeLabel: json["type_label"],
     createdAt: new Date(json["created_at"]),
     updatedAt: new Date(json["updated_at"]),
     dueDate: json["due_date"],
@@ -192,7 +200,7 @@ export function PaymentToJSON(json: any): Payment {
 }
 
 export function PaymentToJSONTyped(
-  value?: Omit<Payment, "created_at" | "updated_at"> | null,
+  value?: Omit<Payment, "type_label" | "created_at" | "updated_at"> | null,
   ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {

@@ -64,6 +64,26 @@ class AssociationMembership(TapirModel):
         return f"{self.member.get_display_name()} {self.type.name} {self.start_date} -> {self.end_date}"
 
 
+class AssociationDepositTransaction(TapirModel):
+    class Type(models.TextChoices):
+        SUBSCRIPTION = "subscription", "Zeichnung"
+        IMPORT = "import", "Import"
+        IMPORT_OUTSTANDING = "import_outstanding", "Importierte offene Einlage"
+        REPAYMENT = "repayment", "Rückzahlung"
+        CORRECTION = "correction", "Korrektur"
+
+    member = models.ForeignKey(Member, on_delete=models.CASCADE)
+    transaction_type = models.CharField(max_length=30, choices=Type.choices)
+    amount = models.DecimalField(max_digits=8, decimal_places=2)
+    valid_at = models.DateField()
+
+
+class AssociationDepositAgreedLogEntry(LogEntry):
+    template_name = "associations/log/deposit_agreed.html"
+
+    amount = models.DecimalField(max_digits=8, decimal_places=2)
+
+
 class AssociationMembershipDeletedLogEntry(LogEntry):
     template_name = "associations/log/membership_deleted.html"
 
