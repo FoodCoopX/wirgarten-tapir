@@ -25,7 +25,7 @@ class TestAssociationDepositDepartureExport(TapirIntegrationTest):
         )
         self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_ENABLED, True)
 
-    def test_getMemberships_nonCalendarGrowingPeriod_includesBothBoundariesOnly(self):
+    def test_getMembers_nonCalendarGrowingPeriod_includesBothBoundariesOnly(self):
         GrowingPeriodFactory.create(
             start_date=datetime.date(2025, 3, 1), end_date=datetime.date(2026, 2, 28)
         )
@@ -50,21 +50,49 @@ class TestAssociationDepositDepartureExport(TapirIntegrationTest):
             )
             memberships.append(membership)
 
-        result = AssociationDepositDepartureExport.get_memberships(
-            datetime.datetime(2026, 11, 23, 12)
+        result = AssociationDepositDepartureExport.get_members(
+            reference_datetime=datetime.datetime(2026, 11, 23, 12)
         )
 
         self.assertCountEqual(
-            [memberships[1].pk, memberships[2].pk], result.values_list("pk", flat=True)
+            [memberships[1].member_id, memberships[2].member_id],
+            result.values_list("pk", flat=True),
         )
 
-    def test_getMemberships_noCompletedGrowingPeriod_returnsEmptyQueryset(self):
+    def test_getMembers_noCompletedGrowingPeriod_returnsEmptyQueryset(self):
         GrowingPeriodFactory.create(
             start_date=datetime.date(2026, 3, 1), end_date=datetime.date(2027, 2, 28)
         )
 
-        result = AssociationDepositDepartureExport.get_memberships(
-            datetime.datetime(2026, 11, 23, 12)
+        result = AssociationDepositDepartureExport.get_members(
+            reference_datetime=datetime.datetime(2026, 11, 23, 12)
         )
 
         self.assertFalse(result.exists())
+
+    def test_getMembers_membershipTypeChanged_excludesContinuingMember(self):
+        GrowingPeriodFactory.create(
+            start_date=datetime.date(2025, 3, 1), end_date=datetime.date(2026, 2, 28)
+        )
+        previous = AssociationMembershipFactory.create(
+            start_date=datetime.date(2025, 1, 1), end_date=datetime.date(2025, 6, 30)
+        )
+        AssociationMembershipFactory.create(
+            member=previous.member, start_date=datetime.date(2025, 7, 1), end_date=None
+        )
+        departed = AssociationMembershipFactory.create(
+            start_date=datetime.date(2025, 1, 1), end_date=datetime.date(2025, 12, 31)
+        )
+        for membership in [previous, departed]:
+            AssociationDepositTransaction.objects.create(
+                member=membership.member,
+                transaction_type=AssociationDepositTransaction.Type.IMPORT,
+                amount=200,
+                valid_at=membership.start_date,
+            )
+
+        members = AssociationDepositDepartureExport.get_members(
+            reference_datetime=datetime.datetime(2026, 11, 23, 12)
+        )
+
+        self.assertQuerySetEqual(members, [departed.member], ordered=False)

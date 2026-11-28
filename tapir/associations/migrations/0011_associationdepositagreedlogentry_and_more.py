@@ -55,6 +55,7 @@ class Migration(migrations.Migration):
                         choices=[
                             ("subscription", "Zeichnung"),
                             ("import", "Import"),
+                            ("import_outstanding", "Importierte offene Einlage"),
                             ("repayment", "Rückzahlung"),
                             ("correction", "Korrektur"),
                         ],
