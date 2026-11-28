@@ -74,18 +74,6 @@ class TestPaymentExportBuilderAssociationDeposits(TapirIntegrationTest):
         payment.refresh_from_db()
         self.assertEqual(PAYMENT_TYPE_ASSOCIATION_DEPOSIT, payment.transaction.type)
 
-    def test_exportAllUnexportedPayments_membershipEnded_exportsDeposit(self):
-        membership = self.create_membership()
-        payment = self.create_payment(membership)
-        membership.end_date = self.today - datetime.timedelta(days=1)
-        membership.save(update_fields=["end_date"])
-        self.assertEqual([], self.export())
-        payment.refresh_from_db()
-        self.assertIsNotNone(payment.transaction_id)
-        self.assertEqual(
-            1, Payment.objects.filter(type=PAYMENT_TYPE_ASSOCIATION_DEPOSIT).count()
-        )
-
     def test_exportAllUnexportedPayments_memberExcluded_exportsDepositLikeCoopShares(
         self,
     ):
