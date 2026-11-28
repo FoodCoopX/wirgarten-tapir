@@ -10,11 +10,18 @@ class GenericExportsConfig(AppConfig):
     name = "tapir.generic_exports"
 
     def ready(self) -> None:
+        from tapir.associations.services.association_deposit_departure_export import (
+            AssociationDepositDepartureExport,
+        )
         from tapir.generic_exports.services.member_segment_provider import (
             MemberSegmentProvider,
         )
         from tapir.generic_exports.services.payment_segment_provider import (
             PaymentSegmentProvider,
+        )
+
+        ExportSegmentManager.register_segment(
+            AssociationDepositDepartureExport.get_segment()
         )
 
         for segment in MemberSegmentProvider.get_member_segments():

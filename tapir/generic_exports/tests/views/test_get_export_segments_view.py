@@ -8,6 +8,8 @@ from tapir.generic_exports.services.export_segment_manager import (
     ExportSegmentColumn,
     ExportSegmentManager,
 )
+from tapir.core.config import LEGAL_STATUS_ASSOCIATION
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import MemberFactory
@@ -101,6 +103,36 @@ class TestGetExportSegmentsView(TapirIntegrationTest):
         response = self.client.get(reverse("generic_exports:export_segments"))
 
         self.assertStatusCode(response, 403)
+
+    def test_get_depositsDisabled_hidesDepositSegment(self):
+        self._set_parameter(
+            ParameterKeys.ORGANISATION_LEGAL_STATUS, LEGAL_STATUS_ASSOCIATION
+        )
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_ENABLED, False)
+        self._login_as_admin()
+
+        response = self.client.get(reverse("generic_exports:export_segments"))
+
+        self.assertStatusCode(response, 200)
+        self.assertNotIn(
+            "association_deposit_departures",
+            [segment["id"] for segment in response.json()],
+        )
+
+    def test_get_depositsEnabled_includesDepositSegment(self):
+        self._set_parameter(
+            ParameterKeys.ORGANISATION_LEGAL_STATUS, LEGAL_STATUS_ASSOCIATION
+        )
+        self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_ENABLED, True)
+        self._login_as_admin()
+
+        response = self.client.get(reverse("generic_exports:export_segments"))
+
+        self.assertStatusCode(response, 200)
+        self.assertIn(
+            "association_deposit_departures",
+            [segment["id"] for segment in response.json()],
+        )
 
     def get_test_segments(self):
         return [

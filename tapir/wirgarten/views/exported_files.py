@@ -1,6 +1,7 @@
 import mimetypes
 
 from django.contrib.auth.decorators import permission_required
+from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.http import FileResponse
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_GET
@@ -10,7 +11,7 @@ from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import ExportedFile
 
 
-class ExportedFilesListView(ListView):
+class ExportedFilesListView(PermissionRequiredMixin, ListView):
     model = ExportedFile
     ordering = "-created_at"
 

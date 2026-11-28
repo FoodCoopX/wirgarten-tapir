@@ -1,5 +1,12 @@
 from django.http import Http404
 
+from tapir.associations.services.association_deposit_departure_export import (
+    AssociationDepositDepartureExport,
+)
+from tapir.associations.services.association_deposit_settings import (
+    association_deposits_enabled,
+)
+
 from tapir.generic_exports.services.csv_templates.template_home_delivery_list import (
     TemplateHomeDeliveryList,
 )
@@ -24,6 +31,8 @@ class CsvExportTemplateManager:
             TemplateJokerOverview,
             TemplatePaymentsByIncomeSource,
         ]
+        if association_deposits_enabled(cache=cache):
+            template_list.append(AssociationDepositDepartureExport)
         if any(
             pickup_location.is_home_delivery
             for pickup_location in TapirCache.get_all_pickup_locations(cache=cache)

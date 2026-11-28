@@ -21,7 +21,13 @@ from django_filters.views import FilterView
 from tapir.accounts.services.email_verification_service import (
     EmailVerificationService,
 )
+from tapir.associations.services.association_deposit_settings import (
+    association_deposits_enabled,
+)
 from tapir.associations.models import AssociationMembershipType
+from tapir.associations.services.association_deposit_annotator import (
+    AssociationDepositAnnotator,
+)
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.german_name_sort_service import GermanNameSortService
 from tapir.coop.services.member_search_service import MemberSearchService
@@ -163,6 +169,12 @@ class MemberFilter(FilterSet):
         ],
     )
 
+    deposit_status = ChoiceFilter(
+        label="Einlagenstatus",
+        choices=[("outstanding", "Mindesteinlage noch nicht als exportiert erfasst")],
+        method="filter_deposit_status",
+    )
+
     o = OrderingFilter(
         label=_("Sortierung"),
         initial=0,
@@ -199,6 +211,7 @@ class MemberFilter(FilterSet):
 
     def __init__(self, data=None, *args, **kwargs):
         self.cache = kwargs.pop("cache", {})
+        self.show_deposits = kwargs.pop("show_deposits", False)
 
         if data is None:
             data = {"o": "-organisation_entry_date,-member_no,last_name_sort_key"}
@@ -215,6 +228,8 @@ class MemberFilter(FilterSet):
                 data["o"] += ",last_name_sort_key"
 
         super().__init__(data, *args, **kwargs)
+        if not self.show_deposits:
+            del self.filters["deposit_status"]
 
         if get_parameter_value(
             ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=self.cache
@@ -246,7 +261,15 @@ class MemberFilter(FilterSet):
         queryset = GermanNameSortService.annotate_queryset_with_sort_keys(
             queryset, ["first_name", "last_name"], cache=self.cache
         )
+        if self.show_deposits:
+            queryset = AssociationDepositAnnotator.annotate_members(queryset)
         return super().filter_queryset(queryset)
+
+    def filter_deposit_status(self, queryset, name, value):
+        minimum = get_parameter_value(
+            ParameterKeys.ASSOCIATION_DEPOSIT_MINIMUM, cache=self.cache
+        )
+        return queryset.filter(deposit_agreed__gt=0, deposit_exported__lt=minimum)
 
     def filter_search(self, queryset, name, value):
         return MemberSearchService.filter_queryset(
@@ -340,6 +363,7 @@ class MemberListView(PermissionRequiredMixin, FilterView):
             )
             == LEGAL_STATUS_ASSOCIATION
         )
+        context["show_deposits"] = association_deposits_enabled(cache=self.cache)
         context["cache"] = self.cache
         context["delivery_charge_enabled"] = get_parameter_value(
             key=ParameterKeys.DELIVERY_CHARGE_PER_PICKUP_LOCATION_ENABLED,
@@ -350,6 +374,7 @@ class MemberListView(PermissionRequiredMixin, FilterView):
     def get_filterset_kwargs(self, filterset_class):
         kwargs = super().get_filterset_kwargs(filterset_class)
         kwargs["cache"] = self.cache
+        kwargs["show_deposits"] = association_deposits_enabled(cache=self.cache)
         return kwargs
 
     def get_queryset(self):
