@@ -92,9 +92,7 @@ class AssociationDepositDepartureExport:
                 "member",
                 "Mitglied",
                 "",
-                lambda membership, _, __: cls._spreadsheet_text(
-                    membership.member.get_display_name()
-                ),
+                lambda membership, _, __: membership.member.get_display_name(),
             ),
             ExportSegmentColumn(
                 "departure",
@@ -106,15 +104,13 @@ class AssociationDepositDepartureExport:
                 "account_owner",
                 "Kontoinhaber",
                 "",
-                lambda membership, _, __: cls._spreadsheet_text(
-                    membership.member.account_owner
-                ),
+                lambda membership, _, __: membership.member.account_owner,
             ),
             ExportSegmentColumn(
                 "iban",
                 "IBAN",
                 "",
-                lambda membership, _, __: cls._spreadsheet_text(membership.member.iban),
+                lambda membership, _, __: membership.member.iban,
             ),
             ExportSegmentColumn(
                 "amount",
@@ -144,13 +140,3 @@ class AssociationDepositDepartureExport:
             column_ids=[column.id for column in columns],
             custom_column_names=[column.display_name for column in columns],
         )
-
-    @staticmethod
-    def _spreadsheet_text(value: str | None) -> str:
-        if value is None:
-            return ""
-        if value.startswith(("\t", "\r", "\n")) or value.lstrip().startswith(
-            ("=", "+", "-", "@", "＝", "＋", "－", "＠")
-        ):
-            return "'" + value
-        return value
