@@ -1,4 +1,5 @@
 import {
+  AssociationDepositSettings,
   AssociationMembershipType,
   BestellWizardGrowingPeriodChoice,
   BestellWizardImages,
@@ -11,6 +12,7 @@ import {
 import { TapirTheme } from "../../types/TapirTheme.ts";
 
 export type BestellWizardSettings = {
+  associationDeposit: AssociationDepositSettings;
   theme: TapirTheme;
   pickupLocations: PublicPickupLocation[];
   productTypes: PublicProductType[];

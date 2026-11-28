@@ -1,5 +1,8 @@
 from unittest.mock import patch, Mock
 
+from tapir.associations.services.association_deposit_policy import (
+    AssociationDepositPolicy,
+)
 from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.bestell_wizard.services.bestell_wizard_order_fulfiller import (
@@ -14,6 +17,9 @@ from tapir.pickup_locations.services.member_delivery_address_getter import (
 )
 
 
+@patch.object(
+    AssociationDepositPolicy, "validate_registration_selection", autospec=True
+)
 class TestValidateAndFulfillOrder(TapirUnitTest):
     @patch.object(
         BestellWizardOrderValidator, "validate_home_delivery_address", autospec=True
@@ -46,6 +52,7 @@ class TestValidateAndFulfillOrder(TapirUnitTest):
         mock_get_today: Mock,
         mock_build_delivery_address_input: Mock,
         mock_validate_home_delivery_address: Mock,
+        mock_validate_registration_selection: Mock,
     ):
         today = Mock()
         mock_get_today.return_value = today
@@ -55,6 +62,10 @@ class TestValidateAndFulfillOrder(TapirUnitTest):
             "growing_period_id": "test_id",
             "pickup_location_ids": ["test_pickup_location_id"],
             "personal_data": {"first_name": "John"},
+            "shopping_cart_order": {"product": 1},
+            "shopping_cart_waiting_list": {},
+            "association_deposit_amount": 200,
+            "association_deposit_payment_option": "once",
         }
         cache = Mock()
 
@@ -82,6 +93,9 @@ class TestValidateAndFulfillOrder(TapirUnitTest):
         )
 
         self.assertEqual(member, result)
+        mock_validate_registration_selection.assert_called_once_with(
+            amount=200, has_products=True, cache=cache, payment_option="once"
+        )
 
         mock_validated_growing_period_and_get_contract_start_date.assert_called_once_with(
             "test_id", cache=cache

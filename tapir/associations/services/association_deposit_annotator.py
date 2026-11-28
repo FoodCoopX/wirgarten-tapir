@@ -3,7 +3,10 @@ from decimal import Decimal
 from django.db.models import Exists, OuterRef, Q, QuerySet, Subquery, Sum
 from django.db.models.functions import Coalesce
 
-from tapir.associations.models import AssociationDepositTransaction
+from tapir.associations.models import (
+    AssociationDepositTransaction,
+    AssociationMembership,
+)
 from tapir.wirgarten.models import Member, Payment
 
 
@@ -31,6 +34,11 @@ class AssociationDepositAnnotator:
             .annotate(total=Sum("amount"))
         )
         return members.annotate(
+            deposit_agreement_requested=Exists(
+                AssociationMembership.objects.filter(
+                    member_id=member_id, deposit_agreement_requested_at__isnull=False
+                )
+            ),
             deposit_agreed=Coalesce(Subquery(agreed.values("total")), Decimal("0")),
             deposit_exported=Coalesce(Subquery(received.values("total")), Decimal("0")),
         )

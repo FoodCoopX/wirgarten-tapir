@@ -65,6 +65,12 @@ export interface AssociationMembership {
    * @type {Date}
    * @memberof AssociationMembership
    */
+  depositAgreementRequestedAt?: Date | null;
+  /**
+   *
+   * @type {Date}
+   * @memberof AssociationMembership
+   */
   cancellationTs?: Date | null;
   /**
    *
@@ -114,6 +120,10 @@ export function AssociationMembershipFromJSONTyped(
     updatedAt: new Date(json["updated_at"]),
     startDate: json["start_date"],
     endDate: json["end_date"] == null ? undefined : json["end_date"],
+    depositAgreementRequestedAt:
+      json["deposit_agreement_requested_at"] == null
+        ? undefined
+        : new Date(json["deposit_agreement_requested_at"]),
     cancellationTs:
       json["cancellation_ts"] == null
         ? undefined
@@ -143,6 +153,10 @@ export function AssociationMembershipToJSONTyped(
     type: AssociationMembershipTypeToJSON(value["type"]),
     start_date: value["startDate"],
     end_date: value["endDate"],
+    deposit_agreement_requested_at:
+      value["depositAgreementRequestedAt"] == null
+        ? undefined
+        : (value["depositAgreementRequestedAt"] as any).toISOString(),
     cancellation_ts:
       value["cancellationTs"] == null
         ? undefined

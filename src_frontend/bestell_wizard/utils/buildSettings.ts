@@ -7,6 +7,7 @@ export function buildSettings(
   baseData: BestellWizardBaseDataResponse,
 ): BestellWizardSettings {
   const settings: BestellWizardSettings = {
+    associationDeposit: baseData.associationDeposit,
     theme: baseData.theme as TapirTheme,
     pickupLocations: [],
     productTypes: [],

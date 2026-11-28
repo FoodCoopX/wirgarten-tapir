@@ -31,6 +31,8 @@ export function getStepTitle(
     case "6b_coop_shares":
     case "6b_association_membership":
       return settings.strings.step6bTitle;
+    case "6d_association_deposit":
+      return settings.associationDeposit.name;
     case "6c_coop_member_now":
       return settings.strings.step6cTitle;
     case "7_solidarity_contribution":

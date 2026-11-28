@@ -14,6 +14,8 @@ export * from "./AdminSubscriptionChangeSubscriptionUnit";
 export * from "./AdminSubscriptionChangeSubscriptionUnitStatusEnum";
 export * from "./AssignmentLogEntry";
 export * from "./AssignmentLogEntryStatusEnum";
+export * from "./AssociationDepositPaymentOptionEnum";
+export * from "./AssociationDepositSettings";
 export * from "./AssociationMembership";
 export * from "./AssociationMembershipType";
 export * from "./AssociationMembershipTypePrice";

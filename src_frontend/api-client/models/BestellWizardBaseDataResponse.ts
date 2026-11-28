@@ -12,6 +12,11 @@
  * Do not edit the class manually.
  */
 
+import type { AssociationDepositSettings } from "./AssociationDepositSettings";
+import {
+  AssociationDepositSettingsFromJSON,
+  AssociationDepositSettingsToJSON,
+} from "./AssociationDepositSettings";
 import type { AssociationMembershipType } from "./AssociationMembershipType";
 import {
   AssociationMembershipTypeFromJSON,
@@ -49,6 +54,12 @@ import {
  * @interface BestellWizardBaseDataResponse
  */
 export interface BestellWizardBaseDataResponse {
+  /**
+   *
+   * @type {AssociationDepositSettings}
+   * @memberof BestellWizardBaseDataResponse
+   */
+  associationDeposit: AssociationDepositSettings;
   /**
    *
    * @type {number}
@@ -261,6 +272,11 @@ export interface BestellWizardBaseDataResponse {
 export function instanceOfBestellWizardBaseDataResponse(
   value: object,
 ): value is BestellWizardBaseDataResponse {
+  if (
+    !("associationDeposit" in value) ||
+    value["associationDeposit"] === undefined
+  )
+    return false;
   if (!("priceOfAShare" in value) || value["priceOfAShare"] === undefined)
     return false;
   if (!("coopMinShares" in value) || value["coopMinShares"] === undefined)
@@ -398,6 +414,9 @@ export function BestellWizardBaseDataResponseFromJSONTyped(
     return json;
   }
   return {
+    associationDeposit: AssociationDepositSettingsFromJSON(
+      json["association_deposit"],
+    ),
     priceOfAShare: json["price_of_a_share"],
     coopMinShares: json["coop_min_shares"],
     coopShareInstalmentsEnabled: json["coop_share_instalments_enabled"],
@@ -457,6 +476,9 @@ export function BestellWizardBaseDataResponseToJSONTyped(
   }
 
   return {
+    association_deposit: AssociationDepositSettingsToJSON(
+      value["associationDeposit"],
+    ),
     price_of_a_share: value["priceOfAShare"],
     coop_min_shares: value["coopMinShares"],
     coop_share_instalments_enabled: value["coopShareInstalmentsEnabled"],

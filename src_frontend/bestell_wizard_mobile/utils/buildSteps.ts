@@ -383,6 +383,13 @@ function buildAssociationSteps(
 
   if (willBecomeMemberNow(settings, becomeMemberNow)) {
     associationSteps.push("6b_association_membership");
+    if (
+      settings.associationDeposit.enabled &&
+      (settings.associationDeposit.depositRequiredForSupportingMembers ||
+        isAtLeastOneProductOrdered(shoppingCart))
+    ) {
+      associationSteps.push("6d_association_deposit");
+    }
   }
 
   return associationSteps;

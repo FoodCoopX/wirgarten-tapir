@@ -171,7 +171,10 @@ class MemberFilter(FilterSet):
 
     deposit_status = ChoiceFilter(
         label="Einlagenstatus",
-        choices=[("outstanding", "Mindesteinlage noch nicht als exportiert erfasst")],
+        choices=[
+            ("outstanding", "Mindesteinlage noch nicht als exportiert erfasst"),
+            ("requested", "Individuelle Vereinbarung erbeten"),
+        ],
         method="filter_deposit_status",
     )
 
@@ -266,6 +269,8 @@ class MemberFilter(FilterSet):
         return super().filter_queryset(queryset)
 
     def filter_deposit_status(self, queryset, name, value):
+        if value == "requested":
+            return queryset.filter(deposit_agreement_requested=True)
         minimum = get_parameter_value(
             ParameterKeys.ASSOCIATION_DEPOSIT_MINIMUM, cache=self.cache
         )
