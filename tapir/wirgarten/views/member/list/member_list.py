@@ -24,7 +24,10 @@ from tapir.accounts.services.email_verification_service import (
 from tapir.associations.services.association_deposit_settings import (
     association_deposits_enabled,
 )
-from tapir.associations.models import AssociationMembershipType
+from tapir.associations.models import (
+    AssociationMembershipType,
+    AssociationDepositTransaction,
+)
 from tapir.associations.services.association_deposit_annotator import (
     AssociationDepositAnnotator,
 )
@@ -172,8 +175,12 @@ class MemberFilter(FilterSet):
     deposit_status = ChoiceFilter(
         label="Einlagenstatus",
         choices=[
-            ("outstanding", "Mindesteinlage noch nicht als exportiert erfasst"),
+            (
+                "outstanding",
+                "Mindesteinlage weder vollständig exportiert noch als erhalten erfasst",
+            ),
             ("requested", "Individuelle Vereinbarung erbeten"),
+            ("imported_outstanding", "Importierter Restbetrag offen"),
         ],
         method="filter_deposit_status",
     )
@@ -271,6 +278,10 @@ class MemberFilter(FilterSet):
     def filter_deposit_status(self, queryset, name, value):
         if value == "requested":
             return queryset.filter(deposit_agreement_requested=True)
+        if value == "imported_outstanding":
+            return queryset.filter(
+                associationdeposittransaction__transaction_type=AssociationDepositTransaction.Type.IMPORT_OUTSTANDING,
+            ).distinct()
         minimum = get_parameter_value(
             ParameterKeys.ASSOCIATION_DEPOSIT_MINIMUM, cache=self.cache
         )

@@ -3,6 +3,8 @@ import datetime
 from django.urls import reverse
 from rest_framework import status
 
+from tapir.associations.models import AssociationDepositTransaction
+from tapir.core.config import LEGAL_STATUS_ASSOCIATION
 from tapir.solidarity_contribution.tests.factories import SolidarityContributionFactory
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
@@ -14,6 +16,33 @@ class TestMemberListView(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
+
+    def test_get_importedOutstandingFilter_showsOnlyImportedUnpaidDeposits(self):
+        self._set_parameter(
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS,
+            value=LEGAL_STATUS_ASSOCIATION,
+        )
+        self._set_parameter(key=ParameterKeys.ASSOCIATION_DEPOSIT_ENABLED, value=True)
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+        outstanding = MemberFactory.create()
+        for member, kind in [
+            (outstanding, AssociationDepositTransaction.Type.IMPORT_OUTSTANDING),
+            (MemberFactory.create(), AssociationDepositTransaction.Type.IMPORT),
+            (MemberFactory.create(), AssociationDepositTransaction.Type.SUBSCRIPTION),
+        ]:
+            AssociationDepositTransaction.objects.create(
+                member=member,
+                transaction_type=kind,
+                amount=200,
+                valid_at=datetime.date(2026, 11, 5),
+            )
+
+        response = self.client.get(
+            reverse("wirgarten:member_list"), {"deposit_status": "imported_outstanding"}
+        )
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assertQuerySetEqual(response.context["object_list"], [outstanding])
 
     def test_memberListView_sortByLastNameAscending_compoundLowercaseLastNameSortedByFirstWord(
         self,
