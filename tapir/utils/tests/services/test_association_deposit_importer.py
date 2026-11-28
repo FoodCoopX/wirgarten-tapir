@@ -50,7 +50,7 @@ class TestAssociationDepositImporter(TapirIntegrationTest):
             "Einlage Offen": "50,00",
         }
 
-    def test_importDeposit_receivedAndOutstanding_importsWithoutDebit(self):
+    def test_importDeposit_receivedAndOutstanding_importsWithoutPayment(self):
         AssociationDepositImporter.import_deposit(self.row, {})
         self.assertEqual(
             MEMBER_IMPORT_STATUS_SKIPPED,
