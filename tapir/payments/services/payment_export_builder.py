@@ -8,7 +8,12 @@ from typing import Iterable
 from django.db import transaction
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES
+from tapir.payments.config import (
+    ONE_OFF_TRANSACTION_TYPES,
+    PAYMENT_TYPE_ASSOCIATION_DEPOSIT,
+    PAYMENT_TYPE_COOP_SHARES,
+)
+from tapir.payments.services.payment_type_label_getter import PaymentTypeLabelGetter
 from tapir.payments.services.pain_008_xml_file_creator import Pain008XmlFileCreator
 from tapir.payments.services.payment_export_exclusion_period_service import (
     PaymentExportExclusionPeriodService,
@@ -43,11 +48,14 @@ class PaymentExportBuilder:
     @classmethod
     @transaction.atomic
     def export_all_unexported_payments(
-        cls, reference_date: datetime.date, send_mail: bool, cache: dict
+        cls,
+        reference_date: datetime.date,
+        send_mail: bool,
+        cache: dict,
+        include_deposits: bool = True,
     ):
-        payments = cls.get_unexported_payments(reference_date=reference_date)
-        contract_payments, coop_share_payments = (
-            cls.split_payments_by_contract_or_coop_shares(payments)
+        contract_payments, coop_share_payments, deposit_payments = cls.split_payments(
+            payments=cls.get_unexported_payments(reference_date=reference_date)
         )
 
         for payment in contract_payments:
@@ -67,93 +75,92 @@ class PaymentExportBuilder:
         errors_failed_payments_contracts = cls.export_payments_if_necessary(
             combined_payments=combined_contract_payments,
             database_payments=contract_payments,
-            is_contract_payments=True,
+            payment_type="Verträge",
             reference_date=reference_date,
             send_mail=send_mail,
             cache=cache,
         )
-        errors_failed_payments_shares = []
+        one_off_payment_groups = []
         if legal_status_is_cooperative(cache=cache):
-            errors_failed_payments_shares = cls.export_payments_if_necessary(
-                combined_payments=coop_share_payments,
-                database_payments=coop_share_payments,
-                is_contract_payments=False,
-                reference_date=reference_date,
-                send_mail=send_mail,
-                cache=cache,
+            one_off_payment_groups.append(
+                (PAYMENT_TYPE_COOP_SHARES, coop_share_payments)
             )
-
-        return errors_failed_payments_contracts + errors_failed_payments_shares
+        if include_deposits and deposit_payments:
+            one_off_payment_groups.append(
+                (PAYMENT_TYPE_ASSOCIATION_DEPOSIT, deposit_payments)
+            )
+        errors = errors_failed_payments_contracts
+        for payment_type, payments in one_off_payment_groups:
+            errors.extend(
+                cls.export_payments_if_necessary(
+                    combined_payments=payments,
+                    database_payments=payments,
+                    payment_type=payment_type,
+                    reference_date=reference_date,
+                    send_mail=send_mail,
+                    cache=cache,
+                )
+            )
+        return errors
 
     @classmethod
     def export_payments_if_necessary(
         cls,
         combined_payments: Iterable[Payment],
         database_payments: Iterable[Payment],
-        is_contract_payments: bool,
+        payment_type: str,
         reference_date: datetime.date,
         send_mail: bool,
         cache: dict,
     ):
         if not cls.should_export_payments(
-            is_contract_payments=is_contract_payments, reference_date=reference_date
+            payment_type=payment_type, reference_date=reference_date
         ):
             return []
 
         csv_file, xml_file, errors_failed_payments = cls.create_csv_and_xml_files(
             payments=combined_payments,
-            is_contract_payments=is_contract_payments,
+            payment_type=payment_type,
             send_mail=send_mail,
-            cache=cache,
             reference_date=reference_date,
+            cache=cache,
         )
-
         cls.create_and_assign_transaction(
             csv_file=csv_file,
             xml_file=xml_file,
-            is_contract_payments=is_contract_payments,
+            payment_type=payment_type,
             payments=database_payments,
             reference_date=reference_date,
         )
-
         return errors_failed_payments
 
     @classmethod
-    def should_export_payments(
-        cls, is_contract_payments: bool, reference_date: datetime.date
-    ):
-        payment_type_display = (
-            PaymentExportIntendedUseBuilder.get_payment_type_display_legacy(
-                is_contract_payments
-            )
-        )
+    def should_export_payments(cls, payment_type: str, reference_date: datetime.date):
         last_transaction = (
             PaymentTransaction.objects.filter(
-                type=payment_type_display, month__lte=reference_date
+                type=payment_type, month__lte=reference_date
             )
             .order_by("created_at")
             .last()
         )
-        if last_transaction is None:
-            return True
-
-        return reference_date.month != last_transaction.month.month
+        return (
+            last_transaction is None
+            or reference_date.month != last_transaction.month.month
+        )
 
     @classmethod
     def create_and_assign_transaction(
         cls,
         csv_file: ExportedFile,
         xml_file: ExportedFile | None,
-        is_contract_payments: bool,
+        payment_type: str,
         payments: Iterable[Payment],
         reference_date: datetime.date,
     ):
         payment_transaction = PaymentTransaction.objects.create(
             csv_file=csv_file,
             xml_file=xml_file,
-            type=PaymentExportIntendedUseBuilder.get_payment_type_display_legacy(
-                is_contract_payments
-            ),
+            type=payment_type,
             month=reference_date.replace(day=1),
         )
         for payment in payments:
@@ -216,15 +223,18 @@ class PaymentExportBuilder:
     def create_csv_and_xml_files(
         cls,
         payments: Iterable[Payment],
-        is_contract_payments: bool,
+        payment_type: str,
         send_mail: bool,
         reference_date: datetime.date,
         cache: dict,
     ):
-        file_name = f"{PaymentExportIntendedUseBuilder.get_payment_type_display_legacy(is_contract_payments)}-Einzahlungen {format_month_and_year(reference_date)}"
+        file_name = f"{PaymentTypeLabelGetter.get_label(payment_type)}-Einzahlungen {format_month_and_year(reference_date)}"
         payments = list(payments)
-
-        csv_string = cls.build_csv_string(payments, is_contract_payments, cache)
+        csv_string = cls.build_csv_string(
+            payments=payments,
+            is_contract_payments=payment_type not in ONE_OFF_TRANSACTION_TYPES,
+            cache=cache,
+        )
         csv_file = export_file(
             filename=file_name,
             filetype=ExportedFile.FileType.CSV,
@@ -235,10 +245,9 @@ class PaymentExportBuilder:
             ),
             cache=cache,
         )
-
         xml_file = None
         errors_failed_payments = []
-        if len(payments) > 0:
+        if payments:
             xml_file, errors_failed_payments = (
                 Pain008XmlFileCreator.create_xml_file_and_send_mail(
                     payments=payments,
@@ -248,7 +257,6 @@ class PaymentExportBuilder:
                     cache=cache,
                 )
             )
-
         return csv_file, xml_file, errors_failed_payments
 
     @classmethod
@@ -313,13 +321,15 @@ class PaymentExportBuilder:
         return "".join([header.getvalue(), file_content])
 
     @classmethod
-    def split_payments_by_contract_or_coop_shares(cls, payments: Iterable[Payment]):
+    def split_payments(cls, payments: Iterable[Payment]):
         contract_payments = []
         coop_share_payments = []
+        deposit_payments = []
         for payment in payments:
             if payment.type == PAYMENT_TYPE_COOP_SHARES:
                 coop_share_payments.append(payment)
+            elif payment.type == PAYMENT_TYPE_ASSOCIATION_DEPOSIT:
+                deposit_payments.append(payment)
             else:
                 contract_payments.append(payment)
-
-        return contract_payments, coop_share_payments
+        return contract_payments, coop_share_payments, deposit_payments

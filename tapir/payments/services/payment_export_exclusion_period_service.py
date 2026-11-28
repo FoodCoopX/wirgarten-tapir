@@ -3,7 +3,7 @@ import datetime
 from django.db.models import Exists, OuterRef, Q
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES
+from tapir.payments.config import ONE_OFF_TRANSACTION_TYPES
 from tapir.payments.models import PaymentExportExclusionPeriod
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import Payment
@@ -19,7 +19,7 @@ class PaymentExportExclusionPeriodService:
             key=ParameterKeys.PAYMENT_EXPORT_EXCLUSION_ENABLED, cache=cache
         ):
             return False
-        if payment.type == PAYMENT_TYPE_COOP_SHARES:
+        if payment.type in ONE_OFF_TRANSACTION_TYPES:
             return False
         return cls.is_member_excluded(
             member_id=payment.mandate_ref.member_id,
@@ -45,7 +45,7 @@ class PaymentExportExclusionPeriodService:
         )
         return exported_and_excluded | (
             Q(transaction__isnull=True)
-            & ~Q(type=PAYMENT_TYPE_COOP_SHARES)
+            & ~Q(type__in=ONE_OFF_TRANSACTION_TYPES)
             & Q(member_is_excluded_at_due_date)
         )
 

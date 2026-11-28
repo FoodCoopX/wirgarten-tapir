@@ -9,6 +9,7 @@ from tapir.payments.models import (
     MemberCredit,
     PaymentExportExclusionPeriod,
 )
+from tapir.payments.services.payment_type_label_getter import PaymentTypeLabelGetter
 from tapir.payments.services.payment_export_exclusion_period_service import (
     PaymentExportExclusionPeriodService,
 )
@@ -22,11 +23,16 @@ from tapir.wirgarten.models import Member, Payment, PaymentTransaction
 
 
 class PaymentSerializer(serializers.ModelSerializer):
+    amount = serializers.FloatField()
+    type_label = serializers.SerializerMethodField()
+
     class Meta:
         model = Payment
-        fields = "__all__"
+        exclude = ["association_deposit_transaction"]
 
-    amount = serializers.FloatField()
+    @staticmethod
+    def get_type_label(instance) -> str:
+        return PaymentTypeLabelGetter.get_label(instance.type)
 
 
 class ExtendedPaymentSerializer(serializers.Serializer):
@@ -122,16 +128,21 @@ class JokerCreditIntendedUsePreviewResponseSerializer(serializers.Serializer):
 
 
 class PaymentTransactionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PaymentTransaction
-        fields = "__all__"
-
+    type_label = serializers.SerializerMethodField()
     payments_count = serializers.SerializerMethodField()
     payments_sum = serializers.SerializerMethodField()
     excluded_payments_count = serializers.SerializerMethodField()
     excluded_payments_sum = serializers.SerializerMethodField()
     csv_download_url = serializers.SerializerMethodField()
     xml_download_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = PaymentTransaction
+        fields = "__all__"
+
+    @staticmethod
+    def get_type_label(instance) -> str:
+        return PaymentTypeLabelGetter.get_label(instance.type)
 
     @staticmethod
     def get_payments_count(transaction: PaymentTransaction) -> int:
