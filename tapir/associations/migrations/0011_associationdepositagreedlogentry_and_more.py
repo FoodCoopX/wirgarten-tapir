@@ -11,6 +11,8 @@ class Migration(migrations.Migration):
     dependencies = [
         ("associations", "0010_associationmembershiptype_hidden_in_bestell_wizard"),
         ("log", "0002_alter_logentry_created_date"),
+        # wirgarten 0127 reads configuration in its data migration.
+        ("configuration", "0001_initial"),
         ("wirgarten", "0160_unique_confirmed_extra_email"),
     ]
 
