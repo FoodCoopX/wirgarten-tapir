@@ -66,7 +66,7 @@ export function AssociationDeposit({
           }}
         />
       )}
-      {message && <p role="status">{message}</p>}
+      {message && <output className="d-block">{message}</output>}
     </section>
   );
 }
