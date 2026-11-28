@@ -340,7 +340,10 @@ class ExportMembersView(PermissionRequiredMixin, View):
                 "Solidarbeitrag",
             ]
             + (
-                ["Vereinseinlage vereinbart (€)", "Vereinseinlage exportiert (€)"]
+                [
+                    "Vereinseinlage vereinbart (€)",
+                    "Vereinseinlage exportiert oder erhalten (€)",
+                ]
                 if show_deposits
                 else []
             )

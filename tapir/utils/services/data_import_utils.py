@@ -1,4 +1,8 @@
 import datetime
+from decimal import Decimal, InvalidOperation
+
+from django.core.exceptions import ValidationError
+from django.core.validators import DecimalValidator, MinValueValidator
 
 from django.utils import timezone
 from django.utils.dateparse import parse_date, parse_datetime
@@ -121,3 +125,14 @@ class DataImportUtils:
     @staticmethod
     def is_row_empty(row: dict):
         return not any(DataImportUtils.normalize_cell(v) for v in row.values())
+
+    @staticmethod
+    def parse_amount(row: dict[str, str], column: str) -> Decimal:
+        value = DataImportUtils.normalize_cell(row.get(column))
+        try:
+            amount = Decimal(str(value).replace(",", ".") or "0")
+        except InvalidOperation as error:
+            raise ValidationError(f"Ungültiger Betrag in {column}.") from error
+        DecimalValidator(8, 2)(amount)
+        MinValueValidator(Decimal("0"))(amount)
+        return amount
