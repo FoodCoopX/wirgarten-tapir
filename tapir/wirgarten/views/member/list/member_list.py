@@ -280,8 +280,7 @@ class MemberFilter(FilterSet):
             return queryset.filter(deposit_agreement_requested=True)
         if value == "imported_outstanding":
             return queryset.filter(
-                associationdeposittransaction__transaction_type=AssociationDepositTransaction.Type.SUBSCRIPTION,
-                associationdeposittransaction__payments__isnull=True,
+                associationdeposittransaction__transaction_type=AssociationDepositTransaction.Type.IMPORT_OUTSTANDING,
             ).distinct()
         minimum = get_parameter_value(
             ParameterKeys.ASSOCIATION_DEPOSIT_MINIMUM, cache=self.cache

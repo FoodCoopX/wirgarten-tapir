@@ -10,13 +10,15 @@ class TestParseAmount(TapirUnitTest):
     def test_parseAmount_germanDecimal_returnsAmount(self):
         self.assertEqual(
             Decimal("150.50"),
-            DataImportUtils.parse_amount({"Betrag": "150,50"}, "Betrag"),
+            DataImportUtils.parse_amount(row={"Betrag": "150,50"}, column="Betrag"),
         )
 
     def test_parseAmount_missingValue_returnsZero(self):
-        self.assertEqual(Decimal("0"), DataImportUtils.parse_amount({}, "Betrag"))
+        self.assertEqual(
+            Decimal("0"), DataImportUtils.parse_amount(row={}, column="Betrag")
+        )
 
     def test_parseAmount_invalidAmount_raisesError(self):
         for value in ("n/a", "-1", "1.234", "1000000", "NaN"):
             with self.subTest(value=value), self.assertRaises(ValidationError):
-                DataImportUtils.parse_amount({"Betrag": value}, "Betrag")
+                DataImportUtils.parse_amount(row={"Betrag": value}, column="Betrag")
