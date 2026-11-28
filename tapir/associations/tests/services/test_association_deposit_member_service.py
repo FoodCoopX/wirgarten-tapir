@@ -59,7 +59,7 @@ class TestAssociationDepositMemberService(TapirIntegrationTest):
         )
         self.membership.save()
         self.assertTrue(
-            AssociationDepositMemberService.get_details(self.member, {})[
+            AssociationDepositMemberService.get_details(member=self.member, cache={})[
                 "agreement_requested"
             ]
         )
@@ -68,7 +68,7 @@ class TestAssociationDepositMemberService(TapirIntegrationTest):
         self.assertEqual(
             Decimal("50"),
             AssociationDepositMemberService.validate_increase(
-                self.member, Decimal("250"), {}
+                member=self.member, total_amount=Decimal("250"), cache={}
             ),
         )
 
@@ -76,7 +76,7 @@ class TestAssociationDepositMemberService(TapirIntegrationTest):
         for total in (Decimal("200"), Decimal("150")):
             with self.subTest(total=total), self.assertRaises(ValidationError):
                 AssociationDepositMemberService.validate_increase(
-                    self.member, total, {}
+                    member=self.member, total_amount=total, cache={}
                 )
 
     def test_validateIncrease_inactiveMembership_raisesError(self):
@@ -84,19 +84,19 @@ class TestAssociationDepositMemberService(TapirIntegrationTest):
         self.membership.save()
         with self.assertRaisesMessage(ValidationError, "aktive Vereinsmitgliedschaft"):
             AssociationDepositMemberService.validate_increase(
-                self.member, Decimal("250"), {}
+                member=self.member, total_amount=Decimal("250"), cache={}
             )
 
     def test_validateIncrease_disabledFeature_raisesError(self):
         self._set_parameter(ParameterKeys.ASSOCIATION_DEPOSIT_ENABLED, False)
         with self.assertRaisesMessage(ValidationError, "nicht aktiviert"):
             AssociationDepositMemberService.validate_increase(
-                self.member, Decimal("250"), {}
+                member=self.member, total_amount=Decimal("250"), cache={}
             )
 
     def test_validateIncrease_noSepaConsent_raisesError(self):
         self.member.sepa_consent = None
         with self.assertRaisesMessage(ValidationError, "SEPA-Zustimmung"):
             AssociationDepositMemberService.validate_increase(
-                self.member, Decimal("250"), {}
+                member=self.member, total_amount=Decimal("250"), cache={}
             )

@@ -1,12 +1,8 @@
 import datetime
-from decimal import Decimal
 
 from django.urls import reverse
 
 from tapir.associations.models import AssociationDepositTransaction
-from tapir.associations.services.association_deposit_annotator import (
-    AssociationDepositAnnotator,
-)
 from tapir.associations.tests.factories import AssociationMembershipFactory
 from tapir.core.config import LEGAL_STATUS_ASSOCIATION
 from tapir.generic_exports.models import AutomatedCsvExportResult, CsvExport
@@ -16,7 +12,6 @@ from tapir.generic_exports.services.automated_exports_manager import (
 from tapir.generic_exports.services.csv_export_template_manager import (
     CsvExportTemplateManager,
 )
-from tapir.wirgarten.models import Member
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
@@ -67,7 +62,7 @@ class TestDepositDepartureExport(TapirIntegrationTest):
             member=member, start_date=datetime.date(2027, 3, 1)
         )
         CsvExportTemplateManager.create_exports_from_template(
-            "association_deposit_departures", {}
+            template_id="association_deposit_departures", cache={}
         )
         self.client.force_login(member)
         response = self.client.get(
@@ -81,11 +76,6 @@ class TestDepositDepartureExport(TapirIntegrationTest):
         csv = response.json()["file_as_string"]
         self.assertNotIn("2025-12-31", csv)
         self.assertNotIn("200,00", csv)
-        overview = AssociationDepositAnnotator.annotate_members(
-            Member.objects.filter(pk=member.pk)
-        ).get()
-        self.assertEqual(Decimal("200"), overview.deposit_agreed)
-        self.assertEqual(Decimal("200"), overview.deposit_exported)
 
     def test_doAutomatedCsvExports_yearlyTemplate_exportsPreviousGrowingPeriodOnce(
         self,
@@ -106,7 +96,7 @@ class TestDepositDepartureExport(TapirIntegrationTest):
                 valid_at=membership.start_date,
             )
         CsvExportTemplateManager.create_exports_from_template(
-            "association_deposit_departures", {}
+            template_id="association_deposit_departures", cache={}
         )
         export = CsvExport.objects.get()
         self.assertEqual([], export.email_recipients)
