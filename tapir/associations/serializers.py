@@ -80,6 +80,7 @@ class MemberAssociationMembershipDetailsSerializer(Serializer):
     memberships = AssociationMembershipSerializer(many=True)
     order_wizard_url = CharField(allow_null=True)
     contact_email = serializers.EmailField()
+    deposits_enabled = serializers.BooleanField()
 
 
 class ExistingMemberUpdatesAssociationMembershipRequest(Serializer):
@@ -119,3 +120,23 @@ class AssociationDepositSettingsSerializer(Serializer):
     allow_larger_signup = serializers.BooleanField()
     allow_signup_without_deposit = serializers.BooleanField()
     signup_without_deposit_label = CharField()
+
+
+class AssociationDepositDetailsSerializer(Serializer):
+    name = CharField()
+    amount = serializers.DecimalField(
+        max_digits=10, decimal_places=2, coerce_to_string=False
+    )
+    agreement_requested = serializers.BooleanField()
+    can_increase = serializers.BooleanField()
+    minimum = serializers.DecimalField(
+        max_digits=8, decimal_places=2, coerce_to_string=False
+    )
+    increment = serializers.DecimalField(
+        max_digits=8, decimal_places=2, coerce_to_string=False
+    )
+
+
+class IncreaseAssociationDepositRequestSerializer(Serializer):
+    total_amount = serializers.DecimalField(max_digits=8, decimal_places=2)
+    confirmation = serializers.BooleanField()

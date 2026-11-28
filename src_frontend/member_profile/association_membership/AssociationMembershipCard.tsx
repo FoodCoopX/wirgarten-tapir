@@ -8,6 +8,7 @@ import TapirToastContainer from "../../components/TapirToastContainer.tsx";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
+import { AssociationDeposit } from "./AssociationDeposit";
 import { getCurrentMembership } from "./getCurrentMembership.tsx";
 import { getFutureMemberships } from "./getFutureMemberships.tsx";
 import { getPastMemberships } from "./getPastMemberships.tsx";
@@ -25,6 +26,7 @@ const AssociationMembershipCard: React.FC<AssociationMembershipCardProps> = ({
   const [memberships, setMemberships] = useState<AssociationMembership[]>([]);
   const [orderWizardUrl, setOrderWizardUrl] = useState<string>();
   const [contactEmail, setContactEmail] = useState("");
+  const [depositsEnabled, setDepositsEnabled] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -41,6 +43,7 @@ const AssociationMembershipCard: React.FC<AssociationMembershipCardProps> = ({
         setMemberships(response.memberships);
         setOrderWizardUrl(response.orderWizardUrl ?? undefined);
         setContactEmail(response.contactEmail);
+        setDepositsEnabled(response.depositsEnabled);
       })
       .catch((error) =>
         handleRequestError(
@@ -85,6 +88,12 @@ const AssociationMembershipCard: React.FC<AssociationMembershipCardProps> = ({
                 </>
               )}
             </>
+          )}
+          {depositsEnabled && (
+            <AssociationDeposit
+              memberId={memberId}
+              setToastDatas={setToastDatas}
+            />
           )}
         </Card.Body>
         {orderWizardUrl && (
